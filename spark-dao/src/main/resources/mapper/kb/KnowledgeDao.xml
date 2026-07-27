@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.kb.KnowledgeDao" >
+    <sql id="allColumnList" >
+        id , name , description , parent_chunk_size , child_chunk_size , parent_overlap , child_overlap ,
+        enable_qa , retrieve_top_k , min_similarity , vector_model_id , rerank_model_id , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
+        <if test="name != null">
+            and name like concat('%', #{name}, '%')
+        </if>
+    </sql>
+
+    <sql id="sortCondition">
+        <choose>
+            <when test="sorts != null and sorts.size() > 0">
+                <foreach item="value" index="key" collection="sorts.entrySet()" separator=",">
+                    ${value}
+                </foreach>
+            </when>
+            <otherwise>
+                id desc
+            </otherwise>
+        </choose>
+    </sql>
+
+    <insert id="insert">
+        insert into kb_knowledge (id, name , description , parent_chunk_size , child_chunk_size , parent_overlap , child_overlap ,
+        enable_qa , retrieve_top_k , min_similarity , vector_model_id , rerank_model_id , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{id}, #{name} , #{description} , #{parentChunkSize} , #{childChunkSize} , #{parentOverlap} , #{childOverlap} ,
+        #{enableQa} , #{retrieveTopK} , #{minSimilarity} , #{vectorModelId} , #{rerankModelId} , #{status} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="deleteById">
+        update kb_knowledge set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <update id="updateById">
+        update kb_knowledge set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        <if test="name != null and name != ''">
+            , name = #{name}
+        </if>
+        <if test="description != null and description != ''">
+            , description = #{description}
+        </if>
+        <if test="parentChunkSize != null">
+            , parent_chunk_size = #{parentChunkSize}
+        </if>
+        <if test="childChunkSize != null">
+            , child_chunk_size = #{childChunkSize}
+        </if>
+        <if test="parentOverlap != null">
+            , parent_overlap = #{parentOverlap}
+        </if>
+        <if test="childOverlap != null">
+            , child_overlap = #{childOverlap}
+        </if>
+        <if test="enableQa != null">
+            , enable_qa = #{enableQa}
+        </if>
+        <if test="retrieveTopK != null">
+            , retrieve_top_k = #{retrieveTopK}
+        </if>
+        <if test="minSimilarity != null">
+            , min_similarity = #{minSimilarity}
+        </if>
+        <if test="vectorModelId != null">
+            , vector_model_id = #{vectorModelId}
+        </if>
+        <if test="rerankModelId != null">
+            , rerank_model_id = #{rerankModelId}
+        </if>
+        <if test="status != null">
+            , status = #{status}
+        </if>
+        where id = #{id}
+    </update>
+
+    <select id="queryKnowledgeCount" resultType="java.lang.Integer">
+        select count(1)
+        from kb_knowledge
+        where 1 = 1
+        <include refid="searchCondition"/>
+        ${dataScopeSQL}
+    </select>
+
+    <select id="queryKnowledgeList" resultType="com.spark.bean.kb.result.KnowledgeResult">
+        select <include refid="allColumnList"/>
+        from kb_knowledge
+        where 1 = 1
+        <include refid="searchCondition"/>
+        ${dataScopeSQL}
+        order by
+        <include refid="sortCondition"/>
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="queryKnowledge" resultType="com.spark.bean.kb.result.KnowledgeResult">
+        select <include refid="allColumnList"/>
+        from kb_knowledge
+        where 1=1
+        <include refid="searchCondition"/>
+        limit 1
+    </select>
+</mapper>

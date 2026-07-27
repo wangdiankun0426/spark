@@ -1,0 +1,66 @@
+ 一、精确匹配类（用于结构化数据）
+查询	作用	示例场景
+term	精确匹配单个值（不分词）	状态 = "published"，用户ID = 1001
+terms	匹配多个值中的任意一个（IN 查询）	status IN ("active", "pending")
+range	范围查询（数值、日期、字符串）	价格 100~500，创建时间 > "2024-01-01"
+exists / missing	字段是否存在	查找有/没有 email 的用户
+java
+编辑
+// terms 示例
+Query q = new Query.Builder()
+    .terms(t -> t.field("status").terms(v -> v.value("active").value("pending")))
+    .build();
+二、全文搜索类（用于文本内容）
+这些查询会对输入文本进行分词，适合搜索文章、标题、描述等。
+
+查询	作用	特点
+match	最常用的全文搜索	会对 query 分词，匹配文档中任一分词结果
+match_phrase	短语匹配（顺序+邻近）	"quick brown fox" 必须连续出现
+multi_match	在多个字段中全文搜索	同时查 title + content
+query_string	支持 Lucene 语法（高级）	可写 title:(quick OR slow) AND status:active
+java
+编辑
+// match_phrase 示例：精确短语
+Query q = new Query.Builder()
+    .matchPhrase(m -> m.field("content").query("hello world"))
+    .build();
+三、复合/组合查询（控制逻辑）
+查询	作用
+bool	组合多个查询（must, should, must_not, filter）
+✅ 最常用！
+constant_score	包装查询，所有结果得分相同（常用于 filter）
+dis_max	对多个字段查询取最高分（避免得分稀释）
+java
+编辑
+// bool 查询示例：必须 status=active，且 tags 包含 "news"，但不能是 admin 用户
+BoolQuery.Builder bool = new BoolQuery.Builder()
+    .must(termQuery("status", "active"))
+    .must(termQuery("tags", "news"))
+    .mustNot(termQuery("role", "admin"));
+
+Query q = new Query.Builder().bool(bool.build()).build();
+💡 filter 子句与 must 类似，但不计算相关性得分，性能更高，适合过滤条件（如状态、时间范围）。
+
+四、模糊与模式匹配类
+查询	作用	注意
+wildcard	通配符匹配（*, ?）	不分词，避免前导 *
+regexp	正则表达式匹配	性能低，慎用
+fuzzy	模糊匹配（允许拼写错误）	如 "apple" 匹配 "appl"
+prefix	前缀匹配	相当于 wildcard("field", "pre*")，但更高效
+java
+编辑
+// fuzzy 示例：允许 1~2 个字符编辑距离
+Query q = new Query.Builder()
+    .fuzzy(f -> f.field("name").value("john").fuzziness("AUTO"))
+    .build();
+五、地理位置查询（Geo）
+查询	作用
+geo_distance	查找某点半径内的点
+geo_bounding_box	查找矩形区域内的点
+geo_polygon	查找多边形区域内的点
+六、其他实用查询
+查询	说明
+ids	根据文档 _id 列表查询
+nested	查询嵌套对象（nested 类型字段）
+has_child / has_parent	关联父子文档查询
+script	使用 Painless 脚本自定义查询逻辑（慎用，性能差）

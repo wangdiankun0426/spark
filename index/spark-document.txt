@@ -1,0 +1,71 @@
+curl -u elastic -X PUT "http://localhost:9200/spark-document" -H "Content-Type: application/json" -d'
+{
+  "settings": {
+    "number_of_shards": 1, // 分片数量 ，单节点1即可，三台可以设置为3 每个节点都有一个分片
+    "number_of_replicas": 0 // 副本数量，单节点0即可，三台可以设置为1 每个节点都有1个副本分片
+  },
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "long",
+        "index": true, // 默认true，false不能直接进行查询 排序等操作
+        "doc_values": true
+      },
+      "prtId": {
+        "type": "long",
+        "index": true
+      },
+      "documentType": {
+        "type": "integer",
+        "index": true
+      },
+      "name": {
+        "type": "text", // 用于全文搜索的字符串字段，会被分词存储，不能精确查询
+        "index": true,
+        "fields": {
+          "keyword": {
+            "type": "keyword", // 用于精确匹配的字符串字段，不会分词，只能精确查询（使用*就能实现模糊查询），不能全文检索
+            "ignore_above": 256
+          }
+        }
+      },
+      "ext": {
+        "type": "keyword",
+        "index": true
+      },
+      "size": {
+          "type": "long",
+          "index": true
+       },
+       "sizeStr": {
+          "type": "keyword",
+          "index": true
+      },
+      "ownerId": {
+        "type": "long",
+        "index": true
+      },
+      "content": {
+        "type": "text",
+        "analyzer": "standard",
+         "index": true
+      },
+      "createdBy": {
+        "type": "long",
+        "index": true
+      },
+      "createdDt": {
+        "type": "long",
+        "index": true
+      },
+      "updatedBy": {
+        "type": "long",
+        "index": true
+      },
+      "updatedDt": {
+        "type": "long",
+        "index": true
+      }
+    }
+  }
+}'

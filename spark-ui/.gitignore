@@ -1,0 +1,9 @@
+.idea
+node_modules
+dist
+package-lock.json
+.lingma
+.claude
+CLAUDE.md
+electron/dist
+electron/release

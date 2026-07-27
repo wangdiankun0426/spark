@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.llm.ProviderDao" >
+    <sql id="allColumnList" >
+        id , name , icon , api_url , secret_key , description , remark , order_num , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <sql id="sortCondition">
+        <choose>
+            <when test="sorts != null and sorts.size() > 0">
+                <foreach item="value" index="key" collection="sorts.entrySet()" separator=",">
+                    <if test="key == 'orderNum'">
+                        order_num
+                    </if>
+                    ${value}
+                </foreach>
+            </when>
+            <otherwise>
+                id desc
+            </otherwise>
+        </choose>
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into llm_provider ( name , icon , api_url , secret_key , description , remark , order_num , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values ( #{name} , #{icon} , #{apiUrl} , #{secretKey} , #{description} , #{remark} , #{orderNum} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="deleteById">
+        update llm_provider set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <update id="updateById">
+        update llm_provider  set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        <if test="name != null and name != ''">
+            , name = #{name}
+        </if>
+        <if test="icon != null and icon != ''">
+            , icon = #{icon}
+        </if>
+        <if test="apiUrl != null and apiUrl != ''">
+            , api_url = #{apiUrl}
+        </if>
+        <if test="secretKey != null and secretKey != ''">
+            , secret_key = #{secretKey}
+        </if>
+        <if test="description != null and description != ''">
+            , description = #{description}
+        </if>
+        <if test="remark != null and remark != ''">
+            , remark = #{remark}
+        </if>
+        <if test="orderNum != null">
+            , order_num = #{orderNum}
+        </if>
+        where id = #{id}
+    </update>
+
+    <select id="queryProviderCount" resultType="java.lang.Integer">
+        select count(1)
+        from llm_provider
+        where 1 = 1
+        <include refid="searchCondition"/>
+        ${dataScopeSQL}
+    </select>
+
+    <select id="queryProviderList" resultType="com.spark.bean.llm.result.ProviderResult">
+        select <include refid="allColumnList"/>
+        from llm_provider
+        where 1 = 1
+        <include refid="searchCondition"/>
+        ${dataScopeSQL}
+        order by
+        <include refid="sortCondition"/>
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="queryProvider" resultType="com.spark.bean.llm.result.ProviderResult">
+        select <include refid="allColumnList"/>
+        from llm_provider
+        where 1=1
+        <include refid="searchCondition"/>
+        limit 1
+    </select>
+</mapper>

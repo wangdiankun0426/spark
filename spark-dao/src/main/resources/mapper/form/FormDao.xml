@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.form.FormDao" >
+    <sql id="allColumnList" >
+     id , type, name , rev_id , rev_num, order_num , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="type != null">
+            and type = #{type}
+        </if>
+        <if test="createdBy != null">
+            and created_by = #{createdBy}
+        </if>
+        <if test="name != null and name != ''">
+            and name like concat('%', #{name}, '%')
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <sql id="sortCondition">
+        <choose>
+            <when test="sorts != null and sorts.size() > 0">
+                <foreach item="value" index="key" collection="sorts.entrySet()" separator=",">
+                    <if test="key == 'name'">
+                        name
+                    </if>
+                    <if test="key == 'orderNum'">
+                        order_num
+                    </if>
+                    ${value}
+                </foreach>
+            </when>
+            <otherwise>
+                id desc
+            </otherwise>
+        </choose>
+    </sql>
+
+    <insert id="insert">
+        insert into form ( id, type, name , rev_id , rev_num , order_num , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values ( #{id}, #{type}, #{name} , #{revId} , #{revNum}  , #{orderNum} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="deleteById">
+        update form set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <update id="updateById">
+        update form  set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        <if test="name != null">
+            , name = #{name}
+        </if>
+        <if test="revId != null">
+            , rev_id = #{revId}
+        </if>
+        <if test="revNum != null">
+            , rev_num = #{revNum}
+        </if>
+        <if test="orderNum != null">
+            , order_num = #{orderNum}
+        </if>
+        where id = #{id}
+    </update>
+
+    <select id="queryFormCount" resultType="java.lang.Integer">
+        select count(1)
+        from form
+        where 1 = 1
+        <include refid="searchCondition"/>
+    </select>
+
+    <select id="queryFormList" resultType="com.spark.bean.form.result.FormResult">
+        select <include refid="allColumnList"/>
+        from form
+        where 1 = 1
+        <include refid="searchCondition"/>
+        order by
+        <include refid="sortCondition"/>
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="queryForm" resultType="com.spark.bean.form.result.FormResult">
+        select <include refid="allColumnList"/>
+        from form
+        where 1=1
+        <include refid="searchCondition"/>
+        limit 1
+    </select>
+</mapper>

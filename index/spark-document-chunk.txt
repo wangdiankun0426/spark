@@ -1,0 +1,40 @@
+curl -u elastic -X PUT "http://localhost:9200/spark-document-chunk" -H "Content-Type: application/json" -d'
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0
+  },
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "long",
+        "index": true,
+        "doc_values": true
+      },
+      "prtId": {
+        "type": "long",
+        "index": true,
+        "doc_values": true
+      },
+      "documentType": {
+        "type": "integer",
+        "index": true,
+        "doc_values": true
+      },
+      "docId": {
+        "type": "long",
+        "index": true,
+        "doc_values": true
+      },
+      "chunkIndex": {
+        "type": "integer",
+        "index": true,
+        "doc_values": true
+      },
+      "content": {
+        "type": "text",
+        "index": true
+      }
+    }
+  }
+}'

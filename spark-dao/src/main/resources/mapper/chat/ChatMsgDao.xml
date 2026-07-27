@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.chat.ChatMsgDao" >
+    <sql id="Base_Column_List" >
+    id,space_id, sender_id,receiver_id,message,sign_status, read_status, delete_flag,created_by, created_dt, updated_by, updated_dt
+    </sql>
+
+    <sql id="condition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="spaceId != null">
+            and space_id = #{spaceId}
+        </if>
+        <if test="readStatus != null">
+            and read_status = #{readStatus}
+        </if>
+        <if test="receiverId != null">
+            and receiver_id = #{receiverId}
+        </if>
+        <if test="senderId != null">
+            and sender_id = #{senderId}
+        </if>
+        <if test="orReceiverId != null">
+            or receiver_id = #{orReceiverId}
+        </if>
+        <if test="orSenderId != null">
+            or sender_id = #{orSenderId}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <select id="queryChatMsg" resultType="com.spark.bean.chat.result.ChatMsgResult">
+        select <include refid="Base_Column_List"/>
+        from sys_department
+        where 1=1
+        <include refid="condition"/>
+        limit 1
+    </select>
+
+    <insert id="insert" parameterType="com.spark.bean.chat.entity.ChatMsg" useGeneratedKeys="true" keyProperty="id">
+        insert into chat_msg (space_id, sender_id,receiver_id,message,sign_status,read_status, delete_flag,created_by, created_dt, updated_by, updated_dt)
+        values (#{spaceId}, #{senderId}, #{receiverId}, #{message}, #{signStatus}, #{readStatus}, 1 , #{createdBy} , now(), #{updatedBy}, now())
+    </insert>
+
+    <select id="queryChatMsgList" resultType="com.spark.bean.chat.result.ChatMsgResult">
+        select <include refid="Base_Column_List"/>
+        from chat_msg
+        where 1=1
+        <include refid="condition"/>
+        order by id
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+
+    <update id="updateById" parameterType="com.spark.bean.chat.entity.ChatMsg">
+        update chat_msg
+        set updated_dt = #{updatedDt}, updated_by = #{updatedBy}
+        <if test="signStatus != null">
+            , sign_status = #{signStatus}
+        </if>
+        <if test="readStatus != null">
+            , read_status = #{readStatus}
+        </if>
+        where id = #{id}
+    </update>
+
+    <select id="queryChatMsgCount" resultType="java.lang.Integer">
+        select count(1)
+        from chat_msg
+        where 1=1
+        <include refid="condition"/>
+    </select>
+
+</mapper>

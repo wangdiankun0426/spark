@@ -1,0 +1,87 @@
+// router/modules/common.routes.js
+import login from '@/pages/login'
+import formDesigner from '@/components/FormDesigner/index.vue'
+import noticeEdit from '@/components/Notice/edit.vue'
+import noticeView from '@/components/Notice/view.vue'
+import flowDesigner from '@/components/FlowDesigner/index.vue'
+import graphIndex from "@/pages/kg/graphDetail/index.vue";
+
+export default [
+    {
+        path: '/login',
+        component: login,
+        meta: {
+            title: '登录'
+        }
+    },
+    {
+        path: '/form/designer/:id/:revId',
+        name: 'formDesigner',
+        component: formDesigner,
+        meta: {
+            title: '表单设计器'
+        }
+    },
+    {
+        path: '/flow/designer/:id/:revId',
+        name: 'flowDesigner',
+        component: flowDesigner,
+        meta: {
+            title: '流程设计器'
+        }
+    },
+    {
+        path: '/manage/system/notice/edit/:id',
+        name: 'noticeEdit',
+        component: noticeEdit,
+        meta: {
+            title: '编辑公告内容'
+        }
+    },
+    {
+        path: '/notice/view/:id',
+        name: 'noticeView',
+        component: noticeView,
+        meta: {
+            title: '公告内容'
+        }
+    },
+    {
+        path: '/document/preview',
+        name: 'documentPreview',
+        component: () => import('@/pages/kb/preview/index.vue'),
+        meta: {
+            title: '文档预览'
+        }
+    },
+    {
+        path: '/document/chunk',
+        name: 'documentChunk',
+        component: () => import('@/pages/kb/chunk/index.vue'),
+        meta: {
+            title: '文档分块'
+        }
+    },
+    {
+        path: '/graph/detail',
+        name: 'graphDetail',
+        component: graphIndex,
+        meta: { title: '图谱详情' }
+    },
+    {
+        path: '/noPermission',
+        name: 'noPermission',
+        component: () => import('@/pages/error/noPermission.vue'),
+        meta: {
+            title: '无权限'
+        }
+    },
+    {
+        path: '/:catchAll(.*)*',
+        name: 'noFound',
+        component: () => import('@/pages/error/noFound.vue'),
+        meta: {
+            title: '404'
+        }
+    }
+]

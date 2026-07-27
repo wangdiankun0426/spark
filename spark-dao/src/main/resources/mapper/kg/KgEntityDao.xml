@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.kg.KgEntityDao" >
+    <sql id="allColumnList" >
+        id , graph_id , name , type , description , source_id , status ,
+        dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+        <if test="graphId != null">
+            and graph_id = #{graphId}
+        </if>
+        <if test="name != null">
+            and name like concat('%', #{name}, '%')
+        </if>
+        <if test="type != null">
+            and type = #{type}
+        </if>
+        <if test="sourceId != null">
+            and source_id = #{sourceId}
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
+    </sql>
+
+    <sql id="sortCondition">
+        <choose>
+            <when test="sorts != null and sorts.size() > 0">
+                <foreach item="value" index="key" collection="sorts.entrySet()" separator=",">
+                    ${value}
+                </foreach>
+            </when>
+            <otherwise>
+                id desc
+            </otherwise>
+        </choose>
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into kg_entity (graph_id , name , type , description , source_id , status ,
+        dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{graphId} , #{name} , #{type} , #{description} , #{sourceId} , #{status} ,
+        #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="deleteById">
+        update kg_entity set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <update id="updateById">
+        update kg_entity set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        <if test="graphId != null">
+            , graph_id = #{graphId}
+        </if>
+        <if test="name != null and name != ''">
+            , name = #{name}
+        </if>
+        <if test="type != null">
+            , type = #{type}
+        </if>
+        <if test="description != null">
+            , description = #{description}
+        </if>
+        <if test="sourceId != null">
+            , source_id = #{sourceId}
+        </if>
+        <if test="status != null">
+            , status = #{status}
+        </if>
+        where id = #{id}
+    </update>
+
+    <select id="queryKgEntityCount" resultType="int">
+        select count(1) from kg_entity where 1=1
+        <include refid="searchCondition"/>
+    </select>
+
+    <select id="queryKgEntityList" resultType="com.spark.bean.kg.result.KgEntityResult">
+        select <include refid="allColumnList"/>
+        from kg_entity
+        where 1=1
+        <include refid="searchCondition"/>
+        order by <include refid="sortCondition"/>
+        <if test="page == true">limit #{startRow}, #{pageSize}</if>
+    </select>
+
+    <select id="queryKgEntity" resultType="com.spark.bean.kg.result.KgEntityResult">
+        select <include refid="allColumnList"/>
+        from kg_entity
+        where 1=1
+        <include refid="searchCondition"/>
+        limit 1
+    </select>
+
+    <update id="deleteDBByIds">
+        update kg_entity set delete_flag = -1 , updated_dt = now()
+        where delete_flag = 1 and id in
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <select id="queryKgEntityCountByGraphIds" resultType="com.spark.bean.kg.result.KgEntityCountResult">
+        select graph_id, count(1) as entity_count
+        from kg_entity
+        where delete_flag = 1
+        and graph_id in (
+        <foreach collection="graphIds" item="graphId" separator=",">
+            #{graphId}
+        </foreach>
+        )
+        group by graph_id
+    </select>
+</mapper>

@@ -1,0 +1,42 @@
+{
+  "appId": "com.spark.cloud-ai-platform",
+  "productName": "sparkAIcloud",
+  "directories": {
+    "output": "electron/release",
+    "buildResources": "build"
+  },
+  "files": [
+    "electron/dist/**/*",
+    "!node_modules/**/*"
+  ],
+  "asar": true,
+  "win": {
+    "target": [
+      "nsis"
+    ],
+    "icon": "favicon.ico",
+    "artifactName": "${productName}-${version}.${ext}"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "星火云AI",
+    "uninstallDisplayName": "星火云AI",
+    "language": "2052",
+    "installerIcon": "favicon.ico",
+    "uninstallerIcon": "favicon.ico",
+    "installerHeaderIcon": "favicon.ico"
+  },
+  "mac": {
+    "target": [
+      "dmg"
+    ],
+    "icon": "favicon.ico",
+    "artifactName": "${productName}-${version}.${ext}"
+  },
+  "extraResources": [],
+  "publish": null
+}

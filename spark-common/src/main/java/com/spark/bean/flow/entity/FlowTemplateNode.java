@@ -1,0 +1,54 @@
+package com.spark.bean.flow.entity;
+
+import com.spark.bean.base.BaseEntity;
+import lombok.Data;
+
+/**
+ * +++/\_/\
+ * + ( °w° )=
+ * +++)   (  //
+ * + (__ __)//
+ *
+ * @author wangdiankun
+ * @since 2025/11/2 16:42
+ */
+@Data
+public class FlowTemplateNode extends BaseEntity {
+
+    /**
+     * 流程模板id
+     */
+    private Long templateId;
+
+    /**
+     * 流程版本id
+     */
+    private Long revId;
+
+    /**
+     * 节点id
+     */
+    private String nodeId;
+
+    /**
+     * 节点名称
+     */
+    private String name;
+
+    /**
+     * 节点类型
+     */
+    private String type;
+
+    /**
+     * 节点审批人类型
+     * AssigneeTypeEnum
+     */
+    private Integer assigneeType;
+
+    /**
+     * 审批人
+     */
+    private String assignee;
+
+}

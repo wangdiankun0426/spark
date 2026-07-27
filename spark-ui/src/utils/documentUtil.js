@@ -1,0 +1,44 @@
+// 文档类别常量
+export const DOCUMENT_CATEGORY = {
+  WORD: 'word',
+  EXCEL: 'excel',
+  PDF: 'pdf',
+  PPT: 'ppt',
+  TXT: 'txt',
+  MARKDOWN: 'markdown',
+  IMAGE: 'image',
+  VIDEO: 'video',
+  AUDIO: 'audio'
+}
+
+// 文件后缀 -> 类别 映射
+export const EXT_CATEGORY_MAP = {
+  doc: DOCUMENT_CATEGORY.WORD, docx: DOCUMENT_CATEGORY.WORD,
+  xls: DOCUMENT_CATEGORY.EXCEL, xlsx: DOCUMENT_CATEGORY.EXCEL,
+  pdf: DOCUMENT_CATEGORY.PDF,
+  ppt: DOCUMENT_CATEGORY.PPT, pptx: DOCUMENT_CATEGORY.PPT,
+  txt: DOCUMENT_CATEGORY.TXT,
+  md: DOCUMENT_CATEGORY.MARKDOWN, markdown: DOCUMENT_CATEGORY.MARKDOWN,
+  jpg: DOCUMENT_CATEGORY.IMAGE, jpeg: DOCUMENT_CATEGORY.IMAGE,
+  png: DOCUMENT_CATEGORY.IMAGE, gif: DOCUMENT_CATEGORY.IMAGE,
+  bmp: DOCUMENT_CATEGORY.IMAGE, webp: DOCUMENT_CATEGORY.IMAGE,
+  svg: DOCUMENT_CATEGORY.IMAGE, ico: DOCUMENT_CATEGORY.IMAGE,
+  mp4: DOCUMENT_CATEGORY.VIDEO, webm: DOCUMENT_CATEGORY.VIDEO,
+  mov: DOCUMENT_CATEGORY.VIDEO, avi: DOCUMENT_CATEGORY.VIDEO,
+  mkv: DOCUMENT_CATEGORY.VIDEO, m4v: DOCUMENT_CATEGORY.VIDEO,
+  mp3: DOCUMENT_CATEGORY.AUDIO, wav: DOCUMENT_CATEGORY.AUDIO,
+  ogg: DOCUMENT_CATEGORY.AUDIO, aac: DOCUMENT_CATEGORY.AUDIO,
+  m4a: DOCUMENT_CATEGORY.AUDIO, flac: DOCUMENT_CATEGORY.AUDIO
+}
+
+/**
+ * 根据后缀获取文档类别
+ * 兼容大小写与带点前缀（.jpg / JPG / jpg 均生效）
+ * @param {string} ext 文件后缀
+ * @returns {string} 类别名，未命中返回空串
+ */
+export function getDocumentCategory(ext) {
+  if (!ext) return ''
+  const normalized = String(ext).toLowerCase().replace(/^\./, '')
+  return EXT_CATEGORY_MAP[normalized] || ''
+}

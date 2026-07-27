@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.form.FormObjValueDao" >
+    <sql id="allColumnList" >
+     id , obj_id, form_id , code , type, value, show_value , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="objId != null">
+            and obj_id = #{objId}
+        </if>
+        <if test="formId != null">
+            and form_id = #{formId}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <insert id="batchInsert">
+        insert into form_obj_value (obj_id, form_id , code , type, value, show_value , delete_flag , created_by , created_dt , updated_by , updated_dt )
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.objId}, #{item.formId}, #{item.code}, #{item.type}, #{item.value}, #{item.showValue}, 1, #{item.createdBy}, now(), #{item.createdBy}, now())
+        </foreach>
+    </insert>
+
+    <select id="queryFormObjValueList" resultType="com.spark.bean.form.result.FormObjValueResult">
+        select <include refid="allColumnList"/>
+        from form_obj_value
+        where delete_flag = 1
+        <include refid="searchCondition"/>
+    </select>
+</mapper>

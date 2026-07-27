@@ -1,0 +1,86 @@
+/**
+ * 设计系统变量文件 - Design Tokens
+ * 统一管理颜色、圆角、阴影、过渡等设计 Token
+ * 修改此文件可全局生效
+ */
+
+// ==================== 主色调 ====================
+$color-primary: #004fc5;   // 主蓝色（柔和）
+$color-primary-dark:   #1e3a6e;   // 深蓝（导航/背景用）
+$color-primary-mid:    #2c5aad;   // 中蓝（渐变用）
+$color-primary-light:  #e8f0fd;   // 浅蓝背景（table header/hover）
+$color-primary-soft:   rgba(26, 111, 232, 0.08); // 极淡蓝（微底色）
+
+// ==================== 文字颜色 ====================
+$color-text-primary:   #172b4d;   // 主文字（深蓝黑）
+$color-text-secondary: #5e6c84;   // 次级文字
+$color-text-placeholder: #a0aec0; // 占位文字
+$color-text-white:     #ffffff;
+
+// ==================== 背景颜色 ====================
+$bg-page: #f8f7f7;           // 页面背景（柔和冷灰蓝）
+$bg-card:      #ffffff;           // 卡片背景
+$bg-sidebar:   linear-gradient(180deg, #204588 0%, #204588 100%); // 侧边栏渐变
+$bg-nav:       linear-gradient(90deg, #204588 0%, #1e3a6e 60%, #204588 100%); // 顶部导航渐变
+
+// ==================== 边框 ====================
+$border-color:         #e4eaf4;   // 默认边框（淡蓝灰）
+$border-color-light:   #eef2f8;   // 浅边框
+$border-radius-sm:     5px;
+$border-radius-md:     10px;
+$border-radius-lg:     14px;
+$border-radius-xl:     20px;
+
+// ==================== 阴影 ====================
+$shadow-card:   0 2px 12px 0 rgba(26, 111, 232, 0.08);     // 卡片阴影
+$shadow-card-hover: 0 6px 24px 0 rgba(26, 111, 232, 0.14); // 卡片悬停阴影
+$shadow-nav:    0 2px 8px 0 rgba(23, 43, 77, 0.18);         // 导航阴影
+$shadow-dialog: 0 8px 32px 0 rgba(26, 111, 232, 0.12);      // 弹窗阴影
+
+// ==================== 过渡动画 ====================
+$transition-fast:   all 0.18s ease;
+$transition-normal: all 0.25s ease;
+
+// ==================== 间距 ====================
+$spacing-xs:   4px;
+$spacing-sm:   8px;
+$spacing-md:   16px;
+$spacing-lg:   24px;
+$spacing-xl:   32px;
+
+// ==================== 导航 ====================
+$nav-height:   56px;   // 顶部导航栏高度
+
+// ==================== 字体 ====================
+// 字体栈：优先现代系统字体；Windows 下 'Microsoft YaHei UI' 比 'Microsoft YaHei' 字形更精细
+$font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei UI', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'Source Han Sans CN', 'Noto Sans CJK SC', 'Inter', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+
+// 行高：1.6 提升多行文本的阅读舒适度
+$line-height-base: 1.6;
+
+// 紧凑行高：用于聊天 markdown 预览等密集场景，避免内容显得过于松散
+$line-height-compact: 1.45;
+
+// 字间距：优化字符间距，提升大屏幕可读性
+$letter-spacing-base: 0.2px;
+
+// 大屏幕基础字号（用于媒体查询）
+$font-size-base-screen-lg: 15px;
+$font-size-base-screen-xl: 17px;
+
+// ==================== AI 应用卡片主题色 ====================
+// 用于 AI 应用页面不同 agent 卡片的视觉区分，按 agent.id 取模分配
+$agent-theme-blue:        #1a6fe8;
+$agent-theme-blue-soft:   #e8f0fd;
+$agent-theme-green:       #34c759;
+$agent-theme-green-soft:  #e8f9ee;
+$agent-theme-purple:      #af52de;
+$agent-theme-purple-soft: #f3e8ff;
+$agent-theme-orange:      #ff9500;
+$agent-theme-orange-soft: #fff3e0;
+$agent-theme-cyan:        #00c7be;
+$agent-theme-cyan-soft:   #e0f7f5;
+$agent-theme-pink:        #ff6b9d;
+$agent-theme-pink-soft:   #ffe8f0;
+$agent-theme-indigo:      #5e72e4;
+$agent-theme-indigo-soft: #eaedff;

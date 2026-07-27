@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.kb.DocumentDao" >
+    <sql id="allColumnList" >
+        id , prt_id , document_type , name , size , path , ext , owner_id, delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="prtId != null">
+            and prt_id = #{prtId}
+        </if>
+        <if test="documentType != null">
+            and document_type = #{documentType}
+        </if>
+        <if test="name != null and name != ''">
+            and name like concat('%', #{name}, '%')
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+        <if test="deptId != null">
+            and dept_id = #{deptId}
+        </if>
+        <if test="ownerId != null">
+            and owner_id = #{ownerId}
+        </if>
+    </sql>
+
+    <sql id="sortCondition">
+        <choose>
+            <when test="sorts != null and sorts.size() > 0">
+                <foreach item="value" index="key" collection="sorts.entrySet()" separator=",">
+                    ${value}
+                </foreach>
+            </when>
+            <otherwise>
+                id
+            </otherwise>
+        </choose>
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into kb_document ( id, prt_id, document_type , name , size , path , ext , owner_id, dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values ( #{id}, #{prtId}, #{documentType}, #{name} , #{size} , #{path} , #{ext} , #{ownerId}, #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="deleteById">
+        update kb_document set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <update id="updateById">
+        update kb_document  set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        <if test="name != null and name != ''">
+            , name = #{name}
+        </if>
+        where id = #{id}
+    </update>
+
+    <select id="queryDocumentCount" resultType="java.lang.Integer">
+        select count(1)
+        from kb_document
+        where 1 = 1
+        <include refid="searchCondition"/>
+        ${dataScopeSQL}
+    </select>
+
+    <select id="queryDocumentList" resultType="com.spark.bean.kb.result.DocumentResult">
+        select <include refid="allColumnList"/>
+        from kb_document
+        where 1 = 1
+        <include refid="searchCondition"/>
+        ${dataScopeSQL}
+        order by
+        <include refid="sortCondition"/>
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="queryDocument" resultType="com.spark.bean.kb.result.DocumentResult">
+        select <include refid="allColumnList"/>
+        from kb_document
+        where 1=1
+        <include refid="searchCondition"/>
+        limit 1
+    </select>
+
+    <select id="queryDocumentCountByPrtIds" resultType="com.spark.bean.kb.result.DocumentCountResult">
+        select prt_id, count(1) as document_count
+        from kb_document
+        where delete_flag = 1
+        and prt_id in (
+        <foreach collection="prtIds" item="prtId" separator=",">
+            #{prtId}
+        </foreach>
+        )
+        group by prt_id
+    </select>
+</mapper>

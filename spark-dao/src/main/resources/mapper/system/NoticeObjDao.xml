@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.system.NoticeObjDao" >
+
+    <sql id="Base_Column_List" >
+     id ,  notice_id ,  obj_id ,  delete_flag , created_by ,  created_dt ,  updated_by ,  updated_dt 
+    </sql>
+
+    <sql id="condition">
+        <if test="noticeId != null">
+            and notice_id = #{noticeId}
+        </if>
+        <if test="objIds != null and objIds.size()>0">
+            and obj_id in(
+            <foreach collection="objIds" item="objId" separator=",">
+                #{objId}
+            </foreach>
+            )
+        </if>
+        <if test="noticeIds != null and noticeIds.size()>0">
+            and notice_id in(
+            <foreach collection="noticeIds" item="noticeId" separator=",">
+                #{noticeId}
+            </foreach>
+            )
+        </if>
+    </sql>
+
+    <insert id="batchInsert">
+        insert into  sys_notice_obj  ( notice_id ,  obj_id ,  delete_flag , created_by ,  created_dt ,  updated_by ,  updated_dt )
+        values
+        <foreach collection="objIds" item="objId" separator=",">
+            (#{noticeId}, #{objId}, 1, #{createdBy}, now(), #{createdBy}, now())
+        </foreach>
+    </insert>
+
+    <update id="deleteByNoticeId">
+        update  sys_notice_obj  set delete_flag = -1, updated_by = #{updatedBy}, updated_dt = now()
+        where notice_id = #{noticeId}
+    </update>
+
+    <select id="queryNoticeObjList" resultType="com.spark.bean.system.result.NoticeObjResult">
+        select <include refid="Base_Column_List"/>
+        from  sys_notice_obj
+        where delete_flag = 1
+        <include refid="condition"/>
+    </select>
+</mapper>

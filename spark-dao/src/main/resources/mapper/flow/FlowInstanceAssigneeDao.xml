@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.flow.FlowInstanceAssigneeDao" >
+    <sql id="allColumnList" >
+        id , instance_id , instance_node_id , assignee_set_id , assignee_id , status , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="instanceId != null">
+            and instance_id = #{instanceId}
+        </if>
+        <if test="instanceNodeId != null">
+            and instance_node_id = #{instanceNodeId}
+        </if>
+        <if test="assigneeSetId != null">
+            and assignee_set_id = #{assigneeSetId}
+        </if>
+        <if test="assigneeId != null">
+            and assignee_id = #{assigneeId}
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into flow_instance_assignee (instance_id , instance_node_id , assignee_set_id , assignee_id , status , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values ( #{instanceId} , #{instanceNodeId} , #{assigneeSetId} , #{assigneeId}  , #{status} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="updateById">
+        update flow_instance_assignee set updated_dt = #{updatedDt}, updated_by = #{updatedBy}
+        <if test="status != null">
+            ,status = #{status}
+        </if>
+        where id = #{id}
+    </update>
+
+    <select id="queryInstanceAssigneeList" resultType="com.spark.bean.flow.result.FlowInstanceAssigneeResult">
+        select <include refid="allColumnList" />
+        from flow_instance_assignee
+        where 1=1
+        <include refid="searchCondition" />
+    </select>
+
+    <select id="queryInstanceAssignee" resultType="com.spark.bean.flow.result.FlowInstanceAssigneeResult">
+        select <include refid="allColumnList" />
+        from flow_instance_assignee
+        where 1=1
+        <include refid="searchCondition" />
+        limit 1
+    </select>
+
+</mapper>

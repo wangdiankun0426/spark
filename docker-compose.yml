@@ -1,0 +1,164 @@
+version: '3.4'
+
+networks:
+  spark_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.10.0.1/24
+
+services:
+  spark-redis:
+    image: redis:7.2.0
+    container_name: spark-redis
+    command: redis-server /etc/redis/redis.conf
+    privileged: true
+    networks:
+      spark_network:
+        ipv4_address: 172.10.0.2
+    volumes:
+      - /opt/spark/software/redis/data:/data
+      - /opt/spark/software/redis/conf/redis.conf:/etc/redis/redis.conf
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  spark-mysql:
+    image: mysql:8.0.24
+    container_name: spark-mysql
+    privileged: true
+    networks:
+      spark_network:
+        ipv4_address: 172.10.0.3
+    environment:
+      - MYSQL_ROOT_PASSWORD=Qaz7410
+      - TZ=Asia/Shanghai
+      - LANG=C.UTF-8
+    volumes:
+      - /opt/spark/software/mysql/conf/my.cnf:/etc/mysql/my.cnf
+      - /opt/spark/software/mysql/logs:/var/log/mysql
+      - /opt/spark/software/mysql/data:/var/lib/mysql
+    restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=Qaz7410"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+
+  spark-rabbitmq:
+    image: rabbitmq:3.11
+    container_name: spark-rabbitmq
+    privileged: true
+    networks:
+      spark_network:
+        ipv4_address: 172.10.0.4
+    environment:
+      - RABBITMQ_DEFAULT_USER=root
+      - RABBITMQ_DEFAULT_PASS=Qaz7410
+    volumes:
+      - /opt/spark/software/rabbitmq/data:/var/lib/rabbitmq
+    restart: always
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 60s
+
+  spark-elasticsearch:
+    image: "elasticsearch:8.8.1"
+    container_name: spark-elasticsearch
+    environment:
+      - "ES_JAVA_OPTS=-Xms64m -Xmx512m"
+      - discovery.type=single-node
+      - COMPOSE_PROJECT_NAME=elasticsearch-server
+    networks:
+      spark_network:
+        ipv4_address: 172.10.0.6
+    ports:
+      - "9203:9203"
+    volumes:
+      - /opt/spark/software/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - /opt/spark/software/elasticsearch/data:/usr/share/elasticsearch/data
+      - /opt/spark/software/elasticsearch/plugins:/usr/share/elasticsearch/plugins
+      - /opt/spark/software/elasticsearch/logs:/usr/share/elasticsearch/logs
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9203/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  spark-neo4j:
+    image: neo4j:5.20.0
+    container_name: spark-neo4j
+    privileged: true
+    networks:
+      spark_network:
+        ipv4_address: 172.10.0.8
+    environment:
+      - NEO4J_AUTH=neo4j/Qaz7410
+      - NEO4J_PLUGINS=["apoc"]
+      - NEO4J_server_memory_heap_initial__size=256m
+      - NEO4J_server_memory_heap_max__size=512m
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - /opt/spark/software/neo4j/data:/data
+      - /opt/spark/software/neo4j/logs:/logs
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO - http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  spark-nginx:
+    image: nginx:1.25
+    container_name: spark-nginx
+    privileged: true
+    networks:
+      spark_network:
+        ipv4_address: 172.10.0.5
+    ports:
+      - "8101:8101"
+      - "8102:8102"
+    volumes:
+      - /opt/spark/software/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - /opt/spark/software/nginx/cert:/etc/nginx/cert
+      - /opt/spark/software/nginx/conf.d:/etc/nginx/conf.d
+      - /opt/spark/app/com.spark.ui:/opt/spark/app/com.spark.ui
+      - /opt/spark/app/com.spark.mobile:/opt/spark/app/com.spark.mobile
+      - /opt/spark/software/nginx/log:/usr/log/nginx
+    restart: always
+
+  spark-server:
+    image: spark-server:0.0.1
+    container_name: spark-server
+    privileged: true
+    depends_on:
+      spark-mysql:
+        condition: service_healthy
+      spark-redis:
+        condition: service_healthy
+      spark-rabbitmq:
+        condition: service_healthy
+      spark-elasticsearch:
+        condition: service_healthy
+      spark-neo4j:
+        condition: service_healthy
+    networks:
+      spark_network:
+        ipv4_address: 172.10.0.7
+    volumes:
+      - /opt/spark/docs:/opt/spark/docs
+      - /opt/spark/logs:/opt/spark/logs
+    restart: always

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.flow.FlowInstanceDiscussDao" >
+    <sql id="allColumnList" >
+        id , instance_id , instance_node_id , assignee_id , status , discuss , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into flow_instance_discuss ( instance_id , instance_node_id , assignee_id , status , discuss , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{instanceId} , #{instanceNodeId} , #{assigneeId} , #{status} , #{discuss} ,  1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <select id="queryInstanceDiscussList" resultType="com.spark.bean.flow.result.FlowInstanceDiscussResult">
+        select <include refid="allColumnList"/>
+            from flow_instance_discuss
+        where 1=1
+        <if test="instanceId != null">
+            and instance_id = #{instanceId}
+        </if>
+        <if test="instanceNodeId != null">
+            and instance_node_id = #{instanceNodeId}
+        </if>
+        <if test="assigneeId != null">
+            and assignee_id = #{assigneeId}
+        </if>
+    </select>
+
+</mapper>

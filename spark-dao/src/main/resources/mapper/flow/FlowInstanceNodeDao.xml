@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.flow.FlowInstanceNodeDao" >
+    <sql id="allColumnList" >
+        id , instance_id , node_id , name, type , assignee_set_id, status , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="instanceId != null">
+            and instance_id = #{instanceId}
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
+        <if test="nodeId != null">
+            and node_id = #{nodeId}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <sql id="sortCondition">
+        <choose>
+            <when test="sorts != null and sorts.size() > 0">
+                <foreach item="value" index="key" collection="sorts.entrySet()" separator=",">
+                    ${value}
+                </foreach>
+            </when>
+            <otherwise>
+                id desc
+            </otherwise>
+        </choose>
+    </sql>
+
+    <insert id="insert">
+        insert into flow_instance_node (instance_id , node_id , name, type , assignee_set_id, status , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{instanceId} , #{nodeId} , #{name} , #{type} , #{assigneeSetId} , #{status}  , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="updateById">
+        update flow_instance_node set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        <if test="status != null">
+            , status = #{status}
+        </if>
+        <if test="assigneeSetId != null">
+            , assignee_set_id = #{assigneeSetId}
+        </if>
+        where id = #{id}
+    </update>
+
+    <select id="queryInstanceNode" resultType="com.spark.bean.flow.result.FlowInstanceNodeResult">
+        select <include refid="allColumnList"/>
+        from flow_instance_node
+        where 1 = 1
+        <include refid="searchCondition"/>
+        order by id desc
+        limit 1
+    </select>
+
+    <select id="queryInstanceNodeList" resultType="com.spark.bean.flow.result.FlowInstanceNodeResult">
+        select <include refid="allColumnList"/>
+        from flow_instance_node
+        where 1 = 1
+        <include refid="searchCondition"/>
+        order by id asc
+    </select>
+</mapper>

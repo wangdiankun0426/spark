@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.chat.ChatMsgAttDao" >
+    <sql id="Base_Column_List" >
+        id, msg_id, msg_att_type, doc_id, doc_name, delete_flag, created_by, created_dt, updated_by, updated_dt
+    </sql>
+
+    <sql id="condition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="msgId != null">
+            and msg_id = #{msgId}
+        </if>
+        <if test="msgIds != null and msgIds.size() > 0">
+            and msg_id in (
+            <foreach collection="msgIds" item="msgId" separator=",">
+                #{msgId}
+            </foreach>
+            )
+        </if>
+        <if test="msgAttType != null">
+            and msg_att_type = #{msgAttType}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into chat_msg_att (msg_id,msg_att_type,doc_id,doc_name, delete_flag,created_by, created_dt, updated_by, updated_dt)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.msgId}, #{item.msgAttType}, #{item.docId}, #{item.docName}, 1, #{item.createdBy}, now(), #{item.updatedBy}, now())
+        </foreach>
+    </insert>
+
+    <select id="queryChatMsgAttList" resultType="com.spark.bean.chat.result.ChatMsgAttResult">
+        select <include refid="Base_Column_List"/>
+        from chat_msg_att
+        where 1=1
+        <include refid="condition"/>
+        order by id
+    </select>
+
+</mapper>

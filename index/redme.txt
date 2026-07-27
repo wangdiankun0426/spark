@@ -1,0 +1,13 @@
+index包中放的是elasticsearch8相关的索引数据
+1. 删除索引
+curl -u elastic -X DELETE "http://localhost:9200/spark-document"
+2. 查询所有索引库
+curl -u elastic -XGET "http://localhost:9200/_cat/indices?v"
+3. 查看索引健康情况
+curl -u elastic -XGET -u elastic "http://localhost:9200/_cat/health?v"
+4. 根据id删除文档
+curl -u elastic -XDELETE 'localhost:9200/spark-document/_doc/309'
+5. 根据id查询文档
+curl -u elastic -XGET 'localhost:9200/spark-document/_doc/309'
+6. 更改用户密码
+bin/elasticsearch-setup-passwords interactive

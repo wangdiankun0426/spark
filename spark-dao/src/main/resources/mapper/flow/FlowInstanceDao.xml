@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.flow.FlowInstanceDao" >
+    <sql id="allColumnList" >
+        id , template_id , template_rev_id , form_id , form_rev_id , process_id , flowable_instance_id , status, delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="templateId != null">
+            and template_id = #{templateId}
+        </if>
+        <if test="templateRevId != null">
+            and template_rev_id = #{templateRevId}
+        </if>
+        <if test="formId != null">
+            and form_id = #{formId}
+        </if>
+        <if test="formRevId != null">
+            and form_rev_id = #{formRevId}
+        </if>
+        <if test="processId != null and processId != ''">
+            and process_id = #{processId}
+        </if>
+        <if test="flowableInstanceId != null and flowableInstanceId != ''">
+            and flowable_instance_id = #{flowableInstanceId}
+        </if>
+        <if test="flowableInstanceIds != null and flowableInstanceIds.size() > 0">
+            and flowable_instance_id in (
+            <foreach collection="flowableInstanceIds" item="flowableInstanceId" separator=",">
+                #{flowableInstanceId}
+            </foreach>
+            )
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+        <if test="createdBy != null">
+            and created_by = #{createdBy}
+        </if>
+    </sql>
+
+    <sql id="sortCondition">
+        <choose>
+            <when test="sorts != null and sorts.size() > 0">
+                <foreach item="value" index="key" collection="sorts.entrySet()" separator=",">
+                    <if test="key == 'templateId'">
+                        template_id
+                    </if>
+                    <if test="key == 'templateRevId'">
+                        template_rev_id
+                    </if>
+                    <if test="key == 'formId'">
+                        form_id
+                    </if>
+                    <if test="key == 'formRevId'">
+                        form_rev_id
+                    </if>
+                    <if test="key == 'processId'">
+                        process_id
+                    </if>
+                    <if test="key == 'flowableInstanceId'">
+                        flowable_instance_id
+                    </if>
+                    ${value}
+                </foreach>
+            </when>
+            <otherwise>
+                id desc
+            </otherwise>
+        </choose>
+    </sql>
+
+    <insert id="insert">
+        insert into flow_instance ( id, template_id , template_rev_id , form_id , form_rev_id , process_id , flowable_instance_id , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{id}, #{templateId} , #{templateRevId} , #{formId} , #{formRevId} , #{processId} , #{flowableInstanceId} , #{status} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="deleteById">
+        update flow_instance set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <update id="updateById">
+        update flow_instance  set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        <if test="templateId != null">
+            , template_id = #{templateId}
+        </if>
+        <if test="templateRevId != null">
+            , template_rev_id = #{templateRevId}
+        </if>
+        <if test="formId != null">
+            , form_id = #{formId}
+        </if>
+        <if test="formRevId != null">
+            , form_rev_id = #{formRevId}
+        </if>
+        <if test="processId != null and processId != ''">
+            , process_id = #{processId}
+        </if>
+        <if test="flowableInstanceId != null and flowableInstanceId != ''">
+            , flowable_instance_id = #{flowableInstanceId}
+        </if>
+        where id = #{id}
+    </update>
+
+    <update id="updateByFlowableInstanceId">
+        update flow_instance  set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        <if test="status != null">
+            , status = #{status}
+        </if>
+        where flowable_instance_id = #{flowableInstanceId}
+    </update>
+
+    <select id="queryInstanceCount" resultType="java.lang.Integer">
+        select count(1)
+        from flow_instance
+        where 1 = 1
+        <include refid="searchCondition"/>
+        ${dataScopeSQL}
+    </select>
+
+    <select id="queryInstanceList" resultType="com.spark.bean.flow.result.FlowInstanceResult">
+        select <include refid="allColumnList"/>
+        from flow_instance
+        where 1 = 1
+        <include refid="searchCondition"/>
+        ${dataScopeSQL}
+        order by
+        <include refid="sortCondition"/>
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="queryInstance" resultType="com.spark.bean.flow.result.FlowInstanceResult">
+        select <include refid="allColumnList"/>
+        from flow_instance
+        where 1=1
+        <include refid="searchCondition"/>
+        limit 1
+    </select>
+</mapper>

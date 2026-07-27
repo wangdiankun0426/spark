@@ -1,0 +1,60 @@
+import request from '@/api/request'
+
+/**
+ * 登录
+ * @param data
+ */
+export function loginAPI(data) {
+    return request({
+        url: '/auth/login',
+        method: 'post',
+        params: data
+    })
+}
+
+/**
+ * 登出
+ */
+export function logoutAPI() {
+    return request({
+        url: '/auth/logout',
+        method: 'post'
+    })
+}
+
+/**
+ * 查询图形验证码
+ * @returns {Promise<AxiosResponse<any>>}
+ */
+export function getValidateCodeAPI() {
+    return request({
+        url: '/auth/validateCode',
+        method: 'get',
+    })
+}
+
+/**
+ * 查询短信验证码
+ * @returns {Promise<AxiosResponse<any>>}
+ */
+export function getMessageCodeAPI(param) {
+    return request({
+        url: '/auth/messageCode',
+        method: 'get',
+        params: param
+    })
+}
+
+/**
+ * 查询邮箱验证码
+ * @returns {Promise<AxiosResponse<any>>}
+ */
+export function getEmailCodeAPI(param) {
+    return request({
+        url: '/auth/emailCode',
+        method: 'get',
+        params: param
+    })
+}
+
+

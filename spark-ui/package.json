@@ -1,0 +1,47 @@
+{
+  "name": "spark-ui",
+  "private": true,
+  "version": "0.0.1",
+  "description": "星火云AI应用平台PC端",
+  "author": "wangdiankun",
+  "type": "module",
+  "main": "electron/dist/main/index.js",
+  "scripts": {
+    "dev:web": "vite --mode dev",
+    "build:web": "vite build --mode prod",
+    "dev:electron": "electron-vite dev --mode dev --outDir electron/dist",
+    "build:electron": "electron-vite build --mode prod --outDir electron/dist",
+    "pack:electron:win": "electron-builder --win --config electron-builder.json",
+    "pack:electron:mac": "electron-builder --mac --config electron-builder.json"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.2.1",
+    "@fullcalendar/core": "^6.1.14",
+    "@fullcalendar/daygrid": "^6.1.14",
+    "@fullcalendar/interaction": "^6.1.14",
+    "@fullcalendar/timegrid": "^6.1.14",
+    "@fullcalendar/vue3": "^6.1.14",
+    "@kangc/v-md-editor": "^2.3.18",
+    "@vue-office/docx": "^1.6.3",
+    "@vue-office/excel": "^1.7.14",
+    "@vue-office/pptx": "^1.0.1",
+    "axios": "^1.6.7",
+    "crypto-js": "^4.2.0",
+    "echarts": "^5.5.0",
+    "element-plus": "^2.3.12",
+    "pdfjs-dist": "^3.11.174",
+    "vue": "^3.3.4",
+    "vue-router": "^4.2.5",
+    "vuex": "^4.1.0"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.15.46",
+    "@types/node": "^17.0.0",
+    "@vitejs/plugin-vue": "^4.6.2",
+    "electron": "^43.2.0",
+    "electron-builder": "^26.15.3",
+    "electron-vite": "^2.3.0",
+    "sass": "^1.66.1",
+    "vite": "^4.4.5"
+  }
+}

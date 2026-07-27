@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.flow.FlowTemplateVersionDao" >
+    <sql id="allColumnList" >
+        id , template_id , rev_code, rev_num , process_id , bpm_path , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="templateId != null">
+            and template_id = #{templateId}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <sql id="sortCondition">
+        <choose>
+            <when test="sorts != null and sorts.size() > 0">
+                <foreach item="value" index="key" collection="sorts.entrySet()" separator=",">
+                    <if test="key == 'processId'">
+                        process_id
+                    </if>
+                    ${value}
+                </foreach>
+            </when>
+            <otherwise>
+                id desc
+            </otherwise>
+        </choose>
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into flow_template_version ( template_id , rev_code , rev_num , process_id , bpm_path  , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values ( #{templateId} , #{revCode} , #{revNum} , #{processId} , #{bpmPath}  , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="deleteById">
+        update flow_template_version set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <update id="updateById">
+        update flow_template_version  set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        <if test="templateId != null">
+            , template_id = #{templateId}
+        </if>
+        <if test="revNum != null and revNum != ''">
+            , rev_num = #{revNum}
+        </if>
+        <if test="processId != null and processId != ''">
+            , process_id = #{processId}
+        </if>
+        <if test="bpmPath != null and bpmPath != ''">
+            , bpm_path = #{bpmPath}
+        </if>
+        where id = #{id}
+    </update>
+
+    <select id="queryTemplateVersionCount" resultType="java.lang.Integer">
+        select count(1)
+        from flow_template_version
+        where 1 = 1
+        <include refid="searchCondition"/>
+        ${dataScopeSQL}
+    </select>
+
+    <select id="queryTemplateVersionList" resultType="com.spark.bean.flow.result.FlowTemplateVersionResult">
+        select <include refid="allColumnList"/>
+        from flow_template_version
+        where 1 = 1
+        <include refid="searchCondition"/>
+        ${dataScopeSQL}
+        order by
+        <include refid="sortCondition"/>
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="queryTemplateVersion" resultType="com.spark.bean.flow.result.FlowTemplateVersionResult">
+        select <include refid="allColumnList"/>
+        from flow_template_version
+        where 1=1
+        <include refid="searchCondition"/>
+        limit 1
+    </select>
+</mapper>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.flow.FlowTemplateNodeDao" >
+    <sql id="allColumnList" >
+        id , template_id , rev_id , node_id, name , type, assignee_type, assignee , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="templateId != null">
+            and template_id = #{templateId}
+        </if>
+        <if test="revId != null">
+            and rev_id = #{revId}
+        </if>
+        <if test="nodeId != null">
+            and node_id = #{nodeId}
+        </if>
+    </sql>
+
+    <insert id="batchInsert">
+        insert into flow_template_node (template_id , rev_id , node_id, name , type, assignee_type, assignee , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values
+        <foreach item="item" index="index" collection="list" separator=",">
+            ( #{templateId} , #{revId} , #{item.nodeId} , #{item.name} , #{item.type} , #{item.assigneeType} , #{item.assignee} , 1, 101, now(), 101,now())
+        </foreach>
+    </insert>
+
+    <select id="queryTemplateNode" resultType="com.spark.bean.flow.result.FlowTemplateNodeResult">
+        select <include refid="allColumnList"/>
+        from flow_template_node
+        where delete_flag = 1
+        <include refid="searchCondition"/>
+    </select>
+
+</mapper>

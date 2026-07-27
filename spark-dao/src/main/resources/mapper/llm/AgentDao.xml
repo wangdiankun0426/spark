@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.llm.AgentDao" >
+    <sql id="allColumnList" >
+        id , name , chat_model_id , system_prompt , max_messages , tools , kb_ids , graph_ids , mcp_ids , description , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
+        <if test="name != null">
+            and name like concat('%', #{name}, '%')
+        </if>
+    </sql>
+
+    <sql id="sortCondition">
+        <choose>
+            <when test="sorts != null and sorts.size() > 0">
+                <foreach item="value" index="key" collection="sorts.entrySet()" separator=",">
+                    ${value}
+                </foreach>
+            </when>
+            <otherwise>
+                id desc
+            </otherwise>
+        </choose>
+    </sql>
+
+    <insert id="insert">
+        insert into llm_agent (id, name , chat_model_id , system_prompt , max_messages , tools , kb_ids , graph_ids , mcp_ids , description , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{id}, #{name} , #{chatModelId} , #{systemPrompt} , #{maxMessages} , #{tools} , #{kbIds} , #{graphIds} , #{mcpIds} , #{description} , #{status} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="deleteById">
+        update llm_agent set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <update id="updateById">
+        update llm_agent  set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        <if test="name != null and name != ''">
+            , name = #{name}
+        </if>
+        <if test="chatModelId != null">
+            , chat_model_id = #{chatModelId}
+        </if>
+        <if test="systemPrompt != null and systemPrompt != ''">
+            , system_prompt = #{systemPrompt}
+        </if>
+        <if test="maxMessages != null">
+            , max_messages = #{maxMessages}
+        </if>
+        <if test="tools != null and tools != ''">
+            , tools = #{tools}
+        </if>
+        <if test="tools == null">
+            , tools = null
+        </if>
+        <if test="kbIds != null">
+            , kb_ids = #{kbIds}
+        </if>
+        <if test="kbIds == null">
+            , kb_ids = null
+        </if>
+        <if test="graphIds != null">
+            , graph_ids = #{graphIds}
+        </if>
+        <if test="graphIds == null">
+            , graph_ids = null
+        </if>
+        <if test="mcpIds != null">
+            , mcp_ids = #{mcpIds}
+        </if>
+        <if test="mcpIds == null">
+            , mcp_ids = null
+        </if>
+        <if test="description != null and description != ''">
+            , description = #{description}
+        </if>
+        <if test="status != null">
+            , status = #{status}
+        </if>
+        where id = #{id}
+    </update>
+
+    <select id="queryAgentCount" resultType="java.lang.Integer">
+        select count(1)
+        from llm_agent
+        where 1 = 1
+        <include refid="searchCondition"/>
+        ${dataScopeSQL}
+    </select>
+
+    <select id="queryAgentList" resultType="com.spark.bean.llm.result.AgentResult">
+        select <include refid="allColumnList"/>
+        from llm_agent
+        where 1 = 1
+        <include refid="searchCondition"/>
+        ${dataScopeSQL}
+        order by
+        <include refid="sortCondition"/>
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="queryAgent" resultType="com.spark.bean.llm.result.AgentResult">
+        select <include refid="allColumnList"/>
+        from llm_agent
+        where 1=1
+        <include refid="searchCondition"/>
+        limit 1
+    </select>
+</mapper>

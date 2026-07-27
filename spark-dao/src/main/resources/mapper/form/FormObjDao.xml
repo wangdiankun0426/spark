@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.form.FormObjDao" >
+    <sql id="allColumnList" >
+     id , obj_id , form_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="objId != null">
+            and obj_id = #{objId}
+        </if>
+        <if test="formId != null">
+            and form_id = #{formId}
+        </if>
+        <if test="createdBy != null">
+            and created_by = #{createdBy}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <sql id="sortCondition">
+        <choose>
+            <when test="sorts != null and sorts.size() > 0">
+                <foreach item="value" index="key" collection="sorts.entrySet()" separator=",">
+                    <if test="key == 'objId'">
+                        obj_id
+                    </if>
+                    <if test="key == 'formId'">
+                        form_id
+                    </if>
+                    ${value}
+                </foreach>
+            </when>
+            <otherwise>
+                id desc
+            </otherwise>
+        </choose>
+    </sql>
+
+    <insert id="insert">
+        insert into form_obj (obj_id , form_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{objId} , #{formId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="deleteById">
+        update form_obj set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <update id="updateById">
+        update form_obj set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        <if test="objId != null">
+            , obj_id = #{objId}
+        </if>
+        <if test="formId != null">
+            , form_id = #{formId}
+        </if>
+        where id = #{id}
+    </update>
+
+    <select id="queryFormObjCount" resultType="java.lang.Integer">
+        select count(1)
+        from form_obj
+        where 1 = 1
+        <include refid="searchCondition"/>
+    </select>
+
+    <select id="queryFormObjList" resultType="com.spark.bean.form.result.FormObjResult">
+        select <include refid="allColumnList"/>
+        from form_obj
+        where 1 = 1
+        <include refid="searchCondition"/>
+        order by
+        <include refid="sortCondition"/>
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="queryFormObj" resultType="com.spark.bean.form.result.FormObjResult">
+        select <include refid="allColumnList"/>
+        from form_obj
+        where 1=1
+        <include refid="searchCondition"/>
+        limit 1
+    </select>
+</mapper>

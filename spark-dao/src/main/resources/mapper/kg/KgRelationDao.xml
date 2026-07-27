@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.kg.KgRelationDao" >
+    <sql id="allColumnList" >
+        id , graph_id , head_entity_id , tail_entity_id , relation_type , weight , source_id , status ,
+        dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+        <if test="graphId != null">
+            and graph_id = #{graphId}
+        </if>
+        <if test="headEntityId != null">
+            and head_entity_id = #{headEntityId}
+        </if>
+        <if test="tailEntityId != null">
+            and tail_entity_id = #{tailEntityId}
+        </if>
+        <if test="relationType != null">
+            and relation_type = #{relationType}
+        </if>
+        <if test="sourceId != null">
+            and source_id = #{sourceId}
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
+    </sql>
+
+    <sql id="sortCondition">
+        <choose>
+            <when test="sorts != null and sorts.size() > 0">
+                <foreach item="value" index="key" collection="sorts.entrySet()" separator=",">
+                    ${value}
+                </foreach>
+            </when>
+            <otherwise>
+                id desc
+            </otherwise>
+        </choose>
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into kg_relation (graph_id , head_entity_id , tail_entity_id , relation_type , weight , source_id , status ,
+        dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{graphId} , #{headEntityId} , #{tailEntityId} , #{relationType} , #{weight} , #{sourceId} , #{status} ,
+        #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="deleteById">
+        update kg_relation set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <update id="updateById">
+        update kg_relation set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        <if test="graphId != null">
+            , graph_id = #{graphId}
+        </if>
+        <if test="headEntityId != null">
+            , head_entity_id = #{headEntityId}
+        </if>
+        <if test="tailEntityId != null">
+            , tail_entity_id = #{tailEntityId}
+        </if>
+        <if test="relationType != null and relationType != ''">
+            , relation_type = #{relationType}
+        </if>
+        <if test="weight != null">
+            , weight = #{weight}
+        </if>
+        <if test="sourceId != null">
+            , source_id = #{sourceId}
+        </if>
+        <if test="status != null">
+            , status = #{status}
+        </if>
+        where id = #{id}
+    </update>
+
+    <select id="queryKgRelationCount" resultType="int">
+        select count(1) from kg_relation where 1=1
+        <include refid="searchCondition"/>
+    </select>
+
+    <select id="queryKgRelationList" resultType="com.spark.bean.kg.result.KgRelationResult">
+        select <include refid="allColumnList"/>
+        from kg_relation
+        where 1=1
+        <include refid="searchCondition"/>
+        order by <include refid="sortCondition"/>
+        <if test="page == true">limit #{startRow}, #{pageSize}</if>
+    </select>
+
+    <select id="queryKgRelation" resultType="com.spark.bean.kg.result.KgRelationResult">
+        select <include refid="allColumnList"/>
+        from kg_relation
+        where 1=1
+        <include refid="searchCondition"/>
+        limit 1
+    </select>
+
+    <update id="updateHeadEntityId">
+        update kg_relation set head_entity_id = #{newEntityId} , updated_dt = now()
+        where head_entity_id = #{oldEntityId} and delete_flag = 1
+    </update>
+
+    <update id="updateTailEntityId">
+        update kg_relation set tail_entity_id = #{newEntityId} , updated_dt = now()
+        where tail_entity_id = #{oldEntityId} and delete_flag = 1
+    </update>
+
+    <select id="queryKgRelationCountByGraphIds" resultType="com.spark.bean.kg.result.KgRelationCountResult">
+        select graph_id, count(1) as relation_count
+        from kg_relation
+        where delete_flag = 1
+        and graph_id in (
+        <foreach collection="graphIds" item="graphId" separator=",">
+            #{graphId}
+        </foreach>
+        )
+        group by graph_id
+    </select>
+</mapper>

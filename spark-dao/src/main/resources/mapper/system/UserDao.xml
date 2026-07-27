@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.system.UserDao" >
+    <sql id="Base_Column_List" >
+     id , login_name , name , dept_id ,  phone ,  email ,  sex ,  avatar ,  status , delete_flag , created_by ,  created_dt ,  updated_by ,  updated_dt 
+    </sql>
+
+    <sql id="condition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="loginName != null">
+            and login_name = #{loginName}
+        </if>
+        <if test="name != null">
+            and name like concat('%', #{name}, '%')
+        </if>
+        <if test="deptId != null">
+            and dept_id in (
+                select id from sys_department where code like (select CONCAT(code, '%') from sys_department where id = #{deptId})
+            )
+        </if>
+        <if test="phone != null">
+            and phone = #{phone}
+        </if>
+        <if test="email != null">
+            and email = #{email}
+        </if>
+        <if test="sex != null">
+            and sex = #{sex}
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <insert id="insert">
+        insert into sys_user( id , login_name , password , name ,  dept_id ,  phone ,  email ,  sex ,  avatar ,  status ,  delete_flag , created_by ,  created_dt ,  updated_by ,  updated_dt )
+        values (#{id}, #{loginName}, #{password}, #{name}, #{deptId}, #{phone}, #{email}, #{sex}, #{avatar}, #{status}, 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <select id="queryUserList" resultType="com.spark.bean.system.result.UserResult">
+        select <include refid="Base_Column_List"/>
+        from  sys_user
+        where 1=1
+        <include refid="condition"/>
+        ${dataScopeSQL}
+        <if test="page == true">
+            limit #{startRow} , #{pageSize}
+        </if>
+    </select>
+
+    <select id="queryUserCount" resultType="java.lang.Integer">
+        select count(1)
+        from  sys_user
+        where 1=1
+        <include refid="condition"/>
+        ${dataScopeSQL}
+    </select>
+
+    <select id="queryUser" resultType="com.spark.bean.system.result.UserResult">
+        select <include refid="Base_Column_List"/>,  password 
+        from  sys_user
+        where 1=1
+        <include refid="condition"/>
+        limit 1
+    </select>
+
+    <update id="updateById" parameterType="com.spark.bean.system.entity.User">
+        update  sys_user
+        set updated_by = #{updatedBy}, updated_dt = #{updatedDt}
+        <if test="name != null">
+            ,name = #{name}
+        </if>
+        <if test="password != null">
+            ,password = #{password}
+        </if>
+        <if test="loginName != null">
+            ,login_name = #{loginName}
+        </if>
+        <if test="deptId != null">
+            ,dept_id = #{deptId}
+        </if>
+        <if test="phone != null">
+            ,phone = #{phone}
+        </if>
+        <if test="email != null">
+            ,email = #{email}
+        </if>
+        <if test="sex != null">
+            ,sex = #{sex}
+        </if>
+        <if test="avatar != null">
+            ,avatar = #{avatar}
+        </if>
+        <if test="status != null">
+            ,status = #{status}
+        </if>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="com.spark.bean.system.entity.User">
+        update  sys_user
+        set updated_by = #{updatedBy}, updated_dt = #{updatedDt}, delete_flag = -1
+        where id = #{id}
+    </delete>
+
+</mapper>
