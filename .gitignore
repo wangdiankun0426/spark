@@ -1,6 +1,6 @@
 .idea
 target
-application-local.properties
+application-local.yml
 .claude
 CLAUDE.md
 sql/alert.sql

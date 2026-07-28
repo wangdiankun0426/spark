@@ -18,9 +18,9 @@ public class MqProducerConfig {
         // 设置 ConfirmCallback：消息是否成功到达 Exchange
         rabbitTemplate.setConfirmCallback((data, ack, cause) -> {
             if (ack) {
-                logger.info("消息已成功到达 RabbitMQ Exchange: {}", data);
+                logger.info("消息已成功到达 RabbitMQ Exchange={}", data);
             } else {
-                logger.error("消息发送失败，原因: {}，data: {}", cause, data);
+                logger.error("消息发送失败，原因: {}，data={}", cause, data);
                 // 可在此处记录日志、重试、存 DB 补偿等
             }
         });

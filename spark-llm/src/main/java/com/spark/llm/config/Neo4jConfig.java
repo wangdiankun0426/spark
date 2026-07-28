@@ -21,16 +21,12 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class Neo4jConfig {
-
     private final static Logger logger = LoggerFactory.getLogger(Neo4jConfig.class);
-
-    @Value("${spring.neo4j.uri:bolt://localhost:7687}")
+    @Value("${spring.neo4j.uri}")
     private String uri;
-
-    @Value("${spring.neo4j.username:neo4j}")
+    @Value("${spring.neo4j.username}")
     private String username;
-
-    @Value("${spring.neo4j.password:123456}")
+    @Value("${spring.neo4j.password}")
     private String password;
 
     /**
@@ -39,7 +35,7 @@ public class Neo4jConfig {
      */
     @Bean(destroyMethod = "close")
     public Driver neo4jDriver() {
-        logger.info("初始化 Neo4j Driver, uri: {}", uri);
+        logger.info("init Neo4j Driver, uri={}", uri);
         return GraphDatabase.driver(uri, AuthTokens.basic(username, password));
     }
 
