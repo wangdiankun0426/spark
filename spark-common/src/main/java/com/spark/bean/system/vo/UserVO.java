@@ -63,6 +63,11 @@ public class UserVO extends BaseVO {
     private Integer status;
 
     /**
+     * 企业微信用户ID
+     */
+    private String wecomId;
+
+    /**
      *
      */
     private String oldPassword;

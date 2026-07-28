@@ -135,7 +135,6 @@ npm run dev:electron
 # Electron 桌面端打包
 npm run pack:electron:win    # Windows
 npm run pack:electron:mac    # macOS
-npm run pack:electron:linux  # Linux
 ```
 
 ### 4.3 移动端

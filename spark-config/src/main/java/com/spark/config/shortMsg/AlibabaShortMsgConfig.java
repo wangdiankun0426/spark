@@ -1,4 +1,4 @@
-package com.spark.config.shortMessage;
+package com.spark.config.shortMsg;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 @Data
 @Component
 @ConfigurationProperties(prefix = "spark.sm.alibaba")
-public class AlibabaShortMessageConfig {
+public class AlibabaShortMsgConfig {
 
     /**
      * 短信key

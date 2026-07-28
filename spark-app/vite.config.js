@@ -18,7 +18,6 @@ export default defineConfig((mode) => {
             proxy: {
                 // 在此处为需要解决跨域的 API 配置代理
                 '/api/ws': {
-                    // target: 'ws://192.168.3.115:8101/',
                     target: 'ws://127.0.0.1:8000/',
                     changeOrigin: true,
                     ws: true,

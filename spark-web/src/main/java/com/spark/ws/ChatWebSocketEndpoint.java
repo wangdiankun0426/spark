@@ -40,6 +40,7 @@ public class ChatWebSocketEndpoint {
      */
     @OnOpen
     public void onOpen(Session session) {
+        //todo 鉴权
         logger.info("ws connection opened={}", session.getId());
     }
 

@@ -52,4 +52,5 @@ public interface IDepartmentService {
      * @return 部门信息
      */
     ResultData<String> supplyDeptPath(DepartmentResult departmentResult);
-}
+
+    }

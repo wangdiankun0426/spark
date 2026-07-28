@@ -74,5 +74,9 @@
             <groupId>com.itextpdf</groupId>
             <artifactId>layout</artifactId>
         </dependency>
+        <dependency>
+            <groupId>javax.xml.ws</groupId>
+            <artifactId>jaxws-api</artifactId>
+        </dependency>
     </dependencies>
 </project>

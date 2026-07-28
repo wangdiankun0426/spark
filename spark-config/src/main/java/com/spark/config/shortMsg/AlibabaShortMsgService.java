@@ -1,4 +1,4 @@
-package com.spark.config.shortMessage;
+package com.spark.config.shortMsg;
 
 import com.aliyun.dysmsapi20170525.models.*;
 import com.aliyun.teaopenapi.models.*;
@@ -18,10 +18,10 @@ import org.springframework.stereotype.Component;
  * 阿里云短信服务
  */
 @Component
-public class AlibabaShortMessageService {
-    private static final Logger logger = LoggerFactory.getLogger(AlibabaShortMessageService.class);
+public class AlibabaShortMsgService {
+    private static final Logger logger = LoggerFactory.getLogger(AlibabaShortMsgService.class);
     @Autowired
-    private AlibabaShortMessageConfig alibabaShortMessageConfig;
+    private AlibabaShortMsgConfig alibabaShortMsgConfig;
     private com.aliyun.dysmsapi20170525.Client client;
 
     /**
@@ -31,8 +31,8 @@ public class AlibabaShortMessageService {
     public boolean sendLoginValidate(String phone, String code) {
         if (client == null) {
             Config config = new Config();
-            config.accessKeyId = alibabaShortMessageConfig.getAccessKeyId();
-            config.accessKeySecret = alibabaShortMessageConfig.getAccessKeySecret();
+            config.accessKeyId = alibabaShortMsgConfig.getAccessKeyId();
+            config.accessKeySecret = alibabaShortMsgConfig.getAccessKeySecret();
             try {
                 client =  new com.aliyun.dysmsapi20170525.Client(config);
             } catch (Exception e) {
@@ -42,8 +42,8 @@ public class AlibabaShortMessageService {
         // 发送短信
         SendSmsRequest sendReq = new SendSmsRequest()
                 .setPhoneNumbers(phone)
-                .setSignName(alibabaShortMessageConfig.getSignName())
-                .setTemplateCode(alibabaShortMessageConfig.getTemplateCode())
+                .setSignName(alibabaShortMsgConfig.getSignName())
+                .setTemplateCode(alibabaShortMsgConfig.getTemplateCode())
                 .setTemplateParam("{code:"+code+"}");
         SendSmsResponse sendResp = null;
         try {

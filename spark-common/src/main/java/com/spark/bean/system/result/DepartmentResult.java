@@ -56,6 +56,11 @@ public class DepartmentResult extends BaseResult {
     private Integer orderNum;
 
     /**
+     * 企业微信部门ID
+     */
+    private Long wecomId;
+
+    /**
      * 状态名称
      */
     private String statusName;

@@ -49,4 +49,9 @@ public class Department extends BaseEntity {
      * 排序号
      */
     private Integer orderNum;
+
+    /**
+     * 企业微信部门ID
+     */
+    private Long wecomId;
 }

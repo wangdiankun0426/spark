@@ -56,40 +56,39 @@ public class McpClientManager {
             return null;
         }
         if (!StatusEnum.NORMAL.getValue().equals(mcp.getStatus())) {
-            logger.warn("MCP服务器 {} 已禁用，跳过连接", mcp.getName());
+            logger.warn("connectToServer: mcp status is ={}", mcp.getStatus());
             return null;
         }
         Long serverId = mcp.getId();
         // 已连接则直接返回
         if (clientCache.containsKey(serverId)) {
-            logger.debug("使用缓存的MCP客户端: {}", mcp.getName());
             return clientCache.get(serverId);
         }
         try {
-            logger.info("正在连接到MCP服务器: {}", mcp.getName());
+            logger.info("connectToServer: serverId is ={}", serverId);
             McpClient client;
             if (McpTransportTypeEnum.STDIO.getValue().equals(mcp.getTransport())) {
                 client = createStdioClient(mcp);
             } else if (McpTransportTypeEnum.SSE.getValue().equals(mcp.getTransport())) {
                 if (mcp.getProviderId() == null) {
-                    logger.error("SSE模式MCP服务器 {} 未配置厂商", mcp.getName());
+                    logger.error("connectToServer: mcp provider id is null");
                     return null;
                 }
                 Provider provider = loadProvider(mcp.getProviderId());
                 if (provider == null || StringUtil.isBlank(provider.getSecretKey())) {
-                    logger.error("SSE模式MCP服务器 {} 厂商不存在或未配置密钥", mcp.getName());
+                    logger.error("connectToServer: provider secret key is null");
                     return null;
                 }
                 client = createSseClient(mcp, provider);
             } else {
-                logger.error("未知的MCP传输类型: {}", mcp.getTransport());
+                logger.error("connectToServer: mcp transport type is ={}", mcp.getTransport());
                 return null;
             }
             clientCache.put(serverId, client);
-            logger.info("成功连接到MCP服务器: {}", mcp.getName());
+            logger.info("connectToServer: serverId is ={}", serverId);
             return client;
         } catch (Exception e) {
-            logger.error("连接MCP服务器失败: {}", mcp.getName(), e);
+            logger.error("connectToServer: ", e);
             throw new RuntimeException("连接MCP服务器失败: " + mcp.getName(), e);
         }
     }
@@ -111,10 +110,10 @@ public class McpClientManager {
                     clients.add(client);
                 }
             } catch (Exception e) {
-                logger.error("连接MCP服务器失败，继续处理下一个: {}", mcp.getName(), e);
+                logger.error("connect MCP server fail，next={}", mcp.getName(), e);
             }
         }
-        logger.info("成功连接 {} 个MCP服务器", clients.size());
+        logger.info("connect success {} size MCP server", clients.size());
         return clients;
     }
 
@@ -130,9 +129,9 @@ public class McpClientManager {
         if (client != null) {
             try {
                 client.close();
-                logger.info("已断开MCP服务器连接, serverId: {}", serverId);
+                logger.info("disconnect MCP server, serverId={}", serverId);
             } catch (Exception e) {
-                logger.warn("断开MCP服务器连接异常, serverId: {}", serverId, e);
+                logger.warn("disconnect MCP server error, serverId={}", serverId, e);
             }
         }
     }
@@ -146,11 +145,11 @@ public class McpClientManager {
             try {
                 entry.getValue().close();
             } catch (Exception e) {
-                logger.warn("断开MCP服务器连接异常, serverId: {}", entry.getKey(), e);
+                logger.warn("disconnect MCP server error, serverId={}", entry.getKey(), e);
             }
         }
         clientCache.clear();
-        logger.info("所有MCP服务器连接已断开");
+        logger.info("all MCP server disconnect");
     }
 
     /**
@@ -235,7 +234,7 @@ public class McpClientManager {
                 args.addAll(parsed);
             }
         } catch (Exception e) {
-            logger.warn("解析MCP命令参数失败，按逗号分割: {}", argsJson, e);
+            logger.error("parseArgs error, argsJson={}", argsJson, e);
             for (String arg : argsJson.split(",")) {
                 String trimmed = arg.trim();
                 if (!trimmed.isEmpty()) {
@@ -262,7 +261,7 @@ public class McpClientManager {
                 envMap.putAll(parsed);
             }
         } catch (Exception e) {
-            logger.warn("解析MCP环境变量失败: {}", envJson, e);
+            logger.error("parseEnv error, envJson={}", envJson, e);
         }
         return envMap;
     }

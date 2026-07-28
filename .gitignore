@@ -3,4 +3,4 @@ target
 application-local.properties
 .claude
 CLAUDE.md
-sql/alter.sql
+sql/alert.sql

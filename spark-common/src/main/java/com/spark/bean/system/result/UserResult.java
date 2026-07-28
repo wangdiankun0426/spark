@@ -90,6 +90,11 @@ public class UserResult extends BaseResult {
     private Integer status;
 
     /**
+     * 企业微信用户ID
+     */
+    private String wecomId;
+
+    /**
      * 性别
      */
     private String sexName;

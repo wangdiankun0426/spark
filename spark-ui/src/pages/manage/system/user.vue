@@ -91,6 +91,13 @@
           <el-icon><Plus /></el-icon>新建用户
         </el-button>
         <el-button
+            type="success"
+            :loading="syncLoading"
+            @click="syncWeComOrganization"
+        >
+          <el-icon><Refresh /></el-icon>同步企微架构
+        </el-button>
+        <el-button
             type="warning"
             @click="resetUserQuery" style="float: right"
         >
@@ -259,7 +266,7 @@
 </template>
 
 <script setup>
-import {pageUserListAPI, createUserAPI, updateUserAPI, deleteUserAPI, userDetailAPI} from '@/api/system/user';
+import {pageUserListAPI, createUserAPI, updateUserAPI, deleteUserAPI, userDetailAPI, syncWeComOrganizationAPI} from '@/api/system/user';
 import {ElMessage, ElMessageBox} from "element-plus";
 import {treeDeptAPI} from "@/api/system/dept";
 import {pageRoleListAPI} from '@/api/system/role';
@@ -311,6 +318,7 @@ const pageSizes = [30,50,100];
 const roleList = ref([]);
 const currentDeptId = ref(undefined);
 const defaultExpandedKeys = ref([]);
+const syncLoading = ref(false);
 
 getDeptTree();
 getRoleList();
@@ -342,6 +350,33 @@ function getRoleList() {
   pageRoleListAPI(query).then(res => {
      roleList.value = res.data.rows;
   })
+}
+
+/**
+ * 同步企业微信组织架构
+ */
+function syncWeComOrganization() {
+  ElMessageBox.confirm(
+      '同步企业组织架构将从企业微信拉取最新的部门与用户数据，是否继续？',
+      '同步确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+  ).then(() => {
+    syncLoading.value = true;
+    syncWeComOrganizationAPI().then(res => {
+      if (res.code !== 200) {
+        return;
+      }
+      ElMessage.success("同步成功");
+      getDeptTree();
+      getUserList();
+    }).finally(() => {
+      syncLoading.value = false;
+    });
+  }).catch(() => {});
 }
 
 /**

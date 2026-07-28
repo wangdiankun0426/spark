@@ -75,4 +75,12 @@ public interface DepartmentDao extends BaseDao<Department> {
      */
     @Override
     int updateById(Department department);
+
+    /**
+     * 根据企业微信部门ID查询部门
+     * @param wecomId 企业微信部门ID
+     * @return 部门信息
+     */
+    @Select("select * from sys_department where wecom_id = #{wecomId} limit 1")
+    DepartmentResult queryByWecomId(@Param("wecomId") Long wecomId);
 }

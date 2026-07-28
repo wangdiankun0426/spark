@@ -10,6 +10,7 @@ CREATE TABLE `sys_user` (
     `sex` int(1) NULL COMMENT '性别',
     `avatar` varchar(32) NULL COMMENT '头像',
     `status` int(1) NOT NULL DEFAULT 1 COMMENT '状态',
+    `wecom_id` varchar(64) NULL COMMENT '企业微信用户ID',
 
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
     `created_by` bigint(12) NOT NULL COMMENT '创建人id',
@@ -29,6 +30,7 @@ CREATE TABLE `sys_department` (
     `dept_num` varchar(36) NULL COMMENT '部门编号',
     `status` int(1) NOT NULL DEFAULT 1 COMMENT '状态',
     `order_num` int(2) NOT NULL DEFAULT 99 COMMENT '排序号',
+    `wecom_id` bigint(12) NULL COMMENT '企业微信部门ID',
 
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
     `created_by` bigint(12) NOT NULL COMMENT '创建人id',

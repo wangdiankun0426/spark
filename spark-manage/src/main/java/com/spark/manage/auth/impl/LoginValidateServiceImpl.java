@@ -4,7 +4,7 @@ import com.google.code.kaptcha.Producer;
 import com.spark.bean.system.vo.LoginVO;
 import com.spark.bean.base.ResultData;
 import com.spark.bean.system.entity.ValidateCode;
-import com.spark.config.shortMessage.AlibabaShortMessageService;
+import com.spark.config.shortMsg.AlibabaShortMsgService;
 import com.spark.config.email.EmailService;
 import com.spark.constant.ObjectCacheKey;
 import com.spark.enums.ErrorCodeEnum;
@@ -43,7 +43,7 @@ public class LoginValidateServiceImpl implements ILoginValidateService {
     @Autowired
     private EmailService emailService;
     @Autowired
-    private AlibabaShortMessageService alibabaShortMessageService;
+    private AlibabaShortMsgService alibabaShortMsgService;
 
     /**
      * 构造验证码
@@ -88,7 +88,7 @@ public class LoginValidateServiceImpl implements ILoginValidateService {
         String uuid = UUID.randomUUID().toString();
         String verifyKey = ObjectCacheKey.VALIDATE_CODE_KEY + uuid;
         String verifyCode = String.valueOf(new Random().nextInt(9000) + 1000);
-        boolean bo = alibabaShortMessageService.sendLoginValidate(loginVO.getPhone(), verifyCode);
+        boolean bo = alibabaShortMsgService.sendLoginValidate(loginVO.getPhone(), verifyCode);
         if (!bo) {
             result.setErrorCode(ErrorCodeEnum.MESSAGE_VALIDATE_SEND_ERROR);
             return result;

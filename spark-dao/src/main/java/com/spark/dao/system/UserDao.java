@@ -80,4 +80,12 @@ public interface UserDao extends BaseDao<User> {
      */
     @Update("update sys_user set dept_id = null where dept_id = #{deptId}")
     int resetUserDeptByDeptId(@Param("deptId") Long deptId);
+
+    /**
+     * 根据企业微信用户ID查询用户
+     * @param wecomId 企业微信用户ID
+     * @return 用户信息
+     */
+    @Select("select * from sys_user where wecom_id = #{wecomId} limit 1")
+    UserResult queryByWecomId(@Param("wecomId") String wecomId);
 }

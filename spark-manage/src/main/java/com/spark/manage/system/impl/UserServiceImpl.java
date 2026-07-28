@@ -92,6 +92,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         user.setEmail(userVO.getEmail());
         user.setSex(userVO.getSex());
         user.setStatus(userVO.getStatus());
+        user.setWecomId(userVO.getWecomId());
         if (user.getStatus() == null) {
             user.setStatus(StatusEnum.NORMAL.getValue());
         }
@@ -144,6 +145,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         user.setEmail(userVO.getEmail());
         user.setSex(userVO.getSex());
         user.setStatus(userVO.getStatus());
+        user.setWecomId(userVO.getWecomId());
         int count = userDao.updateDBById(user);
         if (count < 0) {
             return result;

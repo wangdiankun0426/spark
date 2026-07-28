@@ -23,7 +23,7 @@ public class IndexController {
     @GetMapping
     public ResultData<Void> index() {
         ResultData<Void> result = new ResultData<>();
-        result.setMessage("Welcome to use spark.ms server v1.0.0 !");
+        result.setMessage("welcome to use spark ai server !");
         result.setCode(ResultData.OK);
         return result;
     }

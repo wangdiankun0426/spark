@@ -16,6 +16,7 @@ import com.spark.dao.system.UserDao;
 import com.spark.enums.OperateTypeEnum;
 import com.spark.enums.ErrorCodeEnum;
 import com.spark.enums.ObjectTypeEnum;
+import com.spark.enums.StatusEnum;
 import com.spark.manage.BaseService;
 import com.spark.manage.system.IDepartmentService;
 import com.spark.config.redis.RedisService;
@@ -67,7 +68,6 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
             return result;
         }
         Department department = new Department();
-        // 生成唯一主键
         long deptId = super.genObjectId(ObjectTypeEnum.DEPARTMENT);
         department.setId(deptId);
         department.setName(departmentVO.getName());
@@ -76,7 +76,11 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
         department.setDeptNum(departmentVO.getDeptNum());
         department.setStatus(departmentVO.getStatus());
         department.setOrderNum(departmentVO.getOrderNum());
+        department.setWecomId(departmentVO.getWecomId());
         this.supplyDepartmentCode(department);
+        if (department.getStatus() == null) {
+            department.setStatus(StatusEnum.NORMAL.getValue());
+        }
         int count = departmentDao.insertDB(department);
         if (count < 1) {
             return result;
@@ -128,10 +132,21 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
         Department department = new Department();
         department.setId(departmentVO.getId());
         department.setName(departmentVO.getName());
+        department.setPrtId(departmentVO.getPrtId());
         department.setHeaderId(departmentVO.getHeaderId());
         department.setDeptNum(departmentVO.getDeptNum());
         department.setStatus(departmentVO.getStatus());
         department.setOrderNum(departmentVO.getOrderNum());
+        department.setWecomId(departmentVO.getWecomId());
+        // prtId变化时重新生成部门层级码
+        if (departmentVO.getPrtId() != null) {
+            DepartmentQuery prtQuery = new DepartmentQuery();
+            prtQuery.setId(departmentVO.getId());
+            DepartmentResult oldDept = departmentDao.queryDepartment(prtQuery);
+            if (oldDept != null && !Objects.equals(oldDept.getPrtId(), departmentVO.getPrtId())) {
+                this.supplyDepartmentCode(department);
+            }
+        }
         int count = departmentDao.updateDBById(department);
         if (count < 1) {
             return result;

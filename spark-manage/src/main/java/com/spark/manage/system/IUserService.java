@@ -82,4 +82,4 @@ public interface IUserService {
      */
     ResultData<Void> uploadAvatar(MultipartFile file);
 
-}
+    }
