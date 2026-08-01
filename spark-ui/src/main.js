@@ -15,6 +15,7 @@ import CustomRadio from '@/components/FormDesigner/formWidget/basicWidget/radio.
 import CustomSelect from '@/components/FormDesigner/formWidget/basicWidget/select.vue';
 import CustomSelectUser from '@/components/FormDesigner/formWidget/basicWidget/selectUser.vue';
 import CustomDeptUser from '@/components/FormDesigner/formWidget/basicWidget/selectDept.vue';
+import CustomSelectRole from '@/components/FormDesigner/formWidget/basicWidget/selectRole.vue';
 // 自定义组件配置组件
 import CustomInputSetting from '@/components/FormDesigner/settingPanel/basicWidget/input.vue';
 import CustomTextareaSetting from '@/components/FormDesigner/settingPanel/basicWidget/textarea.vue';
@@ -22,6 +23,7 @@ import CustomRadioSetting from '@/components/FormDesigner/settingPanel/basicWidg
 import CustomSelectSetting from '@/components/FormDesigner/settingPanel/basicWidget/select.vue';
 import CustomSelectUserSetting from '@/components/FormDesigner/settingPanel/basicWidget/selectUser.vue';
 import CustomSelectDeptSetting from '@/components/FormDesigner/settingPanel/basicWidget/selectDept.vue';
+import CustomSelectRoleSetting from '@/components/FormDesigner/settingPanel/basicWidget/selectRole.vue';
 const components = [
     // 组件
   CustomInput,
@@ -30,6 +32,7 @@ const components = [
   CustomSelect,
   CustomSelectUser,
   CustomDeptUser,
+  CustomSelectRole,
     // 组件配置
   CustomInputSetting,
   CustomTextareaSetting,
@@ -37,6 +40,7 @@ const components = [
   CustomSelectSetting,
   CustomSelectUserSetting,
   CustomSelectDeptSetting,
+  CustomSelectRoleSetting,
 ];
 // 引用v-md-editor
 import VMdEditor from '@kangc/v-md-editor';

@@ -2,6 +2,7 @@ package com.spark.utils;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -51,5 +52,51 @@ public class StringUtil {
      */
     public static String join(List<Long> list, String separator) {
         return StringUtils.join(list, separator);
+    }
+
+    /**
+     * 解析字符串
+     * @param str
+     * @param interval
+     * @return
+     */
+    public static List<String> parseStringFormCode(String str, String interval) {
+        List<String> keys = new ArrayList<>();
+        if(StringUtils.isBlank(str) || StringUtils.isBlank(interval)) {
+            return keys;
+        }
+        String formVal = str;
+        while (true){
+            int startIndex = formVal.indexOf(interval + "{");
+            int endIndex = formVal.indexOf("}"+interval);
+            if(startIndex == -1 || endIndex == -1) {
+                break;
+            }
+            String formKey = formVal.substring(startIndex+2, endIndex);
+            keys.add(formKey);
+            formVal = formVal.substring(endIndex+2);
+        }
+        return keys;
+    }
+
+    /**
+     * 判断是否为数字
+     * @param cs
+     * @return
+     */
+    public static boolean isNumeric(CharSequence cs) {
+        if (cs == null || cs.isEmpty()) {
+            return false;
+        } else {
+            int sz = cs.length();
+
+            for(int i = 0; i < sz; ++i) {
+                if (!Character.isDigit(cs.charAt(i))) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 }

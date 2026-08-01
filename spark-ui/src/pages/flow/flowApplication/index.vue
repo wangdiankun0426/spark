@@ -66,28 +66,20 @@
     <el-empty v-else :description="keyword ? '未找到匹配的流程模板' : '暂无流程模板'" :image-size="120" />
 
     <!--流程模板表单-->
-    <el-drawer
-        v-model="flowFormVisible"
+    <flow-detail-drawer
+        ref="detailDrawerRef"
+        :visible="flowFormVisible"
+        v-model:name="flowForm.name"
+        v-model:description="flowForm.description"
+        v-model:level="flowForm.level"
+        :created-by-name="userInfo.name"
+        :dept-name="userInfo.deptName"
         title="发起流程"
-        direction="rtl"
-        size="80%"
-        :before-close="handleCloseFlowForm"
+        :formJson="formJson"
+        :bpmJson="bpmJson"
+        :type="1"
+        @close="handleCloseFlowForm"
     >
-      <el-tabs v-model="detailActiveTab">
-        <el-tab-pane label="表单详情" name="form">
-          <form-view
-              :form="formJson"
-              v-if="flowFormVisible && detailActiveTab === 'form'"
-          />
-        </el-tab-pane>
-        <el-tab-pane label="流程图" name="flow">
-          <form-view
-              :bpmJson="bpmJson"
-              v-if="flowFormVisible && detailActiveTab === 'flow'"
-          />
-        </el-tab-pane>
-      </el-tabs>
-
       <template #footer>
         <div class="drawer-footer">
           <el-button
@@ -99,19 +91,21 @@
           >关闭</el-button>
         </div>
       </template>
-    </el-drawer>
+    </flow-detail-drawer>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import {ref, watch, onMounted, onBeforeUnmount, computed} from 'vue';
 import { pageTemplateListAPI, showTemplateDetailAPI } from '@/api/flow/template';
 import { createFlowInstanceAPI } from '@/api/flow/instance.js';
 import { ElMessage } from 'element-plus';
 import { Search, Share, User, EditPen } from '@element-plus/icons-vue';
-import FormView from '@/components/FormView';
-import FlowView from '@/components/FlowView';
+import FlowDetailDrawer from '@/components/FlowDetailDrawer';
 import InfoCard from '@/components/InfoCard/index.vue';
+import store from "@/store/index.js";
+
+const userInfo = computed(() => store.getters['user/getUserInfo'])
 
 const templateList = ref([]);
 const keyword = ref('');
@@ -123,13 +117,16 @@ const themes = ['blue', 'green', 'purple', 'orange', 'cyan', 'pink', 'indigo'];
 const flowFormVisible = ref(false);
 const formJson = ref({});
 const bpmJson = ref({});
-const detailActiveTab = ref('form');
+const detailDrawerRef = ref(null);
 const flowForm = ref({
   templateId: undefined,
   templateRevId: undefined,
   formId: undefined,
   formRevId: undefined,
   processId: undefined,
+  name: undefined,
+  description: undefined,
+  level: 1,
 });
 
 let searchTimer = null;
@@ -193,6 +190,7 @@ function handleOpenTemplate(id) {
       flowForm.value.formId = res.data.formId;
       flowForm.value.formRevId = res.data.formRevId;
       flowForm.value.processId = res.data.processId;
+      flowForm.value.name = res.data.name;
       flowFormVisible.value = true;
     }
   }).catch(() => {});
@@ -202,6 +200,9 @@ function handleOpenTemplate(id) {
  * 提交流程模板表单
  */
 function handleSubmitTemplateForm() {
+  if (!detailDrawerRef.value?.validateTitle()) {
+    return;
+  }
   const list = JSON.parse(JSON.stringify(formJson.value)).widgetList;
   const values = [];
   list.forEach(widget => {
@@ -236,8 +237,10 @@ function handleCloseFlowForm() {
     formId: undefined,
     formRevId: undefined,
     processId: undefined,
+    name: undefined,
+    description: undefined,
+    level: 1,
   };
-  detailActiveTab.value = 'form';
   flowFormVisible.value = false;
 }
 </script>

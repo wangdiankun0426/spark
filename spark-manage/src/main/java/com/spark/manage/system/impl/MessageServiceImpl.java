@@ -48,7 +48,7 @@ public class MessageServiceImpl implements IMessageService {
     public ResultData<Void> createMessage(MessageVO messageVO) {
         ResultData<Void> result = new ResultData<>();
         if (messageVO == null || messageVO.getType() == null || StringUtil.isBlank(messageVO.getTitle())
-                || StringUtil.isBlank(messageVO.getContent())) {
+                || StringUtil.isBlank(messageVO.getContent()) || messageVO.getRefId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }

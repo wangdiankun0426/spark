@@ -22,6 +22,16 @@
         <if test="revId != null">
             and rev_id = #{revId}
         </if>
+        <if test="code != null">
+            and code = #{code}
+        </if>
+        <if test="codes != null and codes.size() > 0">
+            and code in (
+            <foreach collection="codes" item="code" separator=",">
+                #{code}
+            </foreach>
+            )
+        </if>
         <if test="deleteFlag != null and id == null and ids == null">
             and delete_flag = #{deleteFlag}
         </if>
@@ -40,6 +50,14 @@
         from form_field
         where delete_flag = 1
         <include refid="searchCondition"/>
+    </select>
+
+    <select id="queryFormField" resultType="com.spark.bean.form.result.FormFieldResult">
+        select <include refid="allColumnList"/>
+        from form_field
+        where delete_flag = 1
+        <include refid="searchCondition"/>
+        limit 1
     </select>
 
 </mapper>

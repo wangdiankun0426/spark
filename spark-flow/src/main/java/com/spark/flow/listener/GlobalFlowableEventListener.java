@@ -4,23 +4,18 @@ import com.spark.bean.base.BaseContext;
 import com.spark.bean.base.ResultData;
 import com.spark.bean.base.SessionHolder;
 import com.spark.bean.flow.entity.FlowInstance;
-import com.spark.bean.flow.entity.FlowInstanceAssignee;
 import com.spark.bean.flow.entity.FlowInstanceNode;
 import com.spark.bean.flow.query.FlowInstanceNodeQuery;
 import com.spark.bean.flow.query.FlowInstanceQuery;
-import com.spark.bean.flow.query.FlowTemplateNodeQuery;
 import com.spark.bean.flow.result.FlowInstanceNodeResult;
 import com.spark.bean.flow.result.FlowInstanceResult;
-import com.spark.bean.flow.result.FlowTemplateNodeResult;
-import com.spark.dao.flow.FlowInstanceAssigneeDao;
 import com.spark.dao.flow.FlowInstanceDao;
 import com.spark.dao.flow.FlowInstanceNodeDao;
-import com.spark.dao.flow.FlowTemplateNodeDao;
-import com.spark.enums.FlowAssigneeTypeEnum;
 import com.spark.enums.FlowInstanceStatusEnum;
+import com.spark.enums.MessageTypeEnum;
+import com.spark.flow.service.FlowMessageService;
+import com.spark.flow.service.FlowEventService;
 import com.spark.flow.service.FlowableService;
-import com.spark.utils.CollectionUtil;
-import com.spark.utils.StringUtil;
 import org.flowable.common.engine.api.delegate.event.*;
 import org.flowable.engine.delegate.event.FlowableActivityEvent;
 import org.flowable.engine.delegate.event.FlowableCancelledEvent;
@@ -48,13 +43,13 @@ public class GlobalFlowableEventListener implements FlowableEventListener {
     @Autowired
     private FlowInstanceDao instanceDao;
     @Autowired
-    private FlowTemplateNodeDao templateNodeDao;
-    @Autowired
     private FlowInstanceNodeDao instanceNodeDao;
     @Autowired
     private FlowableService flowableService;
     @Autowired
-    private FlowInstanceAssigneeDao instanceAssigneeDao;
+    private FlowMessageService flowMessageService;
+    @Autowired
+    private FlowEventService flowEventService;
 
     /**
      * 全局事件监听
@@ -105,7 +100,7 @@ public class GlobalFlowableEventListener implements FlowableEventListener {
      */
     private void handleProcessActivated(FlowableEngineEvent event) {
         String flowableInstanceId = event.getProcessInstanceId();
-        logger.info("handleProcessActivated, flowableInstanceId: {}" , flowableInstanceId);
+        logger.info("handleProcessActivated, flowableInstanceId={}" , flowableInstanceId);
     }
 
     /**
@@ -114,7 +109,7 @@ public class GlobalFlowableEventListener implements FlowableEventListener {
      */
     private void handleProcessSuspended(FlowableEngineEvent event) {
         String flowableInstanceId = event.getProcessInstanceId();
-        logger.info("handleProcessSuspended, flowableInstanceId: {}" , flowableInstanceId);
+        logger.info("handleProcessSuspended, flowableInstanceId={}" , flowableInstanceId);
     }
 
     /**
@@ -127,7 +122,7 @@ public class GlobalFlowableEventListener implements FlowableEventListener {
      */
     private void handleProcessStarted(FlowableEngineEntityEvent event) {
         String flowableInstanceId = event.getProcessInstanceId();
-        logger.info("handleProcessStarted, flowableInstanceId: {}" , flowableInstanceId);
+        logger.info("handleProcessStarted, flowableInstanceId={}" , flowableInstanceId);
         BaseContext context = SessionHolder.getContext();
         FlowInstance instance = context.getVal(FlowInstance.class);
         instance.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
@@ -144,7 +139,7 @@ public class GlobalFlowableEventListener implements FlowableEventListener {
      */
     private void handleProcessCompleted(FlowableEngineEntityEvent event) {
         String instanceId = event.getProcessInstanceId();
-        logger.info("handleProcessCompleted, instanceId: {}" , instanceId);
+        logger.info("handleProcessCompleted, instanceId={}" , instanceId);
         FlowInstance instance = new FlowInstance();
         instance.setFlowableInstanceId(instanceId);
         instance.setStatus(FlowInstanceStatusEnum.COMPLETED.getValue());
@@ -152,6 +147,8 @@ public class GlobalFlowableEventListener implements FlowableEventListener {
         if (count <= 0) {
             logger.error("handleProcessCompleted error, update db fail");
         }
+        // 发送完结通知
+        flowMessageService.sendFlowNotice(instanceId, MessageTypeEnum.FLOW_COMPLETED.getType());
     }
 
     /**
@@ -160,7 +157,7 @@ public class GlobalFlowableEventListener implements FlowableEventListener {
      */
     private void handleProcessCancelled(FlowableCancelledEvent event) {
         String instanceId = event.getProcessInstanceId();
-        logger.info("handleProcessCancelled, instanceId: {}" , instanceId);
+        logger.info("handleProcessCancelled, instanceId={}" , instanceId);
         FlowInstance instance = new FlowInstance();
         instance.setFlowableInstanceId(instanceId);
         instance.setStatus(FlowInstanceStatusEnum.REJECTED.getValue());
@@ -168,6 +165,8 @@ public class GlobalFlowableEventListener implements FlowableEventListener {
         if (count <= 0) {
             logger.error("handleProcessCancelled error, update db fail");
         }
+        // 发送驳回通知
+        flowMessageService.sendFlowNotice(instanceId, MessageTypeEnum.FLOW_REJECTED.getType());
     }
 
     /**
@@ -179,7 +178,7 @@ public class GlobalFlowableEventListener implements FlowableEventListener {
         String type = event.getActivityType();
         String name = event.getActivityName();
         String flowableInstanceId = event.getProcessInstanceId();
-        logger.info("handleActivityStarted flowableInstanceId : {} , nodeId: {}, type: {}, name: {}", flowableInstanceId, nodeId, type, name);
+        logger.info("handleActivityStarted flowableInstanceId={} , nodeId={}, type={}, name={}", flowableInstanceId, nodeId, type, name);
         FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
         instanceQuery.setFlowableInstanceId(flowableInstanceId);
         FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
@@ -205,7 +204,7 @@ public class GlobalFlowableEventListener implements FlowableEventListener {
         String type = event.getActivityType();
         String name = event.getActivityName();
         String flowableInstanceId = event.getProcessInstanceId();
-        logger.info("handleActivityCompleted flowableInstanceId : {} , nodeId: {}, type: {}, name: {}", flowableInstanceId, nodeId, type, name);
+        logger.info("handleActivityCompleted flowableInstanceId={} , nodeId={}, type={}, name={}", flowableInstanceId, nodeId, type, name);
         FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
         instanceQuery.setFlowableInstanceId(flowableInstanceId);
         FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
@@ -228,80 +227,19 @@ public class GlobalFlowableEventListener implements FlowableEventListener {
     }
 
     /**
-     * 处理任务创建
+     * 处理用户任务创建
      * @param event
      */
     private void handleTaskCreated(FlowableEngineEntityEvent event) {
         Task task = (Task) event.getEntity();
-        String flowableInstanceId = task.getProcessInstanceId();
+        String instanceId = task.getProcessInstanceId();
         String nodeId = task.getTaskDefinitionKey();
-        logger.info("handleTaskCreated, flowableInstanceId : {}, taskId: {}, nodeId : {}", flowableInstanceId, task.getId(), nodeId);
-        FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
-        instanceQuery.setFlowableInstanceId(task.getProcessInstanceId());
-        FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
-        if (instanceResult == null) {
-            logger.error("handleTaskCreated error, instance not exist");
+        logger.info("handleTaskCreated, instanceId={}, taskId={}, nodeId={}", instanceId, task.getId(), nodeId);
+        ResultData<Void> result = flowEventService.onCreatedUserTask(instanceId, nodeId, task.getId());
+        if (result.getCode() != ResultData.OK) {
+            logger.info("handleTaskCreated error, result={}", result);
             return;
         }
-        FlowInstanceNodeQuery instanceNodeQuery = new FlowInstanceNodeQuery();
-        instanceNodeQuery.setInstanceId(instanceResult.getId());
-        instanceNodeQuery.setNodeId(nodeId);
-        instanceNodeQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
-        FlowInstanceNodeResult instanceNodeResult = instanceNodeDao.queryInstanceNode(instanceNodeQuery);
-        if (instanceNodeResult == null) {
-            logger.error("handleTaskCreated error, instance node not exist");
-            return;
-        }
-        FlowTemplateNodeQuery templateNodeQuery = new FlowTemplateNodeQuery();
-        templateNodeQuery.setTemplateId(instanceResult.getTemplateId());
-        templateNodeQuery.setRevId(instanceResult.getTemplateRevId());
-        templateNodeQuery.setNodeId(nodeId);
-        FlowTemplateNodeResult templateNodeResult = templateNodeDao.queryTemplateNode(templateNodeQuery);
-        if (templateNodeResult == null) {
-            logger.error("handleTaskCreated error, template node not exist");
-            return;
-        }
-        Integer assigneeType = templateNodeResult.getAssigneeType();
-        FlowAssigneeTypeEnum assigneeTypeEnum = FlowAssigneeTypeEnum.indexOf(assigneeType);
-        if (assigneeTypeEnum == null) {
-            logger.error("handleTaskCreated error, template node assignee type error");
-            return;
-        }
-        List<Long> assigneeIds = new ArrayList<>();
-        switch (assigneeTypeEnum) {
-            case USER:
-                if (StringUtil.isNotBlank(templateNodeResult.getAssignee())) {
-                    assigneeIds = Arrays.stream(templateNodeResult.getAssignee().split(",")).map(Long::parseLong).toList();
-                }
-                break;
-            case FLOW_APPROVER:
-                assigneeIds.add(instanceResult.getCreatedBy());
-                break;
-            case SYSTEM:
-                flowableService.completeTask(flowableInstanceId,  null);
-                break;
-            default:
-                break;
-        }
-        if (CollectionUtil.isEmpty(assigneeIds)) {
-            logger.warn("handleTaskCreated error, template node assigneeIds is null");
-            return;
-        }
-        String setId = UUID.randomUUID().toString().replaceAll("-", "");
-        assigneeIds.forEach(assigneeId -> {
-            FlowInstanceAssignee instanceAssignee = new FlowInstanceAssignee();
-            instanceAssignee.setInstanceId(instanceResult.getId());
-            instanceAssignee.setInstanceNodeId(instanceNodeResult.getId());
-            instanceAssignee.setAssigneeId(assigneeId);
-            instanceAssignee.setAssigneeSetId(setId);
-            instanceAssignee.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
-            int count = instanceAssigneeDao.insertDB(instanceAssignee);
-        });
-        flowableService.setAssignee(task.getId(), setId);
-        FlowInstanceNode instanceNode = new FlowInstanceNode();
-        instanceNode.setId(instanceNodeResult.getId());
-        instanceNode.setAssigneeSetId(setId);
-        int count = instanceNodeDao.updateDBById(instanceNode);
     }
 
     /**
@@ -312,37 +250,15 @@ public class GlobalFlowableEventListener implements FlowableEventListener {
         Task task = (Task) event.getEntity();
         String flowableInstanceId = task.getProcessInstanceId();
         String nodeId = task.getTaskDefinitionKey();
-        logger.info("handleTaskCompleted, flowableInstanceId : {}, taskId: {}, nodeId : {}", flowableInstanceId, task.getId(), nodeId);
+        logger.info("handleTaskCompleted, flowableInstanceId={}, taskId={}, nodeId={}", flowableInstanceId, task.getId(), nodeId);
         ResultData<Map<String, Object>> variablesData = flowableService.getVariables(flowableInstanceId);
         Map<String, Object> variables = variablesData.getData();
         Object status = variables.get("status");
-        FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
-        instanceQuery.setFlowableInstanceId(task.getProcessInstanceId());
-        FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
-        if (instanceResult == null) {
-            logger.error("handleTaskCompleted error, instance not exist");
+        Integer status_ =  status == null ? FlowInstanceStatusEnum.AUTO_PASS.getValue() : (Integer) status;
+        ResultData<Void> result = flowEventService.onCompletedUserTask(flowableInstanceId, nodeId, status_);
+        if (result.getCode() != ResultData.OK) {
+            logger.error("handleTaskCompleted error, result={}", result);
             return;
-        }
-        FlowInstanceNodeQuery instanceNodeQuery = new FlowInstanceNodeQuery();
-        instanceNodeQuery.setInstanceId(instanceResult.getId());
-        instanceNodeQuery.setNodeId(nodeId);
-        FlowInstanceNodeResult instanceNodeResult = instanceNodeDao.queryInstanceNode(instanceNodeQuery);
-        if (instanceNodeResult == null) {
-            logger.error("handleTaskCompleted error, instance node not exist");
-            return;
-        }
-        FlowInstanceNode instanceNode = new FlowInstanceNode();
-        instanceNode.setId(instanceNodeResult.getId());
-        logger.info("handleTaskCompleted, status : {}", status);
-        instanceNode.setStatus(status == null ? FlowInstanceStatusEnum.COMPLETED.getValue() : (Integer) status);
-        int count = instanceNodeDao.updateDBById(instanceNode);
-        if (count < 1) {
-            logger.error("handleTaskCompleted error, update instance node error");
-            return;
-        }
-        if (FlowInstanceStatusEnum.REJECTED.getValue().equals(status)) {
-            //任务被驳回 直接将流程删除 会触发PROCESS_CANCELLED事件
-            flowableService.deleteInstance(flowableInstanceId);
         }
     }
 
@@ -355,11 +271,8 @@ public class GlobalFlowableEventListener implements FlowableEventListener {
         String flowableInstanceId = task.getProcessInstanceId();
         String nodeId = task.getTaskDefinitionKey();
         String assignee = task.getAssignee();
-        logger.info("handleTaskAssigned, flowableInstanceId : {}, taskId: {}, nodeId : {} , assignee {}", flowableInstanceId,
-                task.getId(), nodeId, assignee);
-
+        logger.info("handleTaskAssigned, flowableInstanceId={}, taskId={}, nodeId={} , assignee={}", flowableInstanceId, task.getId(), nodeId, assignee);
     }
-
 
     @Override
     public boolean isFailOnException() {

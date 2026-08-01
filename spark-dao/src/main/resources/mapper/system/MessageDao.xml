@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.system.MessageDao" >
     <sql id="allColumnList" >
-     id , type , title , content , delete_flag ,created_by ,created_dt , updated_by , updated_dt
+     id , type , title , content , ref_id, delete_flag ,created_by ,created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="condition">
@@ -31,8 +31,8 @@
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into sys_message ( type , title , content , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values ( #{type} , #{title} , #{content} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into sys_message ( type , title , content , ref_id, delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values ( #{type} , #{title} , #{content} , #{refId}, 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">

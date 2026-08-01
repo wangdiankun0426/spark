@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spark.dao.flow.FlowTemplateMsgDao">
+    <sql id="allColumnList">
+        id , template_id , rev_id , type , enabled , content , recipient , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="templateId != null">
+            and template_id = #{templateId}
+        </if>
+        <if test="revId != null">
+            and rev_id = #{revId}
+        </if>
+        <if test="type != null">
+            and type = #{type}
+        </if>
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into flow_template_msg (template_id , rev_id , type , enabled , content , recipient , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values ( #{templateId} , #{revId} , #{type} , #{enabled} , #{content} , #{recipient} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <insert id="batchInsert">
+        insert into flow_template_msg (template_id , rev_id , type , enabled , content , recipient , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values
+        <foreach item="item" index="index" collection="list" separator=",">
+            ( #{templateId} , #{revId} , #{item.type} , #{item.enabled} , #{item.content} , #{item.recipient} , 1, 101, now(), 101, now())
+        </foreach>
+    </insert>
+
+    <update id="deleteById">
+        update flow_template_msg set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <update id="updateById">
+        update flow_template_msg set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        <if test="templateId != null">
+            , template_id = #{templateId}
+        </if>
+        <if test="revId != null">
+            , rev_id = #{revId}
+        </if>
+        <if test="type != null">
+            , type = #{type}
+        </if>
+        <if test="enabled != null">
+            , enabled = #{enabled}
+        </if>
+        <if test="content != null and content != ''">
+            , content = #{content}
+        </if>
+        <if test="recipient != null and recipient != ''">
+            , recipient = #{recipient}
+        </if>
+        where id = #{id}
+    </update>
+
+    <select id="queryFlowTemplateMsgList" resultType="com.spark.bean.flow.result.FlowTemplateMsgResult">
+        select <include refid="allColumnList"/>
+        from flow_template_msg
+        where 1 = 1
+        <include refid="searchCondition"/>
+        order by id desc
+    </select>
+
+    <select id="queryFlowTemplateMsg" resultType="com.spark.bean.flow.result.FlowTemplateMsgResult">
+        select <include refid="allColumnList"/>
+        from flow_template_msg
+        where 1 = 1
+        <include refid="searchCondition"/>
+        limit 1
+    </select>
+</mapper>

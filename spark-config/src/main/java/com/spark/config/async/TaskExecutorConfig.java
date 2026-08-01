@@ -34,7 +34,7 @@ public class TaskExecutorConfig {
         executor.setThreadNamePrefix("asyncTask-");
         executor.setKeepAliveSeconds(60);
         executor.setRejectedExecutionHandler((r, executor1) -> {
-            logger.warn("Task {} rejected, executor: {}", r.toString(), executor1.toString());
+            logger.warn("Task={} rejected, executor={}", r.toString(), executor1.toString());
         });
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(30);

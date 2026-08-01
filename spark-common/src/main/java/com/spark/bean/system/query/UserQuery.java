@@ -3,6 +3,8 @@ package com.spark.bean.system.query;
 import com.spark.bean.base.BaseQuery;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * +++/\_/\
  * + ( °w° )=
@@ -43,4 +45,9 @@ public class UserQuery extends BaseQuery {
      * 状态
      */
     private Integer status;
+
+    /**
+     * 部门id列表
+     */
+    private List<Long> deptIds;
 }

@@ -3,6 +3,8 @@ package com.spark.bean.form.query;
 import com.spark.bean.base.BaseQuery;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * +++/\_/\
  * + ( °w° )=
@@ -14,20 +16,30 @@ import lombok.Data;
  */
 @Data
 public class FormObjValueQuery extends BaseQuery {
+
     /**
      * 对象id
      */
     private Long objId;
+
     /**
      * 表单id
      */
     private Long formId;
+
     /**
      * 类型
      */
     private String type;
+
     /**
      * 字段code
      */
     private String code;
+
+    /**
+     * 字段code
+     */
+    private List<String> codes;
+
 }

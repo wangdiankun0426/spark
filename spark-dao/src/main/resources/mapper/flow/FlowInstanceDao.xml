@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.flow.FlowInstanceDao" >
     <sql id="allColumnList" >
-        id , template_id , template_rev_id , form_id , form_rev_id , process_id , flowable_instance_id , status, delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , template_id , template_rev_id , form_id , form_rev_id , process_id , flowable_instance_id , status, level , name , description , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="searchCondition">
@@ -44,6 +44,9 @@
         <if test="status != null">
             and status = #{status}
         </if>
+        <if test="name != null and name != ''">
+            and name like concat('%', #{name}, '%')
+        </if>
         <if test="deleteFlag != null and id == null and ids == null">
             and delete_flag = #{deleteFlag}
         </if>
@@ -84,8 +87,8 @@
     </sql>
 
     <insert id="insert">
-        insert into flow_instance ( id, template_id , template_rev_id , form_id , form_rev_id , process_id , flowable_instance_id , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values (#{id}, #{templateId} , #{templateRevId} , #{formId} , #{formRevId} , #{processId} , #{flowableInstanceId} , #{status} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into flow_instance ( id, template_id , template_rev_id , form_id , form_rev_id , process_id , flowable_instance_id , status , level , name , description , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{id}, #{templateId} , #{templateRevId} , #{formId} , #{formRevId} , #{processId} , #{flowableInstanceId} , #{status} , #{level} , #{name} , #{description} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">
@@ -112,6 +115,12 @@
         </if>
         <if test="flowableInstanceId != null and flowableInstanceId != ''">
             , flowable_instance_id = #{flowableInstanceId}
+        </if>
+        <if test="name != null and name != ''">
+            , name = #{name}
+        </if>
+        <if test="description != null and description != ''">
+            , description = #{description}
         </if>
         where id = #{id}
     </update>

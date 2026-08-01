@@ -54,6 +54,21 @@ public class FlowInstanceVO extends BaseVO {
     private Integer status;
 
     /**
+     * 紧急程度 FlowInstanceLevelEnum
+     **/
+    private Integer level;
+
+    /**
+     * 流程实例名称
+     **/
+    private String name;
+
+    /**
+     * 流程实例描述
+     **/
+    private String description;
+
+    /**
      * 待审批节点id
      */
     private Long nodeId;

@@ -54,6 +54,36 @@ public class FlowInstanceResult extends BaseResult {
     private Integer status;
 
     /**
+     * 紧急程度 FlowInstanceLevelEnum
+     **/
+    private Integer level;
+
+    /**
+     * 紧急程度名称
+     **/
+    private String levelName;
+
+    /**
+     * 申请部门id
+     **/
+    private Long deptId;
+
+    /**
+     * 申请部门名称
+     **/
+    private String deptName;
+
+    /**
+     * 流程实例名称
+     **/
+    private String name;
+
+    /**
+     * 流程实例描述
+     **/
+    private String description;
+
+    /**
      * 状态名称
      **/
     private String statusName;
@@ -82,4 +112,9 @@ public class FlowInstanceResult extends BaseResult {
      * 待审批节点id
      */
     private Long nodeId;
+
+    /**
+     * 节点权限
+     */
+    private Integer permission;
 }

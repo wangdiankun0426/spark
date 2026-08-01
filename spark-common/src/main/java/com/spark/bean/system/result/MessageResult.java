@@ -30,5 +30,8 @@ public class MessageResult extends BaseResult {
      **/
     private String content;
 
-
+    /**
+     * 所属对象id
+     */
+    private Long refId;
 }

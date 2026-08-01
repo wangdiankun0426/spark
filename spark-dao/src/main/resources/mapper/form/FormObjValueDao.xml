@@ -22,6 +22,16 @@
         <if test="formId != null">
             and form_id = #{formId}
         </if>
+        <if test="code != null">
+            and code = #{code}
+        </if>
+        <if test="codes != null and codes.size() > 0">
+            and code in (
+            <foreach collection="codes" item="code" separator=",">
+                #{code}
+            </foreach>
+            )
+        </if>
         <if test="deleteFlag != null and id == null and ids == null">
             and delete_flag = #{deleteFlag}
         </if>

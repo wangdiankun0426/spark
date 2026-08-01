@@ -49,4 +49,9 @@ public class FlowTemplateNodeResult extends BaseResult {
      * 审批人
      */
     private String assignee;
+
+    /**
+     * 节点权限
+     */
+    private Integer permission;
 }

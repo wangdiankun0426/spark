@@ -3,6 +3,7 @@
       style="height: 400px; min-height: 60vh;"
       :label-position="props.form.formConfig.position"
       :size="props.form.formConfig.size"
+      :disabled="disabled"
   >
     <el-row :gutter="24">
       <el-col :span="widget.config.width"
@@ -19,7 +20,8 @@
 </template>
 <script setup>
 const props = defineProps({
-  form: Object
+  form: Object,
+  disabled: { type: Boolean, default: false },
 });
 
 /**

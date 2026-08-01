@@ -37,4 +37,8 @@ public class MessageVO extends BaseVO {
      */
     private List<Long> userIds;
 
+    /**
+     * 所属对象id
+     */
+    private Long refId;
 }

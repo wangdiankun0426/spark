@@ -6,6 +6,7 @@ import com.spark.bean.base.BaseException;
 import com.spark.bean.base.ResultData;
 import com.spark.bean.base.SessionHolder;
 import com.spark.enums.ErrorCodeEnum;
+import com.spark.enums.FlowTemplateTypeEnum;
 import com.spark.flow.service.FlowableService;
 import com.spark.utils.CollectionUtil;
 import com.spark.utils.StringUtil;
@@ -58,7 +59,7 @@ public class FlowableServiceImpl implements FlowableService {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        BpmnModel model = convertJsonToBpmnModel(processId, bpmJson);
+        BpmnModel model = this.convertJsonToBpmnModel(processId, bpmJson);
         Deployment deployment = repositoryService.createDeployment()
                 .addBpmnModel(processId+".bpmn20.xml", model)
                 .deploy();
@@ -156,6 +157,21 @@ public class FlowableServiceImpl implements FlowableService {
     }
 
     /**
+     * 按任务ID完成任务
+     * 通过任务ID走实体缓存查询，任务创建事件内（尚未提交数据库）也可完成
+     * @param taskId 任务ID
+     * @param variables 流程变量
+     * @return 响应结果
+     */
+    @Override
+    public ResultData<Void> completeTaskById(String taskId, Map<String, Object> variables) {
+        ResultData<Void> result = new ResultData<>();
+        taskService.complete(taskId, variables);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
      * 挂起流程实例
      * @param flowableInstanceId 流程实例ID
      * @return 响应结果
@@ -248,22 +264,16 @@ public class FlowableServiceImpl implements FlowableService {
             String type = el.getString("type");
             String name = el.getString("name");
             FlowElement flowElement = null;
-            switch (type) {
-                case "startEvent":
-                    flowElement = new StartEvent();
-                    break;
-                case "userTask":
-                    flowElement = new UserTask();
-                    break;
-                case "exclusiveGateway":
-                    flowElement = new ExclusiveGateway();
-                    break;
-                case "endEvent":
-                    flowElement = new EndEvent();
-                    break;
-                default:
-                    throw new BaseException(ErrorCodeEnum.FLOW_NODE_TYPE_UNKNOWN);
+            FlowTemplateTypeEnum templateType = FlowTemplateTypeEnum.findByValue(type);
+            if (templateType == null) {
+                throw new BaseException(ErrorCodeEnum.FLOW_NODE_TYPE_UNKNOWN);
             }
+            flowElement = switch (templateType) {
+                case START_EVENT -> new StartEvent();
+                case USER_TASK -> new UserTask();
+                case EXCLUSIVE_GATEWAY -> new ExclusiveGateway();
+                case END_EVENT -> new EndEvent();
+            };
             flowElement.setId(id);
             flowElement.setName(name);
             process.addFlowElement(flowElement);

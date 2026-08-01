@@ -36,4 +36,11 @@ public interface FormFieldDao extends BaseDao<FormField> {
      * @return
      */
     List<FormFieldResult> queryFormFieldList(FormFieldQuery query);
+
+    /**
+     * 查询单条表单字段
+     * @param query
+     * @return
+     */
+    FormFieldResult queryFormField(FormFieldQuery query);
 }

@@ -15,7 +15,7 @@ public enum FlowInstanceStatusEnum {
     PROCESSING(2, "审批中"),
     COMPLETED(3, "审批通过"),
     REJECTED(4, "审批驳回"),
-    CANCELLED(5, "已取消");
+    AUTO_PASS(5, "自动通过");
 
     private Integer value;
 

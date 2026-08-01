@@ -9,6 +9,13 @@
         <if test="roleId != null">
             and role_id = #{roleId}
         </if>
+        <if test="roleIds != null and roleIds.size() > 0">
+            and role_id in (
+            <foreach collection="roleIds" item="roleId" separator=",">
+                #{roleId}
+            </foreach>
+            )
+        </if>
         <if test="userIds != null and userIds.size() > 0">
             and user_id in (
             <foreach collection="userIds" item="userId" separator=",">

@@ -22,6 +22,11 @@ public class RoleUserQuery extends BaseQuery {
     private Long roleId;
 
     /**
+     * 角色ids
+     */
+    private List<Long> roleIds;
+
+    /**
      * 用户ids
      */
     private List<Long> userIds;

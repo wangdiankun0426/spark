@@ -99,5 +99,20 @@ export const sysWidgetList = [
             hidden: false,
             multiple: false,
         },
+    },
+    {
+        type: 'select-role',
+        name: '选择角色',
+        config: {
+            code: '',
+            label: '选择角色',
+            width: 12,
+            value: null,
+            showValue: null,
+            placeholder: '请选择角色',
+            disabled: false,
+            hidden: false,
+            multiple: false,
+        },
     }
 ]

@@ -271,6 +271,7 @@ public class LoginServiceImpl implements ILoginService {
         String content = MessageTypeEnum.LOGIN.getContent();
         messageVO.setContent(String.format(content, loginVO.getLoginName(), DateUtil.getCurrentTime(DateUtil.YYYYMMDD_HHMMSS)));
         messageVO.setUserIds(List.of(loginVO.getUserId()));
+        messageVO.setRefId(loginVO.getUserId());
         mqProducer.sendSystemMessageMq(JsonUtil.toString(messageVO));
     }
 }

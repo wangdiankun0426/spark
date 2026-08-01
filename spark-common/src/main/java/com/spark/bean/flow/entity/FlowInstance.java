@@ -50,4 +50,19 @@ public class FlowInstance extends BaseEntity {
      **/
     private Integer status;
 
+    /**
+     * 紧急程度 FlowInstanceLevelEnum
+     **/
+    private Integer level;
+
+    /**
+     * 流程实例名称
+     **/
+    private String name;
+
+    /**
+     * 流程实例描述
+     **/
+    private String description;
+
 }

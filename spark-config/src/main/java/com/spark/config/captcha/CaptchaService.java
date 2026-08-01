@@ -37,9 +37,9 @@ public class CaptchaService {
         // 验证码图片宽度 默认为200
         properties.setProperty(KAPTCHA_IMAGE_WIDTH, "250");
         // 验证码图片高度 默认为50
-        properties.setProperty(KAPTCHA_IMAGE_HEIGHT, "80");
+        properties.setProperty(KAPTCHA_IMAGE_HEIGHT, "100");
         // 验证码文本字符大小 默认为40
-        properties.setProperty(KAPTCHA_TEXTPRODUCER_FONT_SIZE, "55");
+        properties.setProperty(KAPTCHA_TEXTPRODUCER_FONT_SIZE, "70");
         // KAPTCHA_SESSION_KEY
         properties.setProperty(KAPTCHA_SESSION_CONFIG_KEY, "kaptchaCode");
         // 验证码文本字符长度 默认为5

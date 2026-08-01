@@ -27,6 +27,13 @@
                 select id from sys_department where code like (select CONCAT(code, '%') from sys_department where id = #{deptId})
             )
         </if>
+        <if test="deptIds != null and deptIds.size() > 0">
+            and dept_id in (
+            <foreach collection="deptIds" item="deptId" separator=",">
+                #{deptId}
+            </foreach>
+            )
+        </if>
         <if test="phone != null">
             and phone = #{phone}
         </if>

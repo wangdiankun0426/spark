@@ -20,7 +20,9 @@ import com.spark.dao.flow.*;
 import com.spark.dao.form.FormObjValueDao;
 import com.spark.dao.form.FormVersionDao;
 import com.spark.enums.ErrorCodeEnum;
+import com.spark.enums.FlowInstanceLevelEnum;
 import com.spark.enums.FlowInstanceStatusEnum;
+import com.spark.enums.FlowTemplateNodePermissionEnum;
 import com.spark.enums.ObjectTypeEnum;
 import com.spark.flow.service.FlowableService;
 import com.spark.flow.service.IFlowInstanceService;
@@ -68,6 +70,8 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
     private FlowInstanceDiscussDao instanceDiscussDao;
     @Autowired
     private FlowInstanceAssigneeDao instanceAssigneeDao;
+    @Autowired
+    private FlowTemplateNodeDao templateNodeDao;
 
     /**
      * 创建流程实例
@@ -77,7 +81,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
     @Override
     public ResultData<Void> createInstance(FlowInstanceVO instanceVO) {
         ResultData<Void> result = new ResultData<>();
-        if (instanceVO == null || instanceVO.getTemplateId() == null || instanceVO.getTemplateRevId() == null
+        if (instanceVO == null || StringUtil.isBlank(instanceVO.getName()) || instanceVO.getTemplateId() == null || instanceVO.getTemplateRevId() == null
                 || instanceVO.getFormId() == null || instanceVO.getFormRevId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
@@ -133,6 +137,11 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
             result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_EXIST);
             return result;
         }
+        this.supplyCreatedByName(instanceResult);
+        instanceResult.setLevelName(FlowInstanceLevelEnum.indexOf(instanceResult.getLevel()).getDesc());
+        if (instanceResult.getDeptId() != null) {
+            instanceResult.setDeptName(this.getObjName(instanceResult.getDeptId()));
+        }
         FlowTemplateVersionQuery templateVersionQuery = new FlowTemplateVersionQuery();
         templateVersionQuery.setId(instanceResult.getTemplateRevId());
         FlowTemplateVersionResult templateVersionResult = templateVersionDao.queryTemplateVersion(templateVersionQuery);
@@ -168,7 +177,17 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         instanceResult.setNodes(instanceNodeList);
         if (CollectionUtil.isNotEmpty(instanceNodeList)) {
             Optional<FlowInstanceNodeResult> processingNode = instanceNodeList.stream().filter(node -> FlowInstanceStatusEnum.PROCESSING.getValue().equals(node.getStatus())).findFirst();
-            processingNode.ifPresent(instanceNodeResult -> instanceResult.setNodeId(instanceNodeResult.getId()));
+            processingNode.ifPresent(instanceNodeResult -> {
+                instanceResult.setNodeId(instanceNodeResult.getId());
+                FlowTemplateNodeQuery templateNodeQuery = new FlowTemplateNodeQuery();
+                templateNodeQuery.setNodeId(instanceNodeResult.getNodeId());
+                templateNodeQuery.setTemplateId(instanceResult.getTemplateId());
+                templateNodeQuery.setRevId(instanceResult.getTemplateRevId());
+                FlowTemplateNodeResult flowTemplateNodeResult = templateNodeDao.queryTemplateNode(templateNodeQuery);
+                if (flowTemplateNodeResult != null) {
+                    instanceResult.setPermission(flowTemplateNodeResult.getPermission());
+                }
+            });
         }
         result.setData(instanceResult);
         result.setCode(ResultData.OK);
@@ -262,6 +281,30 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         instanceNodeQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
         FlowInstanceNodeResult instanceNodeResult = instanceNodeDao.queryInstanceNode(instanceNodeQuery);
         if (instanceNodeResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        FlowTemplateNodeQuery templateNodeQuery = new FlowTemplateNodeQuery();
+        templateNodeQuery.setNodeId(instanceNodeResult.getNodeId());
+        templateNodeQuery.setTemplateId(instanceResult.getTemplateId());
+        templateNodeQuery.setRevId(instanceResult.getTemplateRevId());
+        FlowTemplateNodeResult flowTemplateNodeResult = templateNodeDao.queryTemplateNode(templateNodeQuery);
+        if (flowTemplateNodeResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_TEMPLATE_NOT_EXIST);
+            return result;
+        }
+        Integer permission = flowTemplateNodeResult.getPermission();
+        if (permission == null) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        if (FlowInstanceStatusEnum.COMPLETED.getValue().equals(instanceVO.getStatus()) &&
+                (permission & FlowTemplateNodePermissionEnum.ALLOW_APSS.getValue()) != FlowTemplateNodePermissionEnum.ALLOW_APSS.getValue()) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        if (FlowInstanceStatusEnum.REJECTED.getValue().equals(instanceVO.getStatus()) &&
+                (permission & FlowTemplateNodePermissionEnum.ALLOW_REJECT.getValue()) != FlowTemplateNodePermissionEnum.ALLOW_REJECT.getValue()) {
             result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
             return result;
         }
@@ -386,7 +429,13 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
             return;
         }
         super.supplyCreatedByName(list);
-        list.forEach(item -> item.setStatusName(FlowInstanceStatusEnum.indexOf(item.getStatus()).getDesc()));
+        list.forEach(item -> {
+            item.setStatusName(FlowInstanceStatusEnum.indexOf(item.getStatus()).getDesc());
+            item.setLevelName(FlowInstanceLevelEnum.indexOf(item.getLevel()).getDesc());
+            if (item.getDeptId() != null) {
+                item.setDeptName(this.getObjName(item.getDeptId()));
+            }
+        });
 
     }
 

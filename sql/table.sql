@@ -104,6 +104,7 @@ CREATE TABLE `sys_message` (
    `type` int(2) NOT NULL COMMENT '消息类型',
    `title` varchar(64) NOT NULL COMMENT '消息标题',
    `content` varchar(512) NOT NULL COMMENT '消息内容',
+   `ref_id` bigint(12) NOT NULL COMMENT '所属对象ID',
 
    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
@@ -411,6 +412,7 @@ CREATE TABLE `flow_template_node` (
       `type` varchar(36) NOT NULL COMMENT '节点类型',
       `assignee_type` int(3) NULL COMMENT '审批人类型',
       `assignee` varchar(256) NULL COMMENT '审批人',
+      `permission` int(3) NULL COMMENT '节点权限',
 
       `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
       `created_by` bigint(12) NOT NULL COMMENT '创建人id',
@@ -438,6 +440,24 @@ CREATE TABLE `flow_template_sequence` (
       PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='流程模板连线表';
 
+DROP TABLE IF EXISTS `flow_template_msg`;
+CREATE TABLE `flow_template_msg` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `template_id` bigint(12) NOT NULL COMMENT '流程模板id',
+    `rev_id` bigint(12) NOT NULL COMMENT '流程版本id',
+    `type` int(5) NOT NULL COMMENT '通知类型',
+    `enabled` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否启用',
+    `content` varchar(512) NOT NULL DEFAULT '' COMMENT '通知内容模板',
+    `recipient` varchar(256) NOT NULL DEFAULT '' COMMENT '通知人',
+
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='流程模板消息通知表';
+
 DROP TABLE IF EXISTS `flow_instance`;
 CREATE TABLE `flow_instance` (
      `id` bigint(12) NOT NULL COMMENT '主键',
@@ -448,6 +468,9 @@ CREATE TABLE `flow_instance` (
      `process_id` varchar(128) NOT NULL COMMENT '模板id',
      `flowable_instance_id` varchar(128) NOT NULL COMMENT 'flowable 流程实例id' unique ,
      `status` int(5) NOT NULL COMMENT '流程实例状态',
+     `name` varchar(128) NOT NULL COMMENT '流程实例名称',
+     `description` varchar(256) NULL COMMENT '流程实例描述',
+     `level` int(1) NOT NULL DEFAULT 1 COMMENT '紧急程度',
 
      `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
      `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',

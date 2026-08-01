@@ -51,4 +51,8 @@ public class FlowTemplateNode extends BaseEntity {
      */
     private String assignee;
 
+    /**
+     * 节点权限
+     */
+    private Integer permission;
 }

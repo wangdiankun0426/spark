@@ -22,23 +22,14 @@
           height="calc(100vh - 165px)"
           :data="instanceList"
           highlight-current-row
+          @row-click="handleRowClick"
       >
-        <el-table-column prop="id" label="编号" width="100" align="center"/>
-        <el-table-column prop="processId" label="模板ID"  align="center" width="200px"/>
-        <el-table-column prop="statusName" label="状态"  align="center"/>
-        <el-table-column prop="createdByName" label="创建人" align="center"/>
-        <el-table-column prop="createdDt" label="创建时间" align="center"/>
-        <el-table-column fixed="right" label="" width="操作">
-          <template #default="scope">
-            <el-button
-                type="success"
-                text
-                @click="handleOpenInstance(scope.row.id)"
-            >
-              <el-icon><View /></el-icon>查看流程
-            </el-button>
-          </template>
-        </el-table-column>
+        <el-table-column prop="name" label="流程标题"  align="center"/>
+        <el-table-column prop="levelName" label="紧急程度" align="center" width="180px"/>
+        <el-table-column prop="statusName" label="状态"  align="center" width="180px"/>
+        <el-table-column prop="createdByName" label="申请人" align="center" width="180px"/>
+        <el-table-column prop="deptName" label="申请部门" align="center" width="180px"/>
+        <el-table-column prop="createdDt" label="申请时间" align="center" width="220px"/>
       </el-table>
     </div>
     <!--分页组件-->
@@ -56,54 +47,19 @@
     </div>
 
     <!--流程实例表单-->
-    <el-drawer
-        v-model="flowDetailVisible"
-        title="流程详情"
-        direction="rtl"
-        size="80%"
-        :before-close="handleCloseFlowDetail"
-    >
-      <el-tabs v-model="detailActiveTab">
-        <el-tab-pane label="表单详情" name="form">
-          <form-view
-              :form="formJson"
-              v-if="flowDetailVisible && detailActiveTab === 'form'"
-          />
-        </el-tab-pane>
-        <el-tab-pane label="流程图" name="flow">
-          <el-row :gutter="20">
-            <el-col :span="6">
-              <div class="timeline-container">
-                <h4>流程时间线</h4>
-                <el-timeline>
-                  <el-timeline-item
-                      v-for="(node, index) in nodes"
-                      :key="index"
-                      :type="node.status === 2 ? 'primary' : (node.status === 3 ? 'success' : 'danger')"
-                  >
-                    <p>{{ node.name }}</p>
-                    <p>{{ node.createdDt }}</p>
-                    <p v-if="node.type === 'userTask'">节点状态：{{ node.statusName }}</p>
-                    <p v-if="node.status === 2">待审批人：{{ node.unAssigneeName }}</p>
-                    <p v-for="(discuss, index) in node.discusses" :key="index" style="font-size: 12px">
-                      <p>{{ discuss.assigneeName }} - {{ discuss.createdDt }}<br>
-                        审批意见: {{ discuss.discuss }}
-                      </p>
-                    </p>
-                  </el-timeline-item>
-                </el-timeline>
-              </div>
-            </el-col>
-            <el-col :span="18">
-              <form-view
-                  :bpmJson="bpmJson"
-                  v-if="flowDetailVisible && detailActiveTab === 'flow'"
-              />
-            </el-col>
-          </el-row>
-        </el-tab-pane>
-      </el-tabs>
-    </el-drawer>
+    <flow-detail-drawer
+        :visible="flowDetailVisible"
+        :name="instanceName"
+        :description="instanceDescription"
+        :created-by-name="instanceApplicant"
+        :dept-name="instanceDeptName"
+        :level="instanceLevel"
+        :formJson="formJson"
+        :bpmJson="bpmJson"
+        :nodes="nodes"
+        :type="4"
+        @close="handleCloseFlowDetail"
+    />
 
   </div>
 </template>
@@ -115,8 +71,7 @@ import {
   showInstanceDetailAPI
 } from '@/api/flow/instance';
 import { Search } from '@element-plus/icons-vue';
-import FormView from '@/components/FormView';
-import FlowView from '@/components/FlowView';
+import FlowDetailDrawer from '@/components/FlowDetailDrawer';
 
 const instanceQuery = ref({
   pageNo: 1,
@@ -148,6 +103,11 @@ function handleCloseFlowDetail() {
   instanceId.value = undefined;
   flowDetailVisible.value = false;
   detailActiveTab.value = 'form';
+  instanceName.value = '';
+  instanceDescription.value = '';
+  instanceApplicant.value = '';
+  instanceDeptName.value = '';
+  instanceLevel.value = 1;
 }
 
 /**
@@ -183,6 +143,14 @@ function handlePageChangeNo(pageNo) {
   handleGetInstanceList();
 }
 
+/**
+ * 点击行打开对应流程
+ * @param row
+ */
+function handleRowClick(row) {
+  handleOpenInstance(row.id);
+}
+
 const formJson = ref({});
 const bpmJson = ref({});
 const flowDetailVisible = ref(false);
@@ -190,6 +158,11 @@ const detailActiveTab = ref('form');
 const nodes = ref([]);
 const nodeId = ref(undefined);
 const instanceId = ref(undefined);
+const instanceName = ref('');
+const instanceDescription = ref('');
+const instanceApplicant = ref('');
+const instanceDeptName = ref('');
+const instanceLevel = ref(1);
 
 /**
  * 打开流程模板
@@ -206,6 +179,11 @@ function handleOpenInstance(id) {
       nodes.value = res.data.nodes;
       instanceId.value = res.data.id;
       nodeId.value = res.data.nodeId;
+      instanceName.value = res.data.name || '';
+      instanceDescription.value = res.data.description || '';
+      instanceApplicant.value = res.data.createdByName || '';
+      instanceDeptName.value = res.data.deptName || '';
+      instanceLevel.value = res.data.level;
       const values = res.data.values;
       if (values.length === 0) {
         flowDetailVisible.value = true;
@@ -229,18 +207,10 @@ function handleOpenInstance(id) {
 }
 </script>
 
-<style scoped>
-.timeline-container {
-  padding: 5px;
-  border-right: 1px solid #ebeef5;
-  height: calc(100vh - 200px);
-  overflow-y: auto;
-}
-
-.timeline-container h4 {
-  margin-left: 20px;
-  margin-bottom: 10px;
-  color: #333;
+<style scoped lang="scss">
+:deep(.el-table__row) {
+  cursor: pointer;
+  height: 36px !important;
 }
 </style>
 

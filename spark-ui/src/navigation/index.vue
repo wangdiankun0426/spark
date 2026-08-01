@@ -33,13 +33,13 @@
         <!-- 搜索快捷功能 -->
         <el-popover
             v-model:visible="searchVisible"
-            trigger="hover"
+            trigger="click"
             placement="bottom"
             :width="320"
             popper-class="nav-search-popover"
         >
           <template #reference>
-            <div class="tool-item" :class="{ 'is-active': searchVisible }" title="搜索快捷功能">
+            <div class="tool-item" :class="{ 'is-active': searchVisible }" title="快捷功能">
               <el-icon style="font-size: 20px"><SearchV2 /></el-icon>
             </div>
           </template>
@@ -67,14 +67,14 @@
         </el-popover>
         <!-- 消息 -->
         <el-popover
-            trigger="hover"
+            trigger="click"
             placement="bottom"
             :width="360"
             popper-class="nav-message-popover"
             @show="loadNavMessageData"
         >
           <template #reference>
-            <div class="tool-item">
+            <div class="tool-item" title="消息">
               <el-icon style="font-size: 20px"><Bell /></el-icon>
             </div>
           </template>
@@ -88,10 +88,16 @@
                       :timestamp="item.createdDt"
                       placement="top"
                   >
-                    <el-tag :type="i === 0 ? 'success' : 'info'" size="small">
-                      {{ item.title }}
-                    </el-tag>
-                    <p class="nav-message-content">{{ item.content }}</p>
+                    <div
+                        class="nav-message-item"
+                        :class="{ 'is-link': isFlowMessage(item) }"
+                        @click="handleMessageClick(item)"
+                    >
+                      <el-tag type="info" size="small">
+                        {{ item.title }}
+                      </el-tag>
+                      <p class="nav-message-content">{{ item.content }}</p>
+                    </div>
                   </el-timeline-item>
                 </el-timeline>
                 <el-empty v-else description="暂无消息" :image-size="60"/>
@@ -287,50 +293,65 @@ const defaultActive = computed(() => {
   return '/home';
 })
 
-// 消息悬浮框相关
+// 消息弹窗相关
 const messageList = ref([]);
-const messageLoaded = ref(false);
-// 公告相关
 const noticeList = ref([]);
-const noticeLoaded = ref(false);
-// 当前激活的页签
 const navMessageTab = ref('message');
 
 /**
- * 加载消息列表（首次悬浮时拉取一次）
+ * 加载消息列表（每次弹窗时重新拉取）
  */
 function loadMessageList() {
-  if (messageLoaded.value) {
-    return;
-  }
   queryMyMessageListAPI().then(res => {
     messageList.value = res.data || [];
-    messageLoaded.value = true;
   });
 }
 
 /**
- * 加载公告列表（首次悬浮时拉取一次）
+ * 加载公告列表（每次弹窗时重新拉取）
  */
 function loadNoticeList() {
-  if (noticeLoaded.value) {
-    return;
-  }
   noticeListAPI({}).then(res => {
     if (res.code !== 200) {
       return;
     }
     noticeList.value = res.data || [];
-    noticeLoaded.value = true;
   });
 }
 
 /**
- * 悬浮框展开时加载消息与公告
+ * 弹窗展开时加载消息与公告
  */
 function loadNavMessageData() {
   loadMessageList();
   loadNoticeList();
+}
+
+/**
+ * 判断是否为流程消息（refId % 100 === 12 均为流程）
+ * @param item
+ * @returns {boolean}
+ */
+function isFlowMessage(item) {
+  return item.refId !== undefined && item.refId !== null && item.refId % 100 === 12;
+}
+
+/**
+ * 消息点击跳转：流程消息跳转到对应流程列表并打开详情
+ * @param item
+ */
+function handleMessageClick(item) {
+  if (!isFlowMessage(item)) {
+    return;
+  }
+  const refId = item.refId;
+  if (item.type === 2) {
+    // 待办通知 -> 我的待办
+    router.push({ path: '/flow/myPendingList', query: { id: refId } }).catch(() => {});
+  } else if (item.type === 3 || item.type === 4) {
+    // 完结/驳回通知 -> 我的申请
+    router.push({ path: '/flow/myAppliedList', query: { id: refId } }).catch(() => {});
+  }
 }
 
 /**
@@ -517,5 +538,78 @@ function handleViewNotice(row) {
 }
 :deep(.el-dropdown-link:focus) {
   outline: none !important;
+}
+
+// 导航栏消息悬浮框
+.nav-message-popover {
+  .nav-message-tabs {
+    .el-tabs__header {
+      margin-bottom: 8px;
+    }
+    .el-tabs__nav-wrap::after {
+      height: 1px;
+    }
+  }
+  .nav-message-body {
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .nav-message-content {
+    margin: 6px 0 0 0;
+    font-size: 13px;
+    color: $color-text-secondary;
+    line-height: 18px;
+  }
+  .nav-message-item {
+    padding: 4px;
+    border-radius: $border-radius-sm;
+    cursor: pointer;
+    transition: $transition-fast;
+    &.is-link:hover {
+      background-color: $color-primary-soft;
+    }
+  }
+  .nav-message-footer {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid $border-color-light;
+    display: flex;
+    justify-content: center;
+    .el-pagination {
+      float: none;
+      padding: 0;
+    }
+  }
+  .nav-notice-item {
+    padding: 8px 4px;
+    border-bottom: 1px solid $border-color-light;
+    cursor: pointer;
+    transition: $transition-fast;
+    &:last-child {
+      border-bottom: 0;
+    }
+    &:hover {
+      background-color: $color-primary-soft;
+      border-radius: $border-radius-sm;
+    }
+  }
+  .nav-notice-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: $color-text-primary;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .nav-notice-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+  .nav-notice-time {
+    font-size: 12px;
+    color: $color-text-secondary;
+  }
 }
 </style>

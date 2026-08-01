@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.spark.bean.base.ResultData;
 import com.spark.bean.flow.entity.FlowTemplate;
+import com.spark.bean.flow.entity.FlowTemplateMsg;
 import com.spark.bean.flow.entity.FlowTemplateNode;
 import com.spark.bean.flow.entity.FlowTemplateSequence;
 import com.spark.bean.flow.entity.FlowTemplateVersion;
@@ -13,6 +14,7 @@ import com.spark.bean.flow.result.FlowTemplateResult;
 import com.spark.bean.flow.result.FlowTemplateVersionResult;
 import com.spark.bean.flow.vo.FlowTemplateVersionVO;
 import com.spark.dao.flow.FlowTemplateDao;
+import com.spark.dao.flow.FlowTemplateMsgDao;
 import com.spark.dao.flow.FlowTemplateNodeDao;
 import com.spark.dao.flow.FlowTemplateSequenceDao;
 import com.spark.dao.flow.FlowTemplateVersionDao;
@@ -56,6 +58,8 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
     private FlowTemplateSequenceDao templateSequenceDao;
     @Autowired
     private FlowTemplateNodeDao templateNodeDao;
+    @Autowired
+    private FlowTemplateMsgDao templateMsgDao;
     @Value("${flow.bpmn.path}")
     private String flowBpmnPath;
 
@@ -88,24 +92,24 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
         if (result.getCode() != ResultData.OK) {
             return result;
         }
-        FlowTemplateVersion templateversion = new FlowTemplateVersion();
-        BeanUtils.copyProperties(templateVersionVO, templateversion);
-        templateversion.setProcessId(templateResult.getProcessId());
+        FlowTemplateVersion templateVersion = new FlowTemplateVersion();
+        BeanUtils.copyProperties(templateVersionVO, templateVersion);
+        templateVersion.setProcessId(templateResult.getProcessId());
         int maxCode = templateversionDao.queryMaxRevCode(templateResult.getId());
         int revCode = maxCode+1;
         String revNum = this.convertRevNum(revCode);
-        templateversion.setRevCode(revCode);
-        templateversion.setRevNum(revNum);
-        templateversion.setBpmPath(bpmnPath);
-        int count = templateversionDao.insertDB(templateversion);
+        templateVersion.setRevCode(revCode);
+        templateVersion.setRevNum(revNum);
+        templateVersion.setBpmPath(bpmnPath);
+        int count = templateversionDao.insertDB(templateVersion);
         if (count < 1) {
             logger.error("createTemplateVersion error, insert db fail");
             return result;
         }
         FlowTemplate template = new FlowTemplate();
         template.setId(templateResult.getId());
-        template.setRevNum(templateversion.getRevNum());
-        template.setRevId(templateversion.getId());
+        template.setRevNum(templateVersion.getRevNum());
+        template.setRevId(templateVersion.getId());
         count = templateDao.updateDBById(template);
         if (count < 1) {
             logger.error("createTemplateVersion error, update db fail");
@@ -113,12 +117,16 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
         }
         List<FlowTemplateNode> templateNodes = new ArrayList<>();
         List<FlowTemplateSequence> templateSequences = new ArrayList<>();
-        this.convertBpmJson(templateVersionVO.getBpmJson(), templateNodes, templateSequences);
+        List<FlowTemplateMsg> templateMsgs = new ArrayList<>();
+        this.convertBpmJson(templateVersionVO.getBpmJson(), templateNodes, templateSequences, templateMsgs);
         if (CollectionUtil.isNotEmpty(templateNodes)) {
-            templateNodeDao.batchInsert(template.getId(), templateversion.getId(), templateNodes);
+            templateNodeDao.batchInsert(template.getId(), templateVersion.getId(), templateNodes);
         }
         if (CollectionUtil.isNotEmpty(templateSequences)) {
-            templateSequenceDao.batchInsert(template.getId(), templateversion.getId(), templateSequences);
+            templateSequenceDao.batchInsert(template.getId(), templateVersion.getId(), templateSequences);
+        }
+        if (CollectionUtil.isNotEmpty(templateMsgs)) {
+            templateMsgDao.batchInsert(template.getId(), templateVersion.getId(), templateMsgs);
         }
         result.setCode(ResultData.OK);
         return result;
@@ -130,8 +138,9 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
      * @param bpmJson bpmn json
      * @param templateNodes 模板节点
      * @param templateSequences 模板连线
+     * @param templateMsgs 消息模板
      */
-    private void convertBpmJson(String bpmJson, List<FlowTemplateNode> templateNodes, List<FlowTemplateSequence> templateSequences) {
+    private void convertBpmJson(String bpmJson, List<FlowTemplateNode> templateNodes, List<FlowTemplateSequence> templateSequences, List<FlowTemplateMsg> templateMsgs) {
         JSONObject bpmObject = JSONObject.parseObject(bpmJson);
         JSONArray nodes = bpmObject.getJSONArray("nodes");
         for (Object node : nodes) {
@@ -141,12 +150,14 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
             String name = el.getString("name");
             Integer assigneeType = el.getInteger("assigneeType");
             String assignee = el.getString("assignee");
+            Integer permission = el.getInteger("permission");
             FlowTemplateNode templateNode = new FlowTemplateNode();
             templateNode.setNodeId(id);
             templateNode.setType(type);
             templateNode.setName(name);
             templateNode.setAssigneeType(assigneeType);
             templateNode.setAssignee(assignee);
+            templateNode.setPermission(permission);
             templateNodes.add(templateNode);
         }
         JSONArray sequences = bpmObject.getJSONArray("sequences");
@@ -162,6 +173,20 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
             templateSequence.setTargetRef(targetRef);
             templateSequence.setCondition(condition);
             templateSequences.add(templateSequence);
+        }
+        JSONArray notices = bpmObject.getJSONArray("notices");
+        for (Object notice : notices) {
+            JSONObject not = (JSONObject) notice;
+            Integer type = not.getInteger("type");
+            if (type == null) {
+                continue;
+            }
+            FlowTemplateMsg templateMsg = new FlowTemplateMsg();
+            templateMsg.setType(type);
+            templateMsg.setEnabled(not.getBoolean("enabled"));
+            templateMsg.setContent(not.getString("content"));
+            templateMsg.setRecipient(not.getString("recipient"));
+            templateMsgs.add(templateMsg);
         }
     }
 

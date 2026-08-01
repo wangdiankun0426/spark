@@ -56,4 +56,9 @@ public class FlowInstanceQuery extends BaseQuery {
      * 流程状态
      */
     private Integer status;
+
+    /**
+     * 流程实例名称(模糊查询)
+     */
+    private String name;
 }

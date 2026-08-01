@@ -55,6 +55,16 @@ public interface FlowableService {
     ResultData<Void> completeTask(String flowableInstanceId, Map<String, Object> variables);
 
     /**
+     * 按任务ID完成任务
+     * 适用于任务创建事件内（任务尚未提交数据库）的场景，如系统自动通过
+     *
+     * @param taskId 任务id
+     * @param variables 流程变量
+     * @return 响应结果
+     */
+    ResultData<Void> completeTaskById(String taskId, Map<String, Object> variables);
+
+    /**
      * 挂起流程实例
      *
      * @param flowableInstanceId 流程实例id

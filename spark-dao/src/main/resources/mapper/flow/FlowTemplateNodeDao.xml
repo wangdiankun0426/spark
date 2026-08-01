@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.flow.FlowTemplateNodeDao" >
     <sql id="allColumnList" >
-        id , template_id , rev_id , node_id, name , type, assignee_type, assignee , delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , template_id , rev_id , node_id, name , type, assignee_type, assignee , permission,  delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="searchCondition">
@@ -18,10 +18,10 @@
     </sql>
 
     <insert id="batchInsert">
-        insert into flow_template_node (template_id , rev_id , node_id, name , type, assignee_type, assignee , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        insert into flow_template_node (template_id , rev_id , node_id, name , type, assignee_type, assignee , permission, delete_flag , created_by , created_dt , updated_by , updated_dt)
         values
         <foreach item="item" index="index" collection="list" separator=",">
-            ( #{templateId} , #{revId} , #{item.nodeId} , #{item.name} , #{item.type} , #{item.assigneeType} , #{item.assignee} , 1, 101, now(), 101,now())
+            ( #{templateId} , #{revId} , #{item.nodeId} , #{item.name} , #{item.type} , #{item.assigneeType} , #{item.assignee} , #{item.permission},  1, 101, now(), 101,now())
         </foreach>
     </insert>
 
