@@ -1,22 +1,24 @@
 <template>
   <div class="bpmn-designer-container">
-    <flow-canvas
+    <index
             :nodes="nodes"
-            :sequences="sequences"
-            :selected-node="selectedNode"
-            :selected-sequence="selectedSequence"
+            :edges="sequences"
+            source-key="sourceRef"
+            target-key="targetRef"
+            :selected-node-id="selectedNode?.id"
             readonly
             :canvas-width="canvasWidth"
             :canvas-height="canvasHeight"
+            :node-components="NODE_COMPONENTS"
             @select-node="selectNode"
-            @select-sequence="selectSequence"
         />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import FlowCanvas from '@/components/FlowDesigner/FlowCanvas.vue'
+import Index from '@/views/flow/designer/canvas/index.vue'
+import { NODE_COMPONENTS } from '@/views/flow/designer/nodes'
 
 const props = defineProps({
   bpmJson: Object
@@ -25,7 +27,6 @@ const props = defineProps({
 const nodes = ref([])
 const sequences = ref([])
 const selectedNode = ref(null)
-const selectedSequence = ref(null)
 const canvasWidth = ref(2000)
 const canvasHeight = ref(1000)
 
@@ -58,7 +59,7 @@ const calcCanvasSize = () => {
   const PADDING = 200
   const defaultNodeWidth = 110
   const defaultNodeHeight = 72
-  const nodeWidths = { exclusiveGateway: 80, startEvent: 48, endEvent: 48 }
+  const nodeWidths = { exclusiveGateway: 80, startEvent: 120, endEvent: 120 }
   const nodeHeights = { exclusiveGateway: 50, startEvent: 48, endEvent: 48 }
 
   let maxX = 0, maxY = 0
@@ -79,12 +80,6 @@ const calcCanvasSize = () => {
 
 const selectNode = (node) => {
   selectedNode.value = node
-  selectedSequence.value = null
-}
-
-const selectSequence = (sequence) => {
-  selectedSequence.value = sequence
-  selectedNode.value = null
 }
 </script>
 

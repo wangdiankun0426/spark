@@ -97,7 +97,7 @@ let uploadStartTime = 0
 
 watch(() => props.modelValue, (val) => {
   if (val) {
-    const baseUrl = process.env.BASE_HTTP_API || (window.location.origin + '/api')
+    const baseUrl = process.env.BASE_HTTP_API
     documentUploadUrl.value = baseUrl + '/kb/document/upload?prtId=' + props.prtId
     uploadHeaders.value.Authorization = token.value
     uploadFileList.value = []

@@ -87,6 +87,19 @@ public enum ErrorCodeEnum {
     KG_RELATION_NOT_EXIST(2303, "图谱关系不存在"),
     KG_EXTRACT_FAIL(2304, "图谱抽取失败"),
     KG_GRAPH_STORE_FAIL(2305, "图存储操作失败"),
+    // AI工作流相关状态码
+    WORKFLOW_NOT_FOUND(2401, "AI工作流不存在"),
+    WORKFLOW_VERSION_NOT_FOUND(2402, "AI工作流版本不存在"),
+    WORKFLOW_NO_PUBLISHED_VERSION(2403, "AI工作流无已发布版本"),
+    WORKFLOW_ENDPOINT_DUPLICATE(2404, "端点路径重复"),
+    WORKFLOW_ENDPOINT_DISABLED(2405, "端点已停用"),
+    WORKFLOW_DAG_INVALID(2406, "DAG结构非法"),
+    WORKFLOW_RUN_NOT_FOUND(2407, "运行实例不存在"),
+    WORKFLOW_NODE_EXEC_FAILED(2408, "节点执行失败"),
+    WORKFLOW_NODE_TIMEOUT(2409, "节点执行超时"),
+    WORKFLOW_ALREADY_PUBLISHED(2410, "AI工作流已发布"),
+    WORKFLOW_HAS_RUN_HISTORY(2411, "存在运行记录不允许删除"),
+    WORKFLOW_CATEGORY_INVALID(2412, "分类标签无效"),
     ;
 
     private Integer value;

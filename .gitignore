@@ -4,3 +4,5 @@ application-local.yml
 .claude
 CLAUDE.md
 sql/alert.sql
+docs
+spark.iml

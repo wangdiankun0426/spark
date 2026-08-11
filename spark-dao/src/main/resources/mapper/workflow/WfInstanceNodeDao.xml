@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.workflow.WfInstanceNodeDao" >
+    <sql id="allColumnList" >
+        id , instance_id , node_id , node_name , node_type , status , input_json , output_json , error_msg , started_dt , finished_dt , duration_ms , retry_count , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="id != null">and id = #{id}</if>
+        <if test="ids != null and ids.size() > 0">
+            and id in (<foreach collection="ids" item="id" separator=",">#{id}</foreach>)
+        </if>
+        <if test="instanceId != null">and instance_id = #{instanceId}</if>
+        <if test="deleteFlag != null and id == null and ids == null">and delete_flag = #{deleteFlag}</if>
+    </sql>
+
+    <sql id="sortCondition">
+        <choose>
+            <when test="sorts != null and sorts.size() > 0">
+                <foreach item="value" index="key" collection="sorts.entrySet()" separator=",">${value}</foreach>
+            </when>
+            <otherwise>id asc</otherwise>
+        </choose>
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into wf_instance_node ( instance_id , node_id , node_name , node_type , status , input_json , output_json , error_msg , started_dt , finished_dt , duration_ms , retry_count , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{instanceId} , #{nodeId} , #{nodeName} , #{nodeType} , #{status} , #{inputJson} , #{outputJson} , #{errorMsg} , #{startedDt} , #{finishedDt} , #{durationMs} , #{retryCount} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="deleteById">
+        update wf_instance_node set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt} where id = #{id}
+    </update>
+
+    <update id="updateById">
+        update wf_instance_node set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        <if test="status != null">, status = #{status}</if>
+        <if test="inputJson != null">, input_json = #{inputJson}</if>
+        <if test="outputJson != null">, output_json = #{outputJson}</if>
+        <if test="errorMsg != null">, error_msg = #{errorMsg}</if>
+        <if test="startedDt != null">, started_dt = #{startedDt}</if>
+        <if test="finishedDt != null">, finished_dt = #{finishedDt}</if>
+        <if test="durationMs != null">, duration_ms = #{durationMs}</if>
+        <if test="retryCount != null">, retry_count = #{retryCount}</if>
+        where id = #{id}
+    </update>
+
+    <select id="queryInstanceNodeCount" resultType="java.lang.Integer">
+        select count(1) from wf_instance_node where 1 = 1 <include refid="searchCondition"/>
+    </select>
+
+    <select id="queryInstanceNodeList" resultType="com.spark.bean.workflow.result.WfInstanceNodeResult">
+        select <include refid="allColumnList"/> from wf_instance_node where 1 = 1
+        <include refid="searchCondition"/> order by <include refid="sortCondition"/>
+        <if test="page == true">limit #{startRow}, #{pageSize}</if>
+    </select>
+</mapper>

@@ -2,6 +2,8 @@
 import llm from '@/pages/llm/index.vue'
 import agent from '@/pages/llm/agent/index.vue'
 import modelMarket from '@/pages/llm/modelMarket/index.vue'
+import workflowHub from '@/pages/llm/workflow/index.vue'
+import WorkflowInstance from '@/pages/llm/workflow/instance.vue'
 
 export default [
     {
@@ -10,7 +12,7 @@ export default [
         redirect: '/llm/agent',
         component: llm,
         meta: {
-            title: 'AI 应用'
+            title: '应用中心'
         },
         children: [
             {
@@ -24,6 +26,18 @@ export default [
                 name: 'modelMarket',
                 component: modelMarket,
                 meta: { title: '模型市场' }
+            },
+            {
+                path: '/llm/workflow',
+                name: 'llmWorkflow',
+                component: workflowHub,
+                meta: { title: 'AI工作流' }
+            },
+            {
+                path: '/llm/workflow/instance',
+                name: 'workflowInstance',
+                component: WorkflowInstance,
+                meta: { title: '我的运行' }
             },
         ]
     }

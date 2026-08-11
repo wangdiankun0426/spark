@@ -1,10 +1,11 @@
 // router/modules/common.routes.js
 import login from '@/pages/login'
-import formDesigner from '@/components/FormDesigner/index.vue'
-import noticeEdit from '@/components/Notice/edit.vue'
-import noticeView from '@/components/Notice/view.vue'
-import flowDesigner from '@/components/FlowDesigner/index.vue'
+import formDesigner from '@/views/form/designer/index.vue'
+import noticeEdit from '@/views/notice/edit.vue'
+import noticeView from '@/views/notice/view.vue'
+import flowDesigner from '@/views/flow/designer/index.vue'
 import graphIndex from "@/pages/kg/graphDetail/index.vue";
+import workflowIndex from "@/views/workflow/designer/index.vue";
 
 export default [
     {
@@ -29,6 +30,12 @@ export default [
         meta: {
             title: '流程设计器'
         }
+    },
+    {
+        path: '/workflow/designer/:id?/:revId?',
+        name: 'workflowDesigner',
+        component: workflowIndex,
+        meta: { title: '工作流设计器' }
     },
     {
         path: '/manage/system/notice/edit/:id',

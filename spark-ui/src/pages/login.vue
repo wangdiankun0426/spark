@@ -8,39 +8,50 @@
         <p style="font-size: 14px;">
           星火云AI应用平台，我们的目标不仅是一个企业AI协作工具系统，更是以帮助企业实现高效运营、创新驱动和可持续发展的核心支撑为长远目标。
         </p>
-        <div class="sidebar-features" style="margin-top: 30px;">
-          <p style="font-size: 14px;">
-            <el-icon style="color: #ffcc00; margin-right: 5px;"><Document /></el-icon>
-            集中化沟通与协作
-          </p>
-          <p style="font-size: 14px;">
-            <el-icon style="color: #ffcc00; margin-right: 5px;"><ChatDotRound /></el-icon>
-            实时协作工具
-          </p>
-          <p style="font-size: 14px;">
-            <el-icon style="color: #ffcc00; margin-right: 5px;"><Folder /></el-icon>
-            AI知识管理
-          </p>
-          <p style="font-size: 14px;">
-            <el-icon style="color: #ffcc00; margin-right: 5px;"><Calendar /></el-icon>
-            任务与时间管理
-          </p>
-          <p style="font-size: 14px;">
-            <el-icon style="color: #ffcc00; margin-right: 5px;"><DataAnalysis /></el-icon>
-            规范化流程管理
-          </p>
-          <p style="font-size: 14px;">
-            <el-icon style="color: #ffcc00; margin-right: 5px;"><Coin /></el-icon>
-            数据驱动决策
-          </p>
-          <p style="font-size: 14px;">
-            <el-icon style="color: #ffcc00; margin-right: 5px;"><Cloudy /></el-icon>
-            支持数字化转型
-          </p>
-          <p style="font-size: 14px;">
-            <el-icon style="color: #ffcc00; margin-right: 5px;"><Lock /></el-icon>
-            强化信息安全
-          </p>
+        <!-- 核心功能 -->
+        <div class="sidebar-features">
+          <div class="feature-item">
+            <div class="feature-icon"><el-icon><ChatDotRound /></el-icon></div>
+            <div class="feature-text">
+              <div class="feature-name">即时通信</div>
+              <div class="feature-desc">企业级即时消息与协作</div>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon"><el-icon><Connection /></el-icon></div>
+            <div class="feature-text">
+              <div class="feature-name">自定义流程</div>
+              <div class="feature-desc">可视化编排业务流程</div>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon"><el-icon><EditPen /></el-icon></div>
+            <div class="feature-text">
+              <div class="feature-name">自定义表单</div>
+              <div class="feature-desc">拖拽式表单设计器</div>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon"><el-icon><MagicStick /></el-icon></div>
+            <div class="feature-text">
+              <div class="feature-name">AI应用</div>
+              <div class="feature-desc">智能对话与工作流编排</div>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon"><el-icon><SetUp /></el-icon></div>
+            <div class="feature-text">
+              <div class="feature-name">AI工作流</div>
+              <div class="feature-desc">可视化构建智能工作流</div>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon"><el-icon><User /></el-icon></div>
+            <div class="feature-text">
+              <div class="feature-name">Agent</div>
+              <div class="feature-desc">专属智能体助手</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -393,6 +404,62 @@ function submitLoginForm() {
   text-align: left;
   position: relative;
   z-index: 1;
+}
+
+// 核心功能卡片
+.sidebar-features {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 20px;
+  max-width: 560px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(26, 61, 124, 0.08);
+  transition: all 0.2s;
+
+  &:hover {
+    background: #fff;
+    box-shadow: 0 6px 16px rgba(26, 61, 124, 0.1);
+    transform: translateY(-2px);
+  }
+}
+
+.feature-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #0052cc, #00b8d9);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.feature-text {
+  min-width: 0;
+}
+
+.feature-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a3d7c;
+}
+
+.feature-desc {
+  font-size: 12px;
+  color: #7a8bb0;
+  margin-top: 2px;
+  white-space: nowrap;
 }
 
 // 右侧 - 登录表单区（卡片式容器）

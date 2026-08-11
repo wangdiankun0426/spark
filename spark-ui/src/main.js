@@ -9,21 +9,21 @@ import router from '@/router/index';
 import store from '@/store/index';
 import locale from 'element-plus/es/locale/lang/zh-cn';
 // 自定义组件
-import CustomInput from '@/components/FormDesigner/formWidget/basicWidget/input.vue';
-import CustomTextarea from '@/components/FormDesigner/formWidget/basicWidget/textarea.vue';
-import CustomRadio from '@/components/FormDesigner/formWidget/basicWidget/radio.vue';
-import CustomSelect from '@/components/FormDesigner/formWidget/basicWidget/select.vue';
-import CustomSelectUser from '@/components/FormDesigner/formWidget/basicWidget/selectUser.vue';
-import CustomDeptUser from '@/components/FormDesigner/formWidget/basicWidget/selectDept.vue';
-import CustomSelectRole from '@/components/FormDesigner/formWidget/basicWidget/selectRole.vue';
+import CustomInput from '@/views/form/designer/formWidget/basicWidget/input.vue';
+import CustomTextarea from '@/views/form/designer/formWidget/basicWidget/textarea.vue';
+import CustomRadio from '@/views/form/designer/formWidget/basicWidget/radio.vue';
+import CustomSelect from '@/views/form/designer/formWidget/basicWidget/select.vue';
+import CustomSelectUser from '@/views/form/designer/formWidget/basicWidget/selectUser.vue';
+import CustomDeptUser from '@/views/form/designer/formWidget/basicWidget/selectDept.vue';
+import CustomSelectRole from '@/views/form/designer/formWidget/basicWidget/selectRole.vue';
 // 自定义组件配置组件
-import CustomInputSetting from '@/components/FormDesigner/settingPanel/basicWidget/input.vue';
-import CustomTextareaSetting from '@/components/FormDesigner/settingPanel/basicWidget/textarea.vue';
-import CustomRadioSetting from '@/components/FormDesigner/settingPanel/basicWidget/radio.vue';
-import CustomSelectSetting from '@/components/FormDesigner/settingPanel/basicWidget/select.vue';
-import CustomSelectUserSetting from '@/components/FormDesigner/settingPanel/basicWidget/selectUser.vue';
-import CustomSelectDeptSetting from '@/components/FormDesigner/settingPanel/basicWidget/selectDept.vue';
-import CustomSelectRoleSetting from '@/components/FormDesigner/settingPanel/basicWidget/selectRole.vue';
+import CustomInputSetting from '@/views/form/designer/settingPanel/basicWidget/input.vue';
+import CustomTextareaSetting from '@/views/form/designer/settingPanel/basicWidget/textarea.vue';
+import CustomRadioSetting from '@/views/form/designer/settingPanel/basicWidget/radio.vue';
+import CustomSelectSetting from '@/views/form/designer/settingPanel/basicWidget/select.vue';
+import CustomSelectUserSetting from '@/views/form/designer/settingPanel/basicWidget/selectUser.vue';
+import CustomSelectDeptSetting from '@/views/form/designer/settingPanel/basicWidget/selectDept.vue';
+import CustomSelectRoleSetting from '@/views/form/designer/settingPanel/basicWidget/selectRole.vue';
 const components = [
     // 组件
   CustomInput,

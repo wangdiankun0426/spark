@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.workflow.WfInstanceDao" >
+    <sql id="allColumnList" >
+        ri.id , ri.template_id , tf.name as template_name , ri.rev_id , ri.rev_num , ri.status , ri.input_json , ri.output_json , ri.error_msg , ri.started_dt , ri.finished_dt , ri.duration_ms , ri.trigger_type , ri.dept_id , ri.delete_flag , ri.created_by , ri.created_dt , ri.updated_by , ri.updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="id != null">
+            and ri.id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and ri.id in (
+                <foreach collection="ids" item="id" separator=",">#{id}</foreach>
+            )
+        </if>
+        <if test="templateId != null">
+            and ri.template_id = #{templateId}
+        </if>
+        <if test="status != null">
+            and ri.status = #{status}
+        </if>
+        <if test="triggerType != null">
+            and ri.trigger_type = #{triggerType}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and ri.delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <sql id="sortCondition">
+        <choose>
+            <when test="sorts != null and sorts.size() > 0">
+                <foreach item="value" index="key" collection="sorts.entrySet()" separator=",">${value}</foreach>
+            </when>
+            <otherwise>id desc</otherwise>
+        </choose>
+    </sql>
+
+    <insert id="insert">
+        insert into wf_instance (id, template_id , rev_id , rev_num , status , input_json , output_json , error_msg , started_dt , finished_dt , duration_ms , trigger_type , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{id}, #{templateId} , #{revId} , #{revNum} , #{status} , #{inputJson} , #{outputJson} , #{errorMsg} , #{startedDt} , #{finishedDt} , #{durationMs} , #{triggerType} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="deleteById">
+        update wf_instance set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt} where id = #{id}
+    </update>
+
+    <update id="updateById">
+        update wf_instance set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        <if test="status != null">, status = #{status}</if>
+        <if test="outputJson != null">, output_json = #{outputJson}</if>
+        <if test="errorMsg != null">, error_msg = #{errorMsg}</if>
+        <if test="startedDt != null">, started_dt = #{startedDt}</if>
+        <if test="finishedDt != null">, finished_dt = #{finishedDt}</if>
+        <if test="durationMs != null">, duration_ms = #{durationMs}</if>
+        where id = #{id}
+    </update>
+
+    <select id="queryInstanceCount" resultType="java.lang.Integer">
+        select count(1)
+        from wf_instance ri
+        where 1 = 1
+        <include refid="searchCondition"/>
+        ${dataScopeSQL}
+    </select>
+
+    <select id="queryInstanceList" resultType="com.spark.bean.workflow.result.WfInstanceResult">
+        select <include refid="allColumnList"/>
+        from wf_instance ri
+        left join wf_template tf on ri.template_id = tf.id
+        where 1 = 1
+        <include refid="searchCondition"/>
+        ${dataScopeSQL}
+        order by <include refid="sortCondition"/>
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="queryInstance" resultType="com.spark.bean.workflow.result.WfInstanceResult">
+        select <include refid="allColumnList"/>
+        from wf_instance ri left join wf_template tf on ri.template_id = tf.id where 1=1
+        <include refid="searchCondition"/> limit 1
+    </select>
+</mapper>

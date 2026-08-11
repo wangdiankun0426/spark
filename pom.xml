@@ -23,6 +23,7 @@
         <module>spark-web</module>
         <module>spark-kg</module>
         <module>spark-task</module>
+        <module>spark-workflow</module>
     </modules>
 
     <properties>

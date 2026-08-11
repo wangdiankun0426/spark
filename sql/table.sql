@@ -672,3 +672,114 @@ CREATE TABLE kg_relation (
      updated_dt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
      PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识图谱关系表';
+
+DROP TABLE IF EXISTS `wf_template`;
+CREATE TABLE `wf_template` (
+    `id` bigint(12) NOT NULL COMMENT '主键',
+    `name` varchar(128) NOT NULL COMMENT '工作流名称',
+    `description` varchar(512) NULL COMMENT '描述',
+    `status` int(2) NOT NULL DEFAULT -1 COMMENT '状态：-1关闭/1开启',
+    `rev_id` bigint(12) NULL COMMENT '当前生效版本ID',
+    `rev_num` varchar(12) NULL COMMENT '当前生效版本号',
+
+    `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1有效/-1无效',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_dept_id` (`dept_id`),
+    KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工作流模板表';
+
+DROP TABLE IF EXISTS `wf_template_version`;
+CREATE TABLE `wf_template_version` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `template_id` bigint(12) NOT NULL COMMENT '工作流模板ID',
+    `rev_code` int(5) NOT NULL COMMENT '版本序号（1开始递增）',
+    `rev_num` varchar(12) NOT NULL COMMENT '版本号（0.1/0.2/...）',
+    `dag_json` mediumtext NULL COMMENT 'DAG图定义（节点+边，JSON）',
+    `global_vars` text NULL COMMENT '全局变量定义（JSON）',
+
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_template_id` (`template_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工作流模板版本表';
+
+DROP TABLE IF EXISTS `wf_template_endpoint`;
+CREATE TABLE `wf_template_endpoint` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `template_id` bigint(12) NOT NULL COMMENT '工作流模板ID',
+    `rev_id` bigint(12) NOT NULL COMMENT '生效版本ID',
+    `path` varchar(128) NOT NULL COMMENT '端点路径',
+    `auth_type` int(2) NOT NULL DEFAULT 0 COMMENT '鉴权',
+    `api_key` varchar(64) NULL COMMENT 'API Key',
+    `enabled` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否启用',
+
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_path` (`path`, `delete_flag`),
+    KEY `idx_template_id` (`template_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='工作流模板节点配置表';
+
+DROP TABLE IF EXISTS `wf_instance`;
+CREATE TABLE `wf_instance` (
+    `id` bigint(12) NOT NULL COMMENT '主键',
+    `template_id` bigint(12) NOT NULL COMMENT '工作流模板ID',
+    `rev_id` bigint(12) NOT NULL COMMENT '执行版本ID',
+    `rev_num` varchar(12) NOT NULL COMMENT '执行版本号',
+    `status` int(2) NOT NULL DEFAULT 1 COMMENT '运行状态',
+    `input_json` mediumtext NULL COMMENT '输入参数JSON',
+    `output_json` mediumtext NULL COMMENT '输出结果JSON',
+    `error_msg` varchar(1024) NULL COMMENT '错误信息',
+    `started_dt` timestamp NULL COMMENT '开始时间',
+    `finished_dt` timestamp NULL COMMENT '结束时间',
+    `duration_ms` bigint(12) NULL COMMENT '总耗时',
+    `trigger_type` int(2) NOT NULL DEFAULT 1 COMMENT '触发方式',
+
+    `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识',
+    `created_by` bigint(12) NOT NULL COMMENT '触发人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_template_id` (`template_id`),
+    KEY `idx_status` (`status`),
+    KEY `idx_created_by` (`created_by`),
+    KEY `idx_created_dt` (`created_dt`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='工作流实例表';
+
+DROP TABLE IF EXISTS `wf_instance_node`;
+CREATE TABLE `wf_instance_node` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `instance_id` bigint(12) NOT NULL COMMENT '运行实例ID',
+    `node_id` varchar(36) NOT NULL COMMENT 'DAG节点ID',
+    `node_name` varchar(128) NOT NULL COMMENT '节点名称',
+    `node_type` varchar(36) NOT NULL COMMENT '节点类型',
+    `status` int(2) NOT NULL DEFAULT 1 COMMENT '状态',
+    `input_json` mediumtext NULL COMMENT '节点输入JSON快照',
+    `output_json` mediumtext NULL COMMENT '节点输出JSON快照',
+    `error_msg` varchar(1024) NULL COMMENT '错误信息',
+    `started_dt` timestamp NULL COMMENT '开始时间',
+    `finished_dt` timestamp NULL COMMENT '结束时间',
+    `duration_ms` bigint(12) NULL COMMENT '耗时',
+    `retry_count` int(3) NOT NULL DEFAULT 0 COMMENT '重试次数',
+
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_instance_id` (`instance_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='工作流实例节点表';

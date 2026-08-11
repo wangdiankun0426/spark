@@ -10,7 +10,7 @@
       </el-menu-item>
       <el-menu-item index="/llm">
         <el-icon><Ai /></el-icon>
-        <span>AI应用</span>
+        <span>应用中心</span>
       </el-menu-item>
       <el-menu-item index="/kb">
         <el-icon><FolderOpened /></el-icon>

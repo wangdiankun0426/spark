@@ -12,7 +12,13 @@
             <el-icon style="font-size:18px;color:#fef0f0;vertical-align: middle;">
               <Agent/>
             </el-icon>
-            <template #title>Agent应用</template>
+            <template #title>Agent</template>
+          </el-menu-item>
+          <el-menu-item index="/llm/workflow">
+            <el-icon style="font-size:18px;color:#fef0f0;vertical-align: middle;">
+              <Workflow/>
+            </el-icon>
+            <template #title>WorkFlow</template>
           </el-menu-item>
           <el-menu-item index="/llm/modelMarket">
             <el-icon style="font-size:18px;color:#fef0f0;vertical-align: middle;">
@@ -37,6 +43,7 @@ import {computed} from "vue";
 import {useRoute} from "vue-router";
 import Agent from "@/assets/icons/agent.vue";
 import ModelMarket from "@/assets/icons/modelMarket.vue";
+import Workflow from "@/assets/icons/workflow.vue";
 
 const route = useRoute();
 

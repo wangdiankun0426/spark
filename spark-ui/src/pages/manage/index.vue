@@ -5,7 +5,7 @@
         <el-menu
             :default-active="defaultActive"
             :router='true'
-            :default-openeds="['1','2','3','4','5','6','7','8']"
+            :default-openeds="['1','2','3','4','5','6','7','8','9']"
             mode="vertical"
             class="admin-el-menu"
           >
@@ -74,14 +74,14 @@
           </el-sub-menu>
           <el-sub-menu index="5">
             <template #title>
-              <el-icon><Notebook /></el-icon>
-              <span style="color: #ffffff">日志管理</span>
+              <el-icon><Share /></el-icon>
+              <span style="color: #ffffff">工作流管理</span>
             </template>
-            <el-menu-item index="/manage/log/login">
-              <span>登录日志</span>
+            <el-menu-item index="/manage/workflow/template">
+              <span>流程模板</span>
             </el-menu-item>
-            <el-menu-item index="/manage/log/operate">
-              <span>操作日志</span>
+            <el-menu-item index="/manage/workflow/instance">
+              <span>运行记录</span>
             </el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="6">
@@ -109,6 +109,18 @@
             </template>
             <el-menu-item index="/manage/flow/template">
               <span>流程模板</span>
+            </el-menu-item>
+          </el-sub-menu>
+          <el-sub-menu index="9">
+            <template #title>
+              <el-icon><Notebook /></el-icon>
+              <span style="color: #ffffff">日志管理</span>
+            </template>
+            <el-menu-item index="/manage/log/login">
+              <span>登录日志</span>
+            </el-menu-item>
+            <el-menu-item index="/manage/log/operate">
+              <span>操作日志</span>
             </el-menu-item>
           </el-sub-menu>
         </el-menu>

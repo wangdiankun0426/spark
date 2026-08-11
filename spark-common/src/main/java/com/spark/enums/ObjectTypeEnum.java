@@ -23,6 +23,8 @@ public enum ObjectTypeEnum {
     KNOWLEDGE(14,"知识库"),
     MODEL(15,"模型"),
     KG_GRAPH(16,"知识图谱"),
+    WORKFLOW(17,"AI工作流"),
+    WORKFLOW_INSTANCE(18,"AI工作流实例"),
     ;
 
     private Integer value;

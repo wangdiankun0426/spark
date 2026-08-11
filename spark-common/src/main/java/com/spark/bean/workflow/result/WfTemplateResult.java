@@ -1,0 +1,49 @@
+package com.spark.bean.workflow.result;
+
+import com.spark.bean.base.BaseResult;
+import lombok.Data;
+
+/**
+ * +++/\_/\
+ * + ( °w° )=
+ * +++)   (  //
+ * + (__ __)//
+ *
+ * @author wangdiankun
+ * @since 2026-08-11 10:00:00
+ * AI工作流模板查询结果
+ */
+@Data
+public class WfTemplateResult extends BaseResult {
+
+    /**
+     * 工作流名称
+     */
+    private String name;
+
+    /**
+     * 描述
+     */
+    private String description;
+
+    /**
+     * 状态：-1关闭/1开启
+     */
+    private Integer status;
+
+    /**
+     * 状态名称
+     */
+    private String statusName;
+
+    /**
+     * 当前生效版本ID
+     */
+    private Long revId;
+
+    /**
+     * 当前生效版本号
+     */
+    private String revNum;
+
+}

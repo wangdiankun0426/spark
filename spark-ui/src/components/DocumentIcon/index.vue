@@ -7,9 +7,9 @@
 <script setup>
 import { computed } from 'vue'
 import { getDocumentCategory, DOCUMENT_CATEGORY } from '@/utils/documentUtil'
-import DefaultDocumentIcon from '@/assets/icons/docIcon/unkonw.vue'
+import DefaultDocumentIcon from '@/components/DocumentIcon/docIcon/unkonw.vue'
 
-const documentIconModules = import.meta.glob('@/assets/icons/docIcon/*.vue', { eager: true })
+const documentIconModules = import.meta.glob('@/components/DocumentIcon/docIcon/*.vue', { eager: true })
 
 const documentIconMap = {}
 Object.keys(documentIconModules).forEach(key => {

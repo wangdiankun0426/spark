@@ -17,6 +17,8 @@ import kbDocument from '@/pages/manage/kb/document.vue'
 import kgGraph from '@/pages/manage/kg/graph.vue'
 import kgEntity from '@/pages/manage/kg/entity.vue'
 import kgRelation from '@/pages/manage/kg/relation.vue'
+import workflowTemplate from '@/pages/manage/workflow/template.vue'
+import workflowInstance from '@/pages/manage/workflow/instance.vue'
 
 export default [
     {
@@ -133,6 +135,18 @@ export default [
                 name: 'manageKgRelation',
                 component: kgRelation,
                 meta: { title: '关系管理' }
+            },
+            {
+                path: '/manage/workflow/template',
+                name: 'manageWorkflowTemplate',
+                component: workflowTemplate,
+                meta: { title: 'AI工作流' }
+            },
+            {
+                path: '/manage/workflow/instance',
+                name: 'manageWorkflowInstance',
+                component: workflowInstance,
+                meta: { title: '运行记录' }
             },
         ]
     }

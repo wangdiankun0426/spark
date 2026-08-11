@@ -42,4 +42,24 @@ public class TaskExecutorConfig {
         executor.initialize();
         return executor;
     }
+
+    /**
+     * AI工作流执行线程池
+     */
+    @Bean("workflowExecutor")
+    public Executor workflowExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(4);
+        executor.setMaxPoolSize(8);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("workflow-");
+        executor.setKeepAliveSeconds(60);
+        executor.setRejectedExecutionHandler((r, executor1) -> {
+            logger.warn("Workflow task={} rejected", r.toString());
+        });
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(30);
+        executor.initialize();
+        return executor;
+    }
 }

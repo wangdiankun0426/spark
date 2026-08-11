@@ -179,6 +179,7 @@ import FlowListIcon from '@/assets/icons/flowList.vue'
 import MyPendingListIcon from '@/assets/icons/myPendingList.vue'
 import KnowledgeIcon from '@/assets/icons/knowledge.vue'
 import AgentIcon from '@/assets/icons/agent.vue'
+import WorkflowIcon from '@/assets/icons/workflow.vue'
 import ModelMarketIcon from '@/assets/icons/modelMarket.vue'
 import GraphIcon from '@/assets/icons/graph.vue'
 import SearchDocumentIcon from '@/assets/icons/searchDocument.vue'
@@ -188,16 +189,17 @@ const store = useStore()
 const userInfo = computed(() => store.getters['user/getUserInfo'] || {})
 const userId = computed(() => userInfo.value.id)
 
-// 数据卡片假数据（图标复用各二级菜单的图标，后续接入真实接口后替换）
+// 数据卡片假数据
 const dataList = ref([
-  { name: '模型数量', value: 100, icon: ModelMarketIcon },
-  { name: 'Agent数量', value: 50, icon: AgentIcon },
+  { name: '模型数量', value: 21, icon: ModelMarketIcon },
+  { name: 'Agent数量', value: 12, icon: AgentIcon },
+  { name: 'Workflow数量', value: 6, icon: WorkflowIcon },
   { name: '知识库数量', value: 30, icon: KnowledgeIcon },
   { name: '知识图谱数量', value: 20, icon: GraphIcon },
   { name: '文档数量', value: 8310, icon: SearchDocumentIcon }
 ])
 
-// 快捷功能入口列表（图标复用各二级菜单的图标）
+// 快捷功能入口列表
 const shortcutList = ref([
   { name: '流程申请', path: '/flow/application', icon: FlowListIcon },
   { name: '我的待办', path: '/flow/myPendingList', icon: MyPendingListIcon },
