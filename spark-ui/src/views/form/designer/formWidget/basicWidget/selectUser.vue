@@ -1,6 +1,7 @@
 <template>
   <el-form-item
       :label="props.widget.config.label"
+      :required="props.widget.config.required"
       v-if="!props.widget.config.hidden"
   >
     <select-user

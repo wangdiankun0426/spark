@@ -9,17 +9,17 @@
       <!--工具栏-->
       <el-header>
         <el-button
-            type="text"
+            type="danger"
             @click="handleClearWidget"
         ><el-icon><Delete /></el-icon>清空</el-button>
         <el-button
-            type="text"
+            type="warning"
             @click="handleViewForm"
-        ><el-icon><View /></el-icon>预览</el-button>
+        ><el-icon><View /></el-icon>预览表单</el-button>
         <el-button
-            type="text"
+            type="primary"
             @click="handleSaveForm"
-        ><el-icon><Select /></el-icon>保存</el-button>
+        ><el-icon><Select /></el-icon>保存模板</el-button>
       </el-header>
       <!--表单-->
       <el-main>

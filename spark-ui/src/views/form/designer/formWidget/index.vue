@@ -1,9 +1,15 @@
 <template>
-  <div v-if="props.designer.widgetList.length === 0">
-    <center style="font-size: 13px; color: #8c939d"> 请从左侧组件库中选择一个组件 </center>
-  </div>
-  <div v-else class="form-widget-box">
+  <div
+      class="form-widget-box"
+      :class="{ 'form-widget-box--dragover': isDragOver }"
+      @dragenter.prevent="handleDragEnter"
+      @dragover.prevent
+      @dragleave="handleDragLeave"
+      @drop.prevent="handleDropWidget"
+  >
+    <center v-if="props.designer.widgetList.length === 0" class="form-empty"> 请从左侧组件库中选择一个组件 </center>
     <el-form
+        v-else
         :label-position="props.designer.formConfig.position"
         :size="props.designer.formConfig.size"
     >
@@ -11,8 +17,13 @@
         <el-col :span="widget.config.width"
               v-for="(widget, index) in props.designer.widgetList"
               :key="index"
-              :class="handleSelectedStyle(index)"
-              @click="handleSelectWidget(index)">
+              :class="[handleSelectedStyle(index), { 'widget-dragging': dragIndex === index, 'widget-drag-over': dragOverIndex === index && dragIndex !== null && dragIndex !== index }]"
+              draggable="true"
+              @click="handleSelectWidget(index)"
+              @dragstart="handleWidgetDragStart(index, $event)"
+              @dragover.prevent="handleWidgetDragOver(index, $event)"
+              @drop.prevent="handleWidgetDrop(index, $event)"
+              @dragend="handleWidgetDragEnd">
           <component
               :is="getFieldName(widget)"
               :widget="widget"
@@ -42,9 +53,16 @@
   </div>
 </template>
 <script setup>
+import { ref } from 'vue';
+import { basicWidgetList, sysWidgetList } from '../widgetPanel/widgetList.js';
+
 const props = defineProps({
   designer: Object
 })
+
+// 拖拽高亮状态
+const isDragOver = ref(false);
+let dragCounter = 0;
 
 /**
  * 获取自定义组件名称
@@ -53,6 +71,46 @@ const props = defineProps({
  */
 function getFieldName(widget) {
   return "custom-"+widget.type;
+}
+
+/**
+ * 拖拽进入画布：计数加一并高亮
+ */
+function handleDragEnter() {
+  dragCounter++;
+  isDragOver.value = true;
+}
+
+/**
+ * 拖拽离开画布：计数减一，归零后取消高亮
+ */
+function handleDragLeave() {
+  dragCounter--;
+  if (dragCounter <= 0) {
+    dragCounter = 0;
+    isDragOver.value = false;
+  }
+}
+
+/**
+ * 画布拖放：按组件类型新增组件
+ * @param event
+ */
+function handleDropWidget(event) {
+  dragCounter = 0;
+  isDragOver.value = false;
+  const type = event.dataTransfer.getData('application/x-widget-type');
+  if (!type) {
+    return;
+  }
+  const template = [...basicWidgetList, ...sysWidgetList].find(w => w.type === type);
+  if (!template) {
+    return;
+  }
+  const widget = JSON.parse(JSON.stringify(template));
+  widget.config.code = "field" + Date.now();
+  props.designer.widgetList.push(widget);
+  props.designer.selectedId = props.designer.widgetList.length - 1;
 }
 
 /**
@@ -96,6 +154,65 @@ function handleCopyWidget(index) {
   props.designer.widgetList.push(widget_);
   props.designer.selectedId = props.designer.widgetList.length-1;
 }
+
+// 画布内组件拖动排序状态
+const dragIndex = ref(null);
+const dragOverIndex = ref(null);
+
+/**
+ * 组件拖拽开始：记录源下标
+ * @param index
+ * @param event
+ */
+function handleWidgetDragStart(index, event) {
+  dragIndex.value = index;
+  event.dataTransfer.setData('application/x-widget-index', String(index));
+  event.dataTransfer.effectAllowed = 'move';
+}
+
+/**
+ * 组件拖拽悬停：记录目标下标
+ * @param index
+ * @param event
+ */
+function handleWidgetDragOver(index, event) {
+  if (event.dataTransfer.getData('application/x-widget-index') !== '') {
+    dragOverIndex.value = index;
+  }
+}
+
+/**
+ * 组件拖拽释放：调整组件顺序
+ * @param index
+ * @param event
+ */
+function handleWidgetDrop(index, event) {
+  // 非画布内组件拖拽（如面板新增）不在此处理，交由容器 handleDropWidget
+  if (event.dataTransfer.getData('application/x-widget-index') === '') {
+    return;
+  }
+  if (dragIndex.value === null || dragIndex.value === index) {
+    resetWidgetDrag();
+    return;
+  }
+  const list = props.designer.widgetList;
+  const [moved] = list.splice(dragIndex.value, 1);
+  list.splice(index, 0, moved);
+  props.designer.selectedId = index;
+  resetWidgetDrag();
+}
+
+/**
+ * 组件拖拽结束：清空状态
+ */
+function handleWidgetDragEnd() {
+  resetWidgetDrag();
+}
+
+function resetWidgetDrag() {
+  dragIndex.value = null;
+  dragOverIndex.value = null;
+}
 </script>
 <style scoped>
 .form-widget-box {
@@ -104,6 +221,15 @@ function handleCopyWidget(index) {
   overflow-y : auto;
   overflow-x: hidden;
 }
+.form-widget-box--dragover {
+  border: 2px dashed #0052cc;
+  background: rgba(0, 82, 204, 0.04);
+}
+.form-empty {
+  padding-top: 40px;
+  font-size: 13px;
+  color: #8c939d;
+}
 .selected_component {
   border: 1px dashed #0052cc;
   cursor: pointer;
@@ -111,6 +237,13 @@ function handleCopyWidget(index) {
 }
 .no_select_component {
   cursor: pointer;
+}
+.widget-dragging {
+  opacity: 0.5;
+}
+.widget-drag-over {
+  border-top: 2px solid #0052cc;
+  background: rgba(0, 82, 204, 0.04);
 }
 .widget-tool {
   position: absolute;

@@ -42,7 +42,7 @@
     </div>
 
     <!--运行详情抽屉（复用公共组件）-->
-    <instance-history-drawer v-model="detailVisible" :instance-id="detailInstanceId" />
+    <instance-detail-drawer v-model="detailVisible" :instance-id="detailInstanceId" />
   </div>
 </template>
 
@@ -50,7 +50,7 @@
 import { ref, onMounted } from 'vue';
 import { Search } from '@element-plus/icons-vue';
 import { pageInstanceHistoryAPI } from '@/api/workflow/instance.js';
-import InstanceHistoryDrawer from '@/components/WfRunInstanceDrawer/index.vue';
+import InstanceDetailDrawer from '@/components/WfInstanceDetailDrawer/index.vue';
 
 const query = ref({ pageNo: 1, pageSize: 30, status: undefined });
 const pageSizes = [30, 50, 100];

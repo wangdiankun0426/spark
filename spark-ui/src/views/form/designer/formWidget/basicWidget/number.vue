@@ -4,12 +4,13 @@
       :required="props.widget.config.required"
       v-if="!props.widget.config.hidden"
   >
-    <el-input
+    <el-input-number
         v-model="props.widget.config.value"
-        :placeholder="props.widget.config.placeholder"
+        :min="props.widget.config.min"
+        :max="props.widget.config.max"
+        :step="props.widget.config.step"
         :disabled="props.widget.config.disabled"
-        :readonly="props.widget.config.readonly"
-        clearable
+        style="width:100%"
         @change="handleChangeShowValue"
     />
   </el-form-item>
@@ -17,7 +18,7 @@
 
 <script setup>
 defineOptions({
-  name: "customInput"
+  name: "customNumber"
 });
 const props = defineProps({
   widget: Object,

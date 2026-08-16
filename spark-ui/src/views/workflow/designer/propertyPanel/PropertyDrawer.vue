@@ -44,15 +44,32 @@
         <template v-if="node.type === 'startEvent'">
           <el-divider content-position="left">输入参数</el-divider>
           <div v-for="(input, idx) in form.config.inputs" :key="idx" class="kv-row">
-            <el-input v-model="input.name" placeholder="参数名" size="small" style="width:80px" @change="emitUpdate" />
-            <el-select v-model="input.type" size="small" style="width:80px" @change="emitUpdate">
+            <el-input
+                size="default"
+                v-model="input.name"
+                placeholder="参数名"
+                style="width:200px"
+                @change="emitUpdate"
+            />
+            <el-select
+                size="default"
+                v-model="input.type"
+                style="width:120px"
+                @change="emitUpdate">
               <el-option label="文本" value="string" />
               <el-option label="数字" value="number" />
               <el-option label="布尔" value="boolean" />
               <el-option label="JSON" value="json" />
             </el-select>
-            <el-checkbox v-model="input.required" size="small" @change="emitUpdate">必填</el-checkbox>
-            <el-button link type="danger" size="small" @click="removeInput(idx)">
+            <el-checkbox
+                v-model="input.required"
+                @change="emitUpdate"
+            >必填</el-checkbox>
+            <el-button
+                link
+                type="danger"
+                size="small"
+                @click="removeInput(idx)">
               <el-icon><Delete /></el-icon>
             </el-button>
           </div>
@@ -63,9 +80,21 @@
         <template v-if="node.type === 'endEvent'">
           <el-divider content-position="left">输出映射</el-divider>
           <div v-for="(out, idx) in form.config.outputs" :key="idx" class="kv-row">
-            <el-input v-model="out.name" placeholder="输出字段名" size="small" style="width:100px" @change="emitUpdate" />
-            <el-input v-model="out.source" placeholder="来源变量路径" size="small" style="width:160px" @change="emitUpdate" />
-            <el-button link type="danger" size="small" @click="removeOutput(idx)">
+            <el-input
+                v-model="out.name"
+                placeholder="输出字段名"
+                style="width:160px"
+                @change="emitUpdate" />
+            <el-input
+                v-model="out.source"
+                placeholder="来源变量"
+                style="width:160px"
+                @change="emitUpdate" />
+            <el-button
+                link
+                type="danger"
+                size="small"
+                @click="removeOutput(idx)">
               <el-icon><Delete /></el-icon>
             </el-button>
           </div>
@@ -76,8 +105,20 @@
         <template v-if="node.type === 'llmTask'">
           <el-divider content-position="left">LLM配置</el-divider>
           <el-form-item label="模型">
-            <el-select v-model="form.config.modelId" placeholder="选择模型" style="width:100%" @change="emitUpdate" clearable>
-              <el-option v-for="m in modelList" :key="m.id" :label="m.name" :value="m.id" />
+            <el-select
+                v-model="form.config.modelId"
+                placeholder="选择模型"
+                style="width:100%"
+                @change="emitUpdate"
+                clearable
+                size="default"
+            >
+              <el-option
+                  v-for="m in modelList"
+                  :key="m.id"
+                  :label="m.name"
+                  :value="m.id"
+              />
             </el-select>
           </el-form-item>
           <el-form-item label="提示词">
@@ -111,7 +152,7 @@ const form = ref({});
 const modelList = ref([]);
 
 onMounted(async () => {
-  const res = await pageModelListAPI({ page: false, type: 1 }); // type=1: 语言模型
+  const res = await pageModelListAPI({ page: false, type: 1 });
   if (res.code === 200 && res.data?.rows) {
     modelList.value = res.data.rows;
   }
@@ -170,7 +211,7 @@ function removeOutput(idx) {
 
 <style scoped lang="scss">
 .property-drawer {
-  width: 300px;
+  width: 400px;
   background: #fff;
   border-left: 1px solid $border-color;
   flex-shrink: 0;

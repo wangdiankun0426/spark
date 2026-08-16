@@ -20,14 +20,17 @@
           :max="24"
       />
     </el-form-item>
-    <el-form-item label="占位内容">
-      <el-input v-model="props.config.placeholder" />
+    <el-form-item label="最小值">
+      <el-input-number v-model="props.config.min" style="width:100%" />
+    </el-form-item>
+    <el-form-item label="最大值">
+      <el-input-number v-model="props.config.max" style="width:100%" />
+    </el-form-item>
+    <el-form-item label="步长">
+      <el-input-number v-model="props.config.step" :min="1" style="width:100%" />
     </el-form-item>
     <el-form-item label="是否必填">
       <el-switch v-model="props.config.required" />
-    </el-form-item>
-    <el-form-item label="是否只读">
-      <el-switch v-model="props.config.readonly" />
     </el-form-item>
     <el-form-item label="是否禁用">
       <el-switch v-model="props.config.disabled" />
@@ -39,7 +42,7 @@
 </template>
 <script setup>
 defineOptions({
-  name: "customInputSetting"
+  name: "customNumberSetting"
 });
 const props = defineProps({
   config: Object,

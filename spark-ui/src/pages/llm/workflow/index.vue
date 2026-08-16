@@ -63,7 +63,7 @@
     <el-empty v-else :description="keyword ? '未找到匹配的工作流' : '暂无已开启的工作流'" :image-size="120" />
 
     <!--快速运行抽屉-->
-    <instance-detail-drawer v-model="runVisible" :workflow="currentWorkflow" @success="handleRunSuccess" />
+    <run-instance-drawer v-model="runVisible" :workflow="currentWorkflow" @success="handleRunSuccess" />
   </div>
 </template>
 
@@ -71,7 +71,7 @@
 import { ref, onMounted, watch, onBeforeUnmount } from 'vue';
 import { pageWorkflowListAPI } from '@/api/workflow/template.js';
 import { MagicStick, Search, ArrowRight, Clock } from '@element-plus/icons-vue';
-import InstanceDetailDrawer from '@/components/WfInstanceDetailDrawer/index.vue';
+import RunInstanceDrawer from '@/components/WfRunInstanceDrawer/index.vue';
 import InfoCard from '@/components/InfoCard/index.vue';
 
 const keyword = ref('');

@@ -1,5 +1,6 @@
 package com.spark.workflow.engine.impl;
 
+import com.spark.enums.FlowTemplateTypeEnum;
 import com.spark.workflow.engine.WorkflowNodeExecutor;
 import org.springframework.stereotype.Component;
 
@@ -14,11 +15,23 @@ import java.util.Map;
 @Component
 public class EndEventExecutor implements WorkflowNodeExecutor {
 
+    /**
+     * 节点类型
+     * @return
+     */
     @Override
-    public String getNodeType() { return "endEvent"; }
+    public String getNodeType() {
+        return FlowTemplateTypeEnum.END_EVENT.getValue();
+    }
 
+    /**
+     * 执行节点
+     * @param config 节点配置（DAG JSON中的config对象）
+     * @param input 当前节点输入
+     * @param context 全局变量上下文（可读写）
+     * @return
+     */
     @Override
-    @SuppressWarnings("unchecked")
     public Map<String, Object> execute(Map<String, Object> config, Map<String, Object> input, Map<String, Object> context) {
         Map<String, Object> output = new HashMap<>();
         if (config != null && config.containsKey("outputs")) {

@@ -1,6 +1,10 @@
 <template>
   <!--连线配置-->
   <div class="attr-panel" v-if="sequence">
+    <div class="panel-header">
+      <span class="panel-title">连线配置</span>
+      <el-button link @click="$emit('close')"><el-icon><Close /></el-icon></el-button>
+    </div>
     <div class="panel-body">
       <el-form :model="sequence" label-width="auto" size="small">
         <el-form-item label="连线ID">
@@ -23,6 +27,10 @@
 
   <!--节点配置-->
   <div class="attr-panel" v-else-if="node">
+    <div class="panel-header">
+      <span class="panel-title">节点配置</span>
+      <el-button link @click="$emit('close')"><el-icon><Close /></el-icon></el-button>
+    </div>
     <div class="panel-body">
       <el-form :model="node" label-width="auto" size="small">
         <el-form-item label="节点ID">
@@ -62,7 +70,7 @@ const props = defineProps({
   fieldOptions: { type: Array, default: () => [] }
 })
 
-const emit = defineEmits(['delete-node', 'delete-sequence'])
+const emit = defineEmits(['delete-node', 'delete-sequence', 'close'])
 
 /** 获取节点名称用于连线信息展示 */
 function getNodeName(refId) {
@@ -72,15 +80,23 @@ function getNodeName(refId) {
 </script>
 
 <style scoped lang="scss">
-// 右侧属性面板
 .attr-panel {
-  width: 300px;
+  width: 400px;
   background: #fff;
   border-left: 1px solid $border-color;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px $spacing-md;
+    border-bottom: 1px solid $border-color-light;
+    flex-shrink: 0;
+  }
 
   .panel-body {
     flex: 1;

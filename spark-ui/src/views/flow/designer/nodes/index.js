@@ -23,15 +23,14 @@ export const NODE_COMPONENTS = {
 }
 
 /**
- * 节点类型元数据（统一维护）：名称 + 默认尺寸 + 图标/配色
+ * 节点类型元数据：名称 + 默认尺寸 + 图标/配色
  * 画布定位/连线计算用 size；节点面板与兜底渲染用 icon/color/bgColor；
  * 画布中节点包裹样式由节点类型组件负责
  */
 export const NODE_META = {
-  startEvent: { name: '开始', icon: 'VideoPlay', color: '#52c41a', bgColor: '#f6ffed', width: 120, height: 48 },
-  endEvent: { name: '结束', icon: 'CircleClose', color: '#ff4d4f', bgColor: '#fff2f0', width: 120, height: 48 },
-  exclusiveGateway: { name: '条件分支', icon: 'Share', color: '#fa8c16', bgColor: '#fffbe6', width: 108, height: 72 },
-  userTask: { name: '用户任务', icon: 'User', color: '#1890ff', bgColor: '#e6f7ff', width: 128, height: 72 },
-  serviceTask: { name: 'AI工作流', icon: 'Cpu', color: '#722ed1', bgColor: '#f9f0ff', width: 128, height: 72 },
-  llmTask: { name: 'LLM模型', icon: 'Cpu', color: '#004fc5', bgColor: '#e8f0fd', width: 160, height: 60 }
+  startEvent: { name: '开始', icon: 'VideoPlay', color: '#52c41a', bgColor: '#f6ffed', width: 128, height: 60 },
+  endEvent: { name: '结束', icon: 'CircleClose', color: '#ff4d4f', bgColor: '#fff2f0', width: 128, height: 60 },
+  exclusiveGateway: { name: '条件分支', icon: 'Share', color: '#fa8c16', bgColor: '#fffbe6', width: 128, height: 60 },
+  userTask: { name: '用户任务', icon: 'User', color: '#1890ff', bgColor: '#e6f7ff', width: 128, height: 80 },
+  llmTask: { name: 'LLM模型', icon: 'Cpu', color: '#004fc5', bgColor: '#e8f0fd', width: 128, height: 60 }
 }

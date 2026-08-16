@@ -7,13 +7,22 @@
         <el-tag v-if="revNum" size="small" type="warning">{{ revNum }}</el-tag>
       </div>
       <div class="toolbar-right">
-        <el-button type="primary" @click="saveProcess">
+        <el-button
+            type="primary"
+            @click="saveProcess"
+        >
           <el-icon><Folder /></el-icon>保存流程
         </el-button>
-        <el-button type="warning" @click="notificationConfigRef.open()">
+        <el-button
+            type="warning"
+            @click="notificationConfigRef.open()"
+        >
           <el-icon><Bell /></el-icon>流程通知
         </el-button>
-        <el-button type="danger" @click="showClearConfirm = true">
+        <el-button
+            type="danger"
+            @click="showClearConfirm = true"
+        >
           <el-icon><Delete /></el-icon>清空
         </el-button>
       </div>
@@ -27,7 +36,7 @@
           data-key="node-type"
       />
 
-      <!--中间画布（统一使用 DesignerCanvas 通用画布 + 共享节点类型组件）-->
+      <!--中间画布-->
       <index
           :nodes="nodes"
           :sequences="sequences"
@@ -56,6 +65,7 @@
           :field-options="fieldOptions"
           @delete-node="deleteNode"
           @delete-sequence="deleteSequence"
+          @close="closePanel"
       />
     </div>
     <!--底部状态栏-->
@@ -212,6 +222,9 @@ const handleConnect = (sourceId, targetId) => {
 
 const selectNode = (node) => { selectedNode.value = node; selectedSequence.value = null }
 const selectSequence = (sequence) => { selectedSequence.value = sequence; selectedNode.value = null }
+
+/** 关闭右侧属性面板 */
+const closePanel = () => { selectedNode.value = null; selectedSequence.value = null }
 
 /** 画布节点拖动：更新节点坐标 */
 const handleMoveNode = (nodeId, x, y) => {

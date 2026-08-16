@@ -8,6 +8,7 @@ export const basicWidgetList = [
         config: {
             code: '',
             label: '单行文本',
+            required: false,
             width: 12,
             value: null,
             showValue: null,
@@ -23,6 +24,7 @@ export const basicWidgetList = [
         config: {
             code: '',
             label: '多行文本',
+            required: false,
             width: 12,
             value: null,
             showValue: null,
@@ -38,6 +40,7 @@ export const basicWidgetList = [
         config: {
             code: '',
             label: '单选框',
+            required: false,
             width: 12,
             value: null,
             showValue: null,
@@ -55,6 +58,7 @@ export const basicWidgetList = [
         config: {
             code: '',
             label: '下拉选择',
+            required: false,
             width: 12,
             value: null,
             showValue: null,
@@ -67,6 +71,40 @@ export const basicWidgetList = [
             ],
         },
     },
+    {
+        type: 'number',
+        name: '计数器',
+        config: {
+            code: '',
+            label: '计数器',
+            required: false,
+            width: 12,
+            value: null,
+            showValue: null,
+            min: 0,
+            max: 100,
+            step: 1,
+            disabled: false,
+            hidden: false,
+        },
+    },
+    {
+        type: 'date',
+        name: '日期',
+        config: {
+            code: '',
+            label: '日期',
+            required: false,
+            width: 12,
+            value: null,
+            showValue: null,
+            placeholder: '请选择日期',
+            dateType: 'date',
+            readonly: false,
+            disabled: false,
+            hidden: false,
+        },
+    },
 ]
 
 export const sysWidgetList = [
@@ -76,6 +114,7 @@ export const sysWidgetList = [
         config: {
             code: '',
             label: '选择用户',
+            required: false,
             width: 12,
             value: null,
             showValue: null,
@@ -91,6 +130,7 @@ export const sysWidgetList = [
         config: {
             code: '',
             label: '选择部门',
+            required: false,
             width: 12,
             value: null,
             showValue: null,
@@ -106,6 +146,7 @@ export const sysWidgetList = [
         config: {
             code: '',
             label: '选择角色',
+            required: false,
             width: 12,
             value: null,
             showValue: null,

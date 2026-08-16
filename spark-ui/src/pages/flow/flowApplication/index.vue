@@ -204,6 +204,18 @@ function handleSubmitTemplateForm() {
     return;
   }
   const list = JSON.parse(JSON.stringify(formJson.value)).widgetList;
+  // 必填校验
+  const missingWidget = list.find(w => {
+    if (!w.config.required) {
+      return false;
+    }
+    const v = w.config.value;
+    return v === null || v === undefined || v === '' || (Array.isArray(v) && v.length === 0);
+  });
+  if (missingWidget) {
+    ElMessage.warning(`【${missingWidget.config.label}】为必填项，请填写后再发起`);
+    return;
+  }
   const values = [];
   list.forEach(widget => {
     const config = widget.config;

@@ -8,7 +8,7 @@
                 type="primary"
                 @click="handleOpenCreateFormForm"
             >
-              <el-icon><Plus /></el-icon>新建
+              <el-icon><Plus /></el-icon>新建表单模板
             </el-button>
             <el-button
                 type="warning"
@@ -33,6 +33,7 @@
           highlight-current-row
           @sort-change="handleSortChange"
           :header-cell-style="handleHeaderCellClass"
+          border
       >
         <el-table-column prop="id" label="编号" width="100" align="center"/>
         <el-table-column prop="name" label="名称" sortable="custom" width="200" align="center">
@@ -66,7 +67,7 @@
           <template #default="scope">
             <el-button
                 type='primary'
-                link
+                text
                 @click="handleGetFormVersionList(scope.row.id)"
             >
               {{scope.row.revNum}}

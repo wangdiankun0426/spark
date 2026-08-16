@@ -15,7 +15,7 @@ import java.util.Map;
 public interface WorkflowNodeExecutor {
 
     /**
-     * 支持的节点类型
+     * 节点类型
      * @return
      */
     String getNodeType();

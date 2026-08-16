@@ -62,7 +62,7 @@
         @current-change="p => { query.pageNo = p; loadList(); }"
     />
     <!--详情抽屉（复用公共组件）-->
-    <instance-history-drawer v-model="detailVisible" :instance-id="detailInstanceId" />
+    <instance-detail-drawer v-model="detailVisible" :instance-id="detailInstanceId" />
   </div>
 </template>
 
@@ -70,7 +70,7 @@
 import { ref } from 'vue';
 import { pageInstanceHistoryAPI } from '@/api/workflow/instance';
 import { Search } from '@element-plus/icons-vue';
-import InstanceHistoryDrawer from '@/components/WfRunInstanceDrawer/index.vue';
+import InstanceDetailDrawer from '@/components/WfInstanceDetailDrawer/index.vue';
 
 const query = ref({ pageNo: 1, pageSize: 30, status: undefined, sorts: {} });
 const searchFlag = ref({ status: false });

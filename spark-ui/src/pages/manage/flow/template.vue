@@ -6,7 +6,7 @@
           type="primary"
           @click="handleOpenCreateTemplateForm"
       >
-        <el-icon><Plus /></el-icon>新建
+        <el-icon><Plus /></el-icon>新建流程模板
       </el-button>
       <el-button
           type="warning"

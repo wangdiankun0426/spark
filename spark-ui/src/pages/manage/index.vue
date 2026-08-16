@@ -95,15 +95,6 @@
           </el-sub-menu>
           <el-sub-menu index="7">
             <template #title>
-              <el-icon><ChatDotRound /></el-icon>
-              <span style="color: #ffffff">对话管理</span>
-            </template>
-            <el-menu-item index="/manage/chat/msgManage">
-              <span>聊天记录</span>
-            </el-menu-item>
-          </el-sub-menu>
-          <el-sub-menu index="8">
-            <template #title>
               <el-icon><Share /></el-icon>
               <span style="color: #ffffff">流程管理</span>
             </template>
@@ -112,6 +103,15 @@
             </el-menu-item>
             <el-menu-item index="/manage/flow/instance">
               <span>流程实例</span>
+            </el-menu-item>
+          </el-sub-menu>
+          <el-sub-menu index="8">
+            <template #title>
+              <el-icon><ChatDotRound /></el-icon>
+              <span style="color: #ffffff">对话管理</span>
+            </template>
+            <el-menu-item index="/manage/chat/msgManage">
+              <span>聊天记录</span>
             </el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="9">

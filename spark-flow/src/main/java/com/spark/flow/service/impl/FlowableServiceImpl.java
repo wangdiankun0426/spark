@@ -12,6 +12,7 @@ import com.spark.utils.CollectionUtil;
 import com.spark.utils.StringUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.flowable.bpmn.model.*;
+import org.flowable.bpmn.model.Process;
 import org.flowable.engine.RepositoryService;
 import org.flowable.engine.RuntimeService;
 import org.flowable.engine.TaskService;
@@ -253,7 +254,7 @@ public class FlowableServiceImpl implements FlowableService {
      */
     private BpmnModel convertJsonToBpmnModel(String processId, String bpmJson) {
         BpmnModel bpmnModel = new BpmnModel();
-        org.flowable.bpmn.model.Process process = new org.flowable.bpmn.model.Process();
+        Process process = new Process();
         process.setId(processId);
         bpmnModel.addProcess(process);
         JSONObject bpmObject = JSONObject.parseObject(bpmJson);
@@ -273,6 +274,7 @@ public class FlowableServiceImpl implements FlowableService {
                 case USER_TASK -> new UserTask();
                 case EXCLUSIVE_GATEWAY -> new ExclusiveGateway();
                 case END_EVENT -> new EndEvent();
+                default -> throw new IllegalStateException("Unexpected value: " + templateType);
             };
             flowElement.setId(id);
             flowElement.setName(name);

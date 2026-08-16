@@ -1,8 +1,11 @@
 package com.spark.workflow.engine.impl;
 
+import com.spark.enums.FlowTemplateTypeEnum;
 import com.spark.llm.model.ModelFactory;
+import com.spark.utils.StringUtil;
 import com.spark.workflow.engine.WorkflowNodeExecutor;
 import dev.langchain4j.model.chat.ChatModel;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,18 +27,29 @@ public class LlmTaskExecutor implements WorkflowNodeExecutor {
     @Autowired
     private ModelFactory modelFactory;
 
+    /**
+     * 节点类型
+     * @return
+     */
     @Override
-    public String getNodeType() { return "llmTask"; }
+    public String getNodeType() { return FlowTemplateTypeEnum.LLM_TASK.getValue(); }
 
+    /**
+     * 执行节点
+     * @param config 节点配置（DAG JSON中的config对象）
+     * @param input 当前节点输入
+     * @param context 全局变量上下文（可读写）
+     * @return
+     */
     @Override
     public Map<String, Object> execute(Map<String, Object> config, Map<String, Object> input, Map<String, Object> context) {
         Map<String, Object> output = new HashMap<>();
-        String prompt = config != null ? (String) config.getOrDefault("prompt", "") : "";
-        Long modelId = config != null ? toLong(config.get("modelId")) : null;
-
-        // 替换模板变量 {{varName}}
+        if (config == null) {
+            return output;
+        }
+        String prompt = (String) config.getOrDefault("prompt", "");
+        Long modelId = StringUtil.isNumeric(config.get("modelId")+"") ? Long.parseLong(config.get("modelId")+"") : null;
         String resolvedPrompt = resolveVariables(prompt, context);
-
         try {
             ChatModel model = modelFactory.getChatModel(modelId);
             String response = model.chat(resolvedPrompt);
@@ -50,8 +64,16 @@ public class LlmTaskExecutor implements WorkflowNodeExecutor {
         return output;
     }
 
+    /**
+     * 替换模板变量
+     * @param template
+     * @param context
+     * @return
+     */
     private String resolveVariables(String template, Map<String, Object> context) {
-        if (template == null) return "";
+        if (template == null) {
+            return "";
+        }
         Matcher m = VAR_PATTERN.matcher(template);
         StringBuilder sb = new StringBuilder();
         while (m.find()) {
@@ -63,6 +85,12 @@ public class LlmTaskExecutor implements WorkflowNodeExecutor {
         return sb.toString();
     }
 
+    /**
+     *
+     * @param path
+     * @param context
+     * @return
+     */
     private Object resolveNestedVar(String path, Map<String, Object> context) {
         String[] parts = path.split("\\.");
         Object current = context;
@@ -74,12 +102,5 @@ public class LlmTaskExecutor implements WorkflowNodeExecutor {
             }
         }
         return current != null ? current : "";
-    }
-
-    private Long toLong(Object val) {
-        if (val == null) return null;
-        if (val instanceof Long) return (Long) val;
-        if (val instanceof Integer) return ((Integer) val).longValue();
-        try { return Long.parseLong(val.toString()); } catch (Exception e) { return null; }
     }
 }

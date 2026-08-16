@@ -9,6 +9,7 @@ import com.spark.bean.workflow.query.WfInstanceQuery;
 import com.spark.bean.workflow.result.WfInstanceResult;
 import com.spark.dao.workflow.WfInstanceDao;
 import com.spark.dao.workflow.WfInstanceNodeDao;
+import com.spark.enums.FlowTemplateTypeEnum;
 import com.spark.enums.WorkflowInstanceStatusEnum;
 import com.spark.enums.WorkflowNodeStatusEnum;
 import org.slf4j.Logger;
@@ -70,7 +71,9 @@ public class DagExecutor {
         JSONObject dag = JSON.parseObject(dagJson);
         JSONArray nodesArr = dag.getJSONArray("nodes");
         JSONArray sequencesArr = dag.getJSONArray("sequences");
-        if (sequencesArr == null) { sequencesArr = new JSONArray(); }
+        if (sequencesArr == null) {
+            sequencesArr = new JSONArray();
+        }
 
         // 构建节点索引
         Map<String, JSONObject> nodeMap = new LinkedHashMap<>();
@@ -160,8 +163,8 @@ public class DagExecutor {
                     long nodeDuration = System.currentTimeMillis() - nodeStart;
                     updateInstanceNode(runNodeId, WorkflowNodeStatusEnum.SUCCESS.getValue(), JSON.toJSONString(output), null, nodeDuration);
                     nodeOutputs.put(nodeId, output);
-                    // 将节点输出以节点ID为key挂到共享context，支持 end 节点按 nodeId.output.field 路径取值
-                    if (!"start".equals(nodeType) && !"end".equals(nodeType)) {
+                    // 将节点输出以节点ID为key挂到共享context，支持 endEvent 节点按 nodeId.output.field 路径取值
+                    if (!FlowTemplateTypeEnum.START_EVENT.getValue().equals(nodeType) && !FlowTemplateTypeEnum.END_EVENT.getValue().equals(nodeType)) {
                         variables.put(nodeId, output);
                     }
 
@@ -205,10 +208,10 @@ public class DagExecutor {
                 executed.add(nodeId);
             }
 
-            // 收集end节点的输出作为最终结果
+            // 收集endEvent节点的输出作为最终结果
             Map<String, Object> finalOutput = new HashMap<>();
             for (JSONObject node : nodeMap.values()) {
-                if ("end".equals(node.getString("type"))) {
+                if (FlowTemplateTypeEnum.END_EVENT.getValue().equals(node.getString("type"))) {
                     if (nodeOutputs.containsKey(node.getString("id"))) {
                         finalOutput.putAll(nodeOutputs.get(node.getString("id")));
                     }

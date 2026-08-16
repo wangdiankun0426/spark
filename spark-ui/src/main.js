@@ -16,6 +16,8 @@ import CustomSelect from '@/views/form/designer/formWidget/basicWidget/select.vu
 import CustomSelectUser from '@/views/form/designer/formWidget/basicWidget/selectUser.vue';
 import CustomDeptUser from '@/views/form/designer/formWidget/basicWidget/selectDept.vue';
 import CustomSelectRole from '@/views/form/designer/formWidget/basicWidget/selectRole.vue';
+import CustomNumber from '@/views/form/designer/formWidget/basicWidget/number.vue';
+import CustomDate from '@/views/form/designer/formWidget/basicWidget/date.vue';
 // 自定义组件配置组件
 import CustomInputSetting from '@/views/form/designer/settingPanel/basicWidget/input.vue';
 import CustomTextareaSetting from '@/views/form/designer/settingPanel/basicWidget/textarea.vue';
@@ -24,6 +26,8 @@ import CustomSelectSetting from '@/views/form/designer/settingPanel/basicWidget/
 import CustomSelectUserSetting from '@/views/form/designer/settingPanel/basicWidget/selectUser.vue';
 import CustomSelectDeptSetting from '@/views/form/designer/settingPanel/basicWidget/selectDept.vue';
 import CustomSelectRoleSetting from '@/views/form/designer/settingPanel/basicWidget/selectRole.vue';
+import CustomNumberSetting from '@/views/form/designer/settingPanel/basicWidget/number.vue';
+import CustomDateSetting from '@/views/form/designer/settingPanel/basicWidget/date.vue';
 const components = [
     // 组件
   CustomInput,
@@ -33,6 +37,8 @@ const components = [
   CustomSelectUser,
   CustomDeptUser,
   CustomSelectRole,
+  CustomNumber,
+  CustomDate,
     // 组件配置
   CustomInputSetting,
   CustomTextareaSetting,
@@ -41,6 +47,8 @@ const components = [
   CustomSelectUserSetting,
   CustomSelectDeptSetting,
   CustomSelectRoleSetting,
+  CustomNumberSetting,
+  CustomDateSetting,
 ];
 // 引用v-md-editor
 import VMdEditor from '@kangc/v-md-editor';

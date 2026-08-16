@@ -20,6 +20,12 @@
           :max="24"
       />
     </el-form-item>
+    <el-form-item label="日期类型">
+      <el-select v-model="props.config.dateType" style="width:100%">
+        <el-option label="日期" value="date" />
+        <el-option label="日期时间" value="datetime" />
+      </el-select>
+    </el-form-item>
     <el-form-item label="占位内容">
       <el-input v-model="props.config.placeholder" />
     </el-form-item>
@@ -39,7 +45,7 @@
 </template>
 <script setup>
 defineOptions({
-  name: "customInputSetting"
+  name: "customDateSetting"
 });
 const props = defineProps({
   config: Object,

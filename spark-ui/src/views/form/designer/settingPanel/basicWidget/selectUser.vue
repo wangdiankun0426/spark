@@ -20,11 +20,11 @@
           :max="24"
       />
     </el-form-item>
-    <el-form-item label="默认值">
-      <el-input v-model="props.config.defaultValue" />
-    </el-form-item>
     <el-form-item label="占位内容">
       <el-input v-model="props.config.placeholder" />
+    </el-form-item>
+    <el-form-item label="是否必填">
+      <el-switch v-model="props.config.required" />
     </el-form-item>
     <el-form-item label="是否只读">
       <el-switch v-model="props.config.readonly" />
@@ -36,7 +36,9 @@
       <el-switch v-model="props.config.hidden" />
     </el-form-item>
     <el-form-item label="是否多选">
-      <el-switch v-model="props.config.multiple" @change="handleMultipleChange" />
+      <el-switch
+          v-model="props.config.multiple"
+          @change="handleMultipleChange" />
     </el-form-item>
   </el-form>
 </template>

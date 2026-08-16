@@ -3,7 +3,7 @@
     <!--操作按钮-->
     <div>
       <el-button type="primary" @click="handleOpenCreateForm">
-        <el-icon><Plus /></el-icon>新建
+        <el-icon><Plus /></el-icon>新建工作流
       </el-button>
       <el-button type="warning" @click="handleResetQuery">
         <el-icon><Refresh /></el-icon>重置
@@ -59,7 +59,7 @@
         <el-table-column prop="createdDt" label="创建时间" width="160" align="center"/>
         <el-table-column prop="updatedByName" label="修改人" align="center" width="100"/>
         <el-table-column prop="updatedDt" label="修改时间" width="160" align="center"/>
-        <el-table-column fixed="right" label="操作" width="420">
+        <el-table-column fixed="right" label="操作" width="360">
           <template #default="scope">
             <el-button type="primary" text @click="handleOpenDesigner(scope.row)">
               <el-icon><EditPen /></el-icon>
@@ -131,7 +131,7 @@
       </template>
     </el-drawer>
     <!--运行工作流抽屉（复用公共组件）-->
-    <instance-detail-drawer v-model="runVisible" :workflow="currentWorkflow" @success="handleRunSuccess" />
+    <run-instance-drawer v-model="runVisible" :workflow="currentWorkflow" @success="handleRunSuccess" />
     <!--端点配置抽屉-->
     <el-drawer
         v-model="endpointVisible"
@@ -200,7 +200,7 @@
 import { getCurrentInstance, ref } from 'vue';
 import { pageWorkflowListAPI, createWorkflowAPI, updateWorkflowAPI, deleteWorkflowAPI, queryWorkflowDetailAPI } from '@/api/workflow/template';
 import { createEndpointAPI, updateEndpointAPI, deleteEndpointAPI, queryEndpointListAPI } from '@/api/workflow/endpoint';
-import InstanceDetailDrawer from '@/components/WfInstanceDetailDrawer/index.vue';
+import RunInstanceDrawer from '@/components/WfRunInstanceDrawer/index.vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Search } from '@element-plus/icons-vue';
 

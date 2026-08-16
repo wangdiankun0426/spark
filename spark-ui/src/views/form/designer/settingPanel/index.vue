@@ -19,8 +19,8 @@
           <el-form-item label="宽度" label-position="right">
             <el-input-number
                 v-model="formConfig.width"
-                :min="600"
-                :max="1000"
+                :min="800"
+                :max="1600"
                 controls-position="right"
             />
           </el-form-item>
