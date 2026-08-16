@@ -110,6 +110,9 @@
             <el-menu-item index="/manage/flow/template">
               <span>流程模板</span>
             </el-menu-item>
+            <el-menu-item index="/manage/flow/instance">
+              <span>流程实例</span>
+            </el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="9">
             <template #title>

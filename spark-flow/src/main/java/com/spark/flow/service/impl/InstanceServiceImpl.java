@@ -16,6 +16,7 @@ import com.spark.bean.form.query.FormVersionQuery;
 import com.spark.bean.form.result.FormObjValueResult;
 import com.spark.bean.form.result.FormVersionResult;
 import com.spark.bean.form.vo.FormObjValueVO;
+import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.dao.flow.*;
 import com.spark.dao.form.FormObjValueDao;
 import com.spark.dao.form.FormVersionDao;
@@ -367,6 +368,24 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         }
         List<Long> instanceIds = instanceDiscussList.stream().map(FlowInstanceDiscussResult::getInstanceId).distinct().toList();
         query.setIds(instanceIds);
+        PageResult<FlowInstanceResult> list = super.pageList(query);
+        result.setData(list);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 分页查询全部流程实例（管理端）
+     * @param query 查询参数
+     * @return 列表
+     */
+    @Override
+    @DataScope
+    public ResultData<PageResult<FlowInstanceResult>> pageInstanceList(FlowInstanceQuery query) {
+        ResultData<PageResult<FlowInstanceResult>> result = new ResultData<>();
+        if (query == null) {
+            query = new FlowInstanceQuery();
+        }
         PageResult<FlowInstanceResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);

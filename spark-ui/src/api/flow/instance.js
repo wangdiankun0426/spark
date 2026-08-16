@@ -36,6 +36,15 @@ export function pageMyPendedListAPI(query) {
     })
 }
 
+// 分页查询全部流程实例（管理端）
+export function pageInstanceListAPI(query) {
+    return request({
+        url: '/flow/instance/pageList',
+        method: 'get',
+        params: query
+    })
+}
+
 // 分页查询流程实例详情
 export function showInstanceDetailAPI(query) {
     return request({

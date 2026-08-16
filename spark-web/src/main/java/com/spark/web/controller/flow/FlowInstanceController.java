@@ -66,6 +66,16 @@ public class FlowInstanceController {
     }
 
     /**
+     * 分页查询全部流程实例
+     * @param query 查询参数
+     * @return 列表
+     */
+    @GetMapping("pageList")
+    public ResultData<PageResult<FlowInstanceResult>> pageInstanceList(FlowInstanceQuery query) {
+        return instanceService.pageInstanceList(query);
+    }
+
+    /**
      * 查询流程实例详情
      * @param query 查询参数
      * @return 详情

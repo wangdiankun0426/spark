@@ -8,6 +8,7 @@ import logOperate from '@/pages/manage/log/operate'
 import chatMsgManage from '@/pages/manage/chat/msgManage'
 import formTemplate from '@/pages/manage/form/template'
 import flowTemplate from '@/pages/manage/flow/template'
+import flowInstance from '@/pages/manage/flow/instance.vue'
 import provider from '@/pages/manage/llm/provider.vue'
 import model from '@/pages/manage/llm/model.vue'
 import agent from '@/pages/manage/llm/agent.vue'
@@ -105,6 +106,12 @@ export default [
                 name: 'flowTemplate',
                 component: flowTemplate,
                 meta: { title: '流程模板' }
+            },
+            {
+                path: '/manage/flow/instance',
+                name: 'flowInstance',
+                component: flowInstance,
+                meta: { title: '流程实例' }
             },
             {
                 path: '/manage/kb/knowledge',

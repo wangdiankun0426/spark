@@ -58,4 +58,11 @@ public interface IFlowInstanceService {
      * @return
      */
     ResultData<PageResult<FlowInstanceResult>> pageMyPendedList(FlowInstanceQuery query);
+
+    /**
+     * 分页查询全部流程实例（管理端）
+     * @param query 查询参数
+     * @return 列表
+     */
+    ResultData<PageResult<FlowInstanceResult>> pageInstanceList(FlowInstanceQuery query);
 }
