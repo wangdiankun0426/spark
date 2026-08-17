@@ -2,13 +2,24 @@
   <div class="login">
     <!-- 左侧 -->
     <div class="el-login-sidebar">
+      <!-- 蓝色动态背景 -->
+      <div class="anim-bg">
+        <div class="anim-blob anim-blob-1"></div>
+        <div class="anim-blob anim-blob-2"></div>
+        <div class="anim-blob anim-blob-3"></div>
+        <div class="anim-ring anim-ring-1"></div>
+        <div class="anim-ring anim-ring-2"></div>
+        <div class="anim-ring anim-ring-3"></div>
+        <div class="anim-dot anim-dot-1"></div>
+        <div class="anim-dot anim-dot-2"></div>
+        <div class="anim-dot anim-dot-3"></div>
+      </div>
       <div class="sidebar-content">
-        <h1 style="font-size: 38px;">星火云AI应用平台</h1>
+        <h1 style="font-size: 32px;">星火云AI应用平台</h1>
         <p style="font-size: 16px;">欢迎使用 — 星火云AI应用平台</p>
         <p style="font-size: 14px;">
           星火云AI应用平台，我们的目标不仅是一个企业AI协作工具系统，更是以帮助企业实现高效运营、创新驱动和可持续发展的核心支撑为长远目标。
         </p>
-        <!-- 核心功能 -->
         <div class="sidebar-features">
           <div class="feature-item">
             <div class="feature-icon"><el-icon><ChatDotRound /></el-icon></div>
@@ -373,32 +384,146 @@ function submitLoginForm() {
   background-color: $bg-page;
 }
 
-// 左侧 - 品牌展示区（多层次蓝色渐变）
+// 左侧 - 蓝色动态背景
 .el-login-sidebar {
   width: 60%;
   height: 100vh;
-  background-color: white;
+  background: linear-gradient(160deg, #081c45 0%, #0c2f6b 50%, #123f87 100%);
   padding: 20px;
   position: relative;
   overflow: hidden;
-  color: #1a3d7c;
+  color: #ffffff;
+}
 
-  // 背景图片 - 缩小并放置在左下部
-  &::before {
-    content: '';
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    width: calc(50% - 20px);
-    height: calc(60% - 20px);
-    background: url('../assets/images/login-bg.jpg') no-repeat;
-    background-size: 400px;
-    background-position: left bottom;
-    pointer-events: none;
-    z-index: 0;
+// 蓝色动态背景装饰层
+.anim-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+// 极光渐变光斑
+.anim-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.4;
+  animation: blobFloat 18s ease-in-out infinite alternate;
+}
+
+.anim-blob-1 {
+  width: 780px;
+  height: 780px;
+  left: -200px;
+  top: -200px;
+  background: radial-gradient(circle at 30% 30%, #3b82f6 0%, #6ea8ff 35%, transparent 70%);
+}
+
+.anim-blob-2 {
+  width: 700px;
+  height: 700px;
+  right: -180px;
+  bottom: -160px;
+  background: radial-gradient(circle at 60% 40%, #1e6fd9 0%, #4f9bff 35%, transparent 70%);
+  animation-delay: -6s;
+}
+
+.anim-blob-3 {
+  width: 580px;
+  height: 580px;
+  left: 32%;
+  top: 28%;
+  background: radial-gradient(circle at 50% 50%, #2a7bff 0%, transparent 65%);
+  opacity: 0.32;
+  animation-delay: -12s;
+}
+
+@keyframes blobFloat {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(40px, -30px) scale(1.08);
+  }
+  66% {
+    transform: translate(-30px, 25px) scale(0.95);
+  }
+  100% {
+    transform: translate(20px, -15px) scale(1.04);
   }
 }
 
+// 简约几何圆环
+.anim-ring {
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  animation: ringFloat 26s ease-in-out infinite alternate;
+}
+
+.anim-ring-1 {
+  width: 220px;
+  height: 220px;
+  right: 18%;
+  top: 16%;
+}
+
+.anim-ring-2 {
+  width: 120px;
+  height: 120px;
+  left: 12%;
+  bottom: 22%;
+  border-color: rgba(255, 255, 255, 0.14);
+  animation-delay: -8s;
+}
+
+.anim-ring-3 {
+  width: 70px;
+  height: 70px;
+  right: 24%;
+  bottom: 34%;
+  border-color: rgba(255, 255, 255, 0.12);
+  animation-delay: -14s;
+}
+
+@keyframes ringFloat {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    transform: translateY(-24px) rotate(20deg);
+  }
+}
+
+// 微光粒子
+.anim-dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 0 12px rgba(140, 180, 255, 0.9);
+  animation: dotFloat 8s ease-in-out infinite alternate;
+}
+
+.anim-dot-1 { left: 20%; top: 42%; }
+.anim-dot-2 { left: 70%; top: 28%; animation-delay: -3s; }
+.anim-dot-3 { left: 46%; top: 76%; animation-delay: -6s; }
+
+@keyframes dotFloat {
+  0% {
+    transform: translateY(0);
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateY(-28px);
+    opacity: 1;
+  }
+}
+
+// 简约网格
 .sidebar-content {
   margin: 70px 80px 20px 80px;
   text-align: left;
@@ -421,13 +546,13 @@ function submitLoginForm() {
   gap: 12px;
   padding: 14px 16px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(26, 61, 124, 0.08);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   transition: all 0.2s;
 
   &:hover {
-    background: #fff;
-    box-shadow: 0 6px 16px rgba(26, 61, 124, 0.1);
+    background: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
     transform: translateY(-2px);
   }
 }
@@ -452,30 +577,29 @@ function submitLoginForm() {
 .feature-name {
   font-size: 15px;
   font-weight: 600;
-  color: #1a3d7c;
+  color: #ffffff;
 }
 
 .feature-desc {
   font-size: 12px;
-  color: #7a8bb0;
+  color: rgba(255, 255, 255, 0.72);
   margin-top: 2px;
   white-space: nowrap;
 }
 
-// 右侧 - 登录表单区（卡片式容器）
+// 右侧 - 登录表单区（宽度居中）
 .el-login-main {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 40px 48px;
-  height: 800px;
-  width: 36%;
-  min-width: 380px;
-  max-width: 480px;
-  margin: auto 60px auto auto;
+  width: 400px;
+  max-width: 90%;
+  margin: auto;
   background: transparent;
-  border-radius: $border-radius-xl;
-  border: none;
+}
+
+.el-login-main h2 {
+  text-align: center;
 }
 
 .el-input {
