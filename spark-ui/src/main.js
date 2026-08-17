@@ -9,25 +9,25 @@ import router from '@/router/index';
 import store from '@/store/index';
 import locale from 'element-plus/es/locale/lang/zh-cn';
 // 自定义组件
-import CustomInput from '@/views/form/designer/formWidget/basicWidget/input.vue';
-import CustomTextarea from '@/views/form/designer/formWidget/basicWidget/textarea.vue';
-import CustomRadio from '@/views/form/designer/formWidget/basicWidget/radio.vue';
-import CustomSelect from '@/views/form/designer/formWidget/basicWidget/select.vue';
-import CustomSelectUser from '@/views/form/designer/formWidget/basicWidget/selectUser.vue';
-import CustomDeptUser from '@/views/form/designer/formWidget/basicWidget/selectDept.vue';
-import CustomSelectRole from '@/views/form/designer/formWidget/basicWidget/selectRole.vue';
-import CustomNumber from '@/views/form/designer/formWidget/basicWidget/number.vue';
-import CustomDate from '@/views/form/designer/formWidget/basicWidget/date.vue';
+import CustomInput from '@/views/formDesigner/formWidget/basicWidget/input.vue';
+import CustomTextarea from '@/views/formDesigner/formWidget/basicWidget/textarea.vue';
+import CustomRadio from '@/views/formDesigner/formWidget/basicWidget/radio.vue';
+import CustomSelect from '@/views/formDesigner/formWidget/basicWidget/select.vue';
+import CustomSelectUser from '@/views/formDesigner/formWidget/basicWidget/selectUser.vue';
+import CustomDeptUser from '@/views/formDesigner/formWidget/basicWidget/selectDept.vue';
+import CustomSelectRole from '@/views/formDesigner/formWidget/basicWidget/selectRole.vue';
+import CustomNumber from '@/views/formDesigner/formWidget/basicWidget/number.vue';
+import CustomDate from '@/views/formDesigner/formWidget/basicWidget/date.vue';
 // 自定义组件配置组件
-import CustomInputSetting from '@/views/form/designer/settingPanel/basicWidget/input.vue';
-import CustomTextareaSetting from '@/views/form/designer/settingPanel/basicWidget/textarea.vue';
-import CustomRadioSetting from '@/views/form/designer/settingPanel/basicWidget/radio.vue';
-import CustomSelectSetting from '@/views/form/designer/settingPanel/basicWidget/select.vue';
-import CustomSelectUserSetting from '@/views/form/designer/settingPanel/basicWidget/selectUser.vue';
-import CustomSelectDeptSetting from '@/views/form/designer/settingPanel/basicWidget/selectDept.vue';
-import CustomSelectRoleSetting from '@/views/form/designer/settingPanel/basicWidget/selectRole.vue';
-import CustomNumberSetting from '@/views/form/designer/settingPanel/basicWidget/number.vue';
-import CustomDateSetting from '@/views/form/designer/settingPanel/basicWidget/date.vue';
+import CustomInputSetting from '@/views/formDesigner/settingPanel/basicWidget/input.vue';
+import CustomTextareaSetting from '@/views/formDesigner/settingPanel/basicWidget/textarea.vue';
+import CustomRadioSetting from '@/views/formDesigner/settingPanel/basicWidget/radio.vue';
+import CustomSelectSetting from '@/views/formDesigner/settingPanel/basicWidget/select.vue';
+import CustomSelectUserSetting from '@/views/formDesigner/settingPanel/basicWidget/selectUser.vue';
+import CustomSelectDeptSetting from '@/views/formDesigner/settingPanel/basicWidget/selectDept.vue';
+import CustomSelectRoleSetting from '@/views/formDesigner/settingPanel/basicWidget/selectRole.vue';
+import CustomNumberSetting from '@/views/formDesigner/settingPanel/basicWidget/number.vue';
+import CustomDateSetting from '@/views/formDesigner/settingPanel/basicWidget/date.vue';
 const components = [
     // 组件
   CustomInput,

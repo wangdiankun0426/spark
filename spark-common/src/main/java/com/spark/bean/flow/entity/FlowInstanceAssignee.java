@@ -40,4 +40,9 @@ public class FlowInstanceAssignee extends BaseEntity {
      */
     private Integer status;
 
+    /**
+     * 审批顺序
+     */
+    private Integer sort;
+
 }

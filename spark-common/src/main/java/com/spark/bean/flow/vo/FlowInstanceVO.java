@@ -77,4 +77,9 @@ public class FlowInstanceVO extends BaseVO {
      * 审批意见
      */
     private String discuss;
+
+    /**
+     * 转办/加签目标审批人id列表
+     */
+    private List<Long> assigneeIds;
 }

@@ -1,11 +1,11 @@
 // router/modules/common.routes.js
 import login from '@/pages/login'
-import formDesigner from '@/views/form/designer/index.vue'
+import formDesigner from '@/views/formDesigner/index.vue'
 import noticeEdit from '@/views/notice/edit.vue'
 import noticeView from '@/views/notice/view.vue'
-import flowDesigner from '@/views/flow/designer/index.vue'
+import flowDesigner from '@/views/flowDesigner/index.vue'
 import graphIndex from "@/pages/kg/graphDetail/index.vue";
-import workflowIndex from "@/views/workflow/designer/index.vue";
+import workflowIndex from "@/views/workflowDesigner/index.vue";
 
 export default [
     {

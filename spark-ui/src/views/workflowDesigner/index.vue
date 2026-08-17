@@ -72,10 +72,10 @@ import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { queryWorkflowDetailAPI } from '@/api/workflow/template.js';
 import { saveVersionAPI, queryVersionDetailAPI } from '@/api/workflow/version.js';
-import NodePanel from '@/views/flow/designer/nodePanel/index.vue';
-import Index from '@/views/flow/designer/canvas/index.vue';
-import { NODE_COMPONENTS, NODE_META } from '@/views/flow/designer/nodes';
-import PropertyDrawer from '@/views/workflow/designer/propertyPanel/PropertyDrawer.vue';
+import NodePanel from '@/views/flowDesigner/nodePanel/index.vue';
+import Index from '@/views/flowDesigner/canvas/index.vue';
+import { NODE_COMPONENTS, NODE_META } from '@/views/flowDesigner/nodes/index.js';
+import PropertyDrawer from '@/views/workflowDesigner/propertyPanel/PropertyDrawer.vue';
 
 const route = useRoute();
 const canvasRef = ref(null);

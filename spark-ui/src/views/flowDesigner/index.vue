@@ -47,6 +47,7 @@
           :canvas-width="canvasWidth"
           :canvas-height="canvasHeight"
           :node-components="NODE_COMPONENTS"
+          :field-options="fieldOptions"
           drop-data-key="node-type"
           @select-node="selectNode"
           @select-edge="selectSequence"
@@ -94,11 +95,11 @@ import { useRoute } from "vue-router";
 import { createTemplateVersionAPI, queryTemplateVersionDetailAPI } from "@/api/flow/templateVersion.js";
 import { queryTemplateDetailAPI } from "@/api/flow/template.js";
 import { queryFormFieldListAPI } from "@/api/form/formField.js";
-import NodePanel from '@/views/flow/designer/nodePanel/index.vue'
-import Index from '@/views/flow/designer/canvas/index.vue'
+import NodePanel from '@/views/flowDesigner/nodePanel/index.vue'
+import Index from '@/views/flowDesigner/canvas/index.vue'
 import NoticeConfig from './NoticeConfig.vue'
 import PropertyDrawer from './propertyPanel/PropertyDrawer.vue'
-import { NODE_COMPONENTS, NODE_META } from '@/views/flow/designer/nodes'
+import { NODE_COMPONENTS, NODE_META } from '@/views/flowDesigner/nodes/index.js'
 
 const templateId = ref(0);
 const revId = ref(0);
@@ -143,7 +144,6 @@ const nodes = ref([])
 const sequences = ref([])
 const selectedNode = ref(null)
 const selectedSequence = ref(null)
-const canvasRef = ref(null)
 const canvasWidth = ref(2000)
 const canvasHeight = ref(1000)
 const showClearConfirm = ref(false)
@@ -152,7 +152,8 @@ const notificationConfigRef = ref(null)
 const noticeConfig = ref([
   { type: 2, label: '待办通知', enabled: true, content: '#{base:appUserName}# 申请的 #{base:flowName}#，请及时审批！', recipient: '#{base:appAssignee}#' },
   { type: 3, label: '完结通知', enabled: true, content: '#{base:appUserName}# 申请的 #{base:flowName}#，已审批完结！', recipient: '#{base:appUser}#' },
-  { type: 4, label: '驳回通知', enabled: true, content: '#{base:appUserName}# 申请的 #{base:flowName}#，已被驳回！', recipient: '#{base:appUser}#' }
+  { type: 4, label: '驳回通知', enabled: true, content: '#{base:appUserName}# 申请的 #{base:flowName}#，已被驳回！', recipient: '#{base:appUser}#' },
+  { type: 5, label: '催办通知', enabled: true, content: '#{base:appUserName}# 申请的 #{base:flowName}#，正在催促您审批，请及时处理！', recipient: '#{base:appAssignee}#' }
 ])
 
 const calcCanvasSize = () => {
@@ -171,7 +172,7 @@ const calcCanvasSize = () => {
 
 watch(() => nodes.value.length, () => calcCanvasSize());
 
-/** 左侧节点面板分组配置（由统一 NODE_META 派生） */
+/** 左侧节点面板分组配置 */
 const flowNodeGroups = [
   {
     name: 'baseNode',
@@ -201,7 +202,8 @@ const handleCanvasDrop = ({ nodeType, x, y }) => {
     assigneeType: nodeType === 'userTask' ? '' : undefined,
     assignee: nodeType === 'userTask' ? '' : undefined,
     assigneeLabel: nodeType === 'userTask' ? '' : undefined,
-    permission: nodeType === 'userTask' ? 7 : undefined
+    approveType: nodeType === 'userTask' ? '1' : undefined,
+    permission: nodeType === 'userTask' ? 15 : undefined
   })
 }
 
@@ -249,7 +251,7 @@ const deleteSequence = (id) => {
 }
 
 const generateBpmnJson = () => ({
-  nodes: nodes.value.map(el => ({ id: el.id, type: el.type, name: el.name, x: el.x, y: el.y, assigneeType: el.assigneeType, assignee: el.assignee, assigneeLabel: el.assigneeLabel, permission: el.permission })),
+  nodes: nodes.value.map(el => ({ id: el.id, type: el.type, name: el.name, x: el.x, y: el.y, assigneeType: el.assigneeType, assignee: el.assignee, assigneeLabel: el.assigneeLabel, approveType: el.approveType, permission: el.permission })),
   sequences: sequences.value.map(seq => ({ id: seq.id, sourceRef: seq.sourceRef, targetRef: seq.targetRef, name: seq.name, conditionExpression: seq.conditionExpression })),
   notices: noticeConfig.value
 })

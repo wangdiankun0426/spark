@@ -151,6 +151,7 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
             Integer assigneeType = el.getInteger("assigneeType");
             String assignee = el.getString("assignee");
             Integer permission = el.getInteger("permission");
+            Integer approveType = el.getInteger("approveType");
             FlowTemplateNode templateNode = new FlowTemplateNode();
             templateNode.setNodeId(id);
             templateNode.setType(type);
@@ -158,6 +159,7 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
             templateNode.setAssigneeType(assigneeType);
             templateNode.setAssignee(assignee);
             templateNode.setPermission(permission);
+            templateNode.setApproveType(approveType);
             templateNodes.add(templateNode);
         }
         JSONArray sequences = bpmObject.getJSONArray("sequences");

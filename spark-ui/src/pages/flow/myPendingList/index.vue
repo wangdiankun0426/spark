@@ -66,15 +66,48 @@
               v-if="nodeId !== undefined && (nodePermission & 1) === 1"
               @click="handleApprovalFlowInstance(3)"
               type="primary"
-          >同意</el-button>
+          >通过</el-button>
           <el-button
               v-if="nodeId !== undefined && (nodePermission & 2) === 2"
               @click="handleApprovalFlowInstance(4)"
               type="danger"
           >驳回</el-button>
+          <el-button
+              v-if="nodeId !== undefined && (nodePermission & 16) === 16"
+              @click="openOperateDialog('transfer')"
+              type="warning"
+          >转办</el-button>
+          <el-button
+              v-if="nodeId !== undefined && (nodePermission & 32) === 32"
+              @click="openOperateDialog('addSign')"
+              type="primary"
+          >加签</el-button>
         </div>
       </template>
     </flow-detail-drawer>
+
+    <!-- 转办/加签选人弹窗 -->
+    <el-dialog
+        :title="dialogType === 'transfer' ? '转办' : '加签'"
+        v-model="operateDialogVisible"
+        width="400px"
+        :close-on-click-modal="false"
+    >
+      <el-form label-width="70px">
+        <el-form-item :label="dialogType === 'transfer' ? '转办人' : '加签人'">
+          <select-user
+              v-model="selectedUserIds"
+              :multiple="dialogType === 'addSign'"
+              clearable
+              style="width: 100%"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="operateDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="operating" @click="confirmOperate">确定</el-button>
+      </template>
+    </el-dialog>
 
   </div>
 </template>
@@ -83,10 +116,12 @@
 import {getCurrentInstance, ref, onMounted} from 'vue';
 import {
   approvalFlowInstanceAPI,
-  pageMyPendingListAPI, showInstanceDetailAPI
+  pageMyPendingListAPI, showInstanceDetailAPI,
+  transferFlowInstanceAPI, addSignFlowInstanceAPI
 } from '@/api/flow/instance';
 import { Search } from '@element-plus/icons-vue';
 import FlowDetailDrawer from '@/components/FlowDetailDrawer';
+import SelectUser from '@/components/SelectUser/index.vue';
 import {ElMessage, ElMessageBox} from "element-plus";
 import { useRoute } from 'vue-router';
 
@@ -140,7 +175,7 @@ function handleCloseFlowDetail() {
 
 /**
  * 审批流程实例
- * @param status 审批状态 3-同意 4-驳回
+ * @param status 审批状态 3-通过 4-驳回
  */
 const handleApprovalFlowInstance = (status) => {
   ElMessageBox.prompt('请输入审批意见', '提示', {
@@ -210,6 +245,49 @@ function handlePageChangeNo(pageNo) {
  */
 function handleRowClick(row) {
   handleOpenInstance(row.id);
+}
+
+// 转办/加签弹窗状态
+const operateDialogVisible = ref(false);
+const dialogType = ref('transfer');
+const selectedUserIds = ref(null);
+const operating = ref(false);
+
+/**
+ * 打开转办/加签选人弹窗
+ * @param type transfer-转办 addSign-加签
+ */
+function openOperateDialog(type) {
+  dialogType.value = type;
+  selectedUserIds.value = type === 'transfer' ? null : [];
+  operateDialogVisible.value = true;
+}
+
+/**
+ * 确认转办/加签
+ */
+function confirmOperate() {
+  const ids = Array.isArray(selectedUserIds.value) ? selectedUserIds.value : [selectedUserIds.value];
+  if (!ids.length) {
+    ElMessage.warning(dialogType.value === 'transfer' ? '请选择转办人' : '请选择加签人');
+    return;
+  }
+  const api = dialogType.value === 'transfer' ? transferFlowInstanceAPI : addSignFlowInstanceAPI;
+  operating.value = true;
+  api({
+    id: instanceId.value,
+    nodeId: nodeId.value,
+    assigneeIds: ids
+  }).then(res => {
+    if (res.code === 200) {
+      ElMessage.success(dialogType.value === 'transfer' ? '转办成功' : '加签成功');
+      operateDialogVisible.value = false;
+      handleCloseFlowDetail();
+      handleGetInstanceList();
+    }
+  }).catch(() => {}).finally(() => {
+    operating.value = false;
+  });
 }
 
 const formJson = ref({});

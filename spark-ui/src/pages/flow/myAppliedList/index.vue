@@ -59,15 +59,27 @@
         :nodes="nodes"
         :type="2"
         @close="handleCloseFlowDetail"
-    />
+    >
+      <template #footer>
+        <div class="drawer-footer">
+          <el-button
+              v-if="nodeId !== undefined && instanceStatus === 2 && (nodePermission & 8) === 8"
+              :loading="urging"
+              type="warning"
+              @click="handleUrge"
+          >催办</el-button>
+        </div>
+      </template>
+    </flow-detail-drawer>
 
   </div>
 </template>
 
 <script setup>
 import {ref, onMounted} from 'vue';
+import { ElMessage } from 'element-plus';
 import {
-  pageMyAppliedListAPI, showInstanceDetailAPI
+  pageMyAppliedListAPI, showInstanceDetailAPI, urgeFlowInstanceAPI
 } from '@/api/flow/instance';
 import { Search } from '@element-plus/icons-vue';
 import FlowDetailDrawer from '@/components/FlowDetailDrawer';
@@ -109,6 +121,10 @@ function handleCloseFlowDetail() {
   bpmJson.value = {};
   flowDetailVisible.value = false;
   detailActiveTab.value = 'form';
+  instanceId.value = undefined;
+  nodeId.value = undefined;
+  nodePermission.value = undefined;
+  instanceStatus.value = undefined;
   instanceName.value = '';
   instanceDescription.value = '';
   instanceApplicant.value = '';
@@ -157,11 +173,32 @@ function handleRowClick(row) {
   handleOpenInstance(row.id);
 }
 
+// 催办按钮loading（防重复触发）
+const urging = ref(false);
+
+/**
+ * 催办流程实例（向当前审批人发送催办通知）
+ */
+function handleUrge() {
+  urging.value = true;
+  urgeFlowInstanceAPI({ id: instanceId.value }).then(res => {
+    if (res.code === 200) {
+      ElMessage.success('催办通知已发送给当前审批人');
+    }
+  }).catch(() => {}).finally(() => {
+    urging.value = false;
+  });
+}
+
 const formJson = ref({});
 const bpmJson = ref({});
 const flowDetailVisible = ref(false);
 const detailActiveTab = ref('form');
 const nodes = ref([]);
+const instanceId = ref(undefined);
+const nodeId = ref(undefined);
+const nodePermission = ref(undefined);
+const instanceStatus = ref(undefined);
 const instanceName = ref('');
 const instanceDescription = ref('');
 const instanceApplicant = ref('');
@@ -181,7 +218,10 @@ function handleOpenInstance(id) {
       formJson.value = JSON.parse(res.data.formJson);
       bpmJson.value = JSON.parse(res.data.bpmJson);
       nodes.value = res.data.nodes;
-      instanceName.value = res.data.name || '';
+      instanceId.value = res.data.id;
+      nodeId.value = res.data.nodeId;
+      nodePermission.value = res.data.permission;
+      instanceStatus.value = res.data.status;
       instanceDescription.value = res.data.description || '';
       instanceApplicant.value = res.data.createdByName || '';
       instanceDeptName.value = res.data.deptName || '';

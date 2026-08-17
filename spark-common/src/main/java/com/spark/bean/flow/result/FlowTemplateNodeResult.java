@@ -54,4 +54,10 @@ public class FlowTemplateNodeResult extends BaseResult {
      * 节点权限
      */
     private Integer permission;
+
+    /**
+     * 审批类型
+     * FlowApproveTypeEnum
+     */
+    private Integer approveType;
 }

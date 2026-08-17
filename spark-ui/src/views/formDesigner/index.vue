@@ -48,7 +48,7 @@ import {ref} from 'vue';
 import widgetPanel from './widgetPanel/index.vue';
 import formWidget from './formWidget/index.vue';
 import settingPanel from './settingPanel/index.vue';
-import FormView from '../../../components/FormView/index.vue';
+import FormView from '../../components/FormView/index.vue';
 import {queryFormJsonAPI, saveFormJsonAPI} from '@/api/form/form.js';
 import { useRoute } from 'vue-router';
 import {ElMessage} from "element-plus";

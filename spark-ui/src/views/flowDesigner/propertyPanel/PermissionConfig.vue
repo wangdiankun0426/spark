@@ -30,7 +30,10 @@ const props = defineProps({
 const permissionOptions = [
   { label: '允许审批人审批通过', value: 1 },
   { label: '允许审批人审批驳回', value: 2 },
-  { label: '没有审批人时自动通过', value: 4 }
+  { label: '没有审批人时自动通过', value: 4 },
+  { label: '允许申请人催办', value: 8 },
+  { label: '允许审批人转办', value: 16 },
+  { label: '允许审批人加签', value: 32 }
 ]
 
 /** 根据累加值还原选中的权限项 */

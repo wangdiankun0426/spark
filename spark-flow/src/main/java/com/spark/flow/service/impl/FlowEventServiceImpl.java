@@ -115,18 +115,24 @@ public class FlowEventServiceImpl implements FlowEventService {
         // 获取流程审批人
         List<Long> assigneeIds = this.queryFlowAssignee(instanceId, templateNodeResult.getAssignee(),assigneeTypeEnum);
         Integer permission = templateNodeResult.getPermission();
-        logger.info("assigneeIds={},permission={}", assigneeIds, permission);
+        FlowApproveTypeEnum approveTypeEnum = FlowApproveTypeEnum.indexOf(templateNodeResult.getApproveType());
+        logger.info("assigneeIds={},permission={},approveType={}", assigneeIds, permission, approveTypeEnum.getName());
         if (CollectionUtil.isNotEmpty(assigneeIds)) {
             String setId = UUID.randomUUID().toString().replaceAll("-", "");
-            assigneeIds.forEach(assigneeId -> {
+            for (int i = 0; i < assigneeIds.size(); i++) {
                 FlowInstanceAssignee instanceAssignee = new FlowInstanceAssignee();
                 instanceAssignee.setInstanceId(instanceResult.getId());
                 instanceAssignee.setInstanceNodeId(instanceNodeResult.getId());
-                instanceAssignee.setAssigneeId(assigneeId);
+                instanceAssignee.setAssigneeId(assigneeIds.get(i));
                 instanceAssignee.setAssigneeSetId(setId);
-                instanceAssignee.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
-                int count = instanceAssigneeDao.insertDB(instanceAssignee);
-            });
+                instanceAssignee.setSort(i + 1);
+                if (FlowApproveTypeEnum.SEQUENTIAL.equals(approveTypeEnum) && i > 0) {
+                    instanceAssignee.setStatus(FlowInstanceStatusEnum.WAITING.getValue());
+                } else {
+                    instanceAssignee.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+                }
+                instanceAssigneeDao.insertDB(instanceAssignee);
+            }
             flowableService.setAssignee(taskId, setId);
             FlowInstanceNode instanceNode = new FlowInstanceNode();
             instanceNode.setId(instanceNodeResult.getId());

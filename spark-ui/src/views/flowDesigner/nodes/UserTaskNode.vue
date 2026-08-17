@@ -4,6 +4,7 @@
     <span class="node-name">{{ node.name || '用户任务' }}</span>
     <div class="node-info">
       <span class="node-tag">{{ node.assigneeLabel || getAssigneeTypeLabel(node.assigneeType) }}</span>
+      <span class="node-tag approve-tag" :class="`approve-${node.approveType || '1'}`">{{ getApproveTypeLabel(node.approveType) }}</span>
     </div>
   </div>
 </template>
@@ -28,6 +29,19 @@ const assigneeTypeOptions = [
 function getAssigneeTypeLabel(type) {
   const find = assigneeTypeOptions.find(item => item.value === type)
   return find ? find.label : '未选择审批人'
+}
+
+// 审批类型选项（与后端 FlowApproveTypeEnum 对应）
+const approveTypeOptions = [
+  { label: '或签', value: '1' },
+  { label: '会签', value: '2' },
+  { label: '依次审批', value: '3' }
+]
+
+/** 审批类型回显 label（空值默认或签） */
+function getApproveTypeLabel(type) {
+  const find = approveTypeOptions.find(item => item.value === (type || '1'))
+  return find ? find.label : '或签'
 }
 </script>
 
@@ -66,9 +80,10 @@ function getAssigneeTypeLabel(type) {
 .node-info {
   margin-top: 1px;
   max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
 }
 .node-tag {
   display: inline-block;
@@ -83,5 +98,13 @@ function getAssigneeTypeLabel(type) {
   white-space: nowrap;
   background: #eaf3ff;
   color: #1890ff;
+}
+.approve-tag.approve-2 {
+  background: #f0f9eb;
+  color: #67c23a;
+}
+.approve-tag.approve-3 {
+  background: #fdf6ec;
+  color: #e6a23c;
 }
 </style>

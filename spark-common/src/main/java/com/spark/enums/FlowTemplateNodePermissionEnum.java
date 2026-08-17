@@ -13,6 +13,9 @@ public enum FlowTemplateNodePermissionEnum {
     ALLOW_APSS(1 , "允许审批人审批通过"),
     ALLOW_REJECT(2 , "允许审批人审批驳回"),
     AUTO_APSS(4 , "没有审批人时自动通过"),
+    ALLOW_URGE(8 , "允许申请人催办"),
+    ALLOW_TRANSFER(16 , "允许审批人转办"),
+    ALLOW_ADD_SIGN(32 , "允许审批人加签"),
 
     ;
 

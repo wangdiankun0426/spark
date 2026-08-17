@@ -1,7 +1,18 @@
 <template>
   <div class="assignee-selector">
     <el-form-item label="审批类型">
-      <el-select v-model="node.assigneeType" placeholder="请选择审批类型" @change="handleTypeChange">
+      <el-select v-model="node.approveType" placeholder="请选择审批类型">
+        <el-option
+            v-for="item in approveTypeOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+        />
+      </el-select>
+    </el-form-item>
+
+    <el-form-item label="审批人类型">
+      <el-select v-model="node.assigneeType" placeholder="请选择审批人类型" @change="handleTypeChange">
         <el-option
             v-for="item in assigneeTypeOptions"
             :key="item.value"
@@ -81,6 +92,13 @@ const assigneeTypeOptions = [
   { label: '指定部门', value: '4' },
   { label: '指定角色', value: '5' },
   { label: '表单数据', value: '6' }
+]
+
+// 审批类型选项（默认或签）
+const approveTypeOptions = [
+  { label: '或签（一人通过即通过）', value: '1' },
+  { label: '会签（所有人通过才通过）', value: '2' },
+  { label: '依次审批（按顺序逐个审批）', value: '3' }
 ]
 
 /**

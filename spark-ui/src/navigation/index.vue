@@ -65,6 +65,10 @@
             </div>
           </div>
         </el-popover>
+        <!-- 通讯录 -->
+        <div class="tool-item" @click="openContactDrawer" title="通讯录">
+          <el-icon style="font-size: 20px"><ContactList /></el-icon>
+        </div>
         <!-- 消息 -->
         <el-popover
             trigger="click"
@@ -124,10 +128,6 @@
             </el-tab-pane>
           </el-tabs>
         </el-popover>
-        <!-- 通讯录 -->
-        <div class="tool-item" @click="openContactDrawer" title="通讯录">
-          <el-icon style="font-size: 20px"><ContactList /></el-icon>
-        </div>
       </div>
 
       <div class="user-box">
@@ -345,8 +345,8 @@ function handleMessageClick(item) {
     return;
   }
   const refId = item.refId;
-  if (item.type === 2) {
-    // 待办通知 -> 我的待办
+  if (item.type === 2 || item.type === 5) {
+    // 待办/催办通知 -> 我的待办
     router.push({ path: '/flow/myPendingList', query: { id: refId } }).catch(() => {});
   } else if (item.type === 3 || item.type === 4) {
     // 完结/驳回通知 -> 我的申请
@@ -425,6 +425,7 @@ function handleViewNotice(row) {
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
+  padding-right: 12px;
 }
 
 .tool-item {

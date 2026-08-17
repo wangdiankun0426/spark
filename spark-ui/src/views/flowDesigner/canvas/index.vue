@@ -81,6 +81,25 @@
             >{{ edge.name }}</text>
           </template>
 
+          <!-- 分支条件标签（条件分支连线，每个条件片段一行展示分支走向原因） -->
+          <template v-for="edge in sequences" :key="'cond-' + edge.id">
+            <text
+                v-if="formatEdgeConditionLines(edge).length"
+                :x="getConditionLabelPosition(edge).x"
+                :y="getConditionLabelPosition(edge).y"
+                class="cn-line-condition"
+                @mousedown.stop
+                @click.stop="handleSelectEdge(edge)"
+            >
+              <tspan
+                  v-for="(line, idx) in formatEdgeConditionLines(edge)"
+                  :key="idx"
+                  :x="getConditionLabelPosition(edge).x"
+                  :dy="idx === 0 ? 0 : 14"
+              >{{ line }}</tspan>
+            </text>
+          </template>
+
           <!-- 临时连线（正在拖拽中） -->
           <path
               v-if="connecting"
@@ -103,7 +122,7 @@ let canvasUid = 0
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { NODE_META } from '@/views/flow/designer/nodes/index.js'
+import { NODE_META } from '@/views/flowDesigner/nodes/index.js'
 
 defineOptions({ name: 'DesignerCanvas' })
 
@@ -122,6 +141,8 @@ const props = defineProps({
   nodeComponents: { type: Object, default: () => ({}) },
   /** 透传给节点类型组件的额外 props（如 workflowList） */
   nodeComponentProps: { type: Object, default: () => ({}) },
+  /** 表单字段选项（label/value），用于分支条件标签的字段编码翻译 */
+  fieldOptions: { type: Array, default: () => [] },
   /** 拖放新节点时读取的 dataTransfer key */
   dropDataKey: { type: String, default: 'nodeType' }
 })
@@ -298,6 +319,110 @@ function getEdgeLabelPosition(edge) {
   if (!source || !target) return { x: 0, y: 0 }
   const { sourcePoint, targetPoint } = getAnchorPoints(source, target)
   return { x: (sourcePoint.x + targetPoint.x) / 2, y: (sourcePoint.y + targetPoint.y) / 2 - 10 }
+}
+
+/** 分支条件标签位置（中点下方，无名称标签时上移） */
+function getConditionLabelPosition(edge) {
+  const pos = getEdgeLabelPosition(edge)
+  return { x: pos.x, y: edge.name ? pos.y + 20 : pos.y + 8 }
+}
+
+/** 判断连线是否为条件分支连线（源节点为排他网关且有条件表达式） */
+function isConditionEdge(edge) {
+  const source = props.nodes.find(n => n.id === getEdgeSource(edge))
+  return !!source && source.type === 'exclusiveGateway' && !!edge.conditionExpression
+}
+
+/**
+ * 条件表达式转多行可读文案，每个条件片段一行，连接符（且/或）在后续行行首
+ * 如 ${amount > 80 && status == '1'} -> ['金额 大于 80', '且 状态 等于 1']
+ * @param edge 连线
+ * @returns {string[]} 文案行列表，非条件分支连线返回空数组
+ */
+function formatEdgeConditionLines(edge) {
+  if (!isConditionEdge(edge)) {
+    return [];
+  }
+  let s = String(edge.conditionExpression).trim();
+  if (s.startsWith('${') && s.endsWith('}')) {
+    s = s.slice(2, -1);
+  }
+  // 顶层按 && / || 拆分（引号内的连接符不拆分）
+  const { parts, logics } = splitConditionFragments(s);
+  const lines = [];
+  for (let i = 0; i < parts.length; i++) {
+    if (!parts[i]) {
+      continue;
+    }
+    const connector = i === 0 ? '' : (logics[i - 1] === '||' ? '或 ' : '且 ');
+    lines.push(connector + formatConditionFragment(parts[i]));
+  }
+  return lines;
+}
+
+/**
+ * 在顶层按 && / || 拆分表达式（引号内的连接符不拆分）
+ * @param s 表达式（不含 ${} 包裹）
+ * @returns {{parts: string[], logics: string[]}} 片段列表与各片段前的连接符
+ */
+function splitConditionFragments(s) {
+  const parts = [];
+  const logics = [];
+  let cur = '';
+  let inQuote = false;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (ch === "'") {
+      inQuote = !inQuote;
+      cur += ch;
+    } else if (!inQuote && (s.startsWith('&&', i) || s.startsWith('||', i))) {
+      logics.push(s.substr(i, 2));
+      parts.push(cur.trim());
+      cur = '';
+      i++;
+    } else {
+      cur += ch;
+    }
+  }
+  parts.push(cur.trim());
+  return { parts, logics };
+}
+
+/**
+ * 单个条件片段转可读文案：amount > 80 -> 金额 大于 80
+ * @param frag 条件片段
+ * @returns {string} 可读文案
+ */
+function formatConditionFragment(frag) {
+  let s = frag;
+  // 字段编码替换为字段名称（长编码优先，避免前缀误替换）
+  const codes = props.fieldOptions.map(f => f.value).filter(Boolean).sort((a, b) => b.length - a.length);
+  codes.forEach(code => {
+    const label = getFieldLabel(code);
+    s = s.replace(new RegExp(`(?<![\\w])${escapeRegExp(code)}(?![\\w])`, 'g'), label);
+  });
+  return s
+      .replace(/\.contains\(['"]?([^'")]+)['"]?\)/g, ' 包含 $1 ')
+      .replace(/>=/g, ' 大于等于 ')
+      .replace(/<=/g, ' 小于等于 ')
+      .replace(/==/g, ' 等于 ')
+      .replace(/!=/g, ' 不等于 ')
+      .replace(/>/g, ' 大于 ')
+      .replace(/</g, ' 小于 ')
+      .replace(/['"]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+}
+
+/** 字段编码翻译为字段名称（无映射时返回原编码） */
+function getFieldLabel(code) {
+  const find = props.fieldOptions.find(f => f.value === code);
+  return find ? find.label : code;
+}
+
+/** 转义正则特殊字符 */
+function escapeRegExp(str) {
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function getConnectingPath() {
@@ -514,6 +639,19 @@ function handleDrop(event) {
   fill: #5e6c84;
   text-anchor: middle;
   font-weight: 500;
+}
+.cn-line-condition {
+  pointer-events: all;
+  cursor: pointer;
+  font-size: 11px;
+  fill: #fa8c16;
+  text-anchor: middle;
+  font-weight: 500;
+  // 白色描边光晕：保证文字在网格背景/连线交叉处可读
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 3px;
+  stroke-linejoin: round;
 }
 </style>
 

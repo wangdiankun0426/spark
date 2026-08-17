@@ -413,6 +413,7 @@ CREATE TABLE `flow_template_node` (
       `assignee_type` int(3) NULL COMMENT '审批人类型',
       `assignee` varchar(256) NULL COMMENT '审批人',
       `permission` int(3) NULL COMMENT '节点权限',
+      `approve_type` int(3) NULL DEFAULT 1 COMMENT '审批类型',
 
       `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
       `created_by` bigint(12) NOT NULL COMMENT '创建人id',
@@ -524,6 +525,7 @@ CREATE TABLE `flow_instance_assignee` (
       `assignee_set_id` varchar(36) NOT NULL COMMENT '审批人集合id',
       `assignee_id` bigint(12) NOT NULL COMMENT '审批人id',
       `status` int(5) NOT NULL COMMENT '审批状态',
+      `sort` int(5) NULL COMMENT '审批顺序',
 
       `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
       `created_by` bigint(12) NOT NULL COMMENT '创建人id',

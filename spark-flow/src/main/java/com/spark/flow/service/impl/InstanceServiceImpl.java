@@ -21,10 +21,13 @@ import com.spark.dao.flow.*;
 import com.spark.dao.form.FormObjValueDao;
 import com.spark.dao.form.FormVersionDao;
 import com.spark.enums.ErrorCodeEnum;
+import com.spark.enums.FlowApproveTypeEnum;
 import com.spark.enums.FlowInstanceLevelEnum;
 import com.spark.enums.FlowInstanceStatusEnum;
 import com.spark.enums.FlowTemplateNodePermissionEnum;
+import com.spark.enums.MessageTypeEnum;
 import com.spark.enums.ObjectTypeEnum;
+import com.spark.flow.service.FlowMessageService;
 import com.spark.flow.service.FlowableService;
 import com.spark.flow.service.IFlowInstanceService;
 import com.spark.form.service.IFormObjValueService;
@@ -73,6 +76,8 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
     private FlowInstanceAssigneeDao instanceAssigneeDao;
     @Autowired
     private FlowTemplateNodeDao templateNodeDao;
+    @Autowired
+    private FlowMessageService flowMessageService;
 
     /**
      * 创建流程实例
@@ -264,8 +269,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
     @Override
     public ResultData<Void> approveInstance(FlowInstanceVO instanceVO) {
         ResultData<Void> result = new ResultData<>();
-        if (instanceVO == null || instanceVO.getId() == null || instanceVO.getStatus() == null
-                || instanceVO.getNodeId() == null) {
+        if (instanceVO == null || instanceVO.getId() == null || instanceVO.getStatus() == null || instanceVO.getNodeId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
@@ -319,30 +323,162 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
             result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
             return result;
         }
-        Map<String, Object> variables = new HashMap<>();
-        variables.put("status", instanceVO.getStatus());
-        FormObjValueQuery formObjValueQuery = new FormObjValueQuery();
-        formObjValueQuery.setObjId(instanceResult.getId());
-        List<FormObjValueResult> formObjValueList = formObjValueDao.queryFormObjValueList(formObjValueQuery);
-        if (CollectionUtil.isNotEmpty(formObjValueList)) {
-            formObjValueList.forEach(formObjValueResult -> variables.put(formObjValueResult.getCode(), formObjValueResult.getValue()));
-        }
-        flowableService.completeTask(instanceResult.getFlowableInstanceId(), variables);
-        FlowInstanceDiscuss instanceDiscuss = new FlowInstanceDiscuss();
-        instanceDiscuss.setInstanceId(instanceResult.getId());
-        instanceDiscuss.setInstanceNodeId(instanceNodeResult.getId());
-        instanceDiscuss.setDiscuss(instanceVO.getDiscuss());
-        instanceDiscuss.setAssigneeId(SessionHolder.getCurrentUserId());
-        instanceDiscuss.setStatus(instanceVO.getStatus());
-        int count = instanceDiscussDao.insertDB(instanceDiscuss);
-        if (count < 1) {
-            logger.error("approveInstance error, insert db fail");
-            return result;
-        }
+        // 更新审批人状态
         FlowInstanceAssignee instanceAssignee = new FlowInstanceAssignee();
         instanceAssignee.setId(instanceAssigneeResult.getId());
-        instanceAssignee.setStatus(FlowInstanceStatusEnum.COMPLETED.getValue());
-        instanceAssigneeDao.updateDBById(instanceAssignee);
+        instanceAssignee.setStatus(instanceVO.getStatus());
+        int count = instanceAssigneeDao.updateDBById(instanceAssignee);
+        if (count < 1) {
+            logger.error("approveInstance error, update db fail");
+            return result;
+        }
+        FlowApproveTypeEnum approveTypeEnum = FlowApproveTypeEnum.indexOf(flowTemplateNodeResult.getApproveType());
+        boolean completed = true;
+        if (!FlowInstanceStatusEnum.REJECTED.getValue().equals(instanceVO.getStatus()) && !FlowApproveTypeEnum.OR_SIGN.equals(approveTypeEnum)) {
+            if (FlowApproveTypeEnum.AND_SIGN.equals(approveTypeEnum)) {
+                FlowInstanceAssigneeQuery remainQuery = new FlowInstanceAssigneeQuery();
+                remainQuery.setAssigneeSetId(instanceAssigneeResult.getAssigneeSetId());
+                remainQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+                List<FlowInstanceAssigneeResult> remainList = instanceAssigneeDao.queryInstanceAssigneeList(remainQuery);
+                completed = CollectionUtil.isEmpty(remainList);
+            } else {
+                completed = !this.activateNextAssignee(instanceResult.getFlowableInstanceId(), instanceAssigneeResult.getAssigneeSetId());
+            }
+        }
+        if (completed) {
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("status", instanceVO.getStatus());
+            FormObjValueQuery formObjValueQuery = new FormObjValueQuery();
+            formObjValueQuery.setObjId(instanceResult.getId());
+            List<FormObjValueResult> formObjValueList = formObjValueDao.queryFormObjValueList(formObjValueQuery);
+            if (CollectionUtil.isNotEmpty(formObjValueList)) {
+                formObjValueList.forEach(formObjValueResult -> variables.put(formObjValueResult.getCode(), formObjValueResult.getValue()));
+            }
+            flowableService.completeTask(instanceResult.getFlowableInstanceId(), variables);
+        }
+        // 记录操作
+        this.saveFlowDiscuss(instanceResult.getId(), instanceNodeResult.getId(), instanceVO.getStatus(), instanceVO.getDiscuss());
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 催办流程实例
+     * @param instanceVO 催办参数
+     * @return 催办结果
+     */
+    @Override
+    public ResultData<Void> urgeInstance(FlowInstanceVO instanceVO) {
+        ResultData<Void> result = new ResultData<>();
+        if (instanceVO == null || instanceVO.getId() == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
+        instanceQuery.setId(instanceVO.getId());
+        instanceQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
+        if (instanceResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        if (!SessionHolder.getCurrentUserId().equals(instanceResult.getCreatedBy())) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        FlowInstanceNodeQuery instanceNodeQuery = new FlowInstanceNodeQuery();
+        instanceNodeQuery.setInstanceId(instanceResult.getId());
+        instanceNodeQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        FlowInstanceNodeResult instanceNodeResult = instanceNodeDao.queryInstanceNode(instanceNodeQuery);
+        if (instanceNodeResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        FlowTemplateNodeQuery templateNodeQuery = new FlowTemplateNodeQuery();
+        templateNodeQuery.setNodeId(instanceNodeResult.getNodeId());
+        templateNodeQuery.setTemplateId(instanceResult.getTemplateId());
+        templateNodeQuery.setRevId(instanceResult.getTemplateRevId());
+        FlowTemplateNodeResult templateNodeResult = templateNodeDao.queryTemplateNode(templateNodeQuery);
+        Integer permission = templateNodeResult == null ? null : templateNodeResult.getPermission();
+        if (permission == null || (permission & FlowTemplateNodePermissionEnum.ALLOW_URGE.getValue()) != FlowTemplateNodePermissionEnum.ALLOW_URGE.getValue()) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        // 发送催办通知
+        flowMessageService.sendFlowNotice(instanceResult.getFlowableInstanceId(), MessageTypeEnum.FLOW_URGE.getType());
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 转办流程实例
+     * @param instanceVO 转办参数
+     * @return 转办结果
+     */
+    @Override
+    public ResultData<Void> transferInstance(FlowInstanceVO instanceVO) {
+        ResultData<Void> result = new ResultData<>();
+        if (instanceVO == null || CollectionUtil.isEmpty(instanceVO.getAssigneeIds())) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        ResultData<FlowInstanceAssigneeResult> validateResult = this.validateAssigneePermission(instanceVO, FlowTemplateNodePermissionEnum.ALLOW_TRANSFER);
+        if (validateResult.getCode() != ResultData.OK) {
+            result.setCode(validateResult.getCode());
+            result.setMessage(validateResult.getMessage());
+            return result;
+        }
+        FlowInstanceAssigneeResult assigneeResult = validateResult.getData();
+        // 更新审批人状态
+        FlowInstanceAssignee updateAssignee = new FlowInstanceAssignee();
+        updateAssignee.setId(assigneeResult.getId());
+        updateAssignee.setStatus(FlowInstanceStatusEnum.TRANSFERRED.getValue());
+        int count = instanceAssigneeDao.updateDBById(updateAssignee);
+        if (count < 1) {
+            logger.error("transferInstance error, update db fail");
+            return result;
+        }
+        // 新审批人加入集合，继承当前审批顺序
+        List<Long> userIds = instanceVO.getAssigneeIds().stream().distinct().toList();
+        for (int i = 0; i < userIds.size(); i++) {
+            this.insertAssignee(assigneeResult, userIds.get(i), FlowInstanceStatusEnum.PROCESSING.getValue(), assigneeResult.getSort() == null ? null : assigneeResult.getSort() + i);
+        }
+        // 记录操作
+        this.saveFlowDiscuss(assigneeResult.getInstanceId(), assigneeResult.getInstanceNodeId(), FlowInstanceStatusEnum.TRANSFERRED.getValue(), "转办给：" + StringUtil.joinList(super.getObjNames(userIds), ","));
+        // 发送待办
+        flowMessageService.sendFlowNotice(assigneeResult.getFlowableInstanceId(), MessageTypeEnum.FLOW_TODO.getType());
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 加签流程实例
+     * @param instanceVO 加签参数
+     * @return 加签结果
+     */
+    @Override
+    public ResultData<Void> addSignInstance(FlowInstanceVO instanceVO) {
+        ResultData<Void> result = new ResultData<>();
+        if (instanceVO == null || CollectionUtil.isEmpty(instanceVO.getAssigneeIds())) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        ResultData<FlowInstanceAssigneeResult> validateResult = this.validateAssigneePermission(instanceVO, FlowTemplateNodePermissionEnum.ALLOW_ADD_SIGN);
+        if (validateResult.getCode() != ResultData.OK) {
+            result.setCode(validateResult.getCode());
+            result.setMessage(validateResult.getMessage());
+            return result;
+        }
+        FlowInstanceAssigneeResult assigneeResult = validateResult.getData();
+        List<Long> userIds = instanceVO.getAssigneeIds().stream().distinct().toList();
+        // 加签人加入集合
+        for (Long userId : userIds) {
+            this.insertAssignee(assigneeResult, userId, FlowInstanceStatusEnum.PROCESSING.getValue(), null);
+        }
+        // 记录操作
+        this.saveFlowDiscuss(assigneeResult.getInstanceId(), assigneeResult.getInstanceNodeId(), FlowInstanceStatusEnum.ADDED_SIGN.getValue(), "加签给了：" + StringUtil.joinList(super.getObjNames(userIds), ","));
+        // 发送待办
+        flowMessageService.sendFlowNotice(assigneeResult.getFlowableInstanceId(), MessageTypeEnum.FLOW_TODO.getType());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -456,6 +592,136 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
             }
         });
 
+    }
+
+    /**
+     * 校验审批人操作权限
+     * @param instanceVO 操作参数
+     * @param permissionEnum 所需节点权限
+     * @return 校验结果，data为当前审批人
+     */
+    private ResultData<FlowInstanceAssigneeResult> validateAssigneePermission(FlowInstanceVO instanceVO, FlowTemplateNodePermissionEnum permissionEnum) {
+        ResultData<FlowInstanceAssigneeResult> result = new ResultData<>();
+        if (instanceVO == null || instanceVO.getId() == null || instanceVO.getNodeId() == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
+        instanceQuery.setId(instanceVO.getId());
+        instanceQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
+        if (instanceResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        FlowInstanceNodeQuery instanceNodeQuery = new FlowInstanceNodeQuery();
+        instanceNodeQuery.setId(instanceVO.getNodeId());
+        instanceNodeQuery.setInstanceId(instanceResult.getId());
+        instanceNodeQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        FlowInstanceNodeResult instanceNodeResult = instanceNodeDao.queryInstanceNode(instanceNodeQuery);
+        if (instanceNodeResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        FlowTemplateNodeQuery templateNodeQuery = new FlowTemplateNodeQuery();
+        templateNodeQuery.setNodeId(instanceNodeResult.getNodeId());
+        templateNodeQuery.setTemplateId(instanceResult.getTemplateId());
+        templateNodeQuery.setRevId(instanceResult.getTemplateRevId());
+        FlowTemplateNodeResult templateNodeResult = templateNodeDao.queryTemplateNode(templateNodeQuery);
+        Integer permission = templateNodeResult == null ? null : templateNodeResult.getPermission();
+        if (permission == null || (permission & permissionEnum.getValue()) != permissionEnum.getValue()) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        FlowInstanceAssigneeQuery assigneeQuery = new FlowInstanceAssigneeQuery();
+        assigneeQuery.setInstanceId(instanceResult.getId());
+        assigneeQuery.setInstanceNodeId(instanceNodeResult.getId());
+        assigneeQuery.setAssigneeId(SessionHolder.getCurrentUserId());
+        assigneeQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        FlowInstanceAssigneeResult assigneeResult = instanceAssigneeDao.queryInstanceAssignee(assigneeQuery);
+        if (assigneeResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        assigneeResult.setFlowableInstanceId(instanceResult.getFlowableInstanceId());
+        result.setData(assigneeResult);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 向当前审批人集合新增审批人
+     * @param setAssignee 集合内既有审批人
+     * @param assigneeId 审批人id
+     * @param status 审批状态
+     * @param sort 审批顺序
+     */
+    private void insertAssignee(FlowInstanceAssigneeResult setAssignee, Long assigneeId, Integer status, Integer sort) {
+        FlowInstanceAssignee instanceAssignee = new FlowInstanceAssignee();
+        instanceAssignee.setInstanceId(setAssignee.getInstanceId());
+        instanceAssignee.setInstanceNodeId(setAssignee.getInstanceNodeId());
+        instanceAssignee.setAssigneeSetId(setAssignee.getAssigneeSetId());
+        instanceAssignee.setAssigneeId(assigneeId);
+        instanceAssignee.setStatus(status);
+        instanceAssignee.setSort(sort);
+        int count = instanceAssigneeDao.insertDB(instanceAssignee);
+        if (count < 1) {
+            logger.error("insertAssignee error, insert db fail, assigneeId={}", assigneeId);
+        }
+    }
+
+    /**
+     * 保存审批记录
+     * @param instanceId 流程实例id
+     * @param instanceNodeId 流程实例节点id
+     * @param status 操作状态
+     * @param discuss 内容
+     */
+    private void saveFlowDiscuss(Long instanceId, Long instanceNodeId, Integer status, String discuss) {
+        FlowInstanceDiscuss instanceDiscuss = new FlowInstanceDiscuss();
+        instanceDiscuss.setInstanceId(instanceId);
+        instanceDiscuss.setInstanceNodeId(instanceNodeId);
+        instanceDiscuss.setDiscuss(discuss);
+        instanceDiscuss.setAssigneeId(SessionHolder.getCurrentUserId());
+        instanceDiscuss.setStatus(status);
+        int count = instanceDiscussDao.insertDB(instanceDiscuss);
+        if (count < 1) {
+            logger.error("saveFlowDiscuss error, insert db fail");
+        }
+    }
+
+    /**
+     * 依次审批：激活下一位等待审批人并发送待办通知
+     * @param flowableInstanceId flowable流程实例id
+     * @param assigneeSetId 审批人集合id
+     * @return true已激活下一位 false已无等待审批人
+     */
+    private boolean activateNextAssignee(String flowableInstanceId, String assigneeSetId) {
+        FlowInstanceAssigneeQuery assigneeQuery = new FlowInstanceAssigneeQuery();
+        assigneeQuery.setAssigneeSetId(assigneeSetId);
+        assigneeQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        List<FlowInstanceAssigneeResult> processingList = instanceAssigneeDao.queryInstanceAssigneeList(assigneeQuery);
+        if (CollectionUtil.isNotEmpty(processingList)) {
+            // 还有没审批完的 直接返回true 继续审批
+            return true;
+        }
+        assigneeQuery.setStatus(FlowInstanceStatusEnum.WAITING.getValue());
+        List<FlowInstanceAssigneeResult> waitingList = instanceAssigneeDao.queryInstanceAssigneeList(assigneeQuery);
+        if (CollectionUtil.isEmpty(waitingList)) {
+            return false;
+        }
+        // 将加一个审批人置为审批中状态
+        FlowInstanceAssigneeResult nextAssignee = waitingList.get(0);
+        FlowInstanceAssignee updateAssignee = new FlowInstanceAssignee();
+        updateAssignee.setId(nextAssignee.getId());
+        updateAssignee.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        int count = instanceAssigneeDao.updateDBById(updateAssignee);
+        if (count < 1) {
+            logger.error("activateNextAssignee error, update db fail");
+            return true;
+        }
+        flowMessageService.sendFlowNotice(flowableInstanceId, MessageTypeEnum.FLOW_TODO.getType());
+        return true;
     }
 
     /**

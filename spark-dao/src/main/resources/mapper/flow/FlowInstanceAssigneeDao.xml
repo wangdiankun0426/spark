@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.flow.FlowInstanceAssigneeDao" >
     <sql id="allColumnList" >
-        id , instance_id , instance_node_id , assignee_set_id , assignee_id , status , delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , instance_id , instance_node_id , assignee_set_id , assignee_id , status , sort , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="searchCondition">
@@ -27,14 +27,17 @@
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into flow_instance_assignee (instance_id , instance_node_id , assignee_set_id , assignee_id , status , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values ( #{instanceId} , #{instanceNodeId} , #{assigneeSetId} , #{assigneeId}  , #{status} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into flow_instance_assignee (instance_id , instance_node_id , assignee_set_id , assignee_id , status , sort , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values ( #{instanceId} , #{instanceNodeId} , #{assigneeSetId} , #{assigneeId}  , #{status} , #{sort}, 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="updateById">
         update flow_instance_assignee set updated_dt = #{updatedDt}, updated_by = #{updatedBy}
         <if test="status != null">
             ,status = #{status}
+        </if>
+        <if test="sort != null">
+            ,sort = #{sort}
         </if>
         where id = #{id}
     </update>
@@ -44,6 +47,7 @@
         from flow_instance_assignee
         where 1=1
         <include refid="searchCondition" />
+        order by sort asc, id asc
     </select>
 
     <select id="queryInstanceAssignee" resultType="com.spark.bean.flow.result.FlowInstanceAssigneeResult">

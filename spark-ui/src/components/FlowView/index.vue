@@ -2,7 +2,7 @@
   <div class="bpmn-designer-container">
     <index
             :nodes="nodes"
-            :edges="sequences"
+            :sequences="sequences"
             source-key="sourceRef"
             target-key="targetRef"
             :selected-node-id="selectedNode?.id"
@@ -10,6 +10,7 @@
             :canvas-width="canvasWidth"
             :canvas-height="canvasHeight"
             :node-components="NODE_COMPONENTS"
+            :field-options="fieldOptions"
             @select-node="selectNode"
         />
   </div>
@@ -17,11 +18,13 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import Index from '@/views/flow/designer/canvas/index.vue'
-import { NODE_COMPONENTS } from '@/views/flow/designer/nodes'
+import Index from '@/views/flowDesigner/canvas/index.vue'
+import { NODE_COMPONENTS } from '@/views/flowDesigner/nodes'
 
 const props = defineProps({
-  bpmJson: Object
+  bpmJson: Object,
+  // 表单字段选项（label/value），用于分支条件标签的字段编码翻译
+  fieldOptions: { type: Array, default: () => [] }
 });
 
 const nodes = ref([])
@@ -40,7 +43,8 @@ onMounted(() => {
     y: el.y,
     assigneeType: el.assigneeType,
     assignee: el.assignee,
-    assigneeLabel: el.assigneeLabel
+    assigneeLabel: el.assigneeLabel,
+    approveType: el.approveType
   }))
   sequences.value = props.bpmJson.sequences.map(seq => ({
     id: seq.id,

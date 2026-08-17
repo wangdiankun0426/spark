@@ -62,3 +62,30 @@ export function approvalFlowInstanceAPI(data) {
         params: data
     })
 }
+
+// 催办流程实例
+export function urgeFlowInstanceAPI(data) {
+    return request({
+        url: '/flow/instance/urge',
+        method: 'post',
+        params: data
+    })
+}
+
+// 转办流程实例
+export function transferFlowInstanceAPI(data) {
+    return request({
+        url: '/flow/instance/transfer',
+        method: 'post',
+        params: data
+    })
+}
+
+// 加签流程实例
+export function addSignFlowInstanceAPI(data) {
+    return request({
+        url: '/flow/instance/addSign',
+        method: 'post',
+        params: data
+    })
+}

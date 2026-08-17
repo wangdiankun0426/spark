@@ -67,18 +67,28 @@
               <el-timeline>
                 <el-timeline-item
                     v-for="(node, index) in nodes"
-                    :key="index"
-                    :type="node.status === 2 ? 'primary' : (node.status === 3 ? 'success' : 'danger')"
+                    :key="node.id || index"
+                    :type="getTimelineType(node.status)"
+                    :timestamp="node.createdDt"
+                    placement="top"
                 >
-                  <p>{{ node.name }}</p>
-                  <p>{{ node.createdDt }}</p>
-                  <p v-if="node.type === 'userTask'">节点状态：{{ node.statusName }}</p>
-                  <p v-if="node.status === 2">待审批人：{{ node.unAssigneeName }}</p>
-                  <p v-for="(discuss, index) in node.discusses" :key="index" style="font-size: 12px">
-                    <p>{{ discuss.assigneeName }} - {{ discuss.createdDt }}<br>
-                      审批意见: {{ discuss.discuss }}
-                    </p>
-                  </p>
+                  <div class="node-item">
+                    <div class="node-item-header">
+                      <span class="node-name">{{ node.name }}</span>
+                      <el-tag v-if="node.type === 'userTask'" :type="getStatusTagType(node.status)" size="small">
+                        {{ node.statusName }}
+                      </el-tag>
+                    </div>
+                    <div v-if="node.status === 2" class="node-item-row">待审批人：{{ node.unAssigneeName || '-' }}</div>
+                    <div v-for="discuss in node.discusses" :key="discuss.id || discuss.createdDt" class="discuss-item">
+                      <div class="discuss-header">
+                        <span class="discuss-name">{{ discuss.assigneeName }}</span>
+                        <span class="discuss-status" :class="'discuss-status--' + discuss.status">{{ discuss.statusName }}</span>
+                        <span class="discuss-time">{{ discuss.createdDt }}</span>
+                      </div>
+                      <div v-if="discuss.discuss" class="discuss-content">{{ discuss.discuss }}</div>
+                    </div>
+                  </div>
                 </el-timeline-item>
               </el-timeline>
             </div>
@@ -86,6 +96,7 @@
           <el-col :span="nodes.length > 0 ? 18 : 24">
             <flow-view
                 :bpmJson="bpmJson"
+                :field-options="fieldOptions"
                 v-if="visible && tabActive === 'flow'"
             />
           </el-col>
@@ -120,12 +131,43 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'update:name', 'update:description', 'update:level'])
 
+/**
+ * 表单字段选项（label/value），供流程图分支条件标签翻译字段编码
+ * @type {ComputedRef<{label: *, value: *, type: *}[]>}
+ */
+const fieldOptions = computed(() => {
+  const widgetList = props.formJson?.widgetList || []
+  return widgetList
+      .filter(widget => widget.config?.code)
+      .map(widget => ({ label: widget.config.label, value: widget.config.code, type: widget.type }))
+})
+
 /** 紧急程度选项 */
 const levelOptions = [
   { value: 1, label: '一般' },
   { value: 2, label: '重要' },
   { value: 3, label: '紧急' },
 ]
+
+/**
+ * 节点状态 -> 时间线节点颜色类型（2审批中/3通过/4驳回/5自动通过/6等待审批）
+ * @param status 节点状态
+ * @returns {string} 时间线类型
+ */
+function getTimelineType(status) {
+  const typeMap = { 1: 'info', 2: 'primary', 3: 'success', 4: 'danger', 5: 'success', 6: 'warning' }
+  return typeMap[status] || 'info'
+}
+
+/**
+ * 节点状态 -> 标签颜色类型
+ * @param status 节点状态
+ * @returns {string} el-tag 类型
+ */
+function getStatusTagType(status) {
+  const typeMap = { 1: 'info', 2: '', 3: 'success', 4: 'danger', 5: 'success', 6: 'warning' }
+  return typeMap[status] || 'info'
+}
 
 const tabActive = ref('form')
 const titleFormRef = ref(null)
@@ -221,5 +263,79 @@ function handleClose() {
   border-right: 1px solid #ebeef5;
   height: calc(100vh - 200px);
   overflow-y: auto;
+}
+
+// 节点信息
+.node-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.node-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .node-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: $color-text-primary;
+    line-height: 1.4;
+  }
+}
+
+.node-item-row {
+  font-size: 12px;
+  color: $color-text-secondary;
+}
+
+// 审批意见卡片
+.discuss-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #f5f7fa;
+}
+
+.discuss-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+
+  .discuss-name {
+    font-weight: 550;
+    color: $color-text-primary;
+  }
+
+  .discuss-time {
+    color: $color-text-secondary;
+  }
+
+  // 审批结果着色：通过/自动通过绿色，驳回红色，转办/加签灰色
+  .discuss-status--3,
+  .discuss-status--5 {
+    color: #67c23a;
+  }
+
+  .discuss-status--4 {
+    color: #f56c6c;
+  }
+
+  .discuss-status--7,
+  .discuss-status--8 {
+    color: #909399;
+  }
+}
+
+.discuss-content {
+  font-size: 12px;
+  color: $color-text-secondary;
+  line-height: 1.6;
+  word-break: break-all;
+  white-space: pre-wrap;
 }
 </style>

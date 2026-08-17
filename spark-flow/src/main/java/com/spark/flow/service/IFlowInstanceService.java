@@ -53,6 +53,27 @@ public interface IFlowInstanceService {
     ResultData<Void> approveInstance(FlowInstanceVO instanceVO);
 
     /**
+     * 催办流程实例
+     * @param instanceVO 催办参数
+     * @return 催办结果
+     */
+    ResultData<Void> urgeInstance(FlowInstanceVO instanceVO);
+
+    /**
+     * 转办流程实例
+     * @param instanceVO 转办参数
+     * @return 转办结果
+     */
+    ResultData<Void> transferInstance(FlowInstanceVO instanceVO);
+
+    /**
+     * 加签流程实例
+     * @param instanceVO 加签参数
+     * @return 加签结果
+     */
+    ResultData<Void> addSignInstance(FlowInstanceVO instanceVO);
+
+    /**
      * 分页查询我的已办列表
      * @param query
      * @return

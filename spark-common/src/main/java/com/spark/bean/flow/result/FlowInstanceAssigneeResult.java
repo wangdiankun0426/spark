@@ -40,4 +40,13 @@ public class FlowInstanceAssigneeResult extends BaseResult {
      */
     private Integer status;
 
+    /**
+     * 审批顺序
+     */
+    private Integer sort;
+
+    /**
+     * 流程实例id
+     */
+    private String flowableInstanceId;
 }

@@ -94,4 +94,34 @@ public class FlowInstanceController {
     public ResultData<Void> approveInstance(FlowInstanceVO instanceVO) {
         return instanceService.approveInstance(instanceVO);
     }
+
+    /**
+     * 催办流程实例
+     * @param instanceVO 催办参数
+     * @return 响应
+     */
+    @PostMapping("urge")
+    public ResultData<Void> urgeInstance(FlowInstanceVO instanceVO) {
+        return instanceService.urgeInstance(instanceVO);
+    }
+
+    /**
+     * 转办流程实例
+     * @param instanceVO 转办参数
+     * @return 响应
+     */
+    @PostMapping("transfer")
+    public ResultData<Void> transferInstance(FlowInstanceVO instanceVO) {
+        return instanceService.transferInstance(instanceVO);
+    }
+
+    /**
+     * 加签流程实例
+     * @param instanceVO 加签参数
+     * @return 响应
+     */
+    @PostMapping("addSign")
+    public ResultData<Void> addSignInstance(FlowInstanceVO instanceVO) {
+        return instanceService.addSignInstance(instanceVO);
+    }
 }

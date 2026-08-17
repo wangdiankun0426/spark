@@ -15,6 +15,7 @@ public enum MessageTypeEnum {
     FLOW_TODO(2, "流程待办通知", "您有新的流程待办，请及时处理！"),
     FLOW_COMPLETED(3, "流程完结通知", "您申请的流程已审批完结！"),
     FLOW_REJECTED(4, "流程驳回通知", "您申请的流程已被驳回！"),
+    FLOW_URGE(5, "流程催办通知", "您有流程待催办，请及时处理！"),
     ;
 
 

@@ -16,9 +16,9 @@ export const NODE_COMPONENTS = {
   endEvent: EndNode,
   // 条件分支
   exclusiveGateway: GatewayNode,
-  // 用户任务（含审批人标签）
+  // 用户任务
   userTask: UserTaskNode,
-  // LLM 模型（工作流设计器）
+  // LLM 模型
   llmTask: LlmTaskNode
 }
 
@@ -31,6 +31,6 @@ export const NODE_META = {
   startEvent: { name: '开始', icon: 'VideoPlay', color: '#52c41a', bgColor: '#f6ffed', width: 128, height: 60 },
   endEvent: { name: '结束', icon: 'CircleClose', color: '#ff4d4f', bgColor: '#fff2f0', width: 128, height: 60 },
   exclusiveGateway: { name: '条件分支', icon: 'Share', color: '#fa8c16', bgColor: '#fffbe6', width: 128, height: 60 },
-  userTask: { name: '用户任务', icon: 'User', color: '#1890ff', bgColor: '#e6f7ff', width: 128, height: 80 },
+  userTask: { name: '用户任务', icon: 'User', color: '#1890ff', bgColor: '#e6f7ff', width: 128, height: 86 },
   llmTask: { name: 'LLM模型', icon: 'Cpu', color: '#004fc5', bgColor: '#e8f0fd', width: 128, height: 60 }
 }
