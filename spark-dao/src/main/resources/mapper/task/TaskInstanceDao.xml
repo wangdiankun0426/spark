@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.task.TaskInstanceDao" >
+    <sql id="allColumnList" >
+        id , task_type , obj_id , obj_type, task_time , interval_hours , status , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="taskType != null">
+            and task_type = #{taskType}
+        </if>
+        <if test="objId != null">
+            and obj_id = #{objId}
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
+        <if test="taskTimeEnd != null">
+            and task_time &lt;= #{taskTimeEnd}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into task_instance (task_type , obj_id , obj_type, task_time , interval_hours , status , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values ( #{taskType} , #{objId} , #{objType}, #{taskTime} , #{intervalHours} , #{status} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="updateById">
+        update task_instance set updated_dt = #{updatedDt}, updated_by = #{updatedBy}
+        <if test="taskTime != null">
+            ,task_time = #{taskTime}
+        </if>
+        <if test="status != null">
+            ,status = #{status}
+        </if>
+        where id = #{id}
+    </update>
+
+    <update id="deleteById">
+        update task_instance set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <select id="queryTaskInstanceList" resultType="com.spark.bean.task.result.TaskInstanceResult">
+        select <include refid="allColumnList" />
+        from task_instance
+        where 1=1
+        <include refid="searchCondition" />
+    </select>
+
+</mapper>

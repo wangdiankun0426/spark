@@ -60,4 +60,14 @@ public class FlowTemplateNodeResult extends BaseResult {
      * FlowApproveTypeEnum
      */
     private Integer approveType;
+
+    /**
+     * 是否启用定时催办：true启用
+     */
+    private Boolean urgeEnabled;
+
+    /**
+     * 催办间隔（小时）
+     */
+    private Integer urgeInterval;
 }

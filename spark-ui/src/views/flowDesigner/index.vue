@@ -203,6 +203,8 @@ const handleCanvasDrop = ({ nodeType, x, y }) => {
     assignee: nodeType === 'userTask' ? '' : undefined,
     assigneeLabel: nodeType === 'userTask' ? '' : undefined,
     approveType: nodeType === 'userTask' ? '1' : undefined,
+    urgeEnabled: nodeType === 'userTask' ? false : undefined,
+    urgeInterval: nodeType === 'userTask' ? 8 : undefined,
     permission: nodeType === 'userTask' ? 15 : undefined
   })
 }
@@ -251,7 +253,7 @@ const deleteSequence = (id) => {
 }
 
 const generateBpmnJson = () => ({
-  nodes: nodes.value.map(el => ({ id: el.id, type: el.type, name: el.name, x: el.x, y: el.y, assigneeType: el.assigneeType, assignee: el.assignee, assigneeLabel: el.assigneeLabel, approveType: el.approveType, permission: el.permission })),
+  nodes: nodes.value.map(el => ({ id: el.id, type: el.type, name: el.name, x: el.x, y: el.y, assigneeType: el.assigneeType, assignee: el.assignee, assigneeLabel: el.assigneeLabel, approveType: el.approveType, urgeEnabled: el.urgeEnabled === true, urgeInterval: el.urgeInterval, permission: el.permission })),
   sequences: sequences.value.map(seq => ({ id: seq.id, sourceRef: seq.sourceRef, targetRef: seq.targetRef, name: seq.name, conditionExpression: seq.conditionExpression })),
   notices: noticeConfig.value
 })

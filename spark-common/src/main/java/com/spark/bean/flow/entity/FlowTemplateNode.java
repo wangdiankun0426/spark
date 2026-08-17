@@ -61,4 +61,14 @@ public class FlowTemplateNode extends BaseEntity {
      * FlowApproveTypeEnum
      */
     private Integer approveType;
+
+    /**
+     * 是否启用定时催办
+     */
+    private Boolean urgeEnabled;
+
+    /**
+     * 催办间隔
+     */
+    private Integer urgeInterval;
 }

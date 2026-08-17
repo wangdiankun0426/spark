@@ -111,6 +111,10 @@
             v-if="node.type === 'userTask'"
             :node="node"
         />
+        <urge-config
+            v-if="node.type === 'userTask'"
+            :node="node"
+        />
       </el-form>
     </div>
     <div class="panel-footer">
@@ -130,6 +134,7 @@
 import { ref, watch } from 'vue'
 import AssigneeSelector from './AssigneeSelector.vue'
 import PermissionConfig from './PermissionConfig.vue'
+import UrgeConfig from './UrgeConfig.vue'
 
 const props = defineProps({
   node: { type: Object, default: null },

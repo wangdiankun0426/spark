@@ -3,6 +3,8 @@ package com.spark.flow.service.impl;
 import com.spark.bean.base.ResultData;
 import com.spark.bean.flow.entity.FlowInstanceAssignee;
 import com.spark.bean.flow.entity.FlowInstanceNode;
+import com.spark.bean.task.entity.TaskInstance;
+import com.spark.bean.task.entity.TaskInstanceParam;
 import com.spark.bean.flow.query.FlowInstanceNodeQuery;
 import com.spark.bean.flow.query.FlowInstanceQuery;
 import com.spark.bean.flow.query.FlowTemplateNodeQuery;
@@ -15,10 +17,13 @@ import com.spark.bean.system.query.RoleUserQuery;
 import com.spark.bean.system.query.UserQuery;
 import com.spark.bean.system.result.RoleUserResult;
 import com.spark.bean.system.result.UserResult;
+import com.spark.constant.TaskParamCode;
 import com.spark.dao.flow.FlowInstanceAssigneeDao;
 import com.spark.dao.flow.FlowInstanceDao;
 import com.spark.dao.flow.FlowInstanceNodeDao;
 import com.spark.dao.flow.FlowTemplateNodeDao;
+import com.spark.dao.task.TaskInstanceDao;
+import com.spark.dao.task.TaskInstanceParamDao;
 import com.spark.dao.form.FormObjValueDao;
 import com.spark.dao.system.RoleUserDao;
 import com.spark.dao.system.UserDao;
@@ -27,6 +32,7 @@ import com.spark.flow.service.FlowEventService;
 import com.spark.flow.service.FlowMessageService;
 import com.spark.flow.service.FlowableService;
 import com.spark.utils.CollectionUtil;
+import com.spark.utils.DateUtil;
 import com.spark.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +72,10 @@ public class FlowEventServiceImpl implements FlowEventService {
     private FlowMessageService flowMessageService;
     @Autowired
     private FormObjValueDao objValueDao;
+    @Autowired
+    private TaskInstanceDao taskInstanceDao;
+    @Autowired
+    private TaskInstanceParamDao taskInstanceParamDao;
 
     /**
      * 用户任务入口
@@ -138,6 +148,8 @@ public class FlowEventServiceImpl implements FlowEventService {
             instanceNode.setId(instanceNodeResult.getId());
             instanceNode.setAssigneeSetId(setId);
             int count = instanceNodeDao.updateDBById(instanceNode);
+            // 构造催办任务
+            this.generateFlowUrgeTask(templateNodeResult.getUrgeEnabled(), templateNodeResult.getUrgeInterval(), instanceResult.getId(), instanceNodeResult.getId());
             // 发送待办通知
             flowMessageService.sendFlowNotice(instanceId, MessageTypeEnum.FLOW_TODO.getType());
         } else if (FlowAssigneeTypeEnum.SYSTEM.equals(assigneeTypeEnum) || (permission != null && (permission & FlowTemplateNodePermissionEnum.AUTO_APSS.getValue()) == FlowTemplateNodePermissionEnum.AUTO_APSS.getValue())) {
@@ -147,6 +159,43 @@ public class FlowEventServiceImpl implements FlowEventService {
         }
         result.setCode(ResultData.OK);
         return result;
+    }
+
+    /**
+     * 构造催办任务
+     *
+     * @param urgeEnabled
+     * @param urgeInterval
+     * @param instanceId
+     * @param instanceNodeId
+     */
+    private void generateFlowUrgeTask(Boolean urgeEnabled, Integer urgeInterval, Long instanceId, Long instanceNodeId) {
+        if (!Boolean.TRUE.equals(urgeEnabled)) {
+            return;
+        }
+        if (urgeInterval == null || urgeInterval == 0) {
+            return;
+        }
+        TaskInstance urgeTask = new TaskInstance();
+        urgeTask.setTaskType(TaskTypeEnum.FLOW_URGE.getValue());
+        urgeTask.setObjId(instanceId);
+        urgeTask.setObjType(ObjectTypeEnum.FLOW_INSTANCE.getValue());
+        urgeTask.setTaskTime(DateUtil.offsetHour(new Date(), urgeInterval));
+        urgeTask.setIntervalHours(urgeInterval);
+        urgeTask.setStatus(TaskStatusEnum.PENDING.getValue());
+        int urgeCount = taskInstanceDao.insertDB(urgeTask);
+        if (urgeCount < 1) {
+            logger.error("onCreatedUserTask error, insert urge task fail");
+            return;
+        }
+        TaskInstanceParam urgeTaskParam = new TaskInstanceParam();
+        urgeTaskParam.setTaskId(urgeTask.getId());
+        urgeTaskParam.setCode(TaskParamCode.FLOW_INSTANCE_NODE_ID);
+        urgeTaskParam.setValue(instanceNodeId+"");
+        int paramCount = taskInstanceParamDao.insertDB(urgeTaskParam);
+        if (paramCount < 1) {
+            logger.error("onCreatedUserTask error, insert urge task param fail");
+        }
     }
 
     /**

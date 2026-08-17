@@ -54,7 +54,7 @@ public enum ErrorCodeEnum {
     FORM_NOT_EXIST(1401, "表单不存在"),
     FORM_VERSION_NOT_EXIST(1402, "表单版本不存在"),
     FORM_OBJ_EXIST(1403, "表单关联对象不存在"),
-    // 网盘相关状态码
+    // 文档相关状态码
     DOCUMENT_NOT_EXIST(1601, "文件不存在"),
     UPLOAD_FILE_NOT_EXIST(1602, "上传文件不能为空"),
     FILE_ES_INDEX_NOT_EXIST(1603, "文件索引模版不存在"),
@@ -69,12 +69,12 @@ public enum ErrorCodeEnum {
     FLOW_INSTANCE_NOT_EXIST(1705, "流程实例不存在"),
     FLOW_INSTANCE_NOT_ALLOW(1706, "当前流程实例无操作权限"),
     FLOW_TASK_IS_EMPTY(1707, "当前流程实例任务不存在"),
-    // 模型厂商相关状态码
-    PROVIDER_NOT_EXIST(1801, "模型厂商不存在"),
-    // 模型相关状态码
-    MODEL_NOT_EXIST(1901, "模型不存在"),
-    // 智能体相关状态码
-    AGENT_NOT_EXIST(2001, "智能体不存在"),
+    // 任务相关状态码
+    TASK_RESTART(1801, "重启任务"),
+    // llm相关状态码
+    PROVIDER_NOT_EXIST(2001, "模型厂商不存在"),
+    MODEL_NOT_EXIST(2002, "模型不存在"),
+    AGENT_NOT_EXIST(2003, "智能体不存在"),
     // 知识库相关状态码
     KNOWLEDGE_NOT_EXIST(2101, "知识库不存在"),
     KNOWLEDGE_DOCUMENT_NOT_EXIST(2102, "知识库文档不存在"),

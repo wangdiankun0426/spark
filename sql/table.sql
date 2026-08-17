@@ -414,6 +414,8 @@ CREATE TABLE `flow_template_node` (
       `assignee` varchar(256) NULL COMMENT '审批人',
       `permission` int(3) NULL COMMENT '节点权限',
       `approve_type` int(3) NULL DEFAULT 1 COMMENT '审批类型',
+      `urge_enabled` tinyint(1) NULL DEFAULT 0 COMMENT '是否启用定时催办：1启用/0关闭',
+      `urge_interval` int(5) NULL COMMENT '催办间隔',
 
       `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
       `created_by` bigint(12) NOT NULL COMMENT '创建人id',
@@ -785,3 +787,37 @@ CREATE TABLE `wf_instance_node` (
     PRIMARY KEY (`id`),
     KEY `idx_instance_id` (`instance_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='工作流实例节点表';
+
+DROP TABLE IF EXISTS `task_instance`;
+CREATE TABLE `task_instance` (
+     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+     `task_type` int(3) NOT NULL COMMENT '任务类型',
+     `obj_id` bigint(12) NOT NULL COMMENT '业务对象id',
+     `obj_type` int(3) NOT NULL COMMENT '业务对象类型',
+     `task_time` timestamp NOT NULL COMMENT '下次执行时间',
+     `interval_hours` int(5) NULL COMMENT '重复间隔',
+     `status` tinyint(3) NOT NULL DEFAULT 1 COMMENT '任务状态',
+     `remark` varchar(255) NULL COMMENT '备注',
+
+     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+     `created_by` bigint(12) DEFAULT NULL COMMENT '创建人id',
+     `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+     `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+     `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
+     PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务实例表';
+
+DROP TABLE IF EXISTS `task_instance_param`;
+CREATE TABLE `task_instance_param` (
+   `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+   `task_id` bigint(12) NOT NULL COMMENT '定时任务id',
+   `code` varchar(64) NOT NULL COMMENT '参数编码',
+   `value` varchar(256) NULL COMMENT '参数值',
+
+   `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+   `created_by` bigint(12) DEFAULT NULL COMMENT '创建人id',
+   `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+   `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+   `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务参数表';

@@ -31,4 +31,14 @@ public class DateUtil {
         SimpleDateFormat sdf = new SimpleDateFormat(format);
         return sdf.format(new Date());
     }
+
+    /**
+     * 获取几小时之后的时间
+     * @param date
+     * @param hours
+     * @return
+     */
+    public static Date offsetHour(Date date, Integer hours) {
+        return new Date(date.getTime() + hours * 60 * 60 * 1000);
+    }
 }
