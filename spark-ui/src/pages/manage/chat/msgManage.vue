@@ -19,7 +19,7 @@
     </el-form>
     <!--聊天消息列表-->
     <el-table
-        height="calc(100vh - 165px)"
+        height="calc(100vh - 155px)"
         ref="tableRef"
         :data="chatMsgList"
         highlight-current-row

@@ -1,5 +1,6 @@
 package com.spark.task.service.impl;
 
+import com.spark.bean.base.PageResult;
 import com.spark.bean.base.ResultData;
 import com.spark.bean.task.entity.TaskInstance;
 import com.spark.bean.task.query.TaskInstanceParamQuery;
@@ -9,7 +10,10 @@ import com.spark.bean.task.result.TaskInstanceResult;
 import com.spark.dao.task.TaskInstanceDao;
 import com.spark.dao.task.TaskInstanceParamDao;
 import com.spark.enums.ErrorCodeEnum;
+import com.spark.enums.ObjectTypeEnum;
 import com.spark.enums.TaskStatusEnum;
+import com.spark.enums.TaskTypeEnum;
+import com.spark.manage.BaseService;
 import com.spark.task.service.ITaskInstanceService;
 import com.spark.task.service.ITaskTypeHandler;
 import com.spark.utils.CollectionUtil;
@@ -36,7 +40,7 @@ import java.util.stream.Collectors;
  * 通用定时任务调度服务实现：扫描到期任务并按任务类型分发给处理器
  */
 @Service
-public class TaskInstanceServiceImpl implements ITaskInstanceService {
+public class TaskInstanceServiceImpl extends BaseService<TaskInstanceQuery, TaskInstanceResult> implements ITaskInstanceService {
     private final static Logger logger = LoggerFactory.getLogger(TaskInstanceServiceImpl.class);
     @Autowired
     private TaskInstanceDao taskInstanceDao;
@@ -53,6 +57,7 @@ public class TaskInstanceServiceImpl implements ITaskInstanceService {
     public ResultData<Void> executeTask() {
         ResultData<Void> result = new ResultData<>();
         TaskInstanceQuery taskInstanceQuery = new TaskInstanceQuery();
+        taskInstanceQuery.setPage(false);
         taskInstanceQuery.setStatus(TaskStatusEnum.PENDING.getValue());
         taskInstanceQuery.setTaskTimeEnd(new Date());
         List<TaskInstanceResult> taskInstanceList = taskInstanceDao.queryTaskInstanceList(taskInstanceQuery);
@@ -103,6 +108,63 @@ public class TaskInstanceServiceImpl implements ITaskInstanceService {
         }
         result.setCode(ResultData.OK);
         return result;
+    }
+
+    /**
+     * 分页查询任务实例列表
+     * @param query 查询参数（管理列表可不传条件，按业务对象id查询时传objId）
+     * @return 任务实例分页结果
+     */
+    @Override
+    public ResultData<PageResult<TaskInstanceResult>> pageTaskInstanceList(TaskInstanceQuery query) {
+        ResultData<PageResult<TaskInstanceResult>> result = new ResultData<>();
+        if (query == null) {
+            query = new TaskInstanceQuery();
+        }
+        PageResult<TaskInstanceResult> list = super.pageList(query);
+        result.setData(list);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 补充列表数据
+     * @param list 列表数据
+     */
+    @Override
+    protected void supplyList(List<TaskInstanceResult> list) {
+        if (CollectionUtil.isEmpty(list)) {
+            return;
+        }
+        super.supplyCreatedByName(list);
+        list.forEach(item -> {
+            TaskTypeEnum taskTypeEnum = TaskTypeEnum.indexOf(item.getTaskType());
+            if (taskTypeEnum != null) {
+                item.setTaskTypeName(taskTypeEnum.getDesc());
+            }
+            item.setStatusName(TaskStatusEnum.indexOf(item.getStatus()).getDesc());
+            item.setObjTypeName(ObjectTypeEnum.indexOf(item.getObjType()).getDesc());
+        });
+    }
+
+    /**
+     * 查询数量
+     * @param query 查询参数
+     * @return 数量
+     */
+    @Override
+    protected int queryCount(TaskInstanceQuery query) {
+        return taskInstanceDao.queryTaskInstanceCount(query);
+    }
+
+    /**
+     * 查询列表
+     * @param query 查询参数
+     * @return 列表
+     */
+    @Override
+    protected List<TaskInstanceResult> queryList(TaskInstanceQuery query) {
+        return taskInstanceDao.queryTaskInstanceList(query);
     }
 
     /**

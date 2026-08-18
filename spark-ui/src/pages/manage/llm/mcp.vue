@@ -10,7 +10,7 @@
     <div>
       <el-table
           :data="mcpList"
-          height="calc(100vh - 165px)"
+          height="calc(100vh - 155px)"
           highlight-current-row
       >
         <el-table-column prop="id" label="编号" width="80" align="center"/>

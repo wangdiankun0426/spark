@@ -12,7 +12,7 @@
     <!--运行记录列表-->
     <el-table
         ref="tableRef"
-        height="calc(100vh - 165px)"
+        height="calc(100vh - 155px)"
         :data="list"
         highlight-current-row border
         @sort-change="handleSortChange"

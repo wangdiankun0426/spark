@@ -27,7 +27,7 @@
       </el-form>
       <!--表单列表-->
       <el-table
-          height="calc(100vh - 165px)"
+          height="calc(100vh - 155px)"
           ref="tableRef"
           :data="formList"
           highlight-current-row

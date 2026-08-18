@@ -170,6 +170,11 @@
     background-color: #f5f8ff !important;
   }
 
+  // 数据行：统一行高（与操作列按钮 30px + 单元格上下 padding 协调）
+  .el-table__row {
+    height: 40px;
+  }
+
   .el-table__cell {
     padding: 3px 0 !important; // 行高彻底压榨
     font-size: 13px !important; // 字体减小为 13px

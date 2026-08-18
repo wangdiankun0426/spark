@@ -36,6 +36,13 @@ public interface TaskInstanceDao extends BaseDao<TaskInstance> {
     int updateById(TaskInstance taskInstance);
 
     /**
+     * 查询数据数量
+     * @param query
+     * @return
+     */
+    int queryTaskInstanceCount(TaskInstanceQuery query);
+
+    /**
      * 查询数据列表
      * @param query
      * @return

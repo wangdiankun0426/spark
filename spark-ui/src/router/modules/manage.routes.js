@@ -21,6 +21,8 @@ import kgEntity from '@/pages/manage/kg/entity.vue'
 import kgRelation from '@/pages/manage/kg/relation.vue'
 import workflowTemplate from '@/pages/manage/workflow/template.vue'
 import workflowInstance from '@/pages/manage/workflow/instance.vue'
+import taskTemplate from '@/pages/manage/task/template.vue'
+import taskInstance from '@/pages/manage/task/instance.vue'
 
 export default [
     {
@@ -161,6 +163,18 @@ export default [
                 name: 'manageWorkflowInstance',
                 component: workflowInstance,
                 meta: { title: '运行记录' }
+            },
+            {
+                path: '/manage/task/template',
+                name: 'manageTaskTemplate',
+                component: taskTemplate,
+                meta: { title: '任务模板' }
+            },
+            {
+                path: '/manage/task/instance',
+                name: 'manageTaskInstance',
+                component: taskInstance,
+                meta: { title: '任务实例' }
             },
         ]
     }

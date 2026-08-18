@@ -25,7 +25,7 @@
     <div>
       <el-table
           ref="tableRef"
-          height="calc(100vh - 165px)"
+          height="calc(100vh - 155px)"
           :data="graphList"
           highlight-current-row
           @sort-change="handleSortChange"
@@ -212,7 +212,7 @@
         </el-form-item>
         <el-divider content-position="left">实体类型 Schema</el-divider>
         <div class="schema-edit-wrapper">
-          <el-table :data="form.entityTypeList" border size="small">
+          <el-table :data="form.entityTypeList" border>
             <el-table-column label="序号" type="index" width="60" align="center"/>
             <el-table-column label="名称" min-width="280" align="center">
               <template #default="{ $index }">
@@ -248,7 +248,7 @@
         </div>
         <el-divider content-position="left">关系类型 Schema</el-divider>
         <div class="schema-edit-wrapper">
-          <el-table :data="form.relationTypeList" border size="small">
+          <el-table :data="form.relationTypeList" border>
             <el-table-column label="序号" type="index" width="60" align="center"/>
             <el-table-column label="名称" min-width="280" align="center">
               <template #default="{ $index }">

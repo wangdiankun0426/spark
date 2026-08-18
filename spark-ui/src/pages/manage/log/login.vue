@@ -91,7 +91,7 @@ function resetLogQuery() {
   logQuery.value.pageSize = 10;
   logQuery.value.ipAddress = undefined;
   getLogList();
-};
+}
 
 /**
  * 查询日志列表
@@ -101,7 +101,7 @@ function getLogList() {
     logList.value = res.data.rows;
     total.value = res.data.total;
   })
-};
+}
 
 /**
  * 分页查询更改数量
@@ -110,7 +110,7 @@ function getLogList() {
 function pageChangeSize(pageSize) {
   logQuery.value.pageSize = pageSize;
   getLogList();
-};
+}
 
 /**
  * 分页查询更改页码
@@ -119,7 +119,7 @@ function pageChangeSize(pageSize) {
 function pageChangeNo(pageNo) {
   logQuery.value.pageNo = pageNo;
   getLogList();
-};
+}
 
 /**
  * 强制退出
@@ -145,6 +145,6 @@ function forceLogoutForm(sessionId) {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 
 </style>

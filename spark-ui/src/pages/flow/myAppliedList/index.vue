@@ -19,7 +19,7 @@
     <div>
       <el-table
           ref="tableRef"
-          height="calc(100vh - 165px)"
+          height="calc(100vh - 155px)"
           :data="instanceList"
           highlight-current-row
           @row-click="handleRowClick"
@@ -252,7 +252,6 @@ function handleOpenInstance(id) {
 <style scoped lang="scss">
 :deep(.el-table__row) {
   cursor: pointer;
-  height: 36px !important;
 }
 </style>
 

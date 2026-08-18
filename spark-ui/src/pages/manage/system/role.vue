@@ -12,7 +12,7 @@
           :data="roleList"
           @current-change="selectRoleRow"
           highlight-current-row
-          height="calc(100vh - 167px)">
+          height="calc(100vh - 155px)">
         <el-table-column prop="name" label="角色名称" align="center"/>
         <el-table-column prop="dataScopeName" label="数据权限" width="300" align="center"/>
         <el-table-column prop="statusName" label="状态" align="center"/>
@@ -71,7 +71,7 @@
       />
       <el-table
           :data="roleUserList"
-          height="calc(100vh - 167px)">
+          height="calc(100vh - 155px)">
         <el-table-column label="" width="60" align="center">
           <template #default="scope">
             <user-avatar :user-id="scope.row.userId" :size="36" />

@@ -1,6 +1,9 @@
 package com.spark.task.service;
 
+import com.spark.bean.base.PageResult;
 import com.spark.bean.base.ResultData;
+import com.spark.bean.task.query.TaskInstanceQuery;
+import com.spark.bean.task.result.TaskInstanceResult;
 
 /**
  * +++/\_/\
@@ -19,4 +22,11 @@ public interface ITaskInstanceService {
      * @return 执行结果
      */
     ResultData<Void> executeTask();
+
+    /**
+     * 分页查询任务实例列表
+     * @param query
+     * @return 任务实例分页结果
+     */
+    ResultData<PageResult<TaskInstanceResult>> pageTaskInstanceList(TaskInstanceQuery query);
 }

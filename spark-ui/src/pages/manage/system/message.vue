@@ -25,7 +25,7 @@
     <el-table
         :data="messageList"
         highlight-current-row
-        height="calc(100vh - 165px)">
+        height="calc(100vh - 155px)">
       <el-table-column prop="id" label="编号" width="100" align="center"/>
       <el-table-column prop="typeName" label="消息类型" width="140" align="center">
         <template #header>

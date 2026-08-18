@@ -25,7 +25,7 @@
     <div>
       <el-table
           ref="tableRef"
-          height="calc(100vh - 165px)"
+          height="calc(100vh - 155px)"
           :data="templateList"
           highlight-current-row
           @sort-change="handleSortChange"

@@ -12,7 +12,7 @@
     <!--流程实例列表-->
     <el-table
         ref="tableRef"
-        height="calc(100vh - 165px)"
+        height="calc(100vh - 155px)"
         :data="tableList"
         highlight-current-row
         @sort-change="handleSortChange"
@@ -51,9 +51,10 @@
       <el-table-column prop="createdByName" label="申请人" width="100" align="center" />
       <el-table-column prop="deptName" label="申请部门" width="120" align="center" />
       <el-table-column prop="createdDt" label="申请时间" width="160" align="center" />
-      <el-table-column label="操作" width="80" align="center" fixed="right">
+      <el-table-column label="操作" width="140" align="center" fixed="right">
         <template #default="{ row }">
           <el-button type="primary" text size="small" @click="handleOpenDetail(row)">详情</el-button>
+          <el-button type="warning" text size="small" @click="handleOpenTaskList(row)">流程任务</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -82,12 +83,50 @@
         :type="2"
         @close="handleCloseDetail"
     />
+    <!--流程任务抽屉-->
+    <el-drawer
+        v-model="taskListVisible"
+        :title="taskListTitle"
+        direction="ltr"
+        size="40%"
+    >
+      <el-table
+          :data="taskList"
+          highlight-current-row
+          height="calc(100vh - 150px)"
+      >
+        <el-table-column prop="id" label="编号" width="80" align="center" />
+        <el-table-column prop="taskTypeName" label="任务类型" width="140" align="center" />
+        <el-table-column prop="statusName" label="任务状态" width="100" align="center" />
+        <el-table-column prop="taskTime" label="下次执行时间" width="180" align="center" />
+        <el-table-column prop="intervalHours" label="重复间隔(小时)" width="120" align="center" />
+        <el-table-column prop="remark" label="备注" width="120"  align="center">
+          <template #default="scope">
+            <el-tooltip :content="scope.row.remark" placement="bottom" effect="dark">
+              <span>{{ scope.row.remark }}</span>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+        <el-table-column prop="createdDt" label="创建时间" width="180" align="center" />
+      </el-table>
+      <el-pagination
+          :current-page="taskQuery.pageNo"
+          :page-size="taskQuery.pageSize"
+          :page-sizes="taskPageSizes"
+          :background="true"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="taskTotal"
+          @size-change="s => { taskQuery.pageSize = s; handleGetTaskList(); }"
+          @current-change="p => { taskQuery.pageNo = p; handleGetTaskList(); }"
+      />
+    </el-drawer>
   </div>
 </template>
 
 <script setup>
 import { getCurrentInstance, ref } from 'vue';
 import { pageInstanceListAPI, showInstanceDetailAPI } from '@/api/flow/instance';
+import { pageTaskInstanceListAPI } from '@/api/task/instance';
 import { Search } from '@element-plus/icons-vue';
 import FlowDetailDrawer from '@/components/FlowDetailDrawer';
 
@@ -219,6 +258,37 @@ function handleCloseDetail() {
   bpmJson.value = {};
   nodes.value = [];
   detailVisible.value = false;
+}
+
+const taskListVisible = ref(false);
+const taskListTitle = ref('');
+const taskList = ref([]);
+const taskQuery = ref({ pageNo: 1, pageSize: 10, objId: undefined });
+const taskTotal = ref(0);
+const taskPageSizes = [10, 30, 50];
+
+/**
+ * 查询流程任务列表
+ */
+function handleGetTaskList() {
+  pageTaskInstanceListAPI(taskQuery.value).then(res => {
+    if (res.code === 200 && res.data) {
+      taskList.value = res.data.rows || [];
+      taskTotal.value = res.data.total;
+    }
+  });
+}
+
+/**
+ * 打开流程任务列表抽屉
+ * @param row 行数据
+ */
+function handleOpenTaskList(row) {
+  taskQuery.value.pageNo = 1;
+  taskQuery.value.objId = row.id;
+  taskListTitle.value = '流程任务 - ' + (row.name || row.id);
+  handleGetTaskList();
+  taskListVisible.value = true;
 }
 </script>
 

@@ -1,5 +1,6 @@
 package com.spark.bean.task.result;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.spark.bean.base.BaseResult;
 import lombok.Data;
 
@@ -36,8 +37,14 @@ public class TaskInstanceResult extends BaseResult {
     private Integer objType;
 
     /**
+     * 业务对象类型名称
+     */
+    private String objTypeName;
+
+    /**
      * 下次执行时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     private Date taskTime;
 
     /**
@@ -49,6 +56,16 @@ public class TaskInstanceResult extends BaseResult {
      * 任务状态 TaskStatusEnum
      */
     private Integer status;
+
+    /**
+     * 任务类型名称
+     */
+    private String taskTypeName;
+
+    /**
+     * 任务状态名称
+     */
+    private String statusName;
 
     /**
      * 任务参数列表

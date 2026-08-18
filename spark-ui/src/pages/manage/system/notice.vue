@@ -29,7 +29,7 @@
     <el-table
         :data="noticeList"
         highlight-current-row
-        height="calc(100vh - 165px)">
+        height="calc(100vh - 155px)">
       <el-table-column prop="id" label="编号" width="100" align="center"/>
       <el-table-column prop="title" label="公告标题" align="center">
         <template #default="scope">

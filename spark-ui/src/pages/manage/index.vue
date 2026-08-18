@@ -5,7 +5,7 @@
         <el-menu
             :default-active="defaultActive"
             :router='true'
-            :default-openeds="['1','2','3','4','5','6','7','8','9']"
+            :default-openeds="['1','2','3','4','5','6','7','8','9','10']"
             mode="vertical"
             class="admin-el-menu"
           >
@@ -110,6 +110,18 @@
           </el-sub-menu>
           <el-sub-menu index="8">
             <template #title>
+              <el-icon><Share /></el-icon>
+              <span style="color: var(--sidebar-group-text)">任务管理</span>
+            </template>
+            <el-menu-item index="/manage/task/template">
+              <span>任务模板</span>
+            </el-menu-item>
+            <el-menu-item index="/manage/task/instance">
+              <span>任务实例</span>
+            </el-menu-item>
+          </el-sub-menu>
+          <el-sub-menu index="9">
+            <template #title>
               <el-icon><ChatDotRound /></el-icon>
               <span style="color: var(--sidebar-group-text)">对话管理</span>
             </template>
@@ -117,7 +129,7 @@
               <span>聊天记录</span>
             </el-menu-item>
           </el-sub-menu>
-          <el-sub-menu index="9">
+          <el-sub-menu index="10">
             <template #title>
               <el-icon><Notebook /></el-icon>
               <span style="color: var(--sidebar-group-text)">日志管理</span>

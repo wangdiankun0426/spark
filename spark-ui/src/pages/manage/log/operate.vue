@@ -87,7 +87,7 @@ function getLogOperateTypeList() {
   logOperateTypeListAPI().then(res => {
     typeOptions.value = res.data;
   })
-};
+}
 
 /**
  * 重置查询条件
@@ -98,7 +98,7 @@ function resetLogQuery() {
   logQuery.value.type = undefined;
   logQuery.value.code = undefined;
   getLogList();
-};
+}
 
 /**
  * 查询日志列表
@@ -108,7 +108,7 @@ function getLogList() {
     logList.value = res.data.rows;
     total.value = res.data.total;
   })
-};
+}
 
 /**
  * 分页查询更改数量
@@ -117,7 +117,7 @@ function getLogList() {
 function pageChangeSize(pageSize) {
   logQuery.value.pageSize = pageSize;
   getLogList();
-};
+}
 
 /**
  * 分页查询更改页码
@@ -129,6 +129,6 @@ function pageChangeNo(pageNo) {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 
 </style>
