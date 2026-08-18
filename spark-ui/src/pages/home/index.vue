@@ -60,66 +60,6 @@
       </el-col>
     </el-row>
 
-    <!-- 评测区：知识库与知识图谱 -->
-    <el-row :gutter="20" class="eval-row">
-      <!-- 知识库解析与检索评测 -->
-      <el-col :span="12">
-        <div class="eval-card">
-          <div class="eval-header">
-            <div class="eval-title">知识库解析与检索评测</div>
-            <div class="eval-subtitle">文档解析流水线状态</div>
-          </div>
-          <div class="eval-metrics with-progress">
-            <div
-              v-for="m in kbEvalMetrics"
-              :key="m.name"
-              class="eval-metric"
-            >
-              <div class="metric-row">
-                <span class="metric-name">{{ m.name }}</span>
-                <div class="metric-right">
-                  <span class="metric-value">{{ m.value }}</span>
-                  <el-icon v-if="m.trend === 'up'" class="trend-up"><CaretTop /></el-icon>
-                  <span v-else-if="m.trend === '-'" class="trend-flat">-</span>
-                </div>
-              </div>
-              <el-progress
-                :percentage="m.progress"
-                :stroke-width="6"
-                :show-text="false"
-                :color="m.color"
-              />
-            </div>
-          </div>
-        </div>
-      </el-col>
-
-      <!-- 知识图谱构建与提炼 -->
-      <el-col :span="12">
-        <div class="eval-card">
-          <div class="eval-header">
-            <div class="eval-title">知识图谱构建与提炼</div>
-            <div class="eval-subtitle">三元组持续积累趋势</div>
-          </div>
-          <div ref="kgChartRef" class="kg-chart"></div>
-          <div class="eval-metrics kg-metrics">
-            <div
-              v-for="m in kgEvalMetrics"
-              :key="m.name"
-              class="eval-metric"
-            >
-              <span class="metric-name">{{ m.name }}</span>
-              <div class="metric-right">
-                <span class="metric-value">{{ m.value }}</span>
-                <el-icon v-if="m.trend === 'up'" class="trend-up"><CaretTop /></el-icon>
-                <span v-else-if="m.trend === '-'" class="trend-flat">-</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </el-col>
-    </el-row>
-
     <!-- 图表区：文件类型 / 抽取数量 / 实体新增 -->
     <el-row :gutter="20" class="chart-row">
       <!-- 文件类型统计 - 饼状图 -->
@@ -152,6 +92,128 @@
             <div class="eval-subtitle">实体月度新增量</div>
           </div>
           <div ref="entityTrendChartRef" class="chart-box"></div>
+        </div>
+      </el-col>
+    </el-row>
+
+
+    <!-- 评测区：知识库与知识图谱 -->
+    <el-row :gutter="20" class="eval-row">
+      <!-- 知识库解析与检索评测 -->
+      <el-col :span="12">
+        <div class="eval-card">
+          <div class="eval-header">
+            <div class="eval-title">知识库解析与检索评测</div>
+            <div class="eval-subtitle">文档解析流水线状态</div>
+          </div>
+          <div class="eval-metrics with-progress">
+            <div
+                v-for="m in kbEvalMetrics"
+                :key="m.name"
+                class="eval-metric"
+            >
+              <div class="metric-row">
+                <span class="metric-name">{{ m.name }}</span>
+                <div class="metric-right">
+                  <span class="metric-value">{{ m.value }}</span>
+                  <el-icon v-if="m.trend === 'up'" class="trend-up"><CaretTop /></el-icon>
+                  <span v-else-if="m.trend === '-'" class="trend-flat">-</span>
+                </div>
+              </div>
+              <el-progress
+                  :percentage="m.progress"
+                  :stroke-width="6"
+                  :show-text="false"
+                  :color="m.color"
+              />
+            </div>
+          </div>
+        </div>
+      </el-col>
+
+      <!-- 知识图谱构建与提炼 -->
+      <el-col :span="12">
+        <div class="eval-card">
+          <div class="eval-header">
+            <div class="eval-title">知识图谱构建与提炼</div>
+            <div class="eval-subtitle">三元组持续积累趋势</div>
+          </div>
+          <div ref="kgChartRef" class="kg-chart"></div>
+          <div class="eval-metrics kg-metrics">
+            <div
+                v-for="m in kgEvalMetrics"
+                :key="m.name"
+                class="eval-metric"
+            >
+              <span class="metric-name">{{ m.name }}</span>
+              <div class="metric-right">
+                <span class="metric-value">{{ m.value }}</span>
+                <el-icon v-if="m.trend === 'up'" class="trend-up"><CaretTop /></el-icon>
+                <span v-else-if="m.trend === '-'" class="trend-flat">-</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </el-col>
+    </el-row>
+
+
+    <!-- 评测区：知识库与知识图谱 -->
+    <el-row :gutter="20" class="eval-row">
+      <!-- 知识库解析与检索评测 -->
+      <el-col :span="12">
+        <div class="eval-card">
+          <div class="eval-header">
+            <div class="eval-title">知识库解析与检索评测</div>
+            <div class="eval-subtitle">文档解析流水线状态</div>
+          </div>
+          <div class="eval-metrics with-progress">
+            <div
+                v-for="m in kbEvalMetrics"
+                :key="m.name"
+                class="eval-metric"
+            >
+              <div class="metric-row">
+                <span class="metric-name">{{ m.name }}</span>
+                <div class="metric-right">
+                  <span class="metric-value">{{ m.value }}</span>
+                  <el-icon v-if="m.trend === 'up'" class="trend-up"><CaretTop /></el-icon>
+                  <span v-else-if="m.trend === '-'" class="trend-flat">-</span>
+                </div>
+              </div>
+              <el-progress
+                  :percentage="m.progress"
+                  :stroke-width="6"
+                  :show-text="false"
+                  :color="m.color"
+              />
+            </div>
+          </div>
+        </div>
+      </el-col>
+
+      <!-- 知识图谱构建与提炼 -->
+      <el-col :span="12">
+        <div class="eval-card">
+          <div class="eval-header">
+            <div class="eval-title">知识图谱构建与提炼</div>
+            <div class="eval-subtitle">三元组持续积累趋势</div>
+          </div>
+          <div ref="kgChartRef" class="kg-chart"></div>
+          <div class="eval-metrics kg-metrics">
+            <div
+                v-for="m in kgEvalMetrics"
+                :key="m.name"
+                class="eval-metric"
+            >
+              <span class="metric-name">{{ m.name }}</span>
+              <div class="metric-right">
+                <span class="metric-value">{{ m.value }}</span>
+                <el-icon v-if="m.trend === 'up'" class="trend-up"><CaretTop /></el-icon>
+                <span v-else-if="m.trend === '-'" class="trend-flat">-</span>
+              </div>
+            </div>
+          </div>
         </div>
       </el-col>
     </el-row>

@@ -3,6 +3,7 @@ import user from '@/pages/manage/system/user'
 import dept from '@/pages/manage/system/dept'
 import role from '@/pages/manage/system/role'
 import notice from '@/pages/manage/system/notice'
+import message from '@/pages/manage/system/message'
 import logLogin from '@/pages/manage/log/login'
 import logOperate from '@/pages/manage/log/operate'
 import chatMsgManage from '@/pages/manage/chat/msgManage'
@@ -52,6 +53,12 @@ export default [
                 name: 'notice',
                 component: notice,
                 meta: { title: '公告管理' }
+            },
+            {
+                path: '/manage/system/message',
+                name: 'message',
+                component: message,
+                meta: { title: '消息管理' }
             },
             {
                 path: '/manage/llm/providerManage',

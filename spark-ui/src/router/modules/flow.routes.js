@@ -3,6 +3,7 @@ import flowApplication from '@/pages/flow/flowApplication/index.vue'
 import myAppliedList from '@/pages/flow/myAppliedList/index.vue'
 import myPendingList from '@/pages/flow/myPendingList/index.vue'
 import myPendedList from '@/pages/flow/myPendedList/index.vue'
+import copyMe from '@/pages/flow/copyMe/index.vue'
 
 export default [
     {
@@ -31,6 +32,11 @@ export default [
                 path: '/flow/myPendedList',
                 name: 'myPendedList',
                 component: myPendedList
+            },
+            {
+                path: '/flow/copyMe',
+                name: 'copyMe',
+                component: copyMe
             }
         ]
     }

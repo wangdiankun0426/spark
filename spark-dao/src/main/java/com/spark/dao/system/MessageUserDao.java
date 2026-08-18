@@ -4,6 +4,7 @@ import com.spark.bean.system.query.MessageUserQuery;
 import com.spark.bean.system.result.MessageUserResult;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -32,4 +33,13 @@ public interface MessageUserDao {
      * @return
      */
     List<MessageUserResult> queryMessageUserList(MessageUserQuery messageUserQuery);
+
+    /**
+     * 按消息id逻辑删除
+     * @param msgId 消息id
+     * @param updatedBy 修改人
+     * @param updatedDt 修改时间
+     * @return 删除数量
+     */
+    int deleteByMsgId(@Param("msgId") Long msgId, @Param("updatedBy") Long updatedBy, @Param("updatedDt") Date updatedDt);
 }

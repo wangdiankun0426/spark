@@ -24,6 +24,10 @@
             <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><my-applied-list/></el-icon>
             <template #title>我的已办</template>
           </el-menu-item>
+          <el-menu-item index="/flow/copyMe">
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><copy-me/></el-icon>
+            <template #title>抄送给我</template>
+          </el-menu-item>
         </el-menu>
       </el-aside>
 
@@ -38,12 +42,12 @@
 <script setup name="manage">
 
 import {computed} from "vue";
-import {useRoute, useRouter} from "vue-router";
+import {useRoute} from "vue-router";
 import FlowList from "@/assets/icons/flowList.vue";
 import MyAppliedList from "@/assets/icons/myAppliedList.vue";
 import MyPendingList from "@/assets/icons/myPendingList.vue";
+import CopyMe from "@/assets/icons/copyMe.vue";
 
-const router = useRouter();
 const route = useRoute();
 
 /**

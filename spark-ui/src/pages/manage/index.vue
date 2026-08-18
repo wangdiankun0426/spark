@@ -26,6 +26,9 @@
             <el-menu-item index="/manage/system/notice">
               <span>公告管理</span>
             </el-menu-item>
+            <el-menu-item index="/manage/system/message">
+              <span>消息管理</span>
+            </el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="2">
             <template #title>

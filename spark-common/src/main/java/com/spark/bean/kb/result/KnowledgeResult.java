@@ -52,6 +52,11 @@ public class KnowledgeResult extends BaseResult {
     private Integer enableQa;
 
     /**
+     * 是否生成QA
+     */
+    private String enableQaName;
+
+    /**
      * 子块召回数
      */
     private Integer retrieveTopK;

@@ -30,7 +30,6 @@
           highlight-current-row
           @sort-change="handleSortChange"
           :header-cell-style="handleHeaderCellClass"
-          border
       >
         <el-table-column prop="id" label="编号" width="80" align="center"/>
         <el-table-column prop="name" label="名称" min-width="180" align="left">
@@ -99,13 +98,7 @@
         <el-table-column prop="childOverlap" label="子块重叠" width="100" align="center"/>
         <el-table-column prop="retrieveTopK" label="召回TopK" width="100" align="center"/>
         <el-table-column prop="minSimilarity" label="最小相似度" width="110" align="center"/>
-        <el-table-column prop="enableQa" label="生成QA" width="100" align="center">
-          <template #default="scope">
-            <el-tag :type="scope.row.enableQa === 1 ? 'success' : 'info'" size="small">
-              {{ scope.row.enableQa === 1 ? '是' : '否' }}
-            </el-tag>
-          </template>
-        </el-table-column>
+        <el-table-column prop="enableQaName" label="生成QA" width="100" align="center" />
         <el-table-column prop="documentCount" label="文档数" width="90" align="center"/>
         <el-table-column prop="createdByName" label="创建人" width="110" align="center"/>
         <el-table-column prop="createdDt" label="创建时间" width="160" align="center"/>

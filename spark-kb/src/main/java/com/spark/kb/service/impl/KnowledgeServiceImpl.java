@@ -229,6 +229,7 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
         super.supplyUpdatedByName(list);
         list.forEach(knowledgeResult -> {
             knowledgeResult.setStatusName(StatusEnum.indexOf(knowledgeResult.getStatus()).getDesc());
+            knowledgeResult.setEnableQaName(StatusEnum.indexOf(knowledgeResult.getEnableQa()).getDesc());
         });
         List<Long> kbIds = list.stream()
                 .map(KnowledgeResult::getId)

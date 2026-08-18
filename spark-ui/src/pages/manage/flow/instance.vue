@@ -15,7 +15,6 @@
         height="calc(100vh - 165px)"
         :data="tableList"
         highlight-current-row
-        border
         @sort-change="handleSortChange"
         :header-cell-style="handleHeaderCellClass"
     >

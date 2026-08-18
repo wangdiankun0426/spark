@@ -3,6 +3,8 @@ package com.spark.bean.system.query;
 import com.spark.bean.base.BaseQuery;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * +++/\_/\
  * + ( °w° )=
@@ -18,4 +20,14 @@ public class MessageUserQuery extends BaseQuery {
      * 用户id
      */
     private Long userId;
+
+    /**
+     * 消息id
+     */
+    private Long msgId;
+
+    /**
+     * 消息ids
+     */
+    private List<Long> msgIds;
 }

@@ -33,7 +33,6 @@
           highlight-current-row
           @sort-change="handleSortChange"
           :header-cell-style="handleHeaderCellClass"
-          border
       >
         <el-table-column prop="id" label="编号" width="100" align="center"/>
         <el-table-column prop="name" label="名称" sortable="custom" width="200" align="center">

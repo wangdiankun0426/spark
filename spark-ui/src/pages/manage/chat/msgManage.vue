@@ -23,15 +23,15 @@
         ref="tableRef"
         :data="chatMsgList"
         highlight-current-row
-        border>
-        <el-table-column prop="id" label="编号" width="100" align="center"/>
-        <el-table-column prop="message" label="内容" align="center"/>
-        <el-table-column prop="senderName" label="发送人" width="100" align="center"/>
-        <el-table-column prop="receiverName" label="接收人" width="100" align="center"/>
-        <el-table-column prop="signStatusName" label="签收状态" width="100" align="center"/>
-        <el-table-column prop="readStatusName" label="发送状态" width="100" align="center"/>
-        <el-table-column prop="createdDt" label="发送时间" width="180" align="center"/>
-      </el-table>
+    >
+      <el-table-column prop="id" label="编号" width="100" align="center"/>
+      <el-table-column prop="message" label="内容" align="center"/>
+      <el-table-column prop="senderName" label="发送人" width="100" align="center"/>
+      <el-table-column prop="receiverName" label="接收人" width="100" align="center"/>
+      <el-table-column prop="signStatusName" label="签收状态" width="100" align="center"/>
+      <el-table-column prop="readStatusName" label="发送状态" width="100" align="center"/>
+      <el-table-column prop="createdDt" label="发送时间" width="180" align="center"/>
+    </el-table>
     <!--分页组件-->
     <div>
       <el-pagination

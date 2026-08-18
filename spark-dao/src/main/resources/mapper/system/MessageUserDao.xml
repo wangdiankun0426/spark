@@ -16,6 +16,19 @@
             </foreach>
             )
         </if>
+        <if test="msgId != null">
+            and msg_id = #{msgId}
+        </if>
+        <if test="msgIds != null and msgIds.size() > 0">
+            and msg_id in(
+            <foreach collection="msgIds" item="msgId" separator=",">
+                #{msgId}
+            </foreach>
+            )
+        </if>
+        <if test="userId != null">
+            and user_id = #{userId}
+        </if>
         <if test="deleteFlag != null and id == null and ids == null">
             and delete_flag = #{deleteFlag}
         </if>
@@ -28,6 +41,11 @@
             (#{msgId}, #{userId}, 1, #{createdBy}, now(), #{createdBy}, now())
         </foreach>
     </insert>
+
+    <update id="deleteByMsgId">
+        update sys_message_user set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where msg_id = #{msgId} and delete_flag = 1
+    </update>
 
     <select id="queryMessageUserList" resultType="com.spark.bean.system.result.MessageUserResult">
         select <include refid="Base_Column_List"/>

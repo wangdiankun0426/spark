@@ -24,7 +24,6 @@
           highlight-current-row
           @sort-change="handleSortChange"
           :header-cell-style="handleHeaderCellClass"
-          border
       >
         <el-table-column prop="id" label="编号" width="80" align="center"/>
         <el-table-column prop="name" label="名称" min-width="180" align="left">

@@ -50,6 +50,8 @@ public enum ErrorCodeEnum {
     // 聊天相关状态码
     CHAT_MSG_CREATE_ERROR(1201, "聊天消息创建失败"),
     CHAT_SPACE_NOT_EXIST(1202, "聊天空间不存在"),
+    // 消息相关状态码
+    MESSAGE_NOT_EXIST(1301, "消息不存在"),
     // 表单相关状态码
     FORM_NOT_EXIST(1401, "表单不存在"),
     FORM_VERSION_NOT_EXIST(1402, "表单版本不存在"),

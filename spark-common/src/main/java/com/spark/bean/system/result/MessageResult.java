@@ -3,6 +3,8 @@ package com.spark.bean.system.result;
 import com.spark.bean.base.BaseResult;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * +++/\_/\
  * + ( °w° )=
@@ -34,4 +36,19 @@ public class MessageResult extends BaseResult {
      * 所属对象id
      */
     private Long refId;
+
+    /**
+     * 消息类型名称
+     */
+    private String typeName;
+
+    /**
+     * 接收人ids
+     */
+    private List<Long> userIds;
+
+    /**
+     * 接收人姓名
+     */
+    private List<String> userNames;
 }
