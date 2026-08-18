@@ -111,6 +111,7 @@
     <!-- 底部导航栏 -->
     <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#1890ff">
       <up-tabbar-item name="home" icon="home-fill" text="首页"/>
+      <up-tabbar-item name="todo" icon="order" text="待办"/>
       <up-tabbar-item name="contacts" icon="man-add-fill" text="通讯录"/>
       <up-tabbar-item name="agent" icon="grid-fill" text="智能体"/>
       <up-tabbar-item name="message" icon="chat-fill" text="通知"/>
@@ -122,7 +123,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue"
 import { useStore } from "vuex"
-import DashboardCard from "@/components/home/DashboardCard.vue"
+import DashboardCard from "@/pages/home/DashboardCard.vue"
 import UserAvatar from "@/components/UserAvatar/index.vue"
 import { userDetailAPI } from "@/api/system/user"
 

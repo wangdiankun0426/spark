@@ -4,20 +4,23 @@
     :class="['avatar-' + type, 'avatar-shape-' + shape]"
     :style="avatarStyle"
   >
-    <!-- 用户头像：图片加载，失败时文字回退 -->
+    <!-- 用户头像：默认图标占位，图片加载完成后展示 -->
     <template v-if="type === 'user'">
-      <up-image
-        :src="userAvatarUrl"
-        :width="size + 'px'"
-        :height="size + 'px'"
-        shape="circle"
-        :show-loading="false"
-        :error-icon="false"
-      >
-        <template #error>
-          <text class="avatar-text">{{ avatarText }}</text>
-        </template>
-      </up-image>
+      <view class="avatar-img-wrap">
+        <up-image
+          :src="userAvatarUrl"
+          :width="size + 'px'"
+          :height="size + 'px'"
+          shape="circle"
+          :show-loading="false"
+          :error-icon="false"
+          @load="handleAvatarLoad"
+        />
+        <!-- 加载完成前覆盖显示默认头像图标 -->
+        <view v-if="!avatarLoaded" class="avatar-placeholder">
+          <up-icon name="account-fill" :size="iconSize" color="#ffffff"></up-icon>
+        </view>
+      </view>
     </template>
 
     <!-- 智能体/模型图标头像 -->
@@ -44,7 +47,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 const props = defineProps({
   type: {
@@ -77,6 +80,23 @@ const userAvatarUrl = computed(() => {
   if (!props.userId) return ''
   return baseUrl + '/system/user/avatar?id=' + props.userId
 })
+
+// 头像图片是否加载完成，未完成前显示默认图标
+const avatarLoaded = ref(false)
+
+// 列表复用组件时切换用户，需重新加载
+watch(() => props.userId, () => {
+  avatarLoaded.value = false
+})
+
+const iconSize = computed(() => Math.round(props.size * 0.62))
+
+/**
+ * 头像图片加载完成
+ */
+function handleAvatarLoad() {
+  avatarLoaded.value = true
+}
 
 const avatarText = computed(() => {
   const name = props.name || (props.type === 'self' ? '我' : '')
@@ -117,9 +137,27 @@ const avatarStyle = computed(() => ({
   color: #fff;
 }
 
-// 用户头像背景
+// 头像图片容器：占位图标覆盖在图片上层
+.avatar-img-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// 用户头像背景（中性灰渐变，作为默认图标底色）
 .avatar-user {
-  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  background: linear-gradient(135deg, #8d99ae 0%, #adb5c0 100%);
 }
 
 // 智能体图标背景（紫色）

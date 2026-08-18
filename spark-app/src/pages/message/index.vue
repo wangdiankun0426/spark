@@ -18,7 +18,14 @@
       </view>
 
       <!-- 消息卡片 -->
-      <view v-else class="message-card" v-for="item in messageList" :key="item.id">
+      <view
+          v-else
+          class="message-card"
+          :class="{'message-card-link': isFlowMessage(item)}"
+          v-for="item in messageList"
+          :key="item.id"
+          @click="handleMsgClick(item)"
+      >
         <view class="card-header">
           <view class="card-title-row">
             <text class="card-title">{{ item.title }}</text>
@@ -29,11 +36,17 @@
         <view class="card-content">
           <text class="content-text">{{ item.content }}</text>
         </view>
+        <!-- 流程类消息点击跳转流程详情 -->
+        <view v-if="isFlowMessage(item)" class="card-link">
+          <text class="link-text">详情</text>
+          <up-icon name="arrow-right" size="12" color="#0052cc"/>
+        </view>
       </view>
     </view>
 
     <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#0052cc">
       <up-tabbar-item name="home" icon="home-fill" text="首页"/>
+      <up-tabbar-item name="todo" icon="order" text="待办"/>
       <up-tabbar-item name="contacts" icon="man-add-fill" text="通讯录"/>
       <up-tabbar-item name="agent" icon="grid-fill" text="智能体"/>
       <up-tabbar-item name="message" icon="chat-fill" text="通知"/>
@@ -66,6 +79,32 @@ function getMyMessageList() {
     messageList.value = res.data;
   }).finally(() => {
     loading.value = false;
+  });
+}
+
+// 流程类消息类型：2-待办 3-完结 4-驳回 5-催办
+const FLOW_MSG_TYPES = [2, 3, 4, 5];
+// 流程类消息跳转详情页类型：待办/催办通知给审批人（我的待办），完结/驳回通知给申请人（我的申请）
+const FLOW_DETAIL_TYPE_MAP = {2: 3, 3: 1, 4: 1, 5: 3};
+
+/**
+ * 是否为可跳转的流程类消息
+ * @param item 消息行数据
+ */
+function isFlowMessage(item) {
+  return FLOW_MSG_TYPES.indexOf(item.type) !== -1 && item.refId !== undefined && item.refId !== null;
+}
+
+/**
+ * 点击消息卡片跳转流程详情
+ * @param item 消息行数据
+ */
+function handleMsgClick(item) {
+  if (!isFlowMessage(item)) {
+    return;
+  }
+  uni.navigateTo({
+    url: '/pages/todo/detail?id=' + item.refId + '&type=' + FLOW_DETAIL_TYPE_MAP[item.type]
   });
 }
 
@@ -123,6 +162,29 @@ function handleOnTabChange(index) {
   padding: 16px;
   margin-bottom: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  &:active {
+    background-color: #f5f7fa;
+  }
+}
+
+.message-card-link {
+  cursor: pointer;
+}
+
+.card-link {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #ebeef5;
+
+  .link-text {
+    font-size: 12px;
+    color: #0052cc;
+  }
 }
 
 .card-header {

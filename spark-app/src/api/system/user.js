@@ -24,6 +24,19 @@ export function userMenuTreeAPI() {
 }
 
 /**
+ * 分页查询用户列表
+ * @param query
+ * @returns {Promise<AxiosResponse<any>>}
+ */
+export function pageUserListAPI(query) {
+  return request({
+    url: '/system/user/pageList',
+    method: 'get',
+    params: query
+  })
+}
+
+/**
  * 修改密码
  * @param data
  * @returns {Promise<AxiosResponse<any>>}

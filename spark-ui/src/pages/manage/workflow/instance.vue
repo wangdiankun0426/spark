@@ -14,7 +14,7 @@
         ref="tableRef"
         height="calc(100vh - 155px)"
         :data="list"
-        highlight-current-row border
+        highlight-current-row
         @sort-change="handleSortChange"
         :header-cell-style="handleHeaderCellClass"
     >

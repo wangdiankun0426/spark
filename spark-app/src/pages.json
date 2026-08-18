@@ -44,6 +44,18 @@
       }
     },
     {
+      "path": "pages/todo/index",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/todo/detail",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/my/index",
       "style": {
         "navigationStyle": "custom"

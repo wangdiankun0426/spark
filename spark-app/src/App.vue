@@ -5,6 +5,11 @@
 <style lang="scss">
 @import 'node_modules/uview-plus/index.scss';
 
+.u-tabbar-item__icon {
+  width: auto !important;
+  min-width: 0;
+}
+
 /* 全局字体优化：消除大屏幕失真 */
 page,
 body,

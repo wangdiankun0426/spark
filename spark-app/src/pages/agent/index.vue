@@ -60,6 +60,7 @@
 
     <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#0052cc">
       <up-tabbar-item name="home" icon="home-fill" text="首页"/>
+      <up-tabbar-item name="todo" icon="order" text="待办"/>
       <up-tabbar-item name="contacts" icon="man-add-fill" text="通讯录"/>
       <up-tabbar-item name="agent" icon="grid-fill" text="智能体"/>
       <up-tabbar-item name="message" icon="chat-fill" text="通知"/>

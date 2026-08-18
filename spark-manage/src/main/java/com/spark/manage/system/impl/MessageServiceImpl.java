@@ -103,9 +103,6 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
         }
         List<Long> msgIds = messageUserList.stream().map(MessageUserResult::getMsgId).distinct().collect(Collectors.toList());
         MessageQuery query = new MessageQuery();
-        query.setPage(false);
-        // 查询最新的30条消息
-        query.setPageSize(30);
         query.setIds(msgIds);
         List<MessageResult> messageList = messageDao.queryMessageList(query);
         result.setData(messageList);

@@ -14,13 +14,12 @@ export default defineConfig((mode) => {
         },
         server: {
             host: '127.0.0.1',
-            port: 80,
+            port: 7102,
             proxy: {
                 // 在此处为需要解决跨域的 API 配置代理
                 '/api/ws': {
                     target: 'ws://127.0.0.1:8000/',
                     changeOrigin: true,
-                    ws: true,
                     rewrite: path => path.replace(/^\/api/, '') // 去掉 /api 前缀
                 },
                 // 在此处为需要解决跨域的 API 配置代理

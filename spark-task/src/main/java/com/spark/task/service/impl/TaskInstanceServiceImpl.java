@@ -112,7 +112,7 @@ public class TaskInstanceServiceImpl extends BaseService<TaskInstanceQuery, Task
 
     /**
      * 分页查询任务实例列表
-     * @param query 查询参数（管理列表可不传条件，按业务对象id查询时传objId）
+     * @param query 查询参数
      * @return 任务实例分页结果
      */
     @Override
