@@ -38,7 +38,7 @@ defineProps({
 }
 .node-name {
   font-size: 13px;
-  font-weight: 550;
+  font-weight: 400;
   color: $color-text-primary;
   line-height: 1.2;
   word-break: break-all;

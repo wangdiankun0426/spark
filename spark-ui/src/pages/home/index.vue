@@ -582,7 +582,7 @@ function handleLogout() {
   height: 44px;
   padding: 0 $spacing-sm;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 400;
 
   span {
     color: $color-text-white;

@@ -1,0 +1,91 @@
+/**
+ * 主题变量文件 - 导航栏 / 左侧菜单栏 皮肤配色
+ * 深色主题（默认蓝色）为 :root 默认值；html 根节点挂 theme-light 类即切换为浅色主题（白色）
+ * 仅覆盖导航栏与各模块左侧菜单栏的颜色，页面主体样式不受影响
+ */
+
+// ==================== 深色主题（默认，蓝色） ====================
+:root {
+  // 卡片/弹窗/抽屉头部
+  --card-head-bg: #003178;
+  --dialog-head-bg: #0140af;
+  --drawer-head-bg: #0140af;
+  --head-text: #ffffff;
+
+  // 顶部导航栏
+  --nav-bg: linear-gradient(90deg, #204588 0%, #1e3a6e 60%, #204588 100%);
+  --nav-shadow: 0 2px 8px 0 rgba(23, 43, 77, 0.18);
+  --nav-text: #ffffff;
+  --nav-hover-bg: rgba(255, 255, 255, 0.1);
+  --nav-hover-text: #ffffff;
+  --nav-active-bg: rgba(255, 255, 255, 0.08);
+  --nav-active-border: #ffffff;
+  --nav-active-text: #ffffff;
+  --nav-tool-color: rgba(255, 255, 255, 0.8);
+  --nav-tool-hover-bg: rgba(96, 165, 250, 0.25);
+  --nav-tool-hover-color: #ffffff;
+  --nav-avatar-border: rgba(255, 255, 255, 0.6);
+  --nav-dropdown-color: rgba(255, 255, 255, 0.9);
+
+  // 左侧菜单栏
+  --sidebar-bg: linear-gradient(180deg, #204588 0%, #204588 100%);
+  --sidebar-shadow: 2px 0 8px rgba(23, 43, 77, 0.12);
+  --sidebar-text: #ffffff;
+  --sidebar-hover-bg: #4b7aca;
+  --sidebar-active-bg: #6086c6;
+  --sidebar-active-text: #ffffff;
+  --sidebar-icon: #fef0f0;
+  --sidebar-group-bg: rgba(0, 0, 0, 0.15);
+  --sidebar-group-text: rgba(255, 255, 255, 0.9);
+  --sidebar-group-hover-bg: rgba(0, 0, 0, 0.2);
+  --sidebar-item-text: rgba(255, 255, 255, 0.8);
+  --sidebar-item-hover-bg: rgba(255, 255, 255, 0.1);
+  --sidebar-item-hover-text: #ffffff;
+  --sidebar-item-active-bg: rgba(96, 165, 250, 0.2);
+  --sidebar-item-active-text: #ffffff;
+  --sidebar-item-active-border: #ffffff;
+  --sidebar-icon-color: #ffffff;
+}
+
+// ==================== 浅色主题（白色） ====================
+html.theme-light {
+  // 卡片/弹窗/抽屉头部
+  --card-head-bg: #e8f0fd;
+  --dialog-head-bg: #e8f0fd;
+  --drawer-head-bg: #e8f0fd;
+  --head-text: #172b4d;
+
+  // 顶部导航栏
+  --nav-bg: #ffffff;
+  --nav-shadow: 0 2px 8px 0 rgba(23, 43, 77, 0.08);
+  --nav-text: #172b4d;
+  --nav-hover-bg: #e8f0fd;
+  --nav-hover-text: #004fc5;
+  --nav-active-bg: #e8f0fd;
+  --nav-active-border: #004fc5;
+  --nav-active-text: #004fc5;
+  --nav-tool-color: #5e6c84;
+  --nav-tool-hover-bg: #e8f0fd;
+  --nav-tool-hover-color: #004fc5;
+  --nav-avatar-border: rgba(23, 43, 77, 0.2);
+  --nav-dropdown-color: #5e6c84;
+
+  // 左侧菜单栏
+  --sidebar-bg: #ffffff;
+  --sidebar-shadow: 2px 0 8px rgba(23, 43, 77, 0.06);
+  --sidebar-text: #172b4d;
+  --sidebar-hover-bg: #e8f0fd;
+  --sidebar-active-bg: #d6e4fc;
+  --sidebar-active-text: #004fc5;
+  --sidebar-icon: #004fc5;
+  --sidebar-group-bg: #f5f7fa;
+  --sidebar-group-text: #172b4d;
+  --sidebar-group-hover-bg: #eef2f8;
+  --sidebar-item-text: #5e6c84;
+  --sidebar-item-hover-bg: #e8f0fd;
+  --sidebar-item-hover-text: #004fc5;
+  --sidebar-item-active-bg: rgba(0, 79, 197, 0.1);
+  --sidebar-item-active-text: #004fc5;
+  --sidebar-item-active-border: #004fc5;
+  --sidebar-icon-color: #004fc5;
+}

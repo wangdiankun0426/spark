@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-container>
-      <el-aside width="140px" class="flow-el-aside">
+      <el-aside width="180px" class="flow-el-aside">
         <el-menu
             :default-active="defaultActive"
             :router='true'
@@ -9,19 +9,19 @@
             class="flow-el-menu"
         >
           <el-menu-item index="/flow/application">
-            <el-icon style="font-size:18px;color:#fef0f0;vertical-align: middle;"><flow-list/></el-icon>
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><flow-list/></el-icon>
             <template #title>流程申请</template>
           </el-menu-item>
           <el-menu-item index="/flow/myAppliedList">
-            <el-icon style="font-size:18px;color:#fef0f0;vertical-align: middle;"><my-applied-list/></el-icon>
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><my-applied-list/></el-icon>
             <template #title>我的申请</template>
           </el-menu-item>
           <el-menu-item index="/flow/myPendingList">
-            <el-icon style="font-size:18px;color:#fef0f0;vertical-align: middle;"><my-pending-list/></el-icon>
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><my-pending-list/></el-icon>
             <template #title>我的待办</template>
           </el-menu-item>
           <el-menu-item index="/flow/myPendedList">
-            <el-icon style="font-size:18px;color:#fef0f0;vertical-align: middle;"><my-applied-list/></el-icon>
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><my-applied-list/></el-icon>
             <template #title>我的已办</template>
           </el-menu-item>
         </el-menu>
@@ -59,9 +59,9 @@ const defaultActive = computed(() => {
 .flow-el-aside {
   padding: 0;
   height: calc(100vh - $nav-height);
-  background: $bg-sidebar;
-  color: #ffffff;
-  box-shadow: 2px 0 8px rgba(23, 43, 77, 0.12);
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  box-shadow: var(--sidebar-shadow);
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -72,20 +72,22 @@ const defaultActive = computed(() => {
   background: transparent !important;
 }
 .el-menu-item {
-  color: #ffffff;
+  color: var(--sidebar-text);
   height: 44px;
   line-height: 44px;
   font-size: 13px;
-  font-weight: 550;
+  font-weight: 400;
+  padding-left: 30px !important;
 }
 /*悬停一级菜单之后*/
 .el-menu-item:hover {
-  background-color: #4b7aca;
-  padding-left: 18px !important;
+  background-color: var(--sidebar-hover-bg);
+  padding-left: 28px !important;
 }
 /*点击一级菜单之后*/
 .el-menu-item.is-active {
-  background-color: #6086c6;
+  background-color: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
   border-bottom: 0;
 }
 :deep(.el-menu-item .el-menu-tooltip__trigger) {

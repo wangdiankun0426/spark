@@ -179,7 +179,7 @@ function handleClick(e) {
 .info-card-id {
   font-size: 12px;
   color: $color-text-placeholder;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .info-card-badge {
@@ -323,7 +323,7 @@ function handleClick(e) {
     --el-tag-text-color: var(--info-theme);
     --el-tag-border-color: transparent;
     border-color: transparent;
-    font-weight: 500;
+    font-weight: 400;
   }
 
   // 标签分组的小标题（agent 用）

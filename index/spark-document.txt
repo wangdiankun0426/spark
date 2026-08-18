@@ -25,7 +25,7 @@ curl -u elastic -X PUT "http://localhost:9200/spark-document" -H "Content-Type: 
         "fields": {
           "keyword": {
             "type": "keyword", // 用于精确匹配的字符串字段，不会分词，只能精确查询（使用*就能实现模糊查询），不能全文检索
-            "ignore_above": 256
+            "ignore_above": 1024 // 超过这个长度的字符串，不写入倒排索引
           }
         }
       },

@@ -433,7 +433,7 @@ function handleLocateEntity(entity) {
   flex-shrink: 0;
   padding: 2px $spacing-sm;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   border-radius: $border-radius-sm;
   max-width: 90px;
   overflow: hidden;

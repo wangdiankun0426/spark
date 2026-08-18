@@ -2,7 +2,7 @@
   <div>
     <el-menu :default-active="defaultActive" router mode="horizontal">
       <div class="logo-box">
-        <img src="../assets/images/logo.png" width="56" height="40"/>
+        <img src="../assets/images/logo.png" width="50" height="36"/>
       </div>
       <el-menu-item index="/home">
         <el-icon><DataAnalysis /></el-icon>
@@ -30,6 +30,13 @@
       </el-menu-item>
 
       <div class="tool-box">
+        <!-- 主题切换 -->
+        <div class="tool-item" :title="currentTheme === 'light' ? '切换为深色主题' : '切换为浅色主题'" @click="toggleTheme">
+          <el-icon style="font-size: 20px">
+            <Sunny v-if="currentTheme === 'light'" />
+            <Moon v-else />
+          </el-icon>
+        </div>
         <!-- 搜索快捷功能 -->
         <el-popover
             v-model:visible="searchVisible"
@@ -161,9 +168,10 @@ import {queryMyMessageListAPI} from "@/api/system/message.js";
 import {noticeListAPI} from "@/api/system/notice.js";
 import {ElMessageBox} from "element-plus";
 import {ref, computed, nextTick, watch} from "vue";
-import {ArrowDown, DataAnalysis, FolderOpened, Connection, Search, Setting} from "@element-plus/icons-vue";
+import {ArrowDown, DataAnalysis, FolderOpened, Connection, Search, Setting, Moon, Sunny} from "@element-plus/icons-vue";
 import { useRouter, useRoute } from 'vue-router';
 import {useStore} from "vuex";
+import {getTheme, applyTheme, setTheme} from '@/utils/themeUtil';
 import UserAvatar from '@/components/UserAvatar';
 import UserProfile from '@/components/UserProfile';
 import Contacts from '@/components/Chat/contacts.vue';
@@ -183,6 +191,17 @@ const route = useRoute();
 const store = useStore()
 
 const userInfo = computed(() => store.getters['user/getUserInfo'] || { id: undefined })
+
+const currentTheme = ref(getTheme());
+applyTheme(currentTheme.value);
+
+/**
+ * 点击按钮在深色/浅色主题间切换并持久化
+ */
+function toggleTheme() {
+  currentTheme.value = currentTheme.value === 'light' ? 'dark' : 'light';
+  setTheme(currentTheme.value);
+}
 
 // 个人中心弹窗显隐
 const userInfoVisible = ref(false);
@@ -365,10 +384,10 @@ function handleViewNotice(row) {
 </script>
 
 <style lang="scss" scoped>
-// 导航栏整体 - 深蓝渐变背景
+// 导航栏整体 - 跟随主题变量（深色蓝渐变 / 浅色白）
 .el-menu {
-  background: $bg-nav !important;
-  box-shadow: $shadow-nav;
+  background: var(--nav-bg) !important;
+  box-shadow: var(--nav-shadow);
 }
 
 // 左侧 logo 区域
@@ -385,26 +404,26 @@ function handleViewNotice(row) {
 
 // 一级菜单项基础样式
 .el-menu-item {
-  color: #ffffff !important;
+  color: var(--nav-text) !important;
   font-size: 15px !important;
-  font-weight: 550 !important;
+  font-weight: 400 !important;
   transition: $transition-fast;
   letter-spacing: 2px;
 }
 
 // 悬停一级菜单
 .el-menu-item:hover {
-  background-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: var(--nav-hover-bg) !important;
   font-weight: 600;
-  color: #ffffff !important;
+  color: var(--nav-hover-text) !important;
   border-bottom: 0;
 }
 
 // 激活状态一级菜单
 .el-menu-item.is-active {
-  background-color: rgba(255, 255, 255, 0.08) !important;
-  border-bottom: 3px solid #ffffff !important;
-  color: #ffffff !important;
+  background-color: var(--nav-active-bg) !important;
+  border-bottom: 3px solid var(--nav-active-border) !important;
+  color: var(--nav-active-text) !important;
 }
 
 .el-menu--horizontal.el-menu {
@@ -425,7 +444,6 @@ function handleViewNotice(row) {
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
-  padding-right: 12px;
 }
 
 .tool-item {
@@ -438,12 +456,13 @@ function handleViewNotice(row) {
   align-items: center;
   justify-content: center;
   transition: $transition-fast;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--nav-tool-color);
+  margin-right: 8px;
 
   &:hover,
   &.is-active {
-    background-color: rgba(96, 165, 250, 0.25);
-    color: #ffffff;
+    background-color: var(--nav-tool-hover-bg);
+    color: var(--nav-tool-hover-color);
     box-shadow: 0 0 8px rgba(96, 165, 250, 0.4);
   }
 }
@@ -509,14 +528,14 @@ function handleViewNotice(row) {
     outline: none;
 
     :deep(.el-avatar) {
-      border: 1.5px solid rgba(255, 255, 255, 0.6);
+      border: 0.5px solid var(--nav-avatar-border);
       transition: $transition-fast;
       border-radius: 50% !important;
       background: rgba(255, 255, 255, 0.1);
     }
 
     .dropdown-icon {
-      color: rgba(255, 255, 255, 0.9);
+      color: var(--nav-dropdown-color);
       font-size: 12px;
       transition: $transition-fast;
       filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
@@ -524,10 +543,10 @@ function handleViewNotice(row) {
 
     &:hover {
       .dropdown-icon {
-        color: #ffffff;
+        color: var(--nav-tool-hover-color);
       }
       :deep(.el-avatar) {
-        border-color: rgba(255, 255, 255, 0.9);
+        border-color: var(--nav-active-border);
       }
     }
   }
@@ -596,7 +615,7 @@ function handleViewNotice(row) {
   }
   .nav-notice-title {
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 400;
     color: $color-text-primary;
     overflow: hidden;
     text-overflow: ellipsis;

@@ -60,23 +60,23 @@
           <template #default="scope">
             <el-button type="success" text @click="handleDocumentEvent(scope.row.id)">
               <el-icon><HelpFilled /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">事件</span>
+              <span style="font-size: 12px; font-weight: 400">事件</span>
             </el-button>
             <el-button type="primary" text @click="handleOpenChunkPage(scope.row.id)">
               <el-icon><Grid /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">分块</span>
+              <span style="font-size: 12px; font-weight: 400">分块</span>
             </el-button>
             <el-button type="info" text @click="handleDocumentMetadata(scope.row.id)">
               <el-icon><HelpFilled /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">元数据</span>
+              <span style="font-size: 12px; font-weight: 400">元数据</span>
             </el-button>
             <el-button type="success" text @click="handleOpenUpdateDocumentForm(scope.row)">
               <el-icon><Edit /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">修改</span>
+              <span style="font-size: 12px; font-weight: 400">修改</span>
             </el-button>
             <el-button type="danger" text @click="handleDeleteDocument(scope.row.id)">
               <el-icon><Delete /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">删除</span>
+              <span style="font-size: 12px; font-weight: 400">删除</span>
             </el-button>
           </template>
         </el-table-column>
@@ -624,7 +624,7 @@ function handlePreviewDocument(row) {
 .el-upload__text em {
   color: var(--el-color-primary);
   font-style: normal;
-  font-weight: 500;
+  font-weight: 400;
 }
 .upload-progress-container {
   width: 100%;

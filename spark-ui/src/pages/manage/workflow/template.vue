@@ -63,23 +63,23 @@
           <template #default="scope">
             <el-button type="primary" text @click="handleOpenDesigner(scope.row)">
               <el-icon><EditPen /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">编辑模板</span>
+              <span style="font-size: 12px; font-weight: 400">编辑模板</span>
             </el-button>
             <el-button type="success" text @click="handleOpenUpdateForm(scope.row)">
               <el-icon><Edit /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">修改</span>
+              <span style="font-size: 12px; font-weight: 400">修改</span>
             </el-button>
             <el-button type="warning" text @click="handleOpenEndpoint(scope.row)" v-if="scope.row.status === 1">
               <el-icon><Link /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">端点</span>
+              <span style="font-size: 12px; font-weight: 400">端点</span>
             </el-button>
             <el-button type="success" text @click="handleOpenRun(scope.row)" v-if="scope.row.status === 1">
               <el-icon><VideoPlay /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">运行</span>
+              <span style="font-size: 12px; font-weight: 400">运行</span>
             </el-button>
             <el-button type="danger" text @click="handleDelete(scope.row.id)">
               <el-icon><Delete /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">删除</span>
+              <span style="font-size: 12px; font-weight: 400">删除</span>
             </el-button>
           </template>
         </el-table-column>

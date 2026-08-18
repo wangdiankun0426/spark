@@ -253,7 +253,7 @@ function handleChunkQAPageChangeNo(pageNo) {
 
   &__title {
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 400;
     color: $color-text-primary;
   }
 

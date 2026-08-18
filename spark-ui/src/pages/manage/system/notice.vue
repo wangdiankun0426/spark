@@ -54,7 +54,7 @@
               v-if="scope.row.status !== 2"
           >
             <el-icon><Top /></el-icon>
-            <span style="font-size: 12px; font-weight: 500">
+            <span style="font-size: 12px; font-weight: 400">
                发布
               </span>
           </el-button>
@@ -65,7 +65,7 @@
               v-if="scope.row.status === 2"
           >
             <el-icon><Bottom /></el-icon>
-            <span style="font-size: 12px; font-weight: 500">
+            <span style="font-size: 12px; font-weight: 400">
                下架
               </span>
           </el-button>
@@ -75,7 +75,7 @@
               v-if="scope.row.status !== 2"
           >
             <el-icon><Edit /></el-icon>
-            <span style="font-size: 12px; font-weight: 500">
+            <span style="font-size: 12px; font-weight: 400">
                编辑
               </span>
           </el-button>
@@ -84,7 +84,7 @@
               @click="handleViewNotice(scope.row)"
           >
             <el-icon><View /></el-icon>
-            <span style="font-size: 12px; font-weight: 500">
+            <span style="font-size: 12px; font-weight: 400">
                预览
               </span>
           </el-button>
@@ -95,7 +95,7 @@
               v-if="scope.row.status !== 2"
           >
             <el-icon><Edit /></el-icon>
-            <span style="font-size: 12px; font-weight: 500">
+            <span style="font-size: 12px; font-weight: 400">
                修改
               </span>
           </el-button>
@@ -106,7 +106,7 @@
               v-if="scope.row.status !== 2"
           >
             <el-icon><Delete /></el-icon>
-            <span style="font-size: 12px; font-weight: 500">
+            <span style="font-size: 12px; font-weight: 400">
                删除
               </span>
           </el-button>

@@ -389,7 +389,7 @@ const handlePageChangeNo = (pageNo) => {
 }
 .card-actions .el-button {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   padding: 0 !important;
   margin: 0 !important;
   margin-right: 10px !important;

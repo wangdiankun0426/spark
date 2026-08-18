@@ -64,7 +64,7 @@
                 @click="handleOpenUpdateProviderForm(scope.row)"
             >
               <el-icon><Edit /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">
+              <span style="font-size: 12px; font-weight: 400">
                修改
               </span>
             </el-button>
@@ -74,7 +74,7 @@
                 @click="handleModelProvider(scope.row.id)"
             >
               <el-icon><Delete /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">
+              <span style="font-size: 12px; font-weight: 400">
                删除
               </span>
             </el-button>
@@ -470,7 +470,7 @@ function handleSortChange({ column, prop, order }) {
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--el-color-primary);
   background-color: var(--el-color-primary-light-9);
   flex-shrink: 0;

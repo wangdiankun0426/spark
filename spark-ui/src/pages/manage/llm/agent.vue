@@ -51,7 +51,7 @@
                 @click="handleOpenUpdateAgentForm(scope.row)"
             >
               <el-icon><Edit /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">
+              <span style="font-size: 12px; font-weight: 400">
                修改
               </span>
             </el-button>
@@ -61,7 +61,7 @@
                 @click="handleDeleteAgent(scope.row.id)"
             >
               <el-icon><Delete /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">
+              <span style="font-size: 12px; font-weight: 400">
                删除
               </span>
             </el-button>

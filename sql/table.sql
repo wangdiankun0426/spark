@@ -414,7 +414,7 @@ CREATE TABLE `flow_template_node` (
       `assignee` varchar(256) NULL COMMENT '审批人',
       `permission` int(3) NULL COMMENT '节点权限',
       `approve_type` int(3) NULL DEFAULT 1 COMMENT '审批类型',
-      `urge_enabled` tinyint(1) NULL DEFAULT 0 COMMENT '是否启用定时催办：1启用/0关闭',
+      `urge_enabled` tinyint(1) NULL DEFAULT 0 COMMENT '是否启用定时催办',
       `urge_interval` int(5) NULL COMMENT '催办间隔',
 
       `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',

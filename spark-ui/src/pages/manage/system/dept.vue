@@ -38,7 +38,7 @@
               @click="openCreateDeptForm(scope.row.id)"
           >
             <el-icon><Plus /></el-icon>
-            <span style="font-size: 12px; font-weight: 500">
+            <span style="font-size: 12px; font-weight: 400">
               新建子部门
             </span>
           </el-button>
@@ -48,7 +48,7 @@
               @click="openUpdateDeptForm(scope.row)"
           >
             <el-icon><Edit /></el-icon>
-            <span style="font-size: 12px; font-weight: 500">
+            <span style="font-size: 12px; font-weight: 400">
               修改
             </span>
           </el-button>
@@ -58,7 +58,7 @@
               @click="deleteDept(scope.row.id)"
           >
             <el-icon><Delete /></el-icon>
-            <span style="font-size: 12px; font-weight: 500">
+            <span style="font-size: 12px; font-weight: 400">
               删除
             </span>
           </el-button>

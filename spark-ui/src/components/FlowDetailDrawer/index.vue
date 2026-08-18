@@ -307,7 +307,7 @@ function handleClose() {
   font-size: 12px;
 
   .discuss-name {
-    font-weight: 550;
+    font-weight: 400;
     color: $color-text-primary;
   }
 

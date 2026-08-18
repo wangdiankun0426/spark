@@ -1,21 +1,37 @@
 <template>
   <div class="login">
+    <!-- 浅色科技风动态背景（全屏铺满） -->
+    <div class="anim-bg">
+      <div class="anim-grid"></div>
+      <div class="anim-scan"></div>
+      <div class="anim-blob anim-blob-1"></div>
+      <div class="anim-blob anim-blob-2"></div>
+      <div class="anim-orbit anim-orbit-1"></div>
+      <div class="anim-orbit anim-orbit-2"></div>
+      <svg class="anim-net" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+        <polyline class="net-line" points="80,620 220,480 380,560 520,360 680,460 860,280"/>
+        <polyline class="net-line net-line--2" points="120,220 260,330 420,180 560,320 720,150 880,240"/>
+        <polyline class="net-line net-line--3" points="180,720 340,650 480,720 640,580 800,660"/>
+        <polyline class="net-line net-line--4" points="960,520 1120,420 1260,500 1400,340 1520,420"/>
+        <circle class="net-node" cx="80" cy="620" r="4"/>
+        <circle class="net-node net-node--2" cx="220" cy="480" r="3"/>
+        <circle class="net-node net-node--3" cx="520" cy="360" r="4"/>
+        <circle class="net-node net-node--4" cx="860" cy="280" r="3"/>
+        <circle class="net-node net-node--5" cx="420" cy="180" r="3"/>
+        <circle class="net-node net-node--6" cx="720" cy="150" r="4"/>
+        <circle class="net-node net-node--7" cx="640" cy="580" r="3"/>
+        <circle class="net-node net-node--8" cx="1120" cy="420" r="4"/>
+        <circle class="net-node net-node--9" cx="1400" cy="340" r="3"/>
+      </svg>
+      <div class="anim-dot anim-dot-1"></div>
+      <div class="anim-dot anim-dot-2"></div>
+      <div class="anim-dot anim-dot-3"></div>
+      <div class="anim-dot anim-dot-4"></div>
+    </div>
     <!-- 左侧 -->
     <div class="el-login-sidebar">
-      <!-- 蓝色动态背景 -->
-      <div class="anim-bg">
-        <div class="anim-blob anim-blob-1"></div>
-        <div class="anim-blob anim-blob-2"></div>
-        <div class="anim-blob anim-blob-3"></div>
-        <div class="anim-ring anim-ring-1"></div>
-        <div class="anim-ring anim-ring-2"></div>
-        <div class="anim-ring anim-ring-3"></div>
-        <div class="anim-dot anim-dot-1"></div>
-        <div class="anim-dot anim-dot-2"></div>
-        <div class="anim-dot anim-dot-3"></div>
-      </div>
       <div class="sidebar-content">
-        <h1 style="font-size: 32px;">星火云AI应用平台</h1>
+        <h1 class="sidebar-title">星火云AI应用平台</h1>
         <p style="font-size: 16px;">欢迎使用 — 星火云AI应用平台</p>
         <p style="font-size: 14px;">
           星火云AI应用平台，我们的目标不仅是一个企业AI协作工具系统，更是以帮助企业实现高效运营、创新驱动和可持续发展的核心支撑为长远目标。
@@ -194,7 +210,7 @@
                 :loading="loading"
                 size="large"
                 type="primary"
-                style="width: 100%; background-color: #0052cc;height: 40px; font-weight: bold; font-size: 18px"
+                style="width: 100%; background-color: #004fc5;height: 40px; font-weight: bold; font-size: 18px"
                 @click="submitLoginForm"
             >登 录
             </el-button>
@@ -207,17 +223,29 @@
       </el-divider>
 
       <div style="margin: 20px">
-        <el-tooltip content="密码登录" placement="bottom" v-if="loginForm.loginType !== 1">
+        <el-tooltip
+            content="密码登录"
+            placement="bottom"
+            v-if="loginForm.loginType !== 1"
+        >
           <el-button circle @click="switchLoginType(1)">
             <el-icon style="font-size: 18px"><Lock /></el-icon>
           </el-button>
         </el-tooltip>
-        <el-tooltip content="手机号登录" placement="bottom"   v-if="loginForm.loginType !== 2">
+        <el-tooltip
+            content="手机号登录"
+            placement="bottom"
+            v-if="loginForm.loginType !== 2"
+        >
           <el-button circle @click="switchLoginType(2)">
             <el-icon style="font-size: 18px"><Iphone /></el-icon>
           </el-button>
         </el-tooltip>
-        <el-tooltip content="邮箱登录" placement="bottom"   v-if="loginForm.loginType !== 3">
+        <el-tooltip
+            content="邮箱登录"
+            placement="bottom"
+            v-if="loginForm.loginType !== 3"
+        >
           <el-button circle @click="switchLoginType(3)">
             <el-icon style="font-size: 18px"><Message /></el-icon>
           </el-button>
@@ -381,21 +409,22 @@ function submitLoginForm() {
   align-items: center;
   padding: 0;
   margin: 0;
-  background-color: $bg-page;
+  position: relative;
+  // 全屏浅色科技风渐变背景
+  background: linear-gradient(160deg, #f7faff 0%, #eaf2fe 55%, #e3edfd 100%);
 }
 
-// 左侧 - 蓝色动态背景
+// 左侧 - 透明容器（背景由全屏 anim-bg 提供）
 .el-login-sidebar {
   width: 60%;
   height: 100vh;
-  background: linear-gradient(160deg, #081c45 0%, #0c2f6b 50%, #123f87 100%);
   padding: 20px;
   position: relative;
   overflow: hidden;
-  color: #ffffff;
+  color: $color-text-primary;
 }
 
-// 蓝色动态背景装饰层
+// 科技风动态背景装饰层（全屏铺满）
 .anim-bg {
   position: absolute;
   inset: 0;
@@ -404,40 +433,68 @@ function submitLoginForm() {
   z-index: 0;
 }
 
-// 极光渐变光斑
+// 科技网格底纹（双层网格 + 边缘羽化）
+.anim-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+      linear-gradient(rgba(0, 79, 197, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 79, 197, 0.06) 1px, transparent 1px),
+      linear-gradient(rgba(0, 79, 197, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 79, 197, 0.04) 1px, transparent 1px);
+  background-size: 160px 160px, 160px 160px, 40px 40px, 40px 40px;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 45%, #000 40%, transparent 88%);
+  mask-image: radial-gradient(ellipse at 50% 45%, #000 40%, transparent 88%);
+}
+
+// 垂直流光扫描线
+.anim-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 140px;
+  background: linear-gradient(180deg,
+      transparent 0%,
+      rgba(0, 120, 255, 0.05) 30%,
+      rgba(0, 150, 255, 0.12) 50%,
+      rgba(0, 120, 255, 0.05) 70%,
+      transparent 100%);
+  animation: scanMove 8s linear infinite;
+}
+
+@keyframes scanMove {
+  0% {
+    top: -20%;
+  }
+  100% {
+    top: 110%;
+  }
+}
+
+// 柔和光晕（蓝青色系，低透明度）
 .anim-blob {
   position: absolute;
   border-radius: 50%;
   filter: blur(90px);
-  opacity: 0.4;
+  opacity: 0.32;
   animation: blobFloat 18s ease-in-out infinite alternate;
 }
 
 .anim-blob-1 {
-  width: 780px;
-  height: 780px;
-  left: -200px;
+  width: 720px;
+  height: 720px;
+  left: -180px;
   top: -200px;
-  background: radial-gradient(circle at 30% 30%, #3b82f6 0%, #6ea8ff 35%, transparent 70%);
+  background: radial-gradient(circle at 30% 30%, #93c5fd 0%, #bfdbfe 40%, transparent 70%);
 }
 
 .anim-blob-2 {
-  width: 700px;
-  height: 700px;
-  right: -180px;
-  bottom: -160px;
-  background: radial-gradient(circle at 60% 40%, #1e6fd9 0%, #4f9bff 35%, transparent 70%);
+  width: 640px;
+  height: 640px;
+  right: -160px;
+  bottom: -180px;
+  background: radial-gradient(circle at 60% 40%, #a5f3fc 0%, #cde2fc 40%, transparent 70%);
   animation-delay: -6s;
-}
-
-.anim-blob-3 {
-  width: 580px;
-  height: 580px;
-  left: 32%;
-  top: 28%;
-  background: radial-gradient(circle at 50% 50%, #2a7bff 0%, transparent 65%);
-  opacity: 0.32;
-  animation-delay: -12s;
 }
 
 @keyframes blobFloat {
@@ -455,45 +512,100 @@ function submitLoginForm() {
   }
 }
 
-// 简约几何圆环
-.anim-ring {
+// 旋转轨道环（虚线 + 缓慢自转，边缘小光点）
+.anim-orbit {
   position: absolute;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px dashed rgba(0, 79, 197, 0.22);
   border-radius: 50%;
-  animation: ringFloat 26s ease-in-out infinite alternate;
+  animation: orbitSpin 30s linear infinite;
 }
 
-.anim-ring-1 {
-  width: 220px;
-  height: 220px;
-  right: 18%;
-  top: 16%;
+.anim-orbit-1 {
+  width: 420px;
+  height: 420px;
+  right: -100px;
+  top: -120px;
 }
 
-.anim-ring-2 {
-  width: 120px;
-  height: 120px;
-  left: 12%;
-  bottom: 22%;
-  border-color: rgba(255, 255, 255, 0.14);
-  animation-delay: -8s;
+.anim-orbit-2 {
+  width: 260px;
+  height: 260px;
+  left: 6%;
+  bottom: -60px;
+  border-color: rgba(0, 150, 255, 0.18);
+  animation-direction: reverse;
+  animation-duration: 24s;
 }
 
-.anim-ring-3 {
-  width: 70px;
-  height: 70px;
-  right: 24%;
-  bottom: 34%;
-  border-color: rgba(255, 255, 255, 0.12);
-  animation-delay: -14s;
-}
-
-@keyframes ringFloat {
-  0% {
-    transform: translateY(0) rotate(0deg);
+@keyframes orbitSpin {
+  from {
+    transform: rotate(0deg);
   }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// 数据流网络线条与节点
+.anim-net {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.net-line {
+  fill: none;
+  stroke: rgba(0, 79, 197, 0.22);
+  stroke-width: 1;
+  stroke-dasharray: 8 12;
+  animation: netFlow 6s linear infinite;
+}
+
+.net-line--2 {
+  stroke: rgba(0, 150, 216, 0.18);
+  animation-duration: 8s;
+  animation-direction: reverse;
+}
+
+.net-line--3 {
+  stroke: rgba(0, 79, 197, 0.14);
+  animation-duration: 10s;
+}
+
+@keyframes netFlow {
+  to {
+    stroke-dashoffset: -200;
+  }
+}
+
+.net-node {
+  fill: #004fc5;
+  filter: drop-shadow(0 0 4px rgba(0, 120, 255, 0.6));
+  animation: nodePulse 3s ease-in-out infinite;
+}
+
+.net-node--2,
+.net-node--4,
+.net-node--7,
+.net-node--9 {
+  fill: #00b8d9;
+  animation-delay: -1s;
+}
+
+.net-node--3,
+.net-node--6,
+.net-node--8 {
+  animation-delay: -2s;
+}
+
+@keyframes nodePulse {
+  0%,
   100% {
-    transform: translateY(-24px) rotate(20deg);
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
   }
 }
 
@@ -503,14 +615,15 @@ function submitLoginForm() {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.75);
-  box-shadow: 0 0 12px rgba(140, 180, 255, 0.9);
+  background: rgba(0, 120, 255, 0.45);
+  box-shadow: 0 0 12px rgba(0, 120, 255, 0.4);
   animation: dotFloat 8s ease-in-out infinite alternate;
 }
 
 .anim-dot-1 { left: 20%; top: 42%; }
 .anim-dot-2 { left: 70%; top: 28%; animation-delay: -3s; }
 .anim-dot-3 { left: 46%; top: 76%; animation-delay: -6s; }
+.anim-dot-4 { left: 86%; top: 62%; animation-delay: -4s; }
 
 @keyframes dotFloat {
   0% {
@@ -525,10 +638,21 @@ function submitLoginForm() {
 
 // 简约网格
 .sidebar-content {
-  margin: 70px 80px 20px 80px;
+  margin: 140px 80px 20px 80px;
   text-align: left;
   position: relative;
   z-index: 1;
+}
+
+// 平台标题 - 蓝青渐变科技字效
+.sidebar-title {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  background: linear-gradient(90deg, #004fc5 0%, #0072e0 45%, #00b8d9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 // 核心功能卡片
@@ -546,14 +670,36 @@ function submitLoginForm() {
   gap: 12px;
   padding: 14px 16px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(0, 79, 197, 0.1);
+  box-shadow: 0 2px 8px rgba(26, 111, 232, 0.06);
+  position: relative;
+  overflow: hidden;
   transition: all 0.2s;
 
+  // 左侧科技感渐变光条，悬停时点亮
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #004fc5, #00b8d9);
+    opacity: 0;
+    transition: all 0.2s;
+  }
+
   &:hover {
-    background: rgba(255, 255, 255, 0.22);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    background: #ffffff;
+    border-color: rgba(0, 79, 197, 0.2);
+    box-shadow: 0 6px 16px rgba(26, 111, 232, 0.14);
     transform: translateY(-2px);
+
+    &::before {
+      opacity: 1;
+    }
   }
 }
 
@@ -561,13 +707,14 @@ function submitLoginForm() {
   width: 42px;
   height: 42px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #0052cc, #00b8d9);
+  background: linear-gradient(135deg, #004fc5, #00b8d9);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
   flex-shrink: 0;
+  box-shadow: 0 2px 10px rgba(0, 110, 220, 0.35);
 }
 
 .feature-text {
@@ -577,17 +724,17 @@ function submitLoginForm() {
 .feature-name {
   font-size: 15px;
   font-weight: 600;
-  color: #ffffff;
+  color: $color-text-primary;
 }
 
 .feature-desc {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.72);
+  color: $color-text-secondary;
   margin-top: 2px;
   white-space: nowrap;
 }
 
-// 右侧 - 登录表单区（宽度居中）
+// 右侧 - 登录表单区（白色卡片）
 .el-login-main {
   display: flex;
   flex-direction: column;
@@ -595,11 +742,26 @@ function submitLoginForm() {
   width: 400px;
   max-width: 90%;
   margin: auto;
-  background: transparent;
-}
+  margin-right: 8%;
+  padding: 40px 36px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 79, 197, 0.08);
+  border-radius: $border-radius-lg;
+  box-shadow: 0 8px 32px rgba(26, 111, 232, 0.12);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
 
-.el-login-main h2 {
-  text-align: center;
+  // 顶部蓝青渐变光条，呼应科技风
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #004fc5, #00b8d9);
+  }
 }
 
 .el-input {
@@ -622,8 +784,9 @@ function submitLoginForm() {
   }
 }
 
+// 分隔线：文字底色与白色卡片一致，横线在文字两侧正常断开
 ::v-deep(.el-divider__text) {
-  background-color: $bg-page !important;
+  background-color: #ffffff !important;
   color: $color-text-placeholder;
 }
 </style>

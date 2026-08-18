@@ -516,7 +516,7 @@ function handleSelectModel(model) {
 
 .model-pane-total {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   color: $color-text-secondary;
 }
 

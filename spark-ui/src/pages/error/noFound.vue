@@ -56,7 +56,7 @@
   .el-result__sub-title p {
     color: #64748b;
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 400;
   }
 }
 

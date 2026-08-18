@@ -3,6 +3,7 @@ import App from './App.vue';
 import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
 import '@/styles/main.scss';
+import '@/styles/theme.scss';
 import '@/styles/element.scss';
 import * as ElIcon from '@element-plus/icons-vue';
 import router from '@/router/index';

@@ -73,7 +73,7 @@
                 @click="handleDocumentEvent(scope.row.id)"
             >
               <el-icon><HelpFilled /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">
+              <span style="font-size: 12px; font-weight: 400">
                事件
               </span>
             </el-button>
@@ -83,7 +83,7 @@
                 @click="handleOpenChunkPage(scope.row.id)"
             >
               <el-icon><Grid /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">
+              <span style="font-size: 12px; font-weight: 400">
                分块
               </span>
             </el-button>
@@ -93,7 +93,7 @@
                 @click="handleDocumentMetadata(scope.row.id)"
             >
               <el-icon><HelpFilled /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">
+              <span style="font-size: 12px; font-weight: 400">
                元数据
               </span>
             </el-button>
@@ -103,7 +103,7 @@
                 @click="handleOpenUpdateDocumentForm(scope.row)"
             >
               <el-icon><Edit /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">
+              <span style="font-size: 12px; font-weight: 400">
                修改
               </span>
             </el-button>
@@ -113,7 +113,7 @@
                 @click="handleDeleteDocument(scope.row.id)"
             >
               <el-icon><Delete /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">
+              <span style="font-size: 12px; font-weight: 400">
                删除
               </span>
             </el-button>

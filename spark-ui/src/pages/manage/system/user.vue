@@ -140,7 +140,7 @@
                 @click="openUpdateUserForm(scope.row)"
             >
               <el-icon><Edit /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">
+              <span style="font-size: 12px; font-weight: 400">
                修改
               </span>
             </el-button>
@@ -150,7 +150,7 @@
                 text
             >
               <el-icon><Delete /></el-icon>
-              <span style="font-size: 12px; font-weight: 500">
+              <span style="font-size: 12px; font-weight: 400">
                删除
               </span>
             </el-button>

@@ -222,7 +222,7 @@ function handleClose() {
 .el-upload__text em {
   color: var(--el-color-primary);
   font-style: normal;
-  font-weight: 500;
+  font-weight: 400;
 }
 .upload-progress-container {
   width: 100%;

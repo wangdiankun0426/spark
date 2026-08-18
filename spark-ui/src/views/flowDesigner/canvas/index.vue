@@ -581,7 +581,7 @@ function handleDrop(event) {
 .cn-node-name {
   margin-top: 2px;
   font-size: 13px;
-  font-weight: 550;
+  font-weight: 400;
   color: $color-text-primary;
   line-height: 1.2;
   word-break: break-all;
@@ -638,7 +638,7 @@ function handleDrop(event) {
   font-size: 11px;
   fill: #5e6c84;
   text-anchor: middle;
-  font-weight: 500;
+  font-weight: 400;
 }
 .cn-line-condition {
   pointer-events: all;
@@ -646,7 +646,7 @@ function handleDrop(event) {
   font-size: 11px;
   fill: #fa8c16;
   text-anchor: middle;
-  font-weight: 500;
+  font-weight: 400;
   // 白色描边光晕：保证文字在网格背景/连线交叉处可读
   paint-order: stroke;
   stroke: #fff;
