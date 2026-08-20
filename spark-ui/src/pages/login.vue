@@ -749,19 +749,7 @@ function submitLoginForm() {
   border-radius: $border-radius-lg;
   box-shadow: 0 8px 32px rgba(26, 111, 232, 0.12);
   position: relative;
-  overflow: hidden;
   z-index: 1;
-
-  // 顶部蓝青渐变光条，呼应科技风
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #004fc5, #00b8d9);
-  }
 }
 
 .el-input {

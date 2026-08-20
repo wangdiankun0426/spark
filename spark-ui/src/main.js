@@ -19,6 +19,7 @@ import CustomDeptUser from '@/views/formDesigner/formWidget/basicWidget/selectDe
 import CustomSelectRole from '@/views/formDesigner/formWidget/basicWidget/selectRole.vue';
 import CustomNumber from '@/views/formDesigner/formWidget/basicWidget/number.vue';
 import CustomDate from '@/views/formDesigner/formWidget/basicWidget/date.vue';
+import CustomUploadAttachment from '@/views/formDesigner/formWidget/basicWidget/uploadAttachment.vue';
 // 自定义组件配置组件
 import CustomInputSetting from '@/views/formDesigner/settingPanel/basicWidget/input.vue';
 import CustomTextareaSetting from '@/views/formDesigner/settingPanel/basicWidget/textarea.vue';
@@ -29,6 +30,7 @@ import CustomSelectDeptSetting from '@/views/formDesigner/settingPanel/basicWidg
 import CustomSelectRoleSetting from '@/views/formDesigner/settingPanel/basicWidget/selectRole.vue';
 import CustomNumberSetting from '@/views/formDesigner/settingPanel/basicWidget/number.vue';
 import CustomDateSetting from '@/views/formDesigner/settingPanel/basicWidget/date.vue';
+import CustomUploadAttachmentSetting from '@/views/formDesigner/settingPanel/basicWidget/uploadAttachment.vue';
 const components = [
     // 组件
   CustomInput,
@@ -40,6 +42,7 @@ const components = [
   CustomSelectRole,
   CustomNumber,
   CustomDate,
+  CustomUploadAttachment,
     // 组件配置
   CustomInputSetting,
   CustomTextareaSetting,
@@ -50,6 +53,7 @@ const components = [
   CustomSelectRoleSetting,
   CustomNumberSetting,
   CustomDateSetting,
+  CustomUploadAttachmentSetting,
 ];
 // 引用v-md-editor
 import VMdEditor from '@kangc/v-md-editor';

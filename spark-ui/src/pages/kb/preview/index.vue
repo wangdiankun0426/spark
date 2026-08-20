@@ -105,6 +105,7 @@ import '@vue-office/excel/lib/index.css'
 import * as pdfjsLib from 'pdfjs-dist'
 import PdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker'
 import { queryDocumentDetailAPI, downloadDocumentAPI } from '@/api/kb/document'
+import { queryAttachmentDetailAPI, downloadSystemAttachmentAPI } from '@/api/system/attachment'
 import { getDocumentCategory, DOCUMENT_CATEGORY } from '@/utils/documentUtil'
 
 pdfjsLib.GlobalWorkerOptions.workerPort = new PdfjsWorker()
@@ -134,6 +135,8 @@ const CATEGORY_PREVIEW_MAP = {
 
 const route = useRoute()
 const documentId = computed(() => route.query.id)
+// 按对象ID尾数区分类型：文档为9、附件为7（genObjectId 规则：n*100+typeValue）
+const isAttachment = computed(() => Number(documentId.value) % 100 === 7)
 const documentName = ref('')
 const documentExt = ref('')
 const detailLoading = ref(false)
@@ -159,9 +162,10 @@ function loadDocumentDetail() {
     return
   }
   detailLoading.value = true
-  queryDocumentDetailAPI({ id: documentId.value }).then(res => {
+  const detailAPI = isAttachment.value ? queryAttachmentDetailAPI : queryDocumentDetailAPI
+  detailAPI({ id: documentId.value }).then(res => {
     if (res.code !== 200) {
-      detailError.value = '文档详情获取失败'
+      detailError.value = isAttachment.value ? '附件详情获取失败' : '文档详情获取失败'
       return
     }
     documentName.value = res.data.name
@@ -231,10 +235,12 @@ async function loadAndPreview() {
 
   fileLoading.value = true
   try {
-    const blob = await downloadDocumentAPI({
-      id: documentId.value,
-      ext: resolveDownloadExt()
-    })
+    const blob = isAttachment.value
+        ? await downloadSystemAttachmentAPI({ id: documentId.value })
+        : await downloadDocumentAPI({
+          id: documentId.value,
+          ext: resolveDownloadExt()
+        })
     if (previewType.value === TYPE_WORD || previewType.value === TYPE_EXCEL || previewType.value === TYPE_PPT) {
       fileData.value = await blob.arrayBuffer()
     } else if (previewType.value === TYPE_PDF) {

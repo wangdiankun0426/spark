@@ -104,8 +104,8 @@ notice:
 form:
   file:
     path: /opt/spark/docs/form/
-kb:
-  docs:
+docs:
+  file:
     path: /opt/spark/docs/file/
 flow:
   bpmn:

@@ -211,7 +211,7 @@
     <el-drawer
         v-model="formVersionListVisible"
         title="表单版本"
-        direction="rtl"
+        direction="ltr"
         size="20%"
     >
       <div>

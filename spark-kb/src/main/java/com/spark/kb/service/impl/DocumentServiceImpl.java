@@ -77,7 +77,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
     private ElasticsearchOperations elasticsearchOperations;
     @Autowired
     private ESRetrieve esRetrieve;
-    @Value("${kb.docs.path}")
+    @Value("${docs.file.path}")
     private String docsPath;
 
     /**
@@ -97,7 +97,6 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         if (prtId == null) {
             prtId = 0L;
         }
-        Integer documentType = ObjectTypeEnum.KNOWLEDGE.getValue();
         String filename = file.getOriginalFilename();
         String fileExt = FileUtil.getFileExt(filename);
         String filePath = docsPath + UUID.randomUUID() + "." + fileExt;

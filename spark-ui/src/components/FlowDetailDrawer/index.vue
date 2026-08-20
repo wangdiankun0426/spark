@@ -2,7 +2,7 @@
   <el-drawer
       :model-value="visible"
       title="流程详情"
-      direction="rtl"
+      direction="ltr"
       size="100%"
       :before-close="handleClose"
   >

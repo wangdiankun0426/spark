@@ -1,5 +1,11 @@
 <template>
-  <el-drawer v-model="visible" title="运行详情" direction="rtl" size="40%" append-to-body>
+  <el-drawer
+      v-model="visible"
+      title="运行详情"
+      direction="ltr"
+      size="40%"
+      append-to-body
+  >
     <template v-if="detail">
       <el-descriptions :column="1" border size="small">
         <el-descriptions-item label="工作流">{{ detail.templateName }}</el-descriptions-item>

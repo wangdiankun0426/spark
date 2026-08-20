@@ -27,6 +27,8 @@ public enum OperateTypeEnum {
     ROLE_DELETE(32, "删除角色"),
     ROLE_ADD_USER(33, "为角色添加用户"),
     ROLE_DEL_USER(34, "为角色移除用户"),
+    // 附件相关的操作记录
+    ATTACHMENT_UPLOAD(40, "上传附件"),
     // 知识库相关的操作记录
     KNOWLEDGE_INSERT(50, "新增知识库"),
     KNOWLEDGE_UPDATE(51, "修改知识库"),

@@ -17,7 +17,8 @@ public enum FormFieldTypeEnum {
     SELECT("select", "下拉选择"),
     SELECT_USER("select-user", "选择用户"),
     SELECT_DEPT("select-dept", "选择部门"),
-    SELECT_ROLE("select-role", "选择角色");
+    SELECT_ROLE("select-role", "选择角色"),
+    UPLOAD_ATTACHMENT("upload-attachment", "上传附件");
 
     private String value;
 

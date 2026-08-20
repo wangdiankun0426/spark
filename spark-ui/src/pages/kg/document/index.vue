@@ -159,7 +159,7 @@
     <el-drawer
         v-model="metadataVisible"
         title="元数据表单列表"
-        direction="rtl"
+        direction="ltr"
         size="24%"
     >
       <div class="metadata-list">

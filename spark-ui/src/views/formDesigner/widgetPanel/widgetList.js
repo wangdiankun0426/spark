@@ -155,5 +155,21 @@ export const sysWidgetList = [
             hidden: false,
             multiple: false,
         },
+    },
+    {
+        type: 'upload-attachment',
+        name: '上传附件',
+        config: {
+            code: '',
+            label: '上传附件',
+            required: false,
+            width: 12,
+            value: null,
+            showValue: null,
+            disabled: false,
+            hidden: false,
+            multiple: false,
+            downloadable: true,
+        },
     }
 ]

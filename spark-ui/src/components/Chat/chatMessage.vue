@@ -2,7 +2,7 @@
   <el-drawer
       v-model="visible"
       :title="title"
-      direction="rtl"
+      direction="ltr"
       size="60%"
       append-to-body
       class="chat-record-drawer"

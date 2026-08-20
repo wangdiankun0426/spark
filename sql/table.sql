@@ -128,6 +128,24 @@ CREATE TABLE `sys_message_user` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='消息用户表';
 
+DROP TABLE IF EXISTS `sys_attachment`;
+CREATE TABLE `sys_attachment` (
+  `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `name` varchar(256) NOT NULL COMMENT '文件名称',
+  `size` bigint(12) NOT NULL COMMENT '文件大小',
+  `path` varchar(128) NOT NULL COMMENT '存储路径',
+  `ext` varchar(64) NOT NULL COMMENT '拓展名',
+  `owner_id` bigint(12) NOT NULL COMMENT '上传人id',
+
+  `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
+  `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+  `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+  `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+  `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统附件表';
+
 DROP TABLE IF EXISTS `log_login`;
 CREATE TABLE `log_login` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',

@@ -16,6 +16,7 @@ public enum ObjectTypeEnum {
     ROLE(4,"角色"),
     CHAT_SPACE(5,"聊天空间"),
     FORM(6,"表单"),
+    ATTACHMENT(7,"附件"),
     DOCUMENT(9,"文档"),
     FLOW_TEMPLATE(11,"流程模板"),
     FLOW_INSTANCE(12,"流程实例"),

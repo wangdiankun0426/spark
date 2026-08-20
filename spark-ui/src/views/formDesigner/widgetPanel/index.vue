@@ -71,6 +71,7 @@ const widgetIconMap = {
   'select-user': 'User',
   'select-dept': 'OfficeBuilding',
   'select-role': 'Avatar',
+  'upload-attachment': 'UploadFilled',
 };
 
 /**
