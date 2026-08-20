@@ -222,7 +222,7 @@ function openCreateDeptForm(id) {
   deptForm.value.headerId = undefined;
   deptForm.value.deptNum = undefined;
   deptForm.value.status = 1;
-  deptForm.value.orderNum = 0;
+  deptForm.value.orderNum = 1;
   deptForm.value.prtId = id;
   deptFormTitle.value = "创建部门";
   deptFormVisible.value = true;

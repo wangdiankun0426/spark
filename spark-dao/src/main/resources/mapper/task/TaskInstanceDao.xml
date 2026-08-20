@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.task.TaskInstanceDao" >
     <sql id="allColumnList" >
-        id , task_type , obj_id , obj_type, task_time , interval_hours , status , delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , task_type , obj_id , obj_type, set_id , sort , task_time , interval_hours , status , remark, delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="searchCondition">
@@ -24,8 +24,8 @@
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into task_instance (task_type , obj_id , obj_type, task_time , interval_hours , status , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values ( #{taskType} , #{objId} , #{objType}, #{taskTime} , #{intervalHours} , #{status} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into task_instance (task_type , obj_id , obj_type, set_id , sort , task_time , interval_hours , status , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values ( #{taskType} , #{objId} , #{objType}, #{setId} , #{sort} , #{taskTime} , #{intervalHours} , #{status} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="updateById">
@@ -35,6 +35,9 @@
         </if>
         <if test="status != null">
             ,status = #{status}
+        </if>
+        <if test="remark != null and remark != ''">
+            ,remark = #{remark}
         </if>
         where id = #{id}
     </update>
@@ -60,6 +63,13 @@
         <if test="page == true">
             limit #{startRow}, #{pageSize}
         </if>
+    </select>
+
+    <!-- 查询同组中执行顺序靠前且未结束的任务数量 -->
+    <select id="countUnfinishedPrecedingTask" resultType="java.lang.Integer">
+        select count(1)
+        from task_instance
+        where  delete_flag = 1 and  status = 1 and set_id = #{setId} and sort &lt; #{sort}
     </select>
 
 </mapper>

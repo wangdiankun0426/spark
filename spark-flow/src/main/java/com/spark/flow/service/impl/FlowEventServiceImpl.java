@@ -8,26 +8,36 @@ import com.spark.bean.task.entity.TaskInstanceParam;
 import com.spark.bean.flow.query.FlowInstanceNodeQuery;
 import com.spark.bean.flow.query.FlowInstanceQuery;
 import com.spark.bean.flow.query.FlowTemplateNodeQuery;
+import com.spark.bean.flow.query.FlowTemplateNodeTaskQuery;
+import com.spark.bean.flow.query.FlowTemplateNodeTaskParamQuery;
 import com.spark.bean.flow.result.FlowInstanceNodeResult;
 import com.spark.bean.flow.result.FlowInstanceResult;
 import com.spark.bean.flow.result.FlowTemplateNodeResult;
+import com.spark.bean.flow.result.FlowTemplateNodeTaskResult;
+import com.spark.bean.flow.result.FlowTemplateNodeTaskParamResult;
 import com.spark.bean.form.query.FormObjValueQuery;
 import com.spark.bean.form.result.FormObjValueResult;
 import com.spark.bean.system.query.RoleUserQuery;
 import com.spark.bean.system.query.UserQuery;
 import com.spark.bean.system.result.RoleUserResult;
 import com.spark.bean.system.result.UserResult;
+import com.spark.bean.task.query.TaskTemplateQuery;
+import com.spark.bean.task.result.TaskTemplateResult;
 import com.spark.constant.TaskParamCode;
 import com.spark.dao.flow.FlowInstanceAssigneeDao;
 import com.spark.dao.flow.FlowInstanceDao;
 import com.spark.dao.flow.FlowInstanceNodeDao;
 import com.spark.dao.flow.FlowTemplateNodeDao;
+import com.spark.dao.flow.FlowTemplateNodeTaskDao;
+import com.spark.dao.flow.FlowTemplateNodeTaskParamDao;
 import com.spark.dao.task.TaskInstanceDao;
 import com.spark.dao.task.TaskInstanceParamDao;
+import com.spark.dao.task.TaskTemplateDao;
 import com.spark.dao.form.FormObjValueDao;
 import com.spark.dao.system.RoleUserDao;
 import com.spark.dao.system.UserDao;
 import com.spark.enums.*;
+import com.spark.flow.service.BaseFlowService;
 import com.spark.flow.service.FlowEventService;
 import com.spark.flow.service.FlowMessageService;
 import com.spark.flow.service.FlowableService;
@@ -52,7 +62,7 @@ import java.util.stream.Collectors;
  * @since 2026/8/6 22:43
  */
 @Service
-public class FlowEventServiceImpl implements FlowEventService {
+public class FlowEventServiceImpl extends BaseFlowService implements FlowEventService {
     private final static Logger logger = LoggerFactory.getLogger(FlowEventServiceImpl.class);
     @Autowired
     private FlowInstanceDao instanceDao;
@@ -76,6 +86,12 @@ public class FlowEventServiceImpl implements FlowEventService {
     private TaskInstanceDao taskInstanceDao;
     @Autowired
     private TaskInstanceParamDao taskInstanceParamDao;
+    @Autowired
+    private FlowTemplateNodeTaskDao templateNodeTaskDao;
+    @Autowired
+    private FlowTemplateNodeTaskParamDao templateNodeTaskParamDao;
+    @Autowired
+    private TaskTemplateDao taskTemplateDao;
 
     /**
      * 用户任务入口
@@ -148,8 +164,8 @@ public class FlowEventServiceImpl implements FlowEventService {
             instanceNode.setId(instanceNodeResult.getId());
             instanceNode.setAssigneeSetId(setId);
             int count = instanceNodeDao.updateDBById(instanceNode);
-            // 构造催办任务
-            this.generateFlowUrgeTask(templateNodeResult.getUrgeEnabled(), templateNodeResult.getUrgeInterval(), instanceResult.getId(), instanceNodeResult.getId());
+            // 构造催办任务实例
+            this.generateFlowUrgeTaskInstance(templateNodeResult.getUrgeEnabled(), templateNodeResult.getUrgeInterval(), instanceResult.getId(), instanceNodeResult.getId());
             // 发送待办通知
             flowMessageService.sendFlowNotice(instanceId, MessageTypeEnum.FLOW_TODO.getType());
         } else if (FlowAssigneeTypeEnum.SYSTEM.equals(assigneeTypeEnum) || (permission != null && (permission & FlowTemplateNodePermissionEnum.AUTO_APSS.getValue()) == FlowTemplateNodePermissionEnum.AUTO_APSS.getValue())) {
@@ -162,40 +178,61 @@ public class FlowEventServiceImpl implements FlowEventService {
     }
 
     /**
-     * 构造催办任务
-     *
-     * @param urgeEnabled
-     * @param urgeInterval
-     * @param instanceId
-     * @param instanceNodeId
+     * 节点任务触发
+     * @param flowableInstanceId 流程实例ID（Flowable实例id）
+     * @param nodeId
+     * @param executeType
+     * @return 触发结果
      */
-    private void generateFlowUrgeTask(Boolean urgeEnabled, Integer urgeInterval, Long instanceId, Long instanceNodeId) {
-        if (!Boolean.TRUE.equals(urgeEnabled)) {
-            return;
+    @Override
+    public ResultData<Void> onNodeTask(String flowableInstanceId, String nodeId, Integer executeType) {
+        ResultData<Void> result = new ResultData<>();
+        if (StringUtil.isBlank(flowableInstanceId) || StringUtil.isBlank(nodeId) || executeType == null) {
+            logger.error("onNodeTask instanceId={}, nodeId={}, executeType={}", flowableInstanceId, nodeId, executeType);
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
         }
-        if (urgeInterval == null || urgeInterval == 0) {
-            return;
+        FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
+        instanceQuery.setFlowableInstanceId(flowableInstanceId);
+        FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
+        if (instanceResult == null) {
+            logger.error("onNodeTask error, instance not exist");
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_EXIST);
+            return result;
         }
-        TaskInstance urgeTask = new TaskInstance();
-        urgeTask.setTaskType(TaskTypeEnum.FLOW_URGE.getValue());
-        urgeTask.setObjId(instanceId);
-        urgeTask.setObjType(ObjectTypeEnum.FLOW_INSTANCE.getValue());
-        urgeTask.setTaskTime(DateUtil.offsetHour(new Date(), urgeInterval));
-        urgeTask.setIntervalHours(urgeInterval);
-        urgeTask.setStatus(TaskStatusEnum.PENDING.getValue());
-        int urgeCount = taskInstanceDao.insertDB(urgeTask);
-        if (urgeCount < 1) {
-            logger.error("onCreatedUserTask error, insert urge task fail");
-            return;
+        FlowTemplateNodeTaskQuery nodeTaskQuery = new FlowTemplateNodeTaskQuery();
+        nodeTaskQuery.setTemplateId(instanceResult.getTemplateId());
+        nodeTaskQuery.setRevId(instanceResult.getTemplateRevId());
+        nodeTaskQuery.setNodeId(nodeId);
+        nodeTaskQuery.setExecuteType(executeType);
+        List<FlowTemplateNodeTaskResult> nodeTaskList = templateNodeTaskDao.queryTemplateNodeTaskList(nodeTaskQuery);
+        if (CollectionUtil.isEmpty(nodeTaskList)) {
+            result.setCode(ResultData.OK);
+            return result;
         }
-        TaskInstanceParam urgeTaskParam = new TaskInstanceParam();
-        urgeTaskParam.setTaskId(urgeTask.getId());
-        urgeTaskParam.setCode(TaskParamCode.FLOW_INSTANCE_NODE_ID);
-        urgeTaskParam.setValue(instanceNodeId+"");
-        int paramCount = taskInstanceParamDao.insertDB(urgeTaskParam);
-        if (paramCount < 1) {
-            logger.error("onCreatedUserTask error, insert urge task param fail");
+        List<Long> nodeTaskIds = nodeTaskList.stream().map(FlowTemplateNodeTaskResult::getId).toList();
+        FlowTemplateNodeTaskParamQuery paramQuery = new FlowTemplateNodeTaskParamQuery();
+        paramQuery.setNodeTaskIds(nodeTaskIds);
+        List<FlowTemplateNodeTaskParamResult> paramList = templateNodeTaskParamDao.queryTemplateNodeTaskParamList(paramQuery);
+        Map<Long, List<FlowTemplateNodeTaskParamResult>> paramMap = paramList.stream().collect(Collectors.groupingBy(FlowTemplateNodeTaskParamResult::getNodeTaskId));
+        Map<String, String> formValueMap = new HashMap<>();
+        Map<String, String> formTxtMap = new HashMap<>();
+        Long instanceId = instanceResult.getId();
+        FormObjValueQuery objValueQuery = new FormObjValueQuery();
+        objValueQuery.setObjId(instanceId);
+        List<FormObjValueResult> valueList = objValueDao.queryFormObjValueList(objValueQuery);
+        if (CollectionUtil.isNotEmpty(valueList)) {
+            formValueMap = valueList.stream().collect(Collectors.toMap(FormObjValueResult::getCode, FormObjValueResult::getValue, (v1, v2) -> v2));
+            formTxtMap = valueList.stream().collect(Collectors.toMap(FormObjValueResult::getCode, FormObjValueResult::getShowValue, (v1, v2) -> v2));
         }
+        String setId = UUID.randomUUID().toString().replaceAll("-", "");
+        for (FlowTemplateNodeTaskResult nodeTaskResult : nodeTaskList) {
+            List<FlowTemplateNodeTaskParamResult> params = paramMap.get(nodeTaskResult.getId());
+            // 构造流程任务实例
+            this.generateFlowTaskInstance(instanceId, nodeTaskResult, params, formValueMap, formTxtMap, setId);
+        }
+        result.setCode(ResultData.OK);
+        return result;
     }
 
     /**
@@ -436,4 +473,88 @@ public class FlowEventServiceImpl implements FlowEventService {
         }
         return assigneeIds;
     }
+
+    /**
+     * 构造催办任务实例
+     *
+     * @param urgeEnabled
+     * @param urgeInterval
+     * @param instanceId
+     * @param instanceNodeId
+     */
+    private void generateFlowUrgeTaskInstance(Boolean urgeEnabled, Integer urgeInterval, Long instanceId, Long instanceNodeId) {
+        if (!Boolean.TRUE.equals(urgeEnabled) || urgeInterval == null || urgeInterval == 0) {
+            return;
+        }
+        TaskInstance urgeTask = new TaskInstance();
+        urgeTask.setTaskType(TaskTypeEnum.FLOW_URGE.getValue());
+        urgeTask.setObjId(instanceId);
+        urgeTask.setObjType(ObjectTypeEnum.FLOW_INSTANCE.getValue());
+        urgeTask.setSort(1);
+        urgeTask.setTaskTime(DateUtil.offsetHour(new Date(), urgeInterval));
+        urgeTask.setIntervalHours(urgeInterval);
+        urgeTask.setStatus(TaskStatusEnum.PENDING.getValue());
+        String setId = UUID.randomUUID().toString().replaceAll("-", "");
+        urgeTask.setSetId(setId);
+        int urgeCount = taskInstanceDao.insertDB(urgeTask);
+        if (urgeCount < 1) {
+            logger.error("onCreatedUserTask error, insert urge task fail");
+            return;
+        }
+        TaskInstanceParam urgeTaskParam = new TaskInstanceParam();
+        urgeTaskParam.setTaskId(urgeTask.getId());
+        urgeTaskParam.setCode(TaskParamCode.FLOW_INSTANCE_NODE_ID);
+        urgeTaskParam.setValue(instanceNodeId+"");
+        int paramCount = taskInstanceParamDao.insertDB(urgeTaskParam);
+        if (paramCount < 1) {
+            logger.error("onCreatedUserTask error, insert urge task param fail");
+        }
+    }
+
+    /**
+     * 构造流程任务实例
+     * @param instanceId
+     * @param nodeTaskResult
+     * @param params
+     * @param formValueMap
+     * @param formTxtMap
+     * @param setId
+     */
+    private void generateFlowTaskInstance(Long instanceId, FlowTemplateNodeTaskResult nodeTaskResult, List<FlowTemplateNodeTaskParamResult> params, Map<String, String> formValueMap, Map<String, String> formTxtMap, String setId) {
+        TaskTemplateQuery templateQuery = new TaskTemplateQuery();
+        templateQuery.setId(nodeTaskResult.getTaskTemplateId());
+        TaskTemplateResult taskTemplate = taskTemplateDao.queryTaskTemplate(templateQuery);
+        if (taskTemplate == null) {
+            logger.error("task template not exist, templateId={}", nodeTaskResult.getTaskTemplateId());
+            return;
+        }
+        TaskInstance taskInstance = new TaskInstance();
+        taskInstance.setTaskType(taskTemplate.getTaskType());
+        taskInstance.setObjId(instanceId);
+        taskInstance.setObjType(ObjectTypeEnum.FLOW_INSTANCE.getValue());
+        taskInstance.setSetId(setId);
+        taskInstance.setSort(nodeTaskResult.getSort() == null ? 1 : nodeTaskResult.getSort());
+        taskInstance.setTaskTime(new Date());
+        taskInstance.setStatus(TaskStatusEnum.PENDING.getValue());
+        int count = taskInstanceDao.insertDB(taskInstance);
+        if (count < 1) {
+            logger.error("insert task instance fail");
+            return;
+        }
+        if (CollectionUtil.isEmpty(params)) {
+            return;
+        }
+        for (FlowTemplateNodeTaskParamResult param : params) {
+            TaskInstanceParam taskInstanceParam = new TaskInstanceParam();
+            taskInstanceParam.setTaskId(taskInstance.getId());
+            taskInstanceParam.setCode(param.getCode());
+            String value = super.generateFlowValue(param.getValue(), null, formValueMap, formTxtMap);
+            taskInstanceParam.setValue(value);
+            count = taskInstanceParamDao.insertDB(taskInstanceParam);
+            if (count < 1) {
+                logger.error("insert task instance param fail");
+            }
+        }
+    }
+
 }

@@ -33,7 +33,7 @@
         <if test="taskType != null">
             ,task_type = #{taskType}
         </if>
-        <if test="remark != null">
+        <if test="remark != null and remark != ''">
             ,remark = #{remark}
         </if>
         where id = #{id}

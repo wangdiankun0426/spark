@@ -18,11 +18,13 @@ import com.spark.task.service.ITaskInstanceService;
 import com.spark.task.service.ITaskTypeHandler;
 import com.spark.utils.CollectionUtil;
 import com.spark.utils.DateUtil;
+import com.spark.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -70,6 +72,12 @@ public class TaskInstanceServiceImpl extends BaseService<TaskInstanceQuery, Task
             handlerMap.put(taskTypeHandler.getTaskType(), taskTypeHandler);
         }
         for (TaskInstanceResult taskInstance : taskInstanceList) {
+            // 检查是否有前置任务未完成
+            boolean hasTask = this.checkHasPrecedingTask(taskInstance);
+            if (hasTask) {
+                logger.info("executeTask skip, preceding task not finished, taskId={}, setId={}, sort={}", taskInstance.getId(), taskInstance.getSetId(), taskInstance.getSort());
+                continue;
+            }
             ITaskTypeHandler taskTypeHandler = handlerMap.get(taskInstance.getTaskType());
             if (taskTypeHandler == null) {
                 logger.error("executeTask error, handler not found, taskType={}, taskId={}", taskInstance.getTaskType(), taskInstance.getId());
@@ -108,6 +116,15 @@ public class TaskInstanceServiceImpl extends BaseService<TaskInstanceQuery, Task
         }
         result.setCode(ResultData.OK);
         return result;
+    }
+
+    /**
+     * 检查是否有前置任务未执行
+     * @return
+     */
+    private boolean checkHasPrecedingTask(TaskInstanceResult taskInstance) {
+        int precedingCount = taskInstanceDao.countUnfinishedPrecedingTask(taskInstance.getSetId(), taskInstance.getSort());
+        return precedingCount > 0;
     }
 
     /**

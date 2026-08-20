@@ -12,6 +12,7 @@ import com.spark.bean.flow.result.FlowInstanceResult;
 import com.spark.dao.flow.FlowInstanceDao;
 import com.spark.dao.flow.FlowInstanceNodeDao;
 import com.spark.enums.FlowInstanceStatusEnum;
+import com.spark.enums.FlowNodeTaskExecuteEnum;
 import com.spark.enums.MessageTypeEnum;
 import com.spark.flow.service.FlowMessageService;
 import com.spark.flow.service.FlowEventService;
@@ -193,6 +194,12 @@ public class GlobalFlowableEventListener implements FlowableEventListener {
         instanceNode.setType(type);
         instanceNode.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
         int count = instanceNodeDao.insertDB(instanceNode);
+        if (count <= 0) {
+            logger.error("handleActivityStarted error, insert db fail");
+            return;
+        }
+        // 触发节点开始执行的任务
+        flowEventService.onNodeTask(flowableInstanceId, nodeId, FlowNodeTaskExecuteEnum.NODE_START.getValue());
     }
 
     /**
@@ -224,6 +231,12 @@ public class GlobalFlowableEventListener implements FlowableEventListener {
         instanceNode.setId(instanceNodeResult.getId());
         instanceNode.setStatus(FlowInstanceStatusEnum.COMPLETED.getValue());
         int count = instanceNodeDao.updateDBById(instanceNode);
+        if (count <= 0) {
+            logger.error("handleActivityCompleted error, update db fail");
+            return;
+        }
+        // 触发节点结束执行的任务
+        flowEventService.onNodeTask(flowableInstanceId, nodeId, FlowNodeTaskExecuteEnum.NODE_END.getValue());
     }
 
     /**

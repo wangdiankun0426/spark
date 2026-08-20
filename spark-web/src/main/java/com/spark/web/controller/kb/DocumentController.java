@@ -53,8 +53,7 @@ public class DocumentController {
      * @return 上传结果
      */
     @PostMapping("upload")
-    public ResultData<Void> uploadDocument(@RequestParam("file") MultipartFile file,
-                                           @RequestParam("prtId") Long prtId) {
+    public ResultData<Void> uploadDocument(@RequestParam("file") MultipartFile file, @RequestParam("prtId") Long prtId) {
         return documentService.uploadDocument(file, prtId);
     }
 

@@ -13,7 +13,7 @@ package com.spark.enums;
 public enum TaskTypeEnum {
 
     FLOW_URGE(1, "流程催办任务"),
-    KB_DOCUMENT_ARCHIVE(2, "知识库文档归档任务");
+    KB_FILE_ARCHIVE(2, "知识库文档归档任务");
 
     private Integer value;
 

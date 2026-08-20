@@ -7,8 +7,6 @@
       <el-input
           v-model="props.config.label"
           clearable
-          type="textarea"
-          :rows="2"
       />
     </el-form-item>
     <el-form-item label="表单栅格">

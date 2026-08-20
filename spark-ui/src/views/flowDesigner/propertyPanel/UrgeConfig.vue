@@ -7,6 +7,7 @@
           inactive-text="关闭"
           @change="handleEnabledChange"
       />
+      <div class="urge-tip">催办开启之后，创建任务实例进行</div>
     </el-form-item>
     <el-form-item v-if="node.urgeEnabled === true" label="催办间隔">
       <el-input-number

@@ -57,7 +57,11 @@ public class AttachmentServiceImpl extends BaseService<AttachmentQuery, Attachme
         }
         String filename = file.getOriginalFilename();
         String fileExt = FileUtil.getFileExt(filename);
-        String filePath = docsPath + UUID.randomUUID() + "." + fileExt;
+        String filePath = FileUtil.generateFilePath(docsPath, UUID.randomUUID() + "." + fileExt);
+        if (filePath == null) {
+            result.setErrorCode(ErrorCodeEnum.FILE_CREATE_FAIL);
+            return result;
+        }
         // 写入磁盘
         try {
             file.transferTo(new File(filePath));
@@ -82,7 +86,11 @@ public class AttachmentServiceImpl extends BaseService<AttachmentQuery, Attachme
         attachmentResult.setName(filename);
         attachmentResult.setExt(fileExt);
         attachmentResult.setSize(file.getSize());
+        attachmentResult.setOwnerId(SessionHolder.getCurrentUserId());
+        attachmentResult.setOwnerName(super.getObjName(SessionHolder.getCurrentUserId()));
+        attachmentResult.setDeptId(attachment.getDeptId());
         result.setData(attachmentResult);
+        result.setObjId(attId);
         result.setCode(ResultData.OK);
         return result;
     }

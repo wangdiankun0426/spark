@@ -41,36 +41,36 @@ import java.nio.charset.StandardCharsets;
 public class AttachmentController {
     private static final Logger logger = LoggerFactory.getLogger(AttachmentController.class);
     @Autowired
-    private IAttachmentService systemAttachmentService;
+    private IAttachmentService attachmentService;
 
     /**
      * 上传系统附件
      * @param file 文件
-     * @return 上传结果（含附件id、名称、后缀）
+     * @return 上传结果
      */
     @PostMapping("upload")
     private ResultData<AttachmentResult> uploadAttachment(@RequestParam("file") MultipartFile file) {
-        return systemAttachmentService.uploadAttachment(file);
+        return attachmentService.uploadAttachment(file);
     }
 
     /**
      * 查询系统附件详情
-     * @param query 查询参数（含附件id）
+     * @param query 查询参数
      * @return 附件详情（含名称、后缀、大小）
      */
     @GetMapping("detail")
     private ResultData<AttachmentResult> queryAttachmentDetail(AttachmentQuery query) {
-        return systemAttachmentService.queryAttachmentDetail(query);
+        return attachmentService.queryAttachmentDetail(query);
     }
 
     /**
      * 下载系统附件
      * @param response 响应
-     * @param query 查询参数（含附件id）
+     * @param query 查询参数
      */
     @GetMapping("download")
     private void downloadAttachment(HttpServletRequest request, HttpServletResponse response, AttachmentQuery query) {
-        ResultData<AttachmentResult> result = systemAttachmentService.downloadAttachment(query);
+        ResultData<AttachmentResult> result = attachmentService.downloadAttachment(query);
         if (result.getCode() != ResultData.OK) {
             return;
         }

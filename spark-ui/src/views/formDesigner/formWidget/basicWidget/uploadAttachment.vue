@@ -20,38 +20,45 @@
         点击上传
       </el-button>
     </el-upload>
-    <div class="upload-file-list">
-      <div class="upload-file-item" v-for="(file, index) in fileList" :key="file.id">
-        <el-link type="primary" :underline="false" @click="handlePreview(file)">
-          <el-icon><Document /></el-icon>
-          <span>{{ file.name }}</span>
-        </el-link>
-        <div class="upload-file-item__actions">
+    <el-table
+        class="upload-file-table"
+        :data="fileList"
+        size="small"
+    >
+      <el-table-column prop="name" label="名称" min-width="160" show-overflow-tooltip>
+        <template #default="{ row }">
+          <el-link
+              type="primary"
+              :underline="false"
+              @click="handlePreview(row)"
+          >{{ row.name }}</el-link>
+        </template>
+      </el-table-column>
+      <el-table-column prop="sizeStr" label="大小" width="90" align="center" />
+      <el-table-column prop="ownerName" label="上传人" width="110" align="center"  />
+      <el-table-column prop="createdDt" label="上传时间" width="140" align="center" />
+      <el-table-column label="操作" width="130" fixed="right" align="center" >
+        <template #default="{ row, $index }">
           <el-button
               v-if="props.widget.config.downloadable"
               link
-              type="info"
-              title="下载"
-              @click="handleDownload(file)"
-          >
-            <el-icon><Download /></el-icon>下载
-          </el-button>
+              type="primary"
+              @click="handleDownload(row)"
+          >下载</el-button>
           <el-button
               v-if="!props.widget.config.disabled && !props.widget.config.readonly"
               link
               type="danger"
-              @click="handleRemove(index)"
-          >
-            <el-icon><Delete /></el-icon>删除
-          </el-button>
-        </div>
-      </div>
-    </div>
+              @click="handleRemove($index)"
+          >删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
   </el-form-item>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { uploadSystemAttachmentAPI, downloadSystemAttachmentAPI } from '@/api/system/attachment.js'
@@ -69,16 +76,60 @@ const router = useRouter()
 // 上传文件大小上限（50MB）
 const maxFileSize = 50 * 1024 * 1024
 
-// widget.config.value 约定：
-//   多选：逗号串 "id1,id2"，与 showValue（逗号串名称）一一对应
-//   单选：单个 ID（Number）
-const fileList = computed(() => {
+// widget.config 值约定：
+//   value：附件id（单选为单个ID，多选为逗号串），用于业务关联与下载
+//   showValue：附件信息 JSON 数组字符串，如 [{"id":1,"name":"a.pdf","sizeStr":"1MB","ownerName":"张三","createdDt":"2026-08-20 15:00:00"}]
+// 附件列表（含名称/大小/上传人/上传时间），由上传接口返回数据直接维护
+const fileList = ref([])
+
+/**
+ * 初始化附件列表：从 showValue（JSON数组）回显，兼容旧的逗号串名称格式
+ */
+const initFileList = () => {
+  fileList.value = []
+  const showValue = props.widget.config.showValue
+  if (!showValue) {
+    return
+  }
+  try {
+    const list = JSON.parse(showValue)
+    if (Array.isArray(list)) {
+      fileList.value = list.filter(item => item && item.id != null)
+      return
+    }
+  } catch (e) {
+    // 非JSON格式，按旧格式（逗号串名称）处理
+  }
   const ids = String(props.widget.config.value == null ? '' : props.widget.config.value)
       .split(',').filter(Boolean)
-  const names = String(props.widget.config.showValue == null ? '' : props.widget.config.showValue)
-      .split(',').filter(Boolean)
-  return ids.map((id, index) => ({ id: Number(id), name: names[index] || '' }))
-})
+  const names = String(showValue).split(',').filter(Boolean)
+  fileList.value = ids.map((id, index) => ({ id: Number(id), name: names[index] || '' }))
+}
+initFileList()
+
+/**
+ * 同步表单值：value 为附件id，showValue 为附件信息 JSON 数组字符串
+ */
+const syncConfigValue = () => {
+  const ids = fileList.value.map(file => file.id)
+  if (ids.length === 0) {
+    props.widget.config.value = null
+    props.widget.config.showValue = null
+    return
+  }
+  props.widget.config.value = props.widget.config.multiple ? ids.join(',') : ids[0]
+  props.widget.config.showValue = JSON.stringify(fileList.value)
+}
+
+/**
+ * 格式化时间为 yyyy-MM-dd HH:mm:ss
+ * @param date 时间对象
+ * @returns {string} 格式化时间
+ */
+const formatTime = (date) => {
+  const pad = n => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+}
 
 /**
  * 上传前校验：单选限制一个附件、文件大小限制
@@ -98,7 +149,7 @@ function beforeUpload(file) {
 }
 
 /**
- * 自定义上传：调用系统附件上传接口
+ * 自定义上传：调用系统附件上传接口，返回数据直接存入附件列表
  * @param option 上传选项（含 file）
  */
 function handleUploadRequest(option) {
@@ -106,17 +157,15 @@ function handleUploadRequest(option) {
     if (res.code !== 200 || !res.data) {
       return
     }
-    const ids = fileList.value.map(file => file.id)
-    const names = fileList.value.map(file => file.name)
-    ids.push(res.data.id)
-    names.push(res.data.name)
-    if (props.widget.config.multiple) {
-      props.widget.config.value = ids.join(',')
-      props.widget.config.showValue = names.join(',')
-    } else {
-      props.widget.config.value = ids[0]
-      props.widget.config.showValue = names[0]
-    }
+    const attachment = res.data
+    fileList.value.push({
+      id: attachment.id,
+      name: attachment.name,
+      sizeStr: attachment.sizeStr,
+      ownerName: attachment.ownerName,
+      createdDt: formatTime(new Date())
+    })
+    syncConfigValue()
     ElMessage.success('附件上传成功')
   })
 }
@@ -126,17 +175,8 @@ function handleUploadRequest(option) {
  * @param index 附件下标
  */
 function handleRemove(index) {
-  const ids = fileList.value.map(file => file.id)
-  const names = fileList.value.map(file => file.name)
-  ids.splice(index, 1)
-  names.splice(index, 1)
-  if (props.widget.config.multiple) {
-    props.widget.config.value = ids.length > 0 ? ids.join(',') : null
-    props.widget.config.showValue = names.length > 0 ? names.join(',') : null
-  } else {
-    props.widget.config.value = ids.length > 0 ? ids[0] : null
-    props.widget.config.showValue = names.length > 0 ? names[0] : null
-  }
+  fileList.value.splice(index, 1)
+  syncConfigValue()
 }
 
 /**
@@ -172,39 +212,12 @@ function handleDownload(file) {
 .el-form-item {
   margin-bottom: 10px;
 }
-.upload-file-list {
+.upload-file-table {
   width: 100%;
   margin-top: 6px;
-}
-.upload-file-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 28px;
-  padding: 0 8px;
-  border-radius: $border-radius-sm;
-
-  &:hover {
-    background-color: $color-primary-light;
-  }
 
   .el-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    max-width: calc(100% - 64px);
-
-    span {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-  }
-
-  &__actions {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
+    font-size: 13px;
   }
 }
 </style>

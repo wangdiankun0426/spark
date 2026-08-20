@@ -16,4 +16,17 @@ public class TaskParamCode {
      * 流程实例节点id
      */
     public final static String FLOW_INSTANCE_NODE_ID = "instanceNodeId";
+
+    /**
+     * 待归档文档ID
+     */
+    public final static String ATT_ID = "attId";
+
+    /**
+     * 所属知识库ID
+     */
+    public final static String KNOWLEDGE_ID = "kbId";
+
+
+
 }

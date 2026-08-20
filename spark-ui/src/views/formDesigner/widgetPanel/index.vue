@@ -71,6 +71,8 @@ const widgetIconMap = {
   'select-user': 'User',
   'select-dept': 'OfficeBuilding',
   'select-role': 'Avatar',
+  'select-knowledge': 'Collection',
+  'select-graph': 'Share',
   'upload-attachment': 'UploadFilled',
 };
 
@@ -106,8 +108,8 @@ function handleDragStart(event, type) {
   font-weight: bold;
 }
 .el-button.component-btn {
-  width: 100px;
-  height: 38px;
+  width: 106px;
+  height: 40px;
   margin-bottom: 10px;
   padding: 0 8px;
   display: inline-flex;

@@ -22,6 +22,9 @@
         <if test="ownerId != null">
             and owner_id = #{ownerId}
         </if>
+        <if test="deptId != null">
+            and dept_id = #{deptId}
+        </if>
         <if test="createdBy != null">
             and created_by = #{createdBy}
         </if>

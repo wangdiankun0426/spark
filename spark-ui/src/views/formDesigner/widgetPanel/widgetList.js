@@ -157,6 +157,38 @@ export const sysWidgetList = [
         },
     },
     {
+        type: 'select-knowledge',
+        name: '选择知识库',
+        config: {
+            code: '',
+            label: '选择知识库',
+            required: false,
+            width: 12,
+            value: null,
+            showValue: null,
+            placeholder: '请选择知识库',
+            disabled: false,
+            hidden: false,
+            multiple: false,
+        },
+    },
+    {
+        type: 'select-graph',
+        name: '选择知识图谱',
+        config: {
+            code: '',
+            label: '选择知识图谱',
+            required: false,
+            width: 12,
+            value: null,
+            showValue: null,
+            placeholder: '请选择知识图谱',
+            disabled: false,
+            hidden: false,
+            multiple: false,
+        },
+    },
+    {
         type: 'upload-attachment',
         name: '上传附件',
         config: {

@@ -51,6 +51,11 @@ public class AttachmentResult extends BaseResult {
      **/
     private String ownerName;
 
+    /**
+     * 所属部门id
+     **/
+    private Long deptId;
+
     public String getSizeStr() {
         if (size == null) {
             return "0MB";

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spark.dao.flow.FlowTemplateNodeTaskDao">
+    <sql id="allColumnList">
+        id , template_id , rev_id , node_id , task_template_id , execute_type , sort , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="templateId != null">
+            and template_id = #{templateId}
+        </if>
+        <if test="revId != null">
+            and rev_id = #{revId}
+        </if>
+        <if test="nodeId != null and nodeId != ''">
+            and node_id = #{nodeId}
+        </if>
+        <if test="executeType != null">
+            and execute_type = #{executeType}
+        </if>
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into flow_template_node_task (template_id , rev_id , node_id , task_template_id , execute_type , sort , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values ( #{templateId} , #{revId} , #{nodeId} , #{taskTemplateId} , #{executeType} , #{sort} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="deleteById">
+        update flow_template_node_task set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <update id="updateById">
+        update flow_template_node_task set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        <if test="executeType != null">
+            , execute_type = #{executeType}
+        </if>
+        <if test="taskTemplateId != null">
+            , task_template_id = #{taskTemplateId}
+        </if>
+        where id = #{id}
+    </update>
+
+    <select id="queryTemplateNodeTaskList" resultType="com.spark.bean.flow.result.FlowTemplateNodeTaskResult">
+        select <include refid="allColumnList"/>
+        from flow_template_node_task
+        where 1 = 1
+        <include refid="searchCondition"/>
+        order by id asc
+    </select>
+</mapper>

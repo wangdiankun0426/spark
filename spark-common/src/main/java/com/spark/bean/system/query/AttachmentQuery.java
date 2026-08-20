@@ -25,4 +25,9 @@ public class AttachmentQuery extends BaseQuery {
      * 上传人ID
      */
     private Long ownerId;
+
+    /**
+     * 所属部门id
+     */
+    private Long deptId;
 }

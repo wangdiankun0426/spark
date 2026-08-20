@@ -15,6 +15,8 @@ import com.spark.bean.kb.result.KnowledgeResult;
 import com.spark.bean.kb.vo.DocumentVO;
 import com.spark.bean.kg.query.KgGraphQuery;
 import com.spark.bean.kg.result.KgGraphResult;
+import com.spark.bean.system.query.AttachmentQuery;
+import com.spark.bean.system.result.AttachmentResult;
 import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.constant.ESIndexName;
@@ -22,6 +24,7 @@ import com.spark.dao.kb.DocumentDao;
 import com.spark.dao.kb.DocumentEventDao;
 import com.spark.dao.kb.KnowledgeDao;
 import com.spark.dao.kg.KgGraphDao;
+import com.spark.dao.system.AttachmentDao;
 import com.spark.enums.*;
 import com.spark.kb.service.IDocumentService;
 import com.spark.llm.retrieve.ESRetrieve;
@@ -74,6 +77,8 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
     @Autowired
     private KgGraphDao kgGraphDao;
     @Autowired
+    private AttachmentDao attachmentDao;
+    @Autowired
     private ElasticsearchOperations elasticsearchOperations;
     @Autowired
     private ESRetrieve esRetrieve;
@@ -99,7 +104,11 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         }
         String filename = file.getOriginalFilename();
         String fileExt = FileUtil.getFileExt(filename);
-        String filePath = docsPath + UUID.randomUUID() + "." + fileExt;
+        String filePath = FileUtil.generateFilePath(docsPath, UUID.randomUUID() + "." + fileExt);
+        if (filePath == null) {
+            result.setErrorCode(ErrorCodeEnum.FILE_CREATE_FAIL);
+            return result;
+        }
         // 写入磁盘
         try {
             file.transferTo(new File(filePath));
@@ -140,6 +149,90 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
             logger.error("uploadDocument error, insert event db fail");
             return result;
         }
+        result.setObjId(docId);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 根据系统附件归档文档
+     * @param attId 附件id
+     * @param prtId 父ID
+     * @return 归档结果
+     */
+    @Override
+    public ResultData<Long> fileDocument(Long attId, Long prtId) {
+        ResultData<Long> result = new ResultData<>();
+        if (attId == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        AttachmentQuery attachmentQuery = new AttachmentQuery();
+        attachmentQuery.setId(attId);
+        AttachmentResult attachment = attachmentDao.queryAttachment(attachmentQuery);
+        if (attachment == null) {
+            result.setErrorCode(ErrorCodeEnum.FILE_NOT_EXIST);
+            return result;
+        }
+        if (prtId == null) {
+            prtId = 0L;
+        }
+        String newPath = FileUtil.generateFilePath(docsPath, UUID.randomUUID() + "." + attachment.getExt());
+        if (newPath == null) {
+            result.setErrorCode(ErrorCodeEnum.FILE_CREATE_FAIL);
+            return result;
+        }
+        boolean bo = FileUtil.copyFile(attachment.getPath(), newPath);
+        if (!bo) {
+            result.setErrorCode(ErrorCodeEnum.FILE_NOT_EXIST);
+            return result;
+        }
+        // 复制实体文件 pdf格式
+        FileUtil.copyCompanionFile(attachment.getPath(), newPath, "pdf");
+        // 复制实体文件 txt格式
+        FileUtil.copyCompanionFile(attachment.getPath(), newPath, "txt");
+        Document document = new Document();
+        Long docId = super.genObjectId(ObjectTypeEnum.DOCUMENT);
+        document.setId(docId);
+        document.setPrtId(prtId);
+        ObjectTypeEnum objEnum = super.getObjEnum(prtId);
+        document.setDocumentType(objEnum.getValue());
+        document.setName(attachment.getName());
+        document.setExt(attachment.getExt());
+        document.setSize(attachment.getSize());
+        document.setPath(newPath);
+        document.setOwnerId(attachment.getOwnerId());
+        Long userId = SessionHolder.getCurrentUserId() == null ? attachment.getOwnerId() : SessionHolder.getCurrentUserId();
+        Long deptId = SessionHolder.getCurrentDeptId() == null ? attachment.getDeptId() : SessionHolder.getCurrentDeptId();
+        document.setCreatedBy(userId);
+        document.setUpdatedBy(userId);
+        document.setDeptId(deptId);
+        int count = documentDao.insertDB(document);
+        if (count < 1) {
+            logger.error("archiveDocument error, insert db fail");
+            return result;
+        }
+        DocumentEvent event = new DocumentEvent();
+        event.setDocId(docId);
+        event.setContentStatus(DocumentEventStatusEnum.PENDING.getValue());
+        event.setIndexStatus(DocumentEventStatusEnum.PENDING.getValue());
+        event.setChunkStatus(DocumentEventStatusEnum.PENDING.getValue());
+        event.setVectorStatus(DocumentEventStatusEnum.PENDING.getValue());
+        if (objEnum != ObjectTypeEnum.KNOWLEDGE) {
+            event.setVectorStatus(DocumentEventStatusEnum.NO_EXECUTE.getValue());
+        }
+        event.setGraphStatus(DocumentEventStatusEnum.PENDING.getValue());
+        if (objEnum != ObjectTypeEnum.KG_GRAPH) {
+            event.setGraphStatus(DocumentEventStatusEnum.NO_EXECUTE.getValue());
+        }
+        event.setCreatedBy(userId);
+        event.setUpdatedBy(userId);
+        count = documentEventDao.insertDB(event);
+        if (count < 1) {
+            logger.error("archiveDocument error, insert event db fail");
+            return result;
+        }
+        result.setData(docId);
         result.setCode(ResultData.OK);
         return result;
     }
@@ -171,6 +264,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
             logger.error("updateDocument error, update db fail");
             return result;
         }
+        result.setObjId(documentVO.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -202,6 +296,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
             logger.error("deleteDocument error, delete db fail");
             return result;
         }
+        result.setObjId(documentVO.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -247,10 +342,8 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         super.supplyUpdatedByName(documentResult);
         Long prtId = documentResult.getPrtId();
         Integer documentType = documentResult.getDocumentType();
-        if (prtId != null && prtId > 0) {
-            String prtName = queryPrtName(documentType, prtId);
-            documentResult.setPrtName(prtName);
-        }
+        String prtName = this.queryPrtName(documentType, prtId);
+        documentResult.setPrtName(prtName);
         result.setData(documentResult);
         result.setCode(ResultData.OK);
         return result;
@@ -470,7 +563,6 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
             return;
         }
         super.supplyCreatedByName(list);
-        // 按文档归属类型分组收集 prtId，分别查询知识库和知识图谱名称
         Set<Long> knowledgeIds = new HashSet<>();
         Set<Long> graphIds = new HashSet<>();
         for (DocumentResult documentResult : list) {
@@ -511,7 +603,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
 
     /**
      * 根据文档归属类型查询父级名称
-     * @param documentType 文档归属类型：1:知识库，2:知识图谱
+     * @param documentType 文档归属类型
      * @param prtId 父级ID
      * @return 父级名称，查询不到返回 null
      */

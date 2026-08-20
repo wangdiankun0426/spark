@@ -6,6 +6,8 @@ import com.spark.bean.base.ResultData;
 import com.spark.bean.flow.entity.FlowTemplate;
 import com.spark.bean.flow.entity.FlowTemplateMsg;
 import com.spark.bean.flow.entity.FlowTemplateNode;
+import com.spark.bean.flow.entity.FlowTemplateNodeTask;
+import com.spark.bean.flow.entity.FlowTemplateNodeTaskParam;
 import com.spark.bean.flow.entity.FlowTemplateSequence;
 import com.spark.bean.flow.entity.FlowTemplateVersion;
 import com.spark.bean.flow.query.FlowTemplateQuery;
@@ -16,6 +18,8 @@ import com.spark.bean.flow.vo.FlowTemplateVersionVO;
 import com.spark.dao.flow.FlowTemplateDao;
 import com.spark.dao.flow.FlowTemplateMsgDao;
 import com.spark.dao.flow.FlowTemplateNodeDao;
+import com.spark.dao.flow.FlowTemplateNodeTaskDao;
+import com.spark.dao.flow.FlowTemplateNodeTaskParamDao;
 import com.spark.dao.flow.FlowTemplateSequenceDao;
 import com.spark.dao.flow.FlowTemplateVersionDao;
 import com.spark.enums.ErrorCodeEnum;
@@ -60,6 +64,10 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
     private FlowTemplateNodeDao templateNodeDao;
     @Autowired
     private FlowTemplateMsgDao templateMsgDao;
+    @Autowired
+    private FlowTemplateNodeTaskDao templateNodeTaskDao;
+    @Autowired
+    private FlowTemplateNodeTaskParamDao templateNodeTaskParamDao;
     @Value("${flow.bpmn.path}")
     private String flowBpmnPath;
 
@@ -118,7 +126,8 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
         List<FlowTemplateNode> templateNodes = new ArrayList<>();
         List<FlowTemplateSequence> templateSequences = new ArrayList<>();
         List<FlowTemplateMsg> templateMsgs = new ArrayList<>();
-        this.convertBpmJson(templateVersionVO.getBpmJson(), templateNodes, templateSequences, templateMsgs);
+        List<FlowTemplateNodeTask> templateNodeTasks = new ArrayList<>();
+        this.convertBpmJson(templateVersionVO.getBpmJson(), templateNodes, templateSequences, templateMsgs, templateNodeTasks);
         if (CollectionUtil.isNotEmpty(templateNodes)) {
             templateNodeDao.batchInsert(template.getId(), templateVersion.getId(), templateNodes);
         }
@@ -128,19 +137,33 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
         if (CollectionUtil.isNotEmpty(templateMsgs)) {
             templateMsgDao.batchInsert(template.getId(), templateVersion.getId(), templateMsgs);
         }
+        // 节点任务逐条落库（拿回自增id后再批量落库任务参数）
+        for (FlowTemplateNodeTask nodeTask : templateNodeTasks) {
+            nodeTask.setTemplateId(template.getId());
+            nodeTask.setRevId(templateVersion.getId());
+            int taskCount = templateNodeTaskDao.insertDB(nodeTask);
+            if (taskCount < 1) {
+                logger.error("createTemplateVersion error, insert node task fail");
+                continue;
+            }
+            if (CollectionUtil.isNotEmpty(nodeTask.getParams())) {
+                templateNodeTaskParamDao.batchInsert(nodeTask.getId(), nodeTask.getParams());
+            }
+        }
         result.setCode(ResultData.OK);
         return result;
     }
 
     /**
-     * 转换json 解析模板节点和模板连线 数据
+     * 转换json 解析模板节点、模板连线、消息通知与节点任务数据
      *
      * @param bpmJson bpmn json
      * @param templateNodes 模板节点
      * @param templateSequences 模板连线
      * @param templateMsgs 消息模板
+     * @param templateNodeTasks 节点任务
      */
-    private void convertBpmJson(String bpmJson, List<FlowTemplateNode> templateNodes, List<FlowTemplateSequence> templateSequences, List<FlowTemplateMsg> templateMsgs) {
+    private void convertBpmJson(String bpmJson, List<FlowTemplateNode> templateNodes, List<FlowTemplateSequence> templateSequences, List<FlowTemplateMsg> templateMsgs, List<FlowTemplateNodeTask> templateNodeTasks) {
         JSONObject bpmObject = JSONObject.parseObject(bpmJson);
         JSONArray nodes = bpmObject.getJSONArray("nodes");
         for (Object node : nodes) {
@@ -193,6 +216,40 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
             templateMsg.setContent(not.getString("content"));
             templateMsg.setRecipient(not.getString("recipient"));
             templateMsgs.add(templateMsg);
+        }
+        JSONArray nodeTasks = bpmObject.getJSONArray("nodeTasks");
+        if (nodeTasks == null) {
+            return;
+        }
+        for (Object nodeTask : nodeTasks) {
+            JSONObject task = (JSONObject) nodeTask;
+            Long taskTemplateId = task.getLong("taskTemplateId");
+            if (taskTemplateId == null) {
+                continue;
+            }
+            FlowTemplateNodeTask templateNodeTask = new FlowTemplateNodeTask();
+            templateNodeTask.setNodeId(task.getString("nodeId"));
+            templateNodeTask.setTaskTemplateId(taskTemplateId);
+            templateNodeTask.setExecuteType(task.getInteger("executeType"));
+            templateNodeTask.setSort(task.getInteger("sort"));
+            List<FlowTemplateNodeTaskParam> taskParams = new ArrayList<>();
+            JSONArray params = task.getJSONArray("params");
+            if (params != null) {
+                for (Object param : params) {
+                    JSONObject el = (JSONObject) param;
+                    if (el.getString("code") == null) {
+                        continue;
+                    }
+                    FlowTemplateNodeTaskParam taskParam = new FlowTemplateNodeTaskParam();
+                    taskParam.setName(el.getString("name"));
+                    taskParam.setCode(el.getString("code"));
+                    taskParam.setType(el.getInteger("type"));
+                    taskParam.setValue(el.getString("value"));
+                    taskParams.add(taskParam);
+                }
+            }
+            templateNodeTask.setParams(taskParams);
+            templateNodeTasks.add(templateNodeTask);
         }
     }
 

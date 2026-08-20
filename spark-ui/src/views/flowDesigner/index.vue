@@ -64,6 +64,7 @@
           :sequence="selectedSequence"
           :nodes="nodes"
           :field-options="fieldOptions"
+          :node-tasks="nodeTaskConfig"
           @delete-node="deleteNode"
           @delete-sequence="deleteSequence"
           @close="closePanel"
@@ -98,7 +99,7 @@ import { queryFormFieldListAPI } from "@/api/form/formField.js";
 import NodePanel from '@/views/flowDesigner/nodePanel/index.vue'
 import Index from '@/views/flowDesigner/canvas/index.vue'
 import NoticeConfig from './NoticeConfig.vue'
-import PropertyDrawer from './propertyPanel/PropertyDrawer.vue'
+import PropertyDrawer from './PropertyDrawer.vue'
 import { NODE_COMPONENTS, NODE_META } from '@/views/flowDesigner/nodes/index.js'
 
 const templateId = ref(0);
@@ -125,6 +126,7 @@ onMounted(() => {
         nodes.value = bpmJson.nodes || [];
         sequences.value = bpmJson.sequences || [];
         noticeConfig.value = bpmJson.notices ? bpmJson.notices : noticeConfig.value;
+        nodeTaskConfig.value = bpmJson.nodeTasks || [];
         calcCanvasSize();
       }
       getFormFieldList(res.data.formId);
@@ -155,6 +157,8 @@ const noticeConfig = ref([
   { type: 4, label: '驳回通知', enabled: true, content: '#{base:appUserName}# 申请的 #{base:flowName}#，已被驳回！', recipient: '#{base:appUser}#' },
   { type: 5, label: '催办通知', enabled: true, content: '#{base:appUserName}# 申请的 #{base:flowName}#，正在催促您审批，请及时处理！', recipient: '#{base:appAssignee}#' }
 ])
+
+const nodeTaskConfig = ref([])
 
 const calcCanvasSize = () => {
   const PADDING = 200;
@@ -242,6 +246,7 @@ const handleMoveNode = (nodeId, x, y) => {
 const deleteNode = (id) => {
   nodes.value = nodes.value.filter(el => el.id !== id)
   sequences.value = sequences.value.filter(conn => conn.sourceRef !== id && conn.targetRef !== id)
+  nodeTaskConfig.value = nodeTaskConfig.value.filter(task => task.nodeId !== id)
   if (selectedNode.value?.id === id) selectedNode.value = null
   ElMessage.success('节点已删除')
 }
@@ -252,10 +257,22 @@ const deleteSequence = (id) => {
   ElMessage.success('连线已删除')
 }
 
+/** 生成节点任务配置：过滤未选模板或节点已删除的任务，并按节点内顺序生成执行顺序 */
+const generateNodeTasks = () => {
+  const validTasks = nodeTaskConfig.value.filter(task => task.taskTemplateId && nodes.value.some(el => el.id === task.nodeId))
+  const sortCount = {}
+  return validTasks.map(task => {
+    sortCount[task.nodeId] = (sortCount[task.nodeId] || 0) + 1
+    return { ...task, sort: sortCount[task.nodeId] }
+  })
+}
+
 const generateBpmnJson = () => ({
   nodes: nodes.value.map(el => ({ id: el.id, type: el.type, name: el.name, x: el.x, y: el.y, assigneeType: el.assigneeType, assignee: el.assignee, assigneeLabel: el.assigneeLabel, approveType: el.approveType, urgeEnabled: el.urgeEnabled === true, urgeInterval: el.urgeInterval, permission: el.permission })),
   sequences: sequences.value.map(seq => ({ id: seq.id, sourceRef: seq.sourceRef, targetRef: seq.targetRef, name: seq.name, conditionExpression: seq.conditionExpression })),
-  notices: noticeConfig.value
+  notices: noticeConfig.value,
+  // 节点任务配置
+  nodeTasks: generateNodeTasks()
 })
 
 const saveProcess = () => {
@@ -277,6 +294,7 @@ const saveProcess = () => {
 
 const confirmClear = () => {
   nodes.value = []; sequences.value = []; selectedNode.value = null; selectedSequence.value = null; showClearConfirm.value = false
+  nodeTaskConfig.value = []
   ElMessage.success('流程图已清空')
 }
 </script>

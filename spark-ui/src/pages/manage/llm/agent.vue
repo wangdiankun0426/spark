@@ -209,6 +209,9 @@
                   v-model="agentForm.status"
                   :active-value="1"
                   :inactive-value="-1"
+                  active-text="已启用"
+                  inactive-text="已停用"
+                  inline-prompt
               />
             </el-form-item>
             <el-form-item label="描述" prop="description">

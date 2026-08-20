@@ -115,6 +115,11 @@
             v-if="node.type === 'userTask'"
             :node="node"
         />
+        <task-config
+            :node="node"
+            :tasks="nodeTasks"
+            :field-options="fieldOptions"
+        />
       </el-form>
     </div>
     <div class="panel-footer">
@@ -132,15 +137,17 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import AssigneeSelector from './AssigneeSelector.vue'
-import PermissionConfig from './PermissionConfig.vue'
-import UrgeConfig from './UrgeConfig.vue'
+import AssigneeSelector from './propertyPanel/AssigneeSelector.vue'
+import PermissionConfig from './propertyPanel/PermissionConfig.vue'
+import UrgeConfig from './propertyPanel/UrgeConfig.vue'
+import TaskConfig from './propertyPanel/TaskConfig.vue'
 
 const props = defineProps({
   node: { type: Object, default: null },
   sequence: { type: Object, default: null },
   nodes: { type: Array, default: () => [] },
-  fieldOptions: { type: Array, default: () => [] }
+  fieldOptions: { type: Array, default: () => [] },
+  nodeTasks: { type: Array, default: () => [] }
 })
 
 const emit = defineEmits(['delete-node', 'delete-sequence', 'close'])

@@ -11,9 +11,6 @@
       :style="{ height: height + 'px' }"
       @click="handleClick"
   >
-    <!-- 顶部主题色条 -->
-    <div class="info-card-bar"></div>
-
     <!-- 顶部：头像 + 名称 + 徽章 -->
     <div class="info-card-top">
       <div class="info-card-avatar">
@@ -124,16 +121,6 @@ function handleClick(e) {
     border-color: $border-color;
     box-shadow: 0 4px 16px rgba(0, 79, 197, 0.10);
   }
-}
-
-// 顶部主题色条
-.info-card-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background-color: var(--info-theme);
 }
 
 .info-card-top {
@@ -348,10 +335,6 @@ function handleClick(e) {
   cursor: not-allowed;
   opacity: 0.62;
 
-  .info-card-bar {
-    background-color: $color-text-placeholder;
-  }
-
   .info-card-avatar {
     background: $color-text-placeholder;
   }
@@ -364,7 +347,7 @@ function handleClick(e) {
 }
 
 // ============== 主题色 ==============
-// 通过 CSS 变量统一驱动卡片各处主题色（色条 / 头像 / 描述色条 / 标签 / 操作文字）
+// 通过 CSS 变量统一驱动卡片各处主题色（头像 / 标签 / 操作文字）
 .theme-blue   { --info-theme: #{$agent-theme-blue};   --info-theme-light: #{lighten($agent-theme-blue, 12%)};   --info-theme-soft: #{$agent-theme-blue-soft}; }
 .theme-green  { --info-theme: #{$agent-theme-green};  --info-theme-light: #{lighten($agent-theme-green, 12%)};  --info-theme-soft: #{$agent-theme-green-soft}; }
 .theme-purple { --info-theme: #{$agent-theme-purple}; --info-theme-light: #{lighten($agent-theme-purple, 12%)}; --info-theme-soft: #{$agent-theme-purple-soft}; }

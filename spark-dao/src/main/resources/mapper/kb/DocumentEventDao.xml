@@ -64,9 +64,9 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into kb_document_event ( doc_id , content_status , content_remark , index_status, index_remark, chunk_status, chunk_remark, vector_status, vector_remark, graph_status, graph_remark,
-                                        dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+                                        delete_flag , created_by , created_dt , updated_by , updated_dt)
         values ( #{docId} , #{contentStatus} , #{contentRemark} , #{indexStatus}, #{indexRemark}, #{chunkStatus}, #{chunkRemark}, #{vectorStatus}, #{vectorRemark}, #{graphStatus}, #{graphRemark},
-                #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+                1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">

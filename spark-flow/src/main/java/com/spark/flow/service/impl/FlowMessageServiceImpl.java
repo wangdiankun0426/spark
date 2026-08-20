@@ -81,8 +81,8 @@ public class FlowMessageServiceImpl extends BaseFlowService implements FlowMessa
             return result;
         }
         Map<String, String> defaultParam = super.generateFlowDefaultParam(instanceId);
-        content = super.generateFlowValue(content, defaultParam);
-        recipient = super.generateFlowValue(recipient, defaultParam);
+        content = super.generateFlowValue(content, defaultParam, null, null);
+        recipient = super.generateFlowValue(recipient, defaultParam, null, null);
         if (StringUtil.isBlank(recipient)) {
             logger.error("sendFlowNotice error, recipient not exist");
             return result;

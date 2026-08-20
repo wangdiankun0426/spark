@@ -255,13 +255,11 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                 eventQuery.setChunkStatus(DocumentEventStatusEnum.PENDING.getValue());
                 List<DocumentEventResult> documentEventList = documentEventDao.queryDocumentEventList(eventQuery);
                 if (CollectionUtil.isEmpty(documentEventList)) {
-                    logger.info("executeChunkTask documentEventList is empty, skipping this execution.");
                     result.setCode(ResultData.OK);
                     return CompletableFuture.completedFuture(result);
                 }
                 Map<Long, DocumentResult> docMap = this.convertDocumentMap(documentEventList);
                 if (docMap == null) {
-                    logger.info("executeChunkTask docMap is empty, skipping this execution.");
                     result.setCode(ResultData.OK);
                     return CompletableFuture.completedFuture(result);
                 }
@@ -330,13 +328,11 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                 eventQuery.setVectorStatus(DocumentEventStatusEnum.PENDING.getValue());
                 List<DocumentEventResult> documentEventList = documentEventDao.queryDocumentEventList(eventQuery);
                 if (CollectionUtil.isEmpty(documentEventList)) {
-                    logger.info("executeVectorTask documentEventList is empty, skipping this execution.");
                     result.setCode(ResultData.OK);
                     return CompletableFuture.completedFuture(result);
                 }
                 Map<Long, DocumentResult> docMap = this.convertDocumentMap(documentEventList);
                 if (docMap == null) {
-                    logger.info("executeVectorTask docMap is empty, skipping this execution.");
                     result.setCode(ResultData.OK);
                     return CompletableFuture.completedFuture(result);
                 }

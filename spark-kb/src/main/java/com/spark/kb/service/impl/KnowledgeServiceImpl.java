@@ -74,7 +74,6 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        // 设置默认值
         if (knowledge.getParentChunkSize() == null) {
             knowledge.setParentChunkSize(800);
         }
@@ -88,7 +87,7 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
             knowledge.setChildOverlap(20);
         }
         if (knowledge.getEnableQa() == null) {
-            knowledge.setEnableQa(StatusEnum.NORMAL.getValue());
+            knowledge.setEnableQa(StatusEnum.ABNORMAL.getValue());
         }
         if (knowledge.getRetrieveTopK() == null) {
             knowledge.setRetrieveTopK(15);
@@ -97,7 +96,7 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
             knowledge.setMinSimilarity(0.40);
         }
         if (knowledge.getStatus() == null) {
-            knowledge.setStatus(StatusEnum.NORMAL.getValue());
+            knowledge.setStatus(StatusEnum.ABNORMAL.getValue());
         }
         Long id = super.genObjectId(ObjectTypeEnum.KNOWLEDGE);
         knowledge.setId(id);

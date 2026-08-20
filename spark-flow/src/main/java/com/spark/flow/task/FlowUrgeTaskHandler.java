@@ -64,7 +64,8 @@ public class FlowUrgeTaskHandler implements ITaskTypeHandler {
         logger.info("taskInstance={},params={}", taskInstance, params);
         String instanceNodeIdStr = params.getOrDefault(TaskParamCode.FLOW_INSTANCE_NODE_ID, null);
         if (!StringUtil.isNumeric(instanceNodeIdStr)) {
-            logger.error("FlowUrgeTaskHandler error, objNodeId param not exist, taskId={}", taskInstance.getId());
+            logger.error("instanceNodeId param not exist, taskId={}", taskInstance.getId());
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
         Long instanceNodeId = Long.valueOf(instanceNodeIdStr);
@@ -80,12 +81,12 @@ public class FlowUrgeTaskHandler implements ITaskTypeHandler {
         instanceQuery.setId(taskInstance.getObjId());
         FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
         if (instanceResult == null) {
-            logger.error("FlowUrgeTaskHandler error, instance not exist, instanceId={}", taskInstance.getObjId());
+            logger.error("instance not exist, instanceId={}", taskInstance.getObjId());
             return result;
         }
         // 发送催办通知
         result = flowMessageService.sendFlowNotice(instanceResult.getFlowableInstanceId(), MessageTypeEnum.FLOW_URGE.getType());
-        logger.info("FlowUrgeTaskHandler success, taskId={}, instanceId={}", taskInstance.getId(), taskInstance.getObjId());
+        logger.info("task success ,taskId={}, instanceId={}", taskInstance.getId(), taskInstance.getObjId());
         result.setCode(ErrorCodeEnum.TASK_RESTART.getValue());
         return result;
     }

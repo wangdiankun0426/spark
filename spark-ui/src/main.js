@@ -17,6 +17,8 @@ import CustomSelect from '@/views/formDesigner/formWidget/basicWidget/select.vue
 import CustomSelectUser from '@/views/formDesigner/formWidget/basicWidget/selectUser.vue';
 import CustomDeptUser from '@/views/formDesigner/formWidget/basicWidget/selectDept.vue';
 import CustomSelectRole from '@/views/formDesigner/formWidget/basicWidget/selectRole.vue';
+import CustomSelectKnowledge from '@/views/formDesigner/formWidget/basicWidget/selectKnowledge.vue';
+import CustomSelectGraph from '@/views/formDesigner/formWidget/basicWidget/selectGraph.vue';
 import CustomNumber from '@/views/formDesigner/formWidget/basicWidget/number.vue';
 import CustomDate from '@/views/formDesigner/formWidget/basicWidget/date.vue';
 import CustomUploadAttachment from '@/views/formDesigner/formWidget/basicWidget/uploadAttachment.vue';
@@ -28,6 +30,8 @@ import CustomSelectSetting from '@/views/formDesigner/settingPanel/basicWidget/s
 import CustomSelectUserSetting from '@/views/formDesigner/settingPanel/basicWidget/selectUser.vue';
 import CustomSelectDeptSetting from '@/views/formDesigner/settingPanel/basicWidget/selectDept.vue';
 import CustomSelectRoleSetting from '@/views/formDesigner/settingPanel/basicWidget/selectRole.vue';
+import CustomSelectKnowledgeSetting from '@/views/formDesigner/settingPanel/basicWidget/selectKnowledge.vue';
+import CustomSelectGraphSetting from '@/views/formDesigner/settingPanel/basicWidget/selectGraph.vue';
 import CustomNumberSetting from '@/views/formDesigner/settingPanel/basicWidget/number.vue';
 import CustomDateSetting from '@/views/formDesigner/settingPanel/basicWidget/date.vue';
 import CustomUploadAttachmentSetting from '@/views/formDesigner/settingPanel/basicWidget/uploadAttachment.vue';
@@ -40,6 +44,8 @@ const components = [
   CustomSelectUser,
   CustomDeptUser,
   CustomSelectRole,
+  CustomSelectKnowledge,
+  CustomSelectGraph,
   CustomNumber,
   CustomDate,
   CustomUploadAttachment,
@@ -51,6 +57,8 @@ const components = [
   CustomSelectUserSetting,
   CustomSelectDeptSetting,
   CustomSelectRoleSetting,
+  CustomSelectKnowledgeSetting,
+  CustomSelectGraphSetting,
   CustomNumberSetting,
   CustomDateSetting,
   CustomUploadAttachmentSetting,

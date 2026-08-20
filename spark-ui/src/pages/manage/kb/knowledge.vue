@@ -32,7 +32,7 @@
           :header-cell-style="handleHeaderCellClass"
       >
         <el-table-column prop="id" label="编号" width="80" align="center"/>
-        <el-table-column prop="name" label="名称" min-width="180" align="left">
+        <el-table-column prop="name" label="名称" min-width="180" align="center">
           <template #header>
             名称
             <el-popover
@@ -59,7 +59,6 @@
             </el-popover>
           </template>
         </el-table-column>
-        <el-table-column prop="description" label="描述" min-width="180" align="center" show-overflow-tooltip/>
         <el-table-column prop="vectorModelName" label="向量模型" min-width="160" align="center" show-overflow-tooltip/>
         <el-table-column prop="rerankModelName" label="排序模型" min-width="160" align="center" show-overflow-tooltip/>
         <el-table-column prop="statusName" label="状态" width="100" align="center">
@@ -92,6 +91,7 @@
             </el-popover>
           </template>
         </el-table-column>
+        <el-table-column prop="documentCount" label="文档总量" width="90" align="center"/>
         <el-table-column prop="parentChunkSize" label="父块大小" width="100" align="center"/>
         <el-table-column prop="childChunkSize" label="子块大小" width="100" align="center"/>
         <el-table-column prop="parentOverlap" label="父块重叠" width="100" align="center"/>
@@ -99,7 +99,6 @@
         <el-table-column prop="retrieveTopK" label="召回TopK" width="100" align="center"/>
         <el-table-column prop="minSimilarity" label="最小相似度" width="110" align="center"/>
         <el-table-column prop="enableQaName" label="生成QA" width="100" align="center" />
-        <el-table-column prop="documentCount" label="文档数" width="90" align="center"/>
         <el-table-column prop="createdByName" label="创建人" width="110" align="center"/>
         <el-table-column prop="createdDt" label="创建时间" width="160" align="center"/>
         <el-table-column fixed="right" label="操作" width="140" align="center">
@@ -185,22 +184,46 @@
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="父块大小" prop="parentChunkSize">
-              <el-input-number v-model="form.parentChunkSize" :min="1" :max="99999999" controls-position="right" style="width: 100%"/>
+              <el-input-number
+                  v-model="form.parentChunkSize"
+                  :min="1"
+                  :max="9999"
+                  controls-position="right"
+                  style="width: 100%"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="子块大小" prop="childChunkSize">
-              <el-input-number v-model="form.childChunkSize" :min="1" :max="99999999" controls-position="right" style="width: 100%"/>
+              <el-input-number
+                  v-model="form.childChunkSize"
+                  :min="1"
+                  :max="9999"
+                  controls-position="right"
+                  style="width: 100%"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="父块重叠" prop="parentOverlap">
-              <el-input-number v-model="form.parentOverlap" :min="0" :max="99999999" controls-position="right" style="width: 100%"/>
+              <el-input-number
+                  v-model="form.parentOverlap"
+                  :min="0"
+                  :max="9999"
+                  controls-position="right"
+                  style="width: 100%"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="子块重叠" prop="childOverlap">
-              <el-input-number v-model="form.childOverlap" :min="0" :max="99999999" controls-position="right" style="width: 100%"/>
+              <el-input-number
+                  v-model="form.childOverlap"
+                  :min="0"
+                  :max="9999"
+                  controls-position="right"
+                  style="width: 100%"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -245,23 +268,46 @@
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="向量召回TopK" prop="retrieveTopK">
-              <el-input-number v-model="form.retrieveTopK" :min="1" :max="99999999" controls-position="right" style="width: 100%"/>
+              <el-input-number
+                  v-model="form.retrieveTopK"
+                  :min="1"
+                  :max="99"
+                  controls-position="right"
+                  style="width: 100%"/>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="最小相似度" prop="minSimilarity">
-              <el-input-number v-model="form.minSimilarity" :min="0.01" :max="1" :step="0.01" :precision="2" controls-position="right" style="width: 100%"/>
+              <el-input-number
+                  v-model="form.minSimilarity"
+                  :min="0.01"
+                  :max="1"
+                  :step="0.01"
+                  :precision="2"
+                  controls-position="right"
+                  style="width: 100%"
+              />
             </el-form-item>
           </el-col>
         </el-row>
         <el-divider content-position="left">高级选项</el-divider>
         <el-form-item label="生成QA" prop="enableQa">
-          <el-switch v-model="form.enableQa" :active-value="1" :inactive-value="0"/>
+          <el-switch
+              v-model="form.enableQa"
+              :active-value="1"
+              :inactive-value="-1"
+              active-text="已启用"
+              inactive-text="已停用"
+              inline-prompt
+          />
         </el-form-item>
       </el-form>
       <template #footer>
         <div class="drawer-footer">
-          <el-button type="primary" @click="handleSubmitForm">保存</el-button>
+          <el-button
+              type="primary"
+              @click="handleSubmitForm"
+          >保存</el-button>
           <el-button @click="handleCloseForm">取消</el-button>
         </div>
       </template>
@@ -315,7 +361,7 @@ function getDefaultFormData() {
     childChunkSize: 200,
     parentOverlap: 100,
     childOverlap: 20,
-    enableQa: 1,
+    enableQa: 0,
     retrieveTopK: 10,
     minSimilarity: 0.40,
     status: 1,
@@ -333,6 +379,9 @@ const formRules = {
   ],
   vectorModelId: [
     { required: true, message: '请选择向量模型', trigger: 'change' },
+  ],
+  rerankModelId: [
+    { required: true, message: '请选择排序模型', trigger: 'change' },
   ],
 };
 

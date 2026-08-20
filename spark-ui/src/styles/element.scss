@@ -236,6 +236,16 @@
   }
 }
 
+.el-button--primary.is-link {
+  background-color: transparent !important;
+  border-color: transparent !important;
+
+  &:hover {
+    background-color: transparent !important;
+    border-color: transparent !important;
+  }
+}
+
 // el-input 组件
 .el-input__wrapper {
   border-radius: $border-radius-sm !important;

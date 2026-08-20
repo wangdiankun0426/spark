@@ -64,6 +64,9 @@
         <if test="processId != null and processId != ''">
             , process_id = #{processId}
         </if>
+        <if test="formId != null">
+            , form_id = #{formId}
+        </if>
         <if test="revNum != null">
             , rev_num = #{revNum}
         </if>

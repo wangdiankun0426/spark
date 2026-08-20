@@ -32,7 +32,7 @@ spring:
   flowable:
     datasource:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://172.10.0.3:3306/spark_bpm_7?useUnicode=true&characterEncoding=utf8&nullCatalogMeansCurrent=true&serverTimezone=Asia/Shanghai
+      url: jdbc:mysql://172.10.0.3:3306/spark_bpm?useUnicode=true&characterEncoding=utf8&nullCatalogMeansCurrent=true&serverTimezone=Asia/Shanghai
       username: root
       password: Qaz7410
       type: com.alibaba.druid.pool.DruidDataSource

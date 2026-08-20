@@ -375,7 +375,6 @@ CREATE TABLE `kb_document_event` (
       `graph_status` int(5) NOT NULL DEFAULT 1 COMMENT '构建知识图谱状态',
       `graph_remark` varchar(128)  NULL COMMENT '构建知识图谱备注',
 
-      `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
       `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
       `created_by` bigint(12) NOT NULL COMMENT '创建人id',
       `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -443,6 +442,41 @@ CREATE TABLE `flow_template_node` (
       `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
       PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='流程模板节点表';
+
+DROP TABLE IF EXISTS `flow_template_node_task`;
+CREATE TABLE `flow_template_node_task` (
+     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+     `template_id` bigint(12) NOT NULL COMMENT '流程模板id',
+     `rev_id` bigint(12) NOT NULL COMMENT '流程版本id',
+     `node_id` varchar(36) NOT NULL COMMENT '节点id',
+     `task_template_id` bigint(12) NOT NULL COMMENT '任务模板id',
+     `execute_type` int(3) NOT NULL DEFAULT 1 COMMENT '执行时机',
+     `sort` int(5) NOT NULL DEFAULT 1 COMMENT '执行顺序',
+
+     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+     `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+     `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+     `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+     `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+     PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='流程模板节点任务表';
+
+DROP TABLE IF EXISTS `flow_template_node_task_param`;
+CREATE TABLE `flow_template_node_task_param` (
+   `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+   `node_task_id` bigint(12) NOT NULL COMMENT '节点任务id',
+   `name` varchar(64) NOT NULL COMMENT '参数名称',
+   `code` varchar(64) NOT NULL COMMENT '参数编码',
+   `type` tinyint(3) NOT NULL DEFAULT 1 COMMENT '参数类型',
+   `value` varchar(256) NULL COMMENT '参数值',
+
+   `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+   `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+   `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+   `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+   `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='流程模板节点任务参数表';
 
 DROP TABLE IF EXISTS `flow_template_sequence`;
 CREATE TABLE `flow_template_sequence` (
@@ -813,6 +847,8 @@ CREATE TABLE `task_instance` (
      `task_type` int(3) NOT NULL COMMENT '任务类型',
      `obj_id` bigint(12) NOT NULL COMMENT '业务对象id',
      `obj_type` int(3) NOT NULL COMMENT '业务对象类型',
+     `set_id` varchar(64) NOT NULL COMMENT '任务组id',
+     `sort` int(5) NOT NULL DEFAULT 1 COMMENT '执行顺序',
      `task_time` timestamp NOT NULL COMMENT '下次执行时间',
      `interval_hours` int(5) NULL COMMENT '重复间隔',
      `status` tinyint(3) NOT NULL DEFAULT 1 COMMENT '任务状态',

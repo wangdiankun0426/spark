@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spark.dao.flow.FlowTemplateNodeTaskParamDao">
+    <sql id="allColumnList">
+        id , node_task_id , name , code , type , value , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="nodeTaskId != null">
+            and node_task_id = #{nodeTaskId}
+        </if>
+        <if test="nodeTaskIds != null and nodeTaskIds.size() > 0">
+            and node_task_id in(
+            <foreach collection="nodeTaskIds" item="nodeTaskId" separator=",">
+                #{nodeTaskId}
+            </foreach>
+            )
+        </if>
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into flow_template_node_task_param (node_task_id , name , code , type , value , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values ( #{nodeTaskId} , #{name} , #{code} , #{type} , #{value} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <insert id="batchInsert">
+        insert into flow_template_node_task_param (node_task_id , name , code , type , value , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values
+        <foreach item="item" index="index" collection="list" separator=",">
+            ( #{nodeTaskId} , #{item.name} , #{item.code} , #{item.type} , #{item.value} , 1, 101, now(), 101, now())
+        </foreach>
+    </insert>
+
+    <update id="deleteById">
+        update flow_template_node_task_param set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <update id="updateById">
+        update flow_template_node_task_param set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        <if test="value != null and value != ''">
+            , value = #{value}
+        </if>
+        where id = #{id}
+    </update>
+
+    <select id="queryTemplateNodeTaskParamList" resultType="com.spark.bean.flow.result.FlowTemplateNodeTaskParamResult">
+        select <include refid="allColumnList"/>
+        from flow_template_node_task_param
+        where 1 = 1
+        <include refid="searchCondition"/>
+        order by id asc
+    </select>
+</mapper>

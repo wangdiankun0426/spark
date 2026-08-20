@@ -175,7 +175,14 @@
             </el-input>
           </el-form-item>
           <el-form-item label="启用">
-            <el-switch v-model="ep.enabled" :active-value="1" :inactive-value="0" />
+            <el-switch
+                v-model="ep.enabled"
+                :active-value="1"
+                :inactive-value="-1"
+                active-text="已启用"
+                inactive-text="已停用"
+                inline-prompt
+            />
           </el-form-item>
         </el-form>
         <el-button type="primary" size="small" style="width:100%" @click="handleSaveEndpoint(ep)">

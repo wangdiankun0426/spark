@@ -30,6 +30,14 @@ public interface IDocumentService {
     ResultData<Void> uploadDocument(MultipartFile file, Long prtId);
 
     /**
+     * 根据系统附件归档文档
+     * @param attId 附件id
+     * @param prtId 父ID
+     * @return 归档结果
+     */
+    ResultData<Long> fileDocument(Long attId, Long prtId);
+
+    /**
      * 修改文档
      * @param documentVO 修改的文档
      * @return 修改结果

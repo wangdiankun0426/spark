@@ -77,7 +77,7 @@
           </el-sub-menu>
           <el-sub-menu index="5">
             <template #title>
-              <el-icon><Share /></el-icon>
+              <el-icon><SetUp /></el-icon>
               <span style="color: var(--sidebar-group-text)">工作流管理</span>
             </template>
             <el-menu-item index="/manage/workflow/template">
@@ -110,7 +110,7 @@
           </el-sub-menu>
           <el-sub-menu index="8">
             <template #title>
-              <el-icon><Share /></el-icon>
+              <el-icon><AlarmClock /></el-icon>
               <span style="color: var(--sidebar-group-text)">任务管理</span>
             </template>
             <el-menu-item index="/manage/task/template">
@@ -156,7 +156,7 @@
 
 import {computed} from "vue";
 import {useRoute} from "vue-router";
-import {User, Document, Share, Collection} from "@element-plus/icons-vue";
+import {User, Document, Share, Collection, SetUp, AlarmClock} from "@element-plus/icons-vue";
 import Ai from "@/assets/icons/ai.vue";
 import GraphV2 from "@/assets/icons/graphV2.vue";
 

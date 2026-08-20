@@ -4,6 +4,7 @@ import com.spark.bean.task.entity.TaskInstance;
 import com.spark.bean.task.query.TaskInstanceQuery;
 import com.spark.bean.task.result.TaskInstanceResult;
 import com.spark.dao.BaseDao;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -48,4 +49,12 @@ public interface TaskInstanceDao extends BaseDao<TaskInstance> {
      * @return
      */
     List<TaskInstanceResult> queryTaskInstanceList(TaskInstanceQuery query);
+
+    /**
+     * 查询同组中执行顺序靠前且未结束的任务数量
+     * @param setId 任务组id
+     * @param sort 执行顺序
+     * @return 数量
+     */
+    int countUnfinishedPrecedingTask(@Param("setId") String setId, @Param("sort") Integer sort);
 }

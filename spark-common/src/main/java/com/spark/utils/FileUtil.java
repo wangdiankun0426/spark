@@ -4,6 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 /**
  * +++/\_/\
@@ -100,4 +104,86 @@ public class FileUtil {
         }
         return null;
     }
+
+    /**
+     * 构造文件存储路径
+     * @param basePath 配置的根路径
+     * @param fileName 文件名
+     * @return 完整文件路径（根路径/yyyyMM/dd/文件名），目录创建失败时返回 null
+     */
+    public static String generateFilePath(String basePath, String fileName) {
+        if (StringUtil.isBlank(basePath) || StringUtil.isBlank(fileName)) {
+            logger.error("basePath or fileName is blank");
+            return null;
+        }
+        LocalDate now = LocalDate.now();
+        String dirPath = appendSeparator(basePath)
+                + now.format(DateTimeFormatter.ofPattern("yyyyMM"))
+                + File.separator
+                + now.format(DateTimeFormatter.ofPattern("dd"));
+        File dir = new File(dirPath);
+        if (!dir.exists() && !dir.mkdirs()) {
+            logger.error("mkdir fail, dirPath={}", dirPath);
+            return null;
+        }
+        return dirPath + File.separator + fileName;
+    }
+
+    /**
+     * 路径末尾补充分隔符（已存在则不重复追加）
+     * @param path 路径
+     * @return 以分隔符结尾的路径
+     */
+    private static String appendSeparator(String path) {
+        if (path.endsWith("/") || path.endsWith("\\")) {
+            return path;
+        }
+        return path + File.separator;
+    }
+
+    /**
+     * 复制源文件同名的伴随文件
+     * @param srcPath 源文件路径
+     * @param newPath 新文件路径
+     * @param ext 伴随文件后缀
+     */
+    public static void copyCompanionFile(String srcPath, String newPath, String ext) {
+        String fileExt = getFileExt(srcPath);
+        if (ext.equalsIgnoreCase(fileExt)) {
+            return;
+        }
+        String srcCompanion = getFileNameWithoutExt(srcPath) + "." + ext;
+        String newCompanion = getFileNameWithoutExt(newPath) + "." + ext;
+        File srcFile = new File(srcCompanion);
+        if (!srcFile.exists()) {
+            return;
+        }
+        copyFile(srcCompanion, newCompanion);
+    }
+
+    /**
+     * 复制文件
+     * @param srcPath 源文件路径
+     * @param destPath 目标文件路径
+     * @return 是否成功
+     */
+    public static boolean copyFile(String srcPath, String destPath) {
+        if (StringUtil.isBlank(srcPath)) {
+            logger.error("srcPath is blank");
+            return false;
+        }
+        File srcFile = new File(srcPath);
+        if (!srcFile.exists()) {
+            logger.error("file not exist, path={}", srcPath);
+            return false;
+        }
+        try {
+            Files.copy(srcFile.toPath(), new File(destPath).toPath());
+        } catch (IOException e) {
+            logger.error("srcPath={}, destPath={}", srcPath, destPath, e);
+            return false;
+        }
+        return true;
+    }
+
 }

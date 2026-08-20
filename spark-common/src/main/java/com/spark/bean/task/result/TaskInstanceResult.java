@@ -42,6 +42,16 @@ public class TaskInstanceResult extends BaseResult {
     private String objTypeName;
 
     /**
+     * 任务组id（同组任务按执行顺序串行执行）
+     */
+    private String setId;
+
+    /**
+     * 执行顺序
+     */
+    private Integer sort;
+
+    /**
      * 下次执行时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
@@ -66,6 +76,11 @@ public class TaskInstanceResult extends BaseResult {
      * 任务状态名称
      */
     private String statusName;
+
+    /**
+     * 备注
+     */
+    private String remark;
 
     /**
      * 任务参数列表

@@ -30,4 +30,13 @@ public interface FlowEventService {
      * @return
      */
     ResultData<Void> onCompletedUserTask(String instanceId, String nodeId, Integer status);
+
+    /**
+     * 节点任务触发
+     * @param flowableInstanceId 流程实例ID（Flowable实例id）
+     * @param nodeId
+     * @param executeType
+     * @return 触发结果
+     */
+    ResultData<Void> onNodeTask(String flowableInstanceId, String nodeId, Integer executeType);
 }

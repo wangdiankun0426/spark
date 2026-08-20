@@ -202,7 +202,7 @@
           <el-switch
               v-model="form.status"
               :active-value="1"
-              :inactive-value="0"
+              :inactive-value="-1"
               active-text="已启用"
               inactive-text="已停用"
               inline-prompt
