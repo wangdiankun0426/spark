@@ -840,3 +840,34 @@ CREATE TABLE `task_instance_param` (
    `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务参数表';
+
+DROP TABLE IF EXISTS `task_template`;
+CREATE TABLE `task_template` (
+     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+     `name` varchar(128) NOT NULL COMMENT '任务名称',
+     `task_type` int(3) NOT NULL COMMENT '任务类型',
+     `remark` varchar(255) NULL COMMENT '备注',
+
+     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+     `created_by` bigint(12) DEFAULT NULL COMMENT '创建人id',
+     `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+     `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+     `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
+     PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务模板表';
+
+DROP TABLE IF EXISTS `task_template_param`;
+CREATE TABLE `task_template_param` (
+   `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+   `template_id` bigint(12) NOT NULL COMMENT '模板id',
+   `name` varchar(64) NOT NULL COMMENT '参数名称',
+   `code` varchar(64) NOT NULL COMMENT '参数编码',
+   `type` tinyint(3) NOT NULL DEFAULT 1 COMMENT '参数类型：1常量，2表单数据',
+
+   `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+   `created_by` bigint(12) DEFAULT NULL COMMENT '创建人id',
+   `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+   `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+   `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务模板参数表';

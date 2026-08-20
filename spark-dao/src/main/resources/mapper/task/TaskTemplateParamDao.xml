@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.task.TaskTemplateParamDao" >
+    <sql id="allColumnList" >
+        id , template_id , name , code , type , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="templateId != null">
+            and template_id = #{templateId}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into task_template_param (template_id , name , code , type , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values ( #{templateId} , #{name} , #{code} , #{type} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="updateById">
+        update task_template_param set updated_dt = #{updatedDt}, updated_by = #{updatedBy}
+        <if test="templateId != null">
+            ,template_id = #{templateId}
+        </if>
+        <if test="name != null">
+            ,name = #{name}
+        </if>
+        <if test="code != null">
+            ,code = #{code}
+        </if>
+        <if test="type != null">
+            ,type = #{type}
+        </if>
+        where id = #{id}
+    </update>
+
+    <update id="deleteById">
+        update task_template_param set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <update id="deleteByTemplateId">
+        update task_template_param set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = now()
+        where template_id = #{templateId}
+    </update>
+
+    <select id="queryTaskTemplateParamList" resultType="com.spark.bean.task.result.TaskTemplateParamResult">
+        select <include refid="allColumnList" />
+        from task_template_param
+        where 1=1
+        <include refid="searchCondition" />
+        order by id desc
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+
+</mapper>

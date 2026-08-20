@@ -87,6 +87,7 @@ const pageSizes = [30, 50, 100];
 const tableList = ref([]);
 const taskTypeOptions = [
   { label: '流程催办任务', value: 1 },
+  { label: '知识库文档归档任务', value: 2 },
 ];
 const statusOptions = [
   { label: '待处理', value: 1 },

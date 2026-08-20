@@ -102,6 +102,7 @@ public enum ErrorCodeEnum {
     WORKFLOW_ALREADY_PUBLISHED(2410, "AI工作流已发布"),
     WORKFLOW_HAS_RUN_HISTORY(2411, "存在运行记录不允许删除"),
     WORKFLOW_CATEGORY_INVALID(2412, "分类标签无效"),
+    TASK_TEMPLATE_NOT_EXIST(2501, "任务模板不存在"),
     ;
 
     private Integer value;

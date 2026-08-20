@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.task.TaskTemplateDao" >
+    <sql id="allColumnList" >
+        id , name , task_type , remark , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="name != null and name != ''">
+            and name like concat('%', #{name}, '%')
+        </if>
+        <if test="taskType != null">
+            and task_type = #{taskType}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into task_template (name , task_type , remark , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values ( #{name} , #{taskType} , #{remark} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="updateById">
+        update task_template set updated_dt = #{updatedDt}, updated_by = #{updatedBy}
+        <if test="name != null">
+            ,name = #{name}
+        </if>
+        <if test="taskType != null">
+            ,task_type = #{taskType}
+        </if>
+        <if test="remark != null">
+            ,remark = #{remark}
+        </if>
+        where id = #{id}
+    </update>
+
+    <update id="deleteById">
+        update task_template set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <select id="queryTaskTemplateCount" resultType="java.lang.Integer">
+        select count(1)
+        from task_template
+        where 1 = 1
+        <include refid="searchCondition" />
+    </select>
+
+    <select id="queryTaskTemplateList" resultType="com.spark.bean.task.result.TaskTemplateResult">
+        select <include refid="allColumnList" />
+        from task_template
+        where 1=1
+        <include refid="searchCondition" />
+        order by id desc
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="queryTaskTemplate" resultType="com.spark.bean.task.result.TaskTemplateResult">
+        select <include refid="allColumnList" />
+        from task_template
+        where 1=1
+        <include refid="searchCondition" />
+        limit 1
+    </select>
+
+</mapper>

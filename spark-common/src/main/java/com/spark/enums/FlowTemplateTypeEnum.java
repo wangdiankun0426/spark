@@ -12,9 +12,9 @@ package com.spark.enums;
  */
 public enum FlowTemplateTypeEnum {
     START_EVENT("startEvent", "开始事件"),
-    USER_TASK("userTask", "用户任务"),
-    EXCLUSIVE_GATEWAY("exclusiveGateway", "排他网关"),
     END_EVENT("endEvent", "结束事件"),
+    EXCLUSIVE_GATEWAY("exclusiveGateway", "排他网关"),
+    USER_TASK("userTask", "用户任务"),
     LLM_TASK("llmTask", "LLM模型"),
     ;
 
