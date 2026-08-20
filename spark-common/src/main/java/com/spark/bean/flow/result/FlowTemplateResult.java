@@ -56,6 +56,16 @@ public class FlowTemplateResult extends BaseResult {
     private String statusName;
 
     /**
+     * 流程类型
+     **/
+    private Integer type;
+
+    /**
+     * 流程类型名称
+     **/
+    private String typeName;
+
+    /**
      * 表单json
      **/
     private String formJson;

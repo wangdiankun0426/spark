@@ -19,6 +19,7 @@ import com.spark.dao.flow.FlowTemplateVersionDao;
 import com.spark.dao.form.FormDao;
 import com.spark.dao.form.FormVersionDao;
 import com.spark.enums.ErrorCodeEnum;
+import com.spark.enums.FlowTypeEnum;
 import com.spark.enums.ObjectTypeEnum;
 import com.spark.enums.StatusEnum;
 import com.spark.flow.service.IFlowTemplateService;
@@ -83,6 +84,7 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
         BeanUtils.copyProperties(templateVO, template);
         template.setProcessId(processId);
         template.setStatus(StatusEnum.ABNORMAL.getValue());
+        template.setType(templateVO.getType() == null ? FlowTypeEnum.NORMAL.getValue() : templateVO.getType());
         template.setRevNum("0.1");
         template.setRevId(templateVersion.getId());
         template.setId(templateId);
@@ -261,7 +263,10 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
         }
         super.supplyCreatedByName(list);
         super.supplyUpdatedByName(list);
-        list.forEach(item -> item.setStatusName(StatusEnum.indexOf(item.getStatus()).getDesc()));
+        list.forEach(item -> {
+            item.setStatusName(StatusEnum.indexOf(item.getStatus()).getDesc());
+            item.setTypeName(FlowTypeEnum.indexOf(item.getType()).getDesc());
+        });
     }
 
     /**

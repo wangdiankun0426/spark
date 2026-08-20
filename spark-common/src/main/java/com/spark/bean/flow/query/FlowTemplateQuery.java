@@ -40,4 +40,9 @@ public class FlowTemplateQuery extends BaseQuery {
      */
     private Integer status;
 
+    /**
+     * 流程类型
+     */
+    private Integer type;
+
 }

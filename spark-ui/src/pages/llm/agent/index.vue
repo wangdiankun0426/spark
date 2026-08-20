@@ -225,7 +225,7 @@ function handleSelectAgent(agent) {
   justify-content: space-between;
   align-items: center;
   margin-bottom: $spacing-lg;
-  padding: $spacing-lg $spacing-xl;
+  padding: $spacing-md $spacing-xl;
   background-color: $bg-card;
   border-radius: $border-radius-lg;
   box-shadow: $shadow-card;

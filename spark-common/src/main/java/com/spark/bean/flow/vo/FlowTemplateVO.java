@@ -30,4 +30,9 @@ public class FlowTemplateVO extends BaseVO {
      **/
     private Integer status;
 
+    /**
+     * 流程类型
+     **/
+    private Integer type;
+
 }

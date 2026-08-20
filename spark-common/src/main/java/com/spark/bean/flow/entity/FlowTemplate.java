@@ -45,4 +45,9 @@ public class FlowTemplate extends BaseEntity {
      **/
     private Long formId;
 
+    /**
+     * 流程类型
+     **/
+    private Integer type;
+
 }

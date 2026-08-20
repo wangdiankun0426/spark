@@ -33,12 +33,12 @@
         <if test="value != null">
             ,value = #{value}
         </if>
-        where id = #glm-5.3_common
+        where id = #{id}
     </update>
 
     <update id="deleteById">
         update task_instance_param set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
-        where id = #glm-5.3_common
+        where id = #{id}
     </update>
 
     <select id="queryTaskInstanceParamList" resultType="com.spark.bean.task.result.TaskInstanceParamResult">

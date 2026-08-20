@@ -390,6 +390,7 @@ CREATE TABLE `flow_template` (
      `name` varchar(128) NOT NULL COMMENT '名称',
      `process_id` varchar(128) NOT NULL COMMENT '模板id',
      `form_id` bigint(12) NULL COMMENT '表单id',
+     `type` int(3) NOT NULL DEFAULT 1 COMMENT '流程类型',
      `rev_id` bigint(12) NULL COMMENT '版本id',
      `rev_num` varchar(12) NOT NULL COMMENT '当前版本号',
      `status` int(1) NOT NULL DEFAULT 0 COMMENT '状态',

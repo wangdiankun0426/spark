@@ -86,6 +86,41 @@
             </el-popover>
           </template>
         </el-table-column>
+        <el-table-column prop="typeName" label="类型" align="center" width="140px">
+          <template #header>
+            类型
+            <el-popover
+                :visible="templateSearchFlag.type"
+                placement="bottom"
+                :width="200"
+                trigger="click">
+              <template #reference>
+                <el-button
+                    :type="templateSearchFlag.type ? 'primary':'info'"
+                    link
+                    :icon="Search"
+                    @click.stop="templateSearchFlag.type = !templateSearchFlag.type"
+                />
+              </template>
+              <div>
+                <el-select
+                    clearable
+                    v-model="templateQuery.type"
+                    @change="handleGetTemplateList"
+                    placeholder="请选择流程类型"
+                >
+                  <el-option
+                      v-for="item in typeOptions"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value"
+                  >
+                  </el-option>
+                </el-select>
+              </div>
+            </el-popover>
+          </template>
+        </el-table-column>
         <el-table-column prop="revNum" label="版本"  align="center"/>
         <el-table-column prop="statusName" label="状态"  align="center">
           <template #header>
@@ -209,6 +244,16 @@
                 />
               </el-select>
             </el-form-item>
+            <el-form-item label="类型" prop="type">
+              <el-select v-model="templateForm.type" placeholder="请选择流程类型" style="width: 100%">
+                <el-option
+                    v-for="item in typeOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
             <el-form-item label="状态" prop="status">
               <el-switch
                   v-model="templateForm.status"
@@ -268,12 +313,14 @@ const templateQuery = ref({
   name: undefined,
   processId: undefined,
   status: undefined,
+  type: undefined,
   sorts: {},
 });
 const templateSearchFlag = ref({
   name: false,
   processId: false,
   status: false,
+  type: false,
 });
 const total = ref(0);
 const pageSizes = [30,50,100];
@@ -287,8 +334,20 @@ const templateForm = ref({
 const templateFormRules = {
   name: [{ required: true, trigger: "blur", message: "请输入名称" }],
   formId: [{ required: true, trigger: "change", message: "请选择流程表单" }],
+  type: [{ required: true, trigger: "change", message: "请选择流程类型" }],
   status: [{ required: true, trigger: "change", message: "请选择状态" }],
 };
+
+const typeOptions = [
+  {
+    label: "普通流程",
+    value: 1,
+  },
+  {
+    label: "知识库归档流程",
+    value: 2,
+  },
+]
 
 const statusOptions = [
   {
@@ -352,6 +411,7 @@ function handleOpenUpdateTemplateForm(row) {
       templateForm.value.id = res1.data.id;
       templateForm.value.name = res1.data.name;
       templateForm.value.formId = res1.data.formId;
+      templateForm.value.type = res1.data.type;
       templateForm.value.status = res1.data.status;
       templateFormTitle.value = "修改流程模板";
       templateFormVisible.value = true;
@@ -389,6 +449,7 @@ function handleOpenCreateTemplateForm() {
     templateForm.value.id = undefined;
     templateForm.value.name = undefined;
     templateForm.value.formId = undefined;
+    templateForm.value.type = 1;
     templateForm.value.status = 1;
     templateFormTitle.value = "创建流程模板";
     templateFormVisible.value = true;
@@ -407,6 +468,8 @@ function handleResetTemplateQuery() {
   templateSearchFlag.value.processId = false;
   templateQuery.value.status = undefined;
   templateSearchFlag.value.status = false;
+  templateQuery.value.type = undefined;
+  templateSearchFlag.value.type = false;
   // 清除排序状态
   let columns = proxy.$refs.tableRef.store.states.columns.value;
   columns.forEach((column) => {
@@ -429,6 +492,7 @@ function handleSubmitTemplateForm() {
           revNum: templateForm.value.revNum,
           status: templateForm.value.status,
           formId: templateForm.value.formId,
+          type: templateForm.value.type,
         };
         createTemplateAPI(data).then(res => {
           if (res.code !== 200) {
@@ -446,6 +510,7 @@ function handleSubmitTemplateForm() {
           revNum: templateForm.value.revNum,
           status: templateForm.value.status,
           formId: templateForm.value.formId,
+          type: templateForm.value.type,
         };
         updateTemplateAPI(data).then(res => {
           if (res.code !== 200) {
@@ -468,6 +533,7 @@ function handleCloseTemplateForm() {
   templateForm.value.name = undefined;
   templateForm.value.processId = undefined;
   templateForm.value.revNum = undefined;
+  templateForm.value.type = undefined;
   templateForm.value.status = undefined;
   templateFormTitle.value = "";
   templateFormVisible.value = false;
