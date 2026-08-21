@@ -29,4 +29,11 @@ public interface ITaskInstanceService {
      * @return 任务实例分页结果
      */
     ResultData<PageResult<TaskInstanceResult>> pageTaskInstanceList(TaskInstanceQuery query);
+
+    /**
+     * 查询任务实例详情
+     * @param query 查询参数
+     * @return 任务实例详情
+     */
+    ResultData<TaskInstanceResult> queryTaskInstanceDetail(TaskInstanceQuery query);
 }

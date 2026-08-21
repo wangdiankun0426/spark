@@ -592,7 +592,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
     /**
      * 解析 LLM 返回的关系 JSON
      * @param response LLM 响应文本
-     * @param entityMap 实体名称到实体的映射（用于回填 id）
+     * @param entityMap 实体名称到实体的映射
      * @return 关系列表
      */
     private List<KgRelation> parseRelations(String response, Map<String, KgEntity> entityMap) {

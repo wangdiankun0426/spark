@@ -42,7 +42,7 @@ public class WeComController {
     private WeComConfig weComConfig;
 
     /**
-     * 企业微信回调 URL 验证（GET 请求）
+     * 企业微信回调 URL 验证
      * 企业微信后台配置回调 URL 时，会发送 GET 请求验证 URL 的有效性
      * @param request  HTTP 请求
      * @param response HTTP 响应
@@ -78,7 +78,7 @@ public class WeComController {
     }
 
     /**
-     * 接收企业微信消息（POST 请求）
+     * 接收企业微信消息
      * 企业微信推送消息时，会发送 POST 请求携带加密的 XML 消息体
      * @param request  HTTP 请求
      * @param response HTTP 响应

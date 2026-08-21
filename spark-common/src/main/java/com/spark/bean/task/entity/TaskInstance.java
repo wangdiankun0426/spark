@@ -35,7 +35,7 @@ public class TaskInstance extends BaseEntity {
     private Integer objType;
 
     /**
-     * 任务组id（同组任务按执行顺序串行执行）
+     * 任务组id
      */
     private String setId;
 

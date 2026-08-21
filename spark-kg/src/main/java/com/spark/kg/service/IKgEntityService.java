@@ -36,7 +36,7 @@ public interface IKgEntityService {
 
     /**
      * 删除实体
-     * @param kgEntityVO 实体数据（id）
+     * @param kgEntityVO 实体数据
      * @return 删除结果
      */
     ResultData<Void> deleteKgEntity(KgEntityVO kgEntityVO);

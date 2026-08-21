@@ -12,3 +12,16 @@ export function pageTaskInstanceListAPI(query) {
         params: query
     })
 }
+
+/**
+ * 查询任务实例详情（含参数与产出数据）
+ * @param query 查询参数（含任务实例id）
+ * @returns {Promise<AxiosResponse<any>>}
+ */
+export function queryTaskInstanceDetailAPI(query) {
+    return request({
+        url: '/task/instance/detail',
+        method: 'get',
+        params: query
+    })
+}

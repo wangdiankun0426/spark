@@ -27,6 +27,4 @@ public class TaskParamCode {
      */
     public final static String KNOWLEDGE_ID = "kbId";
 
-
-
 }

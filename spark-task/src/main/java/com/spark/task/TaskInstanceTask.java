@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
  *
  * @author wangdiankun
  * @since 2026-08-17 16:30:00
- * 通用定时任务调度器（每分钟扫描到期任务并按类型分发）
+ * 通用定时任务调度器
  */
 @Service
 public class TaskInstanceTask {

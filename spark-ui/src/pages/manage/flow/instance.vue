@@ -108,6 +108,11 @@
           </template>
         </el-table-column>
         <el-table-column prop="createdDt" label="创建时间" width="180" align="center" />
+        <el-table-column fixed="right" label="操作" width="80" align="center">
+          <template #default="scope">
+            <el-button type="primary" text size="small" @click="handleOpenTaskDetail(scope.row)">详情</el-button>
+          </template>
+        </el-table-column>
       </el-table>
       <el-pagination
           :current-page="taskQuery.pageNo"
@@ -120,6 +125,8 @@
           @current-change="p => { taskQuery.pageNo = p; handleGetTaskList(); }"
       />
     </el-drawer>
+    <!--任务实例详情弹窗-->
+    <task-instance-detail v-model="taskDetailVisible" :task-id="taskDetailId" />
   </div>
 </template>
 
@@ -127,6 +134,7 @@
 import { getCurrentInstance, ref } from 'vue';
 import { pageInstanceListAPI, showInstanceDetailAPI } from '@/api/flow/instance';
 import { pageTaskInstanceListAPI } from '@/api/task/instance';
+import TaskInstanceDetail from '@/components/TaskInstanceDetail';
 import { Search } from '@element-plus/icons-vue';
 import FlowDetailDrawer from '@/components/FlowDetailDrawer';
 
@@ -266,6 +274,8 @@ const taskList = ref([]);
 const taskQuery = ref({ pageNo: 1, pageSize: 10, objId: undefined });
 const taskTotal = ref(0);
 const taskPageSizes = [10, 30, 50];
+const taskDetailVisible = ref(false);
+const taskDetailId = ref(undefined);
 
 /**
  * 查询流程任务列表
@@ -289,6 +299,15 @@ function handleOpenTaskList(row) {
   taskListTitle.value = '流程任务 - ' + (row.name || row.id);
   handleGetTaskList();
   taskListVisible.value = true;
+}
+
+/**
+ * 打开任务实例详情弹窗
+ * @param row 行数据
+ */
+function handleOpenTaskDetail(row) {
+  taskDetailId.value = row.id;
+  taskDetailVisible.value = true;
 }
 </script>
 

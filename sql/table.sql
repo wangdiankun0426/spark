@@ -877,6 +877,22 @@ CREATE TABLE `task_instance_param` (
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务参数表';
 
+DROP TABLE IF EXISTS `task_instance_data`;
+CREATE TABLE `task_instance_data` (
+   `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+   `set_id` varchar(64) NOT NULL COMMENT '任务组id',
+   `task_id` bigint(12) NOT NULL COMMENT '任务实例id',
+   `code` varchar(64) NOT NULL COMMENT '数据编码',
+   `value` varchar(256) NULL COMMENT '数据值',
+
+   `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+   `created_by` bigint(12) DEFAULT NULL COMMENT '创建人id',
+   `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+   `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+   `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务实例产出数据表';
+
 DROP TABLE IF EXISTS `task_template`;
 CREATE TABLE `task_template` (
      `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',

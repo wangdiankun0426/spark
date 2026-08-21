@@ -42,7 +42,7 @@ public class TaskInstanceResult extends BaseResult {
     private String objTypeName;
 
     /**
-     * 任务组id（同组任务按执行顺序串行执行）
+     * 任务组id
      */
     private String setId;
 
@@ -86,5 +86,10 @@ public class TaskInstanceResult extends BaseResult {
      * 任务参数列表
      */
     private List<TaskInstanceParamResult> params;
+
+    /**
+     * 任务产出数据列表
+     */
+    private List<TaskInstanceDataResult> dataList;
 
 }

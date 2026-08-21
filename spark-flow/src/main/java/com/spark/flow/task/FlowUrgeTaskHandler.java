@@ -5,6 +5,7 @@ import com.spark.bean.flow.query.FlowInstanceNodeQuery;
 import com.spark.bean.flow.query.FlowInstanceQuery;
 import com.spark.bean.flow.result.FlowInstanceNodeResult;
 import com.spark.bean.flow.result.FlowInstanceResult;
+import com.spark.bean.task.entity.TaskInstanceData;
 import com.spark.bean.task.result.TaskInstanceResult;
 import com.spark.constant.TaskParamCode;
 import com.spark.dao.flow.FlowInstanceDao;
@@ -22,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -32,7 +34,7 @@ import java.util.Map;
  *
  * @author wangdiankun
  * @since 2026-08-17 16:30:00
- * 流程催办定时任务处理器：节点仍在审批中则发送催办通知并顺延下次执行（周期催办），否则取消任务
+ * 流程催办定时任务处理器
  */
 @Service
 public class FlowUrgeTaskHandler implements ITaskTypeHandler {
@@ -59,8 +61,8 @@ public class FlowUrgeTaskHandler implements ITaskTypeHandler {
      * @param params
      */
     @Override
-    public ResultData<Void> handle(TaskInstanceResult taskInstance, Map<String, String> params) {
-        ResultData<Void> result = new ResultData<>();
+    public ResultData<List<TaskInstanceData>> handle(TaskInstanceResult taskInstance, Map<String, String> params) {
+        ResultData<List<TaskInstanceData>> result = new ResultData<>();
         logger.info("taskInstance={},params={}", taskInstance, params);
         String instanceNodeIdStr = params.getOrDefault(TaskParamCode.FLOW_INSTANCE_NODE_ID, null);
         if (!StringUtil.isNumeric(instanceNodeIdStr)) {
@@ -85,7 +87,7 @@ public class FlowUrgeTaskHandler implements ITaskTypeHandler {
             return result;
         }
         // 发送催办通知
-        result = flowMessageService.sendFlowNotice(instanceResult.getFlowableInstanceId(), MessageTypeEnum.FLOW_URGE.getType());
+        ResultData<Void> sendResult = flowMessageService.sendFlowNotice(instanceResult.getFlowableInstanceId(), MessageTypeEnum.FLOW_URGE.getType());
         logger.info("task success ,taskId={}, instanceId={}", taskInstance.getId(), taskInstance.getObjId());
         result.setCode(ErrorCodeEnum.TASK_RESTART.getValue());
         return result;

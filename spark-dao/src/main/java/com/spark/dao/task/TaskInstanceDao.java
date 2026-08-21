@@ -51,6 +51,13 @@ public interface TaskInstanceDao extends BaseDao<TaskInstance> {
     List<TaskInstanceResult> queryTaskInstanceList(TaskInstanceQuery query);
 
     /**
+     * 查询数据详情
+     * @param query
+     * @return
+     */
+    TaskInstanceResult queryTaskInstance(TaskInstanceQuery query);
+
+    /**
      * 查询同组中执行顺序靠前且未结束的任务数量
      * @param setId 任务组id
      * @param sort 执行顺序

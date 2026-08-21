@@ -3,11 +3,15 @@ package com.spark.task.service.impl;
 import com.spark.bean.base.PageResult;
 import com.spark.bean.base.ResultData;
 import com.spark.bean.task.entity.TaskInstance;
+import com.spark.bean.task.entity.TaskInstanceData;
+import com.spark.bean.task.query.TaskInstanceDataQuery;
 import com.spark.bean.task.query.TaskInstanceParamQuery;
 import com.spark.bean.task.query.TaskInstanceQuery;
+import com.spark.bean.task.result.TaskInstanceDataResult;
 import com.spark.bean.task.result.TaskInstanceParamResult;
 import com.spark.bean.task.result.TaskInstanceResult;
 import com.spark.dao.task.TaskInstanceDao;
+import com.spark.dao.task.TaskInstanceDataDao;
 import com.spark.dao.task.TaskInstanceParamDao;
 import com.spark.enums.ErrorCodeEnum;
 import com.spark.enums.ObjectTypeEnum;
@@ -49,6 +53,8 @@ public class TaskInstanceServiceImpl extends BaseService<TaskInstanceQuery, Task
     @Autowired
     private TaskInstanceParamDao taskInstanceParamDao;
     @Autowired
+    private TaskInstanceDataDao taskInstanceDataDao;
+    @Autowired
     private List<ITaskTypeHandler> taskTypeHandlers;
 
     /**
@@ -75,12 +81,10 @@ public class TaskInstanceServiceImpl extends BaseService<TaskInstanceQuery, Task
             // 检查是否有前置任务未完成
             boolean hasTask = this.checkHasPrecedingTask(taskInstance);
             if (hasTask) {
-                logger.info("executeTask skip, preceding task not finished, taskId={}, setId={}, sort={}", taskInstance.getId(), taskInstance.getSetId(), taskInstance.getSort());
                 continue;
             }
             ITaskTypeHandler taskTypeHandler = handlerMap.get(taskInstance.getTaskType());
             if (taskTypeHandler == null) {
-                logger.error("executeTask error, handler not found, taskType={}, taskId={}", taskInstance.getTaskType(), taskInstance.getId());
                 TaskInstance updateTask = new TaskInstance();
                 updateTask.setId(taskInstance.getId());
                 updateTask.setStatus(TaskStatusEnum.FAIL.getValue());
@@ -92,12 +96,22 @@ public class TaskInstanceServiceImpl extends BaseService<TaskInstanceQuery, Task
                 continue;
             }
             try {
-                Map<String, String> params = this.generateTaskInstanceParams(taskInstance.getId());
-                ResultData<Void> handle = taskTypeHandler.handle(taskInstance, params);
+                // 构造任务实例所属参数
+                Map<String, String> params = this.generateTaskInstanceParams(taskInstance);
+                // 执行任务实例
+                ResultData<List<TaskInstanceData>> handle = taskTypeHandler.handle(taskInstance, params);
+                // 处理结果
                 TaskInstance updateTask = new TaskInstance();
                 updateTask.setId(taskInstance.getId());
                 if (handle.getCode() == ResultData.OK) {
                     updateTask.setStatus(TaskStatusEnum.SUCCESS.getValue());
+                    List<TaskInstanceData> data = handle.getData();
+                    if (CollectionUtil.isNotEmpty(data)) {
+                        int dataCount = taskInstanceDataDao.batchInsert(data);
+                        if (dataCount < 1) {
+                            logger.error("batch insert task instance data fail, taskId={}", taskInstance.getId());
+                        }
+                    }
                 } else if (handle.getCode() == ErrorCodeEnum.TASK_RESTART.getValue()) {
                     updateTask.setTaskTime(DateUtil.offsetHour(new Date(), taskInstance.getIntervalHours()));
                 } else {
@@ -145,6 +159,40 @@ public class TaskInstanceServiceImpl extends BaseService<TaskInstanceQuery, Task
     }
 
     /**
+     * 查询任务实例详情
+     * @param query 查询参数
+     * @return 任务实例详情
+     */
+    @Override
+    public ResultData<TaskInstanceResult> queryTaskInstanceDetail(TaskInstanceQuery query) {
+        ResultData<TaskInstanceResult> result = new ResultData<>();
+        if (query == null || query.getId() == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        TaskInstanceResult taskInstanceResult = taskInstanceDao.queryTaskInstance(query);
+        if (taskInstanceResult == null) {
+            result.setErrorCode(ErrorCodeEnum.TASK_INSTANCE_NOT_EXIST);
+            return result;
+        }
+        List<TaskInstanceResult> supplyList = List.of(taskInstanceResult);
+        this.supplyList(supplyList);
+        // 任务参数
+        TaskInstanceParamQuery paramQuery = new TaskInstanceParamQuery();
+        paramQuery.setTaskId(taskInstanceResult.getId());
+        List<TaskInstanceParamResult> params = taskInstanceParamDao.queryTaskInstanceParamList(paramQuery);
+        taskInstanceResult.setParams(params);
+        // 任务产出数据
+        TaskInstanceDataQuery dataQuery = new TaskInstanceDataQuery();
+        dataQuery.setTaskId(taskInstanceResult.getId());
+        List<TaskInstanceDataResult> dataList = taskInstanceDataDao.queryTaskInstanceDataList(dataQuery);
+        taskInstanceResult.setDataList(dataList);
+        result.setData(taskInstanceResult);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
      * 补充列表数据
      * @param list 列表数据
      */
@@ -186,17 +234,23 @@ public class TaskInstanceServiceImpl extends BaseService<TaskInstanceQuery, Task
 
     /**
      * 构造任务实例参数
-     * @param taskInstanceId 任务实例id
+     * @param taskInstance 任务实例
      */
-    private Map<String, String> generateTaskInstanceParams(Long taskInstanceId) {
+    private Map<String, String> generateTaskInstanceParams(TaskInstanceResult taskInstance) {
         Map<String, String> params = new HashMap<>();
         TaskInstanceParamQuery paramQuery = new TaskInstanceParamQuery();
-        paramQuery.setTaskId(taskInstanceId);
+        paramQuery.setTaskId(taskInstance.getId());
         List<TaskInstanceParamResult> paramList = taskInstanceParamDao.queryTaskInstanceParamList(paramQuery);
-        if (CollectionUtil.isEmpty(paramList)) {
-            return params;
+        if (CollectionUtil.isNotEmpty(paramList)) {
+            params = paramList.stream().collect(Collectors.toMap(TaskInstanceParamResult::getCode, TaskInstanceParamResult::getValue));
         }
-        params = paramList.stream().collect(Collectors.toMap(TaskInstanceParamResult::getCode, TaskInstanceParamResult::getValue));
+        TaskInstanceDataQuery dataQuery = new TaskInstanceDataQuery();
+        dataQuery.setSetId(taskInstance.getSetId());
+        List<TaskInstanceDataResult> dataList = taskInstanceDataDao.queryTaskInstanceDataList(dataQuery);
+        if (CollectionUtil.isNotEmpty(dataList)) {
+            Map<String, String> dataMap = dataList.stream().collect(Collectors.toMap(TaskInstanceDataResult::getCode, TaskInstanceDataResult::getValue, (v1, v2) -> v2));
+            params.putAll(dataMap);
+        }
         return params;
     }
 }

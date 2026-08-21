@@ -53,7 +53,7 @@ public class KgEntityController {
 
     /**
      * 删除实体
-     * @param kgEntityVO 实体参数（id）
+     * @param kgEntityVO 实体参数
      * @return 响应结果
      */
     @PostMapping("delete")

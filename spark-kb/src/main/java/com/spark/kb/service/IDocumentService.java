@@ -74,8 +74,8 @@ public interface IDocumentService {
 
     /**
      * 下载文档
-     * @param query 查询参数（含文档id和后缀）
-     * @return 文档结果（含文件路径和文件名）
+     * @param query 查询参数
+     * @return 文档结果
      */
     ResultData<DocumentResult> downloadDocument(DocumentQuery query);
 }

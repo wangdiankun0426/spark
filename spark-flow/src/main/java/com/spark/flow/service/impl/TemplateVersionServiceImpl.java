@@ -137,7 +137,7 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
         if (CollectionUtil.isNotEmpty(templateMsgs)) {
             templateMsgDao.batchInsert(template.getId(), templateVersion.getId(), templateMsgs);
         }
-        // 节点任务逐条落库（拿回自增id后再批量落库任务参数）
+        // 节点任务逐条落库
         for (FlowTemplateNodeTask nodeTask : templateNodeTasks) {
             nodeTask.setTemplateId(template.getId());
             nodeTask.setRevId(templateVersion.getId());

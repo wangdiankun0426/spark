@@ -6,6 +6,9 @@
     </sql>
 
     <sql id="searchCondition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
         <if test="taskType != null">
             and task_type = #{taskType}
         </if>
@@ -63,6 +66,14 @@
         <if test="page == true">
             limit #{startRow}, #{pageSize}
         </if>
+    </select>
+
+    <select id="queryTaskInstance" resultType="com.spark.bean.task.result.TaskInstanceResult">
+        select <include refid="allColumnList" />
+        from task_instance
+        where 1=1
+        <include refid="searchCondition" />
+        limit 1
     </select>
 
     <!-- 查询同组中执行顺序靠前且未结束的任务数量 -->

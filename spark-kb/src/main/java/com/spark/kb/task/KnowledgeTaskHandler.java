@@ -1,6 +1,7 @@
 package com.spark.kb.task;
 
 import com.spark.bean.base.ResultData;
+import com.spark.bean.task.entity.TaskInstanceData;
 import com.spark.bean.task.result.TaskInstanceResult;
 import com.spark.constant.TaskParamCode;
 import com.spark.enums.ErrorCodeEnum;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -49,8 +51,8 @@ public class KnowledgeTaskHandler implements ITaskTypeHandler {
      * @return
      */
     @Override
-    public ResultData<Void> handle(TaskInstanceResult taskInstance, Map<String, String> params) {
-        ResultData<Void> result = new ResultData<>();
+    public ResultData<List<TaskInstanceData>> handle(TaskInstanceResult taskInstance, Map<String, String> params) {
+        ResultData<List<TaskInstanceData>> result = new ResultData<>();
         logger.info("taskInstance={},params={}", taskInstance, params);
         String kbIdStr = params.getOrDefault(TaskParamCode.KNOWLEDGE_ID, null);
         if (StringUtil.isBlank(kbIdStr)) {
@@ -71,6 +73,7 @@ public class KnowledgeTaskHandler implements ITaskTypeHandler {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        List<TaskInstanceData> list = new ArrayList<>();
         for (Long kbId : kbIds) {
             for (Long attId : attIds) {
                 ResultData<Long> fileResult = documentService.fileDocument(attId, kbId);
@@ -78,10 +81,32 @@ public class KnowledgeTaskHandler implements ITaskTypeHandler {
                     logger.error("file document fail, attId={}, kbId={}, taskId={}", attId, kbId, taskInstance.getId());
                     return result;
                 }
+                TaskInstanceData taskInstanceData = this.genreTaskInstanceData(taskInstance, TaskParamCode.ATT_ID + attId, fileResult.getData());
+                if (taskInstanceData != null) {
+                    list.add(taskInstanceData);
+                }
             }
         }
         logger.info("task success, taskId={}, instanceId={}", taskInstance.getId(), taskInstance.getObjId());
+        result.setData(list);
         result.setCode(ResultData.OK);
         return result;
+    }
+
+    /**
+     * 构造任务产出的数据
+     * @param taskInstance 任务实例
+     * @param value 产出的文档id
+     */
+    private TaskInstanceData genreTaskInstanceData(TaskInstanceResult taskInstance, String code, Long value) {
+        if (value == null) {
+            return null;
+        }
+        TaskInstanceData taskInstanceData = new TaskInstanceData();
+        taskInstanceData.setSetId(taskInstance.getSetId());
+        taskInstanceData.setTaskId(taskInstance.getId());
+        taskInstanceData.setCode(code);
+        taskInstanceData.setValue(value+"");
+        return taskInstanceData;
     }
 }

@@ -1,8 +1,10 @@
 package com.spark.task.service;
 
 import com.spark.bean.base.ResultData;
+import com.spark.bean.task.entity.TaskInstanceData;
 import com.spark.bean.task.result.TaskInstanceResult;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,5 +30,5 @@ public interface ITaskTypeHandler {
      * @param taskInstance
      * @param params
      */
-    ResultData<Void> handle(TaskInstanceResult taskInstance, Map<String, String> params);
+    ResultData<List<TaskInstanceData>> handle(TaskInstanceResult taskInstance, Map<String, String> params);
 }

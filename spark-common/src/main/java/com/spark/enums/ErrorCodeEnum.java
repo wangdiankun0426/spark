@@ -73,6 +73,8 @@ public enum ErrorCodeEnum {
     FLOW_TASK_IS_EMPTY(1707, "当前流程实例任务不存在"),
     // 任务相关状态码
     TASK_RESTART(1801, "重启任务"),
+    TASK_TEMPLATE_NOT_EXIST(1802, "任务模板不存在"),
+    TASK_INSTANCE_NOT_EXIST(1803, "任务实例不存在"),
     // llm相关状态码
     PROVIDER_NOT_EXIST(2001, "模型厂商不存在"),
     MODEL_NOT_EXIST(2002, "模型不存在"),
@@ -102,7 +104,7 @@ public enum ErrorCodeEnum {
     WORKFLOW_ALREADY_PUBLISHED(2410, "AI工作流已发布"),
     WORKFLOW_HAS_RUN_HISTORY(2411, "存在运行记录不允许删除"),
     WORKFLOW_CATEGORY_INVALID(2412, "分类标签无效"),
-    TASK_TEMPLATE_NOT_EXIST(2501, "任务模板不存在"),
+
     ;
 
     private Integer value;

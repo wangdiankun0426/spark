@@ -35,4 +35,14 @@ public class TaskInstanceController {
     private ResultData<PageResult<TaskInstanceResult>> pageTaskInstanceList(TaskInstanceQuery query) {
         return taskInstanceService.pageTaskInstanceList(query);
     }
+
+    /**
+     * 查询任务实例详情
+     * @param query 查询参数
+     * @return 任务实例详情
+     */
+    @GetMapping("detail")
+    private ResultData<TaskInstanceResult> queryTaskInstanceDetail(TaskInstanceQuery query) {
+        return taskInstanceService.queryTaskInstanceDetail(query);
+    }
 }

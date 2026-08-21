@@ -56,7 +56,7 @@ public class AttachmentController {
     /**
      * 查询系统附件详情
      * @param query 查询参数
-     * @return 附件详情（含名称、后缀、大小）
+     * @return 附件详情
      */
     @GetMapping("detail")
     private ResultData<AttachmentResult> queryAttachmentDetail(AttachmentQuery query) {

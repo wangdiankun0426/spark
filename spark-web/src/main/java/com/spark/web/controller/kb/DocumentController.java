@@ -110,7 +110,7 @@ public class DocumentController {
     /**
      * 下载文档
      * @param response 响应
-     * @param query 查询参数（含文档id和后缀）
+     * @param query 查询参数
      */
     @GetMapping("download")
     public void downloadDocument(HttpServletRequest request, HttpServletResponse response, DocumentQuery query) {

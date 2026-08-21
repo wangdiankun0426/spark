@@ -60,6 +60,11 @@
       </el-table-column>
       <el-table-column prop="createdByName" label="创建人" width="100" align="center" />
       <el-table-column prop="createdDt" label="创建时间" width="180" align="center" />
+      <el-table-column fixed="right" label="操作" width="80" align="center">
+        <template #default="scope">
+          <el-button type="primary" text size="small" @click="handleOpenDetail(scope.row)">详情</el-button>
+        </template>
+      </el-table-column>
     </el-table>
     <!--分页-->
     <el-pagination
@@ -72,12 +77,15 @@
         @size-change="s => { query.pageSize = s; handleGetList(); }"
         @current-change="p => { query.pageNo = p; handleGetList(); }"
     />
+    <!--任务实例详情弹窗-->
+    <task-instance-detail v-model="detailVisible" :task-id="detailTaskId" />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
 import { pageTaskInstanceListAPI } from '@/api/task/instance';
+import TaskInstanceDetail from '@/components/TaskInstanceDetail';
 import { Search } from '@element-plus/icons-vue';
 
 const query = ref({ pageNo: 1, pageSize: 30, taskType: undefined, status: undefined });
@@ -94,6 +102,8 @@ const statusOptions = [
   { label: '成功', value: 2 },
   { label: '失败', value: 3 },
 ];
+const detailVisible = ref(false);
+const detailTaskId = ref(undefined);
 
 handleGetList();
 
@@ -122,6 +132,15 @@ function handleGetList() {
       total.value = res.data.total;
     }
   });
+}
+
+/**
+ * 打开任务实例详情弹窗
+ * @param row 行数据
+ */
+function handleOpenDetail(row) {
+  detailTaskId.value = row.id;
+  detailVisible.value = true;
 }
 </script>
 

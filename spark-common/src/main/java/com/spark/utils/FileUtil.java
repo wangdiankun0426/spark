@@ -109,7 +109,7 @@ public class FileUtil {
      * 构造文件存储路径
      * @param basePath 配置的根路径
      * @param fileName 文件名
-     * @return 完整文件路径（根路径/yyyyMM/dd/文件名），目录创建失败时返回 null
+     * @return 完整文件路径，目录创建失败时返回 null
      */
     public static String generateFilePath(String basePath, String fileName) {
         if (StringUtil.isBlank(basePath) || StringUtil.isBlank(fileName)) {
@@ -130,7 +130,7 @@ public class FileUtil {
     }
 
     /**
-     * 路径末尾补充分隔符（已存在则不重复追加）
+     * 路径末尾补充分隔符
      * @param path 路径
      * @return 以分隔符结尾的路径
      */

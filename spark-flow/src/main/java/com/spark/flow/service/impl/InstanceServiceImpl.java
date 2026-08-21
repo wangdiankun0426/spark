@@ -511,7 +511,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
     }
 
     /**
-     * 分页查询全部流程实例（管理端）
+     * 分页查询全部流程实例
      * @param query 查询参数
      * @return 列表
      */
