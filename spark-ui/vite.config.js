@@ -32,6 +32,7 @@ export default defineConfig((mode) => {
     server: {
       host: '127.0.0.1',
       port: 7101,
+      strictPort: true, // 端口被占用时直接报错，避免 Tauri devUrl 指向失效端口
       proxy: {
         // 在此处为需要解决跨域的 API 配置代理
         '/api/ws': {

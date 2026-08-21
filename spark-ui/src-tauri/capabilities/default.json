@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "默认能力：允许所有窗口（含动态创建的子窗口）调用核心 API",
+  "windows": ["*"],
+  "permissions": ["core:default"]
+}

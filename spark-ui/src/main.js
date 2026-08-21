@@ -1,5 +1,7 @@
 import { createApp } from 'vue';
 import App from './App.vue';
+// 桌面端（Tauri）环境适配，需在应用挂载前初始化（接管 window.open）
+import { setupDesktop } from '@/utils/desktop.js';
 import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
 import '@/styles/main.scss';
@@ -77,6 +79,8 @@ VMdEditor.use(githubTheme, { Hljs: hljs });
 VMdPreview.use(githubTheme, { Hljs: hljs });
 
 const app = createApp(App);
+// 桌面端适配初始化（浏览器环境下为空操作）
+setupDesktop();
 app.use(VMdEditor);
 app.use(VMdPreview);
 app.use(ElementPlus, {locale})

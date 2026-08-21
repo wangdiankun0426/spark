@@ -78,7 +78,7 @@
           <el-sub-menu index="5">
             <template #title>
               <el-icon><SetUp /></el-icon>
-              <span style="color: var(--sidebar-group-text)">工作流管理</span>
+              <span style="color: var(--sidebar-group-text)">WorkFlow管理</span>
             </template>
             <el-menu-item index="/manage/workflow/template">
               <span>流程模板</span>

@@ -1,9 +1,9 @@
 // router/index.js
 import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
+import { isTauri } from '@/utils/desktop.js'
 
-// 判断是否为 Electron 环境（Electron 需使用 Hash 模式兼容 file:// 协议）
-const isElectron = navigator.userAgent.toLowerCase().includes('electron')
-const history = isElectron ? createWebHashHistory() : createWebHistory()
+// 判断是否为桌面端环境（Tauri 需使用 Hash 模式兼容应用内协议）
+const history = isTauri ? createWebHashHistory() : createWebHistory()
 
 // 导入所有模块路由
 import commonRoutes from './modules/common.routes'

@@ -81,6 +81,54 @@
           </div>
         </div>
       </div>
+      <!-- 客户端下载入口-->
+      <div v-if="!isTauri" class="sidebar-downloads">
+        <div class="download-items">
+          <el-tooltip content="点击下载 Win10+ 安装包" placement="top">
+            <div class="download-item" @click="downloadWin">
+              <el-icon><Monitor /></el-icon>
+              <span>Win10+ 安装包</span>
+            </div>
+          </el-tooltip>
+          <el-popover placement="top" :width="180" trigger="hover">
+            <template #reference>
+              <div class="download-item">
+                <el-icon><Iphone /></el-icon>
+                <span>移动端 H5</span>
+              </div>
+            </template>
+            <div style="text-align: center;">
+              <img v-if="h5QrImg" :src="h5QrImg" alt="移动端 H5 二维码"
+                   style="width: 140px; height: 140px; border: 1px solid #ebeef5; border-radius: 8px;"/>
+              <div style="font-size: 12px; color: #909399; margin-top: 6px;">扫码访问移动端 H5</div>
+            </div>
+          </el-popover>
+          <el-tooltip content="开发中，敬请期待" placement="top">
+            <div class="download-item download-item--soon" @click="comingSoon('微信小程序')">
+              <el-icon><ChatDotRound /></el-icon>
+              <span>微信小程序</span>
+            </div>
+          </el-tooltip>
+          <el-tooltip content="开发中，敬请期待" placement="top">
+            <div class="download-item download-item--soon" @click="comingSoon('Mac')">
+              <el-icon><Platform /></el-icon>
+              <span>Mac</span>
+            </div>
+          </el-tooltip>
+          <el-tooltip content="开发中，敬请期待" placement="top">
+            <div class="download-item download-item--soon" @click="comingSoon('Android')">
+              <el-icon><Cellphone /></el-icon>
+              <span>Android</span>
+            </div>
+          </el-tooltip>
+          <el-tooltip content="开发中，敬请期待" placement="top">
+            <div class="download-item download-item--soon" @click="comingSoon('iOS')">
+              <el-icon><Cellphone /></el-icon>
+              <span>iOS</span>
+            </div>
+          </el-tooltip>
+        </div>
+      </div>
     </div>
 
     <!-- 右侧 -->
@@ -262,6 +310,9 @@ import Validate from '@/assets/icons/validate';
 import { ref, getCurrentInstance } from "vue";
 import { useRouter } from 'vue-router';
 import { useStore } from "vuex";
+import { ElMessage } from 'element-plus';
+import QRCode from 'qrcode';
+import { isTauri } from '@/utils/desktop.js';
 
 const router = useRouter();
 const { proxy } = getCurrentInstance();
@@ -285,6 +336,33 @@ const loading = ref(false);
 const validateImg = ref(undefined);
 const count = ref(0);
 const timer = ref(null);
+
+// Windows安装包下载地址
+const WIN_SETUP_URL = 'https://spark.evancloud.top:7101/download/星火云AI_0.0.1_x64-setup.exe';
+// 移动端 H5 访问地址
+const H5_URL = 'https://spark.evancloud.top:7102/';
+// 移动端 H5 二维码图片
+const h5QrImg = ref(undefined);
+
+// 生成移动端 H5 访问二维码
+QRCode.toDataURL(H5_URL, { width: 160, margin: 1 }).then(dataUrl => {
+  h5QrImg.value = dataUrl;
+});
+
+/**
+ * 下载 Windows 安装包
+ */
+function downloadWin() {
+  window.open(WIN_SETUP_URL);
+}
+
+/**
+ * 未上线客户端提示
+ * @param name 客户端名称
+ */
+function comingSoon(name) {
+  ElMessage.info(name + ' 客户端开发中，敬请期待');
+}
 
 getValidateImg();
 
@@ -732,6 +810,59 @@ function submitLoginForm() {
   color: $color-text-secondary;
   margin-top: 2px;
   white-space: nowrap;
+}
+
+// 客户端下载入口（固定在左侧栏左下角，一字排开）
+.sidebar-downloads {
+  position: absolute;
+  left: 40px;
+  bottom: 28px;
+  z-index: 1;
+}
+
+.download-items {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 10px;
+}
+
+.download-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  color: $color-text-primary;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(0, 79, 197, 0.12);
+  box-shadow: 0 2px 8px rgba(26, 111, 232, 0.06);
+  cursor: pointer;
+  transition: all 0.2s;
+
+  .el-icon {
+    font-size: 16px;
+    color: #004fc5;
+  }
+
+  &:hover {
+    background: #ffffff;
+    border-color: rgba(0, 79, 197, 0.28);
+    box-shadow: 0 4px 12px rgba(26, 111, 232, 0.14);
+    transform: translateY(-1px);
+  }
+}
+
+// 未上线客户端置灰虚线样式
+.download-item--soon {
+  color: $color-text-secondary;
+  border-style: dashed;
+  border-color: rgba(0, 79, 197, 0.18);
+
+  .el-icon {
+    color: $color-text-secondary;
+  }
 }
 
 // 右侧 - 登录表单区（白色卡片）

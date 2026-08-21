@@ -4,7 +4,7 @@
 
 星火云AI应用平台是一套**企业级 AI 协同办公平台**，以「即时通信、自定义表单、自定义流程、AI Agent、AI 工作流（Workflow）」五大能力为核心，融合 RAG 知识库、知识图谱、大模型接入等 AI 基础设施，帮助企业**低代码、可视化**地快速构建和落地各类业务系统。
 
-项目采用 Monorepo 架构，包含后端服务、PC 前端（浏览器端 + Electron 桌面端）和移动端（H5 + 微信小程序），一套代码多端运行，开箱即用。
+项目采用 Monorepo 架构，包含后端服务、PC 前端（浏览器端 + Tauri 2 桌面端）和移动端（H5 + 微信小程序），一套代码多端运行，开箱即用。
 
 ---
 
@@ -48,7 +48,7 @@ spark/
 ├── spark-kg/          # 知识图谱
 ├── spark-workflow/    # AI 工作流（DAG 编排、执行引擎、端点发布）
 ├── spark-task/        # 定时/异步任务
-├── spark-ui/          # PC 前端（Vue 3 浏览器端 + Electron 桌面端）
+├── spark-ui/          # PC 前端（Vue 3 浏览器端 + Tauri 2 桌面端）
 ├── spark-app/         # 移动端（uniapp：H5 + 微信小程序）
 ├── sql/               # 数据库初始化脚本
 └── pom.xml            # Maven 父 POM
@@ -83,7 +83,7 @@ spark/
 | Vue Router      | 4.2.5   | 路由              |
 | Vuex            | 4.1.0   | 状态管理            |
 | ECharts         | 5.5.0   | 数据可视化           |
-| Electron        | 43.2.0  | 桌面端框架           |
+| Tauri           | 2       | 桌面端框架（仅 Windows） |
 | Node.js         | 22.20.0 | 运行环境            |
 
 ### 移动端（spark-app）
@@ -161,12 +161,11 @@ npm run dev:web
 # 浏览器端构建
 npm run build:web
 
-# Electron 桌面端开发
-npm run dev:electron
+# Tauri 桌面端开发（需安装 Rust 工具链，自动启动 Vite 开发服务器）
+npm run dev:tauri
 
-# Electron 桌面端打包
-npm run pack:electron:win    # Windows
-npm run pack:electron:mac    # macOS
+# Tauri 桌面端打包（仅支持 Windows，产出 NSIS 安装包）
+npm run pack:tauri:win
 ```
 
 ### 6.3 移动端
