@@ -12,7 +12,7 @@ import java.util.Map;
  * @since 2026-08-11 15:00:00
  * 节点执行器接口，每种节点类型需实现
  */
-public interface WorkflowNodeExecutor {
+public interface IWfNodeExecutor {
 
     /**
      * 节点类型
@@ -22,10 +22,12 @@ public interface WorkflowNodeExecutor {
 
     /**
      * 执行节点
-     * @param nodeConfig 节点配置（DAG JSON中的config对象）
+     * @param nodeId 节点id
+     * @param config 节点配置
      * @param input 当前节点输入
-     * @param context 全局变量上下文（可读写）
-     * @return 节点输出，写入context
+     * @param valueMap 表单值
+     * @param showValueMap 表单显示值
+     * @return 节点输出
      */
-    Map<String, Object> execute(Map<String, Object> nodeConfig, Map<String, Object> input, Map<String, Object> context);
+    Map<String, String> execute(String nodeId, Map<String, Object> config, Map<String, String> input, Map<String, String> valueMap , Map<String, String> showValueMap);
 }

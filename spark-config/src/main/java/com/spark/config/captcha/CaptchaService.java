@@ -51,8 +51,8 @@ public class CaptchaService {
         properties.setProperty(KAPTCHA_BACKGROUND_CLR_TO, "0,0,255");
         // 字符间距 默认值为2，可以适当增大
         properties.setProperty(KAPTCHA_TEXTPRODUCER_CHAR_SPACE, "10");
-        // 图片样式 水纹com.google.code.kaptcha.impl.WaterRipple 鱼眼com.google.code.kaptcha.impl.FishEyeGimpy 阴影com.google.code.kaptcha.impl.ShadowGimpy
-        //properties.setProperty(KAPTCHA_OBSCURIFICATOR_IMPL, "com.google.code.kaptcha.impl.FishEyeGimpy");
+        // 图片样式 水纹com.google.code.kaptcha.executor.WaterRipple 鱼眼com.google.code.kaptcha.executor.FishEyeGimpy 阴影com.google.code.kaptcha.executor.ShadowGimpy
+        //properties.setProperty(KAPTCHA_OBSCURIFICATOR_IMPL, "com.google.code.kaptcha.executor.FishEyeGimpy");
         Config config = new Config(properties);
         defaultKaptcha.setConfig(config);
         return defaultKaptcha;

@@ -15,7 +15,6 @@ import com.spark.enums.VariableTypeEnum;
 import com.spark.manage.BaseService;
 import com.spark.utils.CollectionUtil;
 import com.spark.utils.StringUtil;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -77,56 +76,4 @@ public class BaseFlowService extends BaseService {
         }
         return params;
     }
-
-    /**
-     * 根据规则生成 流程值
-     *
-     * @param valueRule
-     * @param defParamMap
-     * @param formValMap
-     * @param formTxtMap
-     * @return
-     */
-    protected String generateFlowValue(String valueRule, Map<String, String> defParamMap, Map<String, String> formValMap, Map<String, String> formTxtMap) {
-        if (StringUtils.isBlank(valueRule)) {
-            return null;
-        }
-        if (defParamMap == null) {
-            defParamMap = new HashMap<>();
-        }
-        if (formValMap == null) {
-            formValMap = new HashMap<>();
-        }
-        if (formTxtMap == null) {
-            formTxtMap = new HashMap<>();
-        }
-        List<String> generateRules = StringUtil.parseStringFormCode(valueRule,"#");
-        for (String rule : generateRules) {
-            if (StringUtils.isBlank(rule) || !rule.contains(":")) {
-                continue;
-            }
-            String[] arr = rule.split(":");
-            String type = arr[0];
-            String key = arr[1];
-            String value = "";
-            if (VariableTypeEnum.BASE.getType().equals(type)) {
-                //基础数据
-                value = defParamMap.get(key);
-            } else if(VariableTypeEnum.FORM.getType().equals(type)) {
-                //表单数据
-                value = formValMap.get(key);
-            } else if(VariableTypeEnum.FORM_TXT.getType().equals(type)) {
-                //表单显示值
-                value = formTxtMap.get(key);
-            } else {
-                continue;
-            }
-            if(value == null) {
-                value = "";
-            }
-            valueRule = valueRule.replace("#{"+rule+"}#", value);
-        }
-        return valueRule;
-    }
-
 }

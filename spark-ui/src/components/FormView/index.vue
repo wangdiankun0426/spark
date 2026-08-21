@@ -1,6 +1,6 @@
 <template>
   <el-form
-      style="height: 400px; min-height: 60vh;"
+      class="form-inline"
       :label-position="props.form.formConfig.position"
       :size="props.form.formConfig.size"
       :disabled="disabled"
@@ -35,5 +35,8 @@ function getFieldName(widget) {
 
 </script>
 <style scoped lang="scss">
-
+.form-inline {
+  //height: 400px;
+  //min-height: 60vh;
+}
 </style>

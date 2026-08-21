@@ -3,7 +3,7 @@
     <!--操作按钮-->
     <div>
       <el-button type="primary" @click="handleOpenCreateForm">
-        <el-icon><Plus /></el-icon>新建工作流
+        <el-icon><Plus /></el-icon>新建WorkFlow
       </el-button>
       <el-button type="warning" @click="handleResetQuery">
         <el-icon><Refresh /></el-icon>重置
@@ -68,10 +68,6 @@
               <el-icon><Edit /></el-icon>
               <span style="font-size: 12px; font-weight: 400">修改</span>
             </el-button>
-            <el-button type="warning" text @click="handleOpenEndpoint(scope.row)" v-if="scope.row.status === 1">
-              <el-icon><Link /></el-icon>
-              <span style="font-size: 12px; font-weight: 400">端点</span>
-            </el-button>
             <el-button type="success" text @click="handleOpenRun(scope.row)" v-if="scope.row.status === 1">
               <el-icon><VideoPlay /></el-icon>
               <span style="font-size: 12px; font-weight: 400">运行</span>
@@ -114,6 +110,11 @@
             <el-form-item label="描述" prop="description">
               <el-input v-model="form.description" type="textarea" :rows="3" placeholder="请输入描述" />
             </el-form-item>
+            <el-form-item label="输入表单" prop="formId">
+              <el-select v-model="form.formId" placeholder="请选择输入表单" clearable filterable style="width:100%">
+                <el-option v-for="item in formOptions" :key="item.id" :label="item.name" :value="item.id" />
+              </el-select>
+            </el-form-item>
             <el-form-item label="状态" prop="status">
               <el-select v-model="form.status" style="width:100%">
                 <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
@@ -131,81 +132,13 @@
     </el-drawer>
     <!--运行工作流抽屉（复用公共组件）-->
     <run-instance-drawer v-model="runVisible" :workflow="currentWorkflow" @success="handleRunSuccess" />
-    <!--端点配置抽屉-->
-    <el-drawer
-        v-model="endpointVisible"
-        title="端点配置"
-        direction="ltr"
-        size="40%"
-        :before-close="handleCloseEndpoint"
-    >
-      <div class="endpoint-list-header">
-        <span style="font-size:13px;color:$color-text-secondary">一个工作流可配置多个端点，每个端点独立路径/鉴权</span>
-        <el-button type="primary" size="small" @click="handleAddEndpoint">
-          <el-icon><Plus /></el-icon>新增端点
-        </el-button>
-      </div>
-
-      <el-empty v-if="endpointList.length === 0" description="暂无端点，点击右上角新增" :image-size="60" />
-
-      <div v-for="(ep, idx) in endpointList" :key="ep.id || ('new_' + idx)" class="endpoint-card">
-        <div class="endpoint-card-header">
-          <el-tag size="small" :type="ep.enabled === 1 ? 'success' : 'info'" effect="plain">
-            {{ ep.enabled === 1 ? '已启用' : '已停用' }}
-          </el-tag>
-          <el-button v-if="ep.id" link type="danger" size="small" @click="handleDeleteEndpoint(ep)">删除</el-button>
-          <el-button v-else link type="info" size="small" @click="handleRemoveNewEndpoint(idx)">移除</el-button>
-        </div>
-        <el-form label-width="auto" size="small" class="endpoint-form">
-          <el-form-item label="路径">
-            <el-input v-model="ep.path" placeholder="如: ai/summary" />
-          </el-form-item>
-          <el-form-item label="鉴权方式">
-            <el-select v-model="ep.authType" style="width:100%">
-              <el-option label="无鉴权（内部调用）" :value="0" />
-              <el-option label="登录态" :value="1" />
-              <el-option label="API Key" :value="2" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="API Key" v-if="ep.authType === 2">
-            <el-input v-model="ep.apiKey" readonly>
-              <template #append>
-                <el-button @click="genApiKey(ep)">生成</el-button>
-              </template>
-            </el-input>
-          </el-form-item>
-          <el-form-item label="启用">
-            <el-switch
-                v-model="ep.enabled"
-                :active-value="1"
-                :inactive-value="-1"
-                active-text="已启用"
-                inactive-text="已停用"
-                inline-prompt
-            />
-          </el-form-item>
-        </el-form>
-        <el-button type="primary" size="small" style="width:100%" @click="handleSaveEndpoint(ep)">
-          {{ ep.id ? '保存修改' : '保存新端点' }}
-        </el-button>
-      </div>
-
-      <el-alert type="info" :closable="false" show-icon style="margin-top:16px">
-        <template #title>
-          <div style="font-size:12px;line-height:1.6">
-            <div>调用地址: <code>POST /api/workflow/instance/{路径}</code></div>
-            <div>API Key 鉴权时请求头: <code>Authorization: Bearer {apiKey}</code></div>
-          </div>
-        </template>
-      </el-alert>
-    </el-drawer>
   </div>
 </template>
 
 <script setup>
 import { getCurrentInstance, ref } from 'vue';
 import { pageWorkflowListAPI, createWorkflowAPI, updateWorkflowAPI, deleteWorkflowAPI, queryWorkflowDetailAPI } from '@/api/workflow/template';
-import { createEndpointAPI, updateEndpointAPI, deleteEndpointAPI, queryEndpointListAPI } from '@/api/workflow/endpoint';
+import { queryFormListAPI } from '@/api/form/form';
 import RunInstanceDrawer from '@/components/WfRunInstanceDrawer/index.vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Search } from '@element-plus/icons-vue';
@@ -218,14 +151,19 @@ const pageSizes = [30, 50, 100];
 const tableList = ref([]);
 const formVisible = ref(false);
 const formTitle = ref('');
-const form = ref({ id: undefined, name: undefined, description: undefined });
+const form = ref({ id: undefined, name: undefined, description: undefined, formId: undefined });
 const formRules = { name: [{ required: true, trigger: 'blur', message: '请输入工作流名称' }] };
+const formOptions = ref([]);
 const statusOptions = [
   { label: '关闭', value: -1 },
   { label: '开启', value: 1 }
 ];
 
 handleGetList();
+// 加载AI工作流表单选项
+queryFormListAPI({ type: 4, page: false }).then(res => {
+  if (res.code === 200 && res.data) { formOptions.value = res.data; }
+});
 
 function handleDelete(id) {
   ElMessageBox.confirm('是否确定删除此AI工作流?', '提示', {
@@ -240,7 +178,7 @@ function handleDelete(id) {
 function handleOpenUpdateForm(row) {
   queryWorkflowDetailAPI({ id: row.id }).then(res => {
     if (res.code === 200 && res.data) {
-      form.value = { id: res.data.id, name: res.data.name, description: res.data.description, status: res.data.status };
+      form.value = { id: res.data.id, name: res.data.name, description: res.data.description, status: res.data.status, formId: res.data.formId };
       formTitle.value = '修改AI工作流';
       formVisible.value = true;
     }
@@ -253,8 +191,8 @@ function handleOpenDesigner(row) {
 }
 
 function handleOpenCreateForm() {
-  form.value = { id: undefined, name: undefined, description: undefined, status: -1 };
-  formTitle.value = '新建AI工作流';
+  form.value = { id: undefined, name: undefined, description: undefined, status: -1, formId: undefined };
+  formTitle.value = '新建WorkFlow';
   formVisible.value = true;
 }
 
@@ -273,7 +211,7 @@ function handleResetQuery() {
 function handleSubmitForm() {
   proxy.$refs.formRef.validate(valid => {
     if (valid) {
-      const data = { id: form.value.id, name: form.value.name, description: form.value.description, status: form.value.status };
+      const data = { id: form.value.id, name: form.value.name, description: form.value.description, status: form.value.status, formId: form.value.formId };
       if (!form.value.id) {
         createWorkflowAPI(data).then(res => {
           if (res.code === 200) { ElMessage.success('创建成功'); handleCloseForm(); handleGetList(); }
@@ -288,7 +226,7 @@ function handleSubmitForm() {
 }
 
 function handleCloseForm() {
-  form.value = { id: undefined, name: undefined, description: undefined, status: -1 };
+  form.value = { id: undefined, name: undefined, description: undefined, status: -1, formId: undefined };
   formTitle.value = '';
   formVisible.value = false;
 }
@@ -327,94 +265,4 @@ function handleOpenRun(row) {
 function handleRunSuccess() {
   runVisible.value = false;
 }
-
-const endpointVisible = ref(false);
-const endpointList = ref([]);
-let currentTemplate = null;
-
-function genRandomPath() {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let s = '';
-  for (let i = 0; i < 16; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
-  return s;
-}
-
-function genApiKey(ep) {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let key = 'sk-';
-  for (let i = 0; i < 32; i++) { key += chars.charAt(Math.floor(Math.random() * chars.length)); }
-  ep.apiKey = key;
-}
-
-function handleOpenEndpoint(row) {
-  currentTemplate = row;
-  queryEndpointListAPI({ templateId: row.id }).then(res => {
-    if (res.code === 200 && res.data) {
-      endpointList.value = res.data;
-    } else {
-      endpointList.value = [];
-    }
-    endpointVisible.value = true;
-  });
-}
-
-function handleAddEndpoint() {
-  endpointList.value.push({
-    id: undefined, templateId: currentTemplate.id, revId: currentTemplate.revId,
-    path: genRandomPath(), authType: 0, apiKey: '', enabled: 1
-  });
-}
-
-function handleRemoveNewEndpoint(idx) {
-  endpointList.value.splice(idx, 1);
-}
-
-function handleSaveEndpoint(ep) {
-  if (!ep.path) { ElMessage.warning('请填写路径'); return; }
-  if (ep.id) {
-    updateEndpointAPI(ep).then(res => {
-      if (res.code === 200) { ElMessage.success('端点修改成功'); }
-    });
-  } else {
-    createEndpointAPI(ep).then(res => {
-      if (res.code === 200) { ElMessage.success('端点创建成功'); handleOpenEndpoint(currentTemplate); }
-    });
-  }
-}
-
-function handleDeleteEndpoint(ep) {
-  ElMessageBox.confirm('确定删除此端点配置吗？', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }).then(() => {
-    deleteEndpointAPI({ id: ep.id }).then(res => {
-      if (res.code === 200) { ElMessage.success('端点已删除'); handleOpenEndpoint(currentTemplate); }
-    });
-  }).catch(() => {});
-}
-
-function handleCloseEndpoint() {
-  endpointList.value = [];
-  currentTemplate = null;
-  endpointVisible.value = false;
-}
 </script>
-
-<style scoped lang="scss">
-.endpoint-list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-.endpoint-card {
-  border: 1px solid #e4eaf4;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 12px;
-  background: #fafbfc;
-}
-.endpoint-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-</style>

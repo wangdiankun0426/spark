@@ -388,7 +388,7 @@ CREATE TABLE `flow_template` (
      `id` bigint(12) NOT NULL COMMENT '主键',
      `name` varchar(128) NOT NULL COMMENT '名称',
      `process_id` varchar(128) NOT NULL COMMENT '模板id',
-     `form_id` bigint(12) NULL COMMENT '表单id',
+     `form_id` bigint(12) NOT NULL COMMENT '表单id',
      `type` int(3) NOT NULL DEFAULT 1 COMMENT '流程类型',
      `rev_id` bigint(12) NULL COMMENT '版本id',
      `rev_num` varchar(12) NOT NULL COMMENT '当前版本号',
@@ -738,6 +738,7 @@ CREATE TABLE `wf_template` (
     `status` int(2) NOT NULL DEFAULT -1 COMMENT '状态：-1关闭/1开启',
     `rev_id` bigint(12) NULL COMMENT '当前生效版本ID',
     `rev_num` varchar(12) NULL COMMENT '当前生效版本号',
+    `form_id` bigint(12) NOT NULL COMMENT '表单ID',
 
     `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1有效/-1无效',
@@ -768,26 +769,6 @@ CREATE TABLE `wf_template_version` (
     KEY `idx_template_id` (`template_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工作流模板版本表';
 
-DROP TABLE IF EXISTS `wf_template_endpoint`;
-CREATE TABLE `wf_template_endpoint` (
-    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
-    `template_id` bigint(12) NOT NULL COMMENT '工作流模板ID',
-    `rev_id` bigint(12) NOT NULL COMMENT '生效版本ID',
-    `path` varchar(128) NOT NULL COMMENT '端点路径',
-    `auth_type` int(2) NOT NULL DEFAULT 0 COMMENT '鉴权',
-    `api_key` varchar(64) NULL COMMENT 'API Key',
-    `enabled` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否启用',
-
-    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识',
-    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
-    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
-    `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_path` (`path`, `delete_flag`),
-    KEY `idx_template_id` (`template_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='工作流模板节点配置表';
-
 DROP TABLE IF EXISTS `wf_instance`;
 CREATE TABLE `wf_instance` (
     `id` bigint(12) NOT NULL COMMENT '主键',
@@ -795,13 +776,9 @@ CREATE TABLE `wf_instance` (
     `rev_id` bigint(12) NOT NULL COMMENT '执行版本ID',
     `rev_num` varchar(12) NOT NULL COMMENT '执行版本号',
     `status` int(2) NOT NULL DEFAULT 1 COMMENT '运行状态',
-    `input_json` mediumtext NULL COMMENT '输入参数JSON',
-    `output_json` mediumtext NULL COMMENT '输出结果JSON',
     `error_msg` varchar(1024) NULL COMMENT '错误信息',
-    `started_dt` timestamp NULL COMMENT '开始时间',
     `finished_dt` timestamp NULL COMMENT '结束时间',
     `duration_ms` bigint(12) NULL COMMENT '总耗时',
-    `trigger_type` int(2) NOT NULL DEFAULT 1 COMMENT '触发方式',
 
     `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识',

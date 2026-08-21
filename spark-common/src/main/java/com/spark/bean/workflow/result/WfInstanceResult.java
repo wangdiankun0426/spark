@@ -49,24 +49,9 @@ public class WfInstanceResult extends BaseResult {
     private String statusName;
 
     /**
-     * 输入参数JSON
-     */
-    private String inputJson;
-
-    /**
-     * 输出结果JSON
-     */
-    private String outputJson;
-
-    /**
      * 错误信息
      */
     private String errorMsg;
-
-    /**
-     * 开始时间
-     */
-    private Timestamp startedDt;
 
     /**
      * 结束时间
@@ -77,15 +62,5 @@ public class WfInstanceResult extends BaseResult {
      * 总耗时（毫秒）
      */
     private Long durationMs;
-
-    /**
-     * 触发方式
-     */
-    private Integer triggerType;
-
-    /**
-     * 触发方式名称
-     */
-    private String triggerTypeName;
 
 }

@@ -34,12 +34,12 @@ public class WfInstanceNodeResult extends BaseResult {
     private String nodeName;
 
     /**
-     * 节点类型（llm/knowledge/code/...）
+     * 节点类型 FlowTemplateTypeEnum
      */
     private String nodeType;
 
     /**
-     * 状态：1等待/2运行中/3成功/4失败/5跳过
+     * 状态 WorkflowNodeStatusEnum
      */
     private Integer status;
 

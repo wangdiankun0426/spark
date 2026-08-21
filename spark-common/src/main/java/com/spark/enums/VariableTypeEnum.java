@@ -13,6 +13,7 @@ public enum VariableTypeEnum {
     BASE(1,"基础数据", "base"),
     FORM(2,"表单数据", "form"),
     FORM_TXT(3,"表单显示值", "formTxt"),
+    NODE(4,"节点数据", "node"),
 
     ;
 

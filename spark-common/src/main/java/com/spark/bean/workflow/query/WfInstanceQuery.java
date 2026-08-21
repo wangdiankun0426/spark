@@ -26,9 +26,4 @@ public class WfInstanceQuery extends BaseQuery {
      */
     private Integer status;
 
-    /**
-     * 触发方式：1手动/2API/3定时/4审批流
-     */
-    private Integer triggerType;
-
 }

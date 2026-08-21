@@ -5,6 +5,10 @@
       <div class="toolbar-left">
         <span class="toolbar-title">{{ templateName || '新建流程' }}</span>
         <el-tag v-if="revNum" size="small" type="warning">{{ revNum }}</el-tag>
+        <el-button text size="small" type="primary" @click="varHelpVisible = true">
+          <el-icon><QuestionFilled /></el-icon>
+          <span style="font-size:12px">变量帮助</span>
+        </el-button>
       </div>
       <div class="toolbar-right">
         <el-button
@@ -37,7 +41,7 @@
       />
 
       <!--中间画布-->
-      <index
+      <canvas-index
           :nodes="nodes"
           :sequences="sequences"
           source-key="sourceRef"
@@ -86,20 +90,24 @@
 
     <!--流程通知-->
     <NoticeConfig ref="notificationConfigRef" :config="noticeConfig" />
+
+    <!--变量帮助-->
+    <variable-help v-model="varHelpVisible" :form-fields="helpFormFields" :base-vars="helpBaseVars" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRoute } from "vue-router";
 import { createTemplateVersionAPI, queryTemplateVersionDetailAPI } from "@/api/flow/templateVersion.js";
 import { queryTemplateDetailAPI } from "@/api/flow/template.js";
 import { queryFormFieldListAPI } from "@/api/form/formField.js";
 import NodePanel from '@/views/flowDesigner/nodePanel/index.vue'
-import Index from '@/views/flowDesigner/canvas/index.vue'
+import CanvasIndex from '@/views/flowDesigner/canvas/index.vue'
 import NoticeConfig from './NoticeConfig.vue'
 import PropertyDrawer from './PropertyDrawer.vue'
+import VariableHelp from '@/components/FlowVariableHelp/index.vue'
 import { NODE_COMPONENTS, NODE_META } from '@/views/flowDesigner/nodes/index.js'
 
 const templateId = ref(0);
@@ -107,6 +115,16 @@ const revId = ref(0);
 const templateName = ref('');
 const revNum = ref('');
 const fieldOptions = ref([]);
+
+/** 变量帮助 */
+const varHelpVisible = ref(false);
+const helpFormFields = computed(() => fieldOptions.value.map(f => ({ label: f.label, code: f.value })));
+const helpBaseVars = [
+  { label: '申请人', value: '#{base:appUserName}#' },
+  { label: '流程名称', value: '#{base:flowName}#' },
+  { label: '发起人', value: '#{base:appUser}#' },
+  { label: '当前审批人', value: '#{base:appAssignee}#' }
+];
 
 onMounted(() => {
   const params = useRoute().params;

@@ -548,7 +548,7 @@ public class FlowEventServiceImpl extends BaseFlowService implements FlowEventSe
             TaskInstanceParam taskInstanceParam = new TaskInstanceParam();
             taskInstanceParam.setTaskId(taskInstance.getId());
             taskInstanceParam.setCode(param.getCode());
-            String value = super.generateFlowValue(param.getValue(), null, formValueMap, formTxtMap);
+            String value = super.generateFlowValue(param.getValue(), null, formValueMap, formTxtMap, null);
             taskInstanceParam.setValue(value);
             count = taskInstanceParamDao.insertDB(taskInstanceParam);
             if (count < 1) {

@@ -30,4 +30,9 @@ public class WfTemplateVO extends BaseVO {
      */
     private Integer status;
 
+    /**
+     * 绑定输入表单ID
+     */
+    private Long formId;
+
 }

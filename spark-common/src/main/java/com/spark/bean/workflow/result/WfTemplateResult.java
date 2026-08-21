@@ -46,4 +46,19 @@ public class WfTemplateResult extends BaseResult {
      */
     private String revNum;
 
+    /**
+     * 绑定输入表单ID
+     */
+    private Long formId;
+
+    /**
+     * 绑定表单版本ID
+     */
+    private Long formRevId;
+
+    /**
+     * 绑定表单JSON定义
+     */
+    private String formJson;
+
 }

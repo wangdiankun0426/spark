@@ -15,8 +15,7 @@ public enum WorkflowInstanceStatusEnum {
     RUNNING(1, "运行中"),
     SUCCESS(2, "成功"),
     FAILED(3, "失败"),
-    TIMEOUT(4, "超时"),
-    CANCELED(5, "已取消");
+    ;
 
     private Integer value;
 

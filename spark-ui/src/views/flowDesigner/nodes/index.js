@@ -32,5 +32,8 @@ export const NODE_META = {
   endEvent: { name: '结束', icon: 'CircleClose', color: '#ff4d4f', bgColor: '#fff2f0', width: 128, height: 60 },
   exclusiveGateway: { name: '条件分支', icon: 'Share', color: '#fa8c16', bgColor: '#fffbe6', width: 128, height: 60 },
   userTask: { name: '用户任务', icon: 'User', color: '#1890ff', bgColor: '#e6f7ff', width: 128, height: 86 },
-  llmTask: { name: 'LLM模型', icon: 'Cpu', color: '#004fc5', bgColor: '#e8f0fd', width: 128, height: 60 }
+  llmTask: { name: 'LLM模型', icon: 'Cpu', color: '#004fc5', bgColor: '#e8f0fd', width: 128, height: 60 },
+  docParse: { name: '文档解析', icon: 'Document', color: '#13c2c2', bgColor: '#e6fffb', width: 128, height: 60 },
+  notify: { name: '发送通知', icon: 'Bell', color: '#722ed1', bgColor: '#f9f0ff', width: 128, height: 60 },
+  kbArchive: { name: '知识库归档', icon: 'Collection', color: '#237804', bgColor: '#f6ffed', width: 128, height: 60 }
 }

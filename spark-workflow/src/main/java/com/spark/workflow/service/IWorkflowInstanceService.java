@@ -2,14 +2,14 @@ package com.spark.workflow.service;
 
 import com.spark.bean.base.PageResult;
 import com.spark.bean.base.ResultData;
+import com.spark.bean.workflow.entity.WfInstance;
 import com.spark.bean.workflow.query.WfInstanceQuery;
 import com.spark.bean.workflow.query.WfInstanceNodeQuery;
 import com.spark.bean.workflow.result.WfInstanceResult;
 import com.spark.bean.workflow.result.WfInstanceNodeResult;
-import jakarta.servlet.http.HttpServletRequest;
+import com.spark.bean.workflow.vo.WfRunVO;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * +++/\_/\
@@ -48,12 +48,10 @@ public interface IWorkflowInstanceService {
     ResultData<List<WfInstanceNodeResult>> queryInstanceNodes(WfInstanceNodeQuery query);
 
     /**
-     * 执行工作流（公开端点调用入口）
+     * 运行工作流
      *
-     * @param path 端点路径
-     * @param params 输入参数
-     * @param request HTTP请求
-     * @return 执行结果
+     * @param runVO 运行入参
+     * @return 运行实例
      */
-    ResultData<Map<String, Object>> executeWorkflow(String path, Map<String, Object> params, HttpServletRequest request);
+    ResultData<WfInstance> runWorkflow(WfRunVO runVO);
 }

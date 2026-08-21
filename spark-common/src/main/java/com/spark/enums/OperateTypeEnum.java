@@ -57,7 +57,6 @@ public enum OperateTypeEnum {
     WORKFLOW_UPDATE(81, "修改AI工作流"),
     WORKFLOW_DELETE(82, "删除AI工作流"),
     WORKFLOW_PUBLISH(83, "发布AI工作流"),
-    WORKFLOW_ENDPOINT_UPDATE(84, "修改端点配置"),
     // 消息相关的操作记录
     MESSAGE_INSERT(90, "发送消息"),
     MESSAGE_DELETE(91, "删除消息"),

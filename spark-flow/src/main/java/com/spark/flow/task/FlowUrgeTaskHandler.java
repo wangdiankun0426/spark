@@ -16,6 +16,7 @@ import com.spark.enums.MessageTypeEnum;
 import com.spark.enums.TaskTypeEnum;
 import com.spark.flow.service.FlowMessageService;
 import com.spark.task.service.ITaskTypeHandler;
+import com.spark.utils.MapUtil;
 import com.spark.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +65,7 @@ public class FlowUrgeTaskHandler implements ITaskTypeHandler {
     public ResultData<List<TaskInstanceData>> handle(TaskInstanceResult taskInstance, Map<String, String> params) {
         ResultData<List<TaskInstanceData>> result = new ResultData<>();
         logger.info("taskInstance={},params={}", taskInstance, params);
-        String instanceNodeIdStr = params.getOrDefault(TaskParamCode.FLOW_INSTANCE_NODE_ID, null);
+        String instanceNodeIdStr = MapUtil.getStringVal(params, TaskParamCode.FLOW_INSTANCE_NODE_ID);
         if (!StringUtil.isNumeric(instanceNodeIdStr)) {
             logger.error("instanceNodeId param not exist, taskId={}", taskInstance.getId());
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);

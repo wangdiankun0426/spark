@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.workflow.WfTemplateDao" >
     <sql id="allColumnList" >
-        id , name , description , status , rev_id , rev_num , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , name , description , status , rev_id , rev_num , form_id , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="searchCondition">
@@ -35,8 +35,8 @@
     </sql>
 
     <insert id="insert">
-        insert into wf_template ( id , name , description , status , rev_id , rev_num , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values (#{id} , #{name} , #{description} , #{status} , #{revId} , #{revNum} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into wf_template ( id , name , description , status , rev_id , rev_num , form_id , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{id} , #{name} , #{description} , #{status} , #{revId} , #{revNum} , #{formId} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">
@@ -60,6 +60,7 @@
         <if test="revNum != null">
              , rev_num = #{revNum}
         </if>
+        , form_id = #{formId}
         where id = #{id}
     </update>
 

@@ -77,6 +77,8 @@ public class WorkflowVersionServiceImpl extends BaseService<WfTemplateVersionQue
         template.setId(versionVO.getTemplateId());
         template.setRevId(version.getId());
         template.setRevNum(newRevNum);
+        // updateById中form_id为无条件更新，此处需回填保持绑定关系不变
+        template.setFormId(templateResult.getFormId());
         count = templateDao.updateDBById(template);
         if (count < 1) {
             logger.error("saveVersion error, update template rev fail");

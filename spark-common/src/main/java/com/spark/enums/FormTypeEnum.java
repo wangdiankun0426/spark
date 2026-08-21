@@ -14,6 +14,7 @@ public enum FormTypeEnum {
     COMMON(1, "普通表单"),
     FLOW(2, "流程表表单"),
     METADATA(3, "元数据表单"),
+    WORKFLOW(4, "workflow表单"),
     ;
 
     private Integer value;

@@ -27,4 +27,9 @@ public class TaskParamCode {
      */
     public final static String KNOWLEDGE_ID = "kbId";
 
+    /**
+     * 已归档文档ID
+     */
+    public final static String FILE_ID = "fileId";
+
 }

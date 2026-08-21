@@ -109,7 +109,7 @@ public class AttachmentServiceImpl extends BaseService<AttachmentQuery, Attachme
         }
         AttachmentResult attachmentResult = attachmentDao.queryAttachment(query);
         if (attachmentResult == null) {
-            result.setErrorCode(ErrorCodeEnum.FILE_NOT_EXIST);
+            result.setErrorCode(ErrorCodeEnum.ATTACHMENT_NOT_EXIST);
             return result;
         }
         File file = new File(attachmentResult.getPath());
@@ -137,7 +137,7 @@ public class AttachmentServiceImpl extends BaseService<AttachmentQuery, Attachme
         }
         AttachmentResult attachmentResult = attachmentDao.queryAttachment(query);
         if (attachmentResult == null) {
-            result.setErrorCode(ErrorCodeEnum.FILE_NOT_EXIST);
+            result.setErrorCode(ErrorCodeEnum.ATTACHMENT_NOT_EXIST);
             return result;
         }
         // 存储路径不对外暴露

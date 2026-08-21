@@ -9,6 +9,7 @@ import com.spark.enums.TaskTypeEnum;
 import com.spark.kb.service.IDocumentService;
 import com.spark.task.service.ITaskTypeHandler;
 import com.spark.utils.CollectionUtil;
+import com.spark.utils.MapUtil;
 import com.spark.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,13 +55,13 @@ public class KnowledgeTaskHandler implements ITaskTypeHandler {
     public ResultData<List<TaskInstanceData>> handle(TaskInstanceResult taskInstance, Map<String, String> params) {
         ResultData<List<TaskInstanceData>> result = new ResultData<>();
         logger.info("taskInstance={},params={}", taskInstance, params);
-        String kbIdStr = params.getOrDefault(TaskParamCode.KNOWLEDGE_ID, null);
+        String kbIdStr = MapUtil.getStringVal(params, TaskParamCode.KNOWLEDGE_ID);
         if (StringUtil.isBlank(kbIdStr)) {
             logger.error("kbId param not exist, taskId={}", taskInstance.getId());
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        String attIdStr = params.getOrDefault(TaskParamCode.ATT_ID, null);
+        String attIdStr = MapUtil.getStringVal(params, TaskParamCode.ATT_ID);
         if (StringUtil.isBlank(attIdStr)) {
             logger.error("attId param not exist, taskId={}", taskInstance.getId());
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
@@ -81,7 +82,7 @@ public class KnowledgeTaskHandler implements ITaskTypeHandler {
                     logger.error("file document fail, attId={}, kbId={}, taskId={}", attId, kbId, taskInstance.getId());
                     return result;
                 }
-                TaskInstanceData taskInstanceData = this.genreTaskInstanceData(taskInstance, TaskParamCode.ATT_ID + attId, fileResult.getData());
+                TaskInstanceData taskInstanceData = this.genreTaskInstanceData(taskInstance, TaskParamCode.FILE_ID+attId, fileResult.getData());
                 if (taskInstanceData != null) {
                     list.add(taskInstanceData);
                 }

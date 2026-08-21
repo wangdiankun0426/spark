@@ -327,10 +327,12 @@ function getConditionLabelPosition(edge) {
   return { x: pos.x, y: edge.name ? pos.y + 20 : pos.y + 8 }
 }
 
-/** 判断连线是否为条件分支连线（源节点为排他网关且有条件表达式） */
+/** 判断连线是否为条件分支连线（源节点为排他网关且配置了 el 表达式走向条件） */
 function isConditionEdge(edge) {
   const source = props.nodes.find(n => n.id === getEdgeSource(edge))
-  return !!source && source.type === 'exclusiveGateway' && !!edge.conditionExpression
+  if (!source || source.type !== 'exclusiveGateway') return false
+  // 两设计器统一：Spring EL 表达式走向条件
+  return !!edge.conditionExpression
 }
 
 /**
@@ -343,6 +345,7 @@ function formatEdgeConditionLines(edge) {
   if (!isConditionEdge(edge)) {
     return [];
   }
+  // 两设计器统一：Spring EL 表达式走向条件
   let s = String(edge.conditionExpression).trim();
   if (s.startsWith('${') && s.endsWith('}')) {
     s = s.slice(2, -1);

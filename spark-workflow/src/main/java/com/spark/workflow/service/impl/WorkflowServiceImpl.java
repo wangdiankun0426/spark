@@ -8,15 +8,22 @@ import com.spark.bean.workflow.query.WfTemplateQuery;
 import com.spark.bean.workflow.query.WfInstanceQuery;
 import com.spark.bean.workflow.result.WfTemplateResult;
 import com.spark.bean.workflow.vo.WfTemplateVO;
+import com.spark.bean.form.query.FormQuery;
+import com.spark.bean.form.query.FormVersionQuery;
+import com.spark.bean.form.result.FormResult;
+import com.spark.bean.form.result.FormVersionResult;
 import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.dao.workflow.WfTemplateDao;
 import com.spark.dao.workflow.WfTemplateVersionDao;
 import com.spark.dao.workflow.WfInstanceDao;
+import com.spark.dao.form.FormDao;
+import com.spark.dao.form.FormVersionDao;
 import com.spark.enums.*;
 import com.spark.manage.BaseService;
 import com.spark.utils.CollectionUtil;
 import com.spark.utils.StringUtil;
+import com.spark.utils.TextUtil;
 import com.spark.workflow.service.IWorkflowService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +52,10 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
     private WfTemplateVersionDao templateVersionDao;
     @Autowired
     private WfInstanceDao instanceDao;
+    @Autowired
+    private FormDao formDao;
+    @Autowired
+    private FormVersionDao formVersionDao;
 
     /**
      * 创建工作流
@@ -57,6 +68,11 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
         ResultData<Void> result = new ResultData<>();
         if (templateVO == null || StringUtil.isBlank(templateVO.getName())) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        // 输入表单绑定可选，绑定时校验表单存在
+        if (templateVO.getFormId() != null && !checkFormExist(templateVO.getFormId())) {
+            result.setErrorCode(ErrorCodeEnum.FORM_NOT_EXIST);
             return result;
         }
         Long templateId = super.genObjectId(ObjectTypeEnum.WORKFLOW);
@@ -102,6 +118,11 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
         WfTemplateResult templateResult = templateDao.queryTemplate(query);
         if (templateResult == null) {
             result.setErrorCode(ErrorCodeEnum.WORKFLOW_NOT_FOUND);
+            return result;
+        }
+        // 输入表单绑定可选，绑定时校验表单存在
+        if (templateVO.getFormId() != null && !checkFormExist(templateVO.getFormId())) {
+            result.setErrorCode(ErrorCodeEnum.FORM_NOT_EXIST);
             return result;
         }
         WfTemplate template = new WfTemplate();
@@ -185,9 +206,51 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
             result.setErrorCode(ErrorCodeEnum.WORKFLOW_NOT_FOUND);
             return result;
         }
+        fillFormJson(templateResult);
         result.setData(templateResult);
         result.setCode(ResultData.OK);
         return result;
+    }
+
+    /**
+     * 校验表单是否存在
+     *
+     * @param formId 表单ID
+     * @return 是否存在
+     */
+    private boolean checkFormExist(Long formId) {
+        FormQuery formQuery = new FormQuery();
+        formQuery.setId(formId);
+        return formDao.queryForm(formQuery) != null;
+    }
+
+    /**
+     * 填充绑定表单JSON定义
+     *
+     * @param templateResult 模板结果
+     */
+    private void fillFormJson(WfTemplateResult templateResult) {
+        if (templateResult.getFormId() == null) {
+            return;
+        }
+        FormQuery formQuery = new FormQuery();
+        formQuery.setId(templateResult.getFormId());
+        FormResult formResult = formDao.queryForm(formQuery);
+        if (formResult == null) {
+            return;
+        }
+        templateResult.setFormRevId(formResult.getRevId());
+        if (formResult.getRevId() == null) {
+            return;
+        }
+        FormVersionQuery formVersionQuery = new FormVersionQuery();
+        formVersionQuery.setId(formResult.getRevId());
+        FormVersionResult formVersionResult = formVersionDao.queryFormVersion(formVersionQuery);
+        if (formVersionResult == null || StringUtil.isBlank(formVersionResult.getFilePath())) {
+            return;
+        }
+        ResultData<String> fromText = TextUtil.getFromText(formVersionResult.getFilePath(), false);
+        templateResult.setFormJson(fromText.getData());
     }
 
     /**

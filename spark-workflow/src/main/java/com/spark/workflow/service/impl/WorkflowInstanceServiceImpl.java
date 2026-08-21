@@ -1,37 +1,36 @@
 package com.spark.workflow.service.impl;
 
-import com.alibaba.fastjson2.JSON;
+import com.spark.bean.base.BaseContext;
 import com.spark.bean.base.PageResult;
 import com.spark.bean.base.ResultData;
 import com.spark.bean.base.SessionHolder;
+import com.spark.bean.system.entity.Session;
 import com.spark.bean.workflow.entity.WfInstance;
 import com.spark.bean.workflow.query.WfInstanceNodeQuery;
 import com.spark.bean.workflow.query.WfInstanceQuery;
-import com.spark.bean.workflow.query.WfTemplateEndpointQuery;
 import com.spark.bean.workflow.query.WfTemplateQuery;
 import com.spark.bean.workflow.query.WfTemplateVersionQuery;
 import com.spark.bean.workflow.result.WfInstanceNodeResult;
 import com.spark.bean.workflow.result.WfInstanceResult;
-import com.spark.bean.workflow.result.WfTemplateEndpointResult;
 import com.spark.bean.workflow.result.WfTemplateResult;
 import com.spark.bean.workflow.result.WfTemplateVersionResult;
+import com.spark.bean.workflow.vo.WfRunVO;
+import com.spark.bean.form.entity.FormObjValue;
+import com.spark.bean.form.vo.FormObjValueVO;
 import com.spark.dao.workflow.WfInstanceDao;
 import com.spark.dao.workflow.WfInstanceNodeDao;
 import com.spark.dao.workflow.WfTemplateDao;
-import com.spark.dao.workflow.WfTemplateEndpointDao;
 import com.spark.dao.workflow.WfTemplateVersionDao;
 import com.spark.enums.ErrorCodeEnum;
 import com.spark.enums.ObjectTypeEnum;
-import com.spark.enums.StatusEnum;
-import com.spark.enums.WorkflowEndpointAuthTypeEnum;
 import com.spark.enums.WorkflowInstanceStatusEnum;
-import com.spark.enums.WorkflowTriggerTypeEnum;
+import com.spark.enums.WorkflowNodeStatusEnum;
+import com.spark.form.service.IFormObjValueService;
 import com.spark.manage.BaseService;
 import com.spark.utils.CollectionUtil;
 import com.spark.utils.StringUtil;
 import com.spark.workflow.engine.DagExecutor;
 import com.spark.workflow.service.IWorkflowInstanceService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +39,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * +++/\_/\
@@ -59,13 +59,13 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
     @Autowired
     private WfInstanceNodeDao instanceNodeDao;
     @Autowired
-    private WfTemplateEndpointDao endpointDao;
-    @Autowired
     private WfTemplateDao templateDao;
     @Autowired
     private WfTemplateVersionDao templateVersionDao;
     @Autowired
     private DagExecutor dagExecutor;
+    @Autowired
+    private IFormObjValueService formObjValueService;
 
     /**
      * 分页查询运行实例
@@ -101,6 +101,7 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
             return result;
         }
         instanceResult.setStatusName(WorkflowInstanceStatusEnum.indexOf(instanceResult.getStatus()).getDesc());
+        super.supplyCreatedByName(instanceResult);
         result.setData(instanceResult);
         result.setCode(ResultData.OK);
         return result;
@@ -121,81 +122,89 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
         }
         query.setPage(false);
         List<WfInstanceNodeResult> nodes = instanceNodeDao.queryInstanceNodeList(query);
+        if (CollectionUtil.isNotEmpty(nodes)) {
+            nodes.forEach(node -> {
+                node.setStatusName(WorkflowNodeStatusEnum.indexOf(node.getStatus()).getDesc());
+            });
+        }
         result.setData(nodes);
         result.setCode(ResultData.OK);
         return result;
     }
 
     /**
-     * 执行工作流（公开端点调用入口）
+     * 运行工作流
      *
-     * @param path 端点路径
-     * @param params 输入参数
-     * @param request HTTP请求
-     * @return 执行结果
+     * @param runVO 运行入参
+     * @return 运行实例
      */
     @Override
-    public ResultData<Map<String, Object>> executeWorkflow(String path, Map<String, Object> params, HttpServletRequest request) {
-        ResultData<Map<String, Object>> result = new ResultData<>();
-        WfTemplateEndpointQuery nodeQuery = new WfTemplateEndpointQuery();
-        nodeQuery.setPath(path);
-        WfTemplateEndpointResult endpoint = endpointDao.queryEndpoint(nodeQuery);
-        if (endpoint == null) {
-            result.setErrorCode(ErrorCodeEnum.NOT_FOUND);
+    public ResultData<WfInstance> runWorkflow(WfRunVO runVO) {
+        ResultData<WfInstance> result = new ResultData<>();
+        if (runVO == null || runVO.getTemplateId() == null || runVO.getFormId() == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        if (!StatusEnum.NORMAL.getValue().equals(endpoint.getEnabled())) {
-            result.setErrorCode(ErrorCodeEnum.WORKFLOW_ENDPOINT_DISABLED);
-            return result;
-        }
-        if (WorkflowEndpointAuthTypeEnum.LOGIN.getValue().equals(endpoint.getAuthType())) {
-            if (SessionHolder.getCurrentUserId() == null) {
-                result.setErrorCode(ErrorCodeEnum.NOT_LOGIN);
-                return result;
-            }
-        } else if (WorkflowEndpointAuthTypeEnum.APY_KEY.getValue().equals(endpoint.getAuthType())) {
-            String authHeader = request.getHeader("Authorization");
-            if (StringUtil.isBlank(authHeader) || !authHeader.equals("Bearer " + endpoint.getApiKey())) {
-                result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
-                return result;
-            }
-        }
+        Long templateId = runVO.getTemplateId();
         WfTemplateQuery templateQuery = new WfTemplateQuery();
-        templateQuery.setId(endpoint.getTemplateId());
+        templateQuery.setId(templateId);
         WfTemplateResult template = templateDao.queryTemplate(templateQuery);
-        if (template == null || template.getRevId() == null) {
-            result.setErrorCode(ErrorCodeEnum.WORKFLOW_NO_PUBLISHED_VERSION);
+        if (template == null) {
+            result.setErrorCode(ErrorCodeEnum.WORKFLOW_NOT_FOUND);
             return result;
         }
-        Long instanceId = super.genObjectId(ObjectTypeEnum.WORKFLOW_INSTANCE);
-        WfInstance instance = new WfInstance();
-        instance.setId(instanceId);
-        instance.setTemplateId(endpoint.getTemplateId());
-        instance.setRevId(template.getRevId());
-        instance.setRevNum(template.getRevNum());
-        instance.setStatus(WorkflowInstanceStatusEnum.RUNNING.getValue());
-        instance.setInputJson(JSON.toJSONString(params));
-        instance.setTriggerType(WorkflowTriggerTypeEnum.API.getValue());
-        int count = instanceDao.insertDB(instance);
-        if (count < 1) {
-            logger.error("executeWorkflow error, insert instance fail");
+        if (template.getRevId() == null) {
+            result.setErrorCode(ErrorCodeEnum.WORKFLOW_NO_PUBLISHED_VERSION);
             return result;
         }
         WfTemplateVersionQuery versionQuery = new WfTemplateVersionQuery();
         versionQuery.setId(template.getRevId());
-        WfTemplateVersionResult version = templateVersionDao.queryVersion(versionQuery);
-        if (version == null || StringUtil.isBlank(version.getDagJson())) {
-            instance.setStatus(WorkflowInstanceStatusEnum.FAILED.getValue());
-            instance.setErrorMsg("已发布版本无DAG数据");
-            instanceDao.updateDBById(instance);
+        WfTemplateVersionResult versionResult = templateVersionDao.queryVersion(versionQuery);
+        if (versionResult == null) {
+            result.setErrorCode(ErrorCodeEnum.WORKFLOW_VERSION_NOT_FOUND);
+            return result;
+        }
+        if (StringUtil.isBlank(versionResult.getDagJson())) {
             result.setErrorCode(ErrorCodeEnum.WORKFLOW_DAG_INVALID);
             return result;
         }
-        dagExecutor.executeAsync(instanceId, version.getDagJson(), params);
-        Map<String, Object> output = new HashMap<>();
-        output.put("instanceId", instanceId);
-        output.put("status", "running");
-        result.setData(output);
+        Long instanceId = super.genObjectId(ObjectTypeEnum.WORKFLOW_INSTANCE);
+        List<FormObjValue> values = runVO.getValues();
+        Map<String, String> vlaueMap = new HashMap<>();
+        Map<String, String> showVlaueMap = new HashMap<>();
+        if (CollectionUtil.isNotEmpty(values)) {
+            FormObjValueVO formObjValueVO = new FormObjValueVO();
+            formObjValueVO.setObjId(instanceId);
+            formObjValueVO.setFormId(runVO.getFormId());
+            formObjValueVO.setValues(values);
+            ResultData<Void> saveFormData = formObjValueService.saveFormObjValues(formObjValueVO);
+            if (saveFormData.getCode() != ResultData.OK) {
+                result.setCode(saveFormData.getCode());
+                result.setMessage(saveFormData.getMessage());
+                return result;
+            }
+            vlaueMap = values.stream().filter(v -> StringUtil.isNotBlank(v.getValue())).collect(Collectors.toMap(FormObjValue::getCode, FormObjValue::getValue, (v1, v2) -> v2));
+            showVlaueMap = values.stream().filter(v -> StringUtil.isNotBlank(v.getShowValue())).collect(Collectors.toMap(FormObjValue::getCode, FormObjValue::getShowValue, (v1, v2) -> v2));
+        }
+        WfInstance instance = new WfInstance();
+        instance.setId(instanceId);
+        instance.setTemplateId(templateId);
+        instance.setRevId(template.getRevId());
+        instance.setRevNum(template.getRevNum());
+        instance.setStatus(WorkflowInstanceStatusEnum.RUNNING.getValue());
+        int count = instanceDao.insertDB(instance);
+        if (count < 1) {
+            logger.error("runWorkflow error, insert instance fail");
+            return result;
+        }
+        Session session = new Session();
+        session.setUserId(SessionHolder.getCurrentUserId());
+        BaseContext context = new BaseContext();
+        context.putVal(WfInstance.class, instance);
+        context.put("valueMap", vlaueMap);
+        context.put("showValueMap", showVlaueMap);
+        dagExecutor.executeAsync(session, context, versionResult.getDagJson());
+        result.setData(instance);
         result.setCode(ResultData.OK);
         return result;
     }

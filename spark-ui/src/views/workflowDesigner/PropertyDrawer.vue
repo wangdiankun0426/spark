@@ -1,22 +1,22 @@
 <template>
   <!--连线配置-->
-  <div class="attr-panel" v-if="sequence">
-    <div class="panel-header">
-      <span class="panel-title">连线配置</span>
+  <div class="property-drawer" v-if="edge">
+    <div class="drawer-header">
+      <span class="drawer-title">连线配置</span>
       <el-button link @click="$emit('close')"><el-icon><Close /></el-icon></el-button>
     </div>
-    <div class="panel-body">
-      <el-form :model="sequence" label-width="auto">
+    <div class="drawer-body">
+      <el-form :model="edge" label-width="auto">
         <el-form-item label="连线ID">
-          <el-input :model-value="sequence.id" readonly />
+          <el-input :model-value="edge.id" readonly />
         </el-form-item>
         <el-form-item label="源节点">
-          <el-input :value="getNodeName(sequence.sourceRef)" readonly />
+          <el-input :value="getNodeName(edge.source)" readonly />
         </el-form-item>
         <el-form-item label="目标节点">
-          <el-input :value="getNodeName(sequence.targetRef)" readonly />
+          <el-input :value="getNodeName(edge.target)" readonly />
         </el-form-item>
-        <el-form-item v-if="isConditionBranch(sequence)" label="分支条件">
+        <el-form-item v-if="isConditionBranch(edge)" label="分支条件">
           <div class="condition-builder">
             <div v-for="(cond, idx) in conditions" :key="idx" class="condition-row">
               <div class="condition-row-header">
@@ -43,8 +43,10 @@
                   placeholder="选择来源"
                   @change="syncCondition">
                 <el-option label="表单值" value="form" />
+                <el-option label="节点数据" value="node" />
               </el-select>
               <el-select
+                  v-if="cond.source !== 'node'"
                   v-model="cond.field"
                   placeholder="选择表单字段"
                   @change="syncCondition">
@@ -55,6 +57,12 @@
                     :value="f.value"
                 />
               </el-select>
+              <el-input
+                  v-else
+                  v-model="cond.field"
+                  placeholder="输入上游节点输出数据，如 nodeId.result"
+                  @input="syncCondition"
+              />
               <el-select
                   v-model="cond.relation"
                   placeholder="选择关系"
@@ -78,147 +86,174 @@
             <div v-if="parseFailed" class="condition-warning">
               当前表达式为高级写法，无法可视化解析；修改条件后将覆盖原表达式
             </div>
-            <div v-if="sequence.conditionExpression" class="condition-preview">{{ sequence.conditionExpression }}</div>
+            <div v-if="edge.conditionExpression" class="condition-preview">{{ edge.conditionExpression }}</div>
           </div>
         </el-form-item>
       </el-form>
     </div>
-    <div class="panel-footer">
+    <div class="drawer-footer">
       <el-button
           type="danger"
+          size="small"
           style="width:100%"
-          @click="$emit('delete-sequence', sequence.id)"
-      >
+          @click="$emit('delete-edge')">
         <el-icon><Delete /></el-icon>删除连线
       </el-button>
     </div>
   </div>
 
   <!--节点配置-->
-  <div class="attr-panel" v-else-if="node">
-    <div class="panel-header">
-      <span class="panel-title">节点配置</span>
+  <div class="property-drawer" v-else-if="node">
+    <div class="drawer-header">
+      <span class="drawer-title">节点配置</span>
       <el-button link @click="$emit('close')"><el-icon><Close /></el-icon></el-button>
     </div>
-    <div class="panel-body">
-      <el-form :model="node" label-width="auto">
+    <div class="drawer-body">
+      <el-form
+          :model="form"
+          label-width="auto"
+      >
         <el-form-item label="节点ID">
-          <el-input :model-value="node.id" readonly />
+          <el-input
+              :model-value="node.id"
+              readonly
+          />
         </el-form-item>
         <el-form-item label="节点名称">
-          <el-input v-model="node.name" />
+          <el-input
+              v-model="form.name"
+              @change="emitUpdate"
+          />
         </el-form-item>
-        <assignee-selector
-            v-if="node.type === 'userTask'"
-            :node="node"
-            :field-options="fieldOptions"
+
+        <!--按节点类型拆分配置组件-->
+        <el-empty
+            v-if="node.type === 'startEvent' || node.type === 'endEvent' || node.type === 'exclusiveGateway'"
+            description="该节点无需配置"
+            :image-size="40"
         />
-        <permission-config
-            v-if="node.type === 'userTask'"
-            :node="node"
+        <doc-parse-config
+            v-if="node.type === 'docParse'"
+            :form="form"
+            @update="emitUpdate"
         />
-        <urge-config
-            v-if="node.type === 'userTask'"
-            :node="node"
+        <notify-config
+            v-if="node.type === 'notify'"
+            :form="form"
+            @update="emitUpdate"
         />
-        <task-config
-            :node="node"
-            :tasks="nodeTasks"
+        <kb-archive-config
+            v-if="node.type === 'kbArchive'"
+            :form="form"
+            @update="emitUpdate"
+        />
+        <llm-task-config
+            v-if="node.type === 'llmTask'"
+            :form="form"
+            @update="emitUpdate"
         />
       </el-form>
     </div>
-    <div class="panel-footer">
+    <div class="drawer-footer">
       <el-button
           type="danger"
+          size="small"
           style="width:100%"
-          @click="$emit('delete-node', node.id)"
-      >
-        <el-icon><Delete /> </el-icon>删除节点
+          @click="$emit('delete-node', node.id)">
+        <el-icon><Delete /></el-icon>删除节点
       </el-button>
     </div>
   </div>
-
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import AssigneeSelector from './propertyPanel/AssigneeSelector.vue'
-import PermissionConfig from './propertyPanel/PermissionConfig.vue'
-import UrgeConfig from './propertyPanel/UrgeConfig.vue'
-import TaskConfig from './propertyPanel/TaskConfig.vue'
+import { ref, computed, watch } from 'vue';
+import DocParseConfig from './propertyPanel/DocParseConfig.vue';
+import NotifyConfig from './propertyPanel/NotifyConfig.vue';
+import KbArchiveConfig from './propertyPanel/KbArchiveConfig.vue';
+import LlmTaskConfig from './propertyPanel/LlmTaskConfig.vue';
 
 const props = defineProps({
   node: { type: Object, default: null },
-  sequence: { type: Object, default: null },
+  edge: { type: Object, default: null },
   nodes: { type: Array, default: () => [] },
-  fieldOptions: { type: Array, default: () => [] },
-  nodeTasks: { type: Array, default: () => [] }
-})
+  formFields: { type: Array, default: () => [] }
+});
+const emit = defineEmits(['update', 'close', 'delete-node', 'delete-edge']);
 
-const emit = defineEmits(['delete-node', 'delete-sequence', 'close'])
+const form = ref({});
+
+watch(() => props.node, (newNode) => {
+  if (newNode) {
+    form.value = JSON.parse(JSON.stringify(newNode));
+  } else {
+    form.value = {};
+  }
+}, { immediate: true, deep: true });
+
+function emitUpdate() {
+  emit('update', form.value);
+}
+
+/** 表单字段选项（label/value），用于条件构建器的字段下拉选择 */
+const fieldOptions = computed(() =>
+  props.formFields.map(f => ({ label: f.label, value: f.code }))
+);
+
+/** 获取节点名称用于连线信息展示 */
+function getNodeName(nodeId) {
+  const n = props.nodes.find(n => n.id === nodeId);
+  return n ? n.name : '未知节点';
+}
 
 /**
  * 新建一行条件
- * @returns {{field: string, relation: string, value: string, logic: string}}
+ * @returns {{source: string, field: string, relation: string, value: string, logic: string}}
  */
 function newCondition() {
-  return { source: 'form', field: '', relation: '', value: '', logic: '&&' }
+  return { source: 'form', field: '', relation: '', value: '', logic: '&&' };
 }
 
-/**
- * 条件构建器状态：多条件列表
- * @type {Ref<UnwrapRef<{field: string, relation: string, value: string, logic: string}[]>>}
- */
-const conditions = ref([newCondition()])
+/** 条件构建器状态：多条件列表 */
+const conditions = ref([newCondition()]);
 
-/**
- * 原表达式无法可视化解析时为 true，此时保留原表达式不被空条件覆盖
- * @type {Ref<UnwrapRef<boolean>>}
- */
-const parseFailed = ref(false)
+/** 原表达式无法可视化解析时为 true，此时保留原表达式不被空条件覆盖 */
+const parseFailed = ref(false);
 
-/**
- * 选中连线变化时，解析已有条件表达式回填
- */
-watch(() => props.sequence, (seq) => {
-  const rows = parseCondition(seq ? seq.conditionExpression : '')
+/** 选中连线变化时，解析已有条件表达式回填 */
+watch(() => props.edge, (edge) => {
+  const rows = parseCondition(edge ? edge.conditionExpression : '');
   if (rows) {
-    conditions.value = rows
-    parseFailed.value = false
+    conditions.value = rows;
+    parseFailed.value = false;
   } else {
-    conditions.value = [newCondition()]
-    parseFailed.value = true
+    conditions.value = [newCondition()];
+    parseFailed.value = true;
   }
-}, { immediate: true })
+}, { immediate: true });
 
-/** 获取节点名称用于连线信息展示 */
-function getNodeName(refId) {
-  const n = props.nodes.find(el => el.id === refId)
-  return n ? n.name : '未知节点'
-}
-
-/** 判断连线源节点是否为条件分支 */
-function isConditionBranch(seq) {
-  const source = props.nodes.find(el => el.id === seq.sourceRef)
-  return !!source && source.type === 'exclusiveGateway'
+/** 判断连线源节点是否为排他网关（条件分支） */
+function isConditionBranch(edge) {
+  const source = props.nodes.find(el => el.id === edge.source);
+  return !!source && source.type === 'exclusiveGateway';
 }
 
 /** 添加一行条件 */
 function addCondition() {
-  conditions.value.push(newCondition())
+  conditions.value.push(newCondition());
 }
 
 /** 删除一行条件（至少保留一行） */
 function removeCondition(idx) {
   if (conditions.value.length > 1) {
-    conditions.value.splice(idx, 1)
-    syncCondition()
+    conditions.value.splice(idx, 1);
+    syncCondition();
   }
 }
 
 /** 根据构建器状态生成条件表达式，并写回连线 */
 function syncCondition() {
-  if (!props.sequence) {
+  if (!props.edge) {
     return;
   }
   const expr = buildCondition(conditions.value);
@@ -226,11 +261,11 @@ function syncCondition() {
   if (!expr && parseFailed.value) {
     return;
   }
-  props.sequence.conditionExpression = expr;
+  props.edge.conditionExpression = expr;
 }
 
 /**
- * 生成 Flowable SpEL 条件表达式（多条件以 且/或 连接）
+ * 生成 el 表达式（多条件以 且/或 连接）
  * @param rows 条件列表 [{ field, relation, value, logic }]
  * @returns {string} 如 ${amount > 80 && status == '1'}，无完整条件时返回空串
  */
@@ -328,36 +363,46 @@ function splitFragments(s) {
  */
 function parseFragment(frag) {
   const c = { source: 'form', field: '', relation: '', value: '', logic: '&&' };
-  // 包含：field.contains('value')
-  let m = frag.match(/^([\w]+)\.contains\(['"](.*)['"]\)$/);
+  // 包含：field.contains('value')（字段支持节点ID前缀，如 nodeId.answer）
+  let m = frag.match(/^([\w.]+)\.contains\(['"](.*)['"]\)$/);
   if (m) {
     c.field = m[1];
     c.relation = 'contains';
     c.value = m[2];
-    return c;
+    return fillSource(c);
   }
   // 带引号：field == 'value'
-  m = frag.match(/^([\w]+)\s*(==|!=|>=|<=|>|<)\s*['"](.*)['"]$/);
+  m = frag.match(/^([\w.]+)\s*(==|!=|>=|<=|>|<)\s*['"](.*)['"]$/);
   if (m) {
     c.field = m[1];
     c.relation = m[2];
     c.value = m[3];
-    return c;
+    return fillSource(c);
   }
   // 无引号：field > 80
-  m = frag.match(/^([\w]+)\s*(==|!=|>=|<=|>|<)\s*(.*)$/);
+  m = frag.match(/^([\w.]+)\s*(==|!=|>=|<=|>|<)\s*(.*)$/);
   if (m) {
     c.field = m[1];
     c.relation = m[2];
     c.value = m[3];
-    return c;
+    return fillSource(c);
   }
   return null;
+}
+
+/**
+ * 回填条件来源：能匹配表单字段编码视为表单值，否则视为节点数据
+ * @param c 已解析的条件
+ * @returns {object} 条件对象
+ */
+function fillSource(c) {
+  c.source = fieldOptions.value.some(f => f.value === c.field) ? 'form' : 'node';
+  return c;
 }
 </script>
 
 <style scoped lang="scss">
-.attr-panel {
+.property-drawer {
   width: 400px;
   background: #fff;
   border-left: 1px solid $border-color;
@@ -365,42 +410,38 @@ function parseFragment(frag) {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-
-  .panel-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px $spacing-md;
-    border-bottom: 1px solid $border-color-light;
-    flex-shrink: 0;
-  }
-
-  .panel-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 12px $spacing-md;
-  }
-
-  .panel-footer {
-    flex-shrink: 0;
-    padding: 12px $spacing-md;
-    border-top: 1px solid $border-color-light;
-  }
-
-  .panel-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: $color-text-primary;
-  }
 }
-
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid $border-color-light;
+}
+.drawer-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: $color-text-primary;
+}
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+}
+.drawer-footer {
+  flex-shrink: 0;
+  padding: 12px 16px;
+  border-top: 1px solid $border-color-light;
+}
+.edge-condition-config {
+  width: 100%;
+}
 .condition-builder {
   display: flex;
   flex-direction: column;
   gap: 8px;
   width: 100%;
 }
-
 .condition-row {
   display: flex;
   flex-direction: column;
@@ -410,7 +451,6 @@ function parseFragment(frag) {
   border-radius: 4px;
   background: #fafafa;
 }
-
 .condition-row-header {
   display: flex;
   align-items: center;
@@ -424,23 +464,5 @@ function parseFragment(frag) {
     font-size: 12px;
     color: $color-text-secondary;
   }
-}
-
-.condition-warning {
-  padding: 6px 8px;
-  border-radius: 4px;
-  background: #fdf6ec;
-  font-size: 12px;
-  color: #e6a23c;
-  word-break: break-all;
-}
-
-.condition-preview {
-  padding: 6px 8px;
-  border-radius: 4px;
-  background: #f5f7fa;
-  font-size: 12px;
-  color: #0052cc;
-  word-break: break-all;
 }
 </style>

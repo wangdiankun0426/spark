@@ -284,6 +284,7 @@ const formTypeOptions = [
   { value: 1, label: '普通表单' },
   { value: 2, label: '流程表单' },
   { value: 3, label: '元数据表单' },
+  { value: 4, label: 'workflow表单' },
 ]
 const formFormRules = {
   name: [{ required: true, trigger: "blur", message: "请输入名称" }],

@@ -134,10 +134,10 @@ public class DagUtil {
             return "DAG存在环路，请检查连线";
         }
 
-        // 7. 校验condition节点的出边分支覆盖
+        // 7. 校验排他网关节点的出边分支覆盖
         for (int i = 0; i < nodes.size(); i++) {
             JSONObject node = nodes.getJSONObject(i);
-            if ("condition".equals(node.getString("type"))) {
+            if ("exclusiveGateway".equals(node.getString("type"))) {
                 String nodeId = node.getString("id");
                 long outEdgeCount = sequences.stream().filter(e -> nodeId.equals(((JSONObject) e).getString("source"))).count();
                 if (outEdgeCount < 2) {

@@ -41,4 +41,9 @@ public class WfTemplate extends BaseEntity {
      */
     private String revNum;
 
+    /**
+     * 绑定输入表单ID
+     */
+    private Long formId;
+
 }

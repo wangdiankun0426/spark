@@ -39,24 +39,9 @@ public class WfInstance extends BaseEntity {
     private Integer status;
 
     /**
-     * 输入参数JSON
-     */
-    private String inputJson;
-
-    /**
-     * 输出结果JSON
-     */
-    private String outputJson;
-
-    /**
      * 错误信息
      */
     private String errorMsg;
-
-    /**
-     * 开始时间
-     */
-    private Timestamp startedDt;
 
     /**
      * 结束时间
@@ -67,10 +52,5 @@ public class WfInstance extends BaseEntity {
      * 总耗时（毫秒）
      */
     private Long durationMs;
-
-    /**
-     * 触发方式：1手动/2API/3定时
-     */
-    private Integer triggerType;
 
 }

@@ -43,23 +43,9 @@
       </el-form-item>
       <el-form-item v-for="param in task.params" :key="param.code" :label="param.name" label-width="90px">
         <el-input
-            v-if="param.type === 1"
             v-model="param.value"
-            :placeholder="'请输入' + param.name"
+            :placeholder="param.type === 2 ? '支持变量，详见变量帮助' : '请输入' + param.name"
         />
-        <el-select
-            v-else
-            v-model="param.value"
-            placeholder="请选择表单字段"
-            clearable
-        >
-          <el-option
-              v-for="option in formFieldOptions"
-              :key="option.value"
-              :label="option.label"
-              :value="option.value"
-          />
-        </el-select>
       </el-form-item>
     </div>
   </div>
@@ -75,9 +61,7 @@ const props = defineProps({
   // 当前节点
   node: { type: Object, required: true },
   // 全部节点任务配置（直接原地修改，随保存流程提交）
-  tasks: { type: Array, required: true },
-  // 表单字段选项
-  fieldOptions: { type: Array, required: true }
+  tasks: { type: Array, required: true }
 })
 
 const templateList = ref([])
@@ -86,12 +70,6 @@ const dragIndex = ref(null)
 
 // 当前节点的任务配置
 const nodeTasks = computed(() => props.tasks.filter(task => task.nodeId === props.node.id))
-
-// 表单字段下拉选项：每个字段生成“值”与“显示值”两个选项
-const formFieldOptions = computed(() => props.fieldOptions.flatMap(field => [
-  { label: `${field.label}（值）`, value: `#{form:${field.value}}#` },
-  { label: `${field.label}（显示值）`, value: `#{formTxt:${field.value}}#` }
-]))
 
 /**
  * 查询任务模板列表

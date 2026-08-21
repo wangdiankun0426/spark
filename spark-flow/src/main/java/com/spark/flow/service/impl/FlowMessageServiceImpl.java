@@ -3,9 +3,12 @@ package com.spark.flow.service.impl;
 import com.spark.bean.base.ResultData;
 import com.spark.bean.flow.query.*;
 import com.spark.bean.flow.result.*;
+import com.spark.bean.form.query.FormObjValueQuery;
+import com.spark.bean.form.result.FormObjValueResult;
 import com.spark.bean.system.vo.MessageVO;
 import com.spark.config.rabbitmq.MqProducer;
 import com.spark.dao.flow.*;
+import com.spark.dao.form.FormObjValueDao;
 import com.spark.enums.ErrorCodeEnum;
 import com.spark.enums.FlowInstanceStatusEnum;
 import com.spark.enums.MessageTypeEnum;
@@ -23,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * +++/\_/\
@@ -42,6 +46,8 @@ public class FlowMessageServiceImpl extends BaseFlowService implements FlowMessa
     private FlowTemplateMsgDao templateMsgDao;
     @Autowired
     private MqProducer mqProducer;
+    @Autowired
+    private FormObjValueDao objValueDao;
 
     /**
      * 发送流程通知
@@ -81,8 +87,17 @@ public class FlowMessageServiceImpl extends BaseFlowService implements FlowMessa
             return result;
         }
         Map<String, String> defaultParam = super.generateFlowDefaultParam(instanceId);
-        content = super.generateFlowValue(content, defaultParam, null, null);
-        recipient = super.generateFlowValue(recipient, defaultParam, null, null);
+        Map<String, String> valueMap = new HashMap<>();
+        Map<String, String> showValueMap = new HashMap<>();
+        FormObjValueQuery objValueQuery = new FormObjValueQuery();
+        objValueQuery.setObjId(instanceResult.getId());
+        List<FormObjValueResult> objValueList = objValueDao.queryFormObjValueList(objValueQuery);
+        if (CollectionUtil.isNotEmpty(objValueList)) {
+            valueMap = objValueList.stream().collect(Collectors.toMap(FormObjValueResult::getCode, FormObjValueResult::getValue));
+            showValueMap = objValueList.stream().collect(Collectors.toMap(FormObjValueResult::getCode, FormObjValueResult::getShowValue));
+        }
+        content = super.generateFlowValue(content, defaultParam, valueMap, showValueMap, null);
+        recipient = super.generateFlowValue(recipient, defaultParam, valueMap, showValueMap, null);
         if (StringUtil.isBlank(recipient)) {
             logger.error("sendFlowNotice error, recipient not exist");
             return result;

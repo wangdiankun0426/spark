@@ -21,14 +21,4 @@ public class WfInstanceVO extends BaseVO {
      */
     private Long templateId;
 
-    /**
-     * 输入参数JSON
-     */
-    private String inputJson;
-
-    /**
-     * 触发方式
-     */
-    private Integer triggerType;
-
 }

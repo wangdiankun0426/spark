@@ -3,8 +3,17 @@
     <!--顶部工具栏-->
     <div class="designer-toolbar">
       <div class="toolbar-left">
-        <span class="toolbar-title">{{ workflowName || '新建AI工作流' }}</span>
+        <span class="toolbar-title">{{ workflowName || '新建WorkFlow' }}</span>
         <el-tag v-if="revNum" size="small" type="warning">{{ revNum }}</el-tag>
+        <el-button
+            text
+            size="small"
+            type="primary"
+            @click="varHelpVisible = true"
+        >
+          <el-icon><QuestionFilled /></el-icon>
+          <span style="font-size:12px">变量帮助</span>
+        </el-button>
       </div>
       <div class="toolbar-right">
         <el-button type="primary" @click="handleSaveVersion" :loading="saving">
@@ -20,10 +29,10 @@
       <!--左侧节点面板-->
       <node-panel
           :groups="workflowNodeGroups"
-          :expanded="['flow', 'ai']"
+          :expanded="['flow', 'ai', 'doc', 'notify']"
       />
       <!--中间画布-->
-      <index
+      <canvas-index
           :nodes="nodes"
           :sequences="sequences"
           :selected-node-id="selectedNodeId"
@@ -31,6 +40,7 @@
           :canvas-width="canvasWidth"
           :canvas-height="canvasHeight"
           :node-components="NODE_COMPONENTS"
+          :field-options="fieldOptionsForCanvas"
           @select-node="handleSelectNode"
           @select-edge="handleSelectEdge"
           @drop-node="handleDropNode"
@@ -38,12 +48,13 @@
           @delete-edge="handleDeleteEdge"
           @move-node="handleMoveNode"
       />
-      <!--右侧属性面板（选中节点/连线时展示，未选中时隐藏释放画布空间）-->
+      <!--右侧属性面板-->
       <property-drawer
           v-if="selectedNode || selectedEdge"
           :node="selectedNode"
           :edge="selectedEdge"
           :nodes="nodes"
+          :form-fields="formFields"
           @update="handleUpdateNode"
           @close="handleClosePanel"
           @delete-node="handleDeleteNode"
@@ -54,6 +65,9 @@
     <div class="designer-footer">
       <span>版本: {{ revNum || '新工作流' }} | 节点数: {{ nodes.length }} | 连线数: {{ sequences.length }}</span>
     </div>
+
+    <!--变量帮助对话框-->
+    <variable-help v-model="varHelpVisible" :form-fields="formFields" :base-vars="baseVars" />
 
     <!--清空确认对话框-->
     <el-dialog title="确认清空" v-model="showClearConfirm" width="30%" :show-close="false">
@@ -68,17 +82,18 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
-import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
+import { useRoute, onBeforeRouteLeave } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { queryWorkflowDetailAPI } from '@/api/workflow/template.js';
+import { queryFormFieldListAPI } from '@/api/form/formField.js';
 import { saveVersionAPI, queryVersionDetailAPI } from '@/api/workflow/version.js';
 import NodePanel from '@/views/flowDesigner/nodePanel/index.vue';
-import Index from '@/views/flowDesigner/canvas/index.vue';
+import CanvasIndex from '@/views/flowDesigner/canvas/index.vue';
 import { NODE_COMPONENTS, NODE_META } from '@/views/flowDesigner/nodes/index.js';
-import PropertyDrawer from '@/views/workflowDesigner/propertyPanel/PropertyDrawer.vue';
+import PropertyDrawer from '@/views/workflowDesigner/PropertyDrawer.vue';
+import VariableHelp from '@/components/FlowVariableHelp/index.vue';
 
 const route = useRoute();
-const canvasRef = ref(null);
 const workflowId = ref(null);
 const workflowName = ref('');
 const revId = ref(null);
@@ -89,14 +104,22 @@ const selectedNodeId = ref(null);
 
 const selectedNode = ref(null);
 const selectedEdge = ref(null);
+const formFields = ref([]);
 
-/** 选中连线 id（用于画布高亮） */
+/** 画布连线条件标签用：表单字段 label/value 映射 */
+const fieldOptionsForCanvas = computed(() =>
+  formFields.value.map(f => ({ label: f.label, value: f.code }))
+);
+
+/** 选中连线 id */
 const selectedEdgeId = computed(() => selectedEdge.value?.id || null);
 
-/** 左侧节点面板分组配置（由统一 NODE_META 派生） */
+/** 左侧节点面板分组配置 */
 const workflowNodeGroups = [
-  { name: 'flow', title: '流程控制', nodes: ['startEvent', 'endEvent'].map(toNodeGroup) },
-  { name: 'ai', title: 'AI能力', nodes: ['llmTask'].map(toNodeGroup) }
+  { name: 'flow', title: '流程控制', nodes: ['startEvent', 'endEvent', 'exclusiveGateway'].map(toNodeGroup) },
+  { name: 'ai', title: 'AI能力', nodes: ['llmTask'].map(toNodeGroup) },
+  { name: 'doc', title: '文档能力', nodes: ['docParse', 'kbArchive'].map(toNodeGroup) },
+  { name: 'notify', title: '系统能力', nodes: ['notify'].map(toNodeGroup) }
 ];
 
 function toNodeGroup(type) {
@@ -143,8 +166,14 @@ async function loadWorkflowData(id, rev) {
     workflowName.value = res.data.name;
     revNum.value = res.data.revNum || '';
     revId.value = res.data.revId;
+    // 加载绑定输入表单的字段定义（start节点属性面板展示用）
+    if (res.data.formId) {
+      const fRes = await queryFormFieldListAPI({ formId: res.data.formId });
+      if (fRes.code === 200 && fRes.data) {
+        formFields.value = fRes.data;
+      }
+    }
   }
-  // rev=0 表示使用最新版本，用 revId 加载；rev>0 加载指定版本
   const loadRevId = (rev && rev !== '0') ? rev : revId.value;
   if (loadRevId) {
     const vRes = await queryVersionDetailAPI({ id: loadRevId });
@@ -184,9 +213,20 @@ function handleDropNode(type, x, y) {
 
 function getDefaultConfig(type) {
   switch (type) {
-    case 'startEvent': return { inputs: [] };
-    case 'endEvent': return { outputs: [] };
-    case 'llmTask': return { modelId: null, prompt: '' };
+    case 'startEvent':
+      return {};
+    case 'endEvent':
+      return { outputs: [] };
+    case 'llmTask':
+      return { modelId: null, prompt: '', fileCode: '' };
+    case 'exclusiveGateway':
+      return {};
+    case 'docParse':
+      return { fileCode: '' };
+    case 'notify':
+      return { titleCode: '', contentCode: '', userCode: '', refCode: '' };
+    case 'kbArchive':
+      return { knowledgeId: null, fileCode: '' };
     default: return {};
   }
 }
@@ -233,6 +273,12 @@ function handleClosePanel() {
 
 const showClearConfirm = ref(false);
 
+/** 变量帮助对话框 */
+const varHelpVisible = ref(false);
+const baseVars = [
+
+];
+
 function confirmClear() {
   nodes.value = [];
   sequences.value = [];
@@ -247,7 +293,7 @@ function handleConnectNodes(sourceId, targetId) {
   if (sourceId === targetId) return;
   const exists = sequences.value.find(e => e.source === sourceId && e.target === targetId);
   if (exists) return;
-  sequences.value.push({ id: genEdgeId(), source: sourceId, target: targetId });
+  sequences.value.push({ id: genEdgeId(), source: sourceId, target: targetId, conditionExpression: '' });
 }
 
 function handleDeleteEdge(edgeId) {
