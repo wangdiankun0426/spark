@@ -101,7 +101,7 @@
                   >
                     <div
                         class="nav-message-item"
-                        :class="{ 'is-link': isFlowMessage(item) }"
+                        :class="{ 'is-link': isClickableMessage(item.refId) }"
                         @click="handleMessageClick(item)"
                     >
                       <el-tag type="info" size="small">
@@ -347,29 +347,41 @@ function loadNavMessageData() {
 }
 
 /**
- * 判断是否为流程消息（refId % 100 === 12 均为流程）
- * @param item
+ * 消息是否可点击跳转（附件/文档/流程）
+ * @param refId
  * @returns {boolean}
  */
-function isFlowMessage(item) {
-  return item.refId !== undefined && item.refId !== null && item.refId % 100 === 12;
+function isClickableMessage(refId) {
+  return Number(refId) % 100 === 7 || Number(refId) % 100 === 9 || Number(refId) % 100 === 12;
 }
 
 /**
- * 消息点击跳转：流程消息跳转到对应流程列表并打开详情
+ * 消息点击跳转
+ * 文档/附件跳转到文档预览页
+ * 流程消息跳转到对应流程列表并打开详情
  * @param item
  */
 function handleMessageClick(item) {
-  if (!isFlowMessage(item)) {
+  const refId = item.refId;
+  if (refId === undefined || refId === null) {
     return;
   }
-  const refId = item.refId;
-  if (item.type === 2 || item.type === 5) {
-    // 待办/催办通知 -> 我的待办
-    router.push({ path: '/flow/myPendingList', query: { id: refId } }).catch(() => {});
-  } else if (item.type === 3 || item.type === 4) {
-    // 完结/驳回通知 -> 我的申请
-    router.push({ path: '/flow/myAppliedList', query: { id: refId } }).catch(() => {});
+  const refType = Number(refId) % 100;
+  // 文档/附件 -> 文档预览页
+  if (refType === 7 || refType === 9) {
+    const { href } = router.resolve({ path: '/document/preview', query: { id: refId } })
+    window.open(href, '_blank')
+    return;
+  }
+  // 流程消息 -> 我的待办 / 我的申请
+  if (refType === 12) {
+    if (item.type === 2 || item.type === 5) {
+      // 待办/催办通知 -> 我的待办
+      router.push({ path: '/flow/myPendingList', query: { id: refId } }).catch(() => {});
+    } else if (item.type === 3 || item.type === 4) {
+      // 完结/驳回通知 -> 我的申请
+      router.push({ path: '/flow/myAppliedList', query: { id: refId } }).catch(() => {});
+    }
   }
 }
 
