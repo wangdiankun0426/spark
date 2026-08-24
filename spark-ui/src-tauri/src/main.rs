@@ -23,7 +23,7 @@ async fn open_app_window(app: tauri::AppHandle, route: String) {
     let label = format!("window-{}", WINDOW_SEQ.fetch_add(1, Ordering::Relaxed));
     let url = WebviewUrl::App(format!("index.html{}", route).into());
     let result = WebviewWindowBuilder::new(&app, label, url)
-        .title("星火云AI")
+        .title("星火云")
         .inner_size(1400.0, 900.0)
         .min_inner_size(1200.0, 800.0)
         .center()
@@ -61,7 +61,7 @@ fn main() {
 
             TrayIconBuilder::with_id("main-tray")
                 .icon(app.default_window_icon().unwrap().clone())
-                .tooltip("星火云AI")
+                .tooltip("星火云")
                 .menu(&menu)
                 // 左键点击不弹菜单，由点击事件显示主窗口
                 .show_menu_on_left_click(false)

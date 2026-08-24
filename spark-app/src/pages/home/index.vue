@@ -6,7 +6,7 @@
         <user-avatar type="user" :userId="userInfo.id" :name="userInfo.name" :size="100"/>
         <view class="welcome-info">
           <text class="welcome-greeting">Hello {{ userInfo.name }}（{{ userInfo.loginName }}），{{ greeting }}</text>
-          <text class="welcome-slogan">欢迎使用星火云AI平台，聚微光成智，燃无限可能</text>
+          <text class="welcome-slogan">欢迎使用星火云应用平台，聚微光成智，燃无限可能</text>
         </view>
       </view>
     </view>

@@ -2,7 +2,7 @@
   <div class="login-box safe-area-page">
     <div class="login-header">
       <text class="login-title">登录</text><br>
-      <text class="login-subtitle">(欢迎使用星火云AI应用平台)</text>
+      <text class="login-subtitle">(欢迎使用星火云应用平台)</text>
     </div>
     <div class="login-middle">
       <div class="login-middle-form">

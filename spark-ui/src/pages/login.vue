@@ -31,10 +31,10 @@
     <!-- 左侧 -->
     <div class="el-login-sidebar">
       <div class="sidebar-content">
-        <h1 class="sidebar-title">星火云AI应用平台</h1>
-        <p style="font-size: 16px;">欢迎使用 — 星火云AI应用平台</p>
+        <h1 class="sidebar-title">星火云应用平台</h1>
+        <p style="font-size: 16px;">欢迎使用 — 星火云应用平台</p>
         <p style="font-size: 14px;">
-          星火云AI应用平台，我们的目标不仅是一个企业AI协作工具系统，更是以帮助企业实现高效运营、创新驱动和可持续发展的核心支撑为长远目标。
+          星火云应用平台，我们的目标不仅是一个企业AI协作工具系统，更是以帮助企业实现高效运营、创新驱动和可持续发展的核心支撑为长远目标。
         </p>
         <div class="sidebar-features">
           <div class="feature-item">
@@ -103,12 +103,19 @@
               <div style="font-size: 12px; color: #909399; margin-top: 6px;">扫码访问移动端 H5</div>
             </div>
           </el-popover>
-          <el-tooltip content="开发中，敬请期待" placement="top">
-            <div class="download-item download-item--soon" @click="comingSoon('微信小程序')">
-              <el-icon><ChatDotRound /></el-icon>
-              <span>微信小程序</span>
+
+          <el-popover placement="top" :width="180" trigger="hover">
+            <template #reference>
+              <div class="download-item">
+                <el-icon><ChatDotRound /></el-icon>
+                <span>微信小程序</span>
+              </div>
+            </template>
+            <div style="text-align: center;">
+              <img v-if="wechatImg" :src="wechatImg" alt="微信小程序 二维码"
+                   style="width: 140px; height: 140px; border: 1px solid #ebeef5; border-radius: 8px;"/>
             </div>
-          </el-tooltip>
+          </el-popover>
           <el-tooltip content="开发中，敬请期待" placement="top">
             <div class="download-item download-item--soon" @click="comingSoon('Mac')">
               <el-icon><Platform /></el-icon>
@@ -338,11 +345,13 @@ const count = ref(0);
 const timer = ref(null);
 
 // Windows安装包下载地址
-const WIN_SETUP_URL = 'https://spark.evancloud.top:7101/download/星火云AI_0.0.1_x64-setup.exe';
+const WIN_SETUP_URL = 'https://spark.evancloud.top:7101/download/星火云_0.0.1_x64-setup.exe';
 // 移动端 H5 访问地址
 const H5_URL = 'https://spark.evancloud.top:7102/';
 // 移动端 H5 二维码图片
 const h5QrImg = ref(undefined);
+// 微信小程序图片
+const wechatImg = ref('https://spark.evancloud.top:7101/download/wechatUrl.png');
 
 // 生成移动端 H5 访问二维码
 QRCode.toDataURL(H5_URL, { width: 160, margin: 1 }).then(dataUrl => {

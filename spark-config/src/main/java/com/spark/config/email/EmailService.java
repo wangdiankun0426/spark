@@ -54,12 +54,12 @@ public class EmailService {
             // 创建邮件消息
             MimeMessage message = new MimeMessage(mailSession);
             // 设置发件人
-            InternetAddress form = new InternetAddress(emailConfig.getUser(), "星火云AI应用平台");
+            InternetAddress form = new InternetAddress(emailConfig.getUser(), "星火云应用平台");
             message.setFrom(form);
             // 设置收件人
             InternetAddress toAddress = new InternetAddress(email);
             message.setRecipient(Message.RecipientType.TO, toAddress);
-            String text = "您好，您正在使用星火云AI应用平台邮箱登录验证，验证码为"+code+"。2分钟有效，如若把验证码泄露他人，后果请自行承担！";
+            String text = "您好，您正在使用星火云应用平台邮箱登录验证，验证码为"+code+"。2分钟有效，如若把验证码泄露他人，后果请自行承担！";
             String title = "登录验证码";
             // 设置邮件标题
             message.setSubject(title);

@@ -2,7 +2,7 @@
   "name": "spark-ui",
   "private": true,
   "version": "0.0.1",
-  "description": "星火云AI应用平台PC端",
+  "description": "星火云应用平台PC端",
   "author": "wangdiankun",
   "type": "module",
   "scripts": {

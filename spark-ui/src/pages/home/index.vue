@@ -11,7 +11,7 @@
               <div class="welcome-text">
                 <div class="greeting">Hello {{ userInfo.name }}（{{ userInfo.loginName }}），{{ greeting }} !</div>
                 <div class="subtitle">
-                  <span class="slogan">欢迎使用星火云AI平台，聚微光成智，燃无限可能</span>
+                  <span class="slogan">欢迎使用星火云应用平台，聚微光成智，燃无限可能</span>
                 </div>
               </div>
             </div>

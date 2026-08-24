@@ -1,13 +1,13 @@
 [package]
 name = "spark-ui"
 version = "0.0.1"
-description = "星火云AI"
+description = "星火云"
 authors = ["wangdiankun"]
 edition = "2021"
 
 # 默认二进制名称与 tauri.conf.json 的 productName 保持一致
 [[bin]]
-name = "星火云AI"
+name = "星火云"
 path = "src/main.rs"
 
 [build-dependencies]

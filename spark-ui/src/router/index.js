@@ -49,7 +49,7 @@ const router = createRouter({
 // 全局前置守卫
 router.beforeEach((to, from, next) => {
     // 设置标题
-    document.title = to.meta.title ? `星火云AI应用平台 - ${to.meta.title}` : '星火云AI应用平台'
+    document.title = to.meta.title ? `星火云应用平台 - ${to.meta.title}` : '星火云应用平台'
 
     // 管理端权限校验
     if (to.path.startsWith('/manage')) {
