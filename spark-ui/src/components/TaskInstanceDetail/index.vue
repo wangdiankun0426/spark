@@ -18,17 +18,10 @@
       <el-descriptions-item label="创建时间">{{ detail.createdDt }}</el-descriptions-item>
       <el-descriptions-item label="备注" :span="2">{{ detail.remark }}</el-descriptions-item>
     </el-descriptions>
-    <div class="section-title">任务参数</div>
-    <el-table :data="detail.params" size="small" border>
-      <el-table-column prop="code" label="参数编码" align="center" />
-      <el-table-column prop="value" label="参数值" align="center" />
-    </el-table>
-    <div class="section-title">产出数据</div>
-    <el-table :data="detail.dataList" size="small" border>
-      <el-table-column prop="code" label="数据编码" align="center" />
-      <el-table-column prop="value" label="数据值" align="center" />
-      <el-table-column prop="createdDt" label="产出时间" width="160" align="center" />
-    </el-table>
+    <div class="section-title">任务入参</div>
+    <pre class="json-block">{{ formatJson(detail.inputJson) }}</pre>
+    <div class="section-title">任务出参</div>
+    <pre class="json-block">{{ formatJson(detail.outputJson) }}</pre>
   </el-dialog>
 </template>
 
@@ -65,13 +58,28 @@ watch(
 )
 
 /**
- * 加载任务实例详情（含参数与产出数据）
+ * 加载任务实例详情
  */
 function loadDetail(taskId) {
   queryTaskInstanceDetailAPI({ id: taskId }).then(res => {
     if (res.code !== 200) return
     detail.value = res.data || {}
   })
+}
+
+/**
+ * 格式化JSON字符串
+ * @param jsonStr JSON字符串
+ * @returns 格式化后的JSON字符串
+ */
+function formatJson(jsonStr) {
+  if (!jsonStr) return '暂无数据'
+  try {
+    const obj = JSON.parse(jsonStr)
+    return JSON.stringify(obj, null, 2)
+  } catch {
+    return jsonStr
+  }
 }
 </script>
 
@@ -80,5 +88,18 @@ function loadDetail(taskId) {
   margin: $spacing-md 0 $spacing-sm;
   font-weight: bold;
   color: $color-text-primary;
+}
+.json-block {
+  background: #f5f7fa;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  padding: 12px;
+  margin: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 </style>

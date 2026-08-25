@@ -1,10 +1,6 @@
 package com.spark.bean.base;
 
-import org.apache.commons.collections4.MapUtils;
-
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  *

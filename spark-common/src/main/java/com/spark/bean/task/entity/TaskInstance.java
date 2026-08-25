@@ -63,4 +63,14 @@ public class TaskInstance extends BaseEntity {
      * 备注
      */
     private String remark;
+
+    /**
+     * 任务实例入参JSON
+     */
+    private String inputJson;
+
+    /**
+     * 任务实例出参JSON
+     */
+    private String outputJson;
 }

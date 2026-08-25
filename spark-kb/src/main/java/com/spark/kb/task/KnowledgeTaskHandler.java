@@ -1,7 +1,6 @@
 package com.spark.kb.task;
 
 import com.spark.bean.base.ResultData;
-import com.spark.bean.task.entity.TaskInstanceData;
 import com.spark.bean.task.result.TaskInstanceResult;
 import com.spark.constant.TaskParamCode;
 import com.spark.enums.ErrorCodeEnum;
@@ -9,6 +8,7 @@ import com.spark.enums.TaskTypeEnum;
 import com.spark.kb.service.IDocumentService;
 import com.spark.task.service.ITaskTypeHandler;
 import com.spark.utils.CollectionUtil;
+import com.spark.utils.JsonUtil;
 import com.spark.utils.MapUtil;
 import com.spark.utils.StringUtil;
 import org.slf4j.Logger;
@@ -16,8 +16,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,14 +47,14 @@ public class KnowledgeTaskHandler implements ITaskTypeHandler {
 
     /**
      * 执行任务
-     * @param taskInstance
-     * @param params
-     * @return
+     * @param taskInstance 任务实例
+     * @param params 任务参数
+     * @return 任务执行结果，成功时data为输出JSON字符串
      */
     @Override
-    public ResultData<List<TaskInstanceData>> handle(TaskInstanceResult taskInstance, Map<String, String> params) {
-        ResultData<List<TaskInstanceData>> result = new ResultData<>();
-        logger.info("taskInstance={},params={}", taskInstance, params);
+    public ResultData<Map<String, String>> handle(TaskInstanceResult taskInstance, Map<String, String> params) {
+        ResultData<Map<String, String>> result = new ResultData<>();
+        logger.info("KnowledgeTaskHandler taskInstance={},params={}", taskInstance, params);
         String kbIdStr = MapUtil.getStringVal(params, TaskParamCode.KNOWLEDGE_ID);
         if (StringUtil.isBlank(kbIdStr)) {
             logger.error("kbId param not exist, taskId={}", taskInstance.getId());
@@ -74,7 +74,7 @@ public class KnowledgeTaskHandler implements ITaskTypeHandler {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        List<TaskInstanceData> list = new ArrayList<>();
+        Map<String, String> outputMap = new HashMap<>();
         for (Long kbId : kbIds) {
             for (Long attId : attIds) {
                 ResultData<Long> fileResult = documentService.fileDocument(attId, kbId);
@@ -82,32 +82,15 @@ public class KnowledgeTaskHandler implements ITaskTypeHandler {
                     logger.error("file document fail, attId={}, kbId={}, taskId={}", attId, kbId, taskInstance.getId());
                     return result;
                 }
-                TaskInstanceData taskInstanceData = this.genreTaskInstanceData(taskInstance, TaskParamCode.FILE_ID+attId, fileResult.getData());
-                if (taskInstanceData != null) {
-                    list.add(taskInstanceData);
+                Long fileId = fileResult.getData();
+                if (fileId != null) {
+                    outputMap.put(TaskParamCode.FILE_ID + attId, fileId.toString());
                 }
             }
         }
         logger.info("task success, taskId={}, instanceId={}", taskInstance.getId(), taskInstance.getObjId());
-        result.setData(list);
+        result.setData(outputMap);
         result.setCode(ResultData.OK);
         return result;
-    }
-
-    /**
-     * 构造任务产出的数据
-     * @param taskInstance 任务实例
-     * @param value 产出的文档id
-     */
-    private TaskInstanceData genreTaskInstanceData(TaskInstanceResult taskInstance, String code, Long value) {
-        if (value == null) {
-            return null;
-        }
-        TaskInstanceData taskInstanceData = new TaskInstanceData();
-        taskInstanceData.setSetId(taskInstance.getSetId());
-        taskInstanceData.setTaskId(taskInstance.getId());
-        taskInstanceData.setCode(code);
-        taskInstanceData.setValue(value+"");
-        return taskInstanceData;
     }
 }

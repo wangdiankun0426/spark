@@ -1,22 +1,14 @@
 package com.spark.workflow.engine.executor;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
-import com.spark.bean.base.PageResult;
 import com.spark.bean.base.ResultData;
-import com.spark.bean.kb.query.DocumentQuery;
 import com.spark.bean.system.query.AttachmentQuery;
 import com.spark.bean.system.result.AttachmentResult;
 import com.spark.dao.system.AttachmentDao;
 import com.spark.enums.ErrorCodeEnum;
 import com.spark.enums.FlowTemplateTypeEnum;
-import com.spark.kb.service.IDocumentChunkService;
 import com.spark.llm.model.ModelFactory;
 import com.spark.manage.BaseService;
-import com.spark.utils.FileUtil;
-import com.spark.utils.MapUtil;
-import com.spark.utils.StringUtil;
-import com.spark.utils.TextUtil;
+import com.spark.utils.*;
 import com.spark.workflow.engine.IWfNodeExecutor;
 import dev.langchain4j.model.chat.ChatModel;
 import org.slf4j.Logger;
@@ -25,8 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * +++/\_/\
@@ -97,10 +87,10 @@ public class LlmTaskExecutor extends BaseService implements IWfNodeExecutor {
             ChatModel model = modelFactory.getChatModel(modelId);
             String response = model.chat(prompt);
             output.put(nodeId+"text", response);
-            boolean validObject = JSON.isValidObject(response);
-            if (validObject) {
-                JSONObject json = JSONObject.parseObject(response);
-                for (Map.Entry<String, Object> entry : json.entrySet()) {
+            boolean validJson = JsonUtil.isValidJson(response);
+            if (validJson) {
+                HashMap<String, Object> map = JsonUtil.toObject(response, HashMap.class);
+                for (Map.Entry<String, Object> entry : map.entrySet()) {
                     String key = entry.getKey();
                     Object value = entry.getValue();
                     output.put(nodeId+key, String.valueOf(value));

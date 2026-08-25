@@ -5,7 +5,6 @@ import com.spark.bean.flow.query.FlowInstanceNodeQuery;
 import com.spark.bean.flow.query.FlowInstanceQuery;
 import com.spark.bean.flow.result.FlowInstanceNodeResult;
 import com.spark.bean.flow.result.FlowInstanceResult;
-import com.spark.bean.task.entity.TaskInstanceData;
 import com.spark.bean.task.result.TaskInstanceResult;
 import com.spark.constant.TaskParamCode;
 import com.spark.dao.flow.FlowInstanceDao;
@@ -23,8 +22,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -58,13 +55,14 @@ public class FlowUrgeTaskHandler implements ITaskTypeHandler {
 
     /**
      * 执行催办任务
-     * @param taskInstance
-     * @param params
+     * @param taskInstance 任务实例
+     * @param params 任务参数
+     * @return 任务执行结果
      */
     @Override
-    public ResultData<List<TaskInstanceData>> handle(TaskInstanceResult taskInstance, Map<String, String> params) {
-        ResultData<List<TaskInstanceData>> result = new ResultData<>();
-        logger.info("taskInstance={},params={}", taskInstance, params);
+    public ResultData<Map<String, String>> handle(TaskInstanceResult taskInstance, Map<String, String> params) {
+        ResultData<Map<String, String>> result = new ResultData<>();
+        logger.info("FlowUrgeTaskHandler taskInstance={},params={}", taskInstance, params);
         String instanceNodeIdStr = MapUtil.getStringVal(params, TaskParamCode.FLOW_INSTANCE_NODE_ID);
         if (!StringUtil.isNumeric(instanceNodeIdStr)) {
             logger.error("instanceNodeId param not exist, taskId={}", taskInstance.getId());

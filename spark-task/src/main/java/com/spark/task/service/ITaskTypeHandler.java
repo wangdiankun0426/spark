@@ -1,10 +1,8 @@
 package com.spark.task.service;
 
 import com.spark.bean.base.ResultData;
-import com.spark.bean.task.entity.TaskInstanceData;
 import com.spark.bean.task.result.TaskInstanceResult;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,8 +25,9 @@ public interface ITaskTypeHandler {
 
     /**
      * 执行任务
-     * @param taskInstance
-     * @param params
+     * @param taskInstance 任务实例
+     * @param params 任务参数
+     * @return 任务执行结果，成功时data为输出JSON字符串
      */
-    ResultData<List<TaskInstanceData>> handle(TaskInstanceResult taskInstance, Map<String, String> params);
+    ResultData<Map<String, String>> handle(TaskInstanceResult taskInstance, Map<String, String> params);
 }

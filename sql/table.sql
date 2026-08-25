@@ -830,6 +830,8 @@ CREATE TABLE `task_instance` (
      `interval_hours` int(5) NULL COMMENT '重复间隔',
      `status` tinyint(3) NOT NULL DEFAULT 1 COMMENT '任务状态',
      `remark` varchar(255) NULL COMMENT '备注',
+     `input_json` mediumtext NULL COMMENT '任务实例入参JSON',
+     `output_json` mediumtext NULL COMMENT '任务实例出参JSON',
 
      `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
      `created_by` bigint(12) DEFAULT NULL COMMENT '创建人id',
@@ -838,37 +840,6 @@ CREATE TABLE `task_instance` (
      `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
      PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务实例表';
-
-DROP TABLE IF EXISTS `task_instance_param`;
-CREATE TABLE `task_instance_param` (
-   `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
-   `task_id` bigint(12) NOT NULL COMMENT '定时任务id',
-   `code` varchar(64) NOT NULL COMMENT '参数编码',
-   `value` varchar(256) NULL COMMENT '参数值',
-
-   `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
-   `created_by` bigint(12) DEFAULT NULL COMMENT '创建人id',
-   `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-   `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
-   `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
-   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务参数表';
-
-DROP TABLE IF EXISTS `task_instance_data`;
-CREATE TABLE `task_instance_data` (
-   `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
-   `set_id` varchar(64) NOT NULL COMMENT '任务组id',
-   `task_id` bigint(12) NOT NULL COMMENT '任务实例id',
-   `code` varchar(64) NOT NULL COMMENT '数据编码',
-   `value` varchar(256) NULL COMMENT '数据值',
-
-   `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
-   `created_by` bigint(12) DEFAULT NULL COMMENT '创建人id',
-   `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-   `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
-   `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
-   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务实例产出数据表';
 
 DROP TABLE IF EXISTS `task_template`;
 CREATE TABLE `task_template` (

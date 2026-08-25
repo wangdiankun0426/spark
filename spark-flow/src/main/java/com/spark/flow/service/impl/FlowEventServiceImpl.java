@@ -4,7 +4,6 @@ import com.spark.bean.base.ResultData;
 import com.spark.bean.flow.entity.FlowInstanceAssignee;
 import com.spark.bean.flow.entity.FlowInstanceNode;
 import com.spark.bean.task.entity.TaskInstance;
-import com.spark.bean.task.entity.TaskInstanceParam;
 import com.spark.bean.flow.query.FlowInstanceNodeQuery;
 import com.spark.bean.flow.query.FlowInstanceQuery;
 import com.spark.bean.flow.query.FlowTemplateNodeQuery;
@@ -31,7 +30,6 @@ import com.spark.dao.flow.FlowTemplateNodeDao;
 import com.spark.dao.flow.FlowTemplateNodeTaskDao;
 import com.spark.dao.flow.FlowTemplateNodeTaskParamDao;
 import com.spark.dao.task.TaskInstanceDao;
-import com.spark.dao.task.TaskInstanceParamDao;
 import com.spark.dao.task.TaskTemplateDao;
 import com.spark.dao.form.FormObjValueDao;
 import com.spark.dao.system.RoleUserDao;
@@ -43,6 +41,7 @@ import com.spark.flow.service.FlowMessageService;
 import com.spark.flow.service.FlowableService;
 import com.spark.utils.CollectionUtil;
 import com.spark.utils.DateUtil;
+import com.spark.utils.JsonUtil;
 import com.spark.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,8 +83,6 @@ public class FlowEventServiceImpl extends BaseFlowService implements FlowEventSe
     private FormObjValueDao objValueDao;
     @Autowired
     private TaskInstanceDao taskInstanceDao;
-    @Autowired
-    private TaskInstanceParamDao taskInstanceParamDao;
     @Autowired
     private FlowTemplateNodeTaskDao templateNodeTaskDao;
     @Autowired
@@ -496,18 +493,12 @@ public class FlowEventServiceImpl extends BaseFlowService implements FlowEventSe
         urgeTask.setStatus(TaskStatusEnum.PENDING.getValue());
         String setId = UUID.randomUUID().toString().replaceAll("-", "");
         urgeTask.setSetId(setId);
+        Map<String, String> inputMap = new HashMap<>();
+        inputMap.put(TaskParamCode.FLOW_INSTANCE_NODE_ID, instanceNodeId.toString());
+        urgeTask.setInputJson(JsonUtil.toString(inputMap));
         int urgeCount = taskInstanceDao.insertDB(urgeTask);
         if (urgeCount < 1) {
             logger.error("onCreatedUserTask error, insert urge task fail");
-            return;
-        }
-        TaskInstanceParam urgeTaskParam = new TaskInstanceParam();
-        urgeTaskParam.setTaskId(urgeTask.getId());
-        urgeTaskParam.setCode(TaskParamCode.FLOW_INSTANCE_NODE_ID);
-        urgeTaskParam.setValue(instanceNodeId+"");
-        int paramCount = taskInstanceParamDao.insertDB(urgeTaskParam);
-        if (paramCount < 1) {
-            logger.error("onCreatedUserTask error, insert urge task param fail");
         }
     }
 
@@ -536,24 +527,17 @@ public class FlowEventServiceImpl extends BaseFlowService implements FlowEventSe
         taskInstance.setSort(nodeTaskResult.getSort() == null ? 1 : nodeTaskResult.getSort());
         taskInstance.setTaskTime(new Date());
         taskInstance.setStatus(TaskStatusEnum.PENDING.getValue());
+        if (CollectionUtil.isNotEmpty(params)) {
+            Map<String, String> inputMap = new HashMap<>();
+            for (FlowTemplateNodeTaskParamResult param : params) {
+                String value = super.generateFlowValue(param.getValue(), null, formValueMap, formTxtMap, null);
+                inputMap.put(param.getCode(), value);
+            }
+            taskInstance.setInputJson(JsonUtil.toString(inputMap));
+        }
         int count = taskInstanceDao.insertDB(taskInstance);
         if (count < 1) {
             logger.error("insert task instance fail");
-            return;
-        }
-        if (CollectionUtil.isEmpty(params)) {
-            return;
-        }
-        for (FlowTemplateNodeTaskParamResult param : params) {
-            TaskInstanceParam taskInstanceParam = new TaskInstanceParam();
-            taskInstanceParam.setTaskId(taskInstance.getId());
-            taskInstanceParam.setCode(param.getCode());
-            String value = super.generateFlowValue(param.getValue(), null, formValueMap, formTxtMap, null);
-            taskInstanceParam.setValue(value);
-            count = taskInstanceParamDao.insertDB(taskInstanceParam);
-            if (count < 1) {
-                logger.error("insert task instance param fail");
-            }
         }
     }
 

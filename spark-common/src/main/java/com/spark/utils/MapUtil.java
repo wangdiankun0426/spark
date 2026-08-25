@@ -1,7 +1,6 @@
 package com.spark.utils;
 
 import org.apache.commons.collections4.MapUtils;
-
 import java.util.Map;
 
 /**
@@ -57,6 +56,25 @@ public class MapUtil {
      */
     public static Long getLongVal(Map map, Object k) {
         return MapUtils.getLong(map, k, 0L);
+    }
+
+
+    /**
+     * 判断map是否为空
+     * @param map
+     * @return
+     */
+    public static boolean isEmpty(Map map) {
+        return MapUtils.isEmpty(map);
+    }
+
+    /**
+     * 判断map是否不为空
+     * @param map
+     * @return
+     */
+    public static boolean isNotEmpty(Map map) {
+        return !isEmpty(map);
     }
 
 }

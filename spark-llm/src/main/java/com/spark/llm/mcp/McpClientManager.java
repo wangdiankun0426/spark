@@ -1,7 +1,5 @@
 package com.spark.llm.mcp;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.TypeReference;
 import com.spark.bean.llm.entity.Mcp;
 import com.spark.bean.llm.entity.Provider;
 import com.spark.bean.llm.query.ProviderQuery;
@@ -9,6 +7,9 @@ import com.spark.bean.llm.result.ProviderResult;
 import com.spark.dao.llm.ProviderDao;
 import com.spark.enums.McpTransportTypeEnum;
 import com.spark.enums.StatusEnum;
+import com.spark.utils.CollectionUtil;
+import com.spark.utils.JsonUtil;
+import com.spark.utils.MapUtil;
 import com.spark.utils.StringUtil;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
@@ -156,19 +157,17 @@ public class McpClientManager {
      * 创建STDIO传输的MCP客户端
      */
     private McpClient createStdioClient(Mcp mcp) {
-        // 构建命令列表
         List<String> commandList = new ArrayList<>();
         commandList.add(mcp.getCommand());
-        if (mcp.getArgs() != null) {
-            List<String> args = parseArgs(mcp.getArgs());
+        List<String> args = JsonUtil.parseList(mcp.getArgs());
+        if (CollectionUtil.isNotEmpty(args)) {
             commandList.addAll(args);
         }
         StdioMcpTransport.Builder transportBuilder = new StdioMcpTransport.Builder()
                 .command(commandList)
                 .logEvents(true);
-        // 设置环境变量
-        Map<String, String> envMap = parseEnv(mcp.getEnv());
-        if (!envMap.isEmpty()) {
+        Map<String, String> envMap = JsonUtil.parseMap(mcp.getEnv());
+        if (MapUtil.isNotEmpty(envMap)) {
             transportBuilder.environment(envMap);
         }
         StdioMcpTransport transport = transportBuilder.build();
@@ -216,53 +215,5 @@ public class McpClientManager {
         provider.setRemark(providerResult.getRemark());
         provider.setOrderNum(providerResult.getOrderNum());
         return provider;
-    }
-
-    /**
-     * 解析STDIO命令参数（JSON数组）
-     * @param argsJson JSON数组字符串
-     * @return 参数列表
-     */
-    private List<String> parseArgs(String argsJson) {
-        List<String> args = new ArrayList<>();
-        if (argsJson == null || argsJson.trim().isEmpty()) {
-            return args;
-        }
-        try {
-            List<String> parsed = JSON.parseObject(argsJson, new TypeReference<List<String>>() {});
-            if (parsed != null) {
-                args.addAll(parsed);
-            }
-        } catch (Exception e) {
-            logger.error("parseArgs error, argsJson={}", argsJson, e);
-            for (String arg : argsJson.split(",")) {
-                String trimmed = arg.trim();
-                if (!trimmed.isEmpty()) {
-                    args.add(trimmed);
-                }
-            }
-        }
-        return args;
-    }
-
-    /**
-     * 解析环境变量（JSON对象）
-     * @param envJson JSON对象字符串
-     * @return 环境变量
-     */
-    private Map<String, String> parseEnv(String envJson) {
-        Map<String, String> envMap = new HashMap<>();
-        if (envJson == null || envJson.trim().isEmpty()) {
-            return envMap;
-        }
-        try {
-            Map<String, String> parsed = JSON.parseObject(envJson, new TypeReference<Map<String, String>>() {});
-            if (parsed != null) {
-                envMap.putAll(parsed);
-            }
-        } catch (Exception e) {
-            logger.error("parseEnv error, envJson={}", envJson, e);
-        }
-        return envMap;
     }
 }

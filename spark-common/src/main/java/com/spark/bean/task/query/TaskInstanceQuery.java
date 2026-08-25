@@ -39,4 +39,9 @@ public class TaskInstanceQuery extends BaseQuery {
      */
     private Date taskTimeEnd;
 
+    /**
+     * 任务组id
+     */
+    private String setId;
+
 }

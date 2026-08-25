@@ -5,7 +5,6 @@ import com.spark.bean.base.BaseResult;
 import lombok.Data;
 
 import java.util.Date;
-import java.util.List;
 
 /**
  * +++/\_/\
@@ -83,13 +82,13 @@ public class TaskInstanceResult extends BaseResult {
     private String remark;
 
     /**
-     * 任务参数列表
+     * 任务实例入参JSON
      */
-    private List<TaskInstanceParamResult> params;
+    private String inputJson;
 
     /**
-     * 任务产出数据列表
+     * 任务实例出参JSON
      */
-    private List<TaskInstanceDataResult> dataList;
+    private String outputJson;
 
 }
