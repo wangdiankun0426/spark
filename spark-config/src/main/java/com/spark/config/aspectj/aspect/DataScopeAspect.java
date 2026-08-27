@@ -1,6 +1,7 @@
 package com.spark.config.aspectj.aspect;
 
 import com.spark.bean.base.BaseException;
+import com.spark.constant.AspectOrder;
 import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.bean.base.BaseQuery;
 import com.spark.bean.base.SessionHolder;
@@ -15,6 +16,7 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
@@ -38,11 +40,12 @@ import java.lang.reflect.Method;
  */
 @Aspect
 @Component
+@Order(AspectOrder.DATA_SCOPE)
 public class DataScopeAspect {
     private final static Logger logger = LoggerFactory.getLogger(DataScopeAspect.class);
 
     /**
-     *切点（自定义注解类全路径）
+     * 切点
      * @within(com.fang.cloud.common.aspect.Ump) 扫类
      * @annotation(com.spark.flow.aspectj.annotation.DataScope) 扫方法
      */
@@ -54,7 +57,6 @@ public class DataScopeAspect {
      */
     @Before(value = ("pointcut()"))
     public void doBefore(JoinPoint joinPoint) {
-        logger.info("DataScopeAspect start");
         // 管理员不过滤权限
         if (isAdmin()) {
             return;
@@ -105,7 +107,7 @@ public class DataScopeAspect {
             BaseQuery baseQuery = (BaseQuery) joinPoint.getArgs()[0];
             baseQuery.setDataScopeSQL(sql.toString());
         }
-        logger.info("DataScopeAspect sql:{}", sql);
+        logger.info("DataScopeAspect sql={}", sql);
     }
 
     /**
@@ -113,8 +115,7 @@ public class DataScopeAspect {
      * @return
      */
     private boolean isAdmin() {
-        boolean isAdmin = SessionHolder.getCurrentSessionId() != null && SessionHolder.getCurrentUserId() == 101;
-        return isAdmin;
+        return SessionHolder.getCurrentSessionId() != null && SessionHolder.getCurrentUserId() == 101;
     }
 
     /**

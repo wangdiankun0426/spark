@@ -66,12 +66,12 @@
               v-if="nodeId !== undefined && instanceStatus === 2 && (nodePermission & 8) === 8"
               :loading="urging"
               type="warning"
-              @click="handleUrge"
+              v-debounce="handleUrge"
           >催办</el-button>
           <el-button
               v-if="instanceStatus === 2 && instanceCreatedBy === currentUserId && (nodePermission & 128) === 128"
               type="danger"
-              @click="handleRecall"
+              v-debounce="handleRecall"
           >撤回</el-button>
           <el-button
               v-if="instanceStatus === 9"

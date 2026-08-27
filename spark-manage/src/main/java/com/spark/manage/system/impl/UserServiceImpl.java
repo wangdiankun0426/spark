@@ -1,5 +1,6 @@
 package com.spark.manage.system.impl;
 
+import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.bean.system.entity.User;
 import com.spark.bean.system.entity.UserProfile;
@@ -49,6 +50,7 @@ import java.util.stream.Collectors;
  * @author wangdiankun
  * @since 2024/2/17 18:52
  */
+@LogPrint
 @Service
 public class UserServiceImpl extends BaseService<UserQuery, UserResult> implements IUserService, InitializingBean {
     private final static Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);

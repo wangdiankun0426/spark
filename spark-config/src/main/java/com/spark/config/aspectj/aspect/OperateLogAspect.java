@@ -1,5 +1,6 @@
 package com.spark.config.aspectj.aspect;
 
+import com.spark.constant.AspectOrder;
 import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.bean.log.entity.LogOperate;
 import com.spark.bean.base.BaseException;
@@ -18,6 +19,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
@@ -33,6 +35,7 @@ import java.lang.reflect.Method;
  */
 @Aspect
 @Component
+@Order(AspectOrder.OPERATE_LOG)
 public class OperateLogAspect {
     private final static Logger logger  = LoggerFactory.getLogger(OperateLogAspect.class);
     @Autowired
@@ -85,7 +88,7 @@ public class OperateLogAspect {
             result.setObjId(null);
         } catch (Throwable e) {
             // 方法抛出异常之后
-            e.printStackTrace();
+            logger.error("OperateLogAspect error", e);
             logOperate.setCode(ErrorCodeEnum.SYSTEM_ERROR.getValue());
             logOperate.setRemark(e.getMessage());
         }

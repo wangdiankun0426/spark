@@ -64,27 +64,27 @@
         <div class="drawer-footer">
           <el-button
               v-if="nodeId !== undefined && (nodePermission & 1) === 1"
-              @click="handleApprovalFlowInstance(3)"
+              v-debounce="() => handleApprovalFlowInstance(3)"
               type="primary"
           >通过</el-button>
           <el-button
               v-if="nodeId !== undefined && (nodePermission & 2) === 2"
-              @click="handleApprovalFlowInstance(4)"
+              v-debounce="() => handleApprovalFlowInstance(4)"
               type="danger"
           >驳回</el-button>
           <el-button
               v-if="nodeId !== undefined && (nodePermission & 16) === 16"
-              @click="openOperateDialog('transfer')"
+              v-debounce="() => openOperateDialog('transfer')"
               type="warning"
           >转办</el-button>
           <el-button
               v-if="nodeId !== undefined && (nodePermission & 32) === 32"
-              @click="openOperateDialog('addSign')"
+              v-debounce="() => openOperateDialog('addSign')"
               type="primary"
           >加签</el-button>
           <el-button
               v-if="nodeId !== undefined && (nodePermission & 64) === 64"
-              @click="openOperateDialog('copy')"
+              v-debounce="() => openOperateDialog('copy')"
               type="info"
           >抄送</el-button>
         </div>
@@ -110,7 +110,7 @@
       </el-form>
       <template #footer>
         <el-button @click="operateDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="operating" @click="confirmOperate">确定</el-button>
+        <el-button type="primary" :loading="operating" v-debounce="confirmOperate">确定</el-button>
       </template>
     </el-dialog>
 

@@ -34,4 +34,9 @@ public class ObjectCacheKey {
      * 大模型问答缓存key
      */
     public final static String LLM_CHAT_MEMORY = "c_m_";
+
+    /**
+     * 防抖缓存key
+     */
+    public final static String DEBOUNCE_KEY = "d_k_";
 }

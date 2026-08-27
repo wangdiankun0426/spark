@@ -20,7 +20,6 @@ import java.io.IOException;
  * TraceId过滤器
  */
 public class TraceIdFilter implements Filter {
-    private static final Logger logger = LoggerFactory.getLogger(TraceIdFilter.class);
 
     /**
      * 过滤器

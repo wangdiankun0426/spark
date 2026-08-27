@@ -8,6 +8,7 @@ import com.spark.bean.flow.vo.FlowInstanceCopyVO;
 import com.spark.bean.flow.vo.FlowInstanceVO;
 import com.spark.bean.base.PageResult;
 import com.spark.bean.base.ResultData;
+import com.spark.config.aspectj.annotation.Debounce;
 import com.spark.flow.service.IFlowInstanceCopyService;
 import com.spark.flow.service.IFlowInstanceService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,7 @@ public class FlowInstanceController {
      * @param instanceVO 流程实例数据
      * @return 创建结果
      */
+    @Debounce
     @PostMapping("create")
     public ResultData<Void> createInstance(@RequestBody FlowInstanceVO instanceVO) {
         return instanceService.createInstance(instanceVO);
@@ -95,6 +97,7 @@ public class FlowInstanceController {
      * @param instanceVO 审批参数
      * @return 响应
      */
+    @Debounce
     @PostMapping("approval")
     public ResultData<Void> approveInstance(FlowInstanceVO instanceVO) {
         return instanceService.approveInstance(instanceVO);
@@ -105,6 +108,7 @@ public class FlowInstanceController {
      * @param instanceVO 催办参数
      * @return 响应
      */
+    @Debounce
     @PostMapping("urge")
     public ResultData<Void> urgeInstance(FlowInstanceVO instanceVO) {
         return instanceService.urgeInstance(instanceVO);
@@ -115,6 +119,7 @@ public class FlowInstanceController {
      * @param instanceVO 转办参数
      * @return 响应
      */
+    @Debounce
     @PostMapping("transfer")
     public ResultData<Void> transferInstance(FlowInstanceVO instanceVO) {
         return instanceService.transferInstance(instanceVO);
@@ -125,6 +130,7 @@ public class FlowInstanceController {
      * @param instanceVO 加签参数
      * @return 响应
      */
+    @Debounce
     @PostMapping("addSign")
     public ResultData<Void> addSignInstance(FlowInstanceVO instanceVO) {
         return instanceService.addSignInstance(instanceVO);
@@ -135,6 +141,7 @@ public class FlowInstanceController {
      * @param instanceVO 撤回参数
      * @return 响应
      */
+    @Debounce
     @PostMapping("recall")
     public ResultData<Void> recallInstance(@RequestBody FlowInstanceVO instanceVO) {
         return instanceService.recallInstance(instanceVO);
@@ -145,6 +152,7 @@ public class FlowInstanceController {
      * @param copyVO 抄送参数
      * @return 响应
      */
+    @Debounce
     @PostMapping("copy")
     public ResultData<Void> copyInstance(@RequestBody FlowInstanceCopyVO copyVO) {
         return instanceCopyService.copyInstance(copyVO);

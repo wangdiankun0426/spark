@@ -23,6 +23,7 @@ public enum ErrorCodeEnum {
     FILE_NOT_EXIST(503, "文件不存在"),
     FILE_CREATE_FAIL(504, "文件创建失败"),
     NO_PERMISSION(506, "无操作权限"),
+    OPERATE_TOO_FREQUENT(507, "操作过于频繁，请稍后再试"),
     // 登录相关状态码
     NOT_LOGIN(601, "用户未登录"),
     LONG_PASSWORD_ERROR(602, "密码错误"),

@@ -17,6 +17,7 @@ import com.spark.bean.form.result.FormObjValueResult;
 import com.spark.bean.form.result.FormVersionResult;
 import com.spark.bean.form.vo.FormObjValueVO;
 import com.spark.config.aspectj.annotation.DataScope;
+import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.dao.flow.*;
 import com.spark.dao.form.FormObjValueDao;
 import com.spark.dao.form.FormVersionDao;
@@ -53,6 +54,7 @@ import java.util.stream.Collectors;
  * @author wangdiankun
  * @since 2025-11-02 15:47:22
  */
+@LogPrint
 @Service
 public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInstanceResult> implements IFlowInstanceService {
     private final static Logger logger = LoggerFactory.getLogger(InstanceServiceImpl.class);

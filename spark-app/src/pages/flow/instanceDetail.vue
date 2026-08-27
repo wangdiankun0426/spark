@@ -124,6 +124,7 @@ import {
 import {toast} from "uview-plus";
 import UserPicker from '@/components/UserPicker/index.vue'
 import store from "@/store/index.js";
+import {useDebounceFn} from "@/utils/debounce";
 
 const instanceId = ref(undefined);
 // 详情类型：1 我的申请 3 我的待办 4 我的已办 5 抄送给我
@@ -244,16 +245,16 @@ const approvalDiscuss = ref('');
  * 打开审批意见弹窗
  * @param status 审批状态 3-通过 4-驳回
  */
-function openApprovalDialog(status) {
+const openApprovalDialog = useDebounceFn((status) => {
   approvalStatus.value = status;
   approvalDiscuss.value = '';
   approvalVisible.value = true;
-}
+});
 
 /**
  * 确认审批
  */
-function handleApproval() {
+const handleApproval = useDebounceFn(() => {
   if (!approvalDiscuss.value || !approvalDiscuss.value.trim()) {
     toast('审批意见不能为空');
     return;
@@ -270,12 +271,12 @@ function handleApproval() {
       setTimeout(handleBack, 500);
     }
   });
-}
+});
 
 /**
  * 催办流程实例
  */
-function handleUrge() {
+const handleUrge = useDebounceFn(() => {
   urging.value = true;
   urgeFlowInstanceAPI({id: instanceId.value}).then(res => {
     if (res.code === 200) {
@@ -284,12 +285,12 @@ function handleUrge() {
   }).finally(() => {
     urging.value = false;
   });
-}
+});
 
 /**
  * 撤回流程实例
  */
-function handleRecall() {
+const handleRecall = useDebounceFn(() => {
   uni.showModal({
     title: '提示',
     content: '确定撤回该流程实例吗？撤回后流程将终止。',
@@ -306,7 +307,7 @@ function handleRecall() {
       });
     }
   });
-}
+});
 
 const userPickerVisible = ref(false);
 const operateType = ref('transfer');
@@ -316,16 +317,16 @@ const operating = ref(false);
  * 打开加签/转办选人弹层
  * @param type transfer-转办 addSign-加签
  */
-function openUserPicker(type) {
+const openUserPicker = useDebounceFn((type) => {
   operateType.value = type;
   userPickerVisible.value = true;
-}
+});
 
 /**
- * 确认加签/转办/抄送（选择用户组件回调）
+ * 确认加签/转办/抄送
  * @param users 选中的用户列表
  */
-function handleUserConfirm(users) {
+const handleUserConfirm = useDebounceFn((users) => {
   const userIds = users.map(user => user.id).join(',');
   operating.value = true;
   if (operateType.value === 'copy') {
@@ -357,7 +358,7 @@ function handleUserConfirm(users) {
       operating.value = false;
     });
   }
-}
+});
 </script>
 <style scoped lang="scss">
 .detail-container {

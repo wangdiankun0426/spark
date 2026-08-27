@@ -11,6 +11,8 @@ import * as ElIcon from '@element-plus/icons-vue';
 import router from '@/router/index';
 import store from '@/store/index';
 import locale from 'element-plus/es/locale/lang/zh-cn';
+// 自定义指令
+import { installDebounceDirectives } from '@/utils/debounce';
 // 自定义组件
 import CustomInput from '@/views/formDesigner/formWidget/basicWidget/input.vue';
 import CustomTextarea from '@/views/formDesigner/formWidget/basicWidget/textarea.vue';
@@ -94,5 +96,7 @@ Object.keys(ElIcon).forEach((key) => {
 components.forEach((Component) => {
   app.component(Component.name, Component);
 });
+// 注册防抖指令
+installDebounceDirectives(app);
 
 app.mount('#app')

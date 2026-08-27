@@ -34,15 +34,15 @@ public class RabbitListenerCustomAspect {
     public void doBefore(JoinPoint point, RabbitListener rabbitListener) {
         Object[] args = point.getArgs();
         for (Object arg : args) {
-            if (arg instanceof Message) {
-                Message message = (Message) arg;
-                MessageProperties messageProperties = message.getMessageProperties();
-                Map<String, Object> headers = messageProperties.getHeaders();
-                String trackId = (String)headers.get(TraceLogUtil.TRACK_ID_KEY);
-                String userId = (String)headers.get(TraceLogUtil.USER_ID_KEY);
-                TraceLogUtil.generateTrackId(trackId);
-                TraceLogUtil.cacheTrackUserId(userId != null ? Long.valueOf(userId) : null);
+            if (!(arg instanceof Message message)) {
+                break;
             }
+            MessageProperties messageProperties = message.getMessageProperties();
+            Map<String, Object> headers = messageProperties.getHeaders();
+            String trackId = (String)headers.get(TraceLogUtil.TRACK_ID_KEY);
+            String userId = (String)headers.get(TraceLogUtil.USER_ID_KEY);
+            TraceLogUtil.generateTrackId(trackId);
+            TraceLogUtil.cacheTrackUserId(userId != null ? Long.valueOf(userId) : null);
         }
     }
 }
