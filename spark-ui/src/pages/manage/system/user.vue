@@ -404,7 +404,7 @@ function getDeptTree() {
  * 查询用户列表
  **/
 function getUserList() {
-   userQuery.value.deptId =  currentDeptId.value;
+  userQuery.value.deptId =  currentDeptId.value;
   pageUserListAPI(userQuery.value).then(res => {
      userList.value = res.data.rows;
      total.value = res.data.total;
@@ -413,14 +413,13 @@ function getUserList() {
 
 /**
  * 打开创建用户表单
- * @param id
  */
-function openCreateUserForm(id) {
+function openCreateUserForm() {
    userForm.value.id = undefined;
    userForm.value.name = undefined;
    userForm.value.loginName = undefined;
    userForm.value.roleIds = undefined;
-   userForm.value.deptId =  currentDeptId;
+   userForm.value.deptId = currentDeptId.value;
    userForm.value.phone = undefined;
    userForm.value.email = undefined;
    userForm.value.sex = 1;
@@ -509,6 +508,12 @@ function closeUserForm() {
    userForm.value.id = undefined;
    userForm.value.name = undefined;
    userForm.value.loginName = undefined;
+   userForm.value.deptId = undefined;
+   userForm.value.roleIds = undefined;
+   userForm.value.phone = undefined;
+   userForm.value.email = undefined;
+   userForm.value.sex = undefined;
+   userForm.value.status = undefined;
    userFormVisible.value = false;
 }
 

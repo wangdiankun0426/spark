@@ -11,32 +11,49 @@ export default [
         name: 'flow',
         redirect: '/flow/application',
         component: flow,
-        meta: { title: '流程中心' },
+        meta: {
+            title: '流程中心'
+        },
         children: [
             {
                 path: '/flow/application',
                 name: 'flowApplication',
-                component: flowApplication
+                component: flowApplication,
+                meta: {
+                    title: '流程申请'
+                },
             },
             {
                 path: '/flow/myApplication',
                 name: 'myApplication',
-                component: myApplication
+                component: myApplication,
+                meta: {
+                    title: '我的申请'
+                },
             },
             {
                 path: '/flow/myTodo',
                 name: 'myTodo',
-                component: myTodo
+                component: myTodo,
+                meta: {
+                    title: '我的待办'
+                },
             },
             {
                 path: '/flow/myDone',
                 name: 'myDone',
-                component: myDone
+                component: myDone,
+                meta: {
+                    title: '我的已办'
+                },
             },
             {
                 path: '/flow/copyMe',
                 name: 'copyMe',
-                component: copyMe
+                component: copyMe,
+                meta: {
+                    title: '抄送给我'
+                },
             }
         ]
     }

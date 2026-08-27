@@ -2,7 +2,7 @@
   <div>
     <el-menu :default-active="defaultActive" router mode="horizontal">
       <div class="logo-box">
-        <img src="../assets/images/logo.png" width="50" height="36"/>
+        <img src="../assets/images/logo.png" width="40" height="36"/>
       </div>
       <el-menu-item index="/home">
         <el-icon><DataAnalysis /></el-icon>
@@ -411,7 +411,7 @@ function handleViewNotice(row) {
   width: 60px;
   padding: 0 0 0 10px;
   margin-left: 20px;
-  margin-right: 20px;
+  margin-right: 10px;
   overflow: hidden;
 }
 

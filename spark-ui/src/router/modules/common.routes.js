@@ -51,7 +51,9 @@ export default [
         path: '/workflow/designer/:id?/:revId?',
         name: 'workflowDesigner',
         component: workflowIndex,
-        meta: { title: '工作流设计器' }
+        meta: {
+            title: '工作流设计器'
+        }
     },
     {
         path: '/manage/system/notice/edit/:id',
@@ -89,7 +91,9 @@ export default [
         path: '/graph/detail',
         name: 'graphDetail',
         component: graphIndex,
-        meta: { title: '图谱详情' }
+        meta: {
+            title: '图谱详情'
+        }
     },
     {
         path: '/noPermission',

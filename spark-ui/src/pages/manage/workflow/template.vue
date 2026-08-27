@@ -160,13 +160,13 @@ const statusOptions = [
 ];
 
 handleGetList();
-// 加载AI工作流表单选项
+// 加载workflow表单选项
 queryFormListAPI({ type: 4, page: false }).then(res => {
   if (res.code === 200 && res.data) { formOptions.value = res.data; }
 });
 
 function handleDelete(id) {
-  ElMessageBox.confirm('是否确定删除此AI工作流?', '提示', {
+  ElMessageBox.confirm('是否确定删除此Workflow?', '提示', {
     confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'
   }).then(() => {
     deleteWorkflowAPI({ id }).then(res => {
@@ -179,7 +179,7 @@ function handleOpenUpdateForm(row) {
   queryWorkflowDetailAPI({ id: row.id }).then(res => {
     if (res.code === 200 && res.data) {
       form.value = { id: res.data.id, name: res.data.name, description: res.data.description, status: res.data.status, formId: res.data.formId };
-      formTitle.value = '修改AI工作流';
+      formTitle.value = '修改WorkFlow';
       formVisible.value = true;
     }
   });

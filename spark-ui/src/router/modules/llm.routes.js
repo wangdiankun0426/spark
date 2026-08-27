@@ -19,25 +19,33 @@ export default [
                 path: '/llm/agent',
                 name: 'agent',
                 component: agent,
-                meta: { title: 'Agent' }
-            },
-            {
-                path: '/llm/modelMarket',
-                name: 'modelMarket',
-                component: modelMarket,
-                meta: { title: '模型市场' }
+                meta: {
+                    title: 'Agent'
+                }
             },
             {
                 path: '/llm/workflow',
                 name: 'llmWorkflow',
                 component: workflowHub,
-                meta: { title: 'AI工作流' }
+                meta: {
+                    title: 'WorkFlow'
+                }
+            },
+            {
+                path: '/llm/modelMarket',
+                name: 'modelMarket',
+                component: modelMarket,
+                meta: {
+                    title: '模型市场'
+                }
             },
             {
                 path: '/llm/workflow/instance',
                 name: 'workflowInstance',
                 component: WorkflowInstance,
-                meta: { title: '我的运行' }
+                meta: {
+                    title: '我的运行'
+                }
             },
         ]
     }

@@ -10,25 +10,33 @@ export default [
         name: 'kb',
         redirect: '/kb/search',
         component: kb,
-        meta: { title: '知识库' },
+        meta: {
+            title: '知识库'
+        },
         children: [
             {
                 path: '/kb/search',
                 name: 'search',
                 component: search,
-                meta: { title: '知识文档' }
+                meta: {
+                    title: '知识文档'
+                }
             },
             {
                 path: '/kb/knowledge',
                 name: 'knowledge',
                 component: knowledge,
-                meta: { title: '知识库' }
+                meta: {
+                    title: '知识库'
+                }
             },
             {
                 path: '/kb/knowledge/document',
                 name: 'knowledgeDocument',
                 component: knowledgeDocument,
-                meta: { title: '知识库文档' }
+                meta: {
+                    title: '知识库文档'
+                }
             },
         ]
     }
