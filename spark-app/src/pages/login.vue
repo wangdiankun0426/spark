@@ -177,6 +177,10 @@
         <text class="icon-label">邮箱登录</text>
       </view>
     </div>
+    <!-- 版权说明 -->
+    <view class="login-copyright">
+      <text class="copyright-text">Copyright © 2024-2026 evancloud.top All Rights Reserved.</text>
+    </view>
   </div>
 </template>
 <script setup>
@@ -419,5 +423,18 @@ function submitLoginForm() {
   font-size: 20px;
   font-weight: bolder;
   color: #ffffff;
+}
+
+.login-copyright {
+  position: fixed;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+.copyright-text {
+  font-size: 12px;
+  color: #909399;
 }
 </style>

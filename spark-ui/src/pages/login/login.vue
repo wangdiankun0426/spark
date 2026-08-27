@@ -310,6 +310,10 @@
         </el-tooltip>
       </div>
     </div>
+    <!-- 版权说明 -->
+    <div class="login-copyright">
+      Copyright © 2024-2026 evancloud.top All Rights Reserved.
+    </div>
   </div>
 </template>
 
@@ -901,6 +905,17 @@ function goRegister() {
 ::v-deep(.el-divider__text) {
   background-color: #ffffff !important;
   color: $color-text-placeholder;
+}
+
+// 版权说明
+.login-copyright {
+  position: fixed;
+  bottom: 20px;
+  right: 8%;
+  text-align: center;
+  font-size: 12px;
+  color: #909399;
+  z-index: 1;
 }
 </style>
 

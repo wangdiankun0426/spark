@@ -8,6 +8,23 @@
 
 ---
 
+## 在线体验
+
+| 端 | 地址 |
+|---|------|
+| PC 端 | https://spark.evancloud.top:7102 |
+| Windows 桌面端 | https://spark.evancloud.top:7101/bundle/星火云_0.0.1_x64-setup.exe |
+| H5 移动端| https://spark.evancloud.top:7102 |
+
+**测试账号**
+
+| 账号       | 密码 |
+|----------|------|
+| zhangsan | 123456 |
+| wangwu   | 123456 |
+
+---
+
 ## 1. 平台定位
 
 **双平台定位：**
