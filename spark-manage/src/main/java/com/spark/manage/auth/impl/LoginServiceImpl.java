@@ -2,12 +2,14 @@ package com.spark.manage.auth.impl;
 
 import com.spark.bean.base.BaseAssert;
 import com.spark.bean.log.entity.LogLogin;
+import com.spark.bean.system.entity.UserProfile;
 import com.spark.bean.system.query.DepartmentQuery;
 import com.spark.bean.system.result.DepartmentResult;
 import com.spark.bean.system.vo.MessageVO;
 import com.spark.bean.base.BaseException;
 import com.spark.bean.system.entity.ValidateCode;
 import com.spark.config.rabbitmq.MqProducer;
+import com.spark.config.wecom.response.WeComUserRes;
 import com.spark.constant.ObjectCacheKey;
 import com.spark.bean.system.entity.Session;
 import com.spark.bean.system.query.UserQuery;
@@ -18,12 +20,14 @@ import com.spark.bean.base.SessionHolder;
 import com.spark.dao.system.DepartmentDao;
 import com.spark.dao.system.RoleDao;
 import com.spark.dao.system.UserDao;
+import com.spark.dao.system.UserProfileDao;
 import com.spark.enums.LoginTypeEnum;
 import com.spark.enums.ErrorCodeEnum;
 import com.spark.enums.MessageTypeEnum;
 import com.spark.manage.auth.ILoginService;
 import com.spark.config.redis.RedisService;
 import com.spark.manage.auth.ILoginValidateService;
+import com.spark.manage.external.WeComUtil;
 import com.spark.utils.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -58,6 +62,10 @@ public class LoginServiceImpl implements ILoginService {
     private RoleDao roleDao;
     @Autowired
     private DepartmentDao departmentDao;
+    @Autowired
+    private WeComUtil weComUtil;
+    @Autowired
+    private UserProfileDao userProfileDao;
 
     /**
      * 登录
@@ -96,7 +104,7 @@ public class LoginServiceImpl implements ILoginService {
             // 记录登录日志
             this.recordLoginLog(loginVO);
             // 发送登录通知
-            this.sendLoginMessage(loginVO);
+            this.sendLoginMessage(userResult);
         } finally {
             TraceLogUtil.removeTrackId();
             TraceLogUtil.removeUserId();
@@ -157,6 +165,9 @@ public class LoginServiceImpl implements ILoginService {
                     StringUtil.isBlank(loginVO.getEmail())
                             || StringUtil.isBlank(loginVO.getValidateId())
                             || StringUtil.isBlank(loginVO.getValidateValue());
+        } else if (LoginTypeEnum.WECOM_OAUTH.getValue().equals(loginVO.getLoginType())) {
+            checkPredicate = vo ->
+                    StringUtil.isBlank(loginVO.getLoginName());
         }
         boolean bo = checkPredicate.test(loginVO);
         if (bo) {
@@ -175,12 +186,16 @@ public class LoginServiceImpl implements ILoginService {
     private ResultData<UserResult> validateLogin(LoginVO loginVO) {
         ResultData<UserResult> result = new ResultData<>();
         UserResult userResult;
+        Integer loginType = loginVO.getLoginType();
+        // 校验验证码
         ValidateCode code = new ValidateCode();
         code.setUuid(loginVO.getValidateId());
         code.setValue(loginVO.getValidateValue());
+        code.setLoginType(loginType);
         ResultData<Void> validateResult = loginValidateService.checkValidateCode(code);
         BaseAssert.assertTrue(validateResult);
-        if (LoginTypeEnum.PASSWORD.getValue().equals(loginVO.getLoginType())) {
+        // 处理不通登录类型
+        if (LoginTypeEnum.PASSWORD.getValue().equals(loginType)) {
             UserQuery userQuery = new UserQuery();
             userQuery.setLoginName(loginVO.getLoginName());
             userResult = userDao.queryUser(userQuery);
@@ -194,7 +209,7 @@ public class LoginServiceImpl implements ILoginService {
                 result.setErrorCode(ErrorCodeEnum.LONG_PASSWORD_ERROR);
                 return result;
             }
-        } else if (LoginTypeEnum.MESSAGE.getValue().equals(loginVO.getLoginType())) {
+        } else if (LoginTypeEnum.MESSAGE.getValue().equals(loginType)) {
             UserQuery userQuery = new UserQuery();
             userQuery.setPhone(loginVO.getPhone());
             userResult = userDao.queryUser(userQuery);
@@ -202,9 +217,27 @@ public class LoginServiceImpl implements ILoginService {
                 result.setErrorCode(ErrorCodeEnum.PHONE_NOT_EXIST);
                 return result;
             }
-        }  else if (LoginTypeEnum.EMAIL.getValue().equals(loginVO.getLoginType())) {
+        }  else if (LoginTypeEnum.EMAIL.getValue().equals(loginType)) {
             UserQuery userQuery = new UserQuery();
             userQuery.setEmail(loginVO.getEmail());
+            userResult = userDao.queryUser(userQuery);
+            if (userResult == null) {
+                result.setErrorCode(ErrorCodeEnum.EMAIL_NOT_EXIST);
+                return result;
+            }
+        } else if (LoginTypeEnum.WECOM_OAUTH.getValue().equals(loginType)) {
+            WeComUserRes userInfo = weComUtil.getUserInfo(loginVO.getLoginName());
+            if (userInfo == null || StringUtil.isBlank(userInfo.getUserid())) {
+                result.setErrorCode(ErrorCodeEnum.WECOM_LOGIN_FAIL);
+                return result;
+            }
+            UserProfile userProfile = userProfileDao.queryByWecomId(userInfo.getUserid());
+            if (userProfile == null) {
+                result.setErrorCode(ErrorCodeEnum.WECOM_NOT_BIND_USER);
+                return result;
+            }
+            UserQuery userQuery = new UserQuery();
+            userQuery.setId(userProfile.getId());
             userResult = userDao.queryUser(userQuery);
             if (userResult == null) {
                 result.setErrorCode(ErrorCodeEnum.EMAIL_NOT_EXIST);
@@ -262,16 +295,16 @@ public class LoginServiceImpl implements ILoginService {
 
     /**
      * 发送登录消息
-     * @param loginVO 登录参数
+     * @param userResult 登录参数
      */
-    private void sendLoginMessage(LoginVO loginVO) {
+    private void sendLoginMessage(UserResult userResult) {
         MessageVO messageVO = new MessageVO();
         messageVO.setType(MessageTypeEnum.LOGIN.getType());
         messageVO.setTitle(MessageTypeEnum.LOGIN.getTitle());
         String content = MessageTypeEnum.LOGIN.getContent();
-        messageVO.setContent(String.format(content, loginVO.getLoginName(), DateUtil.getCurrentTime(DateUtil.YYYYMMDD_HHMMSS)));
-        messageVO.setUserIds(List.of(loginVO.getUserId()));
-        messageVO.setRefId(loginVO.getUserId());
+        messageVO.setContent(String.format(content, userResult.getName(), DateUtil.getCurrentTime(DateUtil.YYYYMMDD_HHMMSS)));
+        messageVO.setUserIds(List.of(userResult.getId()));
+        messageVO.setRefId(userResult.getId());
         mqProducer.sendSystemMessageMq(JsonUtil.toString(messageVO));
     }
 }

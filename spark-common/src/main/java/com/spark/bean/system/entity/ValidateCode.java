@@ -30,4 +30,8 @@ public class ValidateCode {
      */
     private String value;
 
+    /**
+     * 登录类型
+     */
+    private Integer loginType;
 }

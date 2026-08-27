@@ -61,46 +61,43 @@
         </view>
       </DashboardCard>
 
-      <!-- 知识图谱构建与提炼 -->
-      <DashboardCard title="知识图谱构建与提炼" icon="share-fill">
-        <view class="eval-section">
-          <view class="eval-metric kg-metric" v-for="m in kgEvalMetrics" :key="m.name">
-            <text class="metric-name">{{ m.name }}</text>
-            <view class="metric-right">
-              <text class="metric-value">{{ m.value }}</text>
-              <up-icon v-if="m.trend === 'up'" name="arrow-upward" size="14" color="#ff4d4f"></up-icon>
-              <up-icon v-else-if="m.trend === 'down'" name="arrow-downward" size="14" color="#52c41a"></up-icon>
-              <text v-else class="trend-flat">-</text>
+      <!-- AI应用使用统计 -->
+      <DashboardCard title="AI 应用使用统计" icon="grid-fill">
+        <view class="ai-usage-list">
+          <view class="ai-usage-item" v-for="item in aiUsageList" :key="item.name">
+            <view class="usage-left">
+              <view class="usage-icon-wrap" :style="{ backgroundColor: item.bgColor }">
+                <up-icon :name="item.icon" size="18" :color="item.color"></up-icon>
+              </view>
+              <text class="usage-name">{{ item.name }}</text>
+            </view>
+            <view class="usage-right">
+              <text class="usage-value">{{ item.value }}</text>
+              <text class="usage-unit">{{ item.unit }}</text>
             </view>
           </view>
         </view>
       </DashboardCard>
 
-      <!-- 知识图谱构建与提炼 -->
-      <DashboardCard title="知识图谱构建与提炼" icon="share-fill">
-        <view class="eval-section">
-          <view class="eval-metric kg-metric" v-for="m in kgEvalMetrics" :key="m.name">
-            <text class="metric-name">{{ m.name }}</text>
-            <view class="metric-right">
-              <text class="metric-value">{{ m.value }}</text>
-              <up-icon v-if="m.trend === 'up'" name="arrow-upward" size="14" color="#ff4d4f"></up-icon>
-              <up-icon v-else-if="m.trend === 'down'" name="arrow-downward" size="14" color="#52c41a"></up-icon>
-              <text v-else class="trend-flat">-</text>
-            </view>
+      <!-- 系统运行状态 -->
+      <DashboardCard title="系统运行状态" icon="setting-fill">
+        <view class="status-grid">
+          <view class="status-item" v-for="item in systemStatusList" :key="item.name">
+            <view class="status-indicator" :style="{ backgroundColor: item.color }"></view>
+            <text class="status-name">{{ item.name }}</text>
+            <text class="status-value" :style="{ color: item.color }">{{ item.status }}</text>
           </view>
         </view>
       </DashboardCard>
 
-      <!-- 知识图谱构建与提炼 -->
-      <DashboardCard title="知识图谱构建与提炼" icon="share-fill">
-        <view class="eval-section">
-          <view class="eval-metric kg-metric" v-for="m in kgEvalMetrics" :key="m.name">
-            <text class="metric-name">{{ m.name }}</text>
-            <view class="metric-right">
-              <text class="metric-value">{{ m.value }}</text>
-              <up-icon v-if="m.trend === 'up'" name="arrow-upward" size="14" color="#ff4d4f"></up-icon>
-              <up-icon v-else-if="m.trend === 'down'" name="arrow-downward" size="14" color="#52c41a"></up-icon>
-              <text v-else class="trend-flat">-</text>
+      <!-- 最近活动 -->
+      <DashboardCard title="最近活动" icon="clock-fill">
+        <view class="activity-list">
+          <view class="activity-item" v-for="(item, index) in recentActivities" :key="index">
+            <view class="activity-dot" :style="{ backgroundColor: item.color }"></view>
+            <view class="activity-content">
+              <text class="activity-text">{{ item.text }}</text>
+              <text class="activity-time">{{ item.time }}</text>
             </view>
           </view>
         </view>
@@ -111,10 +108,9 @@
     <!-- 底部导航栏 -->
     <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#1890ff">
       <up-tabbar-item name="home" icon="home-fill" text="首页"/>
-      <up-tabbar-item name="todo" icon="order" text="待办"/>
-      <up-tabbar-item name="contacts" icon="man-add-fill" text="通讯录"/>
-      <up-tabbar-item name="agent" icon="grid-fill" text="智能体"/>
-      <up-tabbar-item name="message" icon="chat-fill" text="通知"/>
+      <up-tabbar-item name="flow" icon="order" text="流程"/>
+      <up-tabbar-item name="llm" icon="grid-fill" text="AI+"/>
+      <up-tabbar-item name="message" icon="chat-fill" text="消息"/>
       <up-tabbar-item name="my" icon="account" text="我的"/>
     </up-tabbar>
   </view>
@@ -181,6 +177,33 @@ const kgEvalMetrics = ref([
   { name: '实体覆盖率', value: '87.3%', trend: 'up' }
 ])
 
+// 写死的固定数据 - AI应用使用统计
+const aiUsageList = ref([
+  { name: 'Agent 对话', value: 1256, unit: '次', icon: 'chat-fill', color: '#1890ff', bgColor: '#e6f7ff' },
+  { name: '知识库检索', value: 3680, unit: '次', icon: 'search', color: '#52c41a', bgColor: '#f6ffed' },
+  { name: '工作流执行', value: 89, unit: '次', icon: 'list', color: '#722ed1', bgColor: '#f9f0ff' },
+  { name: '文档解析', value: 256, unit: '份', icon: 'file-text-fill', color: '#faad14', bgColor: '#fff7e6' }
+])
+
+// 写死的固定数据 - 系统运行状态
+const systemStatusList = ref([
+  { name: 'API 服务', status: '正常', color: '#52c41a' },
+  { name: '数据库', status: '正常', color: '#52c41a' },
+  { name: 'Redis 缓存', status: '正常', color: '#52c41a' },
+  { name: '向量引擎', status: '正常', color: '#52c41a' },
+  { name: '消息队列', status: '正常', color: '#52c41a' },
+  { name: '文件存储', status: '维护中', color: '#faad14' }
+])
+
+// 写死的固定数据 - 最近活动
+const recentActivities = ref([
+  { text: '用户 张三 上传了 5 份文档到知识库', time: '10 分钟前', color: '#1890ff' },
+  { text: '工作流「合同审批」执行成功', time: '30 分钟前', color: '#52c41a' },
+  { text: '智能体「客服助手」对话 23 轮', time: '1 小时前', color: '#722ed1' },
+  { text: '知识图谱新增 156 个实体', time: '2 小时前', color: '#13c2c2' },
+  { text: '用户 李四 完成了流程审批', time: '3 小时前', color: '#faad14' }
+])
+
 function handleOnTabChange(index) {
   uni.reLaunch({
     url: '/pages/' + index + '/index'
@@ -243,10 +266,9 @@ function handleOnTabChange(index) {
 .data-card-grid {
   display: flex;
   flex-wrap: wrap;
-  margin: -6px;
 
   .data-card {
-    width: calc(50% - 12px);
+    width: calc(48%);
     margin: 2px;
   }
 }
@@ -333,6 +355,138 @@ function handleOnTabChange(index) {
 
 .trend-flat {
   font-size: 14px;
+  color: #999;
+}
+
+/* AI应用使用统计 */
+.ai-usage-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.ai-usage-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f5f5f5;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.usage-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.usage-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.usage-name {
+  font-size: 14px;
+  color: #333;
+}
+
+.usage-right {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.usage-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.usage-unit {
+  font-size: 12px;
+  color: #999;
+}
+
+/* 系统运行状态 */
+.status-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.status-item {
+  width: calc(26%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  background-color: #fafbfc;
+  border-radius: 8px;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-name {
+  font-size: 12px;
+  color: #666;
+}
+
+.status-value {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* 最近活动 */
+.activity-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f5f5f5;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.activity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.activity-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.activity-text {
+  font-size: 13px;
+  color: #333;
+  line-height: 1.4;
+}
+
+.activity-time {
+  font-size: 12px;
   color: #999;
 }
 

@@ -206,7 +206,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
      * @return 列表
      */
     @Override
-    public ResultData<PageResult<FlowInstanceResult>> pageMyAppliedList(FlowInstanceQuery query) {
+    public ResultData<PageResult<FlowInstanceResult>> pageMyApplicationList(FlowInstanceQuery query) {
         ResultData<PageResult<FlowInstanceResult>> result = new ResultData<>();
         if (query == null) {
             query = new FlowInstanceQuery();
@@ -224,7 +224,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
      * @return 列表
      */
     @Override
-    public ResultData<PageResult<FlowInstanceResult>> pageMyPendingList(FlowInstanceQuery query) {
+    public ResultData<PageResult<FlowInstanceResult>> pageMyTodoList(FlowInstanceQuery query) {
         ResultData<PageResult<FlowInstanceResult>> result = new ResultData<>();
         if (query == null) {
             query = new FlowInstanceQuery();
@@ -489,7 +489,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
      * @return
      */
     @Override
-    public ResultData<PageResult<FlowInstanceResult>> pageMyPendedList(FlowInstanceQuery query) {
+    public ResultData<PageResult<FlowInstanceResult>> pageMyDoneList(FlowInstanceQuery query) {
         ResultData<PageResult<FlowInstanceResult>> result = new ResultData<>();
         if (query == null) {
             query = new FlowInstanceQuery();
@@ -524,6 +524,86 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         }
         PageResult<FlowInstanceResult> list = super.pageList(query);
         result.setData(list);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 撤回流程实例
+     * @param instanceVO 撤回参数
+     * @return 撤回结果
+     */
+    @Override
+    public ResultData<Void> recallInstance(FlowInstanceVO instanceVO) {
+        ResultData<Void> result = new ResultData<>();
+        if (instanceVO == null || instanceVO.getId() == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        // 校验实例存在且状态为审批中
+        FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
+        instanceQuery.setId(instanceVO.getId());
+        instanceQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
+        if (instanceResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        // 校验当前用户是发起人
+        if (!SessionHolder.getCurrentUserId().equals(instanceResult.getCreatedBy())) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        // 查询当前审批节点
+        FlowInstanceNodeQuery instanceNodeQuery = new FlowInstanceNodeQuery();
+        instanceNodeQuery.setInstanceId(instanceResult.getId());
+        instanceNodeQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        FlowInstanceNodeResult instanceNodeResult = instanceNodeDao.queryInstanceNode(instanceNodeQuery);
+        if (instanceNodeResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        // 校验当前节点是否允许撤回
+        FlowTemplateNodeQuery recallTemplateNodeQuery = new FlowTemplateNodeQuery();
+        recallTemplateNodeQuery.setNodeId(instanceNodeResult.getNodeId());
+        recallTemplateNodeQuery.setTemplateId(instanceResult.getTemplateId());
+        recallTemplateNodeQuery.setRevId(instanceResult.getTemplateRevId());
+        FlowTemplateNodeResult recallTemplateNodeResult = templateNodeDao.queryTemplateNode(recallTemplateNodeQuery);
+        Integer recallPermission = recallTemplateNodeResult == null ? null : recallTemplateNodeResult.getPermission();
+        if (recallPermission == null || (recallPermission & FlowTemplateNodePermissionEnum.ALLOW_RECALL.getValue()) != FlowTemplateNodePermissionEnum.ALLOW_RECALL.getValue()) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        // 校验当前节点无人审批过（所有assignee仍为PROCESSING状态）
+        if (StringUtil.isNotBlank(instanceNodeResult.getAssigneeSetId())) {
+            FlowInstanceAssigneeQuery allAssigneeQuery = new FlowInstanceAssigneeQuery();
+            allAssigneeQuery.setAssigneeSetId(instanceNodeResult.getAssigneeSetId());
+            List<FlowInstanceAssigneeResult> allAssigneeList = instanceAssigneeDao.queryInstanceAssigneeList(allAssigneeQuery);
+            if (CollectionUtil.isEmpty(allAssigneeList)) {
+                result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+                return result;
+            }
+            boolean allProcessing = allAssigneeList.stream()
+                    .allMatch(a -> FlowInstanceStatusEnum.PROCESSING.getValue().equals(a.getStatus()));
+            if (!allProcessing) {
+                // 有人已审批，不允许撤回
+                result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+                return result;
+            }
+        }
+        // 更新实例状态为已撤回
+        FlowInstance updateInstance = new FlowInstance();
+        updateInstance.setId(instanceResult.getId());
+        updateInstance.setStatus(FlowInstanceStatusEnum.WITHDRAWN.getValue());
+        int count = instanceDao.updateDBById(updateInstance);
+        if (count < 1) {
+            logger.error("recallInstance error, update db fail");
+            return result;
+        }
+        // 删除Flowable实例，触发PROCESS_CANCELLED事件（因状态已为WITHDRAWN不会被覆盖）
+        flowableService.deleteInstance(instanceResult.getFlowableInstanceId());
+        // 保存撤回记录
+        this.saveFlowDiscuss(instanceResult.getId(), instanceNodeResult.getId(), FlowInstanceStatusEnum.WITHDRAWN.getValue(), instanceVO.getDiscuss());
         result.setCode(ResultData.OK);
         return result;
     }

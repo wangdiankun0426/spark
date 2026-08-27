@@ -5,9 +5,9 @@ import request from '@/api/request'
  * @param params 查询参数
  * @returns {Promise<AxiosResponse<any>>}
  */
-export function pageMyAppliedListAPI(params) {
+export function pageMyApplicationListAPI(params) {
     return request({
-        url: '/flow/instance/pageMyAppliedList',
+        url: '/flow/instance/pageMyApplicationList',
         method: 'get',
         params: params
     })
@@ -18,9 +18,9 @@ export function pageMyAppliedListAPI(params) {
  * @param params 查询参数
  * @returns {Promise<AxiosResponse<any>>}
  */
-export function pageMyPendingListAPI(params) {
+export function pageMyTodoListAPI(params) {
     return request({
-        url: '/flow/instance/pageMyPendingList',
+        url: '/flow/instance/pageMyTodoList',
         method: 'get',
         params: params
     })
@@ -31,9 +31,22 @@ export function pageMyPendingListAPI(params) {
  * @param params 查询参数
  * @returns {Promise<AxiosResponse<any>>}
  */
-export function pageMyPendedListAPI(params) {
+export function pageMyDoneListAPI(params) {
     return request({
-        url: '/flow/instance/pageMyPendedList',
+        url: '/flow/instance/pageMyDoneList',
+        method: 'get',
+        params: params
+    })
+}
+
+/**
+ * 分页查询我的抄送列表
+ * @param params 查询参数
+ * @returns {Promise<AxiosResponse<any>>}
+ */
+export function pageCopyMyListAPI(params) {
+    return request({
+        url: '/flow/instance/pageCopyMyList',
         method: 'get',
         params: params
     })
@@ -101,5 +114,31 @@ export function addSignFlowInstanceAPI(data) {
         url: '/flow/instance/addSign',
         method: 'post',
         params: data
+    })
+}
+
+/**
+ * 撤回流程实例
+ * @param data 撤回参数
+ * @returns {Promise<AxiosResponse<any>>}
+ */
+export function recallFlowInstanceAPI(data) {
+    return request({
+        url: '/flow/instance/recall',
+        method: 'post',
+        data: data
+    })
+}
+
+/**
+ * 抄送流程实例
+ * @param data 抄送参数
+ * @returns {Promise<AxiosResponse<any>>}
+ */
+export function copyFlowInstanceAPI(data) {
+    return request({
+        url: '/flow/instance/copy',
+        method: 'post',
+        data: data
     })
 }

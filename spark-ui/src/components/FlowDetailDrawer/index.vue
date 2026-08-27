@@ -155,7 +155,7 @@ const levelOptions = [
  * @returns {string} 时间线类型
  */
 function getTimelineType(status) {
-  const typeMap = { 1: 'info', 2: 'primary', 3: 'success', 4: 'danger', 5: 'success', 6: 'warning' }
+  const typeMap = { 1: 'info', 2: 'primary', 3: 'success', 4: 'danger', 5: 'success', 6: 'warning', 7: 'info', 8: 'info', 9: 'warning' }
   return typeMap[status] || 'info'
 }
 
@@ -165,7 +165,7 @@ function getTimelineType(status) {
  * @returns {string} el-tag 类型
  */
 function getStatusTagType(status) {
-  const typeMap = { 1: 'info', 2: '', 3: 'success', 4: 'danger', 5: 'success', 6: 'warning' }
+  const typeMap = { 1: 'info', 2: '', 3: 'success', 4: 'danger', 5: 'success', 6: 'warning', 7: 'info', 8: 'info', 9: 'warning' }
   return typeMap[status] || 'info'
 }
 
@@ -315,7 +315,7 @@ function handleClose() {
     color: $color-text-secondary;
   }
 
-  // 审批结果着色：通过/自动通过绿色，驳回红色，转办/加签灰色
+  // 审批结果着色：通过/自动通过绿色，驳回红色，转办/加签灰色，撤回橙色
   .discuss-status--3,
   .discuss-status--5 {
     color: #67c23a;
@@ -328,6 +328,10 @@ function handleClose() {
   .discuss-status--7,
   .discuss-status--8 {
     color: #909399;
+  }
+
+  .discuss-status--9 {
+    color: #e6a23c;
   }
 }
 

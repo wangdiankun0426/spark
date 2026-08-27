@@ -1,0 +1,149 @@
+package com.spark.manage.auth.impl;
+
+import com.spark.bean.base.BaseAssert;
+import com.spark.bean.system.entity.User;
+import com.spark.bean.system.entity.UserProfile;
+import com.spark.bean.system.entity.ValidateCode;
+import com.spark.bean.system.query.UserQuery;
+import com.spark.bean.system.result.UserResult;
+import com.spark.bean.system.vo.RegisterVO;
+import com.spark.bean.base.ResultData;
+import com.spark.config.redis.RedisService;
+import com.spark.constant.ObjectCacheKey;
+import com.spark.dao.system.UserDao;
+import com.spark.dao.system.UserProfileDao;
+import com.spark.enums.*;
+import com.spark.manage.BaseService;
+import com.spark.manage.auth.ILoginValidateService;
+import com.spark.manage.auth.IRegisterService;
+import com.spark.utils.DecryptUtil;
+import com.spark.utils.EncryptUtil;
+import com.spark.utils.StringUtil;
+import com.spark.config.aspectj.annotation.OperateLog;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.sql.Timestamp;
+
+/**
+ * +++/\_/\
+ * + ( °w° )=
+ * +++)   (  //
+ * + (__ __)//
+ *
+ * @author wangdiankun
+ * @since 2026-08-25 10:00:00
+ * 用户注册服务实现
+ */
+@Service
+public class RegisterServiceImpl extends BaseService implements IRegisterService {
+    private final static Logger logger = LoggerFactory.getLogger(RegisterServiceImpl.class);
+    @Autowired
+    private UserDao userDao;
+    @Autowired
+    private UserProfileDao userProfileDao;
+    @Autowired
+    private ILoginValidateService loginValidateService;
+    @Value("${encrypt.privateKey}")
+    private String privateKey;
+
+    /**
+     * 用户注册
+     * @param registerVO 注册参数
+     * @return 注册结果
+     */
+    @Override
+    public ResultData<Void> register(RegisterVO registerVO) {
+        ResultData<Void> result = new ResultData<>();
+        // 校验参数
+        result = this.validateRegisterParam(registerVO);
+        if (result.getCode() != ResultData.OK) {
+            return result;
+        }
+        // 校验验证码
+        ValidateCode code = new ValidateCode();
+        code.setUuid(registerVO.getValidateId());
+        code.setValue(registerVO.getValidateValue());
+        code.setLoginType(LoginTypeEnum.PASSWORD.getValue());
+        ResultData<Void> validateResult = loginValidateService.checkValidateCode(code);
+        BaseAssert.assertTrue(validateResult);
+        // 校验登录名是否已存在
+        UserQuery userQuery = new UserQuery();
+        userQuery.setLoginName(registerVO.getLoginName());
+        UserResult existingUser = userDao.queryUser(userQuery);
+        if (existingUser != null) {
+            result.setErrorCode(ErrorCodeEnum.USER_SAME_LOGIN_NAME_EXIST);
+            return result;
+        }
+        // 生成用户ID
+        Long userId = this.genObjectId(ObjectTypeEnum.USER);
+        // 创建用户
+        User user = new User();
+        user.setId(userId);
+        user.setLoginName(registerVO.getLoginName());
+        user.setName(registerVO.getLoginName());
+        user.setPassword(EncryptUtil.md5(DecryptUtil.des(registerVO.getPassword(), privateKey)));
+        user.setDeptId(102L);
+        user.setSex(registerVO.getSex());
+        user.setStatus(StatusEnum.NORMAL.getValue());
+        user.setCreatedBy(userId);
+        user.setUpdatedBy(userId);
+        int count = userDao.insertDB(user);
+        if (count < 1) {
+            logger.error("register error, insert user fail");
+            result.setErrorCode(ErrorCodeEnum.SYSTEM_ERROR);
+            return result;
+        }
+        // 创建用户扩展信息
+        UserProfile userProfile = new UserProfile();
+        userProfile.setId(userId);
+        userProfile.setCreatedBy(userId);
+        userProfile.setUpdatedBy(userId);
+        userProfileDao.insertDB(userProfile);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 校验注册参数
+     * @param registerVO 注册参数
+     * @return 校验结果
+     */
+    private ResultData<Void> validateRegisterParam(RegisterVO registerVO) {
+        ResultData<Void> result = new ResultData<>();
+        if (registerVO == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (StringUtil.isBlank(registerVO.getLoginName())) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (StringUtil.isBlank(registerVO.getPassword())) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (StringUtil.isBlank(registerVO.getValidateId())) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (StringUtil.isBlank(registerVO.getValidateValue())) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 查询最大id
+     * @return 最大id
+     */
+    @Override
+    protected Long queryMaxId() {
+        return userDao.queryUserMaxId();
+    }
+}

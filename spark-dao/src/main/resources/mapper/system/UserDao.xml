@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.system.UserDao" >
     <sql id="Base_Column_List" >
-     id , login_name , name , dept_id ,  phone ,  email ,  sex ,  avatar ,  status , wecom_id , delete_flag , created_by ,  created_dt ,  updated_by ,  updated_dt
+     id , login_name , name , dept_id ,  phone ,  email ,  sex ,  avatar ,  status , delete_flag , created_by ,  created_dt ,  updated_by ,  updated_dt
     </sql>
 
     <sql id="condition">
@@ -52,8 +52,8 @@
     </sql>
 
     <insert id="insert">
-        insert into sys_user( id , login_name , password , name ,  dept_id ,  phone ,  email ,  sex ,  avatar ,  status ,  wecom_id ,  delete_flag , created_by ,  created_dt ,  updated_by ,  updated_dt )
-        values (#{id}, #{loginName}, #{password}, #{name}, #{deptId}, #{phone}, #{email}, #{sex}, #{avatar}, #{status}, #{wecomId}, 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into sys_user( id , login_name , password , name ,  dept_id ,  phone ,  email ,  sex ,  avatar ,  status ,  delete_flag , created_by ,  created_dt ,  updated_by ,  updated_dt )
+        values (#{id}, #{loginName}, #{password}, #{name}, #{deptId}, #{phone}, #{email}, #{sex}, #{avatar}, #{status}, 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <select id="queryUserList" resultType="com.spark.bean.system.result.UserResult">
@@ -112,9 +112,6 @@
         </if>
         <if test="status != null">
             ,status = #{status}
-        </if>
-        <if test="wecomId != null">
-            ,wecom_id = #{wecomId}
         </if>
         where id = #{id}
     </update>

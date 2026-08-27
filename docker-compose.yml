@@ -161,4 +161,6 @@ services:
     volumes:
       - /opt/spark/docs:/opt/spark/docs
       - /opt/spark/logs:/opt/spark/logs
+      - /opt/spark/app/spark.server.com/spark-0.0.1-SNAPSHOT.jar:/opt/spark/app/spark.server.com/spark-0.0.1-SNAPSHOT.jar:ro
+      - /opt/spark/app/spark.server.com/application-prod.yml:/opt/spark/app/spark.server.com/application-prod.yml:ro
     restart: always

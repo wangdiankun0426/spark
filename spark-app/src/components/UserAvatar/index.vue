@@ -36,7 +36,14 @@
     </template>
 
     <template v-else-if="type === 'model'">
-      <up-icon name="cpu" size="18" color="#fff"></up-icon>
+      <template v-if="shape === 'rounded'">
+        <!-- 模型列表：圆角矩形 + 文字 -->
+        <text class="avatar-text">{{ avatarText }}</text>
+      </template>
+      <template v-else>
+        <!-- 聊天中：青色圆形 + 图标 -->
+        <up-icon name="grid-fill" :size="iconSize" color="#fff"></up-icon>
+      </template>
     </template>
 
     <!-- 自己发送的消息：绿色圆形 + "我" -->
@@ -100,7 +107,7 @@ function handleAvatarLoad() {
 
 const avatarText = computed(() => {
   const name = props.name || (props.type === 'self' ? '我' : '')
-  if (!name) return '用'
+  if (!name) return props.type === 'model' ? '模' : '用'
   return name.substring(0, 2)
 })
 

@@ -103,10 +103,10 @@ spark/
 ### 5.1 即时通信（spark-chat）
 基于 WebSocket 的实时通讯能力：会话空间管理、一对一/群组消息收发、消息状态、用户关系维护。沟通数据安全可控，适用于企业内部协同场景。
 
-### 5.2 自定义表单（spark-form）· 低代码
+### 5.2 自定义表单（spark-form）
 提供可视化**表单设计器**：拖拽表单字段、配置校验与布局、版本管理；表单模板即建即用，提交的数据统一沉淀为结构化对象与取值，可被流程/工作流引用。
 
-### 5.3 自定义流程（spark-flow）· 低代码
+### 5.3 自定义流程（spark-flow）
 提供可视化**流程设计器**，基于 Flowable 流程引擎：节点编排、审批人配置（发起人/指定用户/部门/角色/表单字段）、分支条件、通知提醒、流程实例跟踪与历史监控，覆盖请假、报销等典型审批场景。
 
 ### 5.4 AI Agent（spark-llm）
@@ -162,10 +162,10 @@ npm run dev:web
 npm run build:web
 
 # Tauri 桌面端开发（需安装 Rust 工具链，自动启动 Vite 开发服务器）
-npm run dev:tauri
+npm run dev:win
 
 # Tauri 桌面端打包（仅支持 Windows，产出 NSIS 安装包）
-npm run pack:tauri:win
+npm run pack:win
 ```
 
 ### 6.3 移动端

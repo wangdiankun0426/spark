@@ -1,10 +1,11 @@
 <template>
   <div>
     <el-container>
-      <el-aside width="180px" class="flow-el-aside">
+      <el-aside width="64px" class="flow-el-aside">
         <el-menu
             :default-active="defaultActive"
             :router='true'
+            :collapse="true"
             mode="vertical"
             class="flow-el-menu"
         >
@@ -12,15 +13,15 @@
             <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><flow-list/></el-icon>
             <template #title>流程申请</template>
           </el-menu-item>
-          <el-menu-item index="/flow/myAppliedList">
+          <el-menu-item index="/flow/myApplication">
             <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><my-applied-list/></el-icon>
             <template #title>我的申请</template>
           </el-menu-item>
-          <el-menu-item index="/flow/myPendingList">
+          <el-menu-item index="/flow/myTodo">
             <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><my-pending-list/></el-icon>
             <template #title>我的待办</template>
           </el-menu-item>
-          <el-menu-item index="/flow/myPendedList">
+          <el-menu-item index="/flow/myDone">
             <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><my-applied-list/></el-icon>
             <template #title>我的已办</template>
           </el-menu-item>
@@ -81,12 +82,14 @@ const defaultActive = computed(() => {
   line-height: 44px;
   font-size: 13px;
   font-weight: 400;
-  padding-left: 30px !important;
+  justify-content: center;
+}
+:deep(.el-menu-item) {
+  padding: 0 !important;
 }
 /*悬停一级菜单之后*/
 .el-menu-item:hover {
   background-color: var(--sidebar-hover-bg);
-  padding-left: 28px !important;
 }
 /*点击一级菜单之后*/
 .el-menu-item.is-active {
@@ -95,6 +98,7 @@ const defaultActive = computed(() => {
   border-bottom: 0;
 }
 :deep(.el-menu-item .el-menu-tooltip__trigger) {
-  padding: 0 8px !important;
+  padding: 0 !important;
+  justify-content: center;
 }
 </style>

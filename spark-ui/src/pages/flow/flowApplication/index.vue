@@ -104,7 +104,9 @@ import { Search, Share, User, EditPen } from '@element-plus/icons-vue';
 import FlowDetailDrawer from '@/components/FlowDetailDrawer';
 import InfoCard from '@/components/InfoCard/index.vue';
 import store from "@/store/index.js";
+import { useRoute } from 'vue-router';
 
+const route = useRoute();
 const userInfo = computed(() => store.getters['user/getUserInfo'])
 
 const templateList = ref([]);
@@ -133,6 +135,11 @@ let searchTimer = null;
 
 onMounted(() => {
   loadTemplateList();
+  // 支持从"我的申请"重新发起：携带 templateId 参数时自动打开模板
+  const templateId = route.query.templateId;
+  if (templateId) {
+    handleOpenTemplate(Number(templateId));
+  }
 });
 
 onBeforeUnmount(() => {

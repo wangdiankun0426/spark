@@ -5,11 +5,10 @@ import com.spark.bean.system.query.AttachmentQuery;
 import com.spark.bean.system.result.AttachmentResult;
 import com.spark.dao.system.AttachmentDao;
 import com.spark.enums.ErrorCodeEnum;
-import com.spark.enums.FlowTemplateTypeEnum;
+import com.spark.enums.WorkflowTemplateTypeEnum;
 import com.spark.llm.model.ModelFactory;
 import com.spark.manage.BaseService;
 import com.spark.utils.*;
-import com.spark.workflow.engine.IWfNodeExecutor;
 import dev.langchain4j.model.chat.ChatModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +41,7 @@ public class LlmTaskExecutor extends BaseService implements IWfNodeExecutor {
      * @return
      */
     @Override
-    public String getNodeType() { return FlowTemplateTypeEnum.LLM_TASK.getValue(); }
+    public String getNodeType() { return WorkflowTemplateTypeEnum.LLM_TASK.getValue(); }
 
     /**
      * 执行节点

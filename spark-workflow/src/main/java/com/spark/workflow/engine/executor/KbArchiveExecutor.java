@@ -3,12 +3,11 @@ package com.spark.workflow.engine.executor;
 import com.spark.bean.base.ResultData;
 import com.spark.constant.TaskParamCode;
 import com.spark.enums.ErrorCodeEnum;
-import com.spark.enums.FlowTemplateTypeEnum;
+import com.spark.enums.WorkflowTemplateTypeEnum;
 import com.spark.kb.service.IDocumentService;
 import com.spark.manage.BaseService;
 import com.spark.utils.MapUtil;
 import com.spark.utils.StringUtil;
-import com.spark.workflow.engine.IWfNodeExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +36,7 @@ public class KbArchiveExecutor extends BaseService implements IWfNodeExecutor {
      * @return
      */
     @Override
-    public String getNodeType() { return FlowTemplateTypeEnum.KB_ARCHIVE.getValue(); }
+    public String getNodeType() { return WorkflowTemplateTypeEnum.KB_ARCHIVE.getValue(); }
 
     /**
      * 执行节点

@@ -1,13 +1,13 @@
 /**
- * 桌面端（Tauri）环境适配
+ * 桌面端环境适配
  *
  * 仅在 Tauri Webview 中生效，浏览器环境完全不受影响。
  * Tauri 在页面脚本执行前注入 window.__TAURI_INTERNALS__ / window.__TAURI__，
  * 以此作为桌面端环境标识（WebView2 的 userAgent 不含 electron 等特征）。
  */
 
-// 是否运行在 Tauri 桌面端
-export const isTauri = typeof window !== 'undefined' && window.__TAURI_INTERNALS__ !== undefined
+// 是否为桌面端环境
+export const isDesktop = typeof window !== 'undefined' && window.__TAURI_INTERNALS__ !== undefined
 
 /**
  * 将任意内部地址规范化为 hash 路由（桌面端使用 Hash 路由）
@@ -35,7 +35,7 @@ function toHashRoute(url) {
  * - 外部 http(s) 链接 -> 调用 Rust 命令 open_external_url 交给系统默认浏览器
  */
 export function setupDesktop() {
-    if (!isTauri) {
+    if (!isDesktop) {
         return
     }
     const rawOpen = window.open.bind(window)

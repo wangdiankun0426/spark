@@ -2,7 +2,7 @@ package com.spark.web.controller.system;
 
 import com.spark.bean.base.ResultData;
 import com.spark.config.wecom.WeComConfig;
-import com.spark.manage.si.IWeComService;
+import com.spark.manage.external.IWeComService;
 import com.spark.bean.base.AESException;
 import com.spark.config.wecom.WXBizMsgCrypt;
 import jakarta.servlet.http.HttpServletRequest;

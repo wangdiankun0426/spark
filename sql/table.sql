@@ -10,7 +10,6 @@ CREATE TABLE `sys_user` (
     `sex` int(1) NULL COMMENT '性别',
     `avatar` varchar(32) NULL COMMENT '头像',
     `status` int(1) NOT NULL DEFAULT 1 COMMENT '状态',
-    `wecom_id` varchar(64) NULL COMMENT '企业微信用户ID',
 
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
     `created_by` bigint(12) NOT NULL COMMENT '创建人id',
@@ -19,6 +18,20 @@ CREATE TABLE `sys_user` (
     `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='用户信息表';
+
+DROP TABLE IF EXISTS `sys_user_profile`;
+CREATE TABLE `sys_user_profile` (
+    `id` bigint(12) NOT NULL COMMENT '主键,后两位固定01',
+    `wecom_id` varchar(64) NULL COMMENT '企业微信用户ID',
+
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_wecom_id` (`wecom_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='用户扩展信息表';
 
 DROP TABLE IF EXISTS `sys_department`;
 CREATE TABLE `sys_department` (
@@ -590,6 +603,21 @@ CREATE TABLE `flow_instance_assignee` (
       PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='流程实例审批用户表';
 
+DROP TABLE IF EXISTS `flow_instance_copy`;
+CREATE TABLE `flow_instance_copy` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `instance_id` bigint(12) NOT NULL COMMENT '流程实例id',
+    `user_id` bigint(12) NOT NULL COMMENT '被抄送人id',
+    `node_id` varchar(36) NULL COMMENT '抄送来源节点id',
+
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+    `created_by` bigint(12) NOT NULL COMMENT '抄送人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='流程实例抄送表';
+
 DROP TABLE IF EXISTS `form`;
 CREATE TABLE `form` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
@@ -807,7 +835,6 @@ CREATE TABLE `wf_instance_node` (
     `started_dt` timestamp NULL COMMENT '开始时间',
     `finished_dt` timestamp NULL COMMENT '结束时间',
     `duration_ms` bigint(12) NULL COMMENT '耗时',
-    `retry_count` int(3) NOT NULL DEFAULT 0 COMMENT '重试次数',
 
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识',
     `created_by` bigint(12) NOT NULL COMMENT '创建人id',

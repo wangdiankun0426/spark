@@ -60,9 +60,4 @@ public class User extends BaseEntity {
      */
     private Integer status;
 
-    /**
-     * 企业微信用户ID（userid）
-     */
-    private String wecomId;
-
 }

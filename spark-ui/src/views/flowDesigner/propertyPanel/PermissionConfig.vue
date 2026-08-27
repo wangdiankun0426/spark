@@ -33,7 +33,9 @@ const permissionOptions = [
   { label: '没有审批人时自动通过', value: 4 },
   { label: '允许申请人催办', value: 8 },
   { label: '允许审批人转办', value: 16 },
-  { label: '允许审批人加签', value: 32 }
+  { label: '允许审批人加签', value: 32 },
+  { label: '允许审批人抄送', value: 64 },
+  { label: '允许发起人撤回', value: 128 }
 ]
 
 /** 根据累加值还原选中的权限项 */

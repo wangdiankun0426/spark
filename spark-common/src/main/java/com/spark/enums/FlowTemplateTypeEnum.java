@@ -14,11 +14,8 @@ public enum FlowTemplateTypeEnum {
     START_EVENT("startEvent", "开始事件"),
     END_EVENT("endEvent", "结束事件"),
     EXCLUSIVE_GATEWAY("exclusiveGateway", "排他网关"),
+    PARALLEL_GATEWAY("parallelGateway", "并行网关"),
     USER_TASK("userTask", "用户任务"),
-    LLM_TASK("llmTask", "LLM模型"),
-    DOC_PARSE("docParse", "文档解析"),
-    NOTIFY("notify", "发送通知"),
-    KB_ARCHIVE("kbArchive", "知识库归档"),
     ;
 
     private String value;

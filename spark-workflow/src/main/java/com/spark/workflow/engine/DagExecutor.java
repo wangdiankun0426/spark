@@ -6,14 +6,17 @@ import com.alibaba.fastjson2.JSONObject;
 import com.spark.bean.base.BaseContext;
 import com.spark.bean.base.SessionHolder;
 import com.spark.bean.system.entity.Session;
+import com.spark.bean.workflow.config.RetryConfig;
 import com.spark.bean.workflow.entity.WfInstance;
 import com.spark.bean.workflow.entity.WfInstanceNode;
+import com.spark.bean.workflow.exception.HumanReviewRequiredException;
 import com.spark.dao.workflow.WfInstanceDao;
 import com.spark.dao.workflow.WfInstanceNodeDao;
-import com.spark.enums.FlowTemplateTypeEnum;
+import com.spark.enums.WorkflowTemplateTypeEnum;
 import com.spark.enums.WorkflowInstanceStatusEnum;
 import com.spark.enums.WorkflowNodeStatusEnum;
 import com.spark.utils.StringUtil;
+import com.spark.workflow.engine.executor.IWfNodeExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +31,7 @@ import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 
 /**
  * +++/\_/\
@@ -48,7 +52,10 @@ public class DagExecutor {
     private WfInstanceDao instanceDao;
     @Autowired
     private List<IWfNodeExecutor> executors;
-    /** el 表达式解析器（线程安全，可复用） */
+    @Autowired
+    private RetryStrategy retryStrategy;
+    @Autowired
+    private TimeoutStrategy timeoutStrategy;
     private final SpelExpressionParser parser = new SpelExpressionParser();
 
     /**
@@ -91,6 +98,8 @@ public class DagExecutor {
         Map<String, String> showValueMap = (Map<String, String>) context.getOrDefault("showValueMap", new HashMap<>());
         Long instanceId = wfInstance.getId();
         long startTime = System.currentTimeMillis();
+        // 创建变量空间
+        WorkflowVariableSpace variableSpace = new WorkflowVariableSpace(null, valueMap, showValueMap);
         JSONObject dag = JSON.parseObject(dagJson);
         JSONArray nodes = dag.getJSONArray("nodes");
         JSONArray sequences = dag.getJSONArray("sequences");
@@ -133,8 +142,6 @@ public class DagExecutor {
         Set<String> skipped = new HashSet<>();
         // 记录收到过"活跃路径"放行的节点
         Set<String> liveMarked = new HashSet<>();
-        // 记录所有节点的输出
-        Map<String, Map<String, String>> allNodeOutput = new HashMap<>();
         Map<String, IWfNodeExecutor> executorMap = new HashMap<>();
         for (IWfNodeExecutor executor : executors) {
             executorMap.put(executor.getNodeType(), executor);
@@ -145,6 +152,7 @@ public class DagExecutor {
                 if (skipped.contains(nodeId)) {
                     continue;
                 }
+
                 JSONObject node = nodeMap.get(nodeId);
                 if (node == null) {
                     continue;
@@ -155,40 +163,88 @@ public class DagExecutor {
                 if (config == null) {
                     config = new JSONObject();
                 }
-                // 节点输入，从所有前置节点的输出中获取
+                // 节点输入，从变量空间获取前置节点输出
                 Map<String, String> nodeInput = new HashMap<>();
                 for (int i = 0; i < sequences.size(); i++) {
                     JSONObject sequence = sequences.getJSONObject(i);
                     if (nodeId.equals(sequence.getString("target"))) {
                         String prevNodeId = sequence.getString("source");
-                        if (allNodeOutput.containsKey(prevNodeId)) {
-                            nodeInput.putAll(allNodeOutput.get(prevNodeId));
+                        Map<String, String> prevOutput = variableSpace.getNodeOutput(prevNodeId);
+                        if (prevOutput != null) {
+                            nodeInput.putAll(prevOutput);
                         }
                     }
                 }
                 // 创建节点运行记录
                 Long runNodeId = this.insertInstanceNode(instanceId, nodeId, nodeName, nodeType, WorkflowNodeStatusEnum.RUNNING.getValue(), JSON.toJSONString(nodeInput));
                 long nodeStart = System.currentTimeMillis();
-                // 节点输出
+                // 节点输出（带超时和重试）
                 Map<String, String> nodeOutput = new HashMap<>();
                 try {
                     IWfNodeExecutor executor = executorMap.get(nodeType);
                     if (executor != null) {
-                        nodeOutput = executor.execute(nodeId, config, nodeInput, valueMap, showValueMap);
+                        nodeOutput = this.executeWithTimeoutRetry(nodeId, nodeName, executor, config, nodeInput, valueMap, showValueMap);
+                    } else {
+                        // 网关/起止等无执行器节点：输入直传输出，保证变量跨节点传递
+                        nodeOutput = new HashMap<>(nodeInput);
                     }
                     if (nodeOutput == null) {
                         nodeOutput = new HashMap<>();
                     }
-                    allNodeOutput.put(nodeId, nodeOutput);
+                    // 更新变量空间
+                    variableSpace.setNodeOutput(nodeId, nodeOutput);
                     long nodeDuration = System.currentTimeMillis() - nodeStart;
                     this.updateInstanceNode(runNodeId, WorkflowNodeStatusEnum.SUCCESS.getValue(), JSON.toJSONString(nodeOutput), null, nodeDuration);
                     // 排他网关：按出边配置的走向条件求值，确定生效分支放行，无命中抛异常
-                    if (FlowTemplateTypeEnum.EXCLUSIVE_GATEWAY.getValue().equals(nodeType)) {
-                        this.routeExclusiveGateway(nodeId, sequences, nodeInput, valueMap, showValueMap,
-                                instanceId, nodeMap, remainingInDegree, executed, skipped, liveMarked, queue);
+                    if (WorkflowTemplateTypeEnum.EXCLUSIVE_GATEWAY.getValue().equals(nodeType)) {
+                        this.routeExclusiveGateway(nodeId, sequences, nodeInput, valueMap, showValueMap, instanceId, nodeMap, remainingInDegree, executed, skipped, liveMarked, queue);
                         executed.add(nodeId);
                         continue;
                     }
+                    // 并行分支网关：将所有出边节点加入队列并行执行
+                    if (WorkflowTemplateTypeEnum.PARALLEL_GATEWAY.getValue().equals(nodeType)) {
+                        List<String> outgoing = this.getOutgoingNodes(nodeId, sequences);
+                        if (outgoing.size() > 1) {
+                            // 分支网关：将所有出边节点加入队列
+                            logger.info("Parallel fork: nodeId={}, branches={}", nodeId, outgoing);
+                            queue.addAll(outgoing);
+                            executed.add(nodeId);
+                            continue;
+                        }
+                        // 合并网关：检查是否所有入边分支都已完成
+                        List<String> incoming = this.getIncomingNodes(nodeId, sequences);
+                        if (incoming.size() > 1) {
+                            boolean allCompleted = true;
+                            for (String prevNodeId : incoming) {
+                                if (!executed.contains(prevNodeId)) {
+                                    allCompleted = false;
+                                    break;
+                                }
+                            }
+                            if (!allCompleted) {
+                                // 还有分支未完成，跳过本次执行，等待后续轮次
+                                logger.info("Parallel join waiting: nodeId={}, completed={}", nodeId, executed);
+                                // 重新加入队列
+                                queue.add(nodeId);
+                                continue;
+                            }
+                            logger.info("Parallel join completed: nodeId={}", nodeId);
+                        }
+                    }
+                } catch (HumanReviewRequiredException e) {
+                    // 人工审核节点需要暂停
+                    logger.info("Human review required: nodeId={}, prompt={}", e.getNodeId(), e.getPrompt());
+                    long nodeDuration = System.currentTimeMillis() - nodeStart;
+                    // 更新节点状态为等待审核
+                    Map<String, String> reviewInfo = new HashMap<>();
+                    reviewInfo.put("prompt", e.getPrompt());
+                    reviewInfo.put("reviewerIds", e.getReviewerIds() != null ? e.getReviewerIds() : "");
+                    reviewInfo.put("reviewType", e.getReviewType());
+                    reviewInfo.put("requireComment", String.valueOf(e.isRequireComment()));
+                    this.updateInstanceNode(runNodeId, WorkflowNodeStatusEnum.WAITING.getValue(), JSON.toJSONString(reviewInfo), null, nodeDuration);
+                    // 暂停实例，等待人工审核
+                    this.updateInstance(instanceId, WorkflowInstanceStatusEnum.PAUSED.getValue(), null, System.currentTimeMillis() - startTime);
+                    return;
                 } catch (Exception e) {
                     logger.error("Node execution failed={} (type={})", nodeName, nodeType, e);
                     long nodeDuration = System.currentTimeMillis() - nodeStart;
@@ -325,6 +381,89 @@ public class DagExecutor {
     }
 
     /**
+     * 获取节点的所有出边目标节点
+     * @param nodeId 节点ID
+     * @param sequences 边数组
+     * @return 出边目标节点ID列表
+     */
+    private List<String> getOutgoingNodes(String nodeId, JSONArray sequences) {
+        List<String> outgoing = new ArrayList<>();
+        for (int i = 0; i < sequences.size(); i++) {
+            JSONObject sequence = sequences.getJSONObject(i);
+            if (nodeId.equals(sequence.getString("source"))) {
+                outgoing.add(sequence.getString("target"));
+            }
+        }
+        return outgoing;
+    }
+
+    /**
+     * 获取节点的所有入边源节点
+     * @param nodeId 节点ID
+     * @param sequences 边数组
+     * @return 入边源节点ID列表
+     */
+    private List<String> getIncomingNodes(String nodeId, JSONArray sequences) {
+        List<String> incoming = new ArrayList<>();
+        for (int i = 0; i < sequences.size(); i++) {
+            JSONObject sequence = sequences.getJSONObject(i);
+            if (nodeId.equals(sequence.getString("target"))) {
+                incoming.add(sequence.getString("source"));
+            }
+        }
+        return incoming;
+    }
+
+    /**
+     * 以超时+重试策略执行节点：超时控制在内层，重试在外层
+     * 超时与重试参数从节点 config 读取，未配置时使用默认值
+     * @param nodeId 节点ID
+     * @param nodeName 节点名称
+     * @param executor 节点执行器
+     * @param config 节点配置
+     * @param nodeInput 节点输入
+     * @param valueMap 表单值
+     * @param showValueMap 表单显示值
+     * @return 节点输出
+     */
+    private Map<String, String> executeWithTimeoutRetry(String nodeId, String nodeName, IWfNodeExecutor executor,
+                                                         JSONObject config, Map<String, String> nodeInput,
+                                                         Map<String, String> valueMap, Map<String, String> showValueMap) {
+        Long timeoutMs = config.getLong("timeoutMs");
+        if (timeoutMs == null || timeoutMs <= 0) {
+            timeoutMs = TimeoutStrategy.DEFAULT_TIMEOUT_MS;
+        }
+
+        // 重试配置：未配置的字段使用 RetryConfig 默认值
+        RetryConfig retryConfig = new RetryConfig();
+        if (config.containsKey("maxRetries")) {
+            retryConfig.setMaxRetries(config.getIntValue("maxRetries"));
+        }
+        if (config.containsKey("retryInitialInterval")) {
+            retryConfig.setInitialInterval(config.getLong("retryInitialInterval"));
+        }
+        if (config.containsKey("retryMultiplier")) {
+            retryConfig.setMultiplier(config.getDouble("retryMultiplier"));
+        }
+        if (config.containsKey("retryMaxInterval")) {
+            retryConfig.setMaxInterval(config.getLong("retryMaxInterval"));
+        }
+
+        final Long finalTimeoutMs = timeoutMs;
+        return retryStrategy.executeWithRetry(() -> {
+            try {
+                return timeoutStrategy.executeWithTimeout(
+                        () -> executor.execute(nodeId, config, nodeInput, valueMap, showValueMap),
+                        finalTimeoutMs);
+            } catch (TimeoutException e) {
+                throw new RuntimeException("节点[" + nodeName + "]执行超时，超过" + finalTimeoutMs + "ms", e);
+            } catch (Exception e) {
+                throw new RuntimeException("节点[" + nodeName + "]执行失败: " + e.getMessage(), e);
+            }
+        }, retryConfig);
+    }
+
+    /**
      * 创建实例节点
      * @param instanceId
      * @param nodeId
@@ -343,7 +482,6 @@ public class DagExecutor {
         rn.setStatus(status);
         rn.setInputJson(inputJson);
         rn.setStartedDt(new Timestamp(System.currentTimeMillis()));
-        rn.setRetryCount(0);
         instanceNodeDao.insertDB(rn);
         return rn.getId();
     }

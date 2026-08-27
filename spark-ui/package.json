@@ -8,8 +8,8 @@
   "scripts": {
     "dev:web": "vite --mode dev",
     "build:web": "vite build --mode prod",
-    "dev:tauri": "tauri dev",
-    "pack:tauri:win": "tauri build"
+    "dev:win": "tauri dev",
+    "pack:win": "tauri build"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.2.1",

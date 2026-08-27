@@ -159,6 +159,13 @@ public class GlobalFlowableEventListener implements FlowableEventListener {
     private void handleProcessCancelled(FlowableCancelledEvent event) {
         String instanceId = event.getProcessInstanceId();
         logger.info("handleProcessCancelled, instanceId={}" , instanceId);
+        FlowInstanceQuery checkQuery = new FlowInstanceQuery();
+        checkQuery.setFlowableInstanceId(instanceId);
+        FlowInstanceResult checkResult = instanceDao.queryInstance(checkQuery);
+        if (checkResult != null && FlowInstanceStatusEnum.WITHDRAWN.getValue().equals(checkResult.getStatus())) {
+            logger.info("handleProcessCancelled, instance already withdrawn, skip");
+            return;
+        }
         FlowInstance instance = new FlowInstance();
         instance.setFlowableInstanceId(instanceId);
         instance.setStatus(FlowInstanceStatusEnum.REJECTED.getValue());

@@ -1,6 +1,6 @@
 <template>
   <div class="notify-config">
-    <el-divider content-position="left">通知配置</el-divider>
+    <el-divider>通知配置</el-divider>
     <el-form-item label="标题">
       <el-input
           clearable

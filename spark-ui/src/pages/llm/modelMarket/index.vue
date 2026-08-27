@@ -243,7 +243,7 @@ const emptyText = computed(() => {
  * 加载模型厂商列表（拉全量）
  */
 function loadProviders() {
-  pageProviderListAPI({ pageNo: 1, pageSize: 1000 }).then(res => {
+  pageProviderListAPI({ page: false }).then(res => {
     providerList.value = res.data.rows || []
   })
 }
@@ -254,8 +254,7 @@ function loadProviders() {
 function loadModels() {
   loading.value = true
   const query = {
-    pageNo: 1,
-    pageSize: 1000,
+    page: false,
     providerId: activeProviderId.value || undefined,
     type: modelTypeFilter.value || undefined,
     name: keyword.value || undefined

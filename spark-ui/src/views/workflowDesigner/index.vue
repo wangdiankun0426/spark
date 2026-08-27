@@ -29,7 +29,7 @@
       <!--左侧节点面板-->
       <node-panel
           :groups="workflowNodeGroups"
-          :expanded="['flow', 'ai', 'doc', 'notify']"
+          :expanded="['flow', 'ai', 'system', 'tool']"
       />
       <!--中间画布-->
       <canvas-index
@@ -116,10 +116,10 @@ const selectedEdgeId = computed(() => selectedEdge.value?.id || null);
 
 /** 左侧节点面板分组配置 */
 const workflowNodeGroups = [
-  { name: 'flow', title: '流程控制', nodes: ['startEvent', 'endEvent', 'exclusiveGateway'].map(toNodeGroup) },
-  { name: 'ai', title: 'AI能力', nodes: ['llmTask'].map(toNodeGroup) },
-  { name: 'doc', title: '文档能力', nodes: ['docParse', 'kbArchive'].map(toNodeGroup) },
-  { name: 'notify', title: '系统能力', nodes: ['notify'].map(toNodeGroup) }
+  { name: 'flow', title: '流程控制', nodes: ['startEvent', 'endEvent', 'exclusiveGateway', 'parallelGateway'].map(toNodeGroup) },
+  { name: 'ai', title: 'AI能力', nodes: ['llmTask', 'agentTask', 'kbSearch', 'kgSearch'].map(toNodeGroup) },
+  { name: 'system', title: '系统能力', nodes: ['docParse', 'kbArchive', 'notify'].map(toNodeGroup) },
+  { name: 'tool', title: '工具', nodes: ['variableOp', 'codeExecute', 'httpRequest', 'humanReview'].map(toNodeGroup) }
 ];
 
 function toNodeGroup(type) {
@@ -221,12 +221,28 @@ function getDefaultConfig(type) {
       return { modelId: null, prompt: '', fileCode: '' };
     case 'exclusiveGateway':
       return {};
+    case 'parallelGateway':
+      return {};
+    case 'agentTask':
+      return { agentId: null, task: '', memoryId: '' };
+    case 'kbSearch':
+      return { kbIds: '', query: '', topK: 5 };
+    case 'kgSearch':
+      return { graphId: '', query: '' };
     case 'docParse':
       return { fileCode: '' };
     case 'notify':
       return { titleCode: '', contentCode: '', userCode: '', refCode: '' };
     case 'kbArchive':
       return { knowledgeId: null, fileCode: '' };
+    case 'variableOp':
+      return { operation: 'set', variables: [], sources: [], separator: ',', template: '', source: '', format: '', targetType: '' };
+    case 'codeExecute':
+      return { codeType: 'spel', code: '' };
+    case 'httpRequest':
+      return { url: '', method: 'GET', headers: '', body: '', timeoutMs: 30000 };
+    case 'humanReview':
+      return { prompt: '', reviewerIds: '', reviewType: 'approve', requireComment: false };
     default: return {};
   }
 }

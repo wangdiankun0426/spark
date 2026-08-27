@@ -17,14 +17,14 @@
     </div>
 
     <el-table :data="list" border highlight-current-row height="calc(100vh - 180px)">
-      <el-table-column prop="id" label="编号" width="120" align="center" />
       <el-table-column prop="templateName" label="工作流" min-width="160" align="center" />
       <el-table-column prop="revNum" label="版本" width="80" align="center" />
       <el-table-column prop="statusName" label="状态" width="100" align="center" />
       <el-table-column prop="durationMs" label="耗时" width="100" align="center">
         <template #default="{ row }">{{ row.durationMs != null ? row.durationMs + 'ms' : '-' }}</template>
       </el-table-column>
-      <el-table-column prop="createdDt" label="运行时间" width="160" align="center" />
+      <el-table-column prop="createdByName" label="触发人" align="center" width="120"/>
+      <el-table-column prop="createdDt" label="触发时间" width="160" align="center" />
       <el-table-column label="操作" width="80" align="center" fixed="right">
         <template #default="{ row }">
           <el-button type="primary" text size="small" @click="handleOpenDetail(row)">详情</el-button>

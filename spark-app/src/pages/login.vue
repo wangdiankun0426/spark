@@ -27,11 +27,20 @@
             >
               <up-input
                   v-model="loginForm.password"
-                  placeholder="请输入密码"
-                  type="password"
+                  :placeholder="'请输入密码'"
+                  :type="showPassword ? 'text' : 'password'"
                   border="bottom"
                   clearable
-              ></up-input>
+              >
+                <template #suffix>
+                  <up-icon
+                      :name="showPassword ? 'eye-fill' : 'eye-off'"
+                      size="22"
+                      color="#909399"
+                      @click="showPassword = !showPassword"
+                  ></up-icon>
+                </template>
+              </up-input>
             </up-form-item>
             <up-form-item
                 label="验证码"
@@ -140,7 +149,7 @@
             type="primary"
             :loading="loading"
             loading-text="登 录 中...">
-          登 录
+          <text class="login-text">登 录</text>
         </up-button>
       </div>
     </div>
@@ -148,15 +157,24 @@
     <up-divider text="其他方式登录"  textColor="#0052cc"
                 lineColor="#0052cc"/>
 
-    <div>
-      <view class="login-type-btn" v-if="loginForm.loginType !== 1">
-        <up-button class="login-switch-btn" plain shape="circle" text="密码登录" @click="switchLoginType(1)"/>
+    <div class="login-type-icons">
+      <view class="login-type-icon-item" v-if="loginForm.loginType !== 1" @click="switchLoginType(1)">
+        <view class="icon-circle">
+          <up-icon name="lock" size="24" color="#0052cc"></up-icon>
+        </view>
+        <text class="icon-label">密码登录</text>
       </view>
-      <view class="login-type-btn" v-if="loginForm.loginType !== 2">
-        <up-button class="login-switch-btn" plain shape="circle" text="手机号登录" @click="switchLoginType(2)"/>
+      <view class="login-type-icon-item" v-if="loginForm.loginType !== 2" @click="switchLoginType(2)">
+        <view class="icon-circle">
+          <up-icon name="phone" size="24" color="#0052cc"></up-icon>
+        </view>
+        <text class="icon-label">手机号登录</text>
       </view>
-      <view class="login-type-btn" v-if="loginForm.loginType !== 3">
-        <up-button class="login-switch-btn" plain shape="circle" text="邮箱登录" @click="switchLoginType(3)"/>
+      <view class="login-type-icon-item" v-if="loginForm.loginType !== 3" @click="switchLoginType(3)">
+        <view class="icon-circle">
+          <up-icon name="email" size="24" color="#0052cc"></up-icon>
+        </view>
+        <text class="icon-label">邮箱登录</text>
       </view>
     </div>
   </div>
@@ -169,6 +187,7 @@ import {useStore} from 'vuex';
 
 const store = useStore();
 const loading = ref(false);
+const showPassword = ref(false);
 const loginForm = ref({
   username: undefined,
   password: undefined,
@@ -319,11 +338,6 @@ function submitLoginForm() {
   padding: 5px 10px 5px 10px;
   border-radius: 10px;
 }
-.login-middle-btn {
-  margin-top: 20px;
-  border-radius: 30px;
-  overflow: hidden;
-}
 .login-type-btn {
   float: left;
   margin-left: 10rpx;
@@ -362,6 +376,38 @@ function submitLoginForm() {
   font-size: 18px;
 }
 
+.login-type-icons {
+  display: flex;
+}
+
+.login-type-icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-left: 30px;
+}
+
+.icon-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #0052cc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+}
+
+.icon-label {
+  font-size: 12px;
+  color: #606266;
+}
+
+.login-middle-btn {
+  margin-top: 20px;
+  overflow: hidden;
+}
+
 .login-submit-btn {
   background-color: #0052cc;
   height: 50px;
@@ -369,10 +415,9 @@ function submitLoginForm() {
   font-size: 20px;
 }
 
-.login-switch-btn {
-  border: 2px solid #0052cc;
-  color: #0052cc;
-  width: 100px;
-  height: 30px;
+.logout-text {
+  font-size: 20px;
+  font-weight: bolder;
+  color: #ffffff;
 }
 </style>

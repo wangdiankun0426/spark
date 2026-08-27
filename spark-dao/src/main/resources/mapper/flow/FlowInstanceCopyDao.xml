@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.flow.FlowInstanceCopyDao" >
+    <sql id="allColumnList" >
+        id , instance_id , user_id , node_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="instanceId != null">
+            and instance_id = #{instanceId}
+        </if>
+        <if test="userId != null">
+            and user_id = #{userId}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <insert id="insert">
+        insert into flow_instance_copy ( instance_id , user_id , node_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{instanceId} , #{userId} , #{nodeId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="deleteById">
+        update flow_instance_copy set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <update id="updateById">
+        update flow_instance_copy set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <select id="queryCopyCount" resultType="java.lang.Integer">
+        select count(1)
+        from flow_instance_copy
+        where 1 = 1
+        <include refid="searchCondition"/>
+        ${dataScopeSQL}
+    </select>
+
+    <select id="queryCopyList" resultType="com.spark.bean.flow.result.FlowInstanceCopyResult">
+        select <include refid="allColumnList"/>
+        from flow_instance_copy
+        where 1 = 1
+        <include refid="searchCondition"/>
+        ${dataScopeSQL}
+        order by id
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+</mapper>

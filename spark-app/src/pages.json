@@ -14,13 +14,19 @@
       }
     },
     {
+      "path": "pages/oauthLogin",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/home/index",
       "style": {
         "navigationStyle": "custom"
       }
     },
     {
-      "path": "pages/agent/index",
+      "path": "pages/llm/index",
       "style": {
         "navigationStyle": "custom"
       }
@@ -32,25 +38,19 @@
       }
     },
     {
-      "path": "pages/contacts/index",
+      "path": "views/chat/index",
       "style": {
         "navigationStyle": "custom"
       }
     },
     {
-      "path": "pages/chat/index",
+      "path": "pages/flow/index",
       "style": {
         "navigationStyle": "custom"
       }
     },
     {
-      "path": "pages/todo/index",
-      "style": {
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/todo/detail",
+      "path": "pages/flow/instanceDetail",
       "style": {
         "navigationStyle": "custom"
       }
@@ -75,6 +75,18 @@
     },
     {
       "path": "pages/my/updateAvatar",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "views/contacts/index",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/llm/wfInstanceDetail",
       "style": {
         "navigationStyle": "custom"
       }

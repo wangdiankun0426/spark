@@ -1,5 +1,7 @@
 // router/modules/common.routes.js
-import login from '@/pages/login'
+import login from '@/pages/login/login.vue'
+import oauthLogin from '@/pages/login/oauthLogin.vue'
+import register from '@/pages/login/register.vue'
 import formDesigner from '@/views/formDesigner/index.vue'
 import noticeEdit from '@/views/notice/edit.vue'
 import noticeView from '@/views/notice/view.vue'
@@ -13,6 +15,20 @@ export default [
         component: login,
         meta: {
             title: '登录'
+        }
+    },
+    {
+        path: '/oauthLogin',
+        component: oauthLogin,
+        meta: {
+            title: 'OAuth登录'
+        }
+    },
+    {
+        path: '/register',
+        component: register,
+        meta: {
+            title: '注册'
         }
     },
     {

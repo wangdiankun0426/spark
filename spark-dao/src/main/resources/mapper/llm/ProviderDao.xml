@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.llm.ProviderDao" >
     <sql id="allColumnList" >
-        id , name , icon , api_url , secret_key , description , remark , order_num , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , name , icon , api_url , description , remark , order_num , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="searchCondition">
@@ -95,7 +95,7 @@
     </select>
 
     <select id="queryProvider" resultType="com.spark.bean.llm.result.ProviderResult">
-        select <include refid="allColumnList"/>
+        select <include refid="allColumnList"/>, secret_key
         from llm_provider
         where 1=1
         <include refid="searchCondition"/>

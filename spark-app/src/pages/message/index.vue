@@ -2,7 +2,7 @@
   <view class="message-container safe-area-page">
     <!-- 顶部标题栏 -->
     <view class="message-header">
-      <text class="header-title">系统通知</text>
+      <text class="header-title">消息</text>
     </view>
 
     <!-- 消息列表 -->
@@ -46,10 +46,9 @@
 
     <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#0052cc">
       <up-tabbar-item name="home" icon="home-fill" text="首页"/>
-      <up-tabbar-item name="todo" icon="order" text="待办"/>
-      <up-tabbar-item name="contacts" icon="man-add-fill" text="通讯录"/>
-      <up-tabbar-item name="agent" icon="grid-fill" text="智能体"/>
-      <up-tabbar-item name="message" icon="chat-fill" text="通知"/>
+      <up-tabbar-item name="flow" icon="order" text="流程"/>
+      <up-tabbar-item name="llm" icon="grid-fill" text="AI+"/>
+      <up-tabbar-item name="message" icon="chat-fill" text="消息"/>
       <up-tabbar-item name="my" icon="account" text="我的"/>
     </up-tabbar>
   </view>
@@ -104,7 +103,7 @@ function handleMsgClick(item) {
     return;
   }
   uni.navigateTo({
-    url: '/pages/todo/detail?id=' + item.refId + '&type=' + FLOW_DETAIL_TYPE_MAP[item.type]
+    url: '/pages/flow/instanceDetail?id=' + item.refId + '&type=' + FLOW_DETAIL_TYPE_MAP[item.type]
   });
 }
 

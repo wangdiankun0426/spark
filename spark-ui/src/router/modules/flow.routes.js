@@ -1,8 +1,8 @@
 import flow from '@/pages/flow/index.vue'
 import flowApplication from '@/pages/flow/flowApplication/index.vue'
-import myAppliedList from '@/pages/flow/myAppliedList/index.vue'
-import myPendingList from '@/pages/flow/myPendingList/index.vue'
-import myPendedList from '@/pages/flow/myPendedList/index.vue'
+import myApplication from '@/pages/flow/myApplication/index.vue'
+import myTodo from '@/pages/flow/myTodo/index.vue'
+import myDone from '@/pages/flow/myDone/index.vue'
 import copyMe from '@/pages/flow/copyMe/index.vue'
 
 export default [
@@ -19,19 +19,19 @@ export default [
                 component: flowApplication
             },
             {
-                path: '/flow/myAppliedList',
-                name: 'myAppliedList',
-                component: myAppliedList
+                path: '/flow/myApplication',
+                name: 'myApplication',
+                component: myApplication
             },
             {
-                path: '/flow/myPendingList',
-                name: 'myPendingList',
-                component: myPendingList
+                path: '/flow/myTodo',
+                name: 'myTodo',
+                component: myTodo
             },
             {
-                path: '/flow/myPendedList',
-                name: 'myPendedList',
-                component: myPendedList
+                path: '/flow/myDone',
+                name: 'myDone',
+                component: myDone
             },
             {
                 path: '/flow/copyMe',

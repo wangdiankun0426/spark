@@ -5,6 +5,13 @@ server:
     relaxed-query-chars: "[,],"
     relaxed-path-chars: "[,],"
 spring:
+  autoconfigure:
+    exclude:
+      - org.flowable.spring.boot.ProcessEngineAutoConfiguration
+      - org.flowable.spring.boot.ProcessEngineServicesAutoConfiguration
+      - org.flowable.spring.boot.eventregistry.EventRegistryAutoConfiguration
+      - org.flowable.spring.boot.eventregistry.EventRegistryServicesAutoConfiguration
+      - org.flowable.spring.boot.FlowableSecurityAutoConfiguration
   servlet:
     multipart:
       max-file-size: 50MB
@@ -54,19 +61,11 @@ spring:
       host: 172.10.0.2
       port: 6379
       password: Qaz7410
-#      cluster:
-#        nodes: 192.168.1.79:6481,192.168.1.79:6482,192.168.1.79:6483,192.168.1.79:6484,192.168.1.79:6485,192.168.1.79:6486
-#        max-redirects: 3
-#      sentinel:
-#        password: Qaz7410
-#        master: master1
-#        nodes: 192.168.1.79:6484,192.168.1.79:6485,192.168.1.79:6486
   rabbitmq:
     host: 172.10.0.4
     port: 5672
     username: root
     password: Qaz7410
-#    addresses: amqp://192.168.3.200:5672,amqp://192.168.3.200:5673,amqp://192.168.3.200:5674
     publisher-confirm-type: correlated
     publisher-returns: true
     template:
@@ -114,17 +113,17 @@ spark:
   email:
     host: smtp.163.com
     enable-auth: true
-    user: 1111111111@163.com
-    password: "******"
+    user: xxxxx@163.com
+    password: xxxxxxxxxx
   sm:
     alibaba:
-      access-key-id: "******"
-      access-key-secret: "******"
+      access-key-id: xxxxxxxxxxxxx
+      access-key-secret: xxxxxxxxxxxxx
       sign-name: 星火科技
-      template-code: "SMS_******"
+      template-code: SMS_xxxxxxx
   wecom:
-    corp-id: "******"
-    agent-id:
-    corp-secret: "******"
-    msg-token: "******"
-    msg-encodingAESKey: "******"
+    corp-id: xxxxxxxxxxxxx
+    agent-id: 1000000
+    corp-secret: xxxxxxxxxxxxx
+    msg-token: xxxxxxxxxxxxx
+    msg-encodingAESKey: xxxxxxxxxxxxx

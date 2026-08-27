@@ -16,6 +16,8 @@ public enum FlowTemplateNodePermissionEnum {
     ALLOW_URGE(8 , "允许申请人催办"),
     ALLOW_TRANSFER(16 , "允许审批人转办"),
     ALLOW_ADD_SIGN(32 , "允许审批人加签"),
+    ALLOW_COPY(64 , "允许审批人抄送"),
+    ALLOW_RECALL(128 , "允许发起人撤回"),
 
     ;
 

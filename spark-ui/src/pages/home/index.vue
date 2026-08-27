@@ -157,60 +157,43 @@
       </el-col>
     </el-row>
 
-
-    <!-- 评测区：知识库与知识图谱 -->
+    <!-- 图表区：AI应用使用 / 工作流执行 -->
     <el-row :gutter="20" class="eval-row">
-      <!-- 知识库解析与检索评测 -->
+      <!-- AI应用使用统计 - 柱状图 -->
       <el-col :span="12">
         <div class="eval-card">
           <div class="eval-header">
-            <div class="eval-title">知识库解析与检索评测</div>
-            <div class="eval-subtitle">文档解析流水线状态</div>
+            <div class="eval-title">AI 应用使用统计</div>
+            <div class="eval-subtitle">近 7 日各模块调用量</div>
           </div>
-          <div class="eval-metrics with-progress">
-            <div
-                v-for="m in kbEvalMetrics"
-                :key="m.name"
-                class="eval-metric"
-            >
-              <div class="metric-row">
-                <span class="metric-name">{{ m.name }}</span>
-                <div class="metric-right">
-                  <span class="metric-value">{{ m.value }}</span>
-                  <el-icon v-if="m.trend === 'up'" class="trend-up"><CaretTop /></el-icon>
-                  <span v-else-if="m.trend === '-'" class="trend-flat">-</span>
-                </div>
-              </div>
-              <el-progress
-                  :percentage="m.progress"
-                  :stroke-width="6"
-                  :show-text="false"
-                  :color="m.color"
-              />
-            </div>
-          </div>
+          <div ref="aiUsageChartRef" class="kg-chart"></div>
         </div>
       </el-col>
 
-      <!-- 知识图谱构建与提炼 -->
+      <!-- 工作流执行统计 - 环形进度 -->
       <el-col :span="12">
         <div class="eval-card">
           <div class="eval-header">
-            <div class="eval-title">知识图谱构建与提炼</div>
-            <div class="eval-subtitle">三元组持续积累趋势</div>
+            <div class="eval-title">工作流执行统计</div>
+            <div class="eval-subtitle">本月工作流运行概况</div>
           </div>
-          <div ref="kgChartRef" class="kg-chart"></div>
-          <div class="eval-metrics kg-metrics">
-            <div
-                v-for="m in kgEvalMetrics"
-                :key="m.name"
-                class="eval-metric"
-            >
-              <span class="metric-name">{{ m.name }}</span>
-              <div class="metric-right">
+          <div class="workflow-stats">
+            <div class="workflow-ring-wrap">
+              <div ref="workflowChartRef" class="workflow-ring"></div>
+              <div class="workflow-ring-label">
+                <div class="ring-value">86.5%</div>
+                <div class="ring-name">执行成功率</div>
+              </div>
+            </div>
+            <div class="workflow-metrics">
+              <div
+                  v-for="m in workflowMetrics"
+                  :key="m.name"
+                  class="workflow-metric"
+              >
+                <span class="metric-dot" :style="{ backgroundColor: m.color }"></span>
+                <span class="metric-name">{{ m.name }}</span>
                 <span class="metric-value">{{ m.value }}</span>
-                <el-icon v-if="m.trend === 'up'" class="trend-up"><CaretTop /></el-icon>
-                <span v-else-if="m.trend === '-'" class="trend-flat">-</span>
               </div>
             </div>
           </div>
@@ -264,7 +247,7 @@ const dataList = ref([
 // 快捷功能入口列表
 const shortcutList = ref([
   { name: '流程申请', path: '/flow/application', icon: FlowListIcon },
-  { name: '我的待办', path: '/flow/myPendingList', icon: MyPendingListIcon },
+  { name: '我的待办', path: '/flow/myTodo', icon: MyPendingListIcon },
   { name: '知识库', path: '/kb/knowledge', icon: KnowledgeIcon },
   { name: '知识图谱', path: '/kg/graph', icon: GraphIcon },
   { name: 'Agent', path: '/llm/agent', icon: AgentIcon },
@@ -475,12 +458,115 @@ function renderEntityTrendChart() {
   })
 }
 
+// AI应用使用统计柱状图容器引用与假数据
+const aiUsageChartRef = ref(null)
+const aiUsageDates = ['08-19', '08-20', '08-21', '08-22', '08-23', '08-24', '08-25']
+const aiUsageData = {
+  agent: [125, 138, 96, 142, 168, 155, 120],
+  knowledge: [280, 310, 265, 342, 298, 325, 290],
+  workflow: [45, 52, 38, 62, 48, 55, 42]
+}
+
+// 工作流执行统计环形容器引用
+const workflowChartRef = ref(null)
+
+// 工作流执行统计指标
+const workflowMetrics = ref([
+  { name: '总执行次数', value: '1,256', color: '#004fc5' },
+  { name: '成功次数', value: '1,087', color: '#34c759' },
+  { name: '失败次数', value: '169', color: '#ff3b30' },
+  { name: '平均耗时', value: '3.2s', color: '#ff9500' }
+])
+
+/**
+ * 渲染AI应用使用统计柱状图
+ */
+function renderAiUsageChart() {
+  if (!aiUsageChartRef.value) {
+    return
+  }
+  const chart = echarts.init(aiUsageChartRef.value)
+  chart.setOption({
+    grid: { left: 40, right: 16, top: 16, bottom: 40 },
+    tooltip: { trigger: 'axis' },
+    legend: {
+      bottom: 0,
+      icon: 'roundRect',
+      itemWidth: 12,
+      itemHeight: 8,
+      textStyle: { color: '#5e6c84', fontSize: 11 }
+    },
+    xAxis: {
+      type: 'category',
+      data: aiUsageDates,
+      axisLine: { lineStyle: { color: '#e4eaf4' } },
+      axisLabel: { color: '#5e6c84', fontSize: 11 }
+    },
+    yAxis: {
+      type: 'value',
+      splitLine: { lineStyle: { color: '#eef2f8' } },
+      axisLabel: { color: '#5e6c84', fontSize: 11 }
+    },
+    series: [
+      {
+        name: 'Agent',
+        type: 'bar',
+        barWidth: '20%',
+        data: aiUsageData.agent,
+        itemStyle: { color: '#004fc5', borderRadius: [4, 4, 0, 0] }
+      },
+      {
+        name: '知识库检索',
+        type: 'bar',
+        barWidth: '20%',
+        data: aiUsageData.knowledge,
+        itemStyle: { color: '#34c759', borderRadius: [4, 4, 0, 0] }
+      },
+      {
+        name: '工作流',
+        type: 'bar',
+        barWidth: '20%',
+        data: aiUsageData.workflow,
+        itemStyle: { color: '#ff9500', borderRadius: [4, 4, 0, 0] }
+      }
+    ]
+  })
+}
+
+/**
+ * 渲染工作流执行统计环形图
+ */
+function renderWorkflowChart() {
+  if (!workflowChartRef.value) {
+    return
+  }
+  const chart = echarts.init(workflowChartRef.value)
+  chart.setOption({
+    series: [
+      {
+        type: 'pie',
+        radius: ['65%', '85%'],
+        center: ['50%', '50%'],
+        avoidLabelOverlap: false,
+        label: { show: false },
+        labelLine: { show: false },
+        data: [
+          { value: 1087, name: '成功', itemStyle: { color: '#34c759' } },
+          { value: 169, name: '失败', itemStyle: { color: '#ff3b30' } }
+        ]
+      }
+    ]
+  })
+}
+
 onMounted(() => {
   nextTick(() => {
     renderKgChart()
     renderFileTypeChart()
     renderExtractChart()
     renderEntityTrendChart()
+    renderAiUsageChart()
+    renderWorkflowChart()
   })
 })
 
@@ -817,5 +903,75 @@ function handleLogout() {
 .trend-flat {
   color: $color-text-placeholder;
   font-size: 14px;
+}
+
+.workflow-stats {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xl;
+}
+
+.workflow-ring-wrap {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  flex-shrink: 0;
+}
+
+.workflow-ring {
+  width: 100%;
+  height: 100%;
+}
+
+.workflow-ring-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.ring-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: $color-text-primary;
+}
+
+.ring-name {
+  font-size: 12px;
+  color: $color-text-secondary;
+  margin-top: 2px;
+}
+
+.workflow-metrics {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.workflow-metric {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.metric-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.workflow-metric .metric-name {
+  flex: 1;
+  font-size: 13px;
+  color: $color-text-secondary;
+}
+
+.workflow-metric .metric-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: $color-text-primary;
 }
 </style>

@@ -1,9 +1,9 @@
 // router/index.js
 import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
-import { isTauri } from '@/utils/desktop.js'
+import { isDesktop } from '@/utils/desktop.js'
 
-// 判断是否为桌面端环境（Tauri 需使用 Hash 模式兼容应用内协议）
-const history = isTauri ? createWebHashHistory() : createWebHistory()
+// 判断是否为桌面端环境（桌面端环境 需使用 Hash 模式兼容应用内协议）
+const history = isDesktop ? createWebHashHistory() : createWebHistory()
 
 // 导入所有模块路由
 import commonRoutes from './modules/common.routes'

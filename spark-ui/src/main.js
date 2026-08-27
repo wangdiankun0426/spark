@@ -1,6 +1,6 @@
 import { createApp } from 'vue';
 import App from './App.vue';
-// 桌面端（Tauri）环境适配，需在应用挂载前初始化（接管 window.open）
+// 桌面端环境适配，需在应用挂载前初始化（接管 window.open）
 import { setupDesktop } from '@/utils/desktop.js';
 import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';

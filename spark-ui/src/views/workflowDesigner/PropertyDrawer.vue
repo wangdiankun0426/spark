@@ -125,10 +125,9 @@
               @change="emitUpdate"
           />
         </el-form-item>
-
         <!--按节点类型拆分配置组件-->
         <el-empty
-            v-if="node.type === 'startEvent' || node.type === 'endEvent' || node.type === 'exclusiveGateway'"
+            v-if="['startEvent', 'endEvent', 'exclusiveGateway', 'parallelGateway'].includes(node.type)"
             description="该节点无需配置"
             :image-size="40"
         />
@@ -152,6 +151,104 @@
             :form="form"
             @update="emitUpdate"
         />
+        <agent-task-config
+            v-if="node.type === 'agentTask'"
+            :form="form"
+            @update="emitUpdate"
+        />
+        <kb-search-config
+            v-if="node.type === 'knowledgeSearch'"
+            :form="form"
+            @update="emitUpdate"
+        />
+        <kg-search-config
+            v-if="node.type === 'knowledgeGraphSearch'"
+            :form="form"
+            @update="emitUpdate"
+        />
+        <variable-op-config
+            v-if="node.type === 'variableOp'"
+            :form="form"
+            @update="emitUpdate"
+        />
+        <code-execute-config
+            v-if="node.type === 'codeExecute'"
+            :form="form"
+            @update="emitUpdate"
+        />
+        <http-request-config
+            v-if="node.type === 'httpRequest'"
+            :form="form"
+            @update="emitUpdate"
+        />
+        <human-review-config
+            v-if="node.type === 'humanReview'"
+            :form="form"
+            @update="emitUpdate"
+        />
+        <!--执行策略配置-->
+        <template v-if="!['startEvent', 'endEvent', 'exclusiveGateway', 'parallelGateway'].includes(node.type)">
+          <el-divider>执行策略</el-divider>
+          <el-form-item label="超时时间">
+            <el-input-number
+                v-model="form.config.timeoutMs"
+                :min="1000"
+                :max="3600000"
+                :step="1000"
+                :step-strictly="true"
+                placeholder="毫秒"
+                @change="emitUpdate"
+            />
+            <div class="form-tips">节点执行超时时间，默认5分钟（300000ms）</div>
+          </el-form-item>
+          <el-form-item label="重试次数">
+            <el-input-number
+                v-model="form.config.maxRetries"
+                :min="0"
+                :max="10"
+                :step="1"
+                placeholder="次"
+                @change="emitUpdate"
+            />
+            <div class="form-tips">执行失败时的重试次数，0表示不重试</div>
+          </el-form-item>
+          <el-form-item label="重试间隔">
+            <el-input-number
+                v-model="form.config.retryInitialInterval"
+                :min="100"
+                :max="60000"
+                :step="100"
+                :step-strictly="true"
+                placeholder="毫秒"
+                @change="emitUpdate"
+            />
+            <div class="form-tips">首次重试等待时间，默认1000ms</div>
+          </el-form-item>
+          <el-form-item label="间隔倍数">
+            <el-input-number
+                v-model="form.config.retryMultiplier"
+                :min="1"
+                :max="10"
+                :step="0.1"
+                :precision="1"
+                placeholder="倍"
+                @change="emitUpdate"
+            />
+            <div class="form-tips">每次重试间隔的递增倍数，默认2.0</div>
+          </el-form-item>
+          <el-form-item label="最大间隔">
+            <el-input-number
+                v-model="form.config.retryMaxInterval"
+                :min="1000"
+                :max="300000"
+                :step="1000"
+                :step-strictly="true"
+                placeholder="毫秒"
+                @change="emitUpdate"
+            />
+            <div class="form-tips">重试间隔上限，默认30000ms</div>
+          </el-form-item>
+        </template>
       </el-form>
     </div>
     <div class="drawer-footer">
@@ -172,6 +269,13 @@ import DocParseConfig from './propertyPanel/DocParseConfig.vue';
 import NotifyConfig from './propertyPanel/NotifyConfig.vue';
 import KbArchiveConfig from './propertyPanel/KbArchiveConfig.vue';
 import LlmTaskConfig from './propertyPanel/LlmTaskConfig.vue';
+import AgentTaskConfig from './propertyPanel/AgentTaskConfig.vue';
+import KbSearchConfig from './propertyPanel/KbSearchConfig.vue';
+import KgSearchConfig from './propertyPanel/KgSearchConfig.vue';
+import VariableOpConfig from './propertyPanel/VariableOpConfig.vue';
+import CodeExecuteConfig from './propertyPanel/CodeExecuteConfig.vue';
+import HttpRequestConfig from './propertyPanel/HttpRequestConfig.vue';
+import HumanReviewConfig from './propertyPanel/HumanReviewConfig.vue';
 
 const props = defineProps({
   node: { type: Object, default: null },
@@ -183,9 +287,36 @@ const emit = defineEmits(['update', 'close', 'delete-node', 'delete-edge']);
 
 const form = ref({});
 
+/** 执行策略默认值 */
+const retryTimeoutDefaults = {
+  timeoutMs: 300000,
+  maxRetries: 3,
+  retryInitialInterval: 1000,
+  retryMultiplier: 2.0,
+  retryMaxInterval: 30000
+};
+
+/** 需要执行策略的节点类型 */
+const needRetryTimeout = (type) => {
+  return !['startEvent', 'endEvent', 'exclusiveGateway', 'parallelGateway'].includes(type);
+};
+
 watch(() => props.node, (newNode) => {
   if (newNode) {
-    form.value = JSON.parse(JSON.stringify(newNode));
+    const data = JSON.parse(JSON.stringify(newNode));
+    // 确保 config 对象存在
+    if (!data.config) {
+      data.config = {};
+    }
+    // 为需要的节点类型自动填充执行策略默认值
+    if (needRetryTimeout(data.type)) {
+      Object.keys(retryTimeoutDefaults).forEach(key => {
+        if (data.config[key] === undefined || data.config[key] === null) {
+          data.config[key] = retryTimeoutDefaults[key];
+        }
+      });
+    }
+    form.value = data;
   } else {
     form.value = {};
   }
@@ -464,5 +595,12 @@ function fillSource(c) {
     font-size: 12px;
     color: $color-text-secondary;
   }
+}
+
+.form-tips {
+  font-size: 12px;
+  color: $color-text-secondary;
+  line-height: 1.5;
+  margin-top: 4px;
 }
 </style>

@@ -10,33 +10,33 @@ export function createFlowInstanceAPI(data) {
 }
 
 // 分页查询我申请的流程实例
-export function pageMyAppliedListAPI(query) {
+export function pageMyApplicationListAPI(query) {
     return request({
-        url: '/flow/instance/pageMyAppliedList',
+        url: '/flow/instance/pageMyApplicationList',
         method: 'get',
         params: query
     })
 }
 
 // 分页查询我的待办流程实例
-export function pageMyPendingListAPI(query) {
+export function pageMyTodoListAPI(query) {
     return request({
-        url: '/flow/instance/pageMyPendingList',
+        url: '/flow/instance/pageMyTodoList',
         method: 'get',
         params: query
     })
 }
 
 // 分页查询我的已办流程实例
-export function pageMyPendedListAPI(query) {
+export function pageMyDoneList(query) {
     return request({
-        url: '/flow/instance/pageMyPendedList',
+        url: '/flow/instance/pageMyDoneList',
         method: 'get',
         params: query
     })
 }
 
-// 分页查询全部流程实例（管理端）
+// 分页查询全部流程实例
 export function pageInstanceListAPI(query) {
     return request({
         url: '/flow/instance/pageList',
@@ -87,5 +87,32 @@ export function addSignFlowInstanceAPI(data) {
         url: '/flow/instance/addSign',
         method: 'post',
         params: data
+    })
+}
+
+// 撤回流程实例
+export function recallFlowInstanceAPI(data) {
+    return request({
+        url: '/flow/instance/recall',
+        method: 'post',
+        data
+    })
+}
+
+// 抄送流程实例
+export function copyFlowInstanceAPI(data) {
+    return request({
+        url: '/flow/instance/copy',
+        method: 'post',
+        data
+    })
+}
+
+// 分页查询抄送给我列表
+export function pageCopyMyListAPI(query) {
+    return request({
+        url: '/flow/instance/pageCopyMyList',
+        method: 'get',
+        params: query
     })
 }

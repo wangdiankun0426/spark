@@ -73,9 +73,4 @@ public class WfInstanceNode extends BaseEntity {
      */
     private Long durationMs;
 
-    /**
-     * 重试次数
-     */
-    private Integer retryCount;
-
 }

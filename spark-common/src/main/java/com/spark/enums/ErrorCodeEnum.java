@@ -32,6 +32,8 @@ public enum ErrorCodeEnum {
     PHONE_NOT_EXIST(606,"手机号不存在"),
     EMAIL_NOT_EXIST(607,"邮箱不存在"),
     LOGIN_TYPE_UNKNOWN(607,"未知登录类型"),
+    WECOM_NOT_BIND_USER(608,"企微账号未绑定用户"),
+    WECOM_LOGIN_FAIL(609,"企微登录失败"),
     // 用户相关状态码
     USER_SAME_LOGIN_NAME_EXIST(701,"相同登录名的用户已存在"),
     USER_NOT_EXIST(702, "用户不存在"),

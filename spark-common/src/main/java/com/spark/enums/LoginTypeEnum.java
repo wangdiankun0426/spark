@@ -13,6 +13,9 @@ public enum LoginTypeEnum {
     PASSWORD(1, "密码登录"),
     MESSAGE(2, "短信登录"),
     EMAIL(3, "邮箱登录"),
+    WECOM_OAUTH(4, "企微oauth2登录"),
+
+
     UNKNOWN(10 ,"未知")
     ;
 

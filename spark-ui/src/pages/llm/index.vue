@@ -1,10 +1,11 @@
 <template>
   <div>
     <el-container>
-      <el-aside width="180px" class="llm-el-aside">
+      <el-aside width="64px" class="llm-el-aside">
         <el-menu
             :default-active="defaultActive"
             :router='true'
+            :collapse="true"
             mode="vertical"
             class="llm-el-menu"
         >
@@ -78,12 +79,14 @@ const defaultActive = computed(() => {
   line-height: 44px;
   font-size: 13px;
   font-weight: 400;
-  padding-left: 30px !important;
+  justify-content: center;
+}
+:deep(.el-menu-item) {
+  padding: 0 !important;
 }
 /*悬停一级菜单之后*/
 .el-menu-item:hover {
   background-color: var(--sidebar-hover-bg);
-  padding-left: 28px !important;
 }
 /*点击一级菜单之后*/
 .el-menu-item.is-active {
@@ -92,6 +95,7 @@ const defaultActive = computed(() => {
   border-bottom: 0;
 }
 :deep(.el-menu-item .el-menu-tooltip__trigger) {
-  padding: 0 8px !important;
+  padding: 0 !important;
+  justify-content: center;
 }
 </style>

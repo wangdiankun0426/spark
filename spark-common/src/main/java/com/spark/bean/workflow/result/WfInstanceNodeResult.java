@@ -34,7 +34,7 @@ public class WfInstanceNodeResult extends BaseResult {
     private String nodeName;
 
     /**
-     * 节点类型 FlowTemplateTypeEnum
+     * 节点类型 WorkflowTemplateTypeEnum
      */
     private String nodeType;
 
@@ -77,10 +77,5 @@ public class WfInstanceNodeResult extends BaseResult {
      * 耗时（毫秒）
      */
     private Long durationMs;
-
-    /**
-     * 重试次数
-     */
-    private Integer retryCount;
 
 }

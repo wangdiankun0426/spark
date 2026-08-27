@@ -9,6 +9,7 @@ import com.spark.config.email.EmailService;
 import com.spark.constant.ObjectCacheKey;
 import com.spark.enums.ErrorCodeEnum;
 import com.spark.config.redis.RedisService;
+import com.spark.enums.LoginTypeEnum;
 import com.spark.manage.auth.ILoginValidateService;
 import com.spark.utils.StringUtil;
 import jakarta.annotation.Resource;
@@ -137,7 +138,16 @@ public class LoginValidateServiceImpl implements ILoginValidateService {
     @Override
     public ResultData<Void> checkValidateCode(ValidateCode code) {
         ResultData<Void> result = new ResultData<>();
-        if (code == null || StringUtil.isBlank(code.getUuid()) || StringUtil.isBlank(code.getValue())) {
+        if (code == null || code.getLoginType() == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        Integer loginType = code.getLoginType();
+        if (!LoginTypeEnum.PASSWORD.getValue().equals(loginType) && !LoginTypeEnum.MESSAGE.getValue().equals(loginType)  && !LoginTypeEnum.EMAIL.getValue().equals(loginType) ) {
+            result.setCode(ResultData.OK);
+            return result;
+        }
+        if (StringUtil.isBlank(code.getUuid()) || StringUtil.isBlank(code.getValue())) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }

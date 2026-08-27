@@ -12,7 +12,7 @@ export default [
         redirect: '/llm/agent',
         component: llm,
         meta: {
-            title: '应用中心'
+            title: 'AI应用'
         },
         children: [
             {

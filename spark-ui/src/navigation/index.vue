@@ -10,7 +10,7 @@
       </el-menu-item>
       <el-menu-item index="/llm">
         <el-icon><Ai /></el-icon>
-        <span>应用中心</span>
+        <span>AI应用</span>
       </el-menu-item>
       <el-menu-item index="/kb">
         <el-icon><FolderOpened /></el-icon>
@@ -24,7 +24,7 @@
         <el-icon><Connection /></el-icon>
         <span>流程中心</span>
       </el-menu-item>
-      <el-menu-item index="/manage" v-if="userInfo.id === 101">
+      <el-menu-item index="/manage" v-if="userInfo.id === 101 && !isDesktop">
         <el-icon><Setting /></el-icon>
         <span>管理后台</span>
       </el-menu-item>
@@ -186,6 +186,7 @@ import AgentIcon from '@/assets/icons/agent.vue';
 import ModelMarketIcon from '@/assets/icons/modelMarket.vue';
 import Bell from "@/assets/icons/bell.vue";
 import SearchV2 from "@/assets/icons/searchV2.vue";
+import {isDesktop} from "@/utils/desktop.js";
 const router = useRouter();
 const route = useRoute();
 const store = useStore()
@@ -224,7 +225,7 @@ const searchInputRef = ref(null);
 // 快捷功能列表
 const shortcutList = ref([
   { name: '流程申请', path: '/flow/application', icon: FlowListIcon },
-  { name: '我的待办', path: '/flow/myPendingList', icon: MyPendingListIcon },
+  { name: '我的待办', path: '/flow/myTodo', icon: MyPendingListIcon },
   { name: '知识库', path: '/kb/knowledge', icon: KnowledgeIcon },
   { name: '知识图谱', path: '/kg/graph', icon: GraphIcon },
   { name: 'Agent', path: '/llm/agent', icon: AgentIcon },
@@ -377,10 +378,10 @@ function handleMessageClick(item) {
   if (refType === 12) {
     if (item.type === 2 || item.type === 5) {
       // 待办/催办通知 -> 我的待办
-      router.push({ path: '/flow/myPendingList', query: { id: refId } }).catch(() => {});
+      router.push({ path: '/flow/myTodo', query: { id: refId } }).catch(() => {});
     } else if (item.type === 3 || item.type === 4) {
       // 完结/驳回通知 -> 我的申请
-      router.push({ path: '/flow/myAppliedList', query: { id: refId } }).catch(() => {});
+      router.push({ path: '/flow/myApplication', query: { id: refId } }).catch(() => {});
     }
   }
 }

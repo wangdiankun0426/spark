@@ -3,13 +3,12 @@ package com.spark.workflow.engine.executor;
 import com.spark.bean.base.ResultData;
 import com.spark.bean.system.vo.MessageVO;
 import com.spark.enums.ErrorCodeEnum;
-import com.spark.enums.FlowTemplateTypeEnum;
+import com.spark.enums.WorkflowTemplateTypeEnum;
 import com.spark.enums.MessageTypeEnum;
 import com.spark.manage.BaseService;
 import com.spark.manage.system.IMessageService;
 import com.spark.utils.MapUtil;
 import com.spark.utils.StringUtil;
-import com.spark.workflow.engine.IWfNodeExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +38,7 @@ public class NotifyExecutor extends BaseService implements IWfNodeExecutor {
      * @return
      */
     @Override
-    public String getNodeType() { return FlowTemplateTypeEnum.NOTIFY.getValue(); }
+    public String getNodeType() { return WorkflowTemplateTypeEnum.NOTIFY.getValue(); }
 
     /**
      * 执行节点

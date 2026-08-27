@@ -2,6 +2,7 @@ package com.spark.manage.system.impl;
 
 import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.bean.system.entity.User;
+import com.spark.bean.system.entity.UserProfile;
 import com.spark.bean.system.query.*;
 import com.spark.bean.system.result.*;
 import com.spark.bean.system.vo.LoginVO;
@@ -54,6 +55,8 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
     @Autowired
     private UserDao userDao;
     @Autowired
+    private UserProfileDao userProfileDao;
+    @Autowired
     private DepartmentDao departmentDao;
     @Autowired
     private RoleUserDao roleUserDao;
@@ -92,7 +95,6 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         user.setEmail(userVO.getEmail());
         user.setSex(userVO.getSex());
         user.setStatus(userVO.getStatus());
-        user.setWecomId(userVO.getWecomId());
         if (user.getStatus() == null) {
             user.setStatus(StatusEnum.NORMAL.getValue());
         }
@@ -101,6 +103,11 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
             result.setErrorCode(ErrorCodeEnum.SYSTEM_ERROR);
             return result;
         }
+        // 保存扩展信息
+        UserProfile userProfile = new UserProfile();
+        userProfile.setId(userId);
+        userProfile.setWecomId(userVO.getWecomId());
+        userProfileDao.insertDB(userProfile);
         userVO.setId(userId);
         result = this.addUserRole(userVO);
         result.setObjId(userId);
@@ -145,11 +152,15 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         user.setEmail(userVO.getEmail());
         user.setSex(userVO.getSex());
         user.setStatus(userVO.getStatus());
-        user.setWecomId(userVO.getWecomId());
         int count = userDao.updateDBById(user);
         if (count < 0) {
             return result;
         }
+        // 更新用户扩展信息
+        UserProfile userProfile = new UserProfile();
+        userProfile.setId(userVO.getId());
+        userProfile.setWecomId(userVO.getWecomId());
+        userProfileDao.updateDBById(userProfile);
         result.setObjId(userVO.getId());
         result.setCode(ResultData.OK);
         return result;
@@ -205,7 +216,6 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         this.supplyUserDeptInfo(userResult);
         this.supplyUserRole(userResult);
         result.setData(userResult);
-        result.setCode(ResultData.OK);
         result.setCode(ResultData.OK);
         return result;
     }

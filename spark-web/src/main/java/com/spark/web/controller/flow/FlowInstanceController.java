@@ -1,10 +1,14 @@
 package com.spark.web.controller.flow;
 
+import com.spark.bean.flow.query.FlowInstanceCopyQuery;
 import com.spark.bean.flow.query.FlowInstanceQuery;
+import com.spark.bean.flow.result.FlowInstanceCopyResult;
 import com.spark.bean.flow.result.FlowInstanceResult;
+import com.spark.bean.flow.vo.FlowInstanceCopyVO;
 import com.spark.bean.flow.vo.FlowInstanceVO;
 import com.spark.bean.base.PageResult;
 import com.spark.bean.base.ResultData;
+import com.spark.flow.service.IFlowInstanceCopyService;
 import com.spark.flow.service.IFlowInstanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -21,9 +25,10 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("flow/instance")
 public class FlowInstanceController {
-
     @Autowired
     private IFlowInstanceService instanceService;
+    @Autowired
+    private IFlowInstanceCopyService instanceCopyService;
 
     /**
      * 创建流程实例
@@ -40,9 +45,9 @@ public class FlowInstanceController {
      * @param query 查询参数
      * @return 列表
      */
-    @GetMapping("pageMyAppliedList")
-    public ResultData<PageResult<FlowInstanceResult>> pageMyAppliedList(FlowInstanceQuery query) {
-        return instanceService.pageMyAppliedList(query);
+    @GetMapping("pageMyApplicationList")
+    public ResultData<PageResult<FlowInstanceResult>> pageMyApplicationList(FlowInstanceQuery query) {
+        return instanceService.pageMyApplicationList(query);
     }
 
     /**
@@ -50,9 +55,9 @@ public class FlowInstanceController {
      * @param query 查询参数
      * @return 列表
      */
-    @GetMapping("pageMyPendingList")
-    public ResultData<PageResult<FlowInstanceResult>> pageMyPendingList(FlowInstanceQuery query) {
-        return instanceService.pageMyPendingList(query);
+    @GetMapping("pageMyTodoList")
+    public ResultData<PageResult<FlowInstanceResult>> pageMyTodoList(FlowInstanceQuery query) {
+        return instanceService.pageMyTodoList(query);
     }
 
     /**
@@ -60,9 +65,9 @@ public class FlowInstanceController {
      * @param query 查询参数
      * @return 列表
      */
-    @GetMapping("pageMyPendedList")
-    public ResultData<PageResult<FlowInstanceResult>> pageMyPendedList(FlowInstanceQuery query) {
-        return instanceService.pageMyPendedList(query);
+    @GetMapping("pageMyDoneList")
+    public ResultData<PageResult<FlowInstanceResult>> pageMyDoneList(FlowInstanceQuery query) {
+        return instanceService.pageMyDoneList(query);
     }
 
     /**
@@ -123,5 +128,35 @@ public class FlowInstanceController {
     @PostMapping("addSign")
     public ResultData<Void> addSignInstance(FlowInstanceVO instanceVO) {
         return instanceService.addSignInstance(instanceVO);
+    }
+
+    /**
+     * 撤回流程实例
+     * @param instanceVO 撤回参数
+     * @return 响应
+     */
+    @PostMapping("recall")
+    public ResultData<Void> recallInstance(@RequestBody FlowInstanceVO instanceVO) {
+        return instanceService.recallInstance(instanceVO);
+    }
+
+    /**
+     * 抄送流程实例
+     * @param copyVO 抄送参数
+     * @return 响应
+     */
+    @PostMapping("copy")
+    public ResultData<Void> copyInstance(@RequestBody FlowInstanceCopyVO copyVO) {
+        return instanceCopyService.copyInstance(copyVO);
+    }
+
+    /**
+     * 分页查询抄送给我列表
+     * @param query 查询参数
+     * @return 列表
+     */
+    @GetMapping("pageCopyMyList")
+    public ResultData<PageResult<FlowInstanceCopyResult>> pageCopyMyList(FlowInstanceCopyQuery query) {
+        return instanceCopyService.pageCopyMyList(query);
     }
 }

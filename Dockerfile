@@ -14,9 +14,6 @@ RUN mkdir -p /opt/spark/app/spark.server.com
 # 指定路径
 WORKDIR /opt/spark/app/spark.server.com
 
-# 复制 jar 文件到路径
-COPY ./spark-0.0.1-SNAPSHOT.jar ./spark-0.0.1-SNAPSHOT.jar
-
 # 暴露端口
 EXPOSE 8000
 
@@ -38,4 +35,6 @@ ENV JAVA_OPTS="\
     -XX:+HeapDumpOnOutOfMemoryError"
 
 # 启动服务
-ENTRYPOINT java ${JAVA_OPTS} -jar ./spark-0.0.1-SNAPSHOT.jar
+ENTRYPOINT java ${JAVA_OPTS} \
+    -Dspring.config.location=file:./application-prod.yml \
+    -jar ./spark-0.0.1-SNAPSHOT.jar
