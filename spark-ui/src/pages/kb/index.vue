@@ -9,13 +9,17 @@
             mode="vertical"
             class="kb-el-menu"
         >
+          <el-menu-item index="/kb/knowledge">
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><Knowledge/></el-icon>
+            <template #title>知识库</template>
+          </el-menu-item>
           <el-menu-item index="/kb/search">
             <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><search-document/></el-icon>
             <template #title>知识检索</template>
           </el-menu-item>
-          <el-menu-item index="/kb/knowledge">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><Knowledge/></el-icon>
-            <template #title>知识库</template>
+          <el-menu-item index="/kb/test">
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><Test/></el-icon>
+            <template #title>检索测试</template>
           </el-menu-item>
         </el-menu>
       </el-aside>
@@ -34,6 +38,7 @@ import {computed} from "vue";
 import {useRoute} from "vue-router";
 import Knowledge from "@/assets/icons/knowledge.vue";
 import SearchDocument from "@/assets/icons/searchDocument.vue";
+import Test from "@/assets/icons/test.vue";
 
 const route = useRoute();
 

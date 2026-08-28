@@ -10,26 +10,26 @@ export default [
     {
         path: '/kg',
         name: 'kg',
-        redirect: '/kg/search',
+        redirect: '/kg/graph',
         component: kg,
         meta: {
             title: '知识图谱'
         },
         children: [
             {
-                path: '/kg/search',
-                name: 'graphSearch',
-                component: graphSearch,
-                meta: {
-                    title: '文档检索'
-                }
-            },
-            {
                 path: '/kg/graph',
                 name: 'graph',
                 component: graph,
                 meta: {
                     title: '知识图谱'
+                }
+            },
+            {
+                path: '/kg/search',
+                name: 'graphSearch',
+                component: graphSearch,
+                meta: {
+                    title: '文档检索'
                 }
             },
             {

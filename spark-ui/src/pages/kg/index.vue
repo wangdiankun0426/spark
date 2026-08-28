@@ -9,13 +9,13 @@
             mode="vertical"
             class="kg-el-menu"
         >
-          <el-menu-item index="/kg/search">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><SearchDocument/></el-icon>
-            <template #title>知识检索</template>
-          </el-menu-item>
           <el-menu-item index="/kg/graph">
             <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><Graph/></el-icon>
             <template #title>知识图谱</template>
+          </el-menu-item>
+          <el-menu-item index="/kg/search">
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><SearchDocument/></el-icon>
+            <template #title>知识检索</template>
           </el-menu-item>
         </el-menu>
       </el-aside>

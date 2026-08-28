@@ -64,3 +64,16 @@ export function deleteKnowledgeAPI(data) {
         params: data
     })
 }
+
+/**
+ * 检索测试
+ * @param {Object} query { knowledgeId, query, topK, minSimilarity, enableQa, enableRerank }
+ * @returns {Promise}
+ */
+export function testRetrieveAPI(query) {
+    return request({
+        url: '/kb/knowledge/testRetrieve',
+        method: 'get',
+        params: query
+    })
+}
