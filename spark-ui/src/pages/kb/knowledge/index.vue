@@ -45,6 +45,7 @@
 
         <!-- 配置标签 -->
         <template #tags>
+          <el-tag size="small" effect="light" round v-if="item.chunkStrategyName">{{ item.chunkStrategyName }}</el-tag>
           <el-tag size="small" effect="light" round>父块 {{ item.parentChunkSize }}</el-tag>
           <el-tag size="small" effect="light" round>子块 {{ item.childChunkSize }}</el-tag>
           <el-tag size="small" effect="light" round>TopK {{ item.retrieveTopK }}</el-tag>

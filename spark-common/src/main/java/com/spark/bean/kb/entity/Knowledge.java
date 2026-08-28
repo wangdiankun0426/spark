@@ -47,6 +47,11 @@ public class Knowledge extends BaseEntity {
     private Integer childOverlap;
 
     /**
+     * 分块策略: paragraph/line/sentence/word/character
+     */
+    private String chunkStrategy;
+
+    /**
      * 是否生成QA
      */
     private Integer enableQa;

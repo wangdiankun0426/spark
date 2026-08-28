@@ -31,4 +31,18 @@ public interface IDocumentChunkService {
      */
     ResultData<PageResult<Map>> pageDocumentChunksQAList(DocumentQuery query);
 
+    /**
+     * 查询文档分块统计信息
+     * @param docId 文档ID
+     * @return 统计信息
+     */
+    ResultData<Map<String, Object>> getDocumentChunkStats(Long docId);
+
+    /**
+     * 重新分块文档
+     * @param docId 文档ID
+     * @return 操作结果
+     */
+    ResultData<Void> rechunkDocument(Long docId);
+
 }

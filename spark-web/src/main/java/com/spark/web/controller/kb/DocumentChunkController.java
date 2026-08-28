@@ -45,4 +45,24 @@ public class DocumentChunkController {
     public ResultData<PageResult<Map>> pageDocumentChunksQAList(DocumentQuery query) {
         return documentChunkService.pageDocumentChunksQAList(query);
     }
+
+    /**
+     * 查询文档分块统计信息
+     * @param docId 文档ID
+     * @return 统计信息
+     */
+    @GetMapping("stats")
+    public ResultData<Map<String, Object>> getDocumentChunkStats(Long docId) {
+        return documentChunkService.getDocumentChunkStats(docId);
+    }
+
+    /**
+     * 重新分块文档
+     * @param docId 文档ID
+     * @return 操作结果
+     */
+    @GetMapping("rechunk")
+    public ResultData<Void> rechunkDocument(Long docId) {
+        return documentChunkService.rechunkDocument(docId);
+    }
 }

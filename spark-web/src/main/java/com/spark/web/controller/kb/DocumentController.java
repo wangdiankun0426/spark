@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -137,5 +138,25 @@ public class DocumentController {
         } catch (IOException ex) {
             logger.error("downloadDocument error", ex);
         }
+    }
+
+    /**
+     * 批量删除文档
+     * @param ids 文档ID列表
+     * @return 删除结果
+     */
+    @PostMapping("batchDelete")
+    public ResultData<Void> batchDeleteDocument(@RequestParam List<Long> ids) {
+        return documentService.batchDeleteDocument(ids);
+    }
+
+    /**
+     * 批量重新处理文档
+     * @param ids 文档ID列表
+     * @return 处理结果
+     */
+    @PostMapping("batchReprocess")
+    public ResultData<Void> batchReprocessDocument(@RequestParam List<Long> ids) {
+        return documentService.batchReprocessDocument(ids);
     }
 }

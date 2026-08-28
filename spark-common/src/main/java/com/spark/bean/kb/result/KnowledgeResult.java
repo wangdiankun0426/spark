@@ -47,6 +47,16 @@ public class KnowledgeResult extends BaseResult {
     private Integer childOverlap;
 
     /**
+     * 分块策略: paragraph/line/sentence/word/character
+     */
+    private String chunkStrategy;
+
+    /**
+     * 分块策略名称
+     */
+    private String chunkStrategyName;
+
+    /**
      * 是否生成QA
      */
     private Integer enableQa;

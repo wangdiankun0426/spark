@@ -7,9 +7,11 @@ import com.spark.bean.base.ResultData;
 import com.spark.bean.base.SessionHolder;
 import com.spark.bean.kb.entity.Document;
 import com.spark.bean.kb.entity.DocumentEvent;
+import com.spark.bean.kb.query.DocumentEventQuery;
 import com.spark.bean.kb.query.DocumentQuery;
 import com.spark.bean.kb.query.DocumentSearchQuery;
 import com.spark.bean.kb.query.KnowledgeQuery;
+import com.spark.bean.kb.result.DocumentEventResult;
 import com.spark.bean.kb.result.DocumentResult;
 import com.spark.bean.kb.result.KnowledgeResult;
 import com.spark.bean.kb.vo.DocumentVO;
@@ -549,6 +551,73 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         }
         documentResult.setPath(filePath);
         result.setData(documentResult);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 批量删除文档
+     * @param ids 文档ID列表
+     * @return 删除结果
+     */
+    @Override
+    @OperateLog(operateType = OperateTypeEnum.KNOWLEDGE_DOCUMENT_DELETE)
+    public ResultData<Void> batchDeleteDocument(List<Long> ids) {
+        ResultData<Void> result = new ResultData<>();
+        if (CollectionUtil.isEmpty(ids)) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        int successCount = 0;
+        for (Long id : ids) {
+            try {
+                Document document = new Document();
+                document.setId(id);
+                int count = documentDao.deleteDBById(document);
+                if (count > 0) {
+                    successCount++;
+                }
+            } catch (Exception e) {
+                logger.error("batchDeleteDocument error, id={}", id, e);
+            }
+        }
+        logger.info("batchDeleteDocument success, total={}, success={}", ids.size(), successCount);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 批量重新处理文档
+     * @param ids 文档ID列表
+     * @return 处理结果
+     */
+    @Override
+    public ResultData<Void> batchReprocessDocument(List<Long> ids) {
+        ResultData<Void> result = new ResultData<>();
+        if (CollectionUtil.isEmpty(ids)) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        int successCount = 0;
+        for (Long id : ids) {
+            try {
+                DocumentEventQuery eventQuery = new DocumentEventQuery();
+                eventQuery.setDocId(id);
+                DocumentEventResult eventResult = documentEventDao.queryDocumentEvent(eventQuery);
+                if (eventResult != null) {
+                    DocumentEvent updateEvent = new DocumentEvent();
+                    updateEvent.setId(eventResult.getId());
+                    updateEvent.setChunkStatus(DocumentEventStatusEnum.PENDING.getValue());
+                    updateEvent.setVectorStatus(DocumentEventStatusEnum.PENDING.getValue());
+                    updateEvent.setGraphStatus(DocumentEventStatusEnum.PENDING.getValue());
+                    documentEventDao.updateById(updateEvent);
+                    successCount++;
+                }
+            } catch (Exception e) {
+                logger.error("batchReprocessDocument error, id={}", id, e);
+            }
+        }
+        logger.info("batchReprocessDocument success, total={}, success={}", ids.size(), successCount);
         result.setCode(ResultData.OK);
         return result;
     }

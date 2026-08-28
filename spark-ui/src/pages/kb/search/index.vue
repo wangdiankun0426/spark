@@ -64,10 +64,6 @@
               <DocumentIcon :ext="document.ext" class="doc-icon"/>
               <span class="doc-name">{{document.name}}</span>
               <div class="card-actions">
-                <el-button text type="primary" @click="handleOpenChunkPage(document)">
-                  <el-icon><Grid /></el-icon>
-                  <span>分块</span>
-                </el-button>
                 <el-button text type="primary" @click="handlePreviewDocument(document)">
                   <el-icon><Tickets /></el-icon>
                   <span>预览</span>
@@ -174,15 +170,6 @@ function loadKnowledgeList() {
  */
 const handlePreviewDocument = (row) => {
   const {href} = router.resolve({path: '/document/preview', query: {id: row.id}});
-  window.open(href, '_blank');
-}
-
-/**
- * 打开文档分块页（新开标签页）
- * @param row
- */
-const handleOpenChunkPage = (row) => {
-  const {href} = router.resolve({path: '/document/chunk', query: {id: row.id}});
   window.open(href, '_blank');
 }
 

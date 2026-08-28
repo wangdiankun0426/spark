@@ -92,6 +92,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="documentCount" label="文档总量" width="90" align="center"/>
+        <el-table-column prop="chunkStrategyName" label="分块策略" width="110" align="center"/>
         <el-table-column prop="parentChunkSize" label="父块大小" width="100" align="center"/>
         <el-table-column prop="childChunkSize" label="子块大小" width="100" align="center"/>
         <el-table-column prop="parentOverlap" label="父块重叠" width="100" align="center"/>
@@ -182,6 +183,21 @@
         </el-form-item>
         <el-divider content-position="left">分块配置</el-divider>
         <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="分块策略" prop="chunkStrategy">
+              <el-select
+                  v-model="form.chunkStrategy"
+                  placeholder="请选择分块策略"
+                  style="width: 100%"
+              >
+                <el-option label="按段落分割" value="paragraph" />
+                <el-option label="按行分割" value="line" />
+                <el-option label="按句子分割" value="sentence" />
+                <el-option label="按单词分割" value="word" />
+                <el-option label="按字符分割" value="character" />
+              </el-select>
+            </el-form-item>
+          </el-col>
           <el-col :span="12">
             <el-form-item label="父块大小" prop="parentChunkSize">
               <el-input-number
@@ -361,6 +377,7 @@ function getDefaultFormData() {
     childChunkSize: 200,
     parentOverlap: 100,
     childOverlap: 20,
+    chunkStrategy: 'paragraph',
     enableQa: 0,
     retrieveTopK: 10,
     minSimilarity: 0.40,

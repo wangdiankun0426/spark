@@ -5,6 +5,18 @@
       <span class="document-chunk-page__title">
         文档分块<span v-if="documentName"> - {{ documentName }}</span>
       </span>
+      <div class="document-chunk-page__actions">
+        <el-tag v-if="chunkStats.chunkStrategy" type="info" size="large">
+          策略: {{ getStrategyName(chunkStats.chunkStrategy) }}
+        </el-tag>
+        <el-tag v-if="chunkStats.chunkCount !== undefined" type="success" size="large">
+          分块数: {{ chunkStats.chunkCount }}
+        </el-tag>
+        <el-button type="primary" @click="handleRechunk" :loading="rechunkLoading">
+          <el-icon><RefreshRight /></el-icon>
+          重新分块
+        </el-button>
+      </div>
     </div>
     <!--主体-->
     <div class="document-chunk-page__body">
@@ -104,13 +116,25 @@
 <script setup name="documentChunk">
 import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { Loading, InfoFilled } from '@element-plus/icons-vue'
-import { pageDocumentChunkListAPI, pageDocumentChunkQAListAPI } from '@/api/kb/documentChunk'
+import { Loading, InfoFilled, RefreshRight } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { pageDocumentChunkListAPI, pageDocumentChunkQAListAPI, getDocumentChunkStatsAPI, rechunkDocumentAPI } from '@/api/kb/documentChunk'
 import { queryDocumentDetailAPI } from '@/api/kb/document'
 
 const route = useRoute()
 const documentId = computed(() => route.query.id)
 const documentName = ref('')
+const chunkStats = ref({})
+const rechunkLoading = ref(false)
+
+// 分块策略映射
+const strategyMap = {
+  'paragraph': '按段落分割',
+  'line': '按行分割',
+  'sentence': '按句子分割',
+  'word': '按单词分割',
+  'character': '按字符分割'
+}
 
 const chunkQuery = ref({
   id: undefined,
@@ -140,7 +164,15 @@ watch(documentId, (val) => {
   if (!val) return
   loadDocumentDetail()
   loadChunkList()
+  loadChunkStats()
 }, { immediate: true })
+
+/**
+ * 获取策略名称
+ */
+function getStrategyName(strategy) {
+  return strategyMap[strategy] || strategy || '未知'
+}
 
 /**
  * 加载文档详情
@@ -149,6 +181,47 @@ function loadDocumentDetail() {
   queryDocumentDetailAPI({ id: documentId.value }).then(res => {
     if (res.code !== 200) return
     documentName.value = res.data.name
+  })
+}
+
+/**
+ * 加载分块统计信息
+ */
+function loadChunkStats() {
+  if (!documentId.value) return
+  getDocumentChunkStatsAPI(documentId.value).then(res => {
+    if (res.code === 200) {
+      chunkStats.value = res.data || {}
+    }
+  })
+}
+
+/**
+ * 重新分块
+ */
+function handleRechunk() {
+  ElMessageBox.confirm('确定要重新分块该文档吗？这将删除现有分块并重新处理。', '确认重新分块', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    rechunkLoading.value = true
+    rechunkDocumentAPI(documentId.value).then(res => {
+      if (res.code === 200) {
+        ElMessage.success('重新分块任务已提交')
+        // 刷新分块列表
+        setTimeout(() => {
+          loadChunkList()
+          loadChunkStats()
+        }, 1000)
+      } else {
+        ElMessage.error(res.message || '重新分块失败')
+      }
+    }).finally(() => {
+      rechunkLoading.value = false
+    })
+  }).catch(() => {
+    // 用户取消
   })
 }
 
@@ -245,10 +318,17 @@ function handleChunkQAPageChangeNo(pageNo) {
   &__header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: $spacing-sm;
     padding: $spacing-sm $spacing-md;
     background-color: $bg-card;
     border-bottom: 1px solid $border-color-light;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
   }
 
   &__title {

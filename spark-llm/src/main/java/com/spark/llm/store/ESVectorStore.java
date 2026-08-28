@@ -131,12 +131,34 @@ public class ESVectorStore {
             }
             chunkSize = knowledgeResult.getParentChunkSize();
             overlap = knowledgeResult.getParentOverlap();
+            // 使用知识库配置的分块策略
+            String chunkStrategy = knowledgeResult.getChunkStrategy();
+            List<String> parentChunks = ChunkUtil.handleChunk(content, chunkSize, overlap, chunkStrategy);
+            if (CollectionUtil.isEmpty(parentChunks)) {
+                logger.warn("addChunk skip, parent chunks empty, docId={}, prtId={}", docId, prtId);
+                return;
+            }
+            saveChunksToES(parentChunks, docId, prtId, documentType);
+            logger.info("addChunk success, prtId={}, docId={}, parentChunkSize={}, strategy={}", prtId, docId, parentChunks.size(), chunkStrategy);
+            return;
         }
         List<String> parentChunks = ChunkUtil.handleChunk(content, chunkSize, overlap);
         if (CollectionUtil.isEmpty(parentChunks)) {
             logger.warn("addChunk skip, parent chunks empty, docId={}, prtId={}", docId, prtId);
             return;
         }
+        saveChunksToES(parentChunks, docId, prtId, documentType);
+        logger.info("addChunk success, prtId={}, docId={}, parentChunkSize={}", prtId, docId, parentChunks.size());
+    }
+
+    /**
+     * 保存分块到ES
+     * @param parentChunks 分块列表
+     * @param docId 文档ID
+     * @param prtId 父ID
+     * @param documentType 文档类型
+     */
+    private void saveChunksToES(List<String> parentChunks, Long docId, Long prtId, Integer documentType) {
         // 把历史的分片删掉
         this.deleteChunkByDocId(docId);
         for (int parentIndex = 0; parentIndex < parentChunks.size(); parentIndex++) {
@@ -155,7 +177,6 @@ public class ESVectorStore {
                     .build();
             elasticsearchOperations.index(parentQuery, IndexCoordinates.of(ESIndexName.DOCUMENT_CHUNK_INDEX_NAME));
         }
-        logger.info("addChunk success, prtId={}, docId={}, parentChunkSize={}", prtId, docId, parentChunks.size());
     }
 
     /**

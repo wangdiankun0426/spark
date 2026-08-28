@@ -337,6 +337,7 @@ CREATE TABLE `kb_knowledge` (
     `parent_overlap` int(8) NOT NULL DEFAULT 100 COMMENT '父块重叠',
     `child_chunk_size` int(8) NOT NULL DEFAULT 200 COMMENT '子块大小',
     `child_overlap` int(8) NOT NULL DEFAULT 20 COMMENT '子块重叠',
+    `chunk_strategy` varchar(50) DEFAULT 'paragraph' COMMENT '分块策略',
     `enable_qa` int(1) NOT NULL DEFAULT 1 COMMENT '是否生成QA：1:是,0:否',
     `retrieve_top_k` int(8) NOT NULL DEFAULT 15 COMMENT '向量召回topK',
     `min_similarity` decimal(4,2) NOT NULL DEFAULT 0.40 COMMENT '最小相似度',

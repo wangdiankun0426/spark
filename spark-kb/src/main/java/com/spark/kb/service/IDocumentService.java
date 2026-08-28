@@ -8,6 +8,7 @@ import com.spark.bean.base.PageResult;
 import com.spark.bean.base.ResultData;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -78,4 +79,18 @@ public interface IDocumentService {
      * @return 文档结果
      */
     ResultData<DocumentResult> downloadDocument(DocumentQuery query);
+
+    /**
+     * 批量删除文档
+     * @param ids 文档ID列表
+     * @return 删除结果
+     */
+    ResultData<Void> batchDeleteDocument(List<Long> ids);
+
+    /**
+     * 批量重新处理文档
+     * @param ids 文档ID列表
+     * @return 处理结果
+     */
+    ResultData<Void> batchReprocessDocument(List<Long> ids);
 }

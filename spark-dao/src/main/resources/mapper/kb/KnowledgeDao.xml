@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.kb.KnowledgeDao" >
     <sql id="allColumnList" >
-        id , name , description , parent_chunk_size , child_chunk_size , parent_overlap , child_overlap ,
+        id , name , description , parent_chunk_size , child_chunk_size , parent_overlap , child_overlap , chunk_strategy ,
         enable_qa , retrieve_top_k , min_similarity , vector_model_id , rerank_model_id , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
@@ -42,9 +42,9 @@
     </sql>
 
     <insert id="insert">
-        insert into kb_knowledge (id, name , description , parent_chunk_size , child_chunk_size , parent_overlap , child_overlap ,
+        insert into kb_knowledge (id, name , description , parent_chunk_size , child_chunk_size , parent_overlap , child_overlap , chunk_strategy ,
         enable_qa , retrieve_top_k , min_similarity , vector_model_id , rerank_model_id , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values (#{id}, #{name} , #{description} , #{parentChunkSize} , #{childChunkSize} , #{parentOverlap} , #{childOverlap} ,
+        values (#{id}, #{name} , #{description} , #{parentChunkSize} , #{childChunkSize} , #{parentOverlap} , #{childOverlap} , #{chunkStrategy} ,
         #{enableQa} , #{retrieveTopK} , #{minSimilarity} , #{vectorModelId} , #{rerankModelId} , #{status} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
@@ -72,6 +72,9 @@
         </if>
         <if test="childOverlap != null">
             , child_overlap = #{childOverlap}
+        </if>
+        <if test="chunkStrategy != null and chunkStrategy != ''">
+            , chunk_strategy = #{chunkStrategy}
         </if>
         <if test="enableQa != null">
             , enable_qa = #{enableQa}

@@ -30,6 +30,14 @@
         <el-button type="primary" @click="handleUploadDocument">
           <el-icon style="margin-right: 4px"><DocumentAdd /></el-icon>上传文档
         </el-button>
+        <el-button type="danger" @click="handleBatchDelete" :disabled="selectedIds.length === 0">
+          <el-icon style="margin-right: 4px"><Delete /></el-icon>批量删除
+          <span v-if="selectedIds.length > 0">({{ selectedIds.length }})</span>
+        </el-button>
+        <el-button type="warning" @click="handleBatchReprocess" :disabled="selectedIds.length === 0">
+          <el-icon style="margin-right: 4px"><Refresh /></el-icon>批量重新处理
+          <span v-if="selectedIds.length > 0">({{ selectedIds.length }})</span>
+        </el-button>
       </div>
     </div>
     <!-- 文档列表 -->
@@ -39,7 +47,9 @@
           height="calc(100vh - 206px)"
           :data="documentList"
           highlight-current-row
+          @selection-change="handleSelectionChange"
       >
+        <el-table-column type="selection" width="55" align="center"/>
         <el-table-column prop="id" label="编号" width="100" align="center"/>
         <el-table-column prop="name" label="名称" min-width="300px" align="left">
           <template #default="scope">
@@ -210,7 +220,8 @@ import { computed, getCurrentInstance, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  pageDocumentListAPI, updateDocumentAPI, queryDocumentDetailAPI, deleteDocumentAPI
+  pageDocumentListAPI, updateDocumentAPI, queryDocumentDetailAPI, deleteDocumentAPI,
+  batchDeleteDocumentAPI, batchReprocessDocumentAPI
 } from '@/api/kb/document'
 import { queryKnowledgeDetailAPI } from '@/api/kb/knowledge'
 import FormView from '@/components/FormView'
@@ -280,6 +291,9 @@ const metadataFormVisible = ref(false)
 const currentDocId = ref(undefined)
 const currentFormId = ref(undefined)
 const formJson = ref(undefined)
+
+// 批量操作相关
+const selectedIds = ref([])
 
 // 路由参数变化时重新加载
 watch(kbId, () => {
@@ -545,6 +559,54 @@ function handleOpenChunkPage(docId) {
 function handlePreviewDocument(row) {
   const { href } = router.resolve({ path: '/document/preview', query: { id: row.id } })
   window.open(href, '_blank')
+}
+
+/**
+ * 表格选择变化
+ */
+function handleSelectionChange(selection) {
+  selectedIds.value = selection.map(item => item.id)
+}
+
+/**
+ * 批量删除
+ */
+function handleBatchDelete() {
+  ElMessageBox.confirm(`确定要删除选中的 ${selectedIds.value.length} 个文档吗？`, '确认批量删除', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    batchDeleteDocumentAPI(selectedIds.value).then(res => {
+      if (res.code === 200) {
+        ElMessage.success('批量删除成功')
+        selectedIds.value = []
+        handleGetDocumentList()
+      } else {
+        ElMessage.error(res.message || '批量删除失败')
+      }
+    })
+  }).catch(() => {})
+}
+
+/**
+ * 批量重新处理
+ */
+function handleBatchReprocess() {
+  ElMessageBox.confirm(`确定要重新处理选中的 ${selectedIds.value.length} 个文档吗？`, '确认批量重新处理', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    batchReprocessDocumentAPI(selectedIds.value).then(res => {
+      if (res.code === 200) {
+        ElMessage.success('批量重新处理任务已提交')
+        selectedIds.value = []
+      } else {
+        ElMessage.error(res.message || '批量重新处理失败')
+      }
+    })
+  }).catch(() => {})
 }
 </script>
 

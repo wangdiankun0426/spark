@@ -59,3 +59,29 @@ export function downloadDocumentAPI(query) {
     })
 }
 
+/**
+ * 批量删除文档
+ * @param {Array} ids 文档ID列表
+ * @returns {Promise}
+ */
+export function batchDeleteDocumentAPI(ids) {
+    return request({
+        url: '/kb/document/batchDelete',
+        method: 'post',
+        params: { ids }
+    })
+}
+
+/**
+ * 批量重新处理文档
+ * @param {Array} ids 文档ID列表
+ * @returns {Promise}
+ */
+export function batchReprocessDocumentAPI(ids) {
+    return request({
+        url: '/kb/document/batchReprocess',
+        method: 'post',
+        params: { ids }
+    })
+}
+

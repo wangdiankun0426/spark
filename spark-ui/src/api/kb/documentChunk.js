@@ -17,3 +17,21 @@ export function pageDocumentChunkQAListAPI(query) {
         params: query
     })
 }
+
+// 查询文档分块统计信息
+export function getDocumentChunkStatsAPI(docId) {
+    return request({
+        url: '/kb/document/chunk/stats',
+        method: 'get',
+        params: { docId }
+    })
+}
+
+// 重新分块文档
+export function rechunkDocumentAPI(docId) {
+    return request({
+        url: '/kb/document/chunk/rechunk',
+        method: 'get',
+        params: { docId }
+    })
+}

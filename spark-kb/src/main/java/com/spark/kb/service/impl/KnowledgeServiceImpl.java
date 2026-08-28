@@ -19,6 +19,7 @@ import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.dao.kb.DocumentDao;
 import com.spark.dao.kb.KnowledgeDao;
 import com.spark.dao.llm.ModelDao;
+import com.spark.enums.ChunkStrategyEnum;
 import com.spark.enums.ErrorCodeEnum;
 import com.spark.enums.ObjectTypeEnum;
 import com.spark.enums.OperateTypeEnum;
@@ -94,6 +95,9 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
         }
         if (knowledge.getChildOverlap() == null) {
             knowledge.setChildOverlap(20);
+        }
+        if (StringUtil.isBlank(knowledge.getChunkStrategy())) {
+            knowledge.setChunkStrategy(ChunkStrategyEnum.PARAGRAPH.getCode());
         }
         if (knowledge.getEnableQa() == null) {
             knowledge.setEnableQa(StatusEnum.ABNORMAL.getValue());
@@ -310,6 +314,7 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
         list.forEach(knowledgeResult -> {
             knowledgeResult.setStatusName(StatusEnum.indexOf(knowledgeResult.getStatus()).getDesc());
             knowledgeResult.setEnableQaName(StatusEnum.indexOf(knowledgeResult.getEnableQa()).getDesc());
+            knowledgeResult.setChunkStrategyName(ChunkStrategyEnum.indexOf(knowledgeResult.getChunkStrategy()).getDesc());
         });
         List<Long> kbIds = list.stream()
                 .map(KnowledgeResult::getId)
