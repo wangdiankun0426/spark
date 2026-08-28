@@ -28,7 +28,7 @@ import com.spark.manage.BaseService;
 import com.spark.utils.CollectionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.spark.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -81,7 +81,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
             return result;
         }
         KgGraph kgGraph = new KgGraph();
-        BeanUtils.copyProperties(kgGraphVO, kgGraph);
+        BeanUtil.copyProperties(kgGraphVO, kgGraph);
         if (kgGraph.getStatus() == null) {
             kgGraph.setStatus(StatusEnum.NORMAL.getValue());
         }
@@ -117,7 +117,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
             return result;
         }
         KgGraph kgGraph = new KgGraph();
-        BeanUtils.copyProperties(kgGraphVO, kgGraph);
+        BeanUtil.copyProperties(kgGraphVO, kgGraph);
         int count = kgGraphDao.updateDBById(kgGraph);
         if (count < 1) {
             logger.error("updateKgGraph error, update db fail");

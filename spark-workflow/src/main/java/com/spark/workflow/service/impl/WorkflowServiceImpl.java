@@ -21,16 +21,15 @@ import com.spark.dao.form.FormDao;
 import com.spark.dao.form.FormVersionDao;
 import com.spark.enums.*;
 import com.spark.manage.BaseService;
+import com.spark.utils.BeanUtil;
 import com.spark.utils.CollectionUtil;
 import com.spark.utils.StringUtil;
 import com.spark.utils.TextUtil;
 import com.spark.workflow.service.IWorkflowService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -86,7 +85,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
             return result;
         }
         WfTemplate template = new WfTemplate();
-        BeanUtils.copyProperties(templateVO, template);
+        BeanUtil.copyProperties(templateVO, template);
         template.setId(templateId);
         template.setStatus(templateVO.getStatus() == null ? StatusEnum.ABNORMAL.getValue() : templateVO.getStatus());
         template.setRevId(version.getId());
@@ -126,7 +125,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
             return result;
         }
         WfTemplate template = new WfTemplate();
-        BeanUtils.copyProperties(templateVO, template);
+        BeanUtil.copyProperties(templateVO, template);
         int count = templateDao.updateDBById(template);
         if (count < 1) {
             logger.error("updateWorkflow error, update db fail");

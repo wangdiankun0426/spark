@@ -6,6 +6,7 @@ import com.spark.bean.kb.query.DocumentQuery;
 import com.spark.kb.service.IDocumentChunkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -64,5 +65,17 @@ public class DocumentChunkController {
     @GetMapping("rechunk")
     public ResultData<Void> rechunkDocument(Long docId) {
         return documentChunkService.rechunkDocument(docId);
+    }
+
+    /**
+     * 编辑分块内容
+     * @param docId 文档ID
+     * @param chunkIndex 分块序号
+     * @param content 分块内容
+     * @return 操作结果
+     */
+    @PostMapping("update")
+    public ResultData<Void> updateChunk(Long docId, Integer chunkIndex, String content) {
+        return documentChunkService.updateChunk(docId, chunkIndex, content);
     }
 }

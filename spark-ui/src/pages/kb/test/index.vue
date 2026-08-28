@@ -1,7 +1,10 @@
 <template>
   <div class="app-container">
     <!-- 检索测试表单 -->
-    <el-card class="test-form-card" shadow="hover">
+    <el-card
+        class="test-form-card"
+        shadow="hover"
+    >
       <template #header>
         <div class="card-header">
           <span>检索测试</span>
@@ -10,8 +13,6 @@
       </template>
       <el-form
           :model="testForm"
-          label-width="100px"
-          label-position="top"
       >
         <el-row :gutter="20">
           <el-col :span="6">
@@ -127,11 +128,14 @@
     </el-card>
 
     <!-- 检索结果列表 -->
-    <el-card v-if="testResult && testResult.items && testResult.items.length > 0" class="result-list-card" shadow="hover">
+    <el-card
+        v-if="testResult && testResult.items && testResult.items.length > 0"
+        class="result-list-card"
+        shadow="hover">
       <template #header>
         <div class="card-header">
           <span>检索结果</span>
-          <el-tag type="success" size="small">共 {{ testResult.items.length }} 条</el-tag>
+          <el-tag type="success">共 {{ testResult.items.length }} 条</el-tag>
         </div>
       </template>
       <div class="result-scroll-container">
@@ -144,21 +148,38 @@
           >
             <div class="result-item-header">
               <div class="result-rank">
-                <el-tag :type="getRankTagType(index)" size="small" effect="dark">
+                <el-tag :type="getRankTagType(index)" effect="dark">
                   #{{ item.rank || index + 1 }}
                 </el-tag>
               </div>
               <div class="result-meta">
-                <el-tag v-if="item.docName" type="info" size="small" class="meta-tag">
+                <el-tag
+                    v-if="item.docName"
+                    type="info"
+                    class="meta-tag doc-link"
+                    @click="handlePreview(item)"
+                >
                   <el-icon><Document /></el-icon>
                   {{ item.docName }}
                 </el-tag>
-                <el-tag v-if="item.sourceType" type="warning" size="small" class="meta-tag">
+                <el-tag v-if="item.sourceType" type="warning">
                   {{ item.sourceType }}
                 </el-tag>
-                <el-tag v-if="item.score" type="success" size="small" class="meta-tag">
+                <el-tag v-if="item.score" type="success">
                   相似度: {{ (item.score * 100).toFixed(1) }}%
                 </el-tag>
+              </div>
+              <div class="result-actions">
+                <el-button
+                    v-if="item.docId"
+                    type="primary"
+                    link
+                    size="small"
+                    @click="handlePreview(item)"
+                >
+                  <el-icon><View /></el-icon>
+                  预览文档
+                </el-button>
               </div>
             </div>
             <div class="result-content">
@@ -176,10 +197,13 @@
 
 <script setup name="kbTest">
 import {ref, onMounted, reactive} from 'vue'
-import {Search, RefreshRight, Document} from "@element-plus/icons-vue"
+import {useRouter} from 'vue-router'
+import {Search, RefreshRight, Document, View} from "@element-plus/icons-vue"
 import {ElMessage} from "element-plus"
 import {pageKnowledgeListAPI} from '@/api/kb/knowledge.js'
 import {testRetrieveAPI} from '@/api/kb/knowledge.js'
+
+const router = useRouter()
 
 const loading = ref(false)
 const knowledgeList = ref([])
@@ -288,11 +312,24 @@ function getRankTagType(index) {
 function getStrategyName(strategy) {
   return strategyMap[strategy] || strategy || '-'
 }
+
+/**
+ * 预览文档
+ * @param item 检索结果项
+ */
+function handlePreview(item) {
+  if (!item.docId) {
+    ElMessage.warning('缺少文档信息')
+    return
+  }
+  const {href} = router.resolve({path: '/document/preview', query: {id: item.docId}})
+  window.open(href, '_blank')
+}
 </script>
 
 <style lang="scss" scoped>
 .test-form-card {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .card-header {
@@ -348,11 +385,11 @@ function getStrategyName(strategy) {
 }
 
 .result-list-card {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .result-scroll-container {
-  max-height: calc(100vh - 420px);
+  max-height: calc(100vh - 350px);
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -388,12 +425,20 @@ function getStrategyName(strategy) {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  flex: 1;
 }
 
-.meta-tag {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.doc-link {
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.75;
+  }
+}
+
+.result-actions {
+  flex-shrink: 0;
 }
 
 .result-content {

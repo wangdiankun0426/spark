@@ -38,7 +38,7 @@ import com.spark.utils.StringUtil;
 import com.spark.utils.TextUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.spark.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -95,7 +95,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
             return result;
         }
         FlowInstance instance = new FlowInstance();
-        BeanUtils.copyProperties(instanceVO, instance);
+        BeanUtil.copyProperties(instanceVO, instance);
         instance.setStatus(FlowInstanceStatusEnum.PENDING.getValue());
         Long instanceId = super.genObjectId(ObjectTypeEnum.FLOW_INSTANCE);
         instance.setId(instanceId);

@@ -36,7 +36,7 @@ import com.spark.utils.FileUtil;
 import com.spark.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.spark.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -260,7 +260,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
             return result;
         }
         Document document = new Document();
-        BeanUtils.copyProperties(documentVO, document);
+        BeanUtil.copyProperties(documentVO, document);
         int count = documentDao.updateDBById(document);
         if (count < 1) {
             logger.error("updateDocument error, update db fail");
@@ -378,6 +378,12 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
      */
     private ResultData<PageResult<Map>> searchDocumentContent(DocumentSearchQuery query) {
         ResultData<PageResult<Map>> result = new ResultData<>();
+        if (StringUtil.isBlank(query.getKeyWord())) {
+            PageResult<Map> pageResult = new PageResult<>();
+            result.setData(pageResult);
+            result.setCode(ResultData.OK);
+            return result;
+        }
         // 检查索引是否存在
         IndexOperations indexOps = elasticsearchOperations.indexOps(IndexCoordinates.of(ESIndexName.DOCUMENT_INDEX_NAME));
         if (!indexOps.exists()) {
@@ -432,7 +438,6 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
             result.setCode(ResultData.OK);
             return result;
         }
-
         // 执行查询，使用 Map<String, Object> 接收结果
         SearchHits<Map> searchHits = elasticsearchOperations.search(searchQueryBuilder.build(), Map.class, IndexCoordinates.of(ESIndexName.DOCUMENT_INDEX_NAME));
         // 将搜索结果转换为 Page 对象
@@ -469,16 +474,16 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
      */
     private ResultData<PageResult<Map>> searchDocumentSemantic(DocumentSearchQuery query) {
         ResultData<PageResult<Map>> result = new ResultData<>();
-        // 检查向量索引是否存在
-        IndexOperations indexOps = elasticsearchOperations.indexOps(IndexCoordinates.of(ESIndexName.DOCUMENT_VECTOR_INDEX_NAME));
-        if (!indexOps.exists()) {
-            result.setErrorCode(ErrorCodeEnum.FILE_ES_INDEX_NOT_EXIST);
-            return result;
-        }
         if (StringUtil.isBlank(query.getKeyWord())) {
             PageResult<Map> pageResult = new PageResult<>();
             result.setData(pageResult);
             result.setCode(ResultData.OK);
+            return result;
+        }
+        // 检查向量索引是否存在
+        IndexOperations indexOps = elasticsearchOperations.indexOps(IndexCoordinates.of(ESIndexName.DOCUMENT_VECTOR_INDEX_NAME));
+        if (!indexOps.exists()) {
+            result.setErrorCode(ErrorCodeEnum.FILE_ES_INDEX_NOT_EXIST);
             return result;
         }
         // KNN 召回文档ID列表（已按相关性降序）

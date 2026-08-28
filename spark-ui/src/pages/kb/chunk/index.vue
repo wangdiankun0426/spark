@@ -41,8 +41,9 @@
                 @click="handleSelectChunk(item)"
             >
               <div class="chunk-card__head">
-                <el-tag size="small" type="primary">#{{ item.chunkIndex }}</el-tag>
+                <el-tag>#{{ item.chunkIndex }}</el-tag>
                 <span class="chunk-card__hint">点击查看 QA</span>
+                <el-button type="primary" link size="small" @click.stop="handleEditChunk(item)">编辑</el-button>
               </div>
               <div class="chunk-card__content">{{ item.content }}</div>
             </div>
@@ -110,6 +111,32 @@
         </div>
       </div>
     </div>
+
+    <!-- 编辑分块对话框 -->
+    <el-dialog
+        v-model="editDialogVisible"
+        title="编辑分块"
+        width="60%"
+        :close-on-click-modal="false"
+    >
+      <el-form label-width="80px">
+        <el-form-item label="分块序号">
+          <el-tag>#{{ editForm.chunkIndex }}</el-tag>
+        </el-form-item>
+        <el-form-item label="分块内容">
+          <el-input
+              v-model="editForm.content"
+              type="textarea"
+              :rows="12"
+              placeholder="请输入分块内容，保存后触发重新向量化"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="editDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="editLoading" @click="handleSaveChunk">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -118,7 +145,7 @@ import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { Loading, InfoFilled, RefreshRight } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { pageDocumentChunkListAPI, pageDocumentChunkQAListAPI, getDocumentChunkStatsAPI, rechunkDocumentAPI } from '@/api/kb/documentChunk'
+import { pageDocumentChunkListAPI, pageDocumentChunkQAListAPI, getDocumentChunkStatsAPI, rechunkDocumentAPI, updateChunkAPI } from '@/api/kb/documentChunk'
 import { queryDocumentDetailAPI } from '@/api/kb/document'
 
 const route = useRoute()
@@ -159,6 +186,11 @@ const chunkQAList = ref([])
 const chunkQATotal = ref(0)
 const chunkQALoading = ref(false)
 const chunkQAPageSizes = [10, 20, 50, 100]
+
+// 编辑分块
+const editDialogVisible = ref(false)
+const editLoading = ref(false)
+const editForm = ref({ docId: undefined, chunkIndex: undefined, content: '' })
 
 watch(documentId, (val) => {
   if (!val) return
@@ -222,6 +254,42 @@ function handleRechunk() {
     })
   }).catch(() => {
     // 用户取消
+  })
+}
+
+/**
+ * 打开编辑分块对话框
+ * @param chunk 分块对象
+ */
+function handleEditChunk(chunk) {
+  editForm.value = {
+    docId: documentId.value,
+    chunkIndex: chunk.chunkIndex,
+    content: chunk.content || ''
+  }
+  editDialogVisible.value = true
+}
+
+/**
+ * 保存编辑后的分块内容
+ */
+function handleSaveChunk() {
+  if (!editForm.value.content || !editForm.value.content.trim()) {
+    ElMessage.warning('分块内容不能为空')
+    return
+  }
+  editLoading.value = true
+  updateChunkAPI(editForm.value).then(res => {
+    if (res.code === 200) {
+      ElMessage.success('分块内容已更新，重新向量化任务已提交')
+      editDialogVisible.value = false
+      loadChunkList()
+      loadChunkStats()
+    } else {
+      ElMessage.error(res.message || '保存失败')
+    }
+  }).finally(() => {
+    editLoading.value = false
   })
 }
 

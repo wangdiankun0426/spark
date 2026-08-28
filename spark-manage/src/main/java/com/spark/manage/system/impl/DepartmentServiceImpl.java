@@ -26,7 +26,7 @@ import com.spark.utils.TreeUtil;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.spark.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -108,7 +108,7 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
         List<DepartmentTree> treeList = new ArrayList<>();
         for (DepartmentResult departmentResult : departmentList) {
             DepartmentTree departmentTree = new DepartmentTree();
-            BeanUtils.copyProperties(departmentResult, departmentTree);
+            BeanUtil.copyProperties(departmentResult, departmentTree);
             treeList.add(departmentTree);
         }
         List<DepartmentTree> list = new TreeUtil<DepartmentTree>().convertTreeList(treeList);

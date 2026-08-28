@@ -518,7 +518,7 @@ public class ESRetrieve {
             if (prtId != null) {
                 b.must(m -> m.term(t -> t.field("prtId").value(prtId)));
             }
-            return null;
+            return b;
         }));
     }
 

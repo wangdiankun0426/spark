@@ -14,7 +14,7 @@ import com.spark.utils.CollectionUtil;
 import com.spark.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.spark.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -71,7 +71,7 @@ public class TaskTemplateParamServiceImpl extends BaseService<TaskTemplateParamQ
             return result;
         }
         TaskTemplateParam taskTemplateParam = new TaskTemplateParam();
-        BeanUtils.copyProperties(taskTemplateParamVO, taskTemplateParam);
+        BeanUtil.copyProperties(taskTemplateParamVO, taskTemplateParam);
         int count = taskTemplateParamDao.insertDB(taskTemplateParam);
         if (count < 1) {
             logger.error("createTaskTemplateParam error, insert db fail");
@@ -95,7 +95,7 @@ public class TaskTemplateParamServiceImpl extends BaseService<TaskTemplateParamQ
             return result;
         }
         TaskTemplateParam taskTemplateParam = new TaskTemplateParam();
-        BeanUtils.copyProperties(taskTemplateParamVO, taskTemplateParam);
+        BeanUtil.copyProperties(taskTemplateParamVO, taskTemplateParam);
         int count = taskTemplateParamDao.updateDBById(taskTemplateParam);
         if (count < 1) {
             logger.error("updateTaskTemplateParam error, update db fail");

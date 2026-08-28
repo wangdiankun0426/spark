@@ -1,11 +1,14 @@
 package com.spark.kb.service.impl;
 
+import com.spark.bean.base.BaseAssert;
 import com.spark.bean.base.PageResult;
 import com.spark.bean.base.ResultData;
 import com.spark.bean.kb.entity.Knowledge;
+import com.spark.bean.kb.query.DocumentQuery;
 import com.spark.bean.kb.query.KnowledgeQuery;
 import com.spark.bean.kb.query.RetrieveTestQuery;
 import com.spark.bean.kb.result.DocumentCountResult;
+import com.spark.bean.kb.result.DocumentResult;
 import com.spark.bean.kb.result.KnowledgeResult;
 import com.spark.bean.kb.result.RetrieveItemResult;
 import com.spark.bean.kb.result.RetrieveTestResult;
@@ -25,16 +28,18 @@ import com.spark.enums.ObjectTypeEnum;
 import com.spark.enums.OperateTypeEnum;
 import com.spark.enums.StatusEnum;
 import com.spark.kb.service.IKnowledgeService;
+import com.spark.kb.service.IRetrieveLogService;
 import com.spark.llm.retrieve.ESRetrieve;
 import com.spark.manage.BaseService;
 import com.spark.utils.CollectionUtil;
 import com.spark.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.spark.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,6 +69,8 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
     private ModelDao modelDao;
     @Autowired
     private ESRetrieve esRetrieve;
+    @Autowired
+    private IRetrieveLogService retrieveLogService;
 
     /**
      * 创建知识库
@@ -79,7 +86,7 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
             return result;
         }
         Knowledge knowledge = new Knowledge();
-        BeanUtils.copyProperties(knowledgeVO, knowledge);
+        BeanUtil.copyProperties(knowledgeVO, knowledge);
         if (knowledge.getVectorModelId() == null || knowledge.getRerankModelId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
@@ -143,7 +150,7 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
             return result;
         }
         Knowledge knowledge = new Knowledge();
-        BeanUtils.copyProperties(knowledgeVO, knowledge);
+        BeanUtil.copyProperties(knowledgeVO, knowledge);
         if (knowledge.getVectorModelId() == null || knowledge.getRerankModelId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
@@ -260,44 +267,74 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
         }
         // 执行检索测试
         long startTime = System.currentTimeMillis();
-        try {
-            List<Long> kbIds = new ArrayList<>();
-            kbIds.add(query.getKbId());
-            RetrieveDetailResult detailResult = esRetrieve.retrieveDetail(query.getQuery(), kbIds, knowledge);
-            long costTime = System.currentTimeMillis() - startTime;
-            // 构建测试结果
-            RetrieveTestResult testResult = new RetrieveTestResult();
-            testResult.setQuery(query.getQuery());
-            testResult.setCostTime(costTime);
-            testResult.setStrategy(detailResult.getStrategy());
-            testResult.setQaHit(detailResult.getQaHit());
-            // 构建检索项结果
-            List<RetrieveItemResult> items = new ArrayList<>();
-            if (detailResult.getItems() != null) {
-                testResult.setRetrieveCount(detailResult.getItems().size());
-                for (int i = 0; i < detailResult.getItems().size(); i++) {
-                    RetrieveDetailItem detailItem = detailResult.getItems().get(i);
-                    RetrieveItemResult item = new RetrieveItemResult();
-                    item.setDocId(detailItem.getDocId());
-                    item.setChunkId(detailItem.getChunkId());
-                    item.setChunkIndex(detailItem.getChunkIndex());
-                    item.setContent(detailItem.getContent());
-                    item.setScore(detailItem.getScore());
-                    item.setRank(i + 1);
-                    item.setSourceType(detailItem.getSourceType());
-                    items.add(item);
-                }
-            } else {
-                testResult.setRetrieveCount(0);
+        List<Long> kbIds = new ArrayList<>();
+        kbIds.add(query.getKbId());
+        RetrieveDetailResult detailResult = esRetrieve.retrieveDetail(query.getQuery(), kbIds, knowledge);
+        long costTime = System.currentTimeMillis() - startTime;
+        // 构建测试结果
+        RetrieveTestResult testResult = new RetrieveTestResult();
+        testResult.setQuery(query.getQuery());
+        testResult.setCostTime(costTime);
+        testResult.setStrategy(detailResult.getStrategy());
+        testResult.setQaHit(detailResult.getQaHit());
+        testResult.setRetrieveCount(0);
+        // 构建检索项结果
+        List<RetrieveItemResult> items = new ArrayList<>();
+        if (CollectionUtil.isNotEmpty(detailResult.getItems())) {
+            testResult.setRetrieveCount(detailResult.getItems().size());
+            for (int i = 0; i < detailResult.getItems().size(); i++) {
+                RetrieveDetailItem detailItem = detailResult.getItems().get(i);
+                RetrieveItemResult item = new RetrieveItemResult();
+                item.setDocId(detailItem.getDocId());
+                item.setChunkId(detailItem.getChunkId());
+                item.setChunkIndex(detailItem.getChunkIndex());
+                item.setContent(detailItem.getContent());
+                item.setScore(detailItem.getScore());
+                item.setRank(i + 1);
+                item.setSourceType(detailItem.getSourceType());
+                items.add(item);
             }
-            testResult.setItems(items);
-            result.setData(testResult);
-            result.setCode(ResultData.OK);
-        } catch (Exception e) {
-            logger.error("testRetrieve error, knowledgeId={}, query={}", query.getKbId(), query.getQuery(), e);
-            result.setErrorCode(ErrorCodeEnum.SYSTEM_ERROR);
         }
+        // 记录检索日志
+        ResultData<Void> saveData = retrieveLogService.saveRetrieveLog(query.getKbId(), query.getQuery(), detailResult, costTime);
+        BaseAssert.assertTrue(saveData);
+        // 补充文档信息
+        supplyDocName(items);
+        testResult.setItems(items);
+        result.setData(testResult);
+        result.setCode(ResultData.OK);
         return result;
+    }
+
+    /**
+     * 补充检索结果文档名称
+     * @param items 检索结果列表
+     */
+    private void supplyDocName(List<RetrieveItemResult> items) {
+        if (CollectionUtil.isEmpty(items)) {
+            return;
+        }
+        Set<Long> docIds = items.stream()
+                .map(RetrieveItemResult::getDocId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (CollectionUtil.isEmpty(docIds)) {
+            return;
+        }
+        DocumentQuery docQuery = new DocumentQuery();
+        docQuery.setPage(false);
+        docQuery.setIds(new ArrayList<>(docIds));
+        List<DocumentResult> docList = documentDao.queryDocumentList(docQuery);
+        if (CollectionUtil.isEmpty(docList)) {
+            return;
+        }
+        Map<Long, String> docNameMap = new HashMap<>();
+        for (DocumentResult docResult : docList) {
+            docNameMap.put(docResult.getId(), docResult.getName());
+        }
+        for (RetrieveItemResult item : items) {
+            item.setDocName(docNameMap.get(item.getDocId()));
+        }
     }
 
     /**

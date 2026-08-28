@@ -31,7 +31,7 @@ import com.spark.utils.CollectionUtil;
 import com.spark.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.spark.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -81,7 +81,7 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
             return result;
         }
         Agent agent = new Agent();
-        BeanUtils.copyProperties(agentVO, agent);
+        BeanUtil.copyProperties(agentVO, agent);
         Long id = super.genObjectId(ObjectTypeEnum.AGENT);
         agent.setId(id);
         int count = agentDao.insertDB(agent);
@@ -113,7 +113,7 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
             return result;
         }
         Agent agent = new Agent();
-        BeanUtils.copyProperties(agentVO, agent);
+        BeanUtil.copyProperties(agentVO, agent);
         int count = agentDao.updateDBById(agent);
         if (count < 1) {
             logger.error("updateAgent error, update db fail");

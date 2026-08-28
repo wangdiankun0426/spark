@@ -24,7 +24,7 @@ import com.spark.utils.CollectionUtil;
 import com.spark.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.spark.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -78,7 +78,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
             return result;
         }
         KgEntity kgEntity = new KgEntity();
-        BeanUtils.copyProperties(kgEntityVO, kgEntity);
+        BeanUtil.copyProperties(kgEntityVO, kgEntity);
         if (kgEntity.getStatus() == null) {
             kgEntity.setStatus(StatusEnum.NORMAL.getValue());
         }
@@ -128,7 +128,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
             return result;
         }
         KgEntity kgEntity = new KgEntity();
-        BeanUtils.copyProperties(kgEntityVO, kgEntity);
+        BeanUtil.copyProperties(kgEntityVO, kgEntity);
         int count = kgEntityDao.updateDBById(kgEntity);
         if (count < 1) {
             logger.error("updateKgEntity error, update db fail");

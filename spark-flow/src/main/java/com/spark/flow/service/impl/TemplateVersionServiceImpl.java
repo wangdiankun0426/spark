@@ -31,7 +31,7 @@ import com.spark.utils.StringUtil;
 import com.spark.utils.TextUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.spark.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -101,7 +101,7 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
             return result;
         }
         FlowTemplateVersion templateVersion = new FlowTemplateVersion();
-        BeanUtils.copyProperties(templateVersionVO, templateVersion);
+        BeanUtil.copyProperties(templateVersionVO, templateVersion);
         templateVersion.setProcessId(templateResult.getProcessId());
         int maxCode = templateversionDao.queryMaxRevCode(templateResult.getId());
         int revCode = maxCode+1;

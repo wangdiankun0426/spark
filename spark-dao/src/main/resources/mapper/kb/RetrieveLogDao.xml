@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.kb.RetrieveLogDao" >
+    <sql id="allColumnList" >
+        id , kb_id , query , strategy , retrieve_count , qa_hit , avg_similarity , max_similarity ,
+        cost_time , feedback_score , feedback_remark , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <!-- 查询条件 -->
+    <sql id="searchCondition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in(
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="kbId != null">
+            and kb_id = #{kbId}
+        </if>
+        <if test="strategy != null and strategy != ''">
+            and strategy = #{strategy}
+        </if>
+        <if test="qaHit != null">
+            and qa_hit = #{qaHit}
+        </if>
+        <if test="noResult != null and noResult">
+            and retrieve_count = 0
+        </if>
+        <if test="createdStartTime != null">
+            and created_dt &gt;= #{createdStartTime}
+        </if>
+        <if test="createdEndTime != null">
+            and created_dt &lt;= #{createdEndTime}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <!-- 普通记录表：数据库自增 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into kb_retrieve_log (kb_id , query , strategy , retrieve_count , qa_hit , avg_similarity ,
+        max_similarity , cost_time , feedback_score , feedback_remark , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{kbId} , #{query} , #{strategy} , #{retrieveCount} , #{qaHit} , #{avgSimilarity} ,
+        #{maxSimilarity} , #{costTime} , #{feedbackScore} , #{feedbackRemark} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="updateById">
+        update kb_retrieve_log set updated_dt = #{updatedDt}, updated_by = #{updatedBy}
+        <if test="feedbackScore != null">
+            ,feedback_score = #{feedbackScore}
+        </if>
+        <if test="feedbackRemark != null">
+            ,feedback_remark = #{feedbackRemark}
+        </if>
+        where id = #{id}
+    </update>
+
+    <update id="deleteById">
+        update kb_retrieve_log set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <select id="queryRetrieveLogCount" resultType="java.lang.Integer">
+        select count(1)
+        from kb_retrieve_log
+        where 1 = 1
+        <include refid="searchCondition" />
+    </select>
+
+    <select id="queryRetrieveLogList" resultType="com.spark.bean.kb.result.RetrieveLogResult">
+        select <include refid="allColumnList" />
+        from kb_retrieve_log
+        where 1=1
+        <include refid="searchCondition" />
+        order by id desc
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+
+    <!-- 检索统计 -->
+    <select id="queryRetrieveStats" resultType="com.spark.bean.kb.result.RetrieveStatsResult">
+        select
+            count(*) as totalRetrieveCount,
+            COALESCE(avg(avg_similarity), 0) as avgSimilarity,
+            COALESCE(sum(case when qa_hit = 1 then 1 else 0 end) * 100 / count(*), 0) as qaHitRate,
+            COALESCE(sum(case when retrieve_count = 0 then 1 else 0 end), 0) as noResultCount,
+            COALESCE(avg(case when feedback_score is not null then feedback_score end), 0) as avgFeedbackScore,
+            COALESCE(sum(case when feedback_score is not null then 1 else 0 end), 0) as feedbackCount,
+            COALESCE(avg(cost_time), 0) as avgCostTime
+        from kb_retrieve_log
+        where 1 = 1
+        <include refid="searchCondition" />
+    </select>
+
+    <!-- 热门查询 -->
+    <select id="queryHotQueries" resultType="com.spark.bean.kb.result.HotQueryResult">
+        select
+            query,
+            count(*) as queryCount,
+            COALESCE(avg(avg_similarity), 0) as avgSimilarity
+        from kb_retrieve_log
+        where delete_flag = 1
+        group by query
+        order by queryCount desc
+        limit #{limit}
+    </select>
+
+    <!-- 用户使用排行 -->
+    <select id="queryUserRank" resultType="com.spark.bean.kb.result.UserRankResult">
+        select
+            created_by as userId,
+            count(*) as retrieveCount
+        from kb_retrieve_log
+        where delete_flag = 1
+        group by created_by
+        order by retrieveCount desc
+        limit #{limit}
+    </select>
+
+    <!-- 时段检索次数 -->
+    <select id="queryRetrieveCountByPeriod" resultType="com.spark.bean.kb.result.PeriodRetrieveCountResult">
+        select
+            count(case when created_dt &gt;= #{todayStart} then 1 end) as todayCount,
+            count(case when created_dt &gt;= #{weekStart} then 1 end) as weekCount,
+            count(case when created_dt &gt;= #{monthStart} then 1 end) as monthCount
+        from kb_retrieve_log
+        where delete_flag = 1
+        and created_dt &gt;= #{monthStart}
+    </select>
+</mapper>

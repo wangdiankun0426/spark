@@ -26,7 +26,7 @@ import com.spark.utils.StringUtil;
 import com.spark.utils.TextUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.spark.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -79,7 +79,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
             return result;
         }
         Form form = new Form();
-        BeanUtils.copyProperties(formVO, form);
+        BeanUtil.copyProperties(formVO, form);
         form.setId(formId);
         form.setRevId(formVersion.getId());
         form.setRevNum(formVersion.getRevNum());
@@ -112,7 +112,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
             return result;
         }
         Form form = new Form();
-        BeanUtils.copyProperties(formVO, form);
+        BeanUtil.copyProperties(formVO, form);
         int count = formDao.updateDBById(form);
         if (count < 1) {
             logger.error("updateForm error, update db fail");

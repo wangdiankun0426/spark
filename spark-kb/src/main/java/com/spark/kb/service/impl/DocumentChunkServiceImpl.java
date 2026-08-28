@@ -19,6 +19,7 @@ import com.spark.enums.DocumentEventStatusEnum;
 import com.spark.enums.ErrorCodeEnum;
 import com.spark.kb.service.IDocumentChunkService;
 import com.spark.llm.store.ESVectorStore;
+import com.spark.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +31,10 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -295,6 +298,95 @@ public class DocumentChunkServiceImpl implements IDocumentChunkService {
             result.setErrorCode(ErrorCodeEnum.SYSTEM_ERROR);
         }
         return result;
+    }
+
+    /**
+     * 编辑分块内容
+     * 更新ES分块内容后，重置向量化、图谱状态触发重新处理
+     * @param docId 文档ID
+     * @param chunkIndex 分块序号
+     * @param content 分块内容
+     * @return 操作结果
+     */
+    @Override
+    public ResultData<Void> updateChunk(Long docId, Integer chunkIndex, String content) {
+        ResultData<Void> result = new ResultData<>();
+        if (docId == null || chunkIndex == null || StringUtil.isBlank(content)) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        try {
+            // 检查索引是否存在
+            IndexOperations indexOps = elasticsearchOperations.indexOps(IndexCoordinates.of(ESIndexName.DOCUMENT_CHUNK_INDEX_NAME));
+            if (!indexOps.exists()) {
+                result.setErrorCode(ErrorCodeEnum.FILE_ES_INDEX_NOT_EXIST);
+                return result;
+            }
+            // 查询分块
+            Map<String, Object> chunkMap = queryChunkByIndex(docId, chunkIndex);
+            if (chunkMap == null || chunkMap.get("id") == null) {
+                result.setErrorCode(ErrorCodeEnum.DOCUMENT_NOT_EXIST);
+                return result;
+            }
+            // 更新分块内容
+            String chunkId = String.valueOf(chunkMap.get("id"));
+            Document document = Document.create();
+            document.put("content", content);
+            UpdateQuery updateQuery = UpdateQuery.builder(chunkId).withDocument(document).build();
+            elasticsearchOperations.update(updateQuery, IndexCoordinates.of(ESIndexName.DOCUMENT_CHUNK_INDEX_NAME));
+            // 重置向量化、图谱状态
+            resetEventStatus(docId);
+            logger.info("updateChunk success, docId={}, chunkIndex={}", docId, chunkIndex);
+            result.setCode(ResultData.OK);
+        } catch (Exception e) {
+            logger.error("updateChunk error, docId={}, chunkIndex={}", docId, chunkIndex, e);
+            result.setErrorCode(ErrorCodeEnum.SYSTEM_ERROR);
+        }
+        return result;
+    }
+
+    /**
+     * 按文档ID与分块序号查询分块
+     * @param docId 文档ID
+     * @param chunkIndex 分块序号
+     * @return 分块数据
+     */
+    private Map<String, Object> queryChunkByIndex(Long docId, Integer chunkIndex) {
+        BoolQuery.Builder bqb = QueryBuilders.bool();
+        bqb.must(tq -> tq.term(x -> x.field("docId").value(docId)));
+        bqb.must(tq -> tq.term(x -> x.field("chunkIndex").value(chunkIndex)));
+        NativeQueryBuilder queryBuilder = new NativeQueryBuilder().withQuery(bqb.build()._toQuery());
+        SearchHits<Map> hits = elasticsearchOperations.search(queryBuilder.build(), Map.class, IndexCoordinates.of(ESIndexName.DOCUMENT_CHUNK_INDEX_NAME));
+        if (hits.hasSearchHits()) {
+            return hits.getSearchHit(0).getContent();
+        }
+        return null;
+    }
+
+    /**
+     * 重置文档事件向量化、图谱状态为待处理
+     * @param docId 文档ID
+     */
+    private void resetEventStatus(Long docId) {
+        DocumentQuery documentQuery = new DocumentQuery();
+        documentQuery.setId(docId);
+        DocumentResult document = documentDao.queryDocument(documentQuery);
+        if (document == null) {
+            return;
+        }
+        DocumentEventQuery eventQuery = new DocumentEventQuery();
+        eventQuery.setDocId(docId);
+        DocumentEventResult eventResult = documentEventDao.queryDocumentEvent(eventQuery);
+        if (eventResult == null) {
+            return;
+        }
+        DocumentEvent updateEvent = new DocumentEvent();
+        updateEvent.setId(eventResult.getId());
+        updateEvent.setVectorStatus(DocumentEventStatusEnum.PENDING.getValue());
+        updateEvent.setVectorRemark("分块内容已编辑，等待重新向量化");
+        updateEvent.setGraphStatus(DocumentEventStatusEnum.PENDING.getValue());
+        updateEvent.setGraphRemark("分块内容已编辑，等待重新处理");
+        documentEventDao.updateDBById(updateEvent);
     }
 
 }

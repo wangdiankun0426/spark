@@ -16,7 +16,7 @@ import com.spark.enums.ChatMsgStatusEnum;
 import com.spark.enums.ErrorCodeEnum;
 import com.spark.chat.service.IChatUserService;
 import com.spark.utils.CollectionUtil;
-import org.springframework.beans.BeanUtils;
+import com.spark.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -67,7 +67,7 @@ public class ChatUserServiceImpl implements IChatUserService {
         List<ChatUserResult> list  = new ArrayList<>();
         userList.forEach(item -> {
             ChatUserResult chatUserResult = new ChatUserResult();
-            BeanUtils.copyProperties(item, chatUserResult);
+            BeanUtil.copyProperties(item, chatUserResult);
             list.add(chatUserResult);
         });
         ChatSpaceQuery spaceQuery = new ChatSpaceQuery();

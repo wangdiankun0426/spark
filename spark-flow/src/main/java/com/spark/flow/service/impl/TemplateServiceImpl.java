@@ -29,7 +29,7 @@ import com.spark.utils.StringUtil;
 import com.spark.utils.TextUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.spark.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -81,7 +81,7 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
             return result;
         }
         FlowTemplate template = new FlowTemplate();
-        BeanUtils.copyProperties(templateVO, template);
+        BeanUtil.copyProperties(templateVO, template);
         template.setProcessId(processId);
         template.setStatus(StatusEnum.ABNORMAL.getValue());
         template.setType(templateVO.getType() == null ? FlowTypeEnum.NORMAL.getValue() : templateVO.getType());
@@ -117,7 +117,7 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
             return result;
         }
         FlowTemplate template = new FlowTemplate();
-        BeanUtils.copyProperties(templateVO, template);
+        BeanUtil.copyProperties(templateVO, template);
         int count = templateDao.updateDBById(template);
         if (count < 1) {
             logger.error("updateTemplate error, update db fail");

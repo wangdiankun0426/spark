@@ -20,7 +20,7 @@ import com.spark.llm.service.IModelService;
 import com.spark.utils.CollectionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.spark.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -60,7 +60,7 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
             return result;
         }
         Model model = new Model();
-        BeanUtils.copyProperties(modelVO, model);
+        BeanUtil.copyProperties(modelVO, model);
         Long id = super.genObjectId(ObjectTypeEnum.MODEL);
         model.setId(id);
         int count = modelDao.insertDB(model);
@@ -93,7 +93,7 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
             return result;
         }
         Model model = new Model();
-        BeanUtils.copyProperties(modelVO, model);
+        BeanUtil.copyProperties(modelVO, model);
         int count = modelDao.updateDBById(model);
         if (count < 1) {
             logger.error("updateModel error, update db fail");

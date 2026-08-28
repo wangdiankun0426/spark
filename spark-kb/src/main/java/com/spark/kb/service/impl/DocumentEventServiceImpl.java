@@ -12,7 +12,7 @@ import com.spark.enums.OperateTypeEnum;
 import com.spark.kb.service.IDocumentEventService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.spark.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -74,7 +74,7 @@ public class DocumentEventServiceImpl implements IDocumentEventService {
             return result;
         }
         DocumentEvent documentEvent = new DocumentEvent();
-        BeanUtils.copyProperties(documentEventVO, documentEvent);
+        BeanUtil.copyProperties(documentEventVO, documentEvent);
         int count = documentEventDao.updateDBById(documentEvent);
         if (count < 1) {
             logger.error("updateDocumentEvent error, update db fail");

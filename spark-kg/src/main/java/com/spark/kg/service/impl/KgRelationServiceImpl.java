@@ -27,7 +27,7 @@ import com.spark.utils.CollectionUtil;
 import com.spark.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.spark.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -96,7 +96,7 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
             return result;
         }
         KgRelation kgRelation = new KgRelation();
-        BeanUtils.copyProperties(kgRelationVO, kgRelation);
+        BeanUtil.copyProperties(kgRelationVO, kgRelation);
         if (kgRelation.getWeight() == null) {
             kgRelation.setWeight(1.0);
         }
@@ -150,7 +150,7 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
             return result;
         }
         KgRelation kgRelation = new KgRelation();
-        BeanUtils.copyProperties(kgRelationVO, kgRelation);
+        BeanUtil.copyProperties(kgRelationVO, kgRelation);
         int count = kgRelationDao.updateDBById(kgRelation);
         if (count < 1) {
             logger.error("updateKgRelation error, update db fail");

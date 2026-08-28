@@ -45,4 +45,13 @@ public interface IDocumentChunkService {
      */
     ResultData<Void> rechunkDocument(Long docId);
 
+    /**
+     * 编辑分块内容
+     * @param docId 文档ID
+     * @param chunkIndex 分块序号
+     * @param content 分块内容
+     * @return 操作结果
+     */
+    ResultData<Void> updateChunk(Long docId, Integer chunkIndex, String content);
+
 }

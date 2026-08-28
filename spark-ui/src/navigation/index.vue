@@ -2,7 +2,7 @@
   <div>
     <el-menu :default-active="defaultActive" router mode="horizontal">
       <div class="logo-box">
-        <img src="../assets/images/logo.png" width="40" height="36"/>
+        <img src="../assets/images/logo.png" width="50" height="40"/>
       </div>
       <el-menu-item index="/home">
         <el-icon><DataAnalysis /></el-icon>

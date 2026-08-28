@@ -347,7 +347,6 @@ const handlePageChangeNo = (pageNo) => {
   background-color: #fafafa;
   border-radius: $border-radius-sm;
   padding: $spacing-sm;
-  border-left: 2px solid $color-primary;
   height: 60px;
   overflow-y: auto;
 }

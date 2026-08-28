@@ -397,6 +397,29 @@ CREATE TABLE `kb_document_event` (
       PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='知识库文档事件表';
 
+
+DROP TABLE IF EXISTS `kb_retrieve_log`;
+CREATE TABLE `kb_retrieve_log` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `kb_id` bigint(12) NOT NULL COMMENT '知识库ID',
+    `query` varchar(500) NOT NULL COMMENT '检索查询内容',
+    `strategy` varchar(50) NULL COMMENT '检索策略',
+    `retrieve_count` int(11) DEFAULT 0 COMMENT '召回数量',
+    `qa_hit` tinyint(3) DEFAULT 0 COMMENT 'QA是否命中 0否 1是',
+    `avg_similarity` double DEFAULT 0 COMMENT '平均相似度',
+    `max_similarity` double DEFAULT 0 COMMENT '最高相似度',
+    `cost_time` bigint(20) DEFAULT 0 COMMENT '耗时(毫秒)',
+    `feedback_score` tinyint(3) NULL COMMENT '用户反馈评分 1-5',
+    `feedback_remark` varchar(500) NULL COMMENT '用户反馈备注',
+
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='知识库检索日志表';
+
 DROP TABLE IF EXISTS `flow_template`;
 CREATE TABLE `flow_template` (
      `id` bigint(12) NOT NULL COMMENT '主键',

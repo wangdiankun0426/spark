@@ -25,7 +25,7 @@ import com.spark.utils.StringUtil;
 import com.spark.utils.TextUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.spark.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -78,7 +78,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
             return result;
         }
         Notice notice = new Notice();
-        BeanUtils.copyProperties(noticeVO, notice);
+        BeanUtil.copyProperties(noticeVO, notice);
         int count = noticeDao.insertDB(notice);
         if (count < 1) {
             return result;
@@ -125,7 +125,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
             return result;
         }
         Notice notice = new Notice();
-        BeanUtils.copyProperties(noticeVO, notice);
+        BeanUtil.copyProperties(noticeVO, notice);
         int count = noticeDao.updateDBById(notice);
         if (count < 1) {
             return result;
@@ -178,7 +178,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
             return result;
         }
         Notice notice = new Notice();
-        BeanUtils.copyProperties(noticeVO, notice);
+        BeanUtil.copyProperties(noticeVO, notice);
         notice.setStatus(NoticeStatusEnum.DELISTED.getValue());
         int count = noticeDao.updateDBById(notice);
         if (count < 1) {

@@ -35,3 +35,12 @@ export function rechunkDocumentAPI(docId) {
         params: { docId }
     })
 }
+
+// 编辑分块内容
+export function updateChunkAPI(data) {
+    return request({
+        url: '/kb/document/chunk/update',
+        method: 'post',
+        params: data
+    })
+}

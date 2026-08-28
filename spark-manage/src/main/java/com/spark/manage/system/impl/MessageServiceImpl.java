@@ -19,7 +19,7 @@ import com.spark.utils.CollectionUtil;
 import com.spark.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.spark.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -64,7 +64,7 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
             SessionHolder.setCurrentUserId(101L);
         }
         Message message = new Message();
-        BeanUtils.copyProperties(messageVO, message);
+        BeanUtil.copyProperties(messageVO, message);
         int count = messageDao.insertDB(message);
         if (count < 1) {
             return result;
@@ -146,7 +146,7 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
             return result;
         }
         Message message = new Message();
-        BeanUtils.copyProperties(messageVO, message);
+        BeanUtil.copyProperties(messageVO, message);
         message.setType(MessageTypeEnum.MANUAL.getType());
         message.setRefId(userId);
         int count = messageDao.insertDB(message);

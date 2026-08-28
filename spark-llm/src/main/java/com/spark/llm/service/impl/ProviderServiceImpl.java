@@ -14,7 +14,7 @@ import com.spark.llm.service.IProviderService;
 import com.spark.utils.CollectionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.spark.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -50,7 +50,7 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
             return result;
         }
         Provider provider = new Provider();
-        BeanUtils.copyProperties(providerVO, provider);
+        BeanUtil.copyProperties(providerVO, provider);
         int count = providerDao.insertDB(provider);
         if (count < 1) {
             logger.error("createProvider error, insert db fail");
@@ -80,7 +80,7 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
             return result;
         }
         Provider provider = new Provider();
-        BeanUtils.copyProperties(providerVO, provider);
+        BeanUtil.copyProperties(providerVO, provider);
         int count = providerDao.updateDBById(provider);
         if (count < 1) {
             logger.error("updateProvider error, update db fail");

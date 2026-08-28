@@ -21,6 +21,10 @@
             <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><Test/></el-icon>
             <template #title>检索测试</template>
           </el-menu-item>
+          <el-menu-item index="/kb/stats">
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><Chart/></el-icon>
+            <template #title>检索统计</template>
+          </el-menu-item>
         </el-menu>
       </el-aside>
 
@@ -39,6 +43,7 @@ import {useRoute} from "vue-router";
 import Knowledge from "@/assets/icons/knowledge.vue";
 import SearchDocument from "@/assets/icons/searchDocument.vue";
 import Test from "@/assets/icons/test.vue";
+import Chart from "@/assets/icons/chart.vue";
 
 const route = useRoute();
 

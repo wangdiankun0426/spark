@@ -24,7 +24,7 @@ import com.spark.utils.StringUtil;
 import dev.langchain4j.mcp.client.McpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.spark.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -70,7 +70,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
             return result;
         }
         Mcp Mcp = new Mcp();
-        BeanUtils.copyProperties(mcpVO, Mcp);
+        BeanUtil.copyProperties(mcpVO, Mcp);
         if (Mcp.getStatus() == null) {
             Mcp.setStatus(StatusEnum.NORMAL.getValue());
         }
@@ -108,7 +108,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
             return result;
         }
         Mcp Mcp = new Mcp();
-        BeanUtils.copyProperties(mcpVO, Mcp);
+        BeanUtil.copyProperties(mcpVO, Mcp);
         int count = mcpDao.updateDBById(Mcp);
         if (count < 1) {
             logger.error("updateMcp error, update db fail");
@@ -214,7 +214,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
             return result;
         }
         Mcp Mcp = new Mcp();
-        BeanUtils.copyProperties(mcpResult, Mcp);
+        BeanUtil.copyProperties(mcpResult, Mcp);
         Mcp.setStatus(StatusEnum.NORMAL.getValue());
         try {
             McpClient client = mcpClientManager.connectToServer(Mcp);
