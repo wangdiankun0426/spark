@@ -5,6 +5,8 @@ import graphDocument from '@/pages/kg/document/index.vue'
 import graphSearch from '@/pages/kg/search/index.vue'
 import kgEntity from '@/pages/kg/entity/index.vue'
 import kgRelation from '@/pages/kg/relation/index.vue'
+import kgAnalysis from '@/pages/kg/analysis/index.vue'
+import kgAudit from '@/pages/kg/audit/index.vue'
 
 export default [
     {
@@ -54,6 +56,22 @@ export default [
                 component: kgRelation,
                 meta: {
                     title: '关系'
+                }
+            },
+            {
+                path: '/kg/audit',
+                name: 'kgAudit',
+                component: kgAudit,
+                meta: {
+                    title: '实体审核'
+                }
+            },
+            {
+                path: '/kg/analysis',
+                name: 'kgAnalysis',
+                component: kgAnalysis,
+                meta: {
+                    title: '图谱分析'
                 }
             },
         ]

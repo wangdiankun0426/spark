@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * +++/\_/\
@@ -204,6 +205,85 @@ public class Neo4jGraphStore {
     }
 
     /**
+     * 迁移被合并实体的关系到主实体，并删除被合并节点
+     * 将 old.Node 全部出边 (old)-(r)->(x) 与入边 (x)-(r)->(old) 改写为指向主实体，
+     * 跳过由此产生的自环，最后删除旧节点，保证 Neo4j 与 MySQL 合并结果一致
+     * @param mainEntityId 主实体 id
+     * @param mergedEntityId 被合并实体 id
+     * @return 处理的关系数 + 删除节点数
+     */
+    public int migrateRelations(Long mainEntityId, Long mergedEntityId) {
+        if (mainEntityId == null || mergedEntityId == null) {
+            return 0;
+        }
+        List<RelationEdge> edges = new ArrayList<>();
+        String queryCypher = "MATCH (old:" + NODE_LABEL + " {id: $merged})-[r]-(x:" + NODE_LABEL + ") " +
+                "RETURN r.id as id, r.graphId as graphId, type(r) as relType, " +
+                "startNode(r).id as headId, endNode(r).id as tailId, " +
+                "r.relationType as relationType, r.weight as weight";
+        try (Session session = neo4jDriver.session()) {
+            Result result = session.run(queryCypher, Map.of("merged", mergedEntityId));
+            while (result.hasNext()) {
+                Record record = result.next();
+                RelationEdge edge = new RelationEdge();
+                Value idValue = record.get("id");
+                edge.setId(idValue.isNull() ? null : idValue.asLong());
+                edge.setGraphId(record.get("graphId").asLong(0));
+                edge.setHeadEntityId(record.get("headId").asLong());
+                edge.setTailEntityId(record.get("tailId").asLong());
+                Value relTypeValue = record.get("relationType");
+                String relationType = relTypeValue.isNull() ? null : relTypeValue.asString(null);
+                if (relationType == null || relationType.isEmpty()) {
+                    relationType = record.get("relType").asString(null);
+                }
+                edge.setRelationType(relationType);
+                Value weightValue = record.get("weight");
+                edge.setWeight(weightValue.isNull() ? 1.0 : weightValue.asDouble(1.0));
+                edges.add(edge);
+            }
+        } catch (Exception e) {
+            logger.error("migrateRelations query error, merged={}", mergedEntityId, e);
+            return 0;
+        }
+        int count = 0;
+        for (RelationEdge edge : edges) {
+            if (Objects.equals(edge.getHeadEntityId(), mergedEntityId)) {
+                edge.setHeadEntityId(mainEntityId);
+            }
+            if (Objects.equals(edge.getTailEntityId(), mergedEntityId)) {
+                edge.setTailEntityId(mainEntityId);
+            }
+            if (Objects.equals(edge.getHeadEntityId(), edge.getTailEntityId())) {
+                continue;
+            }
+            count += this.upsertRelation(edge);
+        }
+        count += this.deleteByEntityId(mergedEntityId);
+        return count;
+    }
+
+    /**
+     * 按关系 id 删除单条边
+     * @param relationId 关系 id
+     * @return 删除的边数量
+     */
+    public int deleteByRelationId(Long relationId) {
+        if (relationId == null) {
+            return 0;
+        }
+        String cypher = "MATCH (h:" + NODE_LABEL + ")-[r]->(t:" + NODE_LABEL + ") " +
+                "WHERE r.id = $relationId " +
+                "DELETE r";
+        try (Session session = neo4jDriver.session()) {
+            Result result = session.run(cypher, Map.of("relationId", relationId));
+            return result.consume().counters().relationshipsDeleted();
+        } catch (Exception e) {
+            logger.error("按关系删除图数据失败, relationId={}", relationId, e);
+            return 0;
+        }
+    }
+
+    /**
      * 查询实体的多跳邻居子图
      * @param entityId 起始实体 id
      * @param hopCount 跳数（1 或 2）
@@ -275,7 +355,7 @@ public class Neo4jGraphStore {
      * 按实体名称模糊查询实体节点
      * 优先使用全文索引，失败时回退到 CONTAINS 查询
      * @param graphId 图谱 id
-     * @param name 实体名称（模糊匹配）
+     * @param name 实体名称
      * @return 实体节点列表
      */
     public List<KgEntity> queryEntityByName(Long graphId, String name) {
@@ -283,7 +363,7 @@ public class Neo4jGraphStore {
         if (name == null || name.isBlank()) {
             return list;
         }
-        // 优先使用全文索引（性能更好）
+        // 优先使用全文索引
         String cypher = "CALL db.index.fulltext.queryNodes('entity_fulltext', $name) " +
                 "YIELD node, score " +
                 "WHERE node.graphId = $graphId " +
@@ -312,7 +392,7 @@ public class Neo4jGraphStore {
     }
 
     /**
-     * 使用 CONTAINS 查询实体（全文索引不可用时的回退方案）
+     * 使用 CONTAINS 查询实体，作为全文索引的回退方案
      * @param graphId 图谱 id
      * @param name 实体名称
      * @return 实体节点列表
@@ -340,6 +420,62 @@ public class Neo4jGraphStore {
             logger.error("按名称查询实体失败, graphId={}, name={}", graphId, name, e);
         }
         return list;
+    }
+
+    /**
+     * 查询两个实体之间的最短路径
+     * @param fromEntityId 起始实体 id
+     * @param toEntityId 目标实体 id
+     * @return 路径子图数据
+     */
+    public Map<String, Object> findShortestPath(Long fromEntityId, Long toEntityId) {
+        Map<String, Object> subgraph = new HashMap<>();
+        List<KgEntity> nodes = new ArrayList<>();
+        List<RelationEdge> edges = new ArrayList<>();
+        subgraph.put("nodes", nodes);
+        subgraph.put("edges", edges);
+        if (fromEntityId == null || toEntityId == null || fromEntityId.equals(toEntityId)) {
+            return subgraph;
+        }
+        String cypher = "MATCH path = shortestPath(" +
+                "(from:" + NODE_LABEL + " {id: $fromId})-[*..5]-(to:" + NODE_LABEL + " {id: $toId})) " +
+                "RETURN [n IN nodes(path) | n.id] AS nodeIds, " +
+                "[n IN nodes(path) | n.name] AS nodeNames, " +
+                "[n IN nodes(path) | n.type] AS nodeTypes, " +
+                "[r IN relationships(path) | r.id] AS edgeIds, " +
+                "[r IN relationships(path) | type(r)] AS edgeTypes";
+        try (Session session = neo4jDriver.session()) {
+            Result result = session.run(cypher, Map.of("fromId", fromEntityId, "toId", toEntityId));
+            if (!result.hasNext()) {
+                return subgraph;
+            }
+            Record record = result.next();
+            List<Long> nodeIds = record.get("nodeIds").asList(Value::asLong);
+            List<String> nodeNames = record.get("nodeNames").asList(Value::asString);
+            List<String> nodeTypes = record.get("nodeTypes").asList(v -> v.asString(null));
+            for (int i = 0; i < nodeIds.size(); i++) {
+                KgEntity node = new KgEntity();
+                node.setId(nodeIds.get(i));
+                node.setName(i < nodeNames.size() ? nodeNames.get(i) : null);
+                node.setType(i < nodeTypes.size() ? nodeTypes.get(i) : null);
+                nodes.add(node);
+            }
+            List<Long> edgeIds = record.get("edgeIds").asList(v -> v.isNull() ? null : v.asLong());
+            List<String> edgeTypes = record.get("edgeTypes").asList(Value::asString);
+            for (int i = 0; i < edgeIds.size(); i++) {
+                RelationEdge edge = new RelationEdge();
+                if (edgeIds.get(i) != null) {
+                    edge.setId(edgeIds.get(i));
+                }
+                edge.setHeadEntityId(nodeIds.get(i));
+                edge.setTailEntityId(nodeIds.get(i + 1));
+                edge.setRelationType(i < edgeTypes.size() ? edgeTypes.get(i) : null);
+                edges.add(edge);
+            }
+        } catch (Exception e) {
+            logger.error("findShortestPath error, fromId={}, toId={}", fromEntityId, toEntityId, e);
+        }
+        return subgraph;
     }
 
     /**
@@ -382,6 +518,289 @@ public class Neo4jGraphStore {
         }
         String sanitized = relationType.replaceAll("[^a-zA-Z0-9_]", "_").toUpperCase();
         return sanitized.isEmpty() ? "REL_DEFAULT" : RELATION_TYPE_PREFIX + sanitized;
+    }
+
+    /**
+     * 投影 GDS 图
+     * @param graphId 图谱 id
+     * @param projectionName 投影图名称
+     * @param undirected 是否无向
+     */
+    private void projectGraph(Long graphId, String projectionName, boolean undirected) {
+        String orientation = undirected ? "UNDIRECTED" : "NATURAL";
+        String cypher = "CALL gds.graph.project('" + projectionName + "', " +
+                "'Entity', { " +
+                "  ALL_RELATIONSHIPS: { orientation: '" + orientation + "' } " +
+                "}, { nodeProperties: ['id', 'graphId'] })";
+        try (Session session = neo4jDriver.session()) {
+            session.run(cypher);
+        }
+    }
+
+    /**
+     * 删除 GDS 投影图
+     * @param projectionName 投影图名称
+     */
+    private void dropProjection(String projectionName) {
+        try (Session session = neo4jDriver.session()) {
+            session.run("CALL gds.graph.drop('" + projectionName + "') YIELD graphName RETURN graphName");
+        } catch (Exception e) {
+            logger.warn("dropProjection fail, name={}", projectionName, e);
+        }
+    }
+
+    /**
+     * 按节点 id 扩展邻居子图
+     * @param nodeId 起始节点 id
+     * @param depth 扩展深度
+     * @return 子图数据
+     */
+    public Map<String, Object> expandNode(Long nodeId, int depth) {
+        Map<String, Object> subgraph = new HashMap<>();
+        List<KgEntity> nodes = new ArrayList<>();
+        List<RelationEdge> edges = new ArrayList<>();
+        subgraph.put("nodes", nodes);
+        subgraph.put("edges", edges);
+        if (nodeId == null) {
+            return subgraph;
+        }
+        int hop = Math.max(1, Math.min(depth, 2));
+        String nodeCypher = "MATCH (n:" + NODE_LABEL + " {id: $nodeId})-[*0.." + hop + "]-(m:" + NODE_LABEL + ") " +
+                "RETURN DISTINCT m.id as id, m.name as name, m.type as type, m.description as description, " +
+                "m.graphId as graphId";
+        try (Session session = neo4jDriver.session()) {
+            Result nodeResult = session.run(nodeCypher, Map.of("nodeId", nodeId));
+            while (nodeResult.hasNext()) {
+                Record record = nodeResult.next();
+                KgEntity node = new KgEntity();
+                node.setId(record.get("id").asLong());
+                node.setName(record.get("name").asString(null));
+                node.setType(record.get("type").asString(null));
+                node.setDescription(record.get("description").asString(null));
+                node.setGraphId(record.get("graphId").asLong(0));
+                nodes.add(node);
+            }
+            if (!nodes.isEmpty()) {
+                List<Long> nodeIds = nodes.stream().map(KgEntity::getId).toList();
+                String edgeCypher = "MATCH (h:" + NODE_LABEL + ")-[r]->(t:" + NODE_LABEL + ") " +
+                        "WHERE h.id IN $nodeIds AND t.id IN $nodeIds " +
+                        "RETURN r.id as id, h.id as headId, t.id as tailId, r.relationType as relationType, type(r) as relType";
+                Result edgeResult = session.run(edgeCypher, Map.of("nodeIds", nodeIds));
+                while (edgeResult.hasNext()) {
+                    Record record = edgeResult.next();
+                    RelationEdge edge = new RelationEdge();
+                    Value idValue = record.get("id");
+                    edge.setId(idValue.isNull() ? null : idValue.asLong());
+                    edge.setHeadEntityId(record.get("headId").asLong());
+                    edge.setTailEntityId(record.get("tailId").asLong());
+                    Value relType = record.get("relationType");
+                    String rt = relType.isNull() ? null : relType.asString(null);
+                    if (rt == null || rt.isEmpty()) {
+                        rt = record.get("relType").asString(null);
+                    }
+                    edge.setRelationType(rt);
+                    edges.add(edge);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("expandNode error, nodeId={}, depth={}", nodeId, depth, e);
+        }
+        return subgraph;
+    }
+
+    /**
+     * 查询图谱统计信息
+     * @param graphId 图谱 id
+     * @return 统计信息
+     */
+    public Map<String, Object> queryGraphStats(Long graphId) {
+        Map<String, Object> stats = new HashMap<>();
+        if (graphId == null) {
+            return stats;
+        }
+        String countCypher = "MATCH (n:" + NODE_LABEL + " {graphId: $graphId}) " +
+                "RETURN count(n) AS nodeCount";
+        String typeCypher = "MATCH (n:" + NODE_LABEL + " {graphId: $graphId}) " +
+                "RETURN n.type AS type, count(n) AS cnt ORDER BY cnt DESC";
+        String edgeCypher = "MATCH (n:" + NODE_LABEL + " {graphId: $graphId})-[r]->(m:" + NODE_LABEL + ") " +
+                "WHERE m.graphId = $graphId " +
+                "RETURN count(r) AS edgeCount";
+        try (Session session = neo4jDriver.session()) {
+            Result countResult = session.run(countCypher, Map.of("graphId", graphId));
+            long nodeCount = countResult.hasNext() ? countResult.next().get("nodeCount").asLong() : 0;
+            stats.put("nodeCount", nodeCount);
+
+            Result edgeResult = session.run(edgeCypher, Map.of("graphId", graphId));
+            long edgeCount = edgeResult.hasNext() ? edgeResult.next().get("edgeCount").asLong() : 0;
+            stats.put("edgeCount", edgeCount);
+
+            Result typeResult = session.run(typeCypher, Map.of("graphId", graphId));
+            Map<String, Long> typeDistribution = new HashMap<>();
+            while (typeResult.hasNext()) {
+                Record record = typeResult.next();
+                String type = record.get("type").asString(null);
+                long cnt = record.get("cnt").asLong();
+                typeDistribution.put(type == null || type.isEmpty() ? "未分类" : type, cnt);
+            }
+            stats.put("typeDistribution", typeDistribution);
+        } catch (Exception e) {
+            logger.error("queryGraphStats error, graphId={}", graphId, e);
+        }
+        return stats;
+    }
+
+    /**
+     * 批量查询节点的关联度
+     * @param entityIds 实体 id 列表
+     * @return 关联度结果
+     */
+    public Map<Long, Integer> queryNodeDegrees(List<Long> entityIds) {
+        Map<Long, Integer> degrees = new HashMap<>();
+        if (entityIds == null || entityIds.isEmpty()) {
+            return degrees;
+        }
+        String cypher = "MATCH (n:" + NODE_LABEL + ")-[r]-() " +
+                "WHERE n.id IN $entityIds " +
+                "RETURN n.id AS id, count(r) AS degree";
+        try (Session session = neo4jDriver.session()) {
+            Result result = session.run(cypher, Map.of("entityIds", entityIds));
+            while (result.hasNext()) {
+                Record record = result.next();
+                degrees.put(record.get("id").asLong(), (int) record.get("degree").asLong());
+            }
+        } catch (Exception e) {
+            logger.error("queryNodeDegrees error", e);
+        }
+        return degrees;
+    }
+
+    /**
+     * GDS Louvain 社区检测
+     * @param graphId 图谱 id
+     * @return 社区划分结果
+     */
+    public Map<Integer, List<Long>> detectCommunities(Long graphId) {
+        Map<Integer, List<Long>> communities = new HashMap<>();
+        if (graphId == null) {
+            return communities;
+        }
+        String projectionName = "kg-community-" + graphId;
+        try {
+            projectGraph(graphId, projectionName, true);
+            String cypher = "CALL gds.louvain.stream('" + projectionName + "') " +
+                    "YIELD nodeId, communityId " +
+                    "RETURN gds.util.asNode(nodeId).id AS entityId, communityId";
+            try (Session session = neo4jDriver.session()) {
+                Result result = session.run(cypher);
+                while (result.hasNext()) {
+                    Record record = result.next();
+                    Long entityId = record.get("entityId").asLong();
+                    int communityId = (int) record.get("communityId").asLong();
+                    communities.computeIfAbsent(communityId, k -> new ArrayList<>()).add(entityId);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("detectCommunities error, graphId={}", graphId, e);
+        } finally {
+            dropProjection(projectionName);
+        }
+        return communities;
+    }
+
+    /**
+     * GDS PageRank 算法
+     * @param graphId 图谱 id
+     * @param maxIterations 最大迭代次数
+     * @return 分数结果
+     */
+    public Map<Long, Double> calculatePageRank(Long graphId, int maxIterations) {
+        Map<Long, Double> scores = new HashMap<>();
+        if (graphId == null) {
+            return scores;
+        }
+        String projectionName = "kg-pagerank-" + graphId;
+        try {
+            projectGraph(graphId, projectionName, false);
+            String cypher = "CALL gds.pageRank.stream('" + projectionName + "', { maxIterations: " + maxIterations + " }) " +
+                    "YIELD nodeId, score " +
+                    "RETURN gds.util.asNode(nodeId).id AS entityId, score";
+            try (Session session = neo4jDriver.session()) {
+                Result result = session.run(cypher);
+                while (result.hasNext()) {
+                    Record record = result.next();
+                    scores.put(record.get("entityId").asLong(), record.get("score").asDouble());
+                }
+            }
+        } catch (Exception e) {
+            logger.error("calculatePageRank error, graphId={}", graphId, e);
+        } finally {
+            dropProjection(projectionName);
+        }
+        return scores;
+    }
+
+    /**
+     * GDS 中心度算法
+     * @param graphId 图谱 id
+     * @return 分数结果
+     */
+    public Map<Long, Double> calculateCentrality(Long graphId) {
+        Map<Long, Double> scores = new HashMap<>();
+        if (graphId == null) {
+            return scores;
+        }
+        String projectionName = "kg-centrality-" + graphId;
+        try {
+            projectGraph(graphId, projectionName, false);
+            String cypher = "CALL gds.betweenness.stream('" + projectionName + "') " +
+                    "YIELD nodeId, score " +
+                    "RETURN gds.util.asNode(nodeId).id AS entityId, score";
+            try (Session session = neo4jDriver.session()) {
+                Result result = session.run(cypher);
+                while (result.hasNext()) {
+                    Record record = result.next();
+                    scores.put(record.get("entityId").asLong(), record.get("score").asDouble());
+                }
+            }
+        } catch (Exception e) {
+            logger.error("calculateCentrality error, graphId={}", graphId, e);
+        } finally {
+            dropProjection(projectionName);
+        }
+        return scores;
+    }
+
+    /**
+     * GDS 连通分量算法
+     * @param graphId 图谱 id
+     * @return 连通分量结果
+     */
+    public Map<Integer, List<Long>> findConnectedComponents(Long graphId) {
+        Map<Integer, List<Long>> components = new HashMap<>();
+        if (graphId == null) {
+            return components;
+        }
+        String projectionName = "kg-wcc-" + graphId;
+        try {
+            projectGraph(graphId, projectionName, true);
+            String cypher = "CALL gds.wcc.stream('" + projectionName + "') " +
+                    "YIELD nodeId, componentId " +
+                    "RETURN gds.util.asNode(nodeId).id AS entityId, componentId";
+            try (Session session = neo4jDriver.session()) {
+                Result result = session.run(cypher);
+                while (result.hasNext()) {
+                    Record record = result.next();
+                    Long entityId = record.get("entityId").asLong();
+                    int componentId = (int) record.get("componentId").asLong();
+                    components.computeIfAbsent(componentId, k -> new ArrayList<>()).add(entityId);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("findConnectedComponents error, graphId={}", graphId, e);
+        } finally {
+            dropProjection(projectionName);
+        }
+        return components;
     }
 
 }

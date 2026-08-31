@@ -37,4 +37,5 @@ ENV JAVA_OPTS="\
 # 启动服务
 ENTRYPOINT java ${JAVA_OPTS} \
     -Dspring.config.location=file:./application-prod.yml \
+    -Dlogging.config=file:./logback.xml \
     -jar ./spark-0.0.1-SNAPSHOT.jar

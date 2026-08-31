@@ -26,6 +26,7 @@ import com.spark.enums.KgSourceTypeEnum;
 import com.spark.enums.StatusEnum;
 import com.spark.llm.model.ModelFactory;
 import com.spark.llm.store.ESVectorStore;
+import com.spark.llm.store.KgEntityVectorService;
 import com.spark.llm.store.Neo4jGraphStore;
 import com.spark.task.service.IDocumentTaskService;
 import com.spark.utils.*;
@@ -87,6 +88,8 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
     private ModelFactory modelFactory;
     @Autowired
     private Neo4jGraphStore graphStore;
+    @Autowired
+    private KgEntityVectorService entityVectorService;
     private final Lock contentLock = new ReentrantLock();
     private final Lock indexLock = new ReentrantLock();
     private final Lock chunkLock = new ReentrantLock();
@@ -690,6 +693,12 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                 graphStore.upsertEntity(entity);
             } catch (Exception e) {
                 logger.error("upsertEntity error, id={}", entity.getId(), e);
+            }
+            // 同步向量化实体描述写入ES
+            try {
+                entityVectorService.vectorizeEntity(entity);
+            } catch (Exception e) {
+                logger.error("vectorizeEntity error, id={}", entity.getId(), e);
             }
         }
         logger.info("saveEntities success, docId={}, count={}", docId, entities.size());

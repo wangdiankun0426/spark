@@ -10,7 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
 
 /**
  * +++/\_/\
@@ -76,5 +79,36 @@ public class KgGraphController {
     @GetMapping("detail")
     public ResultData<KgGraphResult> queryKgGraphDetail(KgGraphQuery query) {
         return kgGraphService.queryKgGraphDetail(query);
+    }
+
+    /**
+     * 按需展开节点关联子图
+     * @param nodeId 节点 id
+     * @param depth 扩展深度
+     * @return 子图数据
+     */
+    @GetMapping("visual/expand")
+    public ResultData<Map<String, Object>> expandNodeVisual(@RequestParam Long nodeId, @RequestParam(defaultValue = "1") int depth) {
+        return kgGraphService.expandNodeVisual(nodeId, depth);
+    }
+
+    /**
+     * 查询图谱统计信息
+     * @param graphId 图谱 id
+     * @return 统计信息
+     */
+    @GetMapping("visual/stats")
+    public ResultData<Map<String, Object>> queryGraphStats(@RequestParam Long graphId) {
+        return kgGraphService.queryGraphStats(graphId);
+    }
+
+    /**
+     * 构建 GraphRAG 索引
+     * @param graphId 图谱 id
+     * @return 构建结果
+     */
+    @PostMapping("buildGraphRAG")
+    public ResultData<Void> buildGraphRAGIndex(@RequestParam Long graphId) {
+        return kgGraphService.buildGraphRAGIndex(graphId);
     }
 }

@@ -20,6 +20,7 @@ import com.spark.enums.KgSourceTypeEnum;
 import com.spark.enums.OperateTypeEnum;
 import com.spark.enums.StatusEnum;
 import com.spark.kg.service.IKgEntityService;
+import com.spark.llm.store.KgEntityVectorService;
 import com.spark.llm.store.Neo4jGraphStore;
 import com.spark.manage.BaseService;
 import com.spark.utils.CollectionUtil;
@@ -29,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import com.spark.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,6 +60,8 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
     private KgGraphDao kgGraphDao;
     @Autowired
     private Neo4jGraphStore graphStore;
+    @Autowired
+    private KgEntityVectorService entityVectorService;
 
     /**
      * 新增实体
@@ -105,6 +109,12 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
         } catch (Exception e) {
             logger.error("createKgEntity graphStore error, id={}", id, e);
         }
+        // 同步向量化实体写入ES
+        try {
+            entityVectorService.vectorizeEntity(kgEntity);
+        } catch (Exception e) {
+            logger.error("createKgEntity vectorize error, id={}", id, e);
+        }
         result.setCode(ResultData.OK);
         return result;
     }
@@ -135,6 +145,36 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
         if (count < 1) {
             logger.error("updateKgEntity error, update db fail");
             return result;
+        }
+        // 同步更新 Neo4j 节点属性
+        try {
+            KgEntityResult latest = kgEntityDao.queryKgEntity(query);
+            if (latest != null) {
+                KgEntity node = new KgEntity();
+                node.setId(latest.getId());
+                node.setGraphId(latest.getGraphId());
+                node.setName(latest.getName());
+                node.setType(latest.getType());
+                node.setDescription(latest.getDescription());
+                graphStore.upsertEntity(node);
+            }
+        } catch (Exception e) {
+            logger.error("updateKgEntity graphStore error, id={}", kgEntityVO.getId(), e);
+        }
+        // 同步重新向量化实体
+        try {
+            KgEntityResult latest = kgEntityDao.queryKgEntity(query);
+            if (latest != null) {
+                KgEntity latestEntity = new KgEntity();
+                latestEntity.setId(latest.getId());
+                latestEntity.setGraphId(latest.getGraphId());
+                latestEntity.setName(latest.getName());
+                latestEntity.setType(latest.getType());
+                latestEntity.setDescription(latest.getDescription());
+                entityVectorService.vectorizeEntity(latestEntity);
+            }
+        } catch (Exception e) {
+            logger.error("updateKgEntity vectorize error, id={}", kgEntityVO.getId(), e);
         }
         result.setCode(ResultData.OK);
         return result;
@@ -172,6 +212,12 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
             graphStore.deleteByEntityId(kgEntityVO.getId());
         } catch (Exception e) {
             logger.error("deleteKgEntity graphStore error, id={}", kgEntityVO.getId(), e);
+        }
+        // 同步删除ES实体向量
+        try {
+            entityVectorService.deleteEntityVector(kgEntityVO.getId());
+        } catch (Exception e) {
+            logger.error("deleteKgEntity vectorize error, id={}", kgEntityVO.getId(), e);
         }
         result.setCode(ResultData.OK);
         return result;
@@ -225,6 +271,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
      */
     @Override
     @OperateLog(operateType = OperateTypeEnum.KG_ENTITY_MERGE)
+    @Transactional(rollbackFor = Exception.class)
     public ResultData<Void> mergeKgEntity(Long mainEntityId, List<Long> mergedEntityIds) {
         ResultData<Void> result = new ResultData<>();
         if (mainEntityId == null || CollectionUtil.isEmpty(mergedEntityIds)) {
@@ -238,10 +285,28 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
             result.setErrorCode(ErrorCodeEnum.KG_ENTITY_NOT_EXIST);
             return result;
         }
+        // 去重并排除主实体自身
+        Set<Long> mergedIds = new HashSet<>();
         for (Long mergedId : mergedEntityIds) {
-            if (mergedId == null || mergedId.equals(mainEntityId)) {
-                continue;
+            if (mergedId != null && !mergedId.equals(mainEntityId)) {
+                mergedIds.add(mergedId);
             }
+        }
+        if (mergedIds.isEmpty()) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        // 预校验被合并实体与主实体属于同一图谱
+        for (Long mergedId : mergedIds) {
+            KgEntityQuery mergedQuery = new KgEntityQuery();
+            mergedQuery.setId(mergedId);
+            KgEntityResult mergedEntity = kgEntityDao.queryKgEntity(mergedQuery);
+            if (mergedEntity == null || !mainEntity.getGraphId().equals(mergedEntity.getGraphId())) {
+                result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+                return result;
+            }
+        }
+        for (Long mergedId : mergedIds) {
             // 把被合并实体的关系引用转移到主实体
             kgRelationDao.updateHeadEntityId(mergedId, mainEntityId);
             kgRelationDao.updateTailEntityId(mergedId, mainEntityId);
@@ -250,11 +315,17 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
             entity.setId(mergedId);
             entity.setStatus(StatusEnum.ABNORMAL.getValue());
             kgEntityDao.updateDBById(entity);
-            // Neo4j 同步清理旧节点
+            // Neo4j 迁移关系并删除旧节点，保持双库一致
             try {
-                graphStore.deleteByEntityId(mergedId);
+                graphStore.migrateRelations(mainEntityId, mergedId);
             } catch (Exception e) {
                 logger.error("mergeKgEntity graphStore error, mergedId={}", mergedId, e);
+            }
+            // ES 同步清理旧实体向量
+            try {
+                entityVectorService.deleteEntityVector(mergedId);
+            } catch (Exception e) {
+                logger.error("mergeKgEntity vectorize error, mergedId={}", mergedId, e);
             }
         }
         result.setCode(ResultData.OK);

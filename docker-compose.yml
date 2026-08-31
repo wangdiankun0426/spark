@@ -104,7 +104,7 @@ services:
         ipv4_address: 172.10.0.8
     environment:
       - NEO4J_AUTH=neo4j/Qaz7410
-      - NEO4J_PLUGINS=["apoc"]
+      - NEO4J_dbms_security_procedures_unrestricted=gds.*
       - NEO4J_server_memory_heap_initial__size=256m
       - NEO4J_server_memory_heap_max__size=512m
     ports:
@@ -113,6 +113,7 @@ services:
     volumes:
       - /opt/spark/software/neo4j/data:/data
       - /opt/spark/software/neo4j/logs:/logs
+      - /opt/spark/software/neo4j/plugins:/plugins
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "wget -qO - http://localhost:7474 || exit 1"]
@@ -163,4 +164,5 @@ services:
       - /opt/spark/logs:/opt/spark/logs
       - /opt/spark/app/spark.server.com/spark-0.0.1-SNAPSHOT.jar:/opt/spark/app/spark.server.com/spark-0.0.1-SNAPSHOT.jar:ro
       - /opt/spark/app/spark.server.com/application-prod.yml:/opt/spark/app/spark.server.com/application-prod.yml:ro
+      - /opt/spark/app/spark.server.com/logback.xml:/opt/spark/app/spark.server.com/logback.xml:ro
     restart: always

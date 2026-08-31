@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -96,6 +97,11 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
             result.setErrorCode(ErrorCodeEnum.KG_ENTITY_NOT_EXIST);
             return result;
         }
+        if (!Objects.equals(headEntity.getGraphId(), kgRelationVO.getGraphId())
+                || !Objects.equals(tailEntity.getGraphId(), kgRelationVO.getGraphId())) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
         KgRelation kgRelation = new KgRelation();
         BeanUtil.copyProperties(kgRelationVO, kgRelation);
         if (kgRelation.getWeight() == null) {
@@ -150,12 +156,34 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
             result.setErrorCode(ErrorCodeEnum.KG_RELATION_NOT_EXIST);
             return result;
         }
+        Long graphId = kgRelationVO.getGraphId() == null ? kgRelationResult.getGraphId() : kgRelationVO.getGraphId();
+        Long headEntityId = kgRelationVO.getHeadEntityId() == null ? kgRelationResult.getHeadEntityId() : kgRelationVO.getHeadEntityId();
+        Long tailEntityId = kgRelationVO.getTailEntityId() == null ? kgRelationResult.getTailEntityId() : kgRelationVO.getTailEntityId();
+        if (!validateRelationEntities(graphId, headEntityId, tailEntityId)) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
         KgRelation kgRelation = new KgRelation();
         BeanUtil.copyProperties(kgRelationVO, kgRelation);
         int count = kgRelationDao.updateDBById(kgRelation);
         if (count < 1) {
             logger.error("updateKgRelation error, update db fail");
             return result;
+        }
+        // 同步更新 Neo4j 边
+        try {
+            RelationEdge edge = new RelationEdge();
+            edge.setId(kgRelationResult.getId());
+            edge.setGraphId(graphId);
+            edge.setHeadEntityId(headEntityId);
+            edge.setTailEntityId(tailEntityId);
+            edge.setRelationType(kgRelationVO.getRelationType() == null
+                    ? kgRelationResult.getRelationType() : kgRelationVO.getRelationType());
+            edge.setWeight(kgRelationVO.getWeight() == null
+                    ? kgRelationResult.getWeight() : kgRelationVO.getWeight());
+            graphStore.upsertRelation(edge);
+        } catch (Exception e) {
+            logger.error("updateKgRelation graphStore error, id={}", kgRelationResult.getId(), e);
         }
         result.setCode(ResultData.OK);
         return result;
@@ -188,8 +216,36 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
             logger.error("deleteKgRelation error, delete db fail");
             return result;
         }
+        // 同步删除 Neo4j 边
+        try {
+            graphStore.deleteByRelationId(kgRelationVO.getId());
+        } catch (Exception e) {
+            logger.error("deleteKgRelation graphStore error, id={}", kgRelationVO.getId(), e);
+        }
         result.setCode(ResultData.OK);
         return result;
+    }
+
+    /**
+     * 校验关系两端实体属于同一图谱
+     * @param graphId 图谱 id
+     * @param headEntityId 头实体 id
+     * @param tailEntityId 尾实体 id
+     * @return 是否校验通过
+     */
+    private boolean validateRelationEntities(Long graphId, Long headEntityId, Long tailEntityId) {
+        if (graphId == null || headEntityId == null || tailEntityId == null) {
+            return false;
+        }
+        KgEntityQuery headQuery = new KgEntityQuery();
+        headQuery.setId(headEntityId);
+        KgEntityResult headEntity = kgEntityDao.queryKgEntity(headQuery);
+        KgEntityQuery tailQuery = new KgEntityQuery();
+        tailQuery.setId(tailEntityId);
+        KgEntityResult tailEntity = kgEntityDao.queryKgEntity(tailQuery);
+        return headEntity != null && tailEntity != null
+                && Objects.equals(headEntity.getGraphId(), graphId)
+                && Objects.equals(tailEntity.getGraphId(), graphId);
     }
 
     /**

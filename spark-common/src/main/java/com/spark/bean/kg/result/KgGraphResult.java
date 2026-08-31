@@ -17,6 +17,11 @@ import lombok.Data;
 public class KgGraphResult extends BaseResult {
 
     /**
+     * 所属部门 id
+     */
+    private Long deptId;
+
+    /**
      * 图谱名称
      */
     private String name;

@@ -9,76 +9,149 @@
       <div class="detail-meta">
         <el-tag size="small" effect="light">实体 {{ entityTotal }}</el-tag>
         <el-tag size="small" effect="light">关系 {{ relationList.length }}</el-tag>
+        <el-tag size="small" effect="light" v-if="graphStats.typeDistribution">类型 {{ Object.keys(graphStats.typeDistribution).length }}种</el-tag>
+        <el-tag size="small" effect="light" v-if="graphStats.componentCount >= 0">连通分量 {{ graphStats.componentCount }}</el-tag>
       </div>
     </div>
 
-    <!-- 主体：左侧实体列表 + 右侧图谱 -->
+    <!-- 主体：左侧实体列表 + 中间图谱 + 右侧详情面板 -->
     <div class="detail-body">
-      <!-- 左侧实体列表 -->
+      <!-- 左侧面板 -->
       <div class="entity-panel">
-        <div class="entity-panel-header">
-          <el-input
-              v-model="keyword"
-              placeholder="搜索实体名称"
-              clearable
-              :prefix-icon="Search"
-              size="small"
-          />
-        </div>
-        <div ref="entityListRef" class="entity-list" @scroll="handleEntityScroll">
-          <div
-              v-for="item in entityList"
-              :key="item.id"
-              class="entity-item"
-              :class="{ 'entity-item-active': selectedEntityId === item.id }"
-              @click="handleLocateEntity(item)"
-          >
-            <span
-                class="entity-type-dot"
-                :style="{ backgroundColor: getTypeColor(item.type) }"
-            ></span>
-            <span class="entity-item-name" :title="item.name">{{ item.name }}</span>
-            <span
-                class="entity-item-type"
-                :style="{
-                  color: getTypeColor(item.type),
-                  backgroundColor: getTypeColor(item.type) + '1f'
-                }"
-            >
-              {{ item.type || '未分类' }}
-            </span>
-          </div>
-          <el-empty
-              v-if="!entityList.length && !entityLoading"
-              :image-size="60"
-              description="暂无实体"
-          />
-          <div v-if="entityLoading" class="entity-load-tip">加载中...</div>
-          <div v-else-if="entityFinished && entityList.length" class="entity-load-tip">没有更多了</div>
-        </div>
+        <!-- 标签页：实体 / 社区 -->
+        <el-tabs v-model="leftTab" class="panel-tabs" @tab-change="handleTabChange">
+          <el-tab-pane label="实体" name="entity">
+            <div class="panel-tab-header">
+              <el-input v-model="keyword" placeholder="搜索实体名称" clearable :prefix-icon="Search" size="small" />
+            </div>
+            <!-- 类型筛选 -->
+            <div class="type-filter" v-if="typeOptions.length > 1">
+              <el-checkbox v-model="typeAll" @change="handleTypeAllChange">全选</el-checkbox>
+              <el-checkbox-group v-model="selectedTypes" @change="handleTypeFilterChange" class="type-checkbox-group">
+                <el-checkbox v-for="t in typeOptions" :key="t" :label="t">
+                  <span class="type-dot" :style="{ backgroundColor: getTypeColor(t) }"></span>
+                  {{ t }}
+                </el-checkbox>
+              </el-checkbox-group>
+            </div>
+            <div ref="entityListRef" class="entity-list" @scroll="handleEntityScroll">
+              <div
+                  v-for="item in filteredEntityList"
+                  :key="item.id"
+                  class="entity-item"
+                  :class="{ 'entity-item-active': selectedEntityId === item.id }"
+                  @click="handleLocateEntity(item)"
+                  @dblclick="handleOpenDetail(item)"
+              >
+                <span class="entity-type-dot" :style="{ backgroundColor: getTypeColor(item.type) }"></span>
+                <span class="entity-item-name" :title="item.name">{{ item.name }}</span>
+                <span class="entity-item-type" :style="{ color: getTypeColor(item.type), backgroundColor: getTypeColor(item.type) + '1f' }">
+                  {{ item.type || '未分类' }}
+                </span>
+              </div>
+              <el-empty v-if="!filteredEntityList.length && !entityLoading" :image-size="60" description="暂无实体" />
+              <div v-if="entityLoading" class="entity-load-tip">加载中...</div>
+              <div v-else-if="entityFinished && entityList.length" class="entity-load-tip">没有更多了</div>
+            </div>
+          </el-tab-pane>
+
+          <el-tab-pane label="社区" name="community">
+            <div class="panel-tab-header">
+              <el-button type="primary" size="small" :loading="buildingRAG" @click="handleBuildRAG">
+                <el-icon><Refresh /></el-icon>构建索引
+              </el-button>
+            </div>
+            <div class="entity-list">
+              <div
+                  v-for="c in communityList"
+                  :key="c.id"
+                  class="community-item"
+                  :class="{ 'community-item-active': selectedCommunityId === c.id }"
+                  @click="handleHighlightCommunity(c)"
+              >
+                <div class="community-name">{{ c.name }}</div>
+                <div class="community-desc">{{ c.summary }}</div>
+                <div class="community-meta">{{ c.memberCount }} 个实体</div>
+              </div>
+              <el-empty v-if="!communityList.length" :image-size="60" description="暂无社区，请先构建索引" />
+            </div>
+          </el-tab-pane>
+        </el-tabs>
       </div>
 
-      <!-- 右侧图谱 -->
-      <div class="graph-canvas" ref="canvasRef"></div>
+      <!-- 中间图谱 + 工具栏 -->
+      <div class="graph-main">
+        <div class="graph-toolbar">
+          <el-select v-model="layoutType" size="small" style="width: 100px" @change="handleLayoutChange">
+            <el-option label="力导向" value="force" />
+            <el-option label="圆形" value="circular" />
+            <el-option label="层次" value="dagre" />
+          </el-select>
+          <el-button size="small" @click="handleFitView">适配</el-button>
+          <el-button size="small" @click="handleResetExpand" v-if="expandedNodeIds.size > 0">重置展开</el-button>
+          <span class="toolbar-tip" v-if="entityTotal > MAX_GRAPH_NODES">已显示前 {{ MAX_GRAPH_NODES }} 个节点，共 {{ entityTotal }} 个实体</span>
+        </div>
+        <div class="graph-canvas" ref="canvasRef"></div>
+      </div>
+
+      <!-- 右侧详情面板 -->
+      <div class="detail-panel" v-if="detailVisible">
+        <div class="detail-panel-header">
+          <span class="detail-panel-title">实体详情</span>
+          <el-icon class="detail-panel-close" @click="detailVisible = false"><Close /></el-icon>
+        </div>
+        <div class="detail-panel-body">
+          <div class="detail-row">
+            <span class="detail-label">名称</span>
+            <span class="detail-value">{{ detailEntity.name }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">类型</span>
+            <span class="detail-value">{{ detailEntity.type || '-' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">描述</span>
+            <span class="detail-value">{{ detailEntity.description || '-' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">来源</span>
+            <span class="detail-value">{{ detailEntity.sourceTypeName || '-' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">置信度</span>
+            <span class="detail-value">{{ detailEntity.confidence != null ? detailEntity.confidence.toFixed(2) : '-' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">审核状态</span>
+            <span class="detail-value">{{ detailEntity.auditStatusName || '-' }}</span>
+          </div>
+          <div class="detail-sub-title">关联实体 ({{ detailNeighbors.length }})</div>
+          <div class="detail-neighbor" v-for="n in detailNeighbors" :key="n.id" @click="handleLocateEntity(n)">
+            <span class="neighbor-dot" :style="{ backgroundColor: getTypeColor(n.type) }"></span>
+            <span class="neighbor-name">{{ n.name }}</span>
+          </div>
+          <el-empty v-if="!detailNeighbors.length" :image-size="40" description="暂无关联" />
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import * as echarts from 'echarts'
-import { Connection, Search } from '@element-plus/icons-vue'
-import { queryGraphDetailAPI } from '@/api/kg/graph.js'
+import { Connection, Search, Close, Refresh } from '@element-plus/icons-vue'
+import { queryGraphDetailAPI, expandNodeAPI, queryGraphStatsAPI, buildGraphRAGAPI, pageCommunityListAPI } from '@/api/kg/graph.js'
 import { queryDocumentDetailAPI } from '@/api/kb/document.js'
 import { pageEntityListAPI } from '@/api/kg/entity.js'
 import { pageRelationListAPI } from '@/api/kg/relation.js'
+import { ElMessage } from 'element-plus'
 
 const route = useRoute()
 const graphId = route.query.graphId
 const docId = route.query.docId
-
-// 根据入口参数构造查询参数：docId 走 sourceId/docId，graphId 走 graphId/id
+const MAX_GRAPH_NODES = 500
 const listParam = docId ? { sourceId: docId } : { graphId }
 
 const graph = ref({})
@@ -88,7 +161,11 @@ const keyword = ref('')
 const selectedEntityId = ref(null)
 const canvasRef = ref(null)
 const entityListRef = ref(null)
+const graphStats = ref({})
 let chart = null
+
+// 布局类型
+const layoutType = ref('force')
 
 // 实体分页状态
 const entityPageNo = ref(1)
@@ -96,11 +173,33 @@ const entityPageSize = 30
 const entityTotal = ref(0)
 const entityLoading = ref(false)
 const entityFinished = ref(false)
-
-// 关键字搜索防抖句柄
 let searchTimer = null
 
-// 实体类型 -> 颜色 映射，按出现顺序分配调色板
+// 左侧标签页
+const leftTab = ref('entity')
+
+// 类型筛选
+const selectedTypes = ref([])
+const typeAll = ref(true)
+const typeOptions = ref([])
+
+// 节点展开
+const expandedNodeIds = ref(new Set())
+
+// 详情面板
+const detailVisible = ref(false)
+const detailEntity = ref({})
+const detailNeighbors = ref([])
+
+// 社区
+const communityList = ref([])
+const selectedCommunityId = ref(null)
+const buildingRAG = ref(false)
+
+// 社区节点高亮（存每个社区包含的实体 id 列表）
+const communityEntityIdsMap = ref({})
+
+// 实体类型 -> 颜色
 const typeColorMap = new Map()
 const palette = [
   '#4f8cf7', '#34c759', '#af52de', '#ff9500',
@@ -108,31 +207,40 @@ const palette = [
   '#10b981', '#f43f5e'
 ]
 
+/**
+ * 类型筛选后的实体列表
+ */
+const filteredEntityList = computed(() => {
+  if (selectedTypes.value.length === typeOptions.value.length) {
+    return entityList.value
+  }
+  return entityList.value.filter(e => selectedTypes.value.includes(e.type || '未分类'))
+})
+
+/**
+ * 按实体类型分配稳定颜色
+ */
+function getTypeColor(type) {
+  const key = type || '未分类'
+  if (!typeColorMap.has(key)) {
+    typeColorMap.set(key, palette[typeColorMap.size % palette.length])
+  }
+  return typeColorMap.get(key)
+}
+
 onMounted(() => {
   loadAll()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize)
-  if (searchTimer) {
-    clearTimeout(searchTimer)
-  }
-  if (chart) {
-    chart.dispose()
-    chart = null
-  }
+  if (searchTimer) clearTimeout(searchTimer)
+  if (chart) { chart.dispose(); chart = null }
 })
 
-/**
- * 关键字搜索防抖，300ms 后重置分页重新加载
- */
 watch(keyword, () => {
-  if (searchTimer) {
-    clearTimeout(searchTimer)
-  }
-  searchTimer = setTimeout(() => {
-    loadEntityList(true)
-  }, 300)
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => loadEntityList(true), 300)
 })
 
 function handleResize() {
@@ -140,26 +248,31 @@ function handleResize() {
 }
 
 /**
- * 并行拉取图谱信息与关系列表（关系全量，用于图谱连线），再加载第一页实体
+ * 并行拉取图谱信息、关系列表、统计信息，再加载第一页实体
  */
 async function loadAll() {
   if (!graphId && !docId) return
   const detailPromise = docId
     ? queryDocumentDetailAPI({ id: docId })
     : queryGraphDetailAPI({ id: graphId })
-  const [detailRes, relationRes] = await Promise.all([
+  const [detailRes, relationRes, statsRes] = await Promise.all([
     detailPromise,
-    pageRelationListAPI({ page: false, ...listParam })
+    pageRelationListAPI({ page: false, ...listParam }),
+    graphId ? queryGraphStatsAPI(graphId).catch(() => ({ data: {} })) : Promise.resolve({ data: {} })
   ])
   if (detailRes.code === 200) graph.value = detailRes.data || {}
   if (relationRes.code === 200) relationList.value = relationRes.data?.rows || []
+  if (statsRes.code === 200) graphStats.value = statsRes.data || {}
   await loadEntityList(true)
+  // 加载社区列表
+  if (graphId) {
+    loadCommunityList()
+  }
   window.addEventListener('resize', handleResize)
 }
 
 /**
- * 加载实体列表（分页累积），reset=true 时重置分页从头加载
- * @param {boolean} reset
+ * 加载实体列表（分页累积）
  */
 async function loadEntityList(reset = false) {
   if (!graphId && !docId) return
@@ -172,11 +285,7 @@ async function loadEntityList(reset = false) {
   }
   if (entityFinished.value) return
   entityLoading.value = true
-  const params = {
-    ...listParam,
-    pageNo: entityPageNo.value,
-    pageSize: entityPageSize
-  }
+  const params = { ...listParam, pageNo: entityPageNo.value, pageSize: entityPageSize }
   if (keyword.value) params.name = keyword.value
   const res = await pageEntityListAPI(params)
   if (res.code === 200 && res.data) {
@@ -188,6 +297,15 @@ async function loadEntityList(reset = false) {
     } else {
       entityPageNo.value++
     }
+    // 提取类型选项（首次加载时）
+    if (entityPageNo.value === 1 || typeOptions.value.length === 0) {
+      const typeSet = new Set()
+      entityList.value.forEach(e => typeSet.add(e.type || '未分类'))
+      typeOptions.value = Array.from(typeSet)
+      if (selectedTypes.value.length === 0) {
+        selectedTypes.value = [...typeOptions.value]
+      }
+    }
     await nextTick()
     renderChart()
   }
@@ -196,7 +314,6 @@ async function loadEntityList(reset = false) {
 
 /**
  * 实体列表滚动触底加载下一页
- * @param e
  */
 function handleEntityScroll(e) {
   const { scrollTop, scrollHeight, clientHeight } = e.target
@@ -206,64 +323,221 @@ function handleEntityScroll(e) {
 }
 
 /**
- * 按实体类型分配稳定颜色
- * @param type
+ * 类型筛选：全选
  */
-function getTypeColor(type) {
-  const key = type || '未分类'
-  if (!typeColorMap.has(key)) {
-    typeColorMap.set(key, palette[typeColorMap.size % palette.length])
-  }
-  return typeColorMap.get(key)
+function handleTypeAllChange(val) {
+  selectedTypes.value = val ? [...typeOptions.value] : []
+  renderChart()
 }
 
 /**
- * 渲染 ECharts 力导向图（首次初始化 + 后续追加均用此函数）
+ * 类型筛选：单选变化
+ */
+function handleTypeFilterChange() {
+  typeAll.value = selectedTypes.value.length === typeOptions.value.length
+  renderChart()
+}
+
+/**
+ * 标签页切换
+ */
+function handleTabChange(tab) {
+  if (tab === 'community' && graphId) {
+    loadCommunityList()
+  }
+}
+
+/**
+ * 加载社区列表
+ */
+async function loadCommunityList() {
+  if (!graphId) return
+  const res = await pageCommunityListAPI({ graphId, page: false })
+  if (res.code === 200 && res.data) {
+    communityList.value = res.data.rows || []
+    // 存储每个社区的实体 id 列表（后续可用于高亮）
+    // 注：实体 id 列表需从后端接口补充（当前接口不含），此处仅做展示
+  }
+}
+
+/**
+ * 构建 GraphRAG 索引
+ */
+async function handleBuildRAG() {
+  if (!graphId) return
+  buildingRAG.value = true
+  const res = await buildGraphRAGAPI(graphId)
+  if (res.code === 200) {
+    ElMessage.success('GraphRAG 索引构建成功')
+    loadCommunityList()
+  }
+  buildingRAG.value = false
+}
+
+/**
+ * 高亮社区成员节点（将社区成员节点高亮，非成员淡化）
+ */
+function handleHighlightCommunity(community) {
+  selectedCommunityId.value = community.id
+  // 当前实现：仅展示社区列表信息，点击高亮需后端提供社区成员 id 列表
+  // 简化处理：通过 tooltip 展示社区摘要
+  ElMessage.info(`社区：${community.name}，包含 ${community.memberCount} 个实体`)
+}
+
+/**
+ * 布局切换
+ */
+function handleLayoutChange() {
+  renderChart()
+}
+
+/**
+ * 适配画布
+ */
+function handleFitView() {
+  if (chart) chart.dispatchAction({ type: 'restore' })
+}
+
+/**
+ * 重置展开（回到原始实体列表）
+ */
+async function handleResetExpand() {
+  expandedNodeIds.value.clear()
+  await loadEntityList(true)
+}
+
+/**
+ * 按需展开节点的关联实体（增量加载）
+ */
+async function handleExpandNode(entity) {
+  if (!entity || !entity.id || expandedNodeIds.value.has(entity.id)) return
+  const res = await expandNodeAPI({ nodeId: entity.id, depth: 1 })
+  if (res.code !== 200 || !res.data) return
+  const { nodes: newNodes, edges: newEdges, degrees } = res.data
+  if (!newNodes || !newNodes.length) return
+  expandedNodeIds.value.add(entity.id)
+  // 增量追加节点（去重）
+  const existingIds = new Set(entityList.value.map(e => e.id))
+  const toAdd = newNodes.filter(n => !existingIds.has(n.id))
+  if (toAdd.length > 0) {
+    entityList.value.push(...toAdd)
+    // 补充类型选项
+    const typeSet = new Set(typeOptions.value)
+    toAdd.forEach(e => typeSet.add(e.type || '未分类'))
+    typeOptions.value = Array.from(typeSet)
+    if (selectedTypes.value.length < typeOptions.value.length) {
+      selectedTypes.value = [...typeOptions.value]
+    }
+  }
+  // 增量追加边（去重）
+  const existingEdgeKeys = new Set(relationList.value.map(r => `${r.headEntityId}-${r.tailEntityId}-${r.relationType}`))
+  const edgesToAdd = (newEdges || []).filter(e => !existingEdgeKeys.has(`${e.headEntityId}-${e.tailEntityId}-${e.relationType}`))
+  relationList.value.push(...edgesToAdd)
+  // 记录节点关联度
+  if (degrees) {
+    Object.entries(degrees).forEach(([id, deg]) => {
+      nodeDegreeMap.value[Number(id)] = deg
+    })
+  }
+  renderChart()
+}
+
+/**
+ * 节点关联度映射（用于缩放大小）
+ */
+const nodeDegreeMap = ref({})
+
+/**
+ * 渲染 ECharts 图谱
  */
 function renderChart() {
   if (!canvasRef.value) return
   if (!chart) {
     chart = echarts.init(canvasRef.value)
+    // 监听节点点击：展开关联实体
+    chart.on('click', (params) => {
+      if (params.dataType === 'node' && params.data) {
+        const entity = params.data.raw
+        if (entity) {
+          handleExpandNode(entity)
+        }
+      }
+    })
+    // 监听节点双击：打开详情面板
+    chart.on('dblclick', (params) => {
+      if (params.dataType === 'node' && params.data) {
+        const entity = params.data.raw
+        if (entity) {
+          handleOpenDetail(entity)
+        }
+      }
+    })
   }
-
-  const nodes = entityList.value.map(e => ({
-    id: String(e.id),
-    name: e.name,
-    symbolSize: 34,
-    category: e.type || '未分类',
-    itemStyle: { color: getTypeColor(e.type) },
-    raw: e
-  }))
-  const links = relationList.value.map(r => ({
-    source: String(r.headEntityId),
-    target: String(r.tailEntityId),
-    value: r.relationType,
-    label: {
-      show: true,
-      formatter: r.relationType,
-      fontSize: 11,
-      color: '#5e6c84'
-    },
-    lineStyle: { color: '#c0c8d4', width: 1.5, curveness: 0.15 }
-  }))
+  // 类型筛选过滤
+  const visibleEntities = filteredEntityList.value
+  // 大数据量采样
+  let renderEntities = visibleEntities
+  if (visibleEntities.length > MAX_GRAPH_NODES) {
+    renderEntities = visibleEntities.slice(0, MAX_GRAPH_NODES)
+  }
+  const renderIds = new Set(renderEntities.map(e => e.id))
+  const nodes = renderEntities.map(e => {
+    const degree = nodeDegreeMap.value[e.id] || 0
+    return {
+      id: String(e.id),
+      name: e.name,
+      symbolSize: Math.max(20, Math.min(60, 20 + degree * 3)),
+      category: e.type || '未分类',
+      itemStyle: {
+        color: getTypeColor(e.type),
+        borderColor: expandedNodeIds.value.has(e.id) ? '#333' : undefined,
+        borderWidth: expandedNodeIds.value.has(e.id) ? 3 : undefined
+      },
+      raw: e
+    }
+  })
+  const links = relationList.value
+    .filter(r => renderIds.has(r.headEntityId) && renderIds.has(r.tailEntityId))
+    .map(r => ({
+      source: String(r.headEntityId),
+      target: String(r.tailEntityId),
+      value: r.relationType,
+      label: { show: true, formatter: r.relationType, fontSize: 11, color: '#5e6c84' },
+      lineStyle: { color: '#c0c8d4', width: 1.5, curveness: 0.15 }
+    }))
   const categoriesSet = new Set()
-  entityList.value.forEach(e => categoriesSet.add(e.type || '未分类'))
-  const categories = Array.from(categoriesSet).map(t => ({
-    name: t,
-    itemStyle: { color: getTypeColor(t) }
-  }))
-
+  renderEntities.forEach(e => categoriesSet.add(e.type || '未分类'))
+  const categories = Array.from(categoriesSet).map(t => ({ name: t, itemStyle: { color: getTypeColor(t) } }))
+  const seriesOption = {
+    type: 'graph',
+    layout: layoutType.value,
+    roam: true,
+    draggable: true,
+    categories,
+    data: nodes,
+    links,
+    label: { show: true, position: 'right', fontSize: 12 },
+    lineStyle: { color: '#c0c8d4', curveness: 0.15 },
+    emphasis: {
+      focus: 'adjacency',
+      lineStyle: { width: 3 },
+      label: { fontSize: 14, fontWeight: 'bold' }
+    }
+  }
+  if (layoutType.value === 'force') {
+    seriesOption.force = { repulsion: 240, edgeLength: [80, 180], gravity: 0.08 }
+  }
   const option = {
     tooltip: {
       formatter: p => {
         if (p.dataType === 'node') {
           const d = p.data.raw || {}
           const desc = d.description ? `<br/>描述：${d.description}` : ''
-          return `<b>${d.name}</b><br/>类型：${d.type || '-'}${desc}`
+          const deg = nodeDegreeMap.value[d.id]
+          const degStr = deg != null ? `<br/>关联度：${deg}` : ''
+          return `<b>${d.name}</b><br/>类型：${d.type || '-'}${desc}${degStr}`
         }
-        if (p.dataType === 'edge') {
-          return `关系：${p.data.value || '-'}`
-        }
+        if (p.dataType === 'edge') return `关系：${p.data.value || '-'}`
         return ''
       }
     },
@@ -275,44 +549,44 @@ function renderChart() {
       top: 10,
       textStyle: { fontSize: 12 }
     },
-    series: [{
-      type: 'graph',
-      layout: 'force',
-      roam: true,
-      draggable: true,
-      categories,
-      data: nodes,
-      links,
-      label: { show: true, position: 'right', fontSize: 12 },
-      lineStyle: { color: '#c0c8d4', curveness: 0.15 },
-      emphasis: {
-        focus: 'adjacency',
-        lineStyle: { width: 3 },
-        label: { fontSize: 14, fontWeight: 'bold' }
-      },
-      force: {
-        repulsion: 240,
-        edgeLength: [80, 180],
-        gravity: 0.08
-      }
-    }]
+    series: [seriesOption]
   }
-  chart.setOption(option)
+  chart.setOption(option, true)
 }
 
 /**
- * 点击左侧实体，定位到右侧图谱节点
- * @param entity
+ * 点击左侧实体，定位到图谱节点
  */
 function handleLocateEntity(entity) {
   selectedEntityId.value = entity.id
   if (!chart) return
-  const idx = entityList.value.findIndex(e => e.id === entity.id)
+  const idx = filteredEntityList.value.findIndex(e => e.id === entity.id)
   if (idx < 0) return
   chart.dispatchAction({ type: 'downplay', seriesIndex: 0 })
   chart.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: idx })
   chart.dispatchAction({ type: 'focusNodeAdjacency', seriesIndex: 0, dataIndex: idx })
   chart.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: idx })
+}
+
+/**
+ * 双击实体打开详情面板
+ */
+function handleOpenDetail(entity) {
+  detailEntity.value = entity
+  detailVisible.value = true
+  // 计算关联实体
+  const id = entity.id
+  const neighbors = []
+  relationList.value.forEach(r => {
+    if (r.headEntityId === id) {
+      const target = entityList.value.find(e => e.id === r.tailEntityId)
+      if (target) neighbors.push(target)
+    } else if (r.tailEntityId === id) {
+      const source = entityList.value.find(e => e.id === r.headEntityId)
+      if (source) neighbors.push(source)
+    }
+  })
+  detailNeighbors.value = neighbors
 }
 </script>
 
@@ -352,6 +626,7 @@ function handleLocateEntity(entity) {
 .detail-meta {
   display: flex;
   gap: $spacing-sm;
+  flex-wrap: wrap;
 }
 
 .detail-body {
@@ -364,6 +639,7 @@ function handleLocateEntity(entity) {
   overflow: hidden;
 }
 
+/* 左侧面板 */
 .entity-panel {
   width: 280px;
   border-right: 1px solid $border-color-light;
@@ -372,9 +648,55 @@ function handleLocateEntity(entity) {
   overflow: hidden;
 }
 
-.entity-panel-header {
+.panel-tabs {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-tabs :deep(.el-tabs__content) {
+  flex: 1;
+  overflow: hidden;
+  height: 0;
+}
+
+.panel-tabs :deep(.el-tab-pane) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-tab-header {
   padding: $spacing-md;
   border-bottom: 1px solid $border-color-light;
+}
+
+.type-filter {
+  padding: $spacing-sm $spacing-md;
+  border-bottom: 1px solid $border-color-light;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.type-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.type-checkbox-group :deep(.el-checkbox) {
+  margin: 0;
+  height: 24px;
+}
+
+.type-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
 }
 
 .entity-list {
@@ -441,8 +763,161 @@ function handleLocateEntity(entity) {
   white-space: nowrap;
 }
 
+/* 社区列表 */
+.community-item {
+  padding: $spacing-sm $spacing-md;
+  border-radius: $border-radius-sm;
+  cursor: pointer;
+  border-bottom: 1px solid $border-color-light;
+  transition: $transition-fast;
+
+  &:hover {
+    background-color: $color-primary-soft;
+  }
+}
+
+.community-item-active {
+  background-color: $color-primary-soft;
+}
+
+.community-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: $color-text-primary;
+  margin-bottom: 4px;
+}
+
+.community-desc {
+  font-size: 12px;
+  color: $color-text-secondary;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.community-meta {
+  font-size: 11px;
+  color: $color-text-placeholder;
+}
+
+/* 中间图谱区域 */
+.graph-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.graph-toolbar {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  border-bottom: 1px solid $border-color-light;
+  flex-shrink: 0;
+}
+
+.toolbar-tip {
+  font-size: 12px;
+  color: $color-text-placeholder;
+  margin-left: auto;
+}
+
 .graph-canvas {
   flex: 1;
-  min-width: 0;
+  min-height: 0;
+}
+
+/* 右侧详情面板 */
+.detail-panel {
+  width: 280px;
+  border-left: 1px solid $border-color-light;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.detail-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md;
+  border-bottom: 1px solid $border-color-light;
+}
+
+.detail-panel-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: $color-text-primary;
+}
+
+.detail-panel-close {
+  cursor: pointer;
+  color: $color-text-placeholder;
+  font-size: 18px;
+
+  &:hover {
+    color: $color-text-primary;
+  }
+}
+
+.detail-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: $spacing-md;
+}
+
+.detail-row {
+  display: flex;
+  font-size: 13px;
+  margin-bottom: $spacing-sm;
+}
+
+.detail-label {
+  width: 60px;
+  flex-shrink: 0;
+  color: $color-text-secondary;
+}
+
+.detail-value {
+  flex: 1;
+  color: $color-text-primary;
+  word-break: break-all;
+}
+
+.detail-sub-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: $color-text-primary;
+  margin: $spacing-md 0 $spacing-sm 0;
+  padding-top: $spacing-sm;
+  border-top: 1px solid $border-color-light;
+}
+
+.detail-neighbor {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: 4px $spacing-sm;
+  font-size: 12px;
+  color: $color-text-primary;
+  cursor: pointer;
+  border-radius: $border-radius-sm;
+
+  &:hover {
+    background-color: $color-primary-soft;
+  }
+}
+
+.neighbor-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.neighbor-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

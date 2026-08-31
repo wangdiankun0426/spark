@@ -44,4 +44,9 @@ public class ObjectCacheKey {
      * 分片上传会话元数据key
      */
     public final static String UPLOAD_CHUNK_META = "u_c_m_";
+
+    /**
+     * 知识图谱检索缓存key前缀
+     */
+    public final static String KG_RETRIEVE_CACHE = "k_g_r";
 }

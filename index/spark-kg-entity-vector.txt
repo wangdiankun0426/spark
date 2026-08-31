@@ -1,0 +1,46 @@
+curl -u elastic -X PUT "http://localhost:9200/spark-kg-entity-vector" -H "Content-Type: application/json" -d'
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0
+  },
+  "mappings": {
+   "properties": {
+       "id": {
+          "type": "long",
+          "index": true,
+          "doc_values": true
+        },
+        "graphId": {
+            "type": "long",
+            "index": true,
+            "doc_values": true
+          },
+        "name": {
+           "type": "keyword",
+           "index": true,
+           "doc_values": true
+         },
+        "type": {
+           "type": "keyword",
+           "index": true,
+           "doc_values": true
+         },
+        "description": {
+           "type": "text",
+           "index": true
+         },
+         "embedding": {
+           "type": "dense_vector", //字段类型
+           "dims": 1024, //向量维度
+           "index": true, // 开启检索 用于knn
+           "similarity": "cosine", // 相似度计算方式：余弦相似度，与embedding模型归一化输出匹配
+           "index_options": {
+             "type": "hnsw", //基于HNSW算法
+             "m": 16,
+             "ef_construction": 100
+           }
+         }
+   }
+  }
+}'

@@ -64,3 +64,94 @@ export function deleteGraphAPI(data) {
         params: data
     })
 }
+
+/**
+ * 按需展开节点关联子图（可视化增量加载）
+ * @param {Object} params { nodeId, depth }
+ * @returns {Promise}
+ */
+export function expandNodeAPI(params) {
+    return request({
+        url: '/kg/graph/visual/expand',
+        method: 'get',
+        params: params
+    })
+}
+
+/**
+ * 查询图谱统计信息
+ * @param {number} graphId 图谱 id
+ * @returns {Promise}
+ */
+export function queryGraphStatsAPI(graphId) {
+    return request({
+        url: '/kg/graph/visual/stats',
+        method: 'get',
+        params: { graphId }
+    })
+}
+
+/**
+ * 构建 GraphRAG 索引（社区检测 + 摘要生成）
+ * @param {number} graphId 图谱 id
+ * @returns {Promise}
+ */
+export function buildGraphRAGAPI(graphId) {
+    return request({
+        url: '/kg/graph/buildGraphRAG',
+        method: 'post',
+        params: { graphId }
+    })
+}
+
+/**
+ * 查询图谱社区列表
+ * @param {Object} query { graphId, page, pageSize }
+ * @returns {Promise}
+ */
+export function pageCommunityListAPI(query) {
+    return request({
+        url: '/kg/community/pageList',
+        method: 'get',
+        params: query
+    })
+}
+
+/**
+ * PageRank 算法
+ * @param {Object} params { graphId, maxIterations }
+ * @returns {Promise}
+ */
+export function pageRankAPI(params) {
+    return request({
+        url: '/kg/search/pagerank',
+        method: 'get',
+        params: params
+    })
+}
+
+/**
+ * 中心度算法
+ * @param {number} graphId 图谱 id
+ * @returns {Promise}
+ */
+export function centralityAPI(graphId) {
+    return request({
+        url: '/kg/search/centrality',
+        method: 'get',
+        params: { graphId }
+    })
+}
+
+/**
+ * 连通分量算法
+ * @param {number} graphId 图谱 id
+ * @returns {Promise}
+ */
+export function connectedComponentsAPI(graphId) {
+    return request({
+        url: '/kg/search/components',
+        method: 'get',
+        params: { graphId }
+    })
+}

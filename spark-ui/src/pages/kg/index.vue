@@ -17,6 +17,14 @@
             <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><SearchDocument/></el-icon>
             <template #title>知识检索</template>
           </el-menu-item>
+          <el-menu-item index="/kg/audit">
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><Validate/></el-icon>
+            <template #title>实体审核</template>
+          </el-menu-item>
+          <el-menu-item index="/kg/analysis">
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><DataAnalysis/></el-icon>
+            <template #title>图谱分析</template>
+          </el-menu-item>
         </el-menu>
       </el-aside>
 
@@ -35,7 +43,8 @@ import {useRoute} from "vue-router";
 import Knowledge from "@/assets/icons/knowledge.vue";
 import SearchDocument from "@/assets/icons/searchDocument.vue";
 import Graph from "@/assets/icons/graph.vue";
-import { Box, Share } from "@element-plus/icons-vue";
+import Validate from "@/assets/icons/validate.vue";
+import { Box, Share, DataAnalysis } from "@element-plus/icons-vue";
 
 const route = useRoute();
 

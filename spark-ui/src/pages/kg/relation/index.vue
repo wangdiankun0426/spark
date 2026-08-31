@@ -1,36 +1,34 @@
 <template>
   <div class="app-container">
-    <!--操作按钮-->
-    <div>
-      <el-button
-          @click="handleBack"
-      >
-        <el-icon><ArrowLeft /></el-icon>返回
-      </el-button>
-      <el-button
-          type="primary"
-          @click="handleOpenCreateForm"
-      >
-        <el-icon><Plus /></el-icon>新建关系
-      </el-button>
-      <el-button
-          type="warning"
-          @click="handleResetQuery"
-      >
-        <el-icon><Refresh /></el-icon>重置
-      </el-button>
-      <el-button
-          type="info"
-          @click="handleGetRelationList"
-      >
-        <el-icon><Search /></el-icon>查询
-      </el-button>
+    <!-- 顶部头部 -->
+    <div class="kd-header">
+      <div class="kd-header-left">
+        <el-button text @click="handleBack">
+          <el-icon><ArrowLeft /></el-icon>返回
+        </el-button>
+        <el-divider direction="vertical" />
+        <div class="kd-header-title">
+          <el-icon class="kd-header-icon"><Share /></el-icon>
+          {{ graphName || '知识图谱关系' }}
+        </div>
+      </div>
+      <div class="kd-header-right">
+        <el-button type="warning" @click="handleResetQuery">
+          <el-icon><Refresh /></el-icon>重置
+        </el-button>
+        <el-button type="info" @click="handleGetRelationList">
+          <el-icon><Search /></el-icon>查询
+        </el-button>
+        <el-button type="primary" @click="handleOpenCreateForm">
+          <el-icon><Plus /></el-icon>新建关系
+        </el-button>
+      </div>
     </div>
     <!--关系列表-->
     <div>
       <el-table
           ref="tableRef"
-          height="calc(100vh - 155px)"
+          height="calc(100vh - 206px)"
           :data="relationList"
           highlight-current-row
           @sort-change="handleSortChange"
@@ -298,6 +296,8 @@ const formRules = {
 const entityOptions = ref([]);
 // 关系类型选项（基于当前 graphId 从图谱详情中加载）
 const relationTypeOptions = ref([]);
+// 当前图谱名称（头部标题展示）
+const graphName = ref('');
 
 /**
  * 解析 schema 字符串为数组
@@ -320,10 +320,12 @@ function parseSchema(schemaStr) {
 function loadGraphSchema() {
   if (!query.value.graphId) {
     relationTypeOptions.value = [];
+    graphName.value = '';
     return;
   }
   queryGraphDetailAPI({ id: query.value.graphId }).then(res => {
     if (res.code === 200 && res.data) {
+      graphName.value = res.data.name || '';
       relationTypeOptions.value = parseSchema(res.data.relationTypes);
     }
   });
@@ -533,5 +535,43 @@ function handleDelete(id) {
 <style scoped lang="scss">
 .drawer-footer {
   padding: 0 16px;
+}
+
+// 顶部头部（与知识图谱文档页样式保持一致）
+.kd-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+  padding: $spacing-md $spacing-lg;
+  background-color: $bg-card;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-card;
+}
+
+.kd-header-left {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.kd-header-title {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  font-size: 18px;
+  font-weight: 700;
+  color: $color-text-primary;
+}
+
+.kd-header-icon {
+  font-size: 22px;
+  color: $color-primary;
+}
+
+.kd-header-right {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
 }
 </style>

@@ -788,6 +788,25 @@ CREATE TABLE kg_relation (
      PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识图谱关系表';
 
+DROP TABLE IF EXISTS `kg_community`;
+CREATE TABLE `kg_community` (
+    `id` BIGINT(20) NOT NULL COMMENT '主键',
+    `graph_id` BIGINT(20) NOT NULL COMMENT '图谱 id',
+    `community_index` INT(10) NOT NULL COMMENT '社区序号',
+    `name` VARCHAR(128) NOT NULL COMMENT '社区名称',
+    `summary` TEXT NULL COMMENT '社区摘要',
+    `member_count` INT(10) NOT NULL DEFAULT 0 COMMENT '成员实体数量',
+
+    `dept_id` BIGINT(20) DEFAULT NULL COMMENT '部门 id',
+    `delete_flag` TINYINT(1) DEFAULT 1 COMMENT '删除标记位（1-有效 -1-删除）',
+    `created_by` BIGINT(20) DEFAULT NULL COMMENT '创建人',
+    `created_dt` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` BIGINT(20) DEFAULT NULL COMMENT '修改人',
+    `updated_dt` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_graph_id` (`graph_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='图谱社区表';
+
 DROP TABLE IF EXISTS `wf_template`;
 CREATE TABLE `wf_template` (
     `id` bigint(12) NOT NULL COMMENT '主键',
