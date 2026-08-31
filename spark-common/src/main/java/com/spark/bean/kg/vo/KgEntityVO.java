@@ -42,6 +42,21 @@ public class KgEntityVO extends BaseVO {
     private Long sourceId;
 
     /**
+     * 来源类型
+     */
+    private Integer sourceType;
+
+    /**
+     * 置信度分数
+     */
+    private Double confidence;
+
+    /**
+     * 审核状态
+     */
+    private Integer auditStatus;
+
+    /**
      * 状态（0-无效 1-有效）
      */
     private Integer status;

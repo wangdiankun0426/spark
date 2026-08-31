@@ -15,6 +15,8 @@ import com.spark.dao.kg.KgEntityDao;
 import com.spark.dao.kg.KgGraphDao;
 import com.spark.dao.kg.KgRelationDao;
 import com.spark.enums.ErrorCodeEnum;
+import com.spark.enums.KgAuditStatusEnum;
+import com.spark.enums.KgSourceTypeEnum;
 import com.spark.enums.OperateTypeEnum;
 import com.spark.enums.StatusEnum;
 import com.spark.kg.service.IKgEntityService;
@@ -260,6 +262,64 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
     }
 
     /**
+     * 审核实体
+     * @param entityId 实体ID
+     * @param auditStatus 审核状态
+     * @return 审核结果
+     */
+    @Override
+    public ResultData<Void> auditKgEntity(Long entityId, Integer auditStatus) {
+        ResultData<Void> result = new ResultData<>();
+        if (entityId == null || auditStatus == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        KgEntityQuery query = new KgEntityQuery();
+        query.setId(entityId);
+        KgEntityResult entityResult = kgEntityDao.queryKgEntity(query);
+        if (entityResult == null) {
+            result.setErrorCode(ErrorCodeEnum.KG_ENTITY_NOT_EXIST);
+            return result;
+        }
+        KgEntity entity = new KgEntity();
+        entity.setId(entityId);
+        entity.setAuditStatus(auditStatus);
+        int count = kgEntityDao.updateDBById(entity);
+        if (count < 1) {
+            logger.error("auditKgEntity error, update db fail, entityId={}", entityId);
+            return result;
+        }
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 批量审核实体
+     * @param entityIds 实体ID列表
+     * @param auditStatus 审核状态
+     * @return 审核结果
+     */
+    @Override
+    public ResultData<Void> batchAuditKgEntity(List<Long> entityIds, Integer auditStatus) {
+        ResultData<Void> result = new ResultData<>();
+        if (CollectionUtil.isEmpty(entityIds) || auditStatus == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        for (Long entityId : entityIds) {
+            if (entityId == null) {
+                continue;
+            }
+            KgEntity entity = new KgEntity();
+            entity.setId(entityId);
+            entity.setAuditStatus(auditStatus);
+            kgEntityDao.updateDBById(entity);
+        }
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
      * 补充列表数据
      * @param list 列表
      */
@@ -270,7 +330,17 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
         }
         super.supplyCreatedByName(list);
         super.supplyUpdatedByName(list);
-        list.forEach(ke -> ke.setStatusName(StatusEnum.indexOf(ke.getStatus()).getDesc()));
+        list.forEach(ke -> {
+            ke.setStatusName(StatusEnum.indexOf(ke.getStatus()).getDesc());
+            if (ke.getSourceType() != null) {
+                KgSourceTypeEnum sourceType = KgSourceTypeEnum.indexOf(ke.getSourceType());
+                ke.setSourceTypeName(sourceType.getDesc());
+            }
+            if (ke.getAuditStatus() != null) {
+                KgAuditStatusEnum auditStatus = KgAuditStatusEnum.indexOf(ke.getAuditStatus());
+                ke.setAuditStatusName(auditStatus.getDesc());
+            }
+        });
         Set<Long> graphIds = new HashSet<>();
         for (KgEntityResult ke : list) {
             if (ke.getGraphId() != null) {

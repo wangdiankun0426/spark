@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.kg.KgRelationDao" >
     <sql id="allColumnList" >
-        id , graph_id , head_entity_id , tail_entity_id , relation_type , weight , source_id , status ,
+        id , graph_id , head_entity_id , tail_entity_id , relation_type , weight , source_id , source_type , confidence , status ,
         dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
@@ -54,9 +54,9 @@
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into kg_relation (graph_id , head_entity_id , tail_entity_id , relation_type , weight , source_id , status ,
+        insert into kg_relation (graph_id , head_entity_id , tail_entity_id , relation_type , weight , source_id , source_type , confidence , status ,
         dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values (#{graphId} , #{headEntityId} , #{tailEntityId} , #{relationType} , #{weight} , #{sourceId} , #{status} ,
+        values (#{graphId} , #{headEntityId} , #{tailEntityId} , #{relationType} , #{weight} , #{sourceId} , #{sourceType} , #{confidence} , #{status} ,
         #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
@@ -84,6 +84,12 @@
         </if>
         <if test="sourceId != null">
             , source_id = #{sourceId}
+        </if>
+        <if test="sourceType != null">
+            , source_type = #{sourceType}
+        </if>
+        <if test="confidence != null">
+            , confidence = #{confidence}
         </if>
         <if test="status != null">
             , status = #{status}

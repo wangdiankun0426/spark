@@ -751,6 +751,9 @@ CREATE TABLE kg_entity (
        name VARCHAR(256) NOT NULL COMMENT '实体名称',
        type VARCHAR(64) DEFAULT NULL COMMENT '实体类型',
        source_id BIGINT(20) NOT NULL COMMENT '来源 id' ,
+       source_type INT(3) DEFAULT 1 COMMENT '来源类型',
+       confidence DECIMAL(3,2) DEFAULT 1.00 COMMENT '置信度',
+       audit_status INT(3) DEFAULT 0 COMMENT '审核状态',
        description VARCHAR(1024) DEFAULT NULL COMMENT '实体描述',
        status TINYINT(1) DEFAULT 1 COMMENT '状态（0-禁用 1-启用）',
 
@@ -772,6 +775,8 @@ CREATE TABLE kg_relation (
      relation_type VARCHAR(64) NOT NULL COMMENT '关系类型',
      weight DOUBLE DEFAULT 1.0 COMMENT '关系权重',
      source_id BIGINT(20) NOT NULL COMMENT '来源 id' ,
+     source_type INT(3) DEFAULT 1 COMMENT '来源类型',
+     confidence DECIMAL(3,2) DEFAULT 1.00 COMMENT '置信度',
      status TINYINT(1) DEFAULT 1 COMMENT '状态（0-禁用 1-启用）',
 
      dept_id BIGINT(20) DEFAULT NULL COMMENT '部门 id',

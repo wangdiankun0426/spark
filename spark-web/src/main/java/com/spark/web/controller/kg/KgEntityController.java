@@ -91,4 +91,26 @@ public class KgEntityController {
     public ResultData<Void> mergeKgEntity(@RequestParam Long mainEntityId, @RequestParam List<Long> mergedEntityIds) {
         return kgEntityService.mergeKgEntity(mainEntityId, mergedEntityIds);
     }
+
+    /**
+     * 审核实体
+     * @param entityId 实体ID
+     * @param auditStatus 审核状态
+     * @return 响应结果
+     */
+    @PostMapping("audit")
+    public ResultData<Void> auditKgEntity(@RequestParam Long entityId, @RequestParam Integer auditStatus) {
+        return kgEntityService.auditKgEntity(entityId, auditStatus);
+    }
+
+    /**
+     * 批量审核实体
+     * @param entityIds 实体ID列表
+     * @param auditStatus 审核状态
+     * @return 响应结果
+     */
+    @PostMapping("batchAudit")
+    public ResultData<Void> batchAuditKgEntity(@RequestParam List<Long> entityIds, @RequestParam Integer auditStatus) {
+        return kgEntityService.batchAuditKgEntity(entityIds, auditStatus);
+    }
 }

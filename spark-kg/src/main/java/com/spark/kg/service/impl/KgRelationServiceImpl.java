@@ -18,6 +18,7 @@ import com.spark.dao.kg.KgEntityDao;
 import com.spark.dao.kg.KgGraphDao;
 import com.spark.dao.kg.KgRelationDao;
 import com.spark.enums.ErrorCodeEnum;
+import com.spark.enums.KgSourceTypeEnum;
 import com.spark.enums.OperateTypeEnum;
 import com.spark.enums.StatusEnum;
 import com.spark.kg.service.IKgRelationService;
@@ -242,7 +243,13 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
         }
         super.supplyCreatedByName(list);
         super.supplyUpdatedByName(list);
-        list.forEach(kr -> kr.setStatusName(StatusEnum.indexOf(kr.getStatus()).getDesc()));
+        list.forEach(kr -> {
+            kr.setStatusName(StatusEnum.indexOf(kr.getStatus()).getDesc());
+            if (kr.getSourceType() != null) {
+                KgSourceTypeEnum sourceType = KgSourceTypeEnum.indexOf(kr.getSourceType());
+                kr.setSourceTypeName(sourceType.getDesc());
+            }
+        });
         Set<Long> graphIds = new HashSet<>();
         Set<Long> entityIds = new HashSet<>();
         for (KgRelationResult kr : list) {

@@ -37,6 +37,16 @@ public class KgEntityQuery extends BaseQuery {
     private Long sourceId;
 
     /**
+     * 来源类型
+     */
+    private Integer sourceType;
+
+    /**
+     * 审核状态
+     */
+    private Integer auditStatus;
+
+    /**
      * 状态
      */
     private Integer status;

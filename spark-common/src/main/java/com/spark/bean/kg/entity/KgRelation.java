@@ -42,12 +42,22 @@ public class KgRelation extends BaseEntity {
     private Double weight;
 
     /**
-     * 来源 id：接口创建存用户 id，文档解析存文档 id
+     * 来源 id
      */
     private Long sourceId;
 
     /**
-     * 状态（0-无效 1-有效）
+     * 来源类型
+     */
+    private Integer sourceType;
+
+    /**
+     * 置信度分数
+     */
+    private Double confidence;
+
+    /**
+     * 状态
      */
     private Integer status;
 

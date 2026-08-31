@@ -62,4 +62,20 @@ public interface IKgEntityService {
      * @return 合并结果
      */
     ResultData<Void> mergeKgEntity(Long mainEntityId, List<Long> mergedEntityIds);
+
+    /**
+     * 审核实体
+     * @param entityId 实体ID
+     * @param auditStatus 审核状态
+     * @return 审核结果
+     */
+    ResultData<Void> auditKgEntity(Long entityId, Integer auditStatus);
+
+    /**
+     * 批量审核实体
+     * @param entityIds 实体ID列表
+     * @param auditStatus 审核状态
+     * @return 审核结果
+     */
+    ResultData<Void> batchAuditKgEntity(List<Long> entityIds, Integer auditStatus);
 }

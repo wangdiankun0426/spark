@@ -62,6 +62,21 @@ public class KgRelationResult extends BaseResult {
     private Long sourceId;
 
     /**
+     * 来源类型
+     */
+    private Integer sourceType;
+
+    /**
+     * 来源类型名称
+     */
+    private String sourceTypeName;
+
+    /**
+     * 置信度分数
+     */
+    private Double confidence;
+
+    /**
      * 状态（0-无效 1-有效）
      */
     private Integer status;

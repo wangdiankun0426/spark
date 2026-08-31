@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PostConstruct;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +42,43 @@ public class Neo4jGraphStore {
      * 关系类型前缀（实际类型动态拼接）
      */
     private static final String RELATION_TYPE_PREFIX = "REL_";
+
+    /**
+     * 初始化时创建必要的索引和约束
+     */
+    @PostConstruct
+    public void initIndexes() {
+        try (Session session = neo4jDriver.session()) {
+            // 1. 创建实体ID唯一约束
+            session.run("CREATE CONSTRAINT entity_id_unique IF NOT EXISTS " +
+                "FOR (e:Entity) REQUIRE e.id IS UNIQUE");
+            logger.info("Neo4j constraint entity_id_unique initialized");
+
+            // 2. 创建图谱ID索引
+            session.run("CREATE INDEX entity_graphId_idx IF NOT EXISTS " +
+                "FOR (e:Entity) ON (e.graphId)");
+            logger.info("Neo4j index entity_graphId_idx initialized");
+
+            // 3. 创建实体类型索引
+            session.run("CREATE INDEX entity_type_idx IF NOT EXISTS " +
+                "FOR (e:Entity) ON (e.type)");
+            logger.info("Neo4j index entity_type_idx initialized");
+
+            // 4. 创建实体名称索引
+            session.run("CREATE INDEX entity_name_idx IF NOT EXISTS " +
+                "FOR (e:Entity) ON (e.name)");
+            logger.info("Neo4j index entity_name_idx initialized");
+
+            // 5. 创建全文索引（支持名称和描述的全文搜索）
+            session.run("CREATE FULLTEXT INDEX entity_fulltext IF NOT EXISTS " +
+                "FOR (e:Entity) ON EACH [e.name, e.description]");
+            logger.info("Neo4j fulltext index entity_fulltext initialized");
+
+            logger.info("Neo4j indexes initialized successfully");
+        } catch (Exception e) {
+            logger.error("Failed to initialize Neo4j indexes", e);
+        }
+    }
 
     /**
      * 写入或更新实体节点（按 id MERGE）
@@ -234,6 +273,7 @@ public class Neo4jGraphStore {
 
     /**
      * 按实体名称模糊查询实体节点
+     * 优先使用全文索引，失败时回退到 CONTAINS 查询
      * @param graphId 图谱 id
      * @param name 实体名称（模糊匹配）
      * @return 实体节点列表
@@ -243,6 +283,42 @@ public class Neo4jGraphStore {
         if (name == null || name.isBlank()) {
             return list;
         }
+        // 优先使用全文索引（性能更好）
+        String cypher = "CALL db.index.fulltext.queryNodes('entity_fulltext', $name) " +
+                "YIELD node, score " +
+                "WHERE node.graphId = $graphId " +
+                "RETURN node.id as id, node.name as name, node.type as type, " +
+                "node.description as description, node.graphId as graphId, score " +
+                "ORDER BY score DESC " +
+                "LIMIT 20";
+        try (Session session = neo4jDriver.session()) {
+            Result result = session.run(cypher, Map.of("graphId", graphId, "name", name));
+            while (result.hasNext()) {
+                Record record = result.next();
+                KgEntity node = new KgEntity();
+                node.setId(record.get("id").asLong());
+                node.setName(record.get("name").asString(null));
+                node.setType(record.get("type").asString(null));
+                node.setDescription(record.get("description").asString(null));
+                node.setGraphId(record.get("graphId").asLong(0));
+                list.add(node);
+            }
+        } catch (Exception e) {
+            logger.warn("全文索引查询失败，回退到CONTAINS查询, graphId={}, name={}", graphId, name, e);
+            // 回退到 CONTAINS 查询
+            list = queryEntityByNameContains(graphId, name);
+        }
+        return list;
+    }
+
+    /**
+     * 使用 CONTAINS 查询实体（全文索引不可用时的回退方案）
+     * @param graphId 图谱 id
+     * @param name 实体名称
+     * @return 实体节点列表
+     */
+    private List<KgEntity> queryEntityByNameContains(Long graphId, String name) {
+        List<KgEntity> list = new ArrayList<>();
         String cypher = "MATCH (n:" + NODE_LABEL + ") " +
                 "WHERE n.graphId = $graphId AND n.name CONTAINS $name " +
                 "RETURN n.id as id, n.name as name, n.type as type, n.description as description, " +

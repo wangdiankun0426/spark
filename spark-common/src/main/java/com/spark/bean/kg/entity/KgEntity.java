@@ -42,6 +42,21 @@ public class KgEntity extends BaseEntity {
     private Long sourceId;
 
     /**
+     * 来源类型：1-LLM抽取 2-人工录入 3-规则抽取
+     */
+    private Integer sourceType;
+
+    /**
+     * 置信度分数 (0.0-1.0)
+     */
+    private Double confidence;
+
+    /**
+     * 审核状态：0-待审核 1-已审核 2-已拒绝
+     */
+    private Integer auditStatus;
+
+    /**
      * 状态（0-无效 1-有效）
      */
     private Integer status;

@@ -21,6 +21,8 @@ import com.spark.dao.kg.KgEntityDao;
 import com.spark.dao.kg.KgGraphDao;
 import com.spark.dao.kg.KgRelationDao;
 import com.spark.enums.DocumentEventStatusEnum;
+import com.spark.enums.KgAuditStatusEnum;
+import com.spark.enums.KgSourceTypeEnum;
 import com.spark.enums.StatusEnum;
 import com.spark.llm.model.ModelFactory;
 import com.spark.llm.store.ESVectorStore;
@@ -583,6 +585,9 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
             entity.setName(name);
             entity.setType(obj.getString("type"));
             entity.setDescription(obj.getString("description"));
+            entity.setConfidence(obj.getDouble("confidence"));
+            entity.setSourceType(KgSourceTypeEnum.LLM.getValue());
+            entity.setAuditStatus(KgAuditStatusEnum.PENDING.getValue());
             entity.setStatus(StatusEnum.NORMAL.getValue());
             list.add(entity);
         }
@@ -623,6 +628,8 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
             relation.setRelationType(relationType);
             Double weight = obj.getDouble("weight");
             relation.setWeight(weight == null ? 1.0 : weight);
+            relation.setConfidence(obj.getDouble("confidence"));
+            relation.setSourceType(KgSourceTypeEnum.LLM.getValue());
             relation.setStatus(StatusEnum.NORMAL.getValue());
             list.add(relation);
         }
@@ -665,6 +672,12 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
         for (KgEntity entity : entities) {
             entity.setGraphId(graphId);
             entity.setSourceId(docId);
+            if (entity.getSourceType() == null) {
+                entity.setSourceType(KgSourceTypeEnum.LLM.getValue());
+            }
+            if (entity.getAuditStatus() == null) {
+                entity.setAuditStatus(KgAuditStatusEnum.PENDING.getValue());
+            }
             entity.setStatus(StatusEnum.NORMAL.getValue());
             entity.setCreatedBy(101L);
             entity.setUpdatedBy(101L);
@@ -692,6 +705,9 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
         for (KgRelation relation : relations) {
             relation.setGraphId(graphId);
             relation.setSourceId(docId);
+            if (relation.getSourceType() == null) {
+                relation.setSourceType(KgSourceTypeEnum.LLM.getValue());
+            }
             relation.setStatus(StatusEnum.NORMAL.getValue());
             relation.setCreatedBy(101L);
             relation.setUpdatedBy(101L);

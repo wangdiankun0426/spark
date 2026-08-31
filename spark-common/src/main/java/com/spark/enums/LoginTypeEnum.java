@@ -10,13 +10,12 @@ package com.spark.enums;
  * @since 2024/4/8 11:22
  */
 public enum LoginTypeEnum {
+    UNKNOWN(0 ,"未知"),
     PASSWORD(1, "密码登录"),
     MESSAGE(2, "短信登录"),
     EMAIL(3, "邮箱登录"),
     WECOM_OAUTH(4, "企微oauth2登录"),
 
-
-    UNKNOWN(10 ,"未知")
     ;
 
     LoginTypeEnum(Integer value, String desc) {

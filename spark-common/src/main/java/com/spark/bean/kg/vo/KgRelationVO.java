@@ -47,7 +47,17 @@ public class KgRelationVO extends BaseVO {
     private Long sourceId;
 
     /**
-     * 状态（0-无效 1-有效）
+     * 来源类型
+     */
+    private Integer sourceType;
+
+    /**
+     * 置信度分数
+     */
+    private Double confidence;
+
+    /**
+     * 状态
      */
     private Integer status;
 
