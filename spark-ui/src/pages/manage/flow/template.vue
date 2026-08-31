@@ -264,6 +264,14 @@
                   inline-prompt
               />
             </el-form-item>
+            <el-form-item label="备注" prop="remark">
+              <el-input
+                  v-model="templateForm.remark"
+                  type="textarea"
+                  placeholder="请输入备注"
+                  :rows="3"
+              />
+            </el-form-item>
           </el-col>
         </el-row>
       </el-form>
@@ -413,6 +421,7 @@ function handleOpenUpdateTemplateForm(row) {
       templateForm.value.formId = res1.data.formId;
       templateForm.value.type = res1.data.type;
       templateForm.value.status = res1.data.status;
+      templateForm.value.remark = res1.data.remark;
       templateFormTitle.value = "修改流程模板";
       templateFormVisible.value = true;
     }).catch(e => {})
@@ -451,6 +460,7 @@ function handleOpenCreateTemplateForm() {
     templateForm.value.formId = undefined;
     templateForm.value.type = 1;
     templateForm.value.status = 1;
+    templateForm.value.remark = undefined;
     templateFormTitle.value = "创建流程模板";
     templateFormVisible.value = true;
   }).catch(e => {})
@@ -493,6 +503,7 @@ function handleSubmitTemplateForm() {
           status: templateForm.value.status,
           formId: templateForm.value.formId,
           type: templateForm.value.type,
+          remark: templateForm.value.remark,
         };
         createTemplateAPI(data).then(res => {
           if (res.code !== 200) {
@@ -511,6 +522,7 @@ function handleSubmitTemplateForm() {
           status: templateForm.value.status,
           formId: templateForm.value.formId,
           type: templateForm.value.type,
+          remark: templateForm.value.remark,
         };
         updateTemplateAPI(data).then(res => {
           if (res.code !== 200) {
@@ -535,6 +547,7 @@ function handleCloseTemplateForm() {
   templateForm.value.revNum = undefined;
   templateForm.value.type = undefined;
   templateForm.value.status = undefined;
+  templateForm.value.remark = undefined;
   templateFormTitle.value = "";
   templateFormVisible.value = false;
 }

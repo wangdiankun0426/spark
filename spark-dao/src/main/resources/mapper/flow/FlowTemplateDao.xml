@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.flow.FlowTemplateDao" >
     <sql id="allColumnList" >
-        id , name , process_id , form_id, type, rev_num , rev_id, status , delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , name , process_id , form_id, type, rev_num , rev_id, status, remark , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="searchCondition">
@@ -47,8 +47,8 @@
     </sql>
 
     <insert id="insert">
-        insert into flow_template ( id, name , process_id , form_id , type , rev_num , rev_id, status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values (#{id} , #{name} , #{processId} , #{formId} , #{type} , #{revNum} , #{revId} , #{status} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into flow_template ( id, name , process_id , form_id , type , rev_num , rev_id, status, remark , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{id} , #{name} , #{processId} , #{formId} , #{type} , #{revNum} , #{revId} , #{status} , #{remark} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">
@@ -78,6 +78,9 @@
         </if>
         <if test="type != null">
             , type = #{type}
+        </if>
+        <if test="remark != null">
+            , remark = #{remark}
         </if>
         where id = #{id}
     </update>

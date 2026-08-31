@@ -66,6 +66,11 @@ public class FlowTemplateResult extends BaseResult {
     private String typeName;
 
     /**
+     * 备注
+     **/
+    private String remark;
+
+    /**
      * 表单json
      **/
     private String formJson;

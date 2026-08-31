@@ -31,7 +31,7 @@
           :icon="Share"
           :title="item.name"
           :id-text="'编号 #' + item.id"
-          :description="'模板ID：' + item.processId"
+          :description="item.remark || '暂无备注'"
           :height="300"
           @click="handleOpenTemplate(item.id)"
       >

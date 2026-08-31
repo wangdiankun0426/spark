@@ -10,11 +10,11 @@
 
 ## 在线体验
 
-| 端 | 地址 |
-|---|------|
-| PC 端 | https://spark.evancloud.top:7102 |
+| 端 | 地址                                                              |
+|---|-----------------------------------------------------------------|
+| PC 端 | https://spark.evancloud.top:7101                                |
 | Windows 桌面端 | https://spark.evancloud.top:7101/bundle/星火云_0.0.1_x64-setup.exe |
-| H5 移动端| https://spark.evancloud.top:7102 |
+| H5 移动端| https://spark.evancloud.top:7102                                |
 
 **测试账号**
 

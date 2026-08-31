@@ -50,4 +50,9 @@ public class FlowTemplate extends BaseEntity {
      **/
     private Integer type;
 
+    /**
+     * 备注
+     **/
+    private String remark;
+
 }

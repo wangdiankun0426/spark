@@ -31,7 +31,7 @@
           :icon="MagicStick"
           :title="agent.name"
           :id-text="'编号 #' + agent.id"
-          :description="getDescription(agent)"
+          :description="agent.description || '暂无描述'"
           :disabled="agent.status === -1"
           :height="360"
           @click="handleSelectAgent(agent)"
@@ -180,20 +180,6 @@ function loadAgents() {
  */
 function getTheme(agent) {
   return themes[agent.id % themes.length]
-}
-
-/**
- * 获取描述，description 为空时回退到 systemPrompt 截断
- * @param agent
- */
-function getDescription(agent) {
-  if (agent.description) {
-    return agent.description
-  }
-  if (agent.systemPrompt) {
-    return agent.systemPrompt.length > 60 ? agent.systemPrompt.slice(0, 60) + '...' : agent.systemPrompt
-  }
-  return '暂无描述'
 }
 
 /**

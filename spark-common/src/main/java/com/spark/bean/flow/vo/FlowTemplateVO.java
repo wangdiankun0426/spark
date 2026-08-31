@@ -35,4 +35,9 @@ public class FlowTemplateVO extends BaseVO {
      **/
     private Integer type;
 
+    /**
+     * 备注
+     **/
+    private String remark;
+
 }

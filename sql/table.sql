@@ -430,6 +430,7 @@ CREATE TABLE `flow_template` (
      `rev_id` bigint(12) NULL COMMENT '版本id',
      `rev_num` varchar(12) NOT NULL COMMENT '当前版本号',
      `status` int(1) NOT NULL DEFAULT 0 COMMENT '状态',
+     `remark` varchar(256) NULL COMMENT '备注',
 
      `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
      `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',

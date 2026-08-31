@@ -31,7 +31,7 @@
           :icon="Connection"
           :title="item.name"
           :id-text="'编号 #' + item.id"
-          :description="getDescription(item)"
+          :description="item.description || '暂无描述'"
           :disabled="item.status === 0"
           :height="300"
           @click="handleOpenGraph(item)"
@@ -176,17 +176,6 @@ function loadGraphList() {
  */
 function getTheme(item) {
   return themes[item.id % themes.length]
-}
-
-/**
- * 获取描述，为空时回退占位文案
- * @param item
- */
-function getDescription(item) {
-  if (item.description) {
-    return item.description
-  }
-  return '暂无描述'
 }
 
 /**
