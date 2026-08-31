@@ -16,7 +16,7 @@ import java.util.List;
  *
  * @author wangdiankun
  * @since 2026-08-11 10:00:00
- * AI工作流模板版本表DAO
+ * workFlow模板版本表DAO
  */
 public interface WfTemplateVersionDao extends BaseDao<WfTemplateVersion> {
 

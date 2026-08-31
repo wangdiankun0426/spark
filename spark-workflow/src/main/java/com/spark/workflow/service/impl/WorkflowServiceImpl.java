@@ -95,6 +95,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
             logger.error("createWorkflow error, insert template db fail");
             return result;
         }
+        result.setObjId(templateId);
         result.setCode(ResultData.OK);
         return result;
     }
@@ -108,7 +109,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
     @OperateLog(operateType = OperateTypeEnum.WORKFLOW_UPDATE)
     public ResultData<Void> updateWorkflow(WfTemplateVO templateVO) {
         ResultData<Void> result = new ResultData<>();
-        if (templateVO == null || templateVO.getId() == null) {
+        if (templateVO == null || templateVO.getId() == null || templateVO.getFormId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
@@ -131,6 +132,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
             logger.error("updateWorkflow error, update db fail");
             return result;
         }
+        result.setObjId(templateVO.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -169,6 +171,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
             logger.error("deleteWorkflow error, delete db fail");
             return result;
         }
+        result.setObjId(templateVO.getId());
         result.setCode(ResultData.OK);
         return result;
     }

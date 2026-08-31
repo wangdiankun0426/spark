@@ -13,7 +13,7 @@ import java.sql.Timestamp;
  *
  * @author wangdiankun
  * @since 2026-08-11 10:00:00
- * AI工作流运行实例表实体
+ * workFlow运行实例表实体
  */
 @Data
 public class WfInstance extends BaseEntity {

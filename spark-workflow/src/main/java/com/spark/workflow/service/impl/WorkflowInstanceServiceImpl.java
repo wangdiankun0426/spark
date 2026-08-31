@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
  *
  * @author wangdiankun
  * @since 2026-08-11 15:00:00
- * AI工作流实例Service实现
+ * workFlow实例Service实现
  */
 @Service
 public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, WfInstanceResult> implements IWorkflowInstanceService {

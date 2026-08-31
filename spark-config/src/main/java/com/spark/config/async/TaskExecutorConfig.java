@@ -44,7 +44,7 @@ public class TaskExecutorConfig {
     }
 
     /**
-     * AI工作流执行线程池
+     * workFlow执行线程池
      */
     @Bean("workflowExecutor")
     public Executor workflowExecutor() {

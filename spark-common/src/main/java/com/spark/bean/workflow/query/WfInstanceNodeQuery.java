@@ -11,7 +11,7 @@ import lombok.Data;
  *
  * @author wangdiankun
  * @since 2026-08-11 10:00:00
- * AI工作流实例节点运行记录查询参数
+ * workFlow实例节点运行记录查询参数
  */
 @Data
 public class WfInstanceNodeQuery extends BaseQuery {

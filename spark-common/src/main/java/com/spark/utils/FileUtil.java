@@ -186,4 +186,25 @@ public class FileUtil {
         return true;
     }
 
+    /**
+     * 删除目录及其子文件
+     * @param dir 目录
+     */
+    public static void deleteDir(File dir) {
+        if (dir == null) {
+            return;
+        }
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    deleteDir(file);
+                } else {
+                    file.delete();
+                }
+            }
+        }
+        dir.delete();
+    }
+
 }

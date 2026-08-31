@@ -5,6 +5,8 @@ import com.spark.bean.system.query.AttachmentQuery;
 import com.spark.bean.system.result.AttachmentResult;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 /**
  * +++/\_/\
  * + ( °w° )=
@@ -37,4 +39,36 @@ public interface IAttachmentService {
      * @return 附件详情
      */
     ResultData<AttachmentResult> queryAttachmentDetail(AttachmentQuery query);
+
+    /**
+     * 初始化分片上传会话
+     * @param fileName 文件名称
+     * @param fileSize 文件大小
+     * @param totalChunks 分片总数
+     * @return 上传会话id
+     */
+    ResultData<String> initUploadChunk(String fileName, Long fileSize, Integer totalChunks);
+
+    /**
+     * 上传单个分片
+     * @param uploadId 上传会话id
+     * @param chunkIndex 分片序号
+     * @param file 分片文件
+     * @return 上传结果
+     */
+    ResultData<Void> uploadChunk(String uploadId, Integer chunkIndex, MultipartFile file);
+
+    /**
+     * 查询已上传的分片序号
+     * @param uploadId 上传会话id
+     * @return 分片序号列表
+     */
+    ResultData<List<Integer>> queryUploadChunks(String uploadId);
+
+    /**
+     * 合并分片并保存为系统附件
+     * @param uploadId 上传会话id
+     * @return 附件结果
+     */
+    ResultData<AttachmentResult> mergeUploadChunk(String uploadId);
 }

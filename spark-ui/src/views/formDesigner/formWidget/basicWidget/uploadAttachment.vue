@@ -10,16 +10,23 @@
         :http-request="handleUploadRequest"
         :before-upload="beforeUpload"
         :multiple="props.widget.config.multiple"
-        :disabled="props.widget.config.disabled || props.widget.config.readonly"
+        :disabled="props.widget.config.disabled || props.widget.config.readonly || uploading"
     >
       <el-button
           plain
-          :disabled="props.widget.config.disabled || props.widget.config.readonly"
+          :disabled="props.widget.config.disabled || props.widget.config.readonly || uploading"
       >
         <el-icon><UploadFilled /></el-icon>
         点击上传
       </el-button>
     </el-upload>
+    <div v-if="uploading || canResume" class="upload-progress">
+      <el-progress :percentage="uploadPercent" :stroke-width="6" :status="uploadFailed ? 'exception' : ''" />
+      <div class="upload-progress-status">{{ uploadStatusText }}</div>
+      <el-button v-if="canResume" type="warning" size="small" @click="handleResume" :disabled="uploading">
+        继续上传
+      </el-button>
+    </div>
     <el-table
         class="upload-file-table"
         :data="fileList"
@@ -58,10 +65,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { uploadSystemAttachmentAPI, downloadSystemAttachmentAPI } from '@/api/system/attachment.js'
+import { downloadSystemAttachmentAPI } from '@/api/system/attachment.js'
+import { chunkUploadFile } from '@/utils/chunkUploadUtil.js'
 
 defineOptions({
   name: "customUploadAttachment"
@@ -73,14 +81,24 @@ const props = defineProps({
 
 const router = useRouter()
 
-// 上传文件大小上限（50MB）
-const maxFileSize = 50 * 1024 * 1024
-
 // widget.config 值约定：
 //   value：附件id（单选为单个ID，多选为逗号串），用于业务关联与下载
 //   showValue：附件信息 JSON 数组字符串，如 [{"id":1,"name":"a.pdf","sizeStr":"1MB","ownerName":"张三","createdDt":"2026-08-20 15:00:00"}]
 // 附件列表（含名称/大小/上传人/上传时间），由上传接口返回数据直接维护
 const fileList = ref([])
+// 上传中状态：控制上传按钮禁用与进度展示
+const uploading = ref(false)
+const uploadPercent = ref(0)
+const uploadStatusText = ref('')
+const uploadFailed = ref(false)
+// 断点续传状态
+const lastUploadId = ref(undefined)
+const lastFile = ref(undefined)
+
+// 是否可续传：有保存的 uploadId 且上传失败
+const canResume = computed(() => {
+  return lastUploadId.value && lastFile.value && uploadFailed.value && !uploading.value
+})
 
 /**
  * 初始化附件列表：从 showValue（JSON数组）回显，兼容旧的逗号串名称格式
@@ -132,7 +150,7 @@ const formatTime = (date) => {
 }
 
 /**
- * 上传前校验：单选限制一个附件、文件大小限制
+ * 上传前校验：单选限制一个附件
  * @param file 待上传文件
  * @returns {boolean}
  */
@@ -141,23 +159,41 @@ function beforeUpload(file) {
     ElMessage.warning('只能上传一个附件，请先删除已上传的附件')
     return false
   }
-  if (file.size > maxFileSize) {
-    ElMessage.error('请上传小于50MB的文件')
-    return false
-  }
+  // 清除之前的续传状态
+  lastUploadId.value = undefined
+  lastFile.value = undefined
+  uploadFailed.value = false
   return true
 }
 
 /**
- * 自定义上传：调用系统附件上传接口，返回数据直接存入附件列表
- * @param option 上传选项（含 file）
+ * 执行上传（新上传或续传）
+ * @param file 待上传文件
+ * @param uploadId 续传会话id（可选）
  */
-function handleUploadRequest(option) {
-  uploadSystemAttachmentAPI(option.file).then(res => {
-    if (res.code !== 200 || !res.data) {
-      return
-    }
-    const attachment = res.data
+async function doUpload(file, uploadId) {
+  uploading.value = true
+  uploadPercent.value = 0
+  uploadStatusText.value = uploadId ? '继续上传中...' : '准备上传...'
+  uploadFailed.value = false
+  lastFile.value = file
+  try {
+    const attachment = await chunkUploadFile(file, {
+      uploadId,
+      onUploadId: (id) => {
+        lastUploadId.value = id
+      },
+      onStatus: (statusText) => {
+        uploadStatusText.value = statusText
+      },
+      onProgress: (progress) => {
+        uploadPercent.value = progress.percent
+      }
+    })
+    // 上传成功，清除续传状态
+    lastUploadId.value = undefined
+    lastFile.value = undefined
+    uploadFailed.value = false
     fileList.value.push({
       id: attachment.id,
       name: attachment.name,
@@ -167,7 +203,30 @@ function handleUploadRequest(option) {
     })
     syncConfigValue()
     ElMessage.success('附件上传成功')
-  })
+  } catch (err) {
+    uploadFailed.value = true
+    uploadStatusText.value = '上传失败，可点击"继续上传"重试'
+    // 失败提示由 request.js 或工具内抛出处理，此处避免重复提示
+  } finally {
+    uploading.value = false
+  }
+}
+
+/**
+ * 自定义上传：分片上传文件，成功后存入附件列表
+ * @param option 上传选项（含 file）
+ */
+function handleUploadRequest(option) {
+  doUpload(option.file)
+}
+
+/**
+ * 继续上传：使用保存的 uploadId 续传
+ */
+function handleResume() {
+  if (lastUploadId.value && lastFile.value) {
+    doUpload(lastFile.value, lastUploadId.value)
+  }
 }
 
 /**
@@ -211,6 +270,16 @@ function handleDownload(file) {
 <style lang="scss" scoped>
 .el-form-item {
   margin-bottom: 10px;
+}
+.upload-progress {
+  width: 100%;
+  margin: 6px 0;
+}
+.upload-progress-status {
+  margin-top: 4px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
 }
 .upload-file-table {
   width: 100%;

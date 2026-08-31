@@ -6,7 +6,6 @@ import com.spark.bean.kb.result.DocumentResult;
 import com.spark.bean.kb.vo.DocumentVO;
 import com.spark.bean.base.PageResult;
 import com.spark.bean.base.ResultData;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -21,14 +20,6 @@ import java.util.Map;
  * @since 2024-12-07 19:08:01
  */
 public interface IDocumentService {
-
-    /**
-     * 上传文档
-     * @param file  文件
-     * @param prtId 父ID
-     * @return 上传结果
-     */
-    ResultData<Void> uploadDocument(MultipartFile file, Long prtId);
 
     /**
      * 根据系统附件归档文档

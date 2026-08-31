@@ -11,7 +11,7 @@ import lombok.Data;
  *
  * @author wangdiankun
  * @since 2026-08-11 10:00:00
- * AI工作流模板版本表实体
+ * workFlow模板版本表实体
  */
 @Data
 public class WfTemplateVersion extends BaseEntity {

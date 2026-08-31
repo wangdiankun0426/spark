@@ -52,11 +52,10 @@ public enum OperateTypeEnum {
     KG_ENTITY_INSERT(77, "新增图谱实体"),
     KG_ENTITY_DELETE(78, "删除图谱实体"),
     KG_RELATION_INSERT(79, "新增图谱关系"),
-    // AI工作流相关操作记录
-    WORKFLOW_INSERT(80, "新增AI工作流"),
-    WORKFLOW_UPDATE(81, "修改AI工作流"),
-    WORKFLOW_DELETE(82, "删除AI工作流"),
-    WORKFLOW_PUBLISH(83, "发布AI工作流"),
+    // workFlow相关操作记录
+    WORKFLOW_INSERT(80, "新增workFlow"),
+    WORKFLOW_UPDATE(81, "修改workFlow"),
+    WORKFLOW_DELETE(82, "删除workFlow"),
     // 消息相关的操作记录
     MESSAGE_INSERT(90, "发送消息"),
     MESSAGE_DELETE(91, "删除消息"),

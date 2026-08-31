@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * @author wangdiankun
  * @since 2026-08-11 10:00:00
- * AI工作流管理Controller
+ * workFlow管理Controller
  */
 @RestController
 @RequestMapping("workflow")
@@ -30,7 +30,7 @@ public class WorkflowController {
     private IWorkflowService workflowService;
 
     /**
-     * 创建AI工作流
+     * 创建workFlow
      */
     @PostMapping("create")
     public ResultData<Void> createWorkflow(WfTemplateVO templateVO) {
@@ -38,7 +38,7 @@ public class WorkflowController {
     }
 
     /**
-     * 修改AI工作流基本信息
+     * 修改workFlow基本信息
      */
     @PostMapping("update")
     public ResultData<Void> updateWorkflow(WfTemplateVO templateVO) {
@@ -46,7 +46,7 @@ public class WorkflowController {
     }
 
     /**
-     * 删除AI工作流
+     * 删除workFlow
      */
     @PostMapping("delete")
     public ResultData<Void> deleteWorkflow(WfTemplateVO templateVO) {
@@ -54,7 +54,7 @@ public class WorkflowController {
     }
 
     /**
-     * 分页查询AI工作流列表
+     * 分页查询workFlow列表
      */
     @GetMapping("pageList")
     public ResultData<PageResult<WfTemplateResult>> pageWorkflowList(WfTemplateQuery query) {
@@ -62,7 +62,7 @@ public class WorkflowController {
     }
 
     /**
-     * 查询AI工作流详情
+     * 查询workFlow详情
      */
     @GetMapping("detail")
     public ResultData<WfTemplateResult> queryWorkflowDetail(WfTemplateQuery query) {

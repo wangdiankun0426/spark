@@ -11,23 +11,17 @@
         <el-upload
           class="document-uploader"
           drag
-          :show-file-list="true"
-          :file-list="uploadFileList"
-          :action="documentUploadUrl"
-          :on-success="handleUploadSuccess"
-          :on-error="handleUploadError"
-          :on-progress="handleUploadProgress"
+          :show-file-list="false"
+          :http-request="handleUploadRequest"
           :before-upload="beforeUploadDocument"
-          :headers="uploadHeaders"
-          :limit="1"
-          :on-exceed="handleExceed"
+          :disabled="uploading"
         >
           <el-icon class="el-icon--upload"><upload-filled /></el-icon>
           <div class="el-upload__text">
             拖拽文件到此处或<em>点击上传</em>
           </div>
           <template #tip>
-            <div class="el-upload__tip">请上传小于50MB的文件</div>
+            <div class="el-upload__tip">超过 1MB 自动分片上传</div>
           </template>
         </el-upload>
       </el-form-item>
@@ -43,6 +37,7 @@
             <span>{{ uploadProgress.currentSize }} / {{ uploadProgress.totalSize }}</span>
             <span>{{ uploadProgress.speed }}</span>
           </div>
+          <div class="progress-status">{{ uploadProgress.statusText }}</div>
         </div>
       </el-form-item>
     </el-form>
@@ -51,6 +46,9 @@
     </div>
     <template #footer>
       <div class="dialog-footer">
+        <el-button v-if="canResume" type="warning" @click="handleResume" :disabled="uploading">
+          继续上传
+        </el-button>
         <el-button @click="handleClose">关闭</el-button>
       </div>
     </template>
@@ -60,111 +58,155 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { useStore } from 'vuex'
 import { UploadFilled } from '@element-plus/icons-vue'
+import { chunkUploadFile } from '@/utils/chunkUploadUtil.js'
+import { fileDocumentAPI } from '@/api/kb/document.js'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   prtId: { type: [String, Number], default: undefined },
   tips: {
     type: String,
-    default: '提示：单文件大小不超过 50MB。上传成功后将自动触发预览、内容提取、索引、向量化等后续事件，可在"事件"中查看处理进度。'
+    default: '提示：超过 1MB 自动分片上传。上传成功后将自动触发预览、内容提取、索引、向量化等后续事件，可在"事件"中查看处理进度。'
   }
 })
 
 const emit = defineEmits(['update:modelValue', 'success'])
-
-const store = useStore()
-const token = computed(() => store.getters['user/getToken'])
 
 const drawerVisible = computed({
   get: () => props.modelValue,
   set: val => emit('update:modelValue', val)
 })
 
-const uploadHeaders = ref({ Authorization: undefined })
-const documentUploadUrl = ref(undefined)
-const uploadFileList = ref([])
-const uploadProgress = ref({
-  visible: false,
-  percentage: 0,
-  status: '',
-  currentSize: '0 KB',
-  totalSize: '0 KB',
-  speed: '0 KB/s'
+const uploading = ref(false)
+const uploadProgress = ref(defaultProgress())
+// 断点续传状态
+const lastUploadId = ref(undefined)
+const lastFile = ref(undefined)
+
+// 是否可续传：有保存的 uploadId 且上传失败
+const canResume = computed(() => {
+  return lastUploadId.value && lastFile.value && uploadProgress.value.status === 'exception'
 })
-let uploadStartTime = 0
 
 watch(() => props.modelValue, (val) => {
   if (val) {
-    const baseUrl = process.env.BASE_HTTP_API
-    documentUploadUrl.value = baseUrl + '/kb/document/upload?prtId=' + props.prtId
-    uploadHeaders.value.Authorization = token.value
-    uploadFileList.value = []
-    uploadProgress.value = {
-      visible: false,
-      percentage: 0,
-      status: '',
-      currentSize: '0 KB',
-      totalSize: '0 KB',
-      speed: '0 KB/s'
-    }
+    uploadProgress.value = defaultProgress()
+    lastUploadId.value = undefined
+    lastFile.value = undefined
   }
 })
 
-function handleUploadSuccess(res) {
-  if (res.code === 200) {
+/**
+ * 构造默认进度状态
+ * @returns {Object} 进度状态
+ */
+function defaultProgress() {
+  return {
+    visible: false,
+    percentage: 0,
+    status: '',
+    statusText: '',
+    currentSize: '0 B',
+    totalSize: '0 B',
+    speed: ''
+  }
+}
+
+/**
+ * 上传前校验
+ * @param file 待上传文件
+ * @returns {boolean}
+ */
+function beforeUploadDocument(file) {
+  // 清除之前的续传状态
+  lastUploadId.value = undefined
+  lastFile.value = undefined
+  uploadProgress.value = {
+    visible: true,
+    percentage: 0,
+    status: '',
+    statusText: '准备上传...',
+    currentSize: '0 B',
+    totalSize: formatFileSize(file.size),
+    speed: ''
+  }
+  return true
+}
+
+/**
+ * 执行上传（新上传或续传）
+ * @param file 待上传文件
+ * @param uploadId 续传会话id（可选）
+ */
+async function doUpload(file, uploadId) {
+  uploading.value = true
+  lastFile.value = file
+  try {
+    const attachment = await chunkUploadFile(file, {
+      uploadId,
+      onUploadId: (id) => {
+        lastUploadId.value = id
+      },
+      onStatus: (statusText) => {
+        uploadProgress.value.statusText = statusText
+      },
+      onProgress: (progress) => {
+        uploadProgress.value.percentage = progress.percent
+        uploadProgress.value.currentSize = formatFileSize(progress.uploadedBytes)
+        uploadProgress.value.totalSize = formatFileSize(progress.totalBytes)
+        uploadProgress.value.speed = progress.speed
+      }
+    })
+    uploadProgress.value.statusText = '归档文档中'
+    const res = await fileDocumentAPI({ attId: attachment.id, prtId: props.prtId })
+    if (res.code !== 200) {
+      uploadProgress.value.status = 'exception'
+      return
+    }
+    // 上传成功，清除续传状态
+    lastUploadId.value = undefined
+    lastFile.value = undefined
     uploadProgress.value.status = 'success'
     uploadProgress.value.percentage = 100
     ElMessage.success('文件上传成功')
     emit('success')
     setTimeout(() => {
-      uploadFileList.value = []
-      uploadProgress.value.visible = false
-      uploadProgress.value.percentage = 0
-      uploadProgress.value.status = ''
+      uploadProgress.value = defaultProgress()
     }, 1000)
-  } else {
+  } catch (err) {
     uploadProgress.value.status = 'exception'
-    ElMessage.error(res.message)
+    uploadProgress.value.statusText = '上传失败，可点击"继续上传"重试'
+    ElMessage.error('文件上传失败：' + (err.message || '未知错误'))
+  } finally {
+    uploading.value = false
   }
 }
 
-function handleUploadError(err) {
-  uploadProgress.value.status = 'exception'
-  ElMessage.error('文件上传失败：' + (err.message || '未知错误'))
+/**
+ * 自定义上传：分片上传（不超过 1MB 直接整包）并归档为文档
+ * @param option 上传选项（含 file）
+ */
+function handleUploadRequest(option) {
+  doUpload(option.file)
 }
 
-function handleUploadProgress(event) {
-  const timeElapsed = (Date.now() - uploadStartTime) / 1000
-  const percentage = Math.round(event.percent)
-  const loaded = event.loaded
-  const total = event.total
-  const speed = timeElapsed > 0 ? loaded / timeElapsed : 0
-  uploadProgress.value.visible = true
-  uploadProgress.value.percentage = percentage
-  uploadProgress.value.currentSize = formatFileSize(loaded)
-  uploadProgress.value.totalSize = formatFileSize(total)
-  uploadProgress.value.speed = formatFileSize(speed) + '/s'
-}
-
-function beforeUploadDocument(file) {
-  if (file.size > 1024 * 1024 * 50) {
-    ElMessage.error('请上传小于50MB的文件')
-    return false
+/**
+ * 继续上传：使用保存的 uploadId 续传
+ */
+function handleResume() {
+  if (lastUploadId.value && lastFile.value) {
+    uploadProgress.value.status = ''
+    uploadProgress.value.statusText = '继续上传中...'
+    doUpload(lastFile.value, lastUploadId.value)
   }
-  uploadStartTime = Date.now()
-  uploadProgress.value = {
-    visible: false,
-    percentage: 0,
-    status: '',
-    currentSize: '0 KB',
-    totalSize: formatFileSize(file.size),
-    speed: '0 KB/s'
-  }
-  return true
 }
 
+/**
+ * 格式化文件大小
+ * @param bytes 字节数
+ * @returns {string} 格式化大小
+ */
 function formatFileSize(bytes) {
   if (bytes === 0) return '0 B'
   const k = 1024
@@ -173,20 +215,13 @@ function formatFileSize(bytes) {
   return (bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i]
 }
 
-function handleExceed() {
-  ElMessage.warning('只能上传一个文件，请先删除已选择的文件')
-}
-
+/**
+ * 关闭抽屉
+ */
 function handleClose() {
-  uploadFileList.value = []
-  uploadProgress.value = {
-    visible: false,
-    percentage: 0,
-    status: '',
-    currentSize: '0 KB',
-    totalSize: '0 KB',
-    speed: '0 KB/s'
-  }
+  uploadProgress.value = defaultProgress()
+  lastUploadId.value = undefined
+  lastFile.value = undefined
   drawerVisible.value = false
 }
 </script>
@@ -231,6 +266,11 @@ function handleClose() {
 .progress-info {
   display: flex;
   justify-content: space-between;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+.progress-status {
   margin-top: 8px;
   font-size: 12px;
   color: var(--el-text-color-secondary);

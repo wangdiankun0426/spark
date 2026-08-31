@@ -50,10 +50,8 @@ import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightField;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightFieldParameters;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -88,81 +86,13 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
     private String docsPath;
 
     /**
-     * 上传文档
-     * @param file 文件
-     * @param prtId 父ID
-     * @return 上传结果
-     */
-    @Override
-    @OperateLog(operateType = OperateTypeEnum.KNOWLEDGE_DOCUMENT_INSERT)
-    public ResultData<Void> uploadDocument(MultipartFile file, Long prtId) {
-        ResultData<Void> result = new ResultData<>();
-        if (file == null) {
-            result.setErrorCode(ErrorCodeEnum.UPLOAD_FILE_NOT_EXIST);
-            return result;
-        }
-        if (prtId == null) {
-            prtId = 0L;
-        }
-        String filename = file.getOriginalFilename();
-        String fileExt = FileUtil.getFileExt(filename);
-        String filePath = FileUtil.generateFilePath(docsPath, UUID.randomUUID() + "." + fileExt);
-        if (filePath == null) {
-            result.setErrorCode(ErrorCodeEnum.FILE_CREATE_FAIL);
-            return result;
-        }
-        // 写入磁盘
-        try {
-            file.transferTo(new File(filePath));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        Document document = new Document();
-        Long docId = super.genObjectId(ObjectTypeEnum.DOCUMENT);
-        document.setId(docId);
-        document.setPrtId(prtId);
-        ObjectTypeEnum objEnum = super.getObjEnum(prtId);
-        document.setDocumentType(objEnum.getValue());
-        document.setName(filename);
-        document.setExt(fileExt);
-        document.setSize(file.getSize());
-        document.setPath(filePath);
-        document.setOwnerId(SessionHolder.getCurrentUserId());
-        int count = documentDao.insertDB(document);
-        if (count < 1) {
-            logger.error("uploadDocument error, insert db fail");
-            return result;
-        }
-        DocumentEvent event = new DocumentEvent();
-        event.setDocId(docId);
-        event.setContentStatus(DocumentEventStatusEnum.PENDING.getValue());
-        event.setIndexStatus(DocumentEventStatusEnum.PENDING.getValue());
-        event.setChunkStatus(DocumentEventStatusEnum.PENDING.getValue());
-        event.setVectorStatus(DocumentEventStatusEnum.PENDING.getValue());
-        if (objEnum != ObjectTypeEnum.KNOWLEDGE) {
-            event.setVectorStatus(DocumentEventStatusEnum.NO_EXECUTE.getValue());
-        }
-        event.setGraphStatus(DocumentEventStatusEnum.PENDING.getValue());
-        if (objEnum != ObjectTypeEnum.KG_GRAPH) {
-            event.setGraphStatus(DocumentEventStatusEnum.NO_EXECUTE.getValue());
-        }
-        count = documentEventDao.insertDB(event);
-        if (count < 1) {
-            logger.error("uploadDocument error, insert event db fail");
-            return result;
-        }
-        result.setObjId(docId);
-        result.setCode(ResultData.OK);
-        return result;
-    }
-
-    /**
      * 根据系统附件归档文档
      * @param attId 附件id
      * @param prtId 父ID
      * @return 归档结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.KNOWLEDGE_DOCUMENT_INSERT)
     public ResultData<Long> fileDocument(Long attId, Long prtId) {
         ResultData<Long> result = new ResultData<>();
         if (attId == null) {
@@ -235,6 +165,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
             return result;
         }
         result.setData(docId);
+        result.setObjId(docId);
         result.setCode(ResultData.OK);
         return result;
     }

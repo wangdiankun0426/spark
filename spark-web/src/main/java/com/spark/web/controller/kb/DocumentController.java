@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -48,14 +47,14 @@ public class DocumentController {
     private IDocumentService documentService;
 
     /**
-     * 上传文档
-     * @param file  文件
+     * 根据系统附件归档文档
+     * @param attId 附件ID
      * @param prtId 父ID
-     * @return 上传结果
+     * @return 归档结果（含文档ID）
      */
-    @PostMapping("upload")
-    public ResultData<Void> uploadDocument(@RequestParam("file") MultipartFile file, @RequestParam("prtId") Long prtId) {
-        return documentService.uploadDocument(file, prtId);
+    @PostMapping("fileDocument")
+    public ResultData<Long> fileDocument(@RequestParam("attId") Long attId, @RequestParam("prtId") Long prtId) {
+        return documentService.fileDocument(attId, prtId);
     }
 
     /**

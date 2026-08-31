@@ -39,4 +39,9 @@ public class ObjectCacheKey {
      * 防抖缓存key
      */
     public final static String DEBOUNCE_KEY = "d_k_";
+
+    /**
+     * 分片上传会话元数据key
+     */
+    public final static String UPLOAD_CHUNK_META = "u_c_m_";
 }

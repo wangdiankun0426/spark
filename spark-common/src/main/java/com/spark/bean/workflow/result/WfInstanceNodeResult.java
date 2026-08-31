@@ -13,7 +13,7 @@ import java.sql.Timestamp;
  *
  * @author wangdiankun
  * @since 2026-08-11 10:00:00
- * AI工作流实例节点运行记录查询结果
+ * workFlow实例节点运行记录查询结果
  */
 @Data
 public class WfInstanceNodeResult extends BaseResult {

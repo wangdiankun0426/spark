@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * @author wangdiankun
  * @since 2026-08-11 10:00:00
- * AI工作流版本管理Controller
+ * workFlow版本管理Controller
  */
 @RestController
 @RequestMapping("workflow/version")

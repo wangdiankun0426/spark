@@ -26,7 +26,7 @@ import java.util.List;
  *
  * @author wangdiankun
  * @since 2026-08-11 15:00:00
- * AI工作流实例管理Controller
+ * workFlow实例管理Controller
  */
 @RestController
 @RequestMapping("workflow/instance")

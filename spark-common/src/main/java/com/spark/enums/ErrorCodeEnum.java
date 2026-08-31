@@ -61,6 +61,10 @@ public enum ErrorCodeEnum {
     FORM_OBJ_EXIST(1403, "表单关联对象不存在"),
     // 附件相关状态码
     ATTACHMENT_NOT_EXIST(1501, "附件数据不存在"),
+    UPLOAD_SESSION_NOT_EXIST(1502, "上传会话不存在或已过期"),
+    UPLOAD_CHUNK_INDEX_INVALID(1503, "分片序号非法"),
+    UPLOAD_CHUNK_NOT_COMPLETE(1504, "分片未上传完整"),
+    UPLOAD_CHUNK_SIZE_EXCEED(1505, "分片大小超出限制"),
     // 文档相关状态码
     DOCUMENT_NOT_EXIST(1601, "文件数据不存在"),
     UPLOAD_FILE_NOT_EXIST(1602, "上传文件不能为空"),

@@ -10,7 +10,7 @@
     </parent>
 
     <name>spark-workflow</name>
-    <description>spark-workflow AI工作流模块（DAG编排引擎）</description>
+    <description>spark-workflow workFlow模块（DAG编排引擎）</description>
     <artifactId>spark-workflow</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>

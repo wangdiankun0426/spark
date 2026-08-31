@@ -152,7 +152,10 @@ const tableList = ref([]);
 const formVisible = ref(false);
 const formTitle = ref('');
 const form = ref({ id: undefined, name: undefined, description: undefined, formId: undefined });
-const formRules = { name: [{ required: true, trigger: 'blur', message: '请输入工作流名称' }] };
+const formRules = {
+  name: [{ required: true, trigger: 'blur', message: '请输入工作流名称' }],
+  formId: [{ required: true, trigger: 'blur', message: '请选择输入表单' }]
+}
 const formOptions = ref([]);
 const statusOptions = [
   { label: '关闭', value: -1 },

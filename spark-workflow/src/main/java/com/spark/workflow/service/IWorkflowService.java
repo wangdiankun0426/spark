@@ -14,7 +14,7 @@ import com.spark.bean.workflow.vo.WfTemplateVO;
  *
  * @author wangdiankun
  * @since 2026-08-11 10:00:00
- * AI工作流模板Service接口
+ * workFlow模板Service接口
  */
 public interface IWorkflowService {
 

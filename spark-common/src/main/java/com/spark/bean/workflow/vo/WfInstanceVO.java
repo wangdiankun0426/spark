@@ -11,7 +11,7 @@ import lombok.Data;
  *
  * @author wangdiankun
  * @since 2026-08-11 10:00:00
- * AI工作流运行实例提交参数
+ * workFlow运行实例提交参数
  */
 @Data
 public class WfInstanceVO extends BaseVO {

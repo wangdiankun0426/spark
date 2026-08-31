@@ -8,7 +8,7 @@ package com.spark.enums;
  *
  * @author wangdiankun
  * @since 2026-08-13 10:00:00
- * AI工作流运行实例状态枚举
+ * workFlow运行实例状态枚举
  */
 public enum WorkflowInstanceStatusEnum {
     UNKNOWN(0, "未知"),
