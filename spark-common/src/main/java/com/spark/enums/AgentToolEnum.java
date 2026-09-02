@@ -13,6 +13,7 @@ public enum AgentToolEnum {
     UNKNOWN("unknow", "未知工具"),
     SEARCH_KB("search_kb", "检索知识库"),
     SEARCH_KG("search_kg", "检索知识图谱"),
+    READ_SKILL("read_skill", "读取技能"),
     ;
 
     private String type;

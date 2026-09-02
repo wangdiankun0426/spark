@@ -56,6 +56,11 @@ public class AgentVO extends BaseVO {
     private String mcpIds;
 
     /**
+     * 技能ID列表
+     **/
+    private String skills;
+
+    /**
      * 描述
      **/
     private String description;

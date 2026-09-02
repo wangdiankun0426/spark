@@ -14,6 +14,7 @@ import provider from '@/pages/manage/llm/provider.vue'
 import model from '@/pages/manage/llm/model.vue'
 import agent from '@/pages/manage/llm/agent.vue'
 import mcp from '@/pages/manage/llm/mcp.vue'
+import skill from '@/pages/manage/llm/skill.vue'
 import kbKnowledge from '@/pages/manage/kb/knowledge.vue'
 import kbDocument from '@/pages/manage/kb/document.vue'
 import kgGraph from '@/pages/manage/kg/graph.vue'
@@ -104,6 +105,14 @@ export default [
                 component: agent,
                 meta: {
                     title: 'Agent管理'
+                }
+            },
+            {
+                path: '/manage/llm/skillManage',
+                name: 'skillManage',
+                component: skill,
+                meta: {
+                    title: '技能库管理'
                 }
             },
             {

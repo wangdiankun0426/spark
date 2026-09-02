@@ -11,15 +11,18 @@ import com.spark.bean.llm.entity.Agent;
 import com.spark.bean.llm.query.AgentQuery;
 import com.spark.bean.llm.query.McpQuery;
 import com.spark.bean.llm.query.ModelQuery;
+import com.spark.bean.llm.query.SkillQuery;
 import com.spark.bean.llm.result.AgentResult;
 import com.spark.bean.llm.result.McpResult;
 import com.spark.bean.llm.result.ModelResult;
+import com.spark.bean.llm.result.SkillResult;
 import com.spark.bean.llm.vo.AgentVO;
 import com.spark.dao.kb.KnowledgeDao;
 import com.spark.dao.kg.KgGraphDao;
 import com.spark.dao.llm.AgentDao;
 import com.spark.dao.llm.McpDao;
 import com.spark.dao.llm.ModelDao;
+import com.spark.dao.llm.SkillDao;
 import com.spark.enums.AgentToolEnum;
 import com.spark.enums.ErrorCodeEnum;
 import com.spark.enums.ObjectTypeEnum;
@@ -67,6 +70,8 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
     private McpDao mcpDao;
     @Autowired
     private ModelDao modelDao;
+    @Autowired
+    private SkillDao skillDao;
 
     /**
      * 创建智能体
@@ -211,6 +216,7 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
         Map<AgentResult, List<Long>> agentKbIdMap = new HashMap<>();
         Map<AgentResult, List<Long>> agentGraphIdMap = new HashMap<>();
         Map<AgentResult, List<Long>> agentMcpIdMap = new HashMap<>();
+        Map<AgentResult, List<Long>> agentSkillIdMap = new HashMap<>();
         Map<AgentResult, Long> agentChatModelIdMap = new HashMap<>();
         list.forEach(agentResult -> {
             agentResult.setStatusName(StatusEnum.indexOf(agentResult.getStatus()).getDesc());
@@ -228,11 +234,14 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
             agentGraphIdMap.put(agentResult, graphIds);
             List<Long> mcpIds = agentFactory.parseMcpIds(agentResult.getMcpIds());
             agentMcpIdMap.put(agentResult, mcpIds);
+            List<Long> skillIds = agentFactory.parseSkillIds(agentResult.getSkills());
+            agentSkillIdMap.put(agentResult, skillIds);
         });
         supplyChatModelName(agentChatModelIdMap);
         supplyKbNames(agentKbIdMap);
         supplyGraphNames(agentGraphIdMap);
         supplyMcpNames(agentMcpIdMap);
+        supplySkillNames(agentSkillIdMap);
     }
 
     /**
@@ -344,6 +353,35 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
                     .map(mcpId -> mcpNameMap.getOrDefault(mcpId, "未知MCP服务器"))
                     .collect(Collectors.joining(","));
             agentResult.setMcpNames(mcpNames);
+        });
+    }
+
+    /**
+     * 批量补充技能名称
+     * @param agentSkillIdMap 智能体与技能ID列表的映射
+     */
+    private void supplySkillNames(Map<AgentResult, List<Long>> agentSkillIdMap) {
+        Set<Long> skillIdSet = new HashSet<>();
+        agentSkillIdMap.values().forEach(skillIdSet::addAll);
+        if (CollectionUtil.isEmpty(skillIdSet)) {
+            return;
+        }
+        SkillQuery skillQuery = new SkillQuery();
+        skillQuery.setPage(false);
+        skillQuery.setIds(new ArrayList<>(skillIdSet));
+        List<SkillResult> skillResults = skillDao.querySkillList(skillQuery);
+        if (CollectionUtil.isEmpty(skillResults)) {
+            return;
+        }
+        Map<Long, String> skillNameMap = skillResults.stream().collect(Collectors.toMap(SkillResult::getId, SkillResult::getName));
+        agentSkillIdMap.forEach((agentResult, skillIds) -> {
+            if (CollectionUtil.isEmpty(skillIds)) {
+                return;
+            }
+            String skillNames = skillIds.stream()
+                    .map(skillId -> skillNameMap.getOrDefault(skillId, "未知技能"))
+                    .collect(Collectors.joining(","));
+            agentResult.setSkillNames(skillNames);
         });
     }
 

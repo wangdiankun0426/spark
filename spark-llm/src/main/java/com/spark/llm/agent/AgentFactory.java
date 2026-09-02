@@ -3,6 +3,7 @@ package com.spark.llm.agent;
 import com.spark.bean.llm.query.AgentQuery;
 import com.spark.bean.llm.result.AgentResult;
 import com.spark.bean.llm.result.McpResult;
+import com.spark.bean.llm.result.SkillResult;
 import com.spark.bean.llm.entity.Agent;
 import com.spark.bean.llm.entity.Mcp;
 import com.spark.bean.llm.query.McpQuery;
@@ -10,11 +11,13 @@ import com.spark.enums.AgentToolEnum;
 import com.spark.llm.IAgent;
 import com.spark.dao.llm.AgentDao;
 import com.spark.dao.llm.McpDao;
+import com.spark.dao.llm.SkillDao;
 import com.spark.llm.mcp.McpClientManager;
 import com.spark.llm.memory.RedisChatMemoryStore;
 import com.spark.llm.model.ModelFactory;
 import com.spark.llm.tools.SearchKnowledge;
 import com.spark.llm.tools.SearchKnowledgeGraph;
+import com.spark.llm.tools.SkillTool;
 import com.spark.utils.CollectionUtil;
 import com.spark.utils.StringUtil;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
@@ -49,6 +52,10 @@ public class AgentFactory {
     private SearchKnowledge searchKnowledge;
     @Autowired
     private SearchKnowledgeGraph searchKnowledgeGraph;
+    @Autowired
+    private SkillTool skillTool;
+    @Autowired
+    private SkillDao skillDao;
     @Autowired
     private RedisChatMemoryStore redisChatMemoryStore;
     @Autowired
@@ -93,18 +100,15 @@ public class AgentFactory {
                         .maxMessages(maxMessages)
                         .chatMemoryStore(redisChatMemoryStore)
                         .build());
-        // 设置系统提示词
+        // 组装系统提示词，Agent自定义提示词优先，否则使用默认的工具优先提示词
+        String prompt = "你是一个智能助手。当用户提出问题时，请优先使用可用的工具来获取准确信息。如果工具可以提供相关信息，必须先调用工具，不要仅凭自己的知识直接回答。";
         if (StringUtil.isNotBlank(agent.getSystemPrompt())) {
-            builder.systemMessageProvider(sm -> agent.getSystemPrompt());
-        } else {
-            // 如果没有配置系统提示词，使用默认的工具优先提示词
-            String defaultPrompt = "你是一个智能助手。当用户提出问题时，请优先使用可用的工具来获取准确信息。如果工具可以提供相关信息，必须先调用工具，不要仅凭自己的知识直接回答。";
-            builder.systemMessageProvider(sm -> defaultPrompt);
+            prompt = agent.getSystemPrompt();
         }
-        //  添加工具
+        // 添加工具
+        List<Object> toolObjects = new ArrayList<>();
         List<String> toolList = this.parseTools(agent.getTools());
         if (CollectionUtil.isNotEmpty(toolList)) {
-            List<Object> toolObjects = new ArrayList<>();
             for (String tool : toolList) {
                 if (AgentToolEnum.SEARCH_KB.getType().equals(tool)) {
                     List<Long> kbIds = parseKbIds(agent.getKbIds());
@@ -116,6 +120,21 @@ public class AgentFactory {
                     logger.warn("未知的工具：{}", tool);
                 }
             }
+        }
+        // 装配技能：目录注入系统提示词，并提供技能读取工具供命中时拉取全文
+        List<Long> skillIds = this.parseSkillIds(agent.getSkills());
+        if (CollectionUtil.isNotEmpty(skillIds)) {
+            List<SkillResult> enabledSkills = skillDao.queryEnabledSkillList(skillIds);
+            if (CollectionUtil.isNotEmpty(enabledSkills)) {
+                String catalog = this.buildSkillCatalogText(enabledSkills);
+                prompt = prompt + "\n\n" + catalog;
+                List<Long> enabledSkillIds = enabledSkills.stream().map(SkillResult::getId).toList();
+                toolObjects.add(skillTool.forAgent(enabledSkillIds));
+            }
+        }
+        String finalPrompt = prompt;
+        builder.systemMessageProvider(sm -> finalPrompt);
+        if (CollectionUtil.isNotEmpty(toolObjects)) {
             builder.tools(toolObjects);
         }
         // 注入MCP工具
@@ -155,6 +174,7 @@ public class AgentFactory {
         agent.setKbIds(result.getKbIds());
         agent.setGraphIds(result.getGraphIds());
         agent.setMcpIds(result.getMcpIds());
+        agent.setSkills(result.getSkills());
         return agent;
     }
     
@@ -170,6 +190,26 @@ public class AgentFactory {
         }
         agentCache.remove(agentId);
         logger.info("Agent缓存已清除, agentId: {}", agentId);
+    }
+
+    /**
+     * 技能变更后清除绑定该技能的Agent缓存
+     * 技能装配目录是构建期快照，技能名称/描述/停用或删除后需重建绑定Agent
+     *
+     * @param skillId 技能ID
+     */
+    public void clearAgentsBySkill(Long skillId) {
+        if (skillId == null) {
+            return;
+        }
+        List<Long> agentIds = agentDao.queryAgentIdsBySkill(skillId);
+        if (CollectionUtil.isEmpty(agentIds)) {
+            return;
+        }
+        for (Long agentId : agentIds) {
+            this.clearAgentCache(agentId);
+        }
+        logger.info("Agent caches cleared by skill change, skillId: {}", skillId);
     }
     
     /**
@@ -260,6 +300,46 @@ public class AgentFactory {
             }
         }
         return McpIds;
+    }
+
+    /**
+     * 解析技能ID列表字符串为Long列表
+     * @param skillsStr 技能ID列表字符串（CSV格式）
+     * @return 技能ID列表
+     */
+    public List<Long> parseSkillIds(String skillsStr) {
+        List<Long> skillIds = new ArrayList<>();
+        if (StringUtil.isBlank(skillsStr)) {
+            return skillIds;
+        }
+        String[] idArray = skillsStr.split(",");
+        for (String id : idArray) {
+            String trimmed = id.trim();
+            if (StringUtil.isNotBlank(trimmed)) {
+                try {
+                    skillIds.add(Long.parseLong(trimmed));
+                } catch (NumberFormatException e) {
+                    logger.warn("Invalid skill ID: {}", trimmed);
+                }
+            }
+        }
+        return skillIds;
+    }
+
+    /**
+     * 构建技能装配目录文本
+     * @param skills 已启用的技能列表
+     * @return 目录文本
+     */
+    private String buildSkillCatalogText(List<SkillResult> skills) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("【已装配技能目录】\n");
+        sb.append("当用户请求与下列某项技能能力相匹配时，你必须先调用read_skill工具并传入对应技能名称，读取该技能全文，再严格按其指令执行；若没有任何技能与当前问题匹配，不要调用read_skill。\n");
+        for (SkillResult skill : skills) {
+            sb.append("- 技能名称：").append(skill.getName()).append("；用途描述：").append(skill.getDescription()).append("\n");
+        }
+        sb.append("【目录结束】");
+        return sb.toString();
     }
 
     /**

@@ -47,6 +47,9 @@
             <el-menu-item index="/manage/llm/agentManage">
               <span>Agent管理</span>
             </el-menu-item>
+            <el-menu-item index="/manage/llm/skillManage">
+              <span>技能库管理</span>
+            </el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="3">
             <template #title>

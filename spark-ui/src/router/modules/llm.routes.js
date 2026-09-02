@@ -2,6 +2,7 @@
 import llm from '@/pages/llm/index.vue'
 import agent from '@/pages/llm/agent/index.vue'
 import modelMarket from '@/pages/llm/modelMarket/index.vue'
+import skill from '@/pages/llm/skill/index.vue'
 import workflowHub from '@/pages/llm/workflow/index.vue'
 import WorkflowInstance from '@/pages/llm/workflow/instance.vue'
 
@@ -37,6 +38,14 @@ export default [
                 component: modelMarket,
                 meta: {
                     title: '模型市场'
+                }
+            },
+            {
+                path: '/llm/skill',
+                name: 'llmSkill',
+                component: skill,
+                meta: {
+                    title: '技能库'
                 }
             },
             {

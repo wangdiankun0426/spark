@@ -267,6 +267,7 @@ CREATE TABLE `llm_agent` (
     `kb_ids` varchar(256) NULL COMMENT '知识库ID列表',
     `graph_ids` varchar(256) NULL COMMENT '知识图谱ID列表',
     `mcp_ids` varchar(256) NULL COMMENT 'MCP服务器ID列表',
+    `skills` varchar(512) NULL COMMENT '技能ID列表',
     `status` int(1) NOT NULL DEFAULT 1 COMMENT '状态',
     `description` varchar(256)  NULL COMMENT '描述',
 
@@ -278,6 +279,23 @@ CREATE TABLE `llm_agent` (
     `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='智能体表';
+
+DROP TABLE IF EXISTS `llm_skill`;
+CREATE TABLE `llm_skill` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `name` varchar(100) NOT NULL COMMENT '技能名称',
+    `description` varchar(255) NOT NULL COMMENT '技能一句话描述（注入装配目录，供模型判断是否命中）',
+    `content` mediumtext NOT NULL COMMENT '技能指令正文（Markdown）',
+    `status` int(1) NOT NULL DEFAULT 1 COMMENT '状态：1:启用，-1:禁用',
+
+    `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='技能库表';
 
 DROP TABLE IF EXISTS `chat_space`;
 CREATE TABLE `chat_space` (

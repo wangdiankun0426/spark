@@ -112,6 +112,10 @@ public enum ErrorCodeEnum {
     WORKFLOW_HAS_RUN_HISTORY(2411, "存在运行记录不允许删除"),
     WORKFLOW_CATEGORY_INVALID(2412, "分类标签无效"),
 
+    // 技能相关状态码
+    SKILL_NOT_EXIST(2501, "技能不存在"),
+    SKILL_NAME_EXIST(2502, "同名技能已存在"),
+
     ;
 
     private Integer value;

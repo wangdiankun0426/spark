@@ -27,6 +27,12 @@
             </el-icon>
             <template #title>模型市场</template>
           </el-menu-item>
+          <el-menu-item index="/llm/skill">
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+              <Skill/>
+            </el-icon>
+            <template #title>技能库</template>
+          </el-menu-item>
         </el-menu>
       </el-aside>
 
@@ -45,6 +51,7 @@ import {useRoute} from "vue-router";
 import Agent from "@/assets/icons/agent.vue";
 import ModelMarket from "@/assets/icons/modelMarket.vue";
 import Workflow from "@/assets/icons/workflow.vue";
+import Skill from "@/assets/icons/skill.vue";
 
 const route = useRoute();
 

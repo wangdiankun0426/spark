@@ -83,6 +83,18 @@
               {{ mcp }}
             </el-tag>
           </div>
+          <div class="tag-group" v-if="parseSkills(agent.skillNames).length">
+            <span class="tag-group-label">技能</span>
+            <el-tag
+                v-for="skill in parseSkills(agent.skillNames)"
+                :key="skill"
+                size="small"
+                effect="light"
+                round
+            >
+              {{ skill }}
+            </el-tag>
+          </div>
         </template>
 
         <!-- 底部元信息 -->
@@ -189,6 +201,15 @@ function getTheme(agent) {
 function parseTools(toolNames) {
   if (!toolNames) return []
   return String(toolNames).split(',').map(t => t.trim()).filter(Boolean)
+}
+
+/**
+ * 解析技能名，按逗号分割并过滤占位文案
+ * @param skillNames
+ */
+function parseSkills(skillNames) {
+  if (!skillNames) return []
+  return String(skillNames).split(',').map(t => t.trim()).filter(Boolean)
 }
 
 /**

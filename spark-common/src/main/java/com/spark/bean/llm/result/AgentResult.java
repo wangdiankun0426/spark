@@ -61,6 +61,11 @@ public class AgentResult extends BaseResult {
     private String mcpIds;
 
     /**
+     * 技能ID列表
+     **/
+    private String skills;
+
+    /**
      * 描述
      **/
     private String description;
@@ -94,5 +99,10 @@ public class AgentResult extends BaseResult {
      * MCP名称
      **/
     private String mcpNames = "无";
+
+    /**
+     * 技能名称
+     **/
+    private String skillNames = "无";
 
 }

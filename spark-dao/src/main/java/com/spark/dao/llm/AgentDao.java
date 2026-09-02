@@ -4,6 +4,7 @@ import com.spark.bean.llm.entity.Agent;
 import com.spark.bean.llm.query.AgentQuery;
 import com.spark.bean.llm.result.AgentResult;
 import com.spark.dao.BaseDao;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -70,4 +71,11 @@ public interface AgentDao extends BaseDao<Agent> {
      */
     @Select("select max(id) from llm_agent")
     Long queryAgentMaxId();
+
+    /**
+     * 查询绑定指定技能的智能体ID列表
+     * @param skillId 技能ID
+     * @return 智能体ID列表
+     */
+    List<Long> queryAgentIdsBySkill(@Param("skillId") Long skillId);
 }

@@ -37,6 +37,7 @@
         <el-table-column prop="toolNames" label="工具"  width="200"  align="center"/>
         <el-table-column prop="kbNames" label="知识库" width="200" align="center"/>
         <el-table-column prop="mcpNames" label="MCP服务" width="200" align="center"/>
+        <el-table-column prop="skillNames" label="技能" width="200" align="center"/>
         <el-table-column prop="maxMessages" label="对话记忆大小" width="120"  align="center"/>
         <el-table-column prop="statusName" label="状态" align="center"/>
         <el-table-column prop="createdByName" label="创建人" align="center"/>
@@ -204,6 +205,23 @@
                 />
               </el-select>
             </el-form-item>
+            <el-form-item label="技能" prop="skills">
+              <el-select
+                  v-model="agentForm.skills"
+                  placeholder="请选择技能，可多选"
+                  style="width: 100%"
+                  multiple
+                  collapse-tags
+                  collapse-tags-tooltip
+              >
+                <el-option
+                    v-for="item in skillOptions"
+                    :key="item.id"
+                    :label="item.name"
+                    :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
             <el-form-item label="状态" prop="status">
               <el-switch
                   v-model="agentForm.status"
@@ -242,6 +260,7 @@
             <div>工具可多选，选择后智能体在对话中可调用对应能力；</div>
             <div>选择"检索知识库"工具后，可配置关联的知识库；选择"检索知识图谱"工具后，可配置关联的知识图谱；</div>
             <div>MCP服务可多选，选择后智能体可调用对应 MCP 服务器的工具能力；</div>
+            <div>技能可多选，智能体命中技能时读取技能正文并按其执行，技能需在"技能库管理"中维护；</div>
             <div>描述用于辅助识别，建议填写适用场景与使用对象。</div>
           </div>
         </template>
@@ -268,6 +287,7 @@ import {pageModelListAPI} from '@/api/llm/model.js';
 import {pageKnowledgeListAPI} from '@/api/kb/knowledge.js';
 import {pageGraphListAPI} from '@/api/kg/graph.js';
 import {pageMcpListAPI} from '@/api/llm/mcp.js';
+import {pageSkillListAPI} from '@/api/llm/skill.js';
 import {ElMessage, ElMessageBox} from "element-plus";
 import { Search } from '@element-plus/icons-vue';
 
@@ -294,6 +314,7 @@ const agentForm = ref({
   kbIds: [],
   graphIds: [],
   mcpIds: [],
+  skills: [],
   description: undefined,
   status: 1,
 });
@@ -349,6 +370,7 @@ function handleOpenUpdateAgentForm(row) {
     agentForm.value.kbIds = Array.isArray(res.data.kbIds) ? res.data.kbIds : (res.data.kbIds ? String(res.data.kbIds).split(',').map(id => Number(id)).filter(id => id) : []);
     agentForm.value.graphIds = Array.isArray(res.data.graphIds) ? res.data.graphIds : (res.data.graphIds ? String(res.data.graphIds).split(',').map(id => Number(id)).filter(id => id) : []);
     agentForm.value.mcpIds = Array.isArray(res.data.mcpIds) ? res.data.mcpIds : (res.data.mcpIds ? String(res.data.mcpIds).split(',').map(id => Number(id)).filter(id => id) : []);
+    agentForm.value.skills = Array.isArray(res.data.skills) ? res.data.skills : (res.data.skills ? String(res.data.skills).split(',').map(id => Number(id)).filter(id => id) : []);
     agentForm.value.description = res.data.description;
     agentForm.value.status = res.data.status;
     agentFormTitle.value = "修改智能体";
@@ -432,6 +454,22 @@ function loadMcpOptions() {
 
 loadMcpOptions();
 
+// 技能选项
+const skillOptions = ref([]);
+
+/**
+ * 加载技能选项列表（仅查询启用技能）
+ */
+function loadSkillOptions() {
+  pageSkillListAPI({ page: false, status: 1 }).then(res => {
+    if (res.code === 200 && res.data) {
+      skillOptions.value = res.data.rows || [];
+    }
+  });
+}
+
+loadSkillOptions();
+
 /**
  * 打开创建智能体表单
  * */
@@ -445,6 +483,7 @@ function handleOpenCreateAgentForm() {
   agentForm.value.kbIds = [];
   agentForm.value.graphIds = [];
   agentForm.value.mcpIds = [];
+  agentForm.value.skills = [];
   agentForm.value.description = undefined;
   agentForm.value.status = 1;
   agentFormTitle.value = "创建智能体";
@@ -474,7 +513,9 @@ function handleSubmitAgentForm() {
     if (valid) {
       // 将工具数组转换为逗号分隔的字符串
       const toolsStr = Array.isArray(agentForm.value.tools) ? agentForm.value.tools.join(',') : agentForm.value.tools;
-      
+      // 将技能ID数组转换为逗号分隔的字符串
+      const skillsStr = Array.isArray(agentForm.value.skills) ? agentForm.value.skills.join(',') : agentForm.value.skills;
+
       if (!agentForm.value.id) {
         const data = {
           name: agentForm.value.name,
@@ -485,6 +526,7 @@ function handleSubmitAgentForm() {
           kbIds: agentForm.value.kbIds,
           graphIds: agentForm.value.graphIds,
           mcpIds: agentForm.value.mcpIds,
+          skills: skillsStr,
           description: agentForm.value.description,
           status: agentForm.value.status,
         };
@@ -507,6 +549,7 @@ function handleSubmitAgentForm() {
           kbIds: agentForm.value.kbIds,
           graphIds: agentForm.value.graphIds,
           mcpIds: agentForm.value.mcpIds,
+          skills: skillsStr,
           description: agentForm.value.description,
           status: agentForm.value.status,
         };
@@ -536,6 +579,7 @@ function handleCloseAgentForm() {
   agentForm.value.kbIds = [];
   agentForm.value.graphIds = [];
   agentForm.value.mcpIds = [];
+  agentForm.value.skills = [];
   agentForm.value.description = undefined;
   agentForm.value.status = 1;
   agentFormTitle.value = "";
