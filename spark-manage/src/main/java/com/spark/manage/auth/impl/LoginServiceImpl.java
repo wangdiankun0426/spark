@@ -2,14 +2,17 @@ package com.spark.manage.auth.impl;
 
 import com.spark.bean.base.BaseAssert;
 import com.spark.bean.log.entity.LogLogin;
+import com.spark.bean.system.entity.User;
 import com.spark.bean.system.entity.UserProfile;
 import com.spark.bean.system.query.DepartmentQuery;
 import com.spark.bean.system.result.DepartmentResult;
 import com.spark.bean.system.vo.MessageVO;
 import com.spark.bean.base.BaseException;
 import com.spark.bean.system.entity.ValidateCode;
+import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.rabbitmq.MqProducer;
 import com.spark.config.wecom.response.WeComUserRes;
+import com.spark.config.wechat.response.WeChatSessionRes;
 import com.spark.constant.ObjectCacheKey;
 import com.spark.bean.system.entity.Session;
 import com.spark.bean.system.query.UserQuery;
@@ -23,12 +26,18 @@ import com.spark.dao.system.UserDao;
 import com.spark.dao.system.UserProfileDao;
 import com.spark.enums.LoginTypeEnum;
 import com.spark.enums.ErrorCodeEnum;
+import com.spark.enums.ObjectTypeEnum;
+import com.spark.enums.StatusEnum;
 import com.spark.enums.MessageTypeEnum;
+import com.spark.manage.BaseService;
 import com.spark.manage.auth.ILoginService;
 import com.spark.config.redis.RedisService;
 import com.spark.manage.auth.ILoginValidateService;
-import com.spark.manage.external.WeComUtil;
+import com.spark.config.wecom.WeComUtil;
+import com.spark.config.wechat.WeChatUtil;
 import com.spark.utils.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -46,8 +55,10 @@ import java.util.function.Predicate;
  * @author wangdiankun
  * @since 2024/3/5 13:37
  */
+@LogPrint
 @Service
-public class LoginServiceImpl implements ILoginService {
+public class LoginServiceImpl extends BaseService implements ILoginService {
+    private final static Logger logger = LoggerFactory.getLogger(LoginServiceImpl.class);
     @Autowired
     private UserDao userDao;
     @Autowired
@@ -66,6 +77,10 @@ public class LoginServiceImpl implements ILoginService {
     private WeComUtil weComUtil;
     @Autowired
     private UserProfileDao userProfileDao;
+    @Autowired
+    private WeChatUtil weChatUtil;
+    @Value("${default.user.password}")
+    private String defaultUserPassword;
 
     /**
      * 登录
@@ -168,6 +183,9 @@ public class LoginServiceImpl implements ILoginService {
         } else if (LoginTypeEnum.WECOM_OAUTH.getValue().equals(loginVO.getLoginType())) {
             checkPredicate = vo ->
                     StringUtil.isBlank(loginVO.getLoginName());
+        } else if (LoginTypeEnum.WECHAT.getValue().equals(loginVO.getLoginType())) {
+            checkPredicate = vo ->
+                    StringUtil.isBlank(loginVO.getWxCode());
         }
         boolean bo = checkPredicate.test(loginVO);
         if (bo) {
@@ -185,7 +203,7 @@ public class LoginServiceImpl implements ILoginService {
      */
     private ResultData<UserResult> validateLogin(LoginVO loginVO) {
         ResultData<UserResult> result = new ResultData<>();
-        UserResult userResult;
+        UserResult userResult = null;
         Integer loginType = loginVO.getLoginType();
         // 校验验证码
         ValidateCode code = new ValidateCode();
@@ -242,6 +260,26 @@ public class LoginServiceImpl implements ILoginService {
             if (userResult == null) {
                 result.setErrorCode(ErrorCodeEnum.EMAIL_NOT_EXIST);
                 return result;
+            }
+        } else if (LoginTypeEnum.WECHAT.getValue().equals(loginType)) {
+            WeChatSessionRes weChatSessionRes = weChatUtil.code2Session(loginVO.getWxCode());
+            if (weChatSessionRes == null || StringUtil.isBlank(weChatSessionRes.getOpenid())) {
+                result.setErrorCode(ErrorCodeEnum.WECHAT_LOGIN_FAIL);
+                return result;
+            }
+            UserProfile wxProfile = userProfileDao.queryByWxOpenId(weChatSessionRes.getOpenid());
+            if (wxProfile != null) {
+                UserQuery wxUserQuery = new UserQuery();
+                wxUserQuery.setId(wxProfile.getId());
+                userResult = userDao.queryUser(wxUserQuery);
+            }
+            if (userResult == null) {
+                // 未绑定则自动创建默认账号
+                userResult = this.createWeChatDefaultUser(weChatSessionRes);
+                if (userResult == null) {
+                    result.setErrorCode(ErrorCodeEnum.WECHAT_LOGIN_FAIL);
+                    return result;
+                }
             }
         } else {
             result.setErrorCode(ErrorCodeEnum.LOGIN_TYPE_UNKNOWN);
@@ -307,4 +345,68 @@ public class LoginServiceImpl implements ILoginService {
         messageVO.setRefId(userResult.getId());
         mqProducer.sendSystemMessageMq(JsonUtil.toString(messageVO));
     }
+
+    /**
+     * 创建微信默认账号
+     * @param wxSession 微信登录会话
+     * @return 用户信息
+     */
+    private UserResult createWeChatDefaultUser(WeChatSessionRes wxSession) {
+        if (wxSession == null || StringUtil.isBlank(wxSession.getOpenid())) {
+            logger.warn("createWxDefaultUser skip, invalid wxSession");
+            return null;
+        }
+        String openid = wxSession.getOpenid();
+        Long userId = this.genObjectId(ObjectTypeEnum.USER);
+        // 插入默认用户
+        User user = new User();
+        user.setId(userId);
+        user.setLoginName("wx_" + openid);
+        String tail = openid.length() > 4 ? openid.substring(openid.length() - 4) : openid;
+        user.setName("微信用户" + tail);
+        String encryptedPwd = EncryptUtil.md5(defaultUserPassword);
+        user.setPassword(encryptedPwd);
+        user.setDeptId(102L);
+        user.setStatus(StatusEnum.NORMAL.getValue());
+        user.setCreatedBy(userId);
+        user.setUpdatedBy(userId);
+        int count = userDao.insertDB(user);
+        if (count < 1) {
+            logger.error("createWxDefaultUser error, insert user fail");
+            return null;
+        }
+        // 插入用户扩展信息并绑定微信openid
+        UserProfile wxProfile = new UserProfile();
+        wxProfile.setId(userId);
+        wxProfile.setWxOpenId(openid);
+        wxProfile.setWxUnionId(wxSession.getUnionid());
+        wxProfile.setCreatedBy(userId);
+        wxProfile.setUpdatedBy(userId);
+        try {
+            userProfileDao.insertDB(wxProfile);
+        } catch (Exception e) {
+            // 并发首登触发唯一索引冲突时回查已绑定账号
+            logger.error("createWxDefaultUser error, insert profile fail", e);
+            UserProfile existProfile = userProfileDao.queryByWxOpenId(openid);
+            if (existProfile != null) {
+                UserQuery userQuery = new UserQuery();
+                userQuery.setId(existProfile.getId());
+                return userDao.queryUser(userQuery);
+            }
+            return null;
+        }
+        UserQuery userQuery = new UserQuery();
+        userQuery.setId(userId);
+        return userDao.queryUser(userQuery);
+    }
+
+    /**
+     * 查询最大id
+     * @return 最大id
+     */
+    @Override
+    protected Long queryMaxId() {
+        return userDao.queryUserMaxId();
+    }
+
 }

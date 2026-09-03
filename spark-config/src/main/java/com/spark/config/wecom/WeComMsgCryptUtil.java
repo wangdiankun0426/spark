@@ -30,7 +30,7 @@ import java.util.Base64;
  * 企业微信消息加解密核心类
  * 提供接收消息时的解密和回复消息时的加密功能
  */
-public class WXBizMsgCrypt {
+public class WeComMsgCryptUtil {
 
     private static final Charset CHARSET = StandardCharsets.UTF_8;
     private final String token;
@@ -43,7 +43,7 @@ public class WXBizMsgCrypt {
      * @param encodingAesKey 企业微信后台配置的 EncodingAESKey
      * @param receiveId      企业微信的 CorpId（或第三方应用的 AppId）
      */
-    public WXBizMsgCrypt(String token, String encodingAesKey, String receiveId) {
+    public WeComMsgCryptUtil(String token, String encodingAesKey, String receiveId) {
         this.token = token;
         this.encodingAesKey = encodingAesKey;
         this.receiveId = receiveId;

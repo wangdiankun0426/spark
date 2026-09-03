@@ -1,6 +1,5 @@
-package com.spark.manage.external;
+package com.spark.config.wecom;
 
-import com.spark.config.wecom.WeComConfig;
 import com.spark.config.wecom.response.WeComDeptListRes;
 import com.spark.config.wecom.response.WeComTokenRes;
 import com.spark.config.wecom.response.WeComUserListRes;

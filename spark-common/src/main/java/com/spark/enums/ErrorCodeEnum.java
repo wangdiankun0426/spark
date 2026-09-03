@@ -35,6 +35,7 @@ public enum ErrorCodeEnum {
     LOGIN_TYPE_UNKNOWN(607,"未知登录类型"),
     WECOM_NOT_BIND_USER(608,"企微账号未绑定用户"),
     WECOM_LOGIN_FAIL(609,"企微登录失败"),
+    WECHAT_LOGIN_FAIL(610,"微信登录失败"),
     // 用户相关状态码
     USER_SAME_LOGIN_NAME_EXIST(701,"相同登录名的用户已存在"),
     USER_NOT_EXIST(702, "用户不存在"),

@@ -41,6 +41,7 @@ function getTokenFromStorage() {
 const state = {
   userInfo: getUserInfoFromStorage(),
   token: getTokenFromStorage(),
+  wxSkipAutoLogin: false,
 };
 
 /**
@@ -66,6 +67,10 @@ const mutations = {
     state.token = '';
     uni.removeStorageSync(localStorageKey.TOKEN);
     uni.removeStorageSync(localStorageKey.USERINFO);
+  },
+
+  SET_WX_SKIP_AUTO_LOGIN(state, skip) {
+    state.wxSkipAutoLogin = skip;
   }
 };
 
@@ -97,6 +102,8 @@ const actions = {
   // 登出
   logout({ commit }) {
     commit('CLEAR_USER');
+    // 手动登出后当次不再自动免密登录，冷启动后恢复
+    commit('SET_WX_SKIP_AUTO_LOGIN', true);
   }
 };
 

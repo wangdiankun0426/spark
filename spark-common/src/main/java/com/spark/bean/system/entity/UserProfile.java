@@ -21,4 +21,14 @@ public class UserProfile extends BaseEntity {
      */
     private String wecomId;
 
+    /**
+     * 微信小程序openid
+     */
+    private String wxOpenId;
+
+    /**
+     * 微信unionid
+     */
+    private String wxUnionId;
+
 }

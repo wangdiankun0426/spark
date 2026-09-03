@@ -42,6 +42,14 @@ public interface UserProfileDao extends BaseDao<UserProfile> {
     UserProfile queryByWecomId(@Param("wecomId") String wecomId);
 
     /**
+     * 根据微信openid查询
+     * @param wxOpenId 微信openid
+     * @return 用户扩展信息
+     */
+    @Select("select * from sys_user_profile where wx_openid = #{wxOpenId} and delete_flag = 1 limit 1")
+    UserProfile queryByWxOpenId(@Param("wxOpenId") String wxOpenId);
+
+    /**
      * 根据用户ID查询
      * @param userId 用户ID
      * @return 用户扩展信息

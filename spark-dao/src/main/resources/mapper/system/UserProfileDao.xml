@@ -2,18 +2,24 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.system.UserProfileDao" >
     <sql id="allColumnList" >
-        id , wecom_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , wecom_id , wx_openid , wx_unionid , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <insert id="insert">
-        insert into sys_user_profile (id , wecom_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values (#{id}, #{wecomId}, 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into sys_user_profile (id , wecom_id , wx_openid , wx_unionid , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{id}, #{wecomId}, #{wxOpenId}, #{wxUnionId}, 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="updateById">
         update sys_user_profile set updated_dt = #{updatedDt}, updated_by = #{updatedBy}
         <if test="wecomId != null">
             ,wecom_id = #{wecomId}
+        </if>
+        <if test="wxOpenId != null">
+            ,wx_openid = #{wxOpenId}
+        </if>
+        <if test="wxUnionId != null">
+            ,wx_unionid = #{wxUnionId}
         </if>
         where id = #{id}
     </update>

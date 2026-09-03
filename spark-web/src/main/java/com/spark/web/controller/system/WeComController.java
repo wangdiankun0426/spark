@@ -4,7 +4,7 @@ import com.spark.bean.base.ResultData;
 import com.spark.config.wecom.WeComConfig;
 import com.spark.manage.external.IWeComService;
 import com.spark.bean.base.AESException;
-import com.spark.config.wecom.WXBizMsgCrypt;
+import com.spark.config.wecom.WeComMsgCryptUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
@@ -63,7 +63,7 @@ public class WeComController {
         logger.info("receiveMessageV2 msg_signature={}, timestamp={}, nonce={}, echostr={}", msgSignature, timestamp, nonce, echoStr);
         String result;
         try {
-            WXBizMsgCrypt wxcpt = new WXBizMsgCrypt(weComConfig.getMsgToken(), weComConfig.getMsgEncodingAESKey(), weComConfig.getCorpId());
+            WeComMsgCryptUtil wxcpt = new WeComMsgCryptUtil(weComConfig.getMsgToken(), weComConfig.getMsgEncodingAESKey(), weComConfig.getCorpId());
             // 验证 URL 并解密 echostr
             result = wxcpt.verifyUrl(msgSignature, timestamp, nonce, echoStr);
         } catch (AESException e) {
@@ -100,9 +100,9 @@ public class WeComController {
         String postData = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
         logger.info("receiveMessageV2 postData={}", postData);
         String msg = "";
-        WXBizMsgCrypt wxcpt = null;
+        WeComMsgCryptUtil wxcpt = null;
         try {
-            wxcpt = new WXBizMsgCrypt(weComConfig.getMsgToken(), weComConfig.getMsgEncodingAESKey(), weComConfig.getCorpId());
+            wxcpt = new WeComMsgCryptUtil(weComConfig.getMsgToken(), weComConfig.getMsgEncodingAESKey(), weComConfig.getCorpId());
             //解密消息
             msg = wxcpt.decryptMsg(msg_signature, timestamp, nonce, postData);
         } catch (Exception e) {

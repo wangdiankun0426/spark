@@ -15,6 +15,7 @@ public enum LoginPlatformEnum {
     PC_CLIENT(3, "PC客户端"),
     WECOM_PC(4, "企微PC端"),
     WECOM_MOBILE(5, "企微移动端"),
+    WECHAT_MINIAPP(6, "微信小程序端"),
     UNKNOWN(10, "未知")
     ;
 

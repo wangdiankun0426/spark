@@ -69,4 +69,9 @@ public class LoginVO extends BaseVO {
      * 邮箱
      */
     private String email;
+
+    /**
+     * 微信登录code
+     */
+    private String wxCode;
 }

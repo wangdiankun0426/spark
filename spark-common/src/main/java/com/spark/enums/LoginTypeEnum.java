@@ -15,6 +15,7 @@ public enum LoginTypeEnum {
     MESSAGE(2, "短信登录"),
     EMAIL(3, "邮箱登录"),
     WECOM_OAUTH(4, "企微oauth2登录"),
+    WECHAT(5, "微信小程序免密登录"),
 
     ;
 

@@ -1,4 +1,4 @@
-package com.spark.config.wecom;
+package com.spark.config.wecom.response;
 
 import lombok.Data;
 

@@ -127,3 +127,6 @@ spark:
     corp-secret: xxxxxxxxxxxxx
     msg-token: xxxxxxxxxxxxx
     msg-encodingAESKey: xxxxxxxxxxxxx
+  wechat:
+    app-id: xxxxxxxxxxxxx
+    app-secret: xxxxxxxxxxxxx

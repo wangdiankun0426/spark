@@ -23,6 +23,8 @@ DROP TABLE IF EXISTS `sys_user_profile`;
 CREATE TABLE `sys_user_profile` (
     `id` bigint(12) NOT NULL COMMENT '主键,后两位固定01',
     `wecom_id` varchar(64) NULL COMMENT '企业微信用户ID',
+    `wx_openid` varchar(64) NULL COMMENT '微信小程序openid',
+    `wx_unionid` varchar(64) NULL COMMENT '微信unionid',
 
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
     `created_by` bigint(12) NOT NULL COMMENT '创建人id',
@@ -30,7 +32,8 @@ CREATE TABLE `sys_user_profile` (
     `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
     `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_wecom_id` (`wecom_id`)
+    UNIQUE KEY `uk_wecom_id` (`wecom_id`),
+    UNIQUE KEY `uk_wx_openid` (`wx_openid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='用户扩展信息表';
 
 DROP TABLE IF EXISTS `sys_department`;

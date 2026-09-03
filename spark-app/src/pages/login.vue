@@ -176,6 +176,14 @@
         </view>
         <text class="icon-label">邮箱登录</text>
       </view>
+      <!-- #ifdef MP-WEIXIN -->
+      <view class="login-type-icon-item" @click="wxQuickLogin">
+        <view class="icon-circle">
+          <up-icon name="weixin-fill" size="24" color="#07c160"></up-icon>
+        </view>
+        <text class="icon-label">微信登录</text>
+      </view>
+      <!-- #endif -->
     </div>
     <!-- 版权说明 -->
     <view class="login-copyright">
@@ -204,6 +212,47 @@ const loginForm = ref({
 const validateImg = ref(undefined);
 const count = ref(0);
 const timer = ref(null);
+
+// #ifdef MP-WEIXIN
+/**
+ * 微信静默免密登录
+ */
+function wxQuickLogin() {
+  if (loading.value) {
+    return;
+  }
+  loading.value = true;
+  uni.login({
+    provider: 'weixin',
+    success: (loginRes) => {
+      const data = {
+        loginType: 5,
+        wxCode: loginRes.code,
+        loginPlatform: 6
+      };
+      store.dispatch('user/login', {loginForm: data}).then(res => {
+        loading.value = false;
+        if (res.code === 200) {
+          // 关闭所有页面，打开应用内的某个页面
+          uni.reLaunch({
+            url: '/pages/home/index'
+          });
+        }
+      }).catch(() => {
+        loading.value = false;
+      });
+    },
+    fail: () => {
+      loading.value = false;
+    }
+  });
+}
+
+// 进入登录页时未手动登出则自动静默登录
+if (!store.state.user.wxSkipAutoLogin) {
+  wxQuickLogin();
+}
+// #endif
 
 getValidateImg();
 
