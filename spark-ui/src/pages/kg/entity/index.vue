@@ -518,7 +518,7 @@ function handleDelete(id) {
   padding: 0 16px;
 }
 
-// 顶部头部（与知识图谱文档页样式保持一致）
+// 顶部头部
 .kd-header {
   display: flex;
   justify-content: space-between;

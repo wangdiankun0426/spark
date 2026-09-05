@@ -3,6 +3,7 @@ import llm from '@/pages/llm/index.vue'
 import agent from '@/pages/llm/agent/index.vue'
 import modelMarket from '@/pages/llm/modelMarket/index.vue'
 import skill from '@/pages/llm/skill/index.vue'
+import mcp from '@/pages/llm/mcp/index.vue'
 import workflowHub from '@/pages/llm/workflow/index.vue'
 import WorkflowInstance from '@/pages/llm/workflow/instance.vue'
 
@@ -46,6 +47,14 @@ export default [
                 component: skill,
                 meta: {
                     title: '技能库'
+                }
+            },
+            {
+                path: '/llm/mcp',
+                name: 'llmMcp',
+                component: mcp,
+                meta: {
+                    title: 'MCP服务'
                 }
             },
             {

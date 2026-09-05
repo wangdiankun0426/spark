@@ -17,13 +17,25 @@
             placeholder="搜索流程模板名称"
             clearable
             :prefix-icon="Search"
-            style="width: 240px"
+            style="width: 300px"
         />
+        <el-button type="primary" @click="handleOpenCreateForm">
+          <el-icon><Plus /></el-icon>新增流程模板
+        </el-button>
+        <el-button @click="formTemplateVisible = true">
+          <el-icon><Document /></el-icon>表单模板
+        </el-button>
+        <el-button @click="taskTemplateVisible = true">
+          <el-icon><List /></el-icon>任务模板
+        </el-button>
       </div>
     </div>
 
     <!-- 流程模板卡片网格 -->
-    <div class="flow-grid" v-if="templateList.length">
+    <div
+        class="flow-grid"
+        v-if="templateList.length"
+    >
       <info-card
           v-for="item in templateList"
           :key="item.id"
@@ -32,40 +44,54 @@
           :title="item.name"
           :id-text="'编号 #' + item.id"
           :description="item.remark || '暂无备注'"
+          :disabled="item.status !== 1"
           :height="300"
           @click="handleOpenTemplate(item.id)"
       >
-        <!-- 版本徽章 -->
+        <!-- 状态徽章 -->
         <template #badge>
-          <span class="badge badge-theme">v{{ item.revNum }}</span>
+          <span class="badge" :class="item.status === 1 ? 'badge-primary' : 'badge-muted'">
+            {{ item.statusName }}
+          </span>
         </template>
 
         <!-- 配置标签 -->
         <template #tags>
+          <el-tag size="small" effect="light" round v-if="item.typeName">{{ item.typeName }}</el-tag>
           <el-tag size="small" effect="light" round>版本 v{{ item.revNum }}</el-tag>
           <el-tag size="small" effect="light" round v-if="item.createdByName">{{ item.createdByName }}</el-tag>
         </template>
 
-        <!-- 底部元信息 -->
-        <template #meta>
-          <span class="meta-item" v-if="item.createdByName">
-            <el-icon><User /></el-icon>
-            <span>{{ item.createdByName }}</span>
-          </span>
-        </template>
-
         <!-- 底部操作 -->
         <template #action>
-          <el-button text type="primary" @click.stop="handleOpenTemplate(item.id)">
-            <el-icon><EditPen /></el-icon>申请流程
-          </el-button>
+          <span class="action-item" @click.stop="handleOpenRecord(item)">记录</span>
+          <span class="action-item" @click.stop="handleOpenDesigner(item)">设计</span>
+          <span class="action-item action-edit" @click.stop="handleOpenUpdateForm(item)">修改</span>
+          <span class="action-item action-danger" @click.stop="handleDelete(item)">删除</span>
         </template>
       </info-card>
     </div>
     <!-- 空状态 -->
-    <el-empty v-else :description="keyword ? '未找到匹配的流程模板' : '暂无流程模板'" :image-size="120" />
+    <el-empty
+        class="empty-grid"
+        v-else
+        :description="keyword ? '未找到匹配的流程模板' : '暂无流程模板'"
+        :image-size="120"
+    />
 
-    <!--流程模板表单-->
+    <!-- 分页 -->
+    <el-pagination
+        :current-page="query.pageNo"
+        :page-size="query.pageSize"
+        :page-sizes="pageSizes"
+        :background="true"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+    />
+
+    <!-- 流程发起抽屉 -->
     <flow-detail-drawer
         ref="detailDrawerRef"
         :visible="flowFormVisible"
@@ -82,35 +108,128 @@
     >
       <template #footer>
         <div class="drawer-footer">
-          <el-button
-              type="primary"
-              @click="handleSubmitTemplateForm"
-          >发起流程</el-button>
-          <el-button
-              @click="handleCloseFlowForm"
-          >关闭</el-button>
+          <el-button type="primary" @click="handleSubmitFlow">发起流程</el-button>
+          <el-button @click="handleCloseFlowForm">关闭</el-button>
         </div>
       </template>
     </flow-detail-drawer>
+
+    <!-- 新增 / 修改 流程模板表单抽屉 -->
+    <el-drawer
+        v-model="templateFormVisible"
+        :title="templateFormTitle"
+        direction="ltr"
+        size="30%"
+        :before-close="handleCloseTemplateForm"
+    >
+      <el-form
+          :model="templateForm"
+          label-width="auto"
+          :rules="templateFormRules"
+          ref="templateFormRef"
+      >
+        <el-form-item label="名称" prop="name">
+          <el-input v-model="templateForm.name" placeholder="请输入名称" />
+        </el-form-item>
+        <el-form-item label="表单" prop="formId">
+          <el-select v-model="templateForm.formId" placeholder="请选择流程表单" style="width: 100%">
+            <el-option
+                v-for="item in formOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="类型" prop="type">
+          <el-select v-model="templateForm.type" placeholder="请选择流程类型" style="width: 100%">
+            <el-option
+                v-for="item in typeOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <el-switch
+              v-model="templateForm.status"
+              :active-value="1"
+              :inactive-value="-1"
+              active-text="已开启"
+              inactive-text="已停用"
+              inline-prompt
+          />
+        </el-form-item>
+        <el-form-item label="备注" prop="remark">
+          <el-input
+              v-model="templateForm.remark"
+              type="textarea"
+              placeholder="请输入备注"
+              :rows="3"
+          />
+        </el-form-item>
+      </el-form>
+      <div class="form-tip">
+        <el-alert type="info" :closable="false" show-icon>
+          <template #title>
+            <div class="form-tip-content">
+              <div>已开启：流程模板可用，可发起新的流程实例。</div>
+              <div>已停用：流程模板停用，无法发起新的流程实例，已有实例不受影响。</div>
+              <div class="form-tip-warn">仅状态为"已停用"的流程模板可被删除，请谨慎操作。</div>
+            </div>
+          </template>
+        </el-alert>
+      </div>
+      <template #footer>
+        <div class="drawer-footer">
+          <el-button type="primary" @click="handleSubmitTemplateDrawer">保存</el-button>
+          <el-button @click="handleCloseTemplateForm">取消</el-button>
+        </div>
+      </template>
+    </el-drawer>
+
+    <!-- 表单模板抽屉（复用管理端） -->
+    <form-template-drawer v-model="formTemplateVisible" :type="2" />
+    <!-- 任务模板抽屉（复用管理端） -->
+    <task-template-drawer v-model="taskTemplateVisible" />
   </div>
 </template>
 
 <script setup>
 import {ref, watch, onMounted, onBeforeUnmount, computed} from 'vue';
-import { pageTemplateListAPI, showTemplateDetailAPI } from '@/api/flow/template';
+import {
+  pageTemplateListAPI,
+  showTemplateDetailAPI,
+  createTemplateAPI,
+  updateTemplateAPI,
+  queryTemplateDetailAPI,
+  deleteTemplateAPI
+} from '@/api/flow/template';
+import { queryFormListAPI } from '@/api/form/form.js';
 import { createFlowInstanceAPI } from '@/api/flow/instance.js';
-import { ElMessage } from 'element-plus';
-import { Search, Share, User, EditPen } from '@element-plus/icons-vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { Search, Share, Plus } from '@element-plus/icons-vue';
 import FlowDetailDrawer from '@/components/FlowDetailDrawer';
+import FormTemplateDrawer from '@/components/FormTemplateDrawer/index.vue';
+import TaskTemplateDrawer from '@/components/TaskTemplateDrawer/index.vue';
 import InfoCard from '@/components/InfoCard/index.vue';
 import store from "@/store/index.js";
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute();
+const router = useRouter();
 const userInfo = computed(() => store.getters['user/getUserInfo'])
 
 const templateList = ref([]);
+const total = ref(0);
+const pageSizes = [10, 30, 50];
 const keyword = ref('');
+// 分页查询条件
+const query = ref({
+  pageNo: 1,
+  pageSize: 10,
+});
 
 // 主题色循环，配合 variables.scss 中的 agent 主题 token 使用
 const themes = ['blue', 'green', 'purple', 'orange', 'cyan', 'pink', 'indigo'];
@@ -120,16 +239,29 @@ const flowFormVisible = ref(false);
 const formJson = ref({});
 const bpmJson = ref({});
 const detailDrawerRef = ref(null);
-const flowForm = ref({
-  templateId: undefined,
-  templateRevId: undefined,
-  formId: undefined,
-  formRevId: undefined,
-  processId: undefined,
-  name: undefined,
-  description: undefined,
-  level: 1,
-});
+const flowForm = ref(createEmptyFlowForm());
+
+// 新增/修改模板表单
+const templateFormVisible = ref(false);
+// 表单模板 / 任务模板 抽屉显隐
+const formTemplateVisible = ref(false);
+const taskTemplateVisible = ref(false);
+const templateFormTitle = ref('');
+const templateFormRef = ref(null);
+const templateForm = ref(createEmptyTemplateForm());
+const templateFormRules = {
+  name: [{ required: true, trigger: 'blur', message: '请输入名称' }],
+  formId: [{ required: true, trigger: 'change', message: '请选择流程表单' }],
+  type: [{ required: true, trigger: 'change', message: '请选择流程类型' }],
+  status: [{ required: true, trigger: 'change', message: '请选择状态' }],
+};
+
+const typeOptions = [
+  { label: '普通流程', value: 1 },
+  { label: '知识库归档流程', value: 2 },
+];
+
+const formOptions = ref([]);
 
 let searchTimer = null;
 
@@ -149,30 +281,84 @@ onBeforeUnmount(() => {
 });
 
 /**
- * 名称搜索防抖，300ms 后重新查询
+ * 名称搜索防抖，300ms 后回到第一页并重新查询
  */
 watch(keyword, () => {
   if (searchTimer) {
     clearTimeout(searchTimer);
   }
   searchTimer = setTimeout(() => {
+    query.value.pageNo = 1;
     loadTemplateList();
   }, 300);
 });
 
 /**
- * 加载流程模板列表，一次性拉取全量已启用模板
+ * 构造空流程发起表单
+ */
+function createEmptyFlowForm() {
+  return {
+    templateId: undefined,
+    templateRevId: undefined,
+    formId: undefined,
+    formRevId: undefined,
+    processId: undefined,
+    name: undefined,
+    description: undefined,
+    level: 1,
+  };
+}
+
+/**
+ * 构造空模板表单
+ */
+function createEmptyTemplateForm() {
+  return {
+    id: undefined,
+    name: undefined,
+    formId: undefined,
+    type: 1,
+    status: 1,
+    remark: undefined,
+  };
+}
+
+/**
+ * 分页查询流程模板列表，携带名称关键字
  */
 function loadTemplateList() {
-  const params = { page: false, status: 1 };
+  const params = {
+    pageNo: query.value.pageNo,
+    pageSize: query.value.pageSize,
+  }
   if (keyword.value) {
     params.name = keyword.value;
   }
   pageTemplateListAPI(params).then(res => {
     if (res.code === 200 && res.data) {
       templateList.value = res.data.rows || [];
+      total.value = res.data.total || 0;
     }
   });
+}
+
+/**
+ * 切换每页条数，回到第一页重新查询
+ * @param size
+ */
+function handleSizeChange(size) {
+  query.value.pageSize = size;
+  query.value.pageNo = 1;
+  loadTemplateList();
+}
+
+/**
+ * 切换页码重新查询
+ * @param pageNo
+ */
+function handleCurrentChange(pageNo) {
+  query.value.pageNo = pageNo;
+  loadTemplateList();
 }
 
 /**
@@ -184,7 +370,21 @@ function getTheme(item) {
 }
 
 /**
- * 打开流程模板
+ * 加载流程表单选项
+ */
+function loadTemplateFormOptions() {
+  queryFormListAPI({ type: 2, page: false }).then(res => {
+    if (res.code === 200 && res.data !== undefined) {
+      formOptions.value = res.data.map(item => ({
+        label: item.name,
+        value: item.id,
+      }));
+    }
+  });
+}
+
+/**
+ * 打开流程模板发起申请
  * @param id
  */
 function handleOpenTemplate(id) {
@@ -204,9 +404,9 @@ function handleOpenTemplate(id) {
 }
 
 /**
- * 提交流程模板表单
+ * 提交流程
  */
-function handleSubmitTemplateForm() {
+function handleSubmitFlow() {
   if (!detailDrawerRef.value?.validateTitle()) {
     return;
   }
@@ -226,13 +426,12 @@ function handleSubmitTemplateForm() {
   const values = [];
   list.forEach(widget => {
     const config = widget.config;
-    const value = {
+    values.push({
       code: config.code,
       type: widget.type,
       value: config.value,
       showValue: config.showValue,
-    };
-    values.push(value);
+    });
   });
   flowForm.value.values = values;
   createFlowInstanceAPI(flowForm.value).then(res => {
@@ -245,22 +444,128 @@ function handleSubmitTemplateForm() {
 }
 
 /**
- * 关闭表单
+ * 关闭流程发起表单
  */
 function handleCloseFlowForm() {
   formJson.value = {};
   bpmJson.value = {};
-  flowForm.value = {
-    templateId: undefined,
-    templateRevId: undefined,
-    formId: undefined,
-    formRevId: undefined,
-    processId: undefined,
-    name: undefined,
-    description: undefined,
-    level: 1,
-  };
+  flowForm.value = createEmptyFlowForm();
   flowFormVisible.value = false;
+}
+
+/**
+ * 打开新建模板表单
+ */
+function handleOpenCreateForm() {
+  loadTemplateFormOptions();
+  templateForm.value = createEmptyTemplateForm();
+  templateFormTitle.value = '新建流程模板';
+  templateFormVisible.value = true;
+}
+
+/**
+ * 打开修改模板表单，先拉详情回填
+ * @param item
+ */
+function handleOpenUpdateForm(item) {
+  queryTemplateDetailAPI({ id: item.id }).then(res1 => {
+    if (res1.code === 200 && res1.data) {
+      const d = res1.data;
+      loadTemplateFormOptions();
+      templateForm.value = {
+        id: d.id,
+        name: d.name,
+        formId: d.formId,
+        type: d.type,
+        status: d.status,
+        remark: d.remark,
+      };
+      templateFormTitle.value = '修改流程模板';
+      templateFormVisible.value = true;
+    }
+  });
+}
+
+/**
+ * 关闭模板表单
+ */
+function handleCloseTemplateForm() {
+  templateForm.value = createEmptyTemplateForm();
+  if (templateFormRef.value) {
+    templateFormRef.value.clearValidate();
+  }
+  templateFormTitle.value = '';
+  templateFormVisible.value = false;
+}
+
+/**
+ * 提交模板抽屉（新增 / 修改基本信息）
+ */
+function handleSubmitTemplateDrawer() {
+  templateFormRef.value.validate(valid => {
+    if (!valid) return;
+    const data = {
+      id: templateForm.value.id,
+      name: templateForm.value.name,
+      formId: templateForm.value.formId,
+      type: templateForm.value.type,
+      status: templateForm.value.status,
+      remark: templateForm.value.remark,
+    };
+    if (!data.id) {
+      createTemplateAPI(data).then(res => {
+        if (res.code !== 200) return;
+        ElMessage.success('流程模板创建成功');
+        handleCloseTemplateForm();
+        loadTemplateList();
+      });
+    } else {
+      updateTemplateAPI(data).then(res => {
+        if (res.code !== 200) return;
+        ElMessage.success('流程模板修改成功');
+        handleCloseTemplateForm();
+        loadTemplateList();
+      });
+    }
+  });
+}
+
+/**
+ * 查看该流程模板的运行实例
+ * @param item
+ */
+function handleOpenRecord(item) {
+  router.push({ path: '/flow/instance', query: { templateId: item.id } });
+}
+
+/**
+ * 打开流程设计器（编辑模板，新开窗口）
+ * @param item
+ */
+function handleOpenDesigner(item) {
+  window.open('/flow/designer/' + item.id + '/' + (item.revId === undefined ? 0 : item.revId));
+}
+
+/**
+ * 删除流程模板
+ * @param item
+ */
+function handleDelete(item) {
+  ElMessageBox.confirm('是否确定删除此条流程模板?', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(() => {
+    deleteTemplateAPI({ id: item.id }).then(res => {
+      if (res.code !== 200) return;
+      ElMessage.success('删除流程模板成功');
+      // 删除当前页最后一条时回退上一页，避免停留在空页
+      if (templateList.value.length === 1 && query.value.pageNo > 1) {
+        query.value.pageNo -= 1;
+      }
+      loadTemplateList();
+    });
+  }).catch(() => {});
 }
 </script>
 
@@ -308,12 +613,45 @@ function handleCloseFlowForm() {
 }
 
 .flow-grid {
+  height: calc(100vh - #{$nav-height} - 190px);
+  overflow-y: auto;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: $spacing-lg;
+  align-content: start;
+  :deep(.info-card-action) {
+    gap: $spacing-sm;
+    .action-edit {
+      color: var(--el-color-warning);
+    }
+    .action-danger {
+      color: var(--el-color-danger);
+    }
+  }
+}
+
+.empty-grid {
+  height: calc(100vh - #{$nav-height} - 190px);
 }
 
 .drawer-footer {
-  padding: 0 16px;
+  padding: 0 $spacing-md;
+}
+
+.form-tip {
+  margin-top: $spacing-md;
+}
+
+.form-tip-content {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.form-tip-warn {
+  color: $color-text-secondary;
+  margin-top: $spacing-xs;
 }
 </style>

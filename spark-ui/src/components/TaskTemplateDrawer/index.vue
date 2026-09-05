@@ -1,13 +1,19 @@
 <template>
-  <div class="app-container">
+  <el-drawer
+      :model-value="modelValue"
+      :title="title"
+      direction="ltr"
+      size="80%"
+      destroy-on-close
+      :close-on-click-modal="false"
+      @update:model-value="onUpdate"
+  >
     <div class="template-container">
       <!--左侧任务模板列表-->
       <div class="template-left">
         <div class="panel-header">
-          <el-button
-              type="primary"
-              @click="handleOpenCreateTemplate"
-          ><el-icon><Plus /></el-icon>新建任务模板
+          <el-button type="primary" @click="handleOpenCreateTemplate">
+            <el-icon><Plus /></el-icon>新建任务模板
           </el-button>
           <el-input
               v-model="templateQuery.name"
@@ -23,37 +29,39 @@
               class="search-select"
               @change="handleGetTemplateList"
           >
-            <el-option v-for="item in taskTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
+            <el-option
+                v-for="item in taskTypeOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+            />
           </el-select>
           <el-button type="info" :icon="Search" @click="handleGetTemplateList">查询</el-button>
           <el-button type="warning" :icon="Refresh" @click="handleResetTemplateQuery">重置</el-button>
         </div>
-        <div>
-          <el-table
-              ref="templateTableRef"
-              height="calc(100vh - 160px)"
-              :data="templateList"
-              highlight-current-row
-              @current-change="handleSelectTemplate"
-          >
-            <el-table-column prop="id" label="编号" width="80" align="center" />
-            <el-table-column prop="name" label="任务名称" align="center" />
-            <el-table-column prop="taskTypeName" label="任务类型" width="150" align="center" />
-            <el-table-column prop="remark" label="备注" align="center" show-overflow-tooltip />
-            <el-table-column fixed="right" label="操作" width="150" align="center">
-              <template #default="scope">
-                <el-button type="success" text @click.stop="handleOpenUpdateTemplate(scope.row)">
-                  <el-icon><EditPen /></el-icon>
-                  <span style="font-size: 12px; font-weight: 400">修改</span>
-                </el-button>
-                <el-button type="danger" text @click.stop="handleDeleteTemplate(scope.row.id)">
-                  <el-icon><Delete /></el-icon>
-                  <span style="font-size: 12px; font-weight: 400">删除</span>
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
+        <el-table
+            ref="templateTableRef"
+            height="calc(100vh - 190px)"
+            :data="templateList"
+            highlight-current-row
+            @current-change="handleSelectTemplate"
+        >
+          <el-table-column prop="id" label="编号" width="80" align="center" />
+          <el-table-column prop="name" label="任务名称" align="center" />
+          <el-table-column prop="taskTypeName" label="任务类型" width="150" align="center" />
+          <el-table-column fixed="right" label="操作" width="150" align="center">
+            <template #default="scope">
+              <el-button type="success" text @click.stop="handleOpenUpdateTemplate(scope.row)">
+                <el-icon><EditPen /></el-icon>
+                <span style="font-size: 12px; font-weight: 400">修改</span>
+              </el-button>
+              <el-button type="danger" text @click.stop="handleDeleteTemplate(scope.row.id)">
+                <el-icon><Delete /></el-icon>
+                <span style="font-size: 12px; font-weight: 400">删除</span>
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
         <div>
           <el-pagination
               :current-page="templateQuery.pageNo"
@@ -77,29 +85,27 @@
             <el-icon><Plus /></el-icon>新建参数
           </el-button>
         </div>
-        <div>
-          <el-table
-              height="calc(100vh - 110px)"
-              :data="paramList"
-              v-loading="paramLoading"
-          >
-            <el-table-column prop="name" label="参数名称" align="center" />
-            <el-table-column prop="code" label="参数编码" align="center" />
-            <el-table-column prop="typeName" label="参数类型" align="center" />
-            <el-table-column fixed="right" label="操作" width="150" align="center">
-              <template #default="scope">
-                <el-button type="success" text @click="handleOpenUpdateParam(scope.row)">
-                  <el-icon><EditPen /></el-icon>
-                  <span style="font-size: 12px; font-weight: 400">修改</span>
-                </el-button>
-                <el-button type="danger" text @click="handleDeleteParam(scope.row.id)">
-                  <el-icon><Delete /></el-icon>
-                  <span style="font-size: 12px; font-weight: 400">删除</span>
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
+        <el-table
+            height="calc(100vh - 190px)"
+            :data="paramList"
+            v-loading="paramLoading"
+        >
+          <el-table-column prop="name" label="参数名称" align="center" />
+          <el-table-column prop="code" label="参数编码" align="center" />
+          <el-table-column prop="typeName" label="参数类型" align="center" />
+          <el-table-column fixed="right" label="操作" width="150" align="center">
+            <template #default="scope">
+              <el-button type="success" text @click="handleOpenUpdateParam(scope.row)">
+                <el-icon><EditPen /></el-icon>
+                <span style="font-size: 12px; font-weight: 400">修改</span>
+              </el-button>
+              <el-button type="danger" text @click="handleDeleteParam(scope.row.id)">
+                <el-icon><Delete /></el-icon>
+                <span style="font-size: 12px; font-weight: 400">删除</span>
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
       </div>
     </div>
 
@@ -129,13 +135,8 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button
-            type="primary"
-            @click="handleSubmitTemplateForm"
-        >保存</el-button>
-        <el-button
-            @click="handleCloseTemplateForm"
-        >取消</el-button>
+        <el-button type="primary" @click="handleSubmitTemplateForm">保存</el-button>
+        <el-button @click="handleCloseTemplateForm">取消</el-button>
       </template>
     </el-dialog>
 
@@ -165,16 +166,11 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button
-            type="primary"
-            @click="handleSubmitParamForm"
-        >保存</el-button>
-        <el-button
-            @click="handleCloseParamForm"
-        >取消</el-button>
+        <el-button type="primary" @click="handleSubmitParamForm">保存</el-button>
+        <el-button @click="handleCloseParamForm">取消</el-button>
       </template>
     </el-dialog>
-  </div>
+  </el-drawer>
 </template>
 
 <script setup>
@@ -191,6 +187,20 @@ import {
   updateTaskTemplateParamAPI,
   deleteTaskTemplateParamAPI,
 } from '@/api/task/template';
+
+defineProps({
+  modelValue: { type: Boolean, default: false },
+  title: { type: String, default: '任务模板' }
+})
+const emit = defineEmits(['update:modelValue'])
+
+/**
+ * 外部 v-model 显隐控制
+ * @param visible
+ */
+function onUpdate(visible) {
+  emit('update:modelValue', visible)
+}
 
 const { proxy } = getCurrentInstance();
 const templateTableRef = ref(null);
@@ -479,25 +489,30 @@ function handleDeleteParam(id) {
   height: 100%;
   gap: 16px;
 }
+
 .template-left {
   width: 60%;
   display: flex;
   flex-direction: column;
 }
+
 .template-right {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
+
 .panel-header {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
 }
+
 .search-input {
   width: 200px;
 }
+
 .search-select {
   width: 200px;
 }

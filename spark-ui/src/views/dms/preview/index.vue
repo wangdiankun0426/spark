@@ -106,7 +106,7 @@ import * as pdfjsLib from 'pdfjs-dist'
 import PdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker'
 import { queryDocumentDetailAPI, downloadDocumentAPI } from '@/api/dms/document.js'
 import { queryAttachmentDetailAPI, downloadAttachmentAPI } from '@/api/dms/attachment.js'
-import { getDocumentCategory, DOCUMENT_CATEGORY } from '@/utils/documentUtil'
+import { getDocumentCategory, DOCUMENT_CATEGORY } from '@/utils/documentUtil.js'
 
 pdfjsLib.GlobalWorkerOptions.workerPort = new PdfjsWorker()
 

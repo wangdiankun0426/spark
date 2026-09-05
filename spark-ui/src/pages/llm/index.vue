@@ -33,6 +33,12 @@
             </el-icon>
             <template #title>技能库</template>
           </el-menu-item>
+          <el-menu-item index="/llm/mcp">
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+              <Connection/>
+            </el-icon>
+            <template #title>MCP服务</template>
+          </el-menu-item>
         </el-menu>
       </el-aside>
 
@@ -52,6 +58,7 @@ import Agent from "@/assets/icons/agent.vue";
 import ModelMarket from "@/assets/icons/modelMarket.vue";
 import Workflow from "@/assets/icons/workflow.vue";
 import Skill from "@/assets/icons/skill.vue";
+import { Connection } from '@element-plus/icons-vue';
 
 const route = useRoute();
 

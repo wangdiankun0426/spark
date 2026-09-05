@@ -17,13 +17,17 @@
             placeholder="搜索图谱名称"
             clearable
             :prefix-icon="Search"
-            style="width: 240px"
+            style="width: 300px"
         />
+        <el-button type="primary" @click="handleOpenCreateForm">
+          <el-icon><Plus /></el-icon>新增知识图谱
+        </el-button>
       </div>
     </div>
-
     <!-- 知识图谱卡片网格 -->
-    <div class="graph-grid" v-if="graphList.length">
+    <div
+        class="graph-grid"
+        v-if="graphList.length">
       <info-card
           v-for="item in graphList"
           :key="item.id"
@@ -33,21 +37,19 @@
           :id-text="'编号 #' + item.id"
           :description="item.description || '暂无描述'"
           :disabled="item.status === 0"
-          :height="300"
-          @click="handleOpenGraph(item)"
+          :height="340"
+          @click="handleOpenDocument(item)"
       >
         <!-- 状态徽章 -->
         <template #badge>
           <span class="badge" :class="item.status === 1 ? 'badge-primary' : 'badge-muted'">
-            {{ item.status === 1 ? '已启用' : '已停用' }}
+            {{ item.statusName }}
           </span>
         </template>
 
         <!-- 配置标签 -->
         <template #tags>
-          <el-tag size="small" effect="light" round v-if="item.extractModelName">
-            {{ item.extractModelName }}
-          </el-tag>
+          <el-tag size="small" effect="light" round>抽取模型：{{ item.extractModelName }}</el-tag>
           <div class="tag-group">
             <span class="tag-group-label">实体类型</span>
             <el-tag
@@ -93,44 +95,285 @@
             <span v-if="!item.relationTypeList.length" class="tag-empty">暂无</span>
           </div>
         </template>
-
         <!-- 底部操作 -->
         <template #action>
-          <el-button text type="primary" @click.stop="handleOpenEntity(item)">
-            <el-icon><Box /></el-icon>实体 {{ item.entityCount ?? 0 }}
-          </el-button>
-          <el-button text type="primary" @click.stop="handleOpenRelation(item)">
-            <el-icon><Share /></el-icon>关系 {{ item.relationCount ?? 0 }}
-          </el-button>
-          <el-button text type="primary" @click.stop="handleOpenDocument(item)">
-            <el-icon><Document /></el-icon>文档 {{ item.docCount ?? 0 }}
-          </el-button>
+          <span
+              class="action-item"
+              @click.stop="handleOpenEntity(item)"
+          >实体
+          </span>
+          <span
+              class="action-item"
+              @click.stop="handleOpenRelation(item)"
+          >关系
+          </span>
+          <span
+              class="action-item"
+              @click.stop="handleOpenGraphDetail(item)"
+          >图谱</span>
+          <span
+              class="action-item action-edit"
+              @click.stop="handleOpenUpdateForm(item)"
+          >修改</span>
+          <span
+              class="action-item action-danger"
+              @click.stop="handleDelete(item)"
+          >删除</span>
         </template>
       </info-card>
     </div>
     <!-- 空状态 -->
-    <el-empty v-else :description="keyword ? '未找到匹配的知识图谱' : '暂无知识图谱'" :image-size="120" />
+    <el-empty
+        class="empty-grid"
+        v-else
+        :description="keyword ? '未找到匹配的知识图谱' : '暂无知识图谱'"
+        :image-size="120"
+    />
+    <!-- 分页 -->
+    <el-pagination
+        :current-page="query.pageNo"
+        :page-size="query.pageSize"
+        :page-sizes="pageSizes"
+        :background="true"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+    />
+    <!-- 新增 / 修改 知识图谱表单抽屉 -->
+    <el-drawer
+        v-model="formVisible"
+        :title="formTitle"
+        direction="ltr"
+        size="30%"
+        :before-close="handleCloseForm"
+        :close-on-click-modal="false"
+        destroy-on-close
+    >
+      <el-form
+          :model="form"
+          label-width="auto"
+          :rules="formRules"
+          ref="formRef"
+      >
+        <el-form-item label="名称" prop="name">
+          <el-input
+              v-model="form.name"
+              placeholder="请输入名称"
+              maxlength="128"
+              show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <el-switch
+              v-model="form.status"
+              :active-value="1"
+              :inactive-value="0"
+              active-text="已启用"
+              inactive-text="已停用"
+              inline-prompt
+          />
+        </el-form-item>
+        <el-form-item label="抽取模型" prop="extractModelId">
+          <el-select
+              v-model="form.extractModelId"
+              placeholder="请选择抽取模型"
+              style="width: 100%"
+              filterable
+          >
+            <el-option
+                v-for="item in extractModelOptions"
+                :key="item.id"
+                :label="item.providerName + ' - ' + item.name"
+                :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="块大小" prop="chunkSize">
+          <el-input-number
+              v-model="form.chunkSize"
+              :min="1"
+              :max="10000"
+              :step="100"
+              controls-position="right"
+              style="width: 100%"
+          />
+        </el-form-item>
+        <el-form-item label="块重叠" prop="overlap">
+          <el-input-number
+              v-model="form.overlap"
+              :min="0"
+              :max="1000"
+              :step="50"
+              controls-position="right"
+              style="width: 100%"
+          />
+        </el-form-item>
+        <el-form-item label="描述" prop="description">
+          <el-input
+              v-model="form.description"
+              type="textarea"
+              :rows="3"
+              placeholder="请输入描述"
+              maxlength="512"
+              show-word-limit
+          />
+        </el-form-item>
+        <el-divider content-position="left">实体类型 Schema</el-divider>
+        <div class="schema-edit-wrapper">
+          <el-table :data="form.entityTypeList" border>
+            <el-table-column label="序号" type="index" width="60" align="center"/>
+            <el-table-column label="名称" min-width="280" align="center">
+              <template #default="{ $index }">
+                <el-input
+                    :model-value="form.entityTypeList[$index]"
+                    @update:model-value="val => form.entityTypeList[$index] = val"
+                    placeholder="请输入名称"
+                    maxlength="64"
+                />
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="80" align="center">
+              <template #default="{ $index }">
+                <el-button type="danger" text @click="handleRemoveEntityType($index)">
+                  <el-icon><Delete /></el-icon>
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <el-button
+              class="schema-add-btn"
+              type="primary"
+              plain
+              size="small"
+              @click="handleAddEntityType"
+          >
+            <el-icon><Plus /></el-icon>添加实体类型
+          </el-button>
+        </div>
+        <el-divider content-position="left">关系类型 Schema</el-divider>
+        <div class="schema-edit-wrapper">
+          <el-table :data="form.relationTypeList" border>
+            <el-table-column label="序号" type="index" width="60" align="center"/>
+            <el-table-column label="名称" min-width="280" align="center">
+              <template #default="{ $index }">
+                <el-input
+                    :model-value="form.relationTypeList[$index]"
+                    @update:model-value="val => form.relationTypeList[$index] = val"
+                    placeholder="请输入名称"
+                    maxlength="64"
+                />
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="80" align="center">
+              <template #default="{ $index }">
+                <el-button type="danger" text @click="handleRemoveRelationType($index)">
+                  <el-icon><Delete /></el-icon>
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <el-button
+              class="schema-add-btn"
+              type="primary"
+              plain
+              size="small"
+              @click="handleAddRelationType"
+          >
+            <el-icon><Plus /></el-icon>添加关系类型
+          </el-button>
+        </div>
+      </el-form>
+      <template #footer>
+        <div class="drawer-footer">
+          <el-button type="primary" @click="handleSubmitForm">保存</el-button>
+          <el-button @click="handleCloseForm">取消</el-button>
+        </div>
+      </template>
+    </el-drawer>
   </div>
 </template>
 
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { pageGraphListAPI } from '@/api/kg/graph.js'
-import { Connection, Search, Box, Share, Document } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import {
+  pageGraphListAPI,
+  createGraphAPI,
+  updateGraphAPI,
+  deleteGraphAPI
+} from '@/api/kg/graph.js'
+import { pageModelListAPI } from '@/api/llm/model.js'
+import { Connection, Search, Plus, Delete, Box, Share } from '@element-plus/icons-vue'
 import InfoCard from '@/components/InfoCard/index.vue'
 
 const router = useRouter()
+
 const graphList = ref([])
+const total = ref(0)
+const pageSizes = [10, 30, 50]
 const keyword = ref('')
+// 分页查询条件
+const query = ref({
+  pageNo: 1,
+  pageSize: 10,
+})
 
 // 主题色循环，配合 variables.scss 中的 agent 主题 token 使用
 const themes = ['blue', 'green', 'purple', 'orange', 'cyan', 'pink', 'indigo']
 
 let searchTimer = null
 
+// 新增 / 修改 表单
+const formVisible = ref(false)
+const formTitle = ref('')
+const formRef = ref(null)
+
+function getDefaultFormData() {
+  return {
+    id: undefined,
+    name: '',
+    description: '',
+    entityTypes: '',
+    relationTypes: '',
+    entityTypeList: [],
+    relationTypeList: [],
+    extractModelId: undefined,
+    chunkSize: 500,
+    overlap: 50,
+    status: 1,
+  };
+}
+const form = ref(getDefaultFormData());
+
+const formRules = {
+  name: [
+    { required: true, message: '请输入名称', trigger: 'blur' },
+    { max: 128, message: '名称不能超过 128 个字符', trigger: 'blur' },
+  ],
+  description: [
+    { max: 512, message: '描述不能超过 512 个字符', trigger: 'blur' },
+  ],
+  extractModelId: [
+    { required: true, message: '请选择抽取模型', trigger: 'change' },
+  ],
+  chunkSize: [
+    { required: true, message: '请输入块大小', trigger: 'blur' },
+    { type: 'number', min: 1, max: 10000, message: '块大小需在 1-10000 之间', trigger: 'blur' },
+  ],
+  overlap: [
+    { required: true, message: '请输入块重叠', trigger: 'blur' },
+    { type: 'number', min: 0, max: 1000, message: '块重叠需在 0-1000 之间', trigger: 'blur' },
+  ],
+};
+
+// 抽取模型选项
+const extractModelOptions = ref([]);
+
 onMounted(() => {
   loadGraphList()
+  loadExtractModelOptions()
 })
 
 onBeforeUnmount(() => {
@@ -140,22 +383,37 @@ onBeforeUnmount(() => {
 })
 
 /**
- * 名称搜索防抖，300ms 后重新查询
+ * 名称搜索防抖，300ms 后回到第一页并重新查询
  */
 watch(keyword, () => {
   if (searchTimer) {
     clearTimeout(searchTimer)
   }
   searchTimer = setTimeout(() => {
+    query.value.pageNo = 1
     loadGraphList()
   }, 300)
 })
 
 /**
- * 加载知识图谱列表，一次性拉取全量
+ * 加载抽取模型选项列表（语言模型类型）
+ */
+function loadExtractModelOptions() {
+  pageModelListAPI({ page: false, type: 1 }).then(res => {
+    if (res.code === 200 && res.data) {
+      extractModelOptions.value = res.data.rows || [];
+    }
+  });
+}
+
+/**
+ * 分页查询知识图谱列表
  */
 function loadGraphList() {
-  const params = { page: false }
+  const params = {
+    pageNo: query.value.pageNo,
+    pageSize: query.value.pageSize,
+  }
   if (keyword.value) {
     params.name = keyword.value
   }
@@ -166,8 +424,28 @@ function loadGraphList() {
         entityTypeList: parseSchema(row.entityTypes),
         relationTypeList: parseSchema(row.relationTypes)
       }))
+      total.value = res.data.total || 0
     }
   })
+}
+
+/**
+ * 切换每页条数，回到第一页重新查询
+ * @param size
+ */
+function handleSizeChange(size) {
+  query.value.pageSize = size
+  query.value.pageNo = 1
+  loadGraphList()
+}
+
+/**
+ * 切换页码重新查询
+ * @param pageNo
+ */
+function handleCurrentChange(pageNo) {
+  query.value.pageNo = pageNo
+  loadGraphList()
 }
 
 /**
@@ -179,16 +457,23 @@ function getTheme(item) {
 }
 
 /**
- * 打开图谱详情页（新开标签页）
+ * 打开图谱的文档列表
  * @param item
  */
-function handleOpenGraph(item) {
-  const { href } = router.resolve({ path: '/graph/detail', query: { graphId: item.id } })
-  window.open(href, '_blank')
+function handleOpenDocument(item) {
+  router.push({ path: '/kg/graph/document', query: { prtId: item.id } })
 }
 
 /**
- * 跳转到实体列表（按当前图谱过滤）
+ * 打开图谱可视化详情页
+ * @param item
+ */
+function handleOpenGraphDetail(item) {
+  router.push({ path: '/kg/graph/detail', query: { graphId: item.id } })
+}
+
+/**
+ * 跳转到实体列表
  * @param item
  */
 function handleOpenEntity(item) {
@@ -196,19 +481,11 @@ function handleOpenEntity(item) {
 }
 
 /**
- * 跳转到关系列表（按当前图谱过滤）
+ * 跳转到关系列表
  * @param item
  */
 function handleOpenRelation(item) {
   router.push({ path: '/kg/relation', query: { graphId: item.id } })
-}
-
-/**
- * 跳转到文档列表（按当前图谱过滤）
- * @param item
- */
-function handleOpenDocument(item) {
-  router.push({ path: '/kg/graph/document', query: { graphId: item.id } })
 }
 
 /**
@@ -224,6 +501,126 @@ function parseSchema(schemaStr) {
   } catch (e) {
     return []
   }
+}
+
+/**
+ * 打开新建表单
+ */
+function handleOpenCreateForm() {
+  Object.assign(form.value, getDefaultFormData());
+  formTitle.value = '新增知识图谱';
+  formVisible.value = true;
+}
+
+/**
+ * 打开修改表单
+ * @param item
+ */
+function handleOpenUpdateForm(item) {
+  const entityTypeList = parseSchema(item.entityTypes);
+  const relationTypeList = parseSchema(item.relationTypes);
+  Object.assign(form.value, getDefaultFormData(), item, {
+    entityTypeList,
+    relationTypeList,
+  });
+  formTitle.value = '修改知识图谱';
+  formVisible.value = true;
+}
+
+/**
+ * 关闭表单
+ */
+function handleCloseForm() {
+  Object.assign(form.value, getDefaultFormData());
+  formTitle.value = '';
+  formVisible.value = false;
+}
+
+/**
+ * 添加实体类型行
+ */
+function handleAddEntityType() {
+  form.value.entityTypeList.push('');
+}
+
+/**
+ * 删除实体类型行
+ * @param index
+ */
+function handleRemoveEntityType(index) {
+  form.value.entityTypeList.splice(index, 1);
+}
+
+/**
+ * 添加关系类型行
+ */
+function handleAddRelationType() {
+  form.value.relationTypeList.push('');
+}
+
+/**
+ * 删除关系类型行
+ * @param index
+ */
+function handleRemoveRelationType(index) {
+  form.value.relationTypeList.splice(index, 1);
+}
+
+/**
+ * 提交表单（新增 / 修改）
+ */
+function handleSubmitForm() {
+  formRef.value.validate(valid => {
+    if (!valid) return;
+    const data = {
+      id: form.value.id,
+      name: form.value.name,
+      description: form.value.description,
+      entityTypes: JSON.stringify(form.value.entityTypeList || []),
+      relationTypes: JSON.stringify(form.value.relationTypeList || []),
+      extractModelId: form.value.extractModelId,
+      chunkSize: form.value.chunkSize,
+      overlap: form.value.overlap,
+      status: form.value.status,
+    };
+    if (!data.id) {
+      createGraphAPI(data).then(res => {
+        if (res.code !== 200) return;
+        ElMessage.success('创建成功');
+        handleCloseForm();
+        loadGraphList();
+      });
+    } else {
+      updateGraphAPI(data).then(res => {
+        if (res.code !== 200) return;
+        ElMessage.success('修改成功');
+        handleCloseForm();
+        loadGraphList();
+      });
+    }
+  });
+}
+
+/**
+ * 删除知识图谱
+ * @param item
+ */
+function handleDelete(item) {
+  ElMessageBox.confirm('是否确定删除此条知识图谱?', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(() => {
+    deleteGraphAPI({ id: item.id }).then(res => {
+      if (res.code !== 200) return;
+      ElMessage.success('删除成功');
+      // 删除当前页最后一条时回退上一页，避免停留在空页
+      if (graphList.value.length === 1 && query.value.pageNo > 1) {
+        query.value.pageNo -= 1
+      }
+      loadGraphList();
+    });
+  }).catch(() => {});
 }
 </script>
 
@@ -271,12 +668,30 @@ function parseSchema(schemaStr) {
 }
 
 .graph-grid {
-  height: calc(100vh - #{$nav-height} - 180px);
+  height: calc(100vh - #{$nav-height} - 190px);
   overflow-y: auto;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: $spacing-lg;
   align-content: start;
+  :deep(.info-card-action) {
+    gap: $spacing-xs;
+    flex-wrap: wrap;
+    .action-item {
+      .el-icon {
+        font-size: 13px;
+      }
+    }
+    .action-edit {
+      color: var(--el-color-warning);
+    }
+    .action-danger {
+      color: var(--el-color-danger);
+    }
+  }
+}
+.empty-grid {
+  height: calc(100vh - #{$nav-height} - 190px);
 }
 
 .tag-empty {
@@ -286,5 +701,18 @@ function parseSchema(schemaStr) {
 
 .more-tag {
   cursor: help;
+}
+
+.drawer-footer {
+  padding: 0 $spacing-md;
+}
+
+.schema-edit-wrapper {
+  padding: 0 $spacing-sm;
+}
+
+.schema-add-btn {
+  margin-top: $spacing-sm;
+  width: 100%;
 }
 </style>

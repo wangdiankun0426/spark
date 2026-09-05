@@ -352,18 +352,6 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
             knowledgeResult.setEnableQaName(StatusEnum.indexOf(knowledgeResult.getEnableQa()).getDesc());
             knowledgeResult.setChunkStrategyName(ChunkStrategyEnum.indexOf(knowledgeResult.getChunkStrategy()).getDesc());
         });
-        List<Long> kbIds = list.stream()
-                .map(KnowledgeResult::getId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        Map<Long, Integer> countMap = new HashMap<>();
-        if (!kbIds.isEmpty()) {
-            List<DocumentCountResult> countList = documentDao.queryDocumentCountByPrtIds(kbIds);
-            for (DocumentCountResult row : countList) {
-                countMap.put(row.getPrtId(), row.getDocumentCount());
-            }
-        }
-        list.forEach(kr -> kr.setDocumentCount(countMap.getOrDefault(kr.getId(), 0)));
         Set<Long> modelIds = new HashSet<>();
         for (KnowledgeResult kr : list) {
             if (kr.getVectorModelId() != null) {

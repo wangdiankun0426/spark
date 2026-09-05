@@ -103,12 +103,12 @@ import { useRoute } from "vue-router";
 import { createTemplateVersionAPI, queryTemplateVersionDetailAPI } from "@/api/flow/templateVersion.js";
 import { queryTemplateDetailAPI } from "@/api/flow/template.js";
 import { queryFormFieldListAPI } from "@/api/form/formField.js";
-import NodePanel from '@/views/flowDesigner/nodePanel/index.vue'
-import CanvasIndex from '@/views/flowDesigner/canvas/index.vue'
+import NodePanel from '@/views/flow/designer/nodePanel/index.vue'
+import CanvasIndex from '@/views/flow/designer/canvas/index.vue'
 import NoticeConfig from './NoticeConfig.vue'
 import PropertyDrawer from './PropertyDrawer.vue'
 import VariableHelp from '@/components/FlowVariableHelp/index.vue'
-import { NODE_COMPONENTS, NODE_META } from '@/views/flowDesigner/nodes/index.js'
+import { NODE_COMPONENTS, NODE_META } from '@/views/flow/designer/nodes/index.js'
 
 const templateId = ref(0);
 const revId = ref(0);

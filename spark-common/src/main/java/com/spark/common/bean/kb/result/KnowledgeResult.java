@@ -105,10 +105,4 @@ public class KnowledgeResult extends BaseResult {
      * 排序模型名称
      */
     private String rerankModelName;
-
-    /**
-     * 文档数量
-     */
-    private Integer documentCount;
-
 }

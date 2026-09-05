@@ -33,7 +33,7 @@ public class DocumentTask {
     public void executeContentTask() {
         logger.info("scheduled executeContentTask start");
         CompletableFuture<ResultData<Void>> result = documentTaskService.executeContentTask();
-        logger.info("scheduled executeContentTask end");
+        logger.info("scheduled executeContentTask end, result={}",result);
     }
 
     /**
@@ -44,7 +44,7 @@ public class DocumentTask {
     public void executeIndexTask() {
         logger.info("scheduled executeIndexTask start");
         CompletableFuture<ResultData<Void>>  result = documentTaskService.executeIndexTask();
-        logger.info("scheduled executeIndexTask end");
+        logger.info("scheduled executeIndexTask end, result={}",result);
     }
 
     /**
@@ -55,7 +55,7 @@ public class DocumentTask {
     public void executeChunkTask() {
         logger.info("scheduled executeChunkTask start");
         CompletableFuture<ResultData<Void>> result = documentTaskService.executeChunkTask();
-        logger.info("scheduled executeChunkTask end");
+        logger.info("scheduled executeChunkTask end, result={}",result);
     }
 
     /**
@@ -66,7 +66,7 @@ public class DocumentTask {
     public void executeVectorTask() {
         logger.info("scheduled executeVectorTask start");
         CompletableFuture<ResultData<Void>>  result = documentTaskService.executeVectorTask();
-        logger.info("scheduled executeVectorTask end");
+        logger.info("scheduled executeVectorTask end, result={}",result);
     }
 
     /**
@@ -77,6 +77,6 @@ public class DocumentTask {
     public void executeGraphTask() {
         logger.info("scheduled executeGraphTask start");
         CompletableFuture<ResultData<Void>> result = documentTaskService.executeGraphTask();
-        logger.info("scheduled executeGraphTask end");
+        logger.info("scheduled executeGraphTask end, result={}",result);
     }
 }

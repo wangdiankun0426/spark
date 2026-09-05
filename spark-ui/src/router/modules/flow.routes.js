@@ -4,6 +4,7 @@ import myApplication from '@/pages/flow/myApplication/index.vue'
 import myTodo from '@/pages/flow/myTodo/index.vue'
 import myDone from '@/pages/flow/myDone/index.vue'
 import copyMe from '@/pages/flow/copyMe/index.vue'
+import flowInstance from "@/views/flow/instance/index.vue";
 
 export default [
     {
@@ -22,6 +23,14 @@ export default [
                 meta: {
                     title: '流程申请'
                 },
+            },
+            {
+                path: '/flow/instance',
+                name: 'flowInstance',
+                component: flowInstance,
+                meta: {
+                    title: '流程实例'
+                }
             },
             {
                 path: '/flow/myApplication',

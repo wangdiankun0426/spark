@@ -2,11 +2,17 @@
   <div class="graph-detail-container">
     <!-- 顶部 header -->
     <div class="detail-header">
-      <div class="detail-title">
-        <el-icon class="detail-title-icon"><Connection /></el-icon>
-        <span>{{ graph.name || '图谱详情' }}</span>
+      <div class="detail-header-left">
+        <el-button text @click="handleBack">
+          <el-icon><ArrowLeft /></el-icon>返回
+        </el-button>
+        <el-divider direction="vertical" />
+        <div class="detail-header-title">
+          <el-icon class="detail-header-title-icon"><Connection /></el-icon>
+          <span>{{ graph.name || '图谱详情' }}</span>
+        </div>
       </div>
-      <div class="detail-meta">
+      <div class="detail-header-right">
         <el-tag size="small" effect="light">实体 {{ entityTotal }}</el-tag>
         <el-tag size="small" effect="light">关系 {{ relationList.length }}</el-tag>
         <el-tag size="small" effect="light" v-if="graphStats.typeDistribution">类型 {{ Object.keys(graphStats.typeDistribution).length }}种</el-tag>
@@ -18,7 +24,6 @@
     <div class="detail-body">
       <!-- 左侧面板 -->
       <div class="entity-panel">
-        <!-- 标签页：实体 / 社区 -->
         <el-tabs v-model="leftTab" class="panel-tabs" @tab-change="handleTabChange">
           <el-tab-pane label="实体" name="entity">
             <div class="panel-tab-header">
@@ -78,11 +83,14 @@
           </el-tab-pane>
         </el-tabs>
       </div>
-
       <!-- 中间图谱 + 工具栏 -->
       <div class="graph-main">
         <div class="graph-toolbar">
-          <el-select v-model="layoutType" size="small" style="width: 100px" @change="handleLayoutChange">
+          <el-select
+              v-model="layoutType"
+              style="width: 200px"
+              @change="handleLayoutChange"
+          >
             <el-option label="力导向" value="force" />
             <el-option label="圆形" value="circular" />
             <el-option label="层次" value="dagre" />
@@ -93,7 +101,6 @@
         </div>
         <div class="graph-canvas" ref="canvasRef"></div>
       </div>
-
       <!-- 右侧详情面板 -->
       <div class="detail-panel" v-if="detailVisible">
         <div class="detail-panel-header">
@@ -139,9 +146,9 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
-import { useRoute } from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 import * as echarts from 'echarts'
-import { Connection, Search, Close, Refresh } from '@element-plus/icons-vue'
+import {Connection, Search, Close, Refresh, ArrowLeft} from '@element-plus/icons-vue'
 import { queryGraphDetailAPI, expandNodeAPI, queryGraphStatsAPI, buildGraphRAGAPI, pageCommunityListAPI } from '@/api/kg/graph.js'
 import { queryDocumentDetailAPI } from '@/api/dms/document.js'
 import { pageEntityListAPI } from '@/api/kg/entity.js'
@@ -245,6 +252,15 @@ watch(keyword, () => {
 
 function handleResize() {
   if (chart) chart.resize()
+}
+
+const router = useRouter();
+
+/**
+ * 返回上一页
+ */
+function handleBack() {
+  router.back();
 }
 
 /**
@@ -607,8 +623,12 @@ function handleOpenDetail(entity) {
   border-radius: $border-radius-lg;
   box-shadow: $shadow-card;
 }
-
-.detail-title {
+.detail-header-left {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+.detail-header-title {
   display: flex;
   align-items: center;
   gap: $spacing-sm;
@@ -618,15 +638,15 @@ function handleOpenDetail(entity) {
   color: $color-text-primary;
 }
 
-.detail-title-icon {
+.detail-header-title-icon {
   font-size: 22px;
   color: $color-primary;
 }
 
-.detail-meta {
+.detail-header-right {
   display: flex;
+  align-items: center;
   gap: $spacing-sm;
-  flex-wrap: wrap;
 }
 
 .detail-body {
@@ -840,7 +860,7 @@ function handleOpenDetail(entity) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: $spacing-md;
+  padding: $spacing-sm;
   border-bottom: 1px solid $border-color-light;
 }
 

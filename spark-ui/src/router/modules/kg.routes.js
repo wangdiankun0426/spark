@@ -1,12 +1,13 @@
 // router/modules/kg.routes.js
 import kg from '@/pages/kg/index.vue'
 import graph from '@/pages/kg/graph/index.vue'
-import graphDocument from '@/pages/kg/document/index.vue'
+import graphDocument from '@/views/dms/document/index.vue'
 import graphSearch from '@/pages/kg/search/index.vue'
 import kgEntity from '@/pages/kg/entity/index.vue'
 import kgRelation from '@/pages/kg/relation/index.vue'
 import kgAnalysis from '@/pages/kg/analysis/index.vue'
 import kgAudit from '@/pages/kg/audit/index.vue'
+import graphDetail from "@/pages/kg/graphDetail/index.vue";
 
 export default [
     {
@@ -24,6 +25,14 @@ export default [
                 component: graph,
                 meta: {
                     title: '知识图谱'
+                }
+            },
+            {
+                path: '/kg/graph/detail',
+                name: 'graphDetail',
+                component: graphDetail,
+                meta: {
+                    title: '图谱详情'
                 }
             },
             {

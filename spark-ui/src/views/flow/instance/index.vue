@@ -1,18 +1,25 @@
 <template>
   <div class="app-container">
-    <!--操作按钮-->
-    <div>
-      <el-button type="warning" @click="handleResetQuery">
-        <el-icon><Refresh /></el-icon>重置
-      </el-button>
-      <el-button type="info" @click="handleGetList">
-        <el-icon><Search /></el-icon>查询
-      </el-button>
+    <!-- 顶部头部 -->
+    <div class="kd-header">
+      <div class="kd-header-left">
+        <el-button text @click="handleBack">
+          <el-icon><ArrowLeft /></el-icon>返回
+        </el-button>
+      </div>
+      <div class="kd-header-right">
+        <el-button type="warning" @click="handleResetQuery">
+          <el-icon><Refresh /></el-icon>重置
+        </el-button>
+        <el-button type="info" @click="handleGetList">
+          <el-icon><Search /></el-icon>查询
+        </el-button>
+      </div>
     </div>
     <!--流程实例列表-->
     <el-table
         ref="tableRef"
-        height="calc(100vh - 155px)"
+        height="calc(100vh - 200px)"
         :data="tableList"
         highlight-current-row
         @sort-change="handleSortChange"
@@ -132,14 +139,24 @@
 
 <script setup>
 import { getCurrentInstance, ref } from 'vue';
-import { pageInstanceListAPI, showInstanceDetailAPI } from '@/api/flow/instance';
-import { pageTaskInstanceListAPI } from '@/api/task/instance';
-import TaskInstanceDetail from '@/components/TaskInstanceDetail';
-import { Search } from '@element-plus/icons-vue';
-import FlowDetailDrawer from '@/components/FlowDetailDrawer';
+import {useRoute, useRouter} from 'vue-router';
+import { pageInstanceListAPI, showInstanceDetailAPI } from '@/api/flow/instance.js';
+import { pageTaskInstanceListAPI } from '@/api/task/instance.js';
+import TaskInstanceDetail from '@/components/TaskInstanceDetail/index.vue';
+import {ArrowLeft, Delete, DocumentAdd, Refresh, Search} from '@element-plus/icons-vue';
+import FlowDetailDrawer from '@/components/FlowDetailDrawer/index.vue';
 
 const { proxy } = getCurrentInstance();
-const query = ref({ pageNo: 1, pageSize: 30, name: undefined, status: undefined, sorts: {} });
+const route = useRoute();
+const query = ref({
+  pageNo: 1,
+  pageSize: 30,
+  name: undefined,
+  status: undefined,
+  // 从流程模板卡片「记录」进入时按对应模板过滤
+  templateId: route.query.templateId || undefined,
+  sorts: {}
+});
 const searchFlag = ref({ name: false, status: false });
 const total = ref(0);
 const pageSizes = [30, 50, 100];
@@ -163,6 +180,7 @@ function handleResetQuery() {
     pageSize: 30,
     name: undefined,
     status: undefined,
+    templateId: route.query.templateId || undefined,
     sorts: {}
   };
   searchFlag.value.name = false;
@@ -176,6 +194,7 @@ function handleResetQuery() {
  * 查询流程实例列表
  */
 async function handleGetList() {
+  query.value.templateId = route.query.templateId || undefined;
   const res = await pageInstanceListAPI(query.value);
   if (res.code === 200 && res.data) {
     tableList.value = res.data.rows || [];
@@ -309,7 +328,39 @@ function handleOpenTaskDetail(row) {
   taskDetailId.value = row.id;
   taskDetailVisible.value = true;
 }
+
+const router = useRouter();
+
+/**
+ * 返回上一页
+ */
+function handleBack() {
+  router.back();
+}
 </script>
 
 <style scoped lang="scss">
+.kd-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+  padding: $spacing-md $spacing-lg;
+  background-color: $bg-card;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-card;
+}
+
+.kd-header-left {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.kd-header-right {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
 </style>

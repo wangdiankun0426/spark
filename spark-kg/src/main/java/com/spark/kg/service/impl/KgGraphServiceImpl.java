@@ -246,32 +246,6 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
         super.supplyCreatedByName(list);
         super.supplyUpdatedByName(list);
         list.forEach(kr -> kr.setStatusName(StatusEnum.indexOf(kr.getStatus()).getDesc()));
-        List<Long> graphIds = list.stream()
-                .map(KgGraphResult::getId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        Map<Long, Integer> entityCountMap = new HashMap<>();
-        Map<Long, Integer> relationCountMap = new HashMap<>();
-        Map<Long, Integer> docCountMap = new HashMap<>();
-        if (!graphIds.isEmpty()) {
-            List<KgEntityCountResult> entityCountList = kgEntityDao.queryKgEntityCountByGraphIds(graphIds);
-            for (KgEntityCountResult row : entityCountList) {
-                entityCountMap.put(row.getGraphId(), row.getEntityCount());
-            }
-            List<KgRelationCountResult> relationCountList = kgRelationDao.queryKgRelationCountByGraphIds(graphIds);
-            for (KgRelationCountResult row : relationCountList) {
-                relationCountMap.put(row.getGraphId(), row.getRelationCount());
-            }
-            List<DocumentCountResult> docCountList = documentDao.queryDocumentCountByPrtIds(graphIds);
-            for (DocumentCountResult row : docCountList) {
-                docCountMap.put(row.getPrtId(), row.getDocumentCount());
-            }
-        }
-        list.forEach(kr -> {
-            kr.setEntityCount(entityCountMap.getOrDefault(kr.getId(), 0));
-            kr.setRelationCount(relationCountMap.getOrDefault(kr.getId(), 0));
-            kr.setDocCount(docCountMap.getOrDefault(kr.getId(), 0));
-        });
         Set<Long> modelIds = new HashSet<>();
         for (KgGraphResult kr : list) {
             if (kr.getExtractModelId() != null) {

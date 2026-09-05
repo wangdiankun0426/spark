@@ -402,19 +402,17 @@ function handleViewNotice(row) {
   background: var(--nav-bg) !important;
   box-shadow: var(--nav-shadow);
 }
-
-// 左侧 logo 区域
+// 左侧 logo 区域（绝对定位，不参与菜单居中布局）
 .logo-box {
+  position: absolute;
+  left: 10px;
+  top: 0;
   display: flex;
   align-items: center;
   height: 100%;
   width: 60px;
-  padding: 0 0 0 10px;
-  margin-left: 20px;
-  margin-right: 10px;
   overflow: hidden;
 }
-
 // 一级菜单项基础样式
 .el-menu-item {
   color: var(--nav-text) !important;
@@ -423,7 +421,6 @@ function handleViewNotice(row) {
   transition: $transition-fast;
   letter-spacing: 2px;
 }
-
 // 悬停一级菜单
 .el-menu-item:hover {
   background-color: var(--nav-hover-bg) !important;
@@ -431,24 +428,23 @@ function handleViewNotice(row) {
   color: var(--nav-hover-text) !important;
   border-bottom: 0;
 }
-
 // 激活状态一级菜单
 .el-menu-item.is-active {
   background-color: var(--nav-active-bg) !important;
   border-bottom: 3px solid var(--nav-active-border) !important;
   color: var(--nav-active-text) !important;
 }
-
 .el-menu--horizontal.el-menu {
   --el-menu-horizontal-height: #{$nav-height} !important;
   border: 0;
   height: $nav-height !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-
 // 工具栏区域
 .tool-box {
   height: $nav-height;
-  width: 400px;
   position: absolute;
   right: 110px;
   top: 0;
@@ -470,8 +466,8 @@ function handleViewNotice(row) {
   justify-content: center;
   transition: $transition-fast;
   color: var(--nav-tool-color);
-  margin-right: 8px;
-
+  margin-right: 2px;
+  margin-left: 2px;
   &:hover,
   &.is-active {
     background-color: var(--nav-tool-hover-bg);

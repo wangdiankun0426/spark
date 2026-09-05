@@ -62,7 +62,7 @@ public class KgGraphResult extends BaseResult {
     private Integer overlap;
 
     /**
-     * 状态（0-禁用 1-启用）
+     * 状态
      */
     private Integer status;
 
@@ -70,20 +70,4 @@ public class KgGraphResult extends BaseResult {
      * 状态名称
      */
     private String statusName;
-
-    /**
-     * 实体数量
-     */
-    private Integer entityCount;
-
-    /**
-     * 关系数量
-     */
-    private Integer relationCount;
-
-    /**
-     * 文档数量
-     */
-    private Integer docCount;
-
 }

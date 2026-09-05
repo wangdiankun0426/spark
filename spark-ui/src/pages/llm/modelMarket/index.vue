@@ -17,7 +17,7 @@
             placeholder="搜索模型名称"
             clearable
             :prefix-icon="Search"
-            style="width: 240px"
+            style="width: 300px"
             @change="handleSearch"
             @keyup.enter="handleSearch"
             @clear="handleSearch"
@@ -29,7 +29,12 @@
     <div class="market-body" v-loading="loading">
       <!-- 左侧厂商列表 -->
       <div class="provider-pane">
-        <div class="provider-pane-title">厂商列表</div>
+        <div class="provider-pane-title-row">
+          <div class="provider-pane-title">厂商列表</div>
+          <el-button type="primary" size="small" @click="handleOpenCreateProvider">
+            <el-icon><Plus /></el-icon>新增厂商
+          </el-button>
+        </div>
         <div class="provider-list">
           <div
               class="provider-item"
@@ -70,6 +75,10 @@
               <div class="provider-item-name">{{ provider.name }}</div>
               <div class="provider-item-count" v-if="provider.description">{{ provider.description }}</div>
             </div>
+            <div class="provider-item-actions">
+              <span class="p-act p-act-edit" @click.stop="handleOpenUpdateProvider(provider)">修改</span>
+              <span class="p-act p-act-danger" @click.stop="handleDeleteProvider(provider)">删除</span>
+            </div>
           </div>
         </div>
       </div>
@@ -83,15 +92,23 @@
             <el-divider direction="vertical" />
             <span class="model-pane-total">共 {{ total }} 个模型</span>
           </div>
-          <el-radio-group v-model="modelTypeFilter" size="small">
-            <el-radio-button :label="0">全部</el-radio-button>
-            <el-radio-button :label="1">语言模型</el-radio-button>
-            <el-radio-button :label="2">向量模型</el-radio-button>
-            <el-radio-button :label="3">排序模型</el-radio-button>
-          </el-radio-group>
+          <div class="model-toolbar-actions">
+            <el-radio-group v-model="modelTypeFilter" size="small">
+              <el-radio-button :label="0">全部</el-radio-button>
+              <el-radio-button :label="1">语言模型</el-radio-button>
+              <el-radio-button :label="2">向量模型</el-radio-button>
+              <el-radio-button :label="3">排序模型</el-radio-button>
+            </el-radio-group>
+            <el-button type="primary" size="small" @click="handleOpenCreateModel">
+              <el-icon><Plus /></el-icon>新增模型
+            </el-button>
+          </div>
         </div>
 
-        <div class="model-grid" v-if="modelList.length">
+        <div
+            class="model-grid"
+            v-if="modelList.length"
+        >
           <info-card
               v-for="model in modelList"
               :key="model.id"
@@ -142,10 +159,29 @@
                 使用
                 <el-icon><ArrowRight /></el-icon>
               </span>
+              <span class="action-item action-edit" @click.stop="handleOpenUpdateModel(model)">修改</span>
+              <span class="action-item action-danger" @click.stop="handleDeleteModel(model)">删除</span>
             </template>
           </info-card>
         </div>
-        <el-empty v-else :description="emptyText" :image-size="120" />
+        <el-empty
+            class="empty-grid"
+            v-else
+            :description="emptyText"
+            :image-size="120"
+        />
+
+        <!-- 分页 -->
+        <el-pagination
+            :current-page="query.pageNo"
+            :page-size="query.pageSize"
+            :page-sizes="pageSizes"
+            :background="true"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+        />
       </div>
     </div>
 
@@ -155,19 +191,223 @@
         :target="selectedModelTarget"
         target-type="model"
     />
+
+    <!-- 新增 / 修改 厂商抽屉 -->
+    <el-drawer
+        v-model="providerFormVisible"
+        :title="providerFormTitle"
+        direction="ltr"
+        size="30%"
+        :before-close="handleCloseProviderForm"
+    >
+      <el-form
+          :model="providerForm"
+          label-width="auto"
+          :rules="providerFormRules"
+          ref="providerFormRef"
+      >
+        <el-form-item label="厂商名称" prop="name">
+          <el-input
+              v-model="providerForm.name"
+              placeholder="请输入厂商名称，如：DeepSeek"
+              maxlength="50"
+              show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="厂商图标" prop="icon">
+          <el-input
+              v-model="providerForm.icon"
+              placeholder="请输入厂商图标 URL 或图标标识"
+              maxlength="128"
+              show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="API地址" prop="apiUrl">
+          <el-input
+              v-model="providerForm.apiUrl"
+              placeholder="请输入 API 地址，如：https://api.openai.com"
+              maxlength="128"
+              show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="密钥" prop="secretKey">
+          <el-input
+              v-model="providerForm.secretKey"
+              placeholder="请输入厂商密钥（API Key），如：sk-xxxxxxxx"
+              type="password"
+              show-password
+              maxlength="128"
+          />
+        </el-form-item>
+        <el-form-item label="厂商描述" prop="description">
+          <el-input
+              v-model="providerForm.description"
+              type="textarea"
+              :rows="5"
+              placeholder="请输入厂商描述，简要说明厂商背景与提供的服务，最多 200 字"
+              maxlength="256"
+              show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="备注" prop="remark">
+          <el-input
+              v-model="providerForm.remark"
+              type="textarea"
+              :rows="5"
+              placeholder="请输入备注信息，记录其他需要说明的事项，最多 200 字"
+              maxlength="256"
+              show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="排序" prop="orderNum">
+          <el-input-number
+              v-model="providerForm.orderNum"
+              :min="1"
+              :max="999"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="drawer-footer">
+          <el-button type="primary" @click="handleSubmitProviderForm">保存</el-button>
+          <el-button @click="handleCloseProviderForm">取消</el-button>
+        </div>
+      </template>
+    </el-drawer>
+
+    <!-- 新增 / 修改 模型抽屉 -->
+    <el-drawer
+        v-model="modelFormVisible"
+        :title="modelFormTitle"
+        direction="ltr"
+        size="30%"
+        :before-close="handleCloseModelForm"
+    >
+      <el-form
+          :model="modelForm"
+          label-width="auto"
+          :rules="modelFormRules"
+          ref="modelFormRef"
+      >
+        <el-form-item label="供应商" prop="providerId">
+          <el-select
+              v-model="modelForm.providerId"
+              placeholder="请选择模型供应商，如：DeepSeek"
+              style="width: 100%"
+          >
+            <el-option
+                v-for="item in providerList"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="模型类型" prop="type">
+          <el-select
+              v-model="modelForm.type"
+              placeholder="请选择模型类型"
+              style="width: 100%"
+          >
+            <el-option
+                v-for="item in modelTypeOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="模型名称" prop="name">
+          <el-input
+              v-model="modelForm.name"
+              placeholder="请输入模型名称，如：gpt-4、claude-3-opus"
+              maxlength="50"
+              show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="思考模式" prop="enableThinking" v-if="modelForm.type === 1">
+          <el-switch
+              v-model="modelForm.enableThinking"
+              :active-value="1"
+              :inactive-value="-1"
+              active-text="已启用"
+              inactive-text="已停用"
+              inline-prompt
+          />
+        </el-form-item>
+        <el-form-item label="温度参数" prop="temperature" v-if="modelForm.type === 1">
+          <el-input-number
+              v-model="modelForm.temperature"
+              :min="0"
+              :max="2"
+              :step="0.01"
+              :precision="2"
+              style="width: 100%"
+          />
+        </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <el-switch
+              v-model="modelForm.status"
+              :active-value="1"
+              :inactive-value="-1"
+              active-text="已启用"
+              inactive-text="已停用"
+              inline-prompt
+          />
+        </el-form-item>
+        <el-form-item label="模型描述" prop="description">
+          <el-input
+              v-model="modelForm.description"
+              placeholder="请输入模型描述，简要说明模型能力与适用场景，最多 200 字"
+              type="textarea"
+              :rows="5"
+              maxlength="256"
+              show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="备注" prop="remark">
+          <el-input
+              v-model="modelForm.remark"
+              placeholder="请输入备注信息，记录其他需要说明的事项，最多 200 字"
+              type="textarea"
+              :rows="5"
+              maxlength="256"
+              show-word-limit
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="drawer-footer">
+          <el-button type="primary" @click="handleSubmitModelForm">保存</el-button>
+          <el-button @click="handleCloseModelForm">取消</el-button>
+        </div>
+      </template>
+    </el-drawer>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
-import { ElMessage } from 'element-plus'
-import { pageModelListAPI } from '@/api/llm/model.js'
-import { pageProviderListAPI } from '@/api/llm/provider.js'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import {
+  pageModelListAPI,
+  createModelAPI,
+  updateModelAPI,
+  deleteModelAPI,
+  queryModelDetailAPI
+} from '@/api/llm/model.js'
+import {
+  pageProviderListAPI,
+  createProviderAPI,
+  updateProviderAPI,
+  deleteProviderAPI,
+  queryProviderDetailAPI
+} from '@/api/llm/provider.js'
 import LlmChat from '@/components/Chat/llmChat.vue'
 import InfoCard from '@/components/InfoCard/index.vue'
 import {
   Search, Cpu, Grid, Collection, Histogram, Box,
-  OfficeBuilding, InfoFilled, ArrowRight
+  OfficeBuilding, InfoFilled, ArrowRight, Plus
 } from '@element-plus/icons-vue'
 
 const loading = ref(false)
@@ -176,6 +416,12 @@ const modelTypeFilter = ref(0)
 const providerList = ref([])
 const modelList = ref([])
 const total = ref(0)
+const pageSizes = [8, 16, 32]
+// 分页查询条件
+const query = ref({
+  pageNo: 1,
+  pageSize: 8,
+})
 const activeProviderId = ref(null)
 const drawerVisible = ref(false)
 const selectedModelTarget = ref({})
@@ -197,21 +443,23 @@ onBeforeUnmount(() => {
 })
 
 /**
- * 关键字搜索防抖，300ms 后调用接口检索
+ * 关键字搜索防抖，300ms 后回到第一页并重新检索
  */
 watch(keyword, () => {
   if (searchTimer) {
     clearTimeout(searchTimer)
   }
   searchTimer = setTimeout(() => {
+    query.value.pageNo = 1
     loadModels()
   }, 300)
 })
 
 /**
- * 模型类型切换，立即调用接口检索
+ * 模型类型切换，回到第一页并立即重新检索
  */
 watch(modelTypeFilter, () => {
+  query.value.pageNo = 1
   loadModels()
 })
 
@@ -249,17 +497,18 @@ function loadProviders() {
 }
 
 /**
- * 加载模型列表（按当前厂商、类型、关键字从接口查询）
+ * 分页加载模型列表（按当前厂商、类型、关键字从接口查询）
  */
 function loadModels() {
   loading.value = true
-  const query = {
-    page: false,
+  const params = {
+    pageNo: query.value.pageNo,
+    pageSize: query.value.pageSize,
     providerId: activeProviderId.value || undefined,
     type: modelTypeFilter.value || undefined,
     name: keyword.value || undefined
   }
-  pageModelListAPI(query).then(res => {
+  pageModelListAPI(params).then(res => {
     modelList.value = res.data.rows || []
     total.value = res.data.total || 0
   }).finally(() => {
@@ -268,23 +517,290 @@ function loadModels() {
 }
 
 /**
- * 立即触发模型检索（回车、失焦、清空时调用）
+ * 立即触发模型检索（回车、失焦、清空时调用），回到第一页
  */
 function handleSearch() {
   if (searchTimer) {
     clearTimeout(searchTimer)
     searchTimer = null
   }
+  query.value.pageNo = 1
   loadModels()
 }
 
 /**
- * 切换选中厂商并重新查询模型列表
+ * 切换每页条数，回到第一页重新查询
+ * @param size
+ */
+function handleSizeChange(size) {
+  query.value.pageSize = size
+  query.value.pageNo = 1
+  loadModels()
+}
+
+/**
+ * 切换页码重新查询
+ * @param pageNo
+ */
+function handleCurrentChange(pageNo) {
+  query.value.pageNo = pageNo
+  loadModels()
+}
+
+/**
+ * 切换选中厂商并重新查询模型列表，回到第一页
  * @param providerId
  */
 function handleSelectProvider(providerId) {
   activeProviderId.value = providerId
+  query.value.pageNo = 1
   loadModels()
+}
+
+// 新增 / 修改 厂商表单
+const providerFormVisible = ref(false)
+const providerFormTitle = ref('')
+const providerFormRef = ref(null)
+const providerForm = ref(createEmptyProviderForm())
+const providerFormRules = {
+  name: [{ required: true, trigger: 'blur', message: '请输入厂商名称' }],
+  icon: [{ required: true, trigger: 'blur', message: '请输入厂商图标' }],
+  apiUrl: [{ required: true, trigger: 'blur', message: '请输入API地址' }],
+  secretKey: [{ required: true, trigger: 'blur', message: '请输入厂商密钥' }],
+  orderNum: [{ required: true, trigger: 'blur', message: '请输入排序' }],
+}
+
+/**
+ * 构造空厂商表单
+ */
+function createEmptyProviderForm() {
+  return {
+    id: undefined,
+    name: undefined,
+    icon: undefined,
+    apiUrl: undefined,
+    secretKey: undefined,
+    description: undefined,
+    remark: undefined,
+    orderNum: undefined,
+  }
+}
+
+/**
+ * 打开新建厂商表单
+ */
+function handleOpenCreateProvider() {
+  providerForm.value = createEmptyProviderForm()
+  providerForm.value.orderNum = 999
+  providerFormTitle.value = '新建厂商'
+  providerFormVisible.value = true
+}
+
+/**
+ * 打开修改厂商表单，先拉取详情回填
+ * @param provider
+ */
+function handleOpenUpdateProvider(provider) {
+  queryProviderDetailAPI({ id: provider.id }).then(res => {
+    if (res.code !== 200 || !res.data) return
+    const d = res.data
+    providerForm.value = {
+      id: d.id,
+      name: d.name,
+      icon: d.icon,
+      apiUrl: d.apiUrl,
+      secretKey: d.secretKey,
+      description: d.description,
+      remark: d.remark,
+      orderNum: d.orderNum,
+    }
+    providerFormTitle.value = '修改厂商'
+    providerFormVisible.value = true
+  })
+}
+
+/**
+ * 关闭厂商表单
+ */
+function handleCloseProviderForm() {
+  providerForm.value = createEmptyProviderForm()
+  if (providerFormRef.value) {
+    providerFormRef.value.clearValidate()
+  }
+  providerFormTitle.value = ''
+  providerFormVisible.value = false
+}
+
+/**
+ * 提交厂商表单（新增 / 修改）
+ */
+function handleSubmitProviderForm() {
+  providerFormRef.value.validate(valid => {
+    if (!valid) return
+    const data = { ...providerForm.value }
+    const api = data.id ? updateProviderAPI : createProviderAPI
+    api(data).then(res => {
+      if (res.code !== 200) return
+      ElMessage.success(data.id ? '厂商修改成功' : '厂商创建成功')
+      handleCloseProviderForm()
+      loadProviders()
+    })
+  })
+}
+
+/**
+ * 删除厂商（二次确认，联动刷新列表与模型）
+ * @param provider
+ */
+function handleDeleteProvider(provider) {
+  ElMessageBox.confirm('是否确定删除此条模型厂商?', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(() => {
+    deleteProviderAPI({ id: provider.id }).then(res => {
+      if (res.code !== 200) return
+      ElMessage.success('删除模型厂商成功')
+      if (activeProviderId.value === provider.id) {
+        activeProviderId.value = null
+        query.value.pageNo = 1
+        loadModels()
+      }
+      loadProviders()
+    })
+  }).catch(() => {})
+}
+
+// 新增 / 修改 模型表单
+const modelFormVisible = ref(false)
+const modelFormTitle = ref('')
+const modelFormRef = ref(null)
+const modelForm = ref(createEmptyModelForm())
+const modelTypeOptions = [
+  { label: '语言模型', value: 1 },
+  { label: '向量模型', value: 2 },
+  { label: '排序模型', value: 3 }
+]
+const modelFormRules = {
+  providerId: [{ required: true, trigger: 'change', message: '请选择供应商' }],
+  type: [{ required: true, trigger: 'change', message: '请选择模型类型' }],
+  name: [{ required: true, trigger: 'blur', message: '请输入模型名称' }],
+  temperature: [
+    { required: true, message: '请输入温度参数', trigger: 'blur' },
+    { type: 'number', min: 0, max: 2, message: '温度参数范围为 0.0-2.0', trigger: 'blur' }
+  ],
+}
+
+/**
+ * 构造空模型表单
+ */
+function createEmptyModelForm() {
+  return {
+    id: undefined,
+    providerId: undefined,
+    type: undefined,
+    name: undefined,
+    enableThinking: -1,
+    temperature: 0.10,
+    status: 1,
+    description: undefined,
+    remark: undefined,
+  }
+}
+
+/**
+ * 打开新建模型表单
+ */
+function handleOpenCreateModel() {
+  modelForm.value = createEmptyModelForm()
+  modelFormTitle.value = '新建模型'
+  modelFormVisible.value = true
+}
+
+/**
+ * 打开修改模型表单，先拉取详情回填
+ * @param model
+ */
+function handleOpenUpdateModel(model) {
+  queryModelDetailAPI({ id: model.id }).then(res => {
+    if (res.code !== 200 || !res.data) return
+    const d = res.data
+    modelForm.value = {
+      id: d.id,
+      providerId: d.providerId,
+      type: d.type,
+      name: d.name,
+      enableThinking: d.enableThinking,
+      temperature: d.temperature,
+      status: d.status,
+      description: d.description,
+      remark: d.remark,
+    }
+    modelFormTitle.value = '修改模型'
+    modelFormVisible.value = true
+  })
+}
+
+/**
+ * 关闭模型表单
+ */
+function handleCloseModelForm() {
+  modelForm.value = createEmptyModelForm()
+  if (modelFormRef.value) {
+    modelFormRef.value.clearValidate()
+  }
+  modelFormTitle.value = ''
+  modelFormVisible.value = false
+}
+
+/**
+ * 提交模型表单（新增 / 修改）
+ */
+function handleSubmitModelForm() {
+  modelFormRef.value.validate(valid => {
+    if (!valid) return
+    const data = {
+      id: modelForm.value.id,
+      providerId: modelForm.value.providerId,
+      type: modelForm.value.type,
+      name: modelForm.value.name,
+      // 思考模式仅语言模型使用
+      enableThinking: modelForm.value.type === 1 ? modelForm.value.enableThinking : -1,
+      temperature: modelForm.value.temperature,
+      status: modelForm.value.status,
+      description: modelForm.value.description,
+      remark: modelForm.value.remark,
+    }
+    const api = data.id ? updateModelAPI : createModelAPI
+    api(data).then(res => {
+      if (res.code !== 200) return
+      ElMessage.success(data.id ? '模型修改成功' : '模型创建成功')
+      handleCloseModelForm()
+      loadModels()
+    })
+  })
+}
+
+/**
+ * 删除模型（二次确认）
+ * @param model
+ */
+function handleDeleteModel(model) {
+  ElMessageBox.confirm('是否确定删除此条模型?', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(() => {
+    deleteModelAPI({ id: model.id }).then(res => {
+      if (res.code !== 200) return
+      ElMessage.success('删除模型成功')
+      // 删除当前页最后一条时回退上一页，避免停留在空页
+      if (modelList.value.length === 1 && query.value.pageNo > 1) {
+        query.value.pageNo -= 1
+      }
+      loadModels()
+    })
+  }).catch(() => {})
 }
 
 /**
@@ -405,11 +921,62 @@ function handleSelectModel(model) {
   top: $spacing-md;
 }
 
+.provider-pane-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-sm;
+  padding: $spacing-xs $spacing-sm $spacing-sm;
+}
+
 .provider-pane-title {
   font-size: 13px;
   font-weight: 600;
   color: $color-text-secondary;
-  padding: $spacing-xs $spacing-sm $spacing-sm;
+}
+
+// 厂商项操作（悬停显示，修改黄/删除红）
+.provider-item-actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  opacity: 0;
+  transition: $transition-fast;
+}
+
+.provider-item:hover .provider-item-actions {
+  opacity: 1;
+}
+
+.p-act {
+  font-size: 11px;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.p-act-edit {
+  color: var(--el-color-warning);
+
+  &:hover {
+    opacity: 0.75;
+  }
+}
+
+.p-act-danger {
+  color: var(--el-color-danger);
+
+  &:hover {
+    opacity: 0.75;
+  }
+}
+
+.drawer-footer {
+  padding: 0 $spacing-md;
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-sm;
 }
 
 .provider-list {
@@ -520,12 +1087,37 @@ function handleSelectModel(model) {
 }
 
 .model-grid {
-  height: calc(100vh - #{$nav-height} - 230px);
+  height: calc(100vh - #{$nav-height} - 270px);
   overflow-y: auto;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: $spacing-lg;
   align-content: start;
+}
+.empty-grid {
+  height: calc(100vh - #{$nav-height} - 270px);
+}
+
+// 工具栏右侧操作组
+.model-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+// 模型卡片底部操作区：修改统一黄色、删除统一红色
+.model-grid {
+  :deep(.info-card-action) {
+    gap: $spacing-sm;
+
+    .action-edit {
+      color: var(--el-color-warning);
+    }
+
+    .action-danger {
+      color: var(--el-color-danger);
+    }
+  }
 }
 
 // badge slot 内：语言模型 / 向量模型 / 排序模型 类型徽章配色（不跟随主题色，保留语义区分）

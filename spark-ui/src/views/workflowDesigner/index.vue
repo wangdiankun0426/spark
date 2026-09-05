@@ -87,9 +87,9 @@ import { ElMessage } from 'element-plus';
 import { queryWorkflowDetailAPI } from '@/api/workflow/template.js';
 import { queryFormFieldListAPI } from '@/api/form/formField.js';
 import { saveVersionAPI, queryVersionDetailAPI } from '@/api/workflow/version.js';
-import NodePanel from '@/views/flowDesigner/nodePanel/index.vue';
-import CanvasIndex from '@/views/flowDesigner/canvas/index.vue';
-import { NODE_COMPONENTS, NODE_META } from '@/views/flowDesigner/nodes/index.js';
+import NodePanel from '@/views/flow/designer/nodePanel/index.vue';
+import CanvasIndex from '@/views/flow/designer/canvas/index.vue';
+import { NODE_COMPONENTS, NODE_META } from '@/views/flow/designer/nodes/index.js';
 import PropertyDrawer from '@/views/workflowDesigner/PropertyDrawer.vue';
 import VariableHelp from '@/components/FlowVariableHelp/index.vue';
 

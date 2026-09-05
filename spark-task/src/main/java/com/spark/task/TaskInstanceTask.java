@@ -31,6 +31,6 @@ public class TaskInstanceTask {
     public void executeTask() {
         logger.info("scheduled executeTask start");
         ResultData<Void> result = taskInstanceService.executeTask();
-        logger.info("scheduled executeTask end, code={}", result.getCode());
+        logger.info("scheduled executeTask end, result={}", result);
     }
 }

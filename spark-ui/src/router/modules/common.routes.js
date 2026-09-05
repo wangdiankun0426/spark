@@ -5,8 +5,7 @@ import register from '@/pages/login/register.vue'
 import formDesigner from '@/views/formDesigner/index.vue'
 import noticeEdit from '@/views/notice/edit.vue'
 import noticeView from '@/views/notice/view.vue'
-import flowDesigner from '@/views/flowDesigner/index.vue'
-import graphIndex from "@/pages/kg/graphDetail/index.vue";
+import flowDesigner from '@/views/flow/designer/index.vue'
 import workflowIndex from "@/views/workflowDesigner/index.vue";
 
 export default [
@@ -72,9 +71,17 @@ export default [
         }
     },
     {
+        path: '/document/list',
+        name: 'documentList',
+        component: () => import('@/views/dms/document/index.vue'),
+        meta: {
+            title: '文档列表'
+        }
+    },
+    {
         path: '/document/preview',
         name: 'documentPreview',
-        component: () => import('@/pages/kb/preview/index.vue'),
+        component: () => import('@/views/dms/preview/index.vue'),
         meta: {
             title: '文档预览'
         }
@@ -82,17 +89,9 @@ export default [
     {
         path: '/document/chunk',
         name: 'documentChunk',
-        component: () => import('@/pages/kb/chunk/index.vue'),
+        component: () => import('@/views/dms/chunk/index.vue'),
         meta: {
             title: '文档分块'
-        }
-    },
-    {
-        path: '/graph/detail',
-        name: 'graphDetail',
-        component: graphIndex,
-        meta: {
-            title: '图谱详情'
         }
     },
     {

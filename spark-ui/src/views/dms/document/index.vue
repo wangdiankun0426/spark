@@ -8,8 +8,8 @@
         </el-button>
         <el-divider direction="vertical" />
         <div class="kd-header-title">
-          <el-icon class="kd-header-icon"><Collection /></el-icon>
-          {{ knowledgeName || '知识库文档' }}
+          <el-icon class="kd-header-icon"><component :is="headerIcon" /></el-icon>
+          {{ headerTitle }}
         </div>
       </div>
       <div class="kd-header-right">
@@ -66,8 +66,12 @@
         <el-table-column prop="sizeStr" label="大小" align="center"/>
         <el-table-column prop="ownerName" label="所有者" align="center" />
         <el-table-column prop="createdDt" label="创建时间" width="160" align="center"/>
-        <el-table-column fixed="right" label="操作" width="360" align="center">
+        <el-table-column fixed="right" label="操作" :width="isGraph ? 420 : 360" align="center">
           <template #default="scope">
+            <el-button v-if="isGraph" type="primary" text @click="handleOpenGraphDetail(scope.row.id)">
+              <el-icon><Connection /></el-icon>
+              <span style="font-size: 12px; font-weight: 400">图谱</span>
+            </el-button>
             <el-button type="success" text @click="handleDocumentEvent(scope.row.id)">
               <el-icon><HelpFilled /></el-icon>
               <span style="font-size: 12px; font-weight: 400">事件</span>
@@ -131,8 +135,8 @@
         <el-form-item label="所有者" prop="ownerName">
           <el-input v-model="documentForm.ownerName" placeholder="请输入所有者" readonly />
         </el-form-item>
-        <el-form-item label="所属知识库" prop="kbName">
-          <el-input v-model="documentForm.kbName" placeholder="所属知识库" readonly />
+        <el-form-item :label="isGraph ? '所属知识图谱' : '所属知识库'" prop="kbName">
+          <el-input v-model="documentForm.kbName" :placeholder="isGraph ? '所属知识图谱' : '所属知识库'" readonly />
         </el-form-item>
         <el-form-item label="创建时间" prop="createdDt">
           <el-input v-model="documentForm.createdDt" placeholder="创建时间" readonly />
@@ -156,7 +160,7 @@
     </el-drawer>
 
     <!-- 文件上传 -->
-    <document-upload v-model="uploadDocumentFormVisible" :prt-id="kbId" @success="handleGetDocumentList" />
+    <document-upload v-model="uploadDocumentFormVisible" :prt-id="prtId" @success="handleGetDocumentList" />
 
     <!-- 文件事件详情 -->
     <document-event v-model="documentEventVisible" :doc-id="documentEventDocId" />
@@ -215,7 +219,7 @@
   </div>
 </template>
 
-<script setup name="knowledgeDocument">
+<script setup name="DocumentList">
 import { computed, getCurrentInstance, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -223,15 +227,16 @@ import {
   pageDocumentListAPI, updateDocumentAPI, queryDocumentDetailAPI, deleteDocumentAPI,
   batchDeleteDocumentAPI, batchReprocessDocumentAPI
 } from '@/api/dms/document.js'
-import { queryKnowledgeDetailAPI } from '@/api/kb/knowledge'
-import FormView from '@/components/FormView'
-import DocumentIcon from '@/components/DocumentIcon'
-import DocumentEvent from '@/components/DocumentEvent'
-import DocumentUpload from '@/components/DocumentUpload'
+import { queryKnowledgeDetailAPI } from '@/api/kb/knowledge.js'
+import { queryGraphDetailAPI } from '@/api/kg/graph.js'
+import FormView from '@/components/FormView/index.vue'
+import DocumentIcon from '@/components/DocumentIcon/index.vue'
+import DocumentEvent from '@/components/DocumentEvent/index.vue'
+import DocumentUpload from '@/components/DocumentUpload/index.vue'
 import { pageFormListAPI, queryFormJsonAPI } from '@/api/form/form.js'
 import { detailFormValueAPI, saveFormValueAPI } from '@/api/form/formValue.js'
 import {
-  ArrowLeft, Collection, Search, Refresh, DocumentAdd,
+  ArrowLeft, Collection, Connection, Search, Refresh, DocumentAdd,
   HelpFilled, Grid, Edit, Delete, Tickets
 } from '@element-plus/icons-vue'
 
@@ -239,9 +244,14 @@ const route = useRoute()
 const router = useRouter()
 const { proxy } = getCurrentInstance()
 
-// 当前知识库 ID（路由参数）
-const kbId = computed(() => route.query.kbId)
-const knowledgeName = ref('')
+// 场景识别：文档列表统一传 prtId，按上级 id 末两位判断类型（14 知识库 / 16 知识图谱）
+const prtId = computed(() => route.query.prtId)
+const isGraph = computed(() => String(prtId.value ?? '').endsWith('16'))
+
+// 头部标题图标与文本
+const parentName = ref('')
+const headerIcon = computed(() => isGraph.value ? Connection : Collection)
+const headerTitle = computed(() => parentName.value || (isGraph.value ? '知识图谱文档' : '知识库文档'))
 
 // 文档列表查询
 const documentQuery = ref({
@@ -296,39 +306,47 @@ const formJson = ref(undefined)
 const selectedIds = ref([])
 
 // 路由参数变化时重新加载
-watch(kbId, () => {
-  documentQuery.value.prtId = kbId.value
-  loadKnowledgeDetail()
+watch(prtId, () => {
+  documentQuery.value.prtId = prtId.value
+  loadParentDetail()
   handleGetDocumentList()
 }, { immediate: true })
 
 /**
- * 加载知识库详情，用于头部标题展示
+ * 加载所属知识库 / 知识图谱详情，用于头部标题展示
  */
-function loadKnowledgeDetail() {
-  if (!kbId.value) {
-    knowledgeName.value = ''
+function loadParentDetail() {
+  if (!prtId.value) {
+    parentName.value = ''
     return
   }
-  queryKnowledgeDetailAPI({ id: kbId.value }).then(res => {
-    if (res.code === 200 && res.data) {
-      knowledgeName.value = res.data.name || ''
-    }
-  })
+  if (isGraph.value) {
+    queryGraphDetailAPI({ id: prtId.value }).then(res => {
+      if (res.code === 200 && res.data) {
+        parentName.value = res.data.name || ''
+      }
+    })
+  } else {
+    queryKnowledgeDetailAPI({ id: prtId.value }).then(res => {
+      if (res.code === 200 && res.data) {
+        parentName.value = res.data.name || ''
+      }
+    })
+  }
 }
 
 /**
- * 返回知识库列表
+ * 返回上一层
  */
 function handleBack() {
-  router.push('/kb/knowledge')
+  router.back();
 }
 
 /**
- * 查询文档列表（按当前知识库过滤）
+ * 查询文档列表（按当前知识库 / 知识图谱过滤）
  */
 function handleGetDocumentList() {
-  documentQuery.value.prtId = kbId.value
+  documentQuery.value.prtId = prtId.value
   pageDocumentListAPI(documentQuery.value).then(res => {
     documentList.value = res.data.rows
     total.value = res.data.total
@@ -558,6 +576,15 @@ function handleOpenChunkPage(docId) {
  */
 function handlePreviewDocument(row) {
   const { href } = router.resolve({ path: '/document/preview', query: { id: row.id } })
+  window.open(href, '_blank')
+}
+
+/**
+ * 打开文档对应的知识图谱详情页（新开标签页，仅图谱文档场景）
+ * @param docId 文档 ID
+ */
+function handleOpenGraphDetail(docId) {
+  const { href } = router.resolve({ path: '/graph/detail', query: { docId } })
   window.open(href, '_blank')
 }
 

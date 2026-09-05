@@ -1,135 +1,109 @@
 <template>
-    <div class="app-container">
-      <!--查询条件-->
-      <el-form :model="formQuery" label-width="auto">
-        <el-row :gutter="24">
-          <el-col :span="6">
-            <el-button
-                type="primary"
-                @click="handleOpenCreateFormForm"
-            >
-              <el-icon><Plus /></el-icon>新建表单模板
-            </el-button>
-            <el-button
-                type="warning"
-                @click="handleResetFormQuery"
-            >
-              <el-icon><Refresh /></el-icon>重置
-            </el-button>
-            <el-button
-                type="info"
-                @click="handleGetFormList"
-            >
-              <el-icon><Search /></el-icon>查询
-            </el-button>
-          </el-col>
-        </el-row>
-      </el-form>
-      <!--表单列表-->
-      <el-table
-          height="calc(100vh - 155px)"
-          ref="tableRef"
-          :data="formList"
-          highlight-current-row
-          @sort-change="handleSortChange"
-          :header-cell-style="handleHeaderCellClass"
-      >
-        <el-table-column prop="id" label="编号" width="100" align="center"/>
-        <el-table-column prop="name" label="名称" sortable="custom" width="200" align="center">
-          <template #header>
-            名称
-            <el-popover
-                :visible="formSearchFlag.name"
-                placement="bottom"
-                :width="200"
-                trigger="click">
-              <template #reference>
-                <el-button
-                    :type="formSearchFlag.name ? 'primary':'info'"
-                    link
-                    :icon="Search"
-                    @click.stop="formSearchFlag.name = !formSearchFlag.name"
-                />
-              </template>
-              <div>
-                <el-input
-                    v-model="formQuery.name"
-                    placeholder="请输入名称"
-                    clearable
-                    @input="handleGetFormList"
-                />
-              </div>
-            </el-popover>
-          </template>
-        </el-table-column>
-        <el-table-column prop="revNum" label="版本号" align="center">
-          <template #default="scope">
-            <el-button
-                type='primary'
-                text
-                @click="handleGetFormVersionList(scope.row.id)"
-            >
-              {{scope.row.revNum}}
-            </el-button>
-          </template>
-        </el-table-column>
-        <el-table-column prop="typeName" label="表单类型" align="center"/>
-        <el-table-column prop="orderNum" label="排序号" sortable="custom" align="center"/>
-        <el-table-column prop="createdByName" label="创建人" align="center"/>
-        <el-table-column prop="createdDt" label="创建时间" width="160" align="center"/>
-        <el-table-column prop="updatedByName" label="修改人" align="center"/>
-        <el-table-column prop="updatedDt" label="修改时间" width="160" align="center"/>
-        <el-table-column fixed="right" label="操作" width="240">
-          <template #default="scope">
-            <el-button
-                type="primary"
-                text
-                @click="handleOpenFormDesigner(scope.row)"
-            >
-              <el-icon><EditPen /></el-icon>
-              <span style="font-size: 12px; font-weight: 400">
-                编辑模版
-              </span>
-            </el-button>
-            <el-button
-                type="success"
-                text
-                @click="handleOpenUpdateFormForm(scope.row)"
-            >
-              <el-icon><Edit /></el-icon>
-              <span style="font-size: 12px; font-weight: 400">
-             修改
-            </span>
-            </el-button>
-            <el-button
-                type="danger"
-                text
-                @click="handleDeleteForm(scope.row.id)"
-            >
-              <el-icon><Delete /></el-icon>
-              <span style="font-size: 12px; font-weight: 400">
-             删除
-            </span>
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      <!--分页组件-->
-      <div>
-        <el-pagination
-            :current-page="formQuery.pageNo"
-            :page-size="formQuery.pageSize"
-            :page-sizes="pageSizes"
-            :background="true"
-            layout="total, sizes, prev, pager, next, jumper"
-            :total="total"
-            @size-change="handlePageChangeSize"
-            @current-change="handlePageChangeNo"
-        />
-      </div>
-    </div>
+  <el-drawer
+      :model-value="modelValue"
+      :title="title"
+      direction="ltr"
+      size="80%"
+      destroy-on-close
+      :close-on-click-modal="false"
+      @update:model-value="onUpdate"
+  >
+    <!--查询/操作区-->
+    <el-form :model="formQuery" label-width="auto">
+      <el-row :gutter="24">
+        <el-col :span="6">
+          <el-button type="primary" @click="handleOpenCreateFormForm">
+            <el-icon><Plus /></el-icon>新建表单模板
+          </el-button>
+          <el-button type="warning" @click="handleResetFormQuery">
+            <el-icon><Refresh /></el-icon>重置
+          </el-button>
+          <el-button type="info" @click="handleGetFormList">
+            <el-icon><Search /></el-icon>查询
+          </el-button>
+        </el-col>
+      </el-row>
+    </el-form>
+    <!--表单列表-->
+    <el-table
+        height="calc(100vh - 180px)"
+        ref="tableRef"
+        :data="formList"
+        highlight-current-row
+        @sort-change="handleSortChange"
+        :header-cell-style="handleHeaderCellClass"
+    >
+      <el-table-column prop="id" label="编号" width="100" align="center"/>
+      <el-table-column prop="name" label="名称" sortable="custom" width="200" align="center">
+        <template #header>
+          名称
+          <el-popover
+              :visible="formSearchFlag.name"
+              placement="bottom"
+              :width="200"
+              trigger="click">
+            <template #reference>
+              <el-button
+                  :type="formSearchFlag.name ? 'primary':'info'"
+                  link
+                  :icon="Search"
+                  @click.stop="formSearchFlag.name = !formSearchFlag.name"
+              />
+            </template>
+            <div>
+              <el-input
+                  v-model="formQuery.name"
+                  placeholder="请输入名称"
+                  clearable
+                  @input="handleGetFormList"
+              />
+            </div>
+          </el-popover>
+        </template>
+      </el-table-column>
+      <el-table-column prop="revNum" label="版本号" align="center">
+        <template #default="scope">
+          <el-button type='primary' text @click="handleGetFormVersionList(scope.row.id)">
+            {{ scope.row.revNum }}
+          </el-button>
+        </template>
+      </el-table-column>
+      <el-table-column prop="typeName" label="表单类型" align="center" width="150"/>
+      <el-table-column prop="orderNum" label="排序号" sortable="custom" align="center" width="100"/>
+      <el-table-column prop="createdByName" label="创建人" align="center"/>
+      <el-table-column prop="createdDt" label="创建时间" width="160" align="center"/>
+      <el-table-column prop="updatedByName" label="修改人" align="center"/>
+      <el-table-column prop="updatedDt" label="修改时间" width="160" align="center"/>
+      <el-table-column fixed="right" label="操作" width="200">
+        <template #default="scope">
+          <el-button type="primary" text @click="handleOpenFormDesigner(scope.row)">
+            <el-icon><EditPen /></el-icon>
+            <span style="font-size: 12px; font-weight: 400">设计</span>
+          </el-button>
+          <el-button type="success" text @click="handleOpenUpdateFormForm(scope.row)">
+            <el-icon><Edit /></el-icon>
+            <span style="font-size: 12px; font-weight: 400">修改</span>
+          </el-button>
+          <el-button type="danger" text @click="handleDeleteForm(scope.row.id)">
+            <el-icon><Delete /></el-icon>
+            <span style="font-size: 12px; font-weight: 400">删除</span>
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <!--分页组件-->
+    <el-pagination
+        :current-page="formQuery.pageNo"
+        :page-size="formQuery.pageSize"
+        :page-sizes="pageSizes"
+        :background="true"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handlePageChangeSize"
+        @current-change="handlePageChangeNo"
+    />
 
-    <!--表单表单-->
+    <!--表单表单（创建/修改）-->
     <el-drawer
         v-model="formFormVisible"
         :title="formFormTitle"
@@ -146,16 +120,13 @@
         <el-row :gutter="24">
           <el-col :span="24">
             <el-form-item label="名称" prop="name">
-              <el-input
-                  v-model="formForm.name"
-                  placeholder="请输入名称"
-              />
+              <el-input v-model="formForm.name" placeholder="请输入名称" />
             </el-form-item>
             <el-form-item label="表单类型" prop="type">
               <el-select
                   v-model="formForm.type"
                   placeholder="请选择表单类型"
-                  :disabled="!!formForm.id"
+                  :disabled="true"
                   style="width: 100%"
               >
                 <el-option
@@ -178,13 +149,8 @@
           </el-col>
         </el-row>
       </el-form>
-      <!--底部提示-->
       <div class="form-tip">
-        <el-alert
-            type="info"
-            :closable="false"
-            show-icon
-        >
+        <el-alert type="info" :closable="false" show-icon>
           <template #title>
             <div class="form-tip-content">
               <div>普通表单：通用数据采集表单，字段可自由配置。</div>
@@ -197,16 +163,12 @@
       </div>
       <template #footer>
         <div class="dialog-footer">
-          <el-button
-              type="primary"
-              @click="handleSubmitFormForm"
-          >保存</el-button>
-          <el-button
-              @click="handleCloseFormForm"
-          >取消</el-button>
+          <el-button type="primary" @click="handleSubmitFormForm">保存</el-button>
+          <el-button @click="handleCloseFormForm">取消</el-button>
         </div>
       </template>
     </el-drawer>
+
     <!--表单版本列表-->
     <el-drawer
         v-model="formVersionListVisible"
@@ -216,7 +178,7 @@
     >
       <div>
         <el-table
-            height="calc(100vh - 140px)"
+            height="calc(100vh - 200px)"
             ref="tableFormVersionRef"
             :data="formVersionList"
         >
@@ -224,12 +186,8 @@
           <el-table-column prop="revNum" label="版本号" align="center"/>
           <el-table-column fixed="right" label="">
             <template #default="scope">
-              <el-tooltip content="表单模版" placement="bottom"  >
-                <el-button
-                    type="primary"
-                    circle
-                    @click="handleOpenFormDesignerV2(scope.row)"
-                >
+              <el-tooltip content="表单模版" placement="bottom">
+                <el-button type="primary" circle @click="handleOpenFormDesignerV2(scope.row)">
                   <el-icon><EditPen /></el-icon>
                 </el-button>
               </el-tooltip>
@@ -237,7 +195,6 @@
           </el-table-column>
         </el-table>
       </div>
-      <!--分页组件-->
       <div>
         <el-pagination
             :current-page="formVersionQuery.pageNo"
@@ -251,26 +208,50 @@
         />
       </div>
     </el-drawer>
+  </el-drawer>
 </template>
 
 <script setup>
-import {getCurrentInstance, ref} from 'vue';
-import {pageFormListAPI, createFormAPI, updateFormAPI, queryFormDetailAPI, deleteFormAPI} from '@/api/form/form';
-import {pageFormVersionListAPI} from '@/api/form/formVersion';
-import {ElMessage, ElMessageBox} from "element-plus";
+import { getCurrentInstance, ref } from 'vue';
+import {
+  pageFormListAPI,
+  createFormAPI,
+  updateFormAPI,
+  queryFormDetailAPI,
+  deleteFormAPI
+} from '@/api/form/form';
+import { pageFormVersionListAPI } from '@/api/form/formVersion';
+import { ElMessage, ElMessageBox } from "element-plus";
 import { Search } from '@element-plus/icons-vue';
+
+const props = defineProps({
+  modelValue: { type: Boolean, default: false },
+  title: { type: String, default: '表单模板' },
+  type: { type: Number, default: 1 }
+})
+const emit = defineEmits(['update:modelValue'])
+
+/**
+ * 外部 v-model 显隐控制
+ * @param visible
+ */
+function onUpdate(visible) {
+  emit('update:modelValue', visible)
+}
+
 const { proxy } = getCurrentInstance();
 const formQuery = ref({
   pageNo: 1,
   pageSize: 30,
   name: undefined,
+  type: props.type,
   sorts: {},
 })
 const formSearchFlag = ref({
   name: false,
 })
 const total = ref(0)
-const pageSizes = [30,50,100];
+const pageSizes = [30, 50, 100];
 const formList = ref([]);
 const formFormVisible = ref(false)
 const formFormTitle = ref('')
@@ -298,13 +279,13 @@ const formVersionQuery = ref({
   formId: undefined,
 });
 const versionTotal = ref(0);
-const pageVersionSizes = [15,30,50];
+const pageVersionSizes = [15, 30, 50];
 
 handleGetFormList();
 
 /**
  * 查询表单版本列表
- * */
+ */
 function handleGetFormVersionList(formId) {
   formVersionQuery.value.formId = formId;
   pageFormVersionListAPI(formVersionQuery.value).then(res => {
@@ -317,7 +298,7 @@ function handleGetFormVersionList(formId) {
 /**
  * 删除表单
  * @param id
- * */
+ */
 function handleDeleteForm(id) {
   ElMessageBox.confirm(
       '是否确定删除此条表单?',
@@ -336,10 +317,10 @@ function handleDeleteForm(id) {
       ElMessage.success("删除表单成功");
     })
   }).catch(() => {})
-};
+}
 
 /**
- * 打开修改表单表单
+ * 打开修改表单
  * @param row
  */
 function handleOpenUpdateFormForm(row) {
@@ -349,34 +330,37 @@ function handleOpenUpdateFormForm(row) {
   queryFormDetailAPI(query).then(res => {
     formForm.value.id = res.data.id;
     formForm.value.name = res.data.name;
-    formForm.value.type = res.data.type;
+    // 类型以抽屉传入 type 为准，带出且不可修改
+    formForm.value.type = props.type;
     formForm.value.orderNum = res.data.orderNum;
     formFormTitle.value = "修改表单";
     formFormVisible.value = true;
   });
-};
+}
 
 /**
  * 打开表单设计器
- * */
+ * @param row
+ */
 function handleOpenFormDesigner(row) {
-  window.open("/form/designer/"+row.id+"/"+row.revId);
+  window.open("/form/designer/" + row.id + "/" + row.revId);
 }
 
 /**
- * 打开表单设计器
- * */
+ * 打开表单设计器（指定版本）
+ * @param row
+ */
 function handleOpenFormDesignerV2(row) {
-  window.open("/form/designer/"+row.formId+"/"+row.id);
+  window.open("/form/designer/" + row.formId + "/" + row.id);
 }
 
 /**
- * 打开创建表单表单
- * */
+ * 打开创建表单
+ */
 function handleOpenCreateFormForm() {
   formForm.value.id = undefined;
   formForm.value.name = undefined;
-  formForm.value.type = undefined;
+  formForm.value.type = props.type;
   formForm.value.orderNum = 99;
   formFormTitle.value = "创建表单";
   formFormVisible.value = true;
@@ -384,11 +368,12 @@ function handleOpenCreateFormForm() {
 
 /**
  * 重置查询条件
- * */
+ */
 function handleResetFormQuery() {
   formQuery.value.pageNo = 1;
   formQuery.value.pageSize = 15;
   formQuery.value.name = undefined;
+  formQuery.value.type = props.type;
   formSearchFlag.value.name = false;
   // 清除排序状态
   let columns = proxy.$refs.tableRef.store.states.columns.value;
@@ -400,8 +385,8 @@ function handleResetFormQuery() {
 }
 
 /**
- * 提交表单表单
- * */
+ * 提交表单
+ */
 function handleSubmitFormForm() {
   proxy.$refs.formFormRef.validate(valid => {
     if (valid) {
@@ -413,7 +398,7 @@ function handleSubmitFormForm() {
         };
         createFormAPI(data).then(res => {
           if (res.code !== 200) {
-            return ;
+            return;
           }
           ElMessage.success("表单创建成功");
           handleCloseFormForm();
@@ -421,14 +406,14 @@ function handleSubmitFormForm() {
         })
       } else {
         const data = {
-          id:  formForm.value.id,
+          id: formForm.value.id,
           name: formForm.value.name,
           type: formForm.value.type,
           orderNum: formForm.value.orderNum,
         };
         updateFormAPI(data).then(res => {
           if (res.code !== 200) {
-            return ;
+            return;
           }
           ElMessage.success("表单修改成功");
           handleCloseFormForm();
@@ -441,7 +426,7 @@ function handleSubmitFormForm() {
 
 /**
  * 关闭表单
- * */
+ */
 function handleCloseFormForm() {
   formForm.value.id = undefined;
   formForm.value.name = undefined;
@@ -468,7 +453,7 @@ function handleGetFormList() {
 function handlePageChangeSize(pageSize) {
   formQuery.value.pageSize = pageSize;
   handleGetFormList();
-};
+}
 
 /**
  * 分页查询更改页码
@@ -480,16 +465,16 @@ function handlePageChangeNo(pageNo) {
 }
 
 /**
- * 分页查询更改数量
+ * 分页查询更改数量（版本列表）
  * @param pageSize
  */
 function handleVersionPageChangeSize(pageSize) {
   formVersionQuery.value.pageSize = pageSize;
   handleGetFormVersionList();
-};
+}
 
 /**
- * 分页查询更改页码
+ * 分页查询更改页码（版本列表）
  * @param pageNo
  */
 function handleVersionPageChangeNo(pageNo) {
@@ -498,7 +483,7 @@ function handleVersionPageChangeNo(pageNo) {
 }
 
 /**
- * 多选排序
+ * 表头排序状态还原
  * @param data
  */
 function handleHeaderCellClass(data) {
@@ -531,10 +516,11 @@ function handleSortChange({ column, prop, order }) {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .form-tip {
   margin-top: 16px;
 }
+
 .form-tip-content {
   display: flex;
   flex-direction: column;
@@ -542,6 +528,7 @@ function handleSortChange({ column, prop, order }) {
   font-size: 12px;
   line-height: 1.6;
 }
+
 .form-tip-warn {
   color: #e6a23c;
   margin-top: 4px;

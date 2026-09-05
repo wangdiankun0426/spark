@@ -2,7 +2,7 @@
 import kb from '@/pages/kb/index.vue'
 import search from '@/pages/kb/search/index.vue'
 import knowledge from '@/pages/kb/knowledge/index.vue'
-import knowledgeDocument from '@/pages/kb/document/index.vue'
+import knowledgeDocument from '@/views/dms/document/index.vue'
 import kbTest from '@/pages/kb/test/index.vue'
 import kbStats from '@/pages/kb/stats/index.vue'
 

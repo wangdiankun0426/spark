@@ -122,7 +122,7 @@ let canvasUid = 0
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { NODE_META } from '@/views/flowDesigner/nodes/index.js'
+import { NODE_META } from '@/views/flow/designer/nodes/index.js'
 
 defineOptions({ name: 'DesignerCanvas' })
 
