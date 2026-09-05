@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.sys.MessageUserDao" >
+    <sql id="Base_Column_List" >
+    id, msg_id, user_id, delete_flag,created_by, created_dt, updated_by, updated_dt
+    </sql>
+
+    <sql id="condition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in(
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="msgId != null">
+            and msg_id = #{msgId}
+        </if>
+        <if test="msgIds != null and msgIds.size() > 0">
+            and msg_id in(
+            <foreach collection="msgIds" item="msgId" separator=",">
+                #{msgId}
+            </foreach>
+            )
+        </if>
+        <if test="userId != null">
+            and user_id = #{userId}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <insert id="batchInsert">
+        insert into sys_message_user (msg_id, user_id, delete_flag,created_by, created_dt, updated_by, updated_dt)
+        values
+        <foreach collection="userIds" item="userId" separator=",">
+            (#{msgId}, #{userId}, 1, #{createdBy}, now(), #{createdBy}, now())
+        </foreach>
+    </insert>
+
+    <update id="deleteByMsgId">
+        update sys_message_user set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where msg_id = #{msgId} and delete_flag = 1
+    </update>
+
+    <select id="queryMessageUserList" resultType="com.spark.common.bean.sys.result.MessageUserResult">
+        select <include refid="Base_Column_List"/>
+        from sys_message_user
+        where 1=1
+        <include refid="condition"/>
+        order by id desc
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+</mapper>

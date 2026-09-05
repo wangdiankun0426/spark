@@ -162,26 +162,22 @@
         <view class="icon-circle">
           <up-icon name="lock" size="24" color="#0052cc"></up-icon>
         </view>
-        <text class="icon-label">密码登录</text>
       </view>
       <view class="login-type-icon-item" v-if="loginForm.loginType !== 2" @click="switchLoginType(2)">
         <view class="icon-circle">
           <up-icon name="phone" size="24" color="#0052cc"></up-icon>
         </view>
-        <text class="icon-label">手机号登录</text>
       </view>
       <view class="login-type-icon-item" v-if="loginForm.loginType !== 3" @click="switchLoginType(3)">
         <view class="icon-circle">
           <up-icon name="email" size="24" color="#0052cc"></up-icon>
         </view>
-        <text class="icon-label">邮箱登录</text>
       </view>
       <!-- #ifdef MP-WEIXIN -->
       <view class="login-type-icon-item" @click="wxQuickLogin">
         <view class="icon-circle">
           <up-icon name="weixin-fill" size="24" color="#07c160"></up-icon>
         </view>
-        <text class="icon-label">微信登录</text>
       </view>
       <!-- #endif -->
     </div>
@@ -437,23 +433,16 @@ function submitLoginForm() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-left: 30px;
+  padding-left: 10px;
 }
 
 .icon-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 2px solid #0052cc;
+  width: 35px;
+  height: 35px;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: #fff;
-}
-
-.icon-label {
-  font-size: 12px;
-  color: #606266;
 }
 
 .login-middle-btn {

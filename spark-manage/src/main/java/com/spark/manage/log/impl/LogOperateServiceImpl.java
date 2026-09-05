@@ -1,17 +1,17 @@
 package com.spark.manage.log.impl;
 
-import com.spark.bean.log.entity.LogOperate;
-import com.spark.bean.log.query.LogOperateQuery;
-import com.spark.bean.log.result.LogOperateResult;
-import com.spark.bean.base.PageResult;
-import com.spark.bean.base.ResultData;
-import com.spark.bean.base.SessionHolder;
+import com.spark.common.bean.log.entity.LogOperate;
+import com.spark.common.bean.log.query.LogOperateQuery;
+import com.spark.common.bean.log.result.LogOperateResult;
+import com.spark.common.bean.base.PageResult;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.dao.log.LogOperateDao;
-import com.spark.enums.OperateTypeEnum;
-import com.spark.enums.ErrorCodeEnum;
+import com.spark.common.enums.OperateTypeEnum;
+import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.manage.BaseService;
 import com.spark.manage.log.ILogOperateService;
-import com.spark.utils.CollectionUtil;
+import com.spark.common.utils.CollectionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -7,22 +7,21 @@ import co.elastic.clients.elasticsearch.core.SearchResponse;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import com.spark.bean.kb.query.KnowledgeQuery;
-import com.spark.bean.kb.result.KnowledgeResult;
-import com.spark.bean.kg.query.KgGraphQuery;
-import com.spark.bean.kg.result.KgGraphResult;
-import com.spark.constant.ESIndexName;
+import com.spark.common.bean.kb.query.KnowledgeQuery;
+import com.spark.common.bean.kb.result.KnowledgeResult;
+import com.spark.common.bean.kg.query.KgGraphQuery;
+import com.spark.common.bean.kg.result.KgGraphResult;
+import com.spark.common.constant.ESIndexName;
 import com.spark.dao.kb.KnowledgeDao;
 import com.spark.dao.kg.KgGraphDao;
-import com.spark.enums.ObjectTypeEnum;
-import com.spark.enums.StatusEnum;
+import com.spark.common.enums.ObjectTypeEnum;
+import com.spark.common.enums.StatusEnum;
 import com.spark.llm.model.ModelFactory;
-import com.spark.llm.utils.ChunkUtil;
+import com.spark.common.utils.TextChunkUtil;
 import com.spark.prompt.PromptTemplateLoader;
-import com.spark.utils.CollectionUtil;
-import com.spark.utils.JsonUtil;
-import com.spark.utils.StringUtil;
-import com.spark.utils.TextUtil;
+import com.spark.common.utils.CollectionUtil;
+import com.spark.common.utils.JsonUtil;
+import com.spark.common.utils.StringUtil;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -133,7 +132,7 @@ public class ESVectorStore {
             overlap = knowledgeResult.getParentOverlap();
             // 使用知识库配置的分块策略
             String chunkStrategy = knowledgeResult.getChunkStrategy();
-            List<String> parentChunks = ChunkUtil.handleChunk(content, chunkSize, overlap, chunkStrategy);
+            List<String> parentChunks = TextChunkUtil.handleChunk(content, chunkSize, overlap, chunkStrategy);
             if (CollectionUtil.isEmpty(parentChunks)) {
                 logger.warn("addChunk skip, parent chunks empty, docId={}, prtId={}", docId, prtId);
                 return;
@@ -142,7 +141,7 @@ public class ESVectorStore {
             logger.info("addChunk success, prtId={}, docId={}, parentChunkSize={}, strategy={}", prtId, docId, parentChunks.size(), chunkStrategy);
             return;
         }
-        List<String> parentChunks = ChunkUtil.handleChunk(content, chunkSize, overlap);
+        List<String> parentChunks = TextChunkUtil.handleChunk(content, chunkSize, overlap);
         if (CollectionUtil.isEmpty(parentChunks)) {
             logger.warn("addChunk skip, parent chunks empty, docId={}, prtId={}", docId, prtId);
             return;
@@ -212,7 +211,7 @@ public class ESVectorStore {
             if (StringUtil.isBlank(parentContent)) {
                 continue;
             }
-            List<String> childChunks = ChunkUtil.handleChunk(parentContent, knowledgeResult.getChildChunkSize(), knowledgeResult.getChildOverlap());
+            List<String> childChunks = TextChunkUtil.handleChunk(parentContent, knowledgeResult.getChildChunkSize(), knowledgeResult.getChildOverlap());
             if (CollectionUtil.isEmpty(childChunks)) {
                 continue;
             }

@@ -1,16 +1,16 @@
 package com.spark.llm.mcp;
 
-import com.spark.bean.llm.entity.Mcp;
-import com.spark.bean.llm.entity.Provider;
-import com.spark.bean.llm.query.ProviderQuery;
-import com.spark.bean.llm.result.ProviderResult;
+import com.spark.common.bean.llm.entity.Mcp;
+import com.spark.common.bean.llm.entity.Provider;
+import com.spark.common.bean.llm.query.ProviderQuery;
+import com.spark.common.bean.llm.result.ProviderResult;
 import com.spark.dao.llm.ProviderDao;
-import com.spark.enums.McpTransportTypeEnum;
-import com.spark.enums.StatusEnum;
-import com.spark.utils.CollectionUtil;
-import com.spark.utils.JsonUtil;
-import com.spark.utils.MapUtil;
-import com.spark.utils.StringUtil;
+import com.spark.common.enums.McpTransportTypeEnum;
+import com.spark.common.enums.StatusEnum;
+import com.spark.common.utils.CollectionUtil;
+import com.spark.common.utils.JsonUtil;
+import com.spark.common.utils.MapUtil;
+import com.spark.common.utils.StringUtil;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.transport.http.StreamableHttpMcpTransport;
@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

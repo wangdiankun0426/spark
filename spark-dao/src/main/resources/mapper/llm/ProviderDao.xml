@@ -81,7 +81,7 @@
         ${dataScopeSQL}
     </select>
 
-    <select id="queryProviderList" resultType="com.spark.bean.llm.result.ProviderResult">
+    <select id="queryProviderList" resultType="com.spark.common.bean.llm.result.ProviderResult">
         select <include refid="allColumnList"/>
         from llm_provider
         where 1 = 1
@@ -94,7 +94,7 @@
         </if>
     </select>
 
-    <select id="queryProvider" resultType="com.spark.bean.llm.result.ProviderResult">
+    <select id="queryProvider" resultType="com.spark.common.bean.llm.result.ProviderResult">
         select <include refid="allColumnList"/>, secret_key
         from llm_provider
         where 1=1

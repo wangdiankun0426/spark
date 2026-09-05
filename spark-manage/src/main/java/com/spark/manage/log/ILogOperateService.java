@@ -1,10 +1,10 @@
 package com.spark.manage.log;
 
-import com.spark.bean.log.entity.LogOperate;
-import com.spark.bean.log.query.LogOperateQuery;
-import com.spark.bean.log.result.LogOperateResult;
-import com.spark.bean.base.PageResult;
-import com.spark.bean.base.ResultData;
+import com.spark.common.bean.log.entity.LogOperate;
+import com.spark.common.bean.log.query.LogOperateQuery;
+import com.spark.common.bean.log.result.LogOperateResult;
+import com.spark.common.bean.base.PageResult;
+import com.spark.common.bean.base.ResultData;
 
 import java.util.List;
 import java.util.Map;

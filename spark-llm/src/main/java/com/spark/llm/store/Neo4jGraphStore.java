@@ -1,7 +1,7 @@
 package com.spark.llm.store;
 
-import com.spark.bean.kg.entity.KgEntity;
-import com.spark.bean.kg.entity.RelationEdge;
+import com.spark.common.bean.kg.entity.KgEntity;
+import com.spark.common.bean.kg.entity.RelationEdge;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;

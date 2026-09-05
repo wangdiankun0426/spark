@@ -1,6 +1,6 @@
 package com.spark.workflow.engine;
 
-import com.spark.utils.StringUtil;
+import com.spark.common.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

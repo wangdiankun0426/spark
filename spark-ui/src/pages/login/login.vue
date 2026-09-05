@@ -488,6 +488,8 @@ function submitLoginForm() {
           }
           loading.value = false;
         }
+      }).finally(() => {
+        loading.value = false;
       })
     }
   });

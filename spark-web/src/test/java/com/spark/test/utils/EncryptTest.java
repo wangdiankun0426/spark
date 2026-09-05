@@ -1,7 +1,7 @@
 package com.spark.test.utils;
 
 
-import com.spark.utils.EncryptUtil;
+import com.spark.common.utils.EncryptUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 

@@ -1,16 +1,16 @@
 package com.spark.llm.tools;
 
-import com.spark.bean.chat.result.ChatMsgAttResult;
-import com.spark.bean.kb.query.DocumentQuery;
-import com.spark.bean.kb.query.KnowledgeQuery;
-import com.spark.bean.kb.result.DocumentResult;
-import com.spark.bean.kb.result.KnowledgeResult;
-import com.spark.dao.kb.DocumentDao;
+import com.spark.common.bean.chat.result.ChatMsgAttResult;
+import com.spark.common.bean.dms.query.DocumentQuery;
+import com.spark.common.bean.kb.query.KnowledgeQuery;
+import com.spark.common.bean.dms.result.DocumentResult;
+import com.spark.common.bean.kb.result.KnowledgeResult;
+import com.spark.dao.dms.DocumentDao;
 import com.spark.dao.kb.KnowledgeDao;
 import com.spark.llm.retrieve.ESRetrieve;
-import com.spark.bean.llm.result.RetrieveResult;
-import com.spark.utils.CollectionUtil;
-import com.spark.utils.StringUtil;
+import com.spark.common.bean.llm.result.RetrieveResult;
+import com.spark.common.utils.CollectionUtil;
+import com.spark.common.utils.StringUtil;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;
 import org.slf4j.Logger;

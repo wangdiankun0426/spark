@@ -1,10 +1,10 @@
 package com.spark.llm.service;
 
-import com.spark.bean.llm.query.ProviderQuery;
-import com.spark.bean.llm.result.ProviderResult;
-import com.spark.bean.llm.vo.ProviderVO;
-import com.spark.bean.base.PageResult;
-import com.spark.bean.base.ResultData;
+import com.spark.common.bean.llm.query.ProviderQuery;
+import com.spark.common.bean.llm.result.ProviderResult;
+import com.spark.common.bean.llm.vo.ProviderVO;
+import com.spark.common.bean.base.PageResult;
+import com.spark.common.bean.base.ResultData;
 
 /**
  * +++/\_/\

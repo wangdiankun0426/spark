@@ -1,6 +1,6 @@
 package com.spark.config.rabbitmq;
 
-import com.spark.constant.MqQueueKey;
+import com.spark.common.constant.MqQueueKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.AmqpTemplate;
@@ -28,7 +28,7 @@ public class MqProducer {
      * @param msg 消息内容
      */
     public void sendSystemMessageMq(String msg) {
-        this.sendMq(MqQueueKey.SYSTEM_MESSAGE_KEY, msg);
+        this.sendMq(MqQueueKey.SYS_MSG_KEY, msg);
     }
 
     /**

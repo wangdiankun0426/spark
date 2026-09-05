@@ -1,9 +1,9 @@
 package com.spark.dao.form;
 
-import com.spark.bean.form.entity.FormField;
-import com.spark.bean.form.query.FormFieldQuery;
-import com.spark.bean.form.result.FormFieldResult;
-import com.spark.bean.form.vo.FormFieldVO;
+import com.spark.common.bean.form.entity.FormField;
+import com.spark.common.bean.form.query.FormFieldQuery;
+import com.spark.common.bean.form.result.FormFieldResult;
+import com.spark.common.bean.form.vo.FormFieldVO;
 import com.spark.dao.BaseDao;
 import org.apache.ibatis.annotations.Param;
 

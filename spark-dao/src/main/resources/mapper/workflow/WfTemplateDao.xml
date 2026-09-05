@@ -69,7 +69,7 @@
         <include refid="searchCondition"/> ${dataScopeSQL}
     </select>
 
-    <select id="queryTemplateList" resultType="com.spark.bean.workflow.result.WfTemplateResult">
+    <select id="queryTemplateList" resultType="com.spark.common.bean.workflow.result.WfTemplateResult">
         select <include refid="allColumnList"/>
         from wf_template
         where 1 = 1
@@ -81,7 +81,7 @@
         </if>
     </select>
 
-    <select id="queryTemplate" resultType="com.spark.bean.workflow.result.WfTemplateResult">
+    <select id="queryTemplate" resultType="com.spark.common.bean.workflow.result.WfTemplateResult">
         select <include refid="allColumnList"/>
         from wf_template
         where 1=1

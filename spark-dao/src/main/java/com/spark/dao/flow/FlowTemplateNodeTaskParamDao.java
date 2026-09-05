@@ -1,8 +1,8 @@
 package com.spark.dao.flow;
 
-import com.spark.bean.flow.entity.FlowTemplateNodeTaskParam;
-import com.spark.bean.flow.query.FlowTemplateNodeTaskParamQuery;
-import com.spark.bean.flow.result.FlowTemplateNodeTaskParamResult;
+import com.spark.common.bean.flow.entity.FlowTemplateNodeTaskParam;
+import com.spark.common.bean.flow.query.FlowTemplateNodeTaskParamQuery;
+import com.spark.common.bean.flow.result.FlowTemplateNodeTaskParamResult;
 import com.spark.dao.BaseDao;
 import org.apache.ibatis.annotations.Param;
 

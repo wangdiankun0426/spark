@@ -1,6 +1,6 @@
 package com.spark.config.async;
 
-import com.spark.utils.TraceLogUtil;
+import com.spark.common.utils.TraceLogUtil;
 import org.slf4j.MDC;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.stereotype.Component;

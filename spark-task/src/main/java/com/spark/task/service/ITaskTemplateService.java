@@ -1,15 +1,10 @@
 package com.spark.task.service;
 
-import com.spark.bean.base.PageResult;
-import com.spark.bean.base.ResultData;
-import com.spark.bean.task.query.TaskTemplateParamQuery;
-import com.spark.bean.task.query.TaskTemplateQuery;
-import com.spark.bean.task.result.TaskTemplateParamResult;
-import com.spark.bean.task.result.TaskTemplateResult;
-import com.spark.bean.task.vo.TaskTemplateParamVO;
-import com.spark.bean.task.vo.TaskTemplateVO;
-
-import java.util.List;
+import com.spark.common.bean.base.PageResult;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.task.query.TaskTemplateQuery;
+import com.spark.common.bean.task.result.TaskTemplateResult;
+import com.spark.common.bean.task.vo.TaskTemplateVO;
 
 /**
  * +++/\_/\

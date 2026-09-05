@@ -45,7 +45,7 @@
         </foreach>
     </insert>
 
-    <select id="queryFormObjValueList" resultType="com.spark.bean.form.result.FormObjValueResult">
+    <select id="queryFormObjValueList" resultType="com.spark.common.bean.form.result.FormObjValueResult">
         select <include refid="allColumnList"/>
         from form_obj_value
         where delete_flag = 1

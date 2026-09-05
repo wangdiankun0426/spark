@@ -104,8 +104,8 @@ import '@vue-office/docx/lib/index.css'
 import '@vue-office/excel/lib/index.css'
 import * as pdfjsLib from 'pdfjs-dist'
 import PdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker'
-import { queryDocumentDetailAPI, downloadDocumentAPI } from '@/api/kb/document'
-import { queryAttachmentDetailAPI, downloadSystemAttachmentAPI } from '@/api/system/attachment'
+import { queryDocumentDetailAPI, downloadDocumentAPI } from '@/api/dms/document.js'
+import { queryAttachmentDetailAPI, downloadAttachmentAPI } from '@/api/dms/attachment.js'
 import { getDocumentCategory, DOCUMENT_CATEGORY } from '@/utils/documentUtil'
 
 pdfjsLib.GlobalWorkerOptions.workerPort = new PdfjsWorker()
@@ -236,7 +236,7 @@ async function loadAndPreview() {
   fileLoading.value = true
   try {
     const blob = isAttachment.value
-        ? await downloadSystemAttachmentAPI({ id: documentId.value })
+        ? await downloadAttachmentAPI({ id: documentId.value })
         : await downloadDocumentAPI({
           id: documentId.value,
           ext: resolveDownloadExt()

@@ -1,14 +1,14 @@
 package com.spark.workflow.engine.executor;
 
 import com.alibaba.fastjson2.JSON;
-import com.spark.bean.llm.result.RetrieveResult;
-import com.spark.enums.ErrorCodeEnum;
-import com.spark.enums.WorkflowTemplateTypeEnum;
+import com.spark.common.bean.llm.result.RetrieveResult;
+import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.enums.WorkflowTemplateTypeEnum;
 import com.spark.llm.retrieve.ESRetrieve;
 import com.spark.manage.BaseService;
-import com.spark.utils.CollectionUtil;
-import com.spark.utils.MapUtil;
-import com.spark.utils.StringUtil;
+import com.spark.common.utils.CollectionUtil;
+import com.spark.common.utils.MapUtil;
+import com.spark.common.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

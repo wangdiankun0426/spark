@@ -1,8 +1,8 @@
 package com.spark.dao.task;
 
-import com.spark.bean.task.entity.TaskInstance;
-import com.spark.bean.task.query.TaskInstanceQuery;
-import com.spark.bean.task.result.TaskInstanceResult;
+import com.spark.common.bean.task.entity.TaskInstance;
+import com.spark.common.bean.task.query.TaskInstanceQuery;
+import com.spark.common.bean.task.result.TaskInstanceResult;
 import com.spark.dao.BaseDao;
 import org.apache.ibatis.annotations.Param;
 

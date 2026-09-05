@@ -85,7 +85,7 @@ const baseUrl = process.env.BASE_HTTP_API
 
 const userAvatarUrl = computed(() => {
   if (!props.userId) return ''
-  return baseUrl + '/system/user/avatar?id=' + props.userId
+  return baseUrl + '/sys/user/avatar?id=' + props.userId
 })
 
 // 头像图片是否加载完成，未完成前显示默认图标

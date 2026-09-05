@@ -29,7 +29,7 @@
         values (#{formId} , #{revCode} , #{revNum}  , #{filePath} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
-    <select id="queryFormVersion" resultType="com.spark.bean.form.result.FormVersionResult">
+    <select id="queryFormVersion" resultType="com.spark.common.bean.form.result.FormVersionResult">
         select <include refid="allColumnList"/>
         from form_version
         where 1=1
@@ -37,7 +37,7 @@
         limit 1
     </select>
 
-    <select id="queryFormVersionList" resultType="com.spark.bean.form.result.FormVersionResult">
+    <select id="queryFormVersionList" resultType="com.spark.common.bean.form.result.FormVersionResult">
         select <include refid="allColumnList"/>
         from form_version
         where 1=1

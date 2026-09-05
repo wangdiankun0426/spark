@@ -10,7 +10,7 @@
   </div>
 </template>
 <script setup>
-import { noticeViewTextAPI} from '@/api/system/notice.js';
+import { noticeViewTextAPI} from '@/api/sys/notice.js';
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 

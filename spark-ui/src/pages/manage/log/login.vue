@@ -69,7 +69,7 @@
 <script setup>
 import {pageLogLoginListAPI} from '@/api/log/logLogin.js';
 import {ElMessage, ElMessageBox} from "element-plus";
-import {forceLogoutAPI} from "@/api/system/user";
+import {forceLogoutAPI} from "@/api/sys/user";
 import {ref} from 'vue';
 
 const total = ref(0);

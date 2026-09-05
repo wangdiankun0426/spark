@@ -58,7 +58,7 @@
         <include refid="searchCondition"/>
     </select>
 
-    <select id="queryVersionList" resultType="com.spark.bean.workflow.result.WfTemplateVersionResult">
+    <select id="queryVersionList" resultType="com.spark.common.bean.workflow.result.WfTemplateVersionResult">
         select <include refid="allColumnList"/>
         from wf_template_version
         where 1 = 1
@@ -70,7 +70,7 @@
         </if>
     </select>
 
-    <select id="queryVersion" resultType="com.spark.bean.workflow.result.WfTemplateVersionResult">
+    <select id="queryVersion" resultType="com.spark.common.bean.workflow.result.WfTemplateVersionResult">
         select <include refid="allColumnList"/>
         from wf_template_version
         where 1=1

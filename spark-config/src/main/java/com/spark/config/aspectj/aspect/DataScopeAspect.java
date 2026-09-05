@@ -1,13 +1,13 @@
 package com.spark.config.aspectj.aspect;
 
-import com.spark.bean.base.BaseException;
-import com.spark.constant.AspectOrder;
+import com.spark.common.bean.base.BaseException;
+import com.spark.common.constant.AspectOrder;
 import com.spark.config.aspectj.annotation.DataScope;
-import com.spark.bean.base.BaseQuery;
-import com.spark.bean.base.SessionHolder;
-import com.spark.enums.DataScopeEnum;
-import com.spark.enums.ErrorCodeEnum;
-import com.spark.utils.StringUtil;
+import com.spark.common.bean.base.BaseQuery;
+import com.spark.common.bean.base.SessionHolder;
+import com.spark.common.enums.DataScopeEnum;
+import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.utils.StringUtil;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Aspect;

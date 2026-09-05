@@ -102,7 +102,7 @@
         <include refid="searchCondition"/>
     </select>
 
-    <select id="queryKgRelationList" resultType="com.spark.bean.kg.result.KgRelationResult">
+    <select id="queryKgRelationList" resultType="com.spark.common.bean.kg.result.KgRelationResult">
         select <include refid="allColumnList"/>
         from kg_relation
         where 1=1
@@ -111,7 +111,7 @@
         <if test="page == true">limit #{startRow}, #{pageSize}</if>
     </select>
 
-    <select id="queryKgRelation" resultType="com.spark.bean.kg.result.KgRelationResult">
+    <select id="queryKgRelation" resultType="com.spark.common.bean.kg.result.KgRelationResult">
         select <include refid="allColumnList"/>
         from kg_relation
         where 1=1
@@ -129,7 +129,7 @@
         where tail_entity_id = #{oldEntityId} and delete_flag = 1
     </update>
 
-    <select id="queryKgRelationCountByGraphIds" resultType="com.spark.bean.kg.result.KgRelationCountResult">
+    <select id="queryKgRelationCountByGraphIds" resultType="com.spark.common.bean.kg.result.KgRelationCountResult">
         select graph_id, count(1) as relation_count
         from kg_relation
         where delete_flag = 1

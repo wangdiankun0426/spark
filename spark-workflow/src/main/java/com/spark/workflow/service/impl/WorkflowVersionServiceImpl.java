@@ -1,24 +1,23 @@
 package com.spark.workflow.service.impl;
 
-import com.spark.bean.base.ResultData;
-import com.spark.bean.workflow.entity.WfTemplate;
-import com.spark.bean.workflow.entity.WfTemplateVersion;
-import com.spark.bean.workflow.query.WfTemplateQuery;
-import com.spark.bean.workflow.query.WfTemplateVersionQuery;
-import com.spark.bean.workflow.result.WfTemplateResult;
-import com.spark.bean.workflow.result.WfTemplateVersionResult;
-import com.spark.bean.workflow.vo.WfTemplateVersionVO;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.workflow.entity.WfTemplate;
+import com.spark.common.bean.workflow.entity.WfTemplateVersion;
+import com.spark.common.bean.workflow.query.WfTemplateQuery;
+import com.spark.common.bean.workflow.query.WfTemplateVersionQuery;
+import com.spark.common.bean.workflow.result.WfTemplateResult;
+import com.spark.common.bean.workflow.result.WfTemplateVersionResult;
+import com.spark.common.bean.workflow.vo.WfTemplateVersionVO;
 import com.spark.dao.workflow.WfTemplateDao;
 import com.spark.dao.workflow.WfTemplateVersionDao;
-import com.spark.enums.ErrorCodeEnum;
+import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.manage.BaseService;
-import com.spark.utils.CollectionUtil;
+import com.spark.common.utils.CollectionUtil;
 import com.spark.workflow.service.IWorkflowVersionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 

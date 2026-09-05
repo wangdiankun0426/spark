@@ -37,7 +37,7 @@
 </div>
 </template>
 <script setup>
-import {updatePasswordAPI} from "@/api/system/user";
+import {updatePasswordAPI} from "@/api/sys/user";
 import {des} from "@/utils/encryptUtil";
 import {ref} from 'vue';
 import {toast} from "uview-plus";

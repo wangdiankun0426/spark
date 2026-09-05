@@ -1,8 +1,8 @@
 package com.spark.manage.auth;
 
-import com.spark.bean.system.entity.Session;
-import com.spark.bean.system.vo.LoginVO;
-import com.spark.bean.base.ResultData;
+import com.spark.common.bean.sys.entity.Session;
+import com.spark.common.bean.sys.vo.LoginVO;
+import com.spark.common.bean.base.ResultData;
 
 /**
  * +++/\_/\

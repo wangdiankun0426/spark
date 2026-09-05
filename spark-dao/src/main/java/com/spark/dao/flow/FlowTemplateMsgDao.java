@@ -1,8 +1,8 @@
 package com.spark.dao.flow;
 
-import com.spark.bean.flow.entity.FlowTemplateMsg;
-import com.spark.bean.flow.query.FlowTemplateMsgQuery;
-import com.spark.bean.flow.result.FlowTemplateMsgResult;
+import com.spark.common.bean.flow.entity.FlowTemplateMsg;
+import com.spark.common.bean.flow.query.FlowTemplateMsgQuery;
+import com.spark.common.bean.flow.result.FlowTemplateMsgResult;
 import com.spark.dao.BaseDao;
 import org.apache.ibatis.annotations.Param;
 

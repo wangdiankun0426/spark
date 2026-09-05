@@ -1,21 +1,19 @@
 package com.spark.flow.service;
 
-import com.spark.bean.flow.query.FlowInstanceAssigneeQuery;
-import com.spark.bean.flow.query.FlowInstanceNodeQuery;
-import com.spark.bean.flow.query.FlowInstanceQuery;
-import com.spark.bean.flow.result.FlowInstanceAssigneeResult;
-import com.spark.bean.flow.result.FlowInstanceNodeResult;
-import com.spark.bean.flow.result.FlowInstanceResult;
-import com.spark.constant.FlowParamCode;
+import com.spark.common.bean.flow.query.FlowInstanceAssigneeQuery;
+import com.spark.common.bean.flow.query.FlowInstanceNodeQuery;
+import com.spark.common.bean.flow.query.FlowInstanceQuery;
+import com.spark.common.bean.flow.result.FlowInstanceAssigneeResult;
+import com.spark.common.bean.flow.result.FlowInstanceNodeResult;
+import com.spark.common.bean.flow.result.FlowInstanceResult;
+import com.spark.common.constant.FlowParamCode;
 import com.spark.dao.flow.FlowInstanceAssigneeDao;
 import com.spark.dao.flow.FlowInstanceDao;
 import com.spark.dao.flow.FlowInstanceNodeDao;
-import com.spark.enums.FlowInstanceStatusEnum;
-import com.spark.enums.VariableTypeEnum;
+import com.spark.common.enums.FlowInstanceStatusEnum;
 import com.spark.manage.BaseService;
-import com.spark.utils.CollectionUtil;
-import com.spark.utils.StringUtil;
-import org.apache.commons.lang3.StringUtils;
+import com.spark.common.utils.CollectionUtil;
+import com.spark.common.utils.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.HashMap;

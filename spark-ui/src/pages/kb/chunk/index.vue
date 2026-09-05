@@ -145,8 +145,8 @@ import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { Loading, InfoFilled, RefreshRight } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { pageDocumentChunkListAPI, pageDocumentChunkQAListAPI, getDocumentChunkStatsAPI, rechunkDocumentAPI, updateChunkAPI } from '@/api/kb/documentChunk'
-import { queryDocumentDetailAPI } from '@/api/kb/document'
+import { pageDocumentChunkListAPI, pageDocumentChunkQAListAPI, getDocumentChunkStatsAPI, rechunkDocumentAPI, updateChunkAPI } from '@/api/dms/documentChunk.js'
+import { queryDocumentDetailAPI } from '@/api/dms/document.js'
 
 const route = useRoute()
 const documentId = computed(() => route.query.id)

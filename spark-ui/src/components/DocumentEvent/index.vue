@@ -91,7 +91,7 @@
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { queryDocumentEventDetailAPI, updateDocumentEventAPI } from '@/api/kb/documentEvent'
+import { queryDocumentEventDetailAPI, updateDocumentEventAPI } from '@/api/dms/documentEvent.js'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },

@@ -14,7 +14,7 @@
         values (#{instanceId} , #{instanceNodeId} , #{assigneeId} , #{status} , #{discuss} ,  1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
-    <select id="queryInstanceDiscussList" resultType="com.spark.bean.flow.result.FlowInstanceDiscussResult">
+    <select id="queryInstanceDiscussList" resultType="com.spark.common.bean.flow.result.FlowInstanceDiscussResult">
         select <include refid="allColumnList"/>
             from flow_instance_discuss
         where 1=1

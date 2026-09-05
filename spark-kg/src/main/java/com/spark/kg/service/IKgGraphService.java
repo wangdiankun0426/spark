@@ -1,10 +1,10 @@
 package com.spark.kg.service;
 
-import com.spark.bean.base.PageResult;
-import com.spark.bean.base.ResultData;
-import com.spark.bean.kg.query.KgGraphQuery;
-import com.spark.bean.kg.result.KgGraphResult;
-import com.spark.bean.kg.vo.KgGraphVO;
+import com.spark.common.bean.base.PageResult;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.kg.query.KgGraphQuery;
+import com.spark.common.bean.kg.result.KgGraphResult;
+import com.spark.common.bean.kg.vo.KgGraphVO;
 
 import java.util.List;
 import java.util.Map;

@@ -32,7 +32,7 @@
   </div>
 </template>
 <script setup>
-import {userDetailAPI, uploadAvatarAPI} from "@/api/system/user";
+import {userDetailAPI, uploadAvatarAPI} from "@/api/sys/user";
 import {ref, computed} from "vue";
 import {useStore} from "vuex";
 import {toast} from "uview-plus";

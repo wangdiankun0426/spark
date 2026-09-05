@@ -54,7 +54,7 @@
 </template>
 <script setup>
 import {computed, ref, watch} from "vue";
-import {pageUserListAPI} from "@/api/system/user";
+import {pageUserListAPI} from "@/api/sys/user";
 import {toast} from "uview-plus";
 import UserAvatar from '@/components/UserAvatar/index.vue'
 

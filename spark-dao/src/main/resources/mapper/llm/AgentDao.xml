@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.llm.AgentDao" >
     <sql id="allColumnList" >
-        id , name , chat_model_id , system_prompt , max_messages , tools , kb_ids , graph_ids , mcp_ids , skills , description , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , name , chat_model_id , sys_prompt , max_messages , tools , kb_ids , graph_ids , mcp_ids , skills , description , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="searchCondition">
@@ -41,8 +41,8 @@
     </sql>
 
     <insert id="insert">
-        insert into llm_agent (id, name , chat_model_id , system_prompt , max_messages , tools , kb_ids , graph_ids , mcp_ids , skills , description , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values (#{id}, #{name} , #{chatModelId} , #{systemPrompt} , #{maxMessages} , #{tools} , #{kbIds} , #{graphIds} , #{mcpIds} , #{skills} , #{description} , #{status} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into llm_agent (id, name , chat_model_id , sys_prompt , max_messages , tools , kb_ids , graph_ids , mcp_ids , skills , description , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{id}, #{name} , #{chatModelId} , #{sysPrompt} , #{maxMessages} , #{tools} , #{kbIds} , #{graphIds} , #{mcpIds} , #{skills} , #{description} , #{status} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">
@@ -58,8 +58,8 @@
         <if test="chatModelId != null">
             , chat_model_id = #{chatModelId}
         </if>
-        <if test="systemPrompt != null and systemPrompt != ''">
-            , system_prompt = #{systemPrompt}
+        <if test="sysPrompt != null and sysPrompt != ''">
+            , sys_prompt = #{sysPrompt}
         </if>
         <if test="maxMessages != null">
             , max_messages = #{maxMessages}
@@ -111,7 +111,7 @@
         ${dataScopeSQL}
     </select>
 
-    <select id="queryAgentList" resultType="com.spark.bean.llm.result.AgentResult">
+    <select id="queryAgentList" resultType="com.spark.common.bean.llm.result.AgentResult">
         select <include refid="allColumnList"/>
         from llm_agent
         where 1 = 1
@@ -124,7 +124,7 @@
         </if>
     </select>
 
-    <select id="queryAgent" resultType="com.spark.bean.llm.result.AgentResult">
+    <select id="queryAgent" resultType="com.spark.common.bean.llm.result.AgentResult">
         select <include refid="allColumnList"/>
         from llm_agent
         where 1=1

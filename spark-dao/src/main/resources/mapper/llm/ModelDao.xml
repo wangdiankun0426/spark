@@ -96,7 +96,7 @@
         ${dataScopeSQL}
     </select>
 
-    <select id="queryModelList" resultType="com.spark.bean.llm.result.ModelResult">
+    <select id="queryModelList" resultType="com.spark.common.bean.llm.result.ModelResult">
         select <include refid="allColumnList"/>
         from llm_model
         where 1 = 1
@@ -109,7 +109,7 @@
         </if>
     </select>
 
-    <select id="queryModel" resultType="com.spark.bean.llm.result.ModelResult">
+    <select id="queryModel" resultType="com.spark.common.bean.llm.result.ModelResult">
         select <include refid="allColumnList"/>
         from llm_model
         where 1=1

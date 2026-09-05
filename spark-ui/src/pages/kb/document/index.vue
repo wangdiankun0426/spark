@@ -222,7 +222,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   pageDocumentListAPI, updateDocumentAPI, queryDocumentDetailAPI, deleteDocumentAPI,
   batchDeleteDocumentAPI, batchReprocessDocumentAPI
-} from '@/api/kb/document'
+} from '@/api/dms/document.js'
 import { queryKnowledgeDetailAPI } from '@/api/kb/knowledge'
 import FormView from '@/components/FormView'
 import DocumentIcon from '@/components/DocumentIcon'

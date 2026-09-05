@@ -1,13 +1,13 @@
 package com.spark.form.service.impl;
 
-import com.spark.bean.base.ResultData;
-import com.spark.bean.form.query.FormFieldQuery;
-import com.spark.bean.form.query.FormQuery;
-import com.spark.bean.form.result.FormFieldResult;
-import com.spark.bean.form.result.FormResult;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.form.query.FormFieldQuery;
+import com.spark.common.bean.form.query.FormQuery;
+import com.spark.common.bean.form.result.FormFieldResult;
+import com.spark.common.bean.form.result.FormResult;
 import com.spark.dao.form.FormDao;
 import com.spark.dao.form.FormFieldDao;
-import com.spark.enums.ErrorCodeEnum;
+import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.form.service.IFormFieldService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -8,11 +8,10 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import com.spark.llm.model.ModelFactory;
 import com.spark.llm.store.ESVectorStore;
-import com.spark.llm.utils.ChunkUtil;
+import com.spark.common.utils.TextChunkUtil;
 import com.spark.prompt.PromptTemplateLoader;
 import com.spark.llm.IAgent;
-import com.spark.utils.JsonUtil;
-import com.spark.utils.TextUtil;
+import com.spark.common.utils.JsonUtil;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.service.AiServices;
@@ -145,7 +144,7 @@ public class LlmTest {
                 "李威没再说话。他径直走向电梯，按下九楼。他知道，真正的战斗，从这一刻就已经打响。";
 //        ResultData<String> fromText = TextUtil.getFromText("C:\\Users\\w1561\\Desktop\\demo.txt", true);
 //        String content = fromText.getData();
-        List<String> chunkList = ChunkUtil.handleChunk(content, null, null);
+        List<String> chunkList = TextChunkUtil.handleChunk(content, null, null);
         System.out.println(chunkList.size());
         for (String chunk : chunkList) {
             System.out.println(chunk);

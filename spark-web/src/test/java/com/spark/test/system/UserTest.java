@@ -1,8 +1,8 @@
 package com.spark.test.system;
 
-import com.spark.bean.system.vo.UserVO;
-import com.spark.bean.base.ResultData;
-import com.spark.manage.system.IUserService;
+import com.spark.common.bean.sys.vo.UserVO;
+import com.spark.common.bean.base.ResultData;
+import com.spark.manage.sys.IUserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

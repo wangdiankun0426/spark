@@ -215,7 +215,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   pageDocumentListAPI, updateDocumentAPI, queryDocumentDetailAPI, deleteDocumentAPI
-} from '@/api/kb/document.js'
+} from '@/api/dms/document.js'
 import { queryGraphDetailAPI } from '@/api/kg/graph.js'
 import FormView from '@/components/FormView/index.vue'
 import DocumentIcon from '@/components/DocumentIcon/index.vue'

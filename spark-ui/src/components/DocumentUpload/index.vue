@@ -60,7 +60,7 @@ import { computed, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { UploadFilled } from '@element-plus/icons-vue'
 import { chunkUploadFile } from '@/utils/chunkUploadUtil.js'
-import { fileDocumentAPI } from '@/api/kb/document.js'
+import { fileDocumentAPI } from '@/api/dms/document.js'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },

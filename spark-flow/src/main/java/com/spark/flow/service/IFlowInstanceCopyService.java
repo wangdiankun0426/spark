@@ -1,10 +1,10 @@
 package com.spark.flow.service;
 
-import com.spark.bean.base.PageResult;
-import com.spark.bean.base.ResultData;
-import com.spark.bean.flow.query.FlowInstanceCopyQuery;
-import com.spark.bean.flow.result.FlowInstanceCopyResult;
-import com.spark.bean.flow.vo.FlowInstanceCopyVO;
+import com.spark.common.bean.base.PageResult;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.flow.query.FlowInstanceCopyQuery;
+import com.spark.common.bean.flow.result.FlowInstanceCopyResult;
+import com.spark.common.bean.flow.vo.FlowInstanceCopyVO;
 
 /**
  * +++/\_/\

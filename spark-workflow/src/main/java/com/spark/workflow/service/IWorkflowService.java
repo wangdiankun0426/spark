@@ -1,10 +1,10 @@
 package com.spark.workflow.service;
 
-import com.spark.bean.base.PageResult;
-import com.spark.bean.base.ResultData;
-import com.spark.bean.workflow.query.WfTemplateQuery;
-import com.spark.bean.workflow.result.WfTemplateResult;
-import com.spark.bean.workflow.vo.WfTemplateVO;
+import com.spark.common.bean.base.PageResult;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.workflow.query.WfTemplateQuery;
+import com.spark.common.bean.workflow.result.WfTemplateResult;
+import com.spark.common.bean.workflow.vo.WfTemplateVO;
 
 /**
  * +++/\_/\

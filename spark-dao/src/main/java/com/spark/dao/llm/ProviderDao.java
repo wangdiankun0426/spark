@@ -1,8 +1,8 @@
 package com.spark.dao.llm;
 
-import com.spark.bean.llm.entity.Provider;
-import com.spark.bean.llm.query.ProviderQuery;
-import com.spark.bean.llm.result.ProviderResult;
+import com.spark.common.bean.llm.entity.Provider;
+import com.spark.common.bean.llm.query.ProviderQuery;
+import com.spark.common.bean.llm.result.ProviderResult;
 import com.spark.dao.BaseDao;
 
 import java.util.List;

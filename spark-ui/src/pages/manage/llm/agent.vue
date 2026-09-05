@@ -121,9 +121,9 @@
                 />
               </el-select>
             </el-form-item>
-            <el-form-item label="系统提示词" prop="systemPrompt">
+            <el-form-item label="系统提示词" prop="sysPrompt">
               <el-input
-                  v-model="agentForm.systemPrompt"
+                  v-model="agentForm.sysPrompt"
                   placeholder="请输入系统提示词，用于定义智能体的角色、行为与回答风格，如：你是一位专业的客服助手，请耐心解答用户问题"
                   type="textarea"
                   :rows="20"
@@ -308,7 +308,7 @@ const agentForm = ref({
   id: undefined,
   name: undefined,
   chatModelId: undefined,
-  systemPrompt: undefined,
+  sysPrompt: undefined,
   maxMessages: 10,
   tools: [],
   kbIds: [],
@@ -321,7 +321,7 @@ const agentForm = ref({
 const agentFormRules = {
   name: [{ required: true, trigger: "blur", message: "请输入名称" }],
   chatModelId: [{ required: true, trigger: "change", message: "请选择语言模型" }],
-  systemPrompt: [{ required: true, trigger: "blur", message: "请输入系统提示词" }],
+  sysPrompt: [{ required: true, trigger: "blur", message: "请输入系统提示词" }],
   maxMessages: [{ required: true, trigger: "blur", message: "请输入对话记忆大小" }],
 };
 
@@ -363,7 +363,7 @@ function handleOpenUpdateAgentForm(row) {
     agentForm.value.id = res.data.id;
     agentForm.value.name = res.data.name;
     agentForm.value.chatModelId = res.data.chatModelId;
-    agentForm.value.systemPrompt = res.data.systemPrompt;
+    agentForm.value.sysPrompt = res.data.sysPrompt;
     agentForm.value.maxMessages = res.data.maxMessages;
     // 将逗号分隔的字符串转换为数组
     agentForm.value.tools = res.data.tools ? res.data.tools.split(',').filter(t => t) : [];
@@ -477,7 +477,7 @@ function handleOpenCreateAgentForm() {
   agentForm.value.id = undefined;
   agentForm.value.name = undefined;
   agentForm.value.chatModelId = undefined;
-  agentForm.value.systemPrompt = undefined;
+  agentForm.value.sysPrompt = undefined;
   agentForm.value.maxMessages = 10;
   agentForm.value.tools = [];
   agentForm.value.kbIds = [];
@@ -520,7 +520,7 @@ function handleSubmitAgentForm() {
         const data = {
           name: agentForm.value.name,
           chatModelId: agentForm.value.chatModelId,
-          systemPrompt: agentForm.value.systemPrompt,
+          sysPrompt: agentForm.value.sysPrompt,
           maxMessages: agentForm.value.maxMessages,
           tools: toolsStr,
           kbIds: agentForm.value.kbIds,
@@ -543,7 +543,7 @@ function handleSubmitAgentForm() {
           id:  agentForm.value.id,
           name: agentForm.value.name,
           chatModelId: agentForm.value.chatModelId,
-          systemPrompt: agentForm.value.systemPrompt,
+          sysPrompt: agentForm.value.sysPrompt,
           maxMessages: agentForm.value.maxMessages,
           tools: toolsStr,
           kbIds: agentForm.value.kbIds,
@@ -573,7 +573,7 @@ function handleCloseAgentForm() {
   agentForm.value.id = undefined;
   agentForm.value.name = undefined;
   agentForm.value.chatModelId = undefined;
-  agentForm.value.systemPrompt = undefined;
+  agentForm.value.sysPrompt = undefined;
   agentForm.value.maxMessages = 10;
   agentForm.value.tools = [];
   agentForm.value.kbIds = [];

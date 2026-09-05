@@ -1,9 +1,9 @@
 package com.spark.task.service;
 
-import com.spark.bean.base.PageResult;
-import com.spark.bean.base.ResultData;
-import com.spark.bean.task.query.TaskInstanceQuery;
-import com.spark.bean.task.result.TaskInstanceResult;
+import com.spark.common.bean.base.PageResult;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.task.query.TaskInstanceQuery;
+import com.spark.common.bean.task.result.TaskInstanceResult;
 
 /**
  * +++/\_/\

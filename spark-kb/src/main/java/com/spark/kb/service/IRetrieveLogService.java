@@ -1,13 +1,13 @@
 package com.spark.kb.service;
 
-import com.spark.bean.base.PageResult;
-import com.spark.bean.base.ResultData;
-import com.spark.bean.kb.query.RetrieveLogQuery;
-import com.spark.bean.kb.result.RetrieveDetailResult;
-import com.spark.bean.kb.result.RetrieveLogResult;
-import com.spark.bean.kb.result.RetrieveStatsResult;
-import com.spark.bean.kb.result.UsageStatsResult;
-import com.spark.bean.kb.vo.RetrieveLogVO;
+import com.spark.common.bean.base.PageResult;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.kb.query.RetrieveLogQuery;
+import com.spark.common.bean.kb.result.RetrieveDetailResult;
+import com.spark.common.bean.kb.result.RetrieveLogResult;
+import com.spark.common.bean.kb.result.RetrieveStatsResult;
+import com.spark.common.bean.kb.result.UsageStatsResult;
+import com.spark.common.bean.kb.vo.RetrieveLogVO;
 
 /**
  * 检索日志服务接口

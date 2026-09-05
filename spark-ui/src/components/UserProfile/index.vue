@@ -86,7 +86,7 @@ import { ref, computed, watch, getCurrentInstance } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { useStore } from 'vuex'
-import { updatePasswordAPI } from '@/api/system/user.js'
+import { updatePasswordAPI } from '@/api/sys/user.js'
 import { des } from '@/utils/encryptUtil.js'
 import UserAvatar from '@/components/UserAvatar'
 
@@ -154,7 +154,7 @@ watch(() => props.modelValue, val => {
 function getUserDetail() {
   userInfo.value = store.getters['user/getUserInfo'] || {}
   const baseUrl = process.env.BASE_HTTP_API
-  userAvatarUploadUrl.value = baseUrl + '/system/user/upload/avatar'
+  userAvatarUploadUrl.value = baseUrl + '/sys/user/upload/avatar'
   uploadHeaders.value.Authorization = store.getters['user/getToken']
 }
 

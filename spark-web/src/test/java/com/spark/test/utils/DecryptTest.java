@@ -1,7 +1,7 @@
 package com.spark.test.utils;
 
 
-import com.spark.utils.DecryptUtil;
+import com.spark.common.utils.DecryptUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 

@@ -23,7 +23,7 @@ const avatarUrl = computed(() => {
   if (props.userId === undefined || props.userId === null || props.userId === '') {
     return undefined
   }
-  return baseUrl + '/system/user/avatar?id=' + props.userId + '&time=' + timestamp.value
+  return baseUrl + '/sys/user/avatar?id=' + props.userId + '&time=' + timestamp.value
 })
 
 /**

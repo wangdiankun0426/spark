@@ -1,8 +1,8 @@
 package com.spark.config.wechat;
 
 import com.spark.config.wechat.response.WeChatSessionRes;
-import com.spark.utils.JsonUtil;
-import com.spark.utils.StringUtil;
+import com.spark.common.utils.JsonUtil;
+import com.spark.common.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

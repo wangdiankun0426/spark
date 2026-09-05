@@ -87,7 +87,7 @@
         <include refid="searchCondition"/>
     </select>
 
-    <select id="queryKgGraphList" resultType="com.spark.bean.kg.result.KgGraphResult">
+    <select id="queryKgGraphList" resultType="com.spark.common.bean.kg.result.KgGraphResult">
         select <include refid="allColumnList"/>
         from kg_graph
         where 1=1
@@ -96,7 +96,7 @@
         <if test="page == true">limit #{startRow}, #{pageSize}</if>
     </select>
 
-    <select id="queryKgGraph" resultType="com.spark.bean.kg.result.KgGraphResult">
+    <select id="queryKgGraph" resultType="com.spark.common.bean.kg.result.KgGraphResult">
         select <include refid="allColumnList"/>
         from kg_graph
         where 1=1

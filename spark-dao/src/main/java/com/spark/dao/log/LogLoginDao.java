@@ -1,8 +1,8 @@
 package com.spark.dao.log;
 
-import com.spark.bean.log.entity.LogLogin;
-import com.spark.bean.log.query.LogLoginQuery;
-import com.spark.bean.log.result.LogLoginResult;
+import com.spark.common.bean.log.entity.LogLogin;
+import com.spark.common.bean.log.query.LogLoginQuery;
+import com.spark.common.bean.log.result.LogLoginResult;
 import com.spark.dao.BaseDao;
 
 import java.util.List;

@@ -1,9 +1,9 @@
 package com.spark.kg.service;
 
-import com.spark.bean.base.PageResult;
-import com.spark.bean.base.ResultData;
-import com.spark.bean.kg.query.KgCommunityQuery;
-import com.spark.bean.kg.result.KgCommunityResult;
+import com.spark.common.bean.base.PageResult;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.kg.query.KgCommunityQuery;
+import com.spark.common.bean.kg.result.KgCommunityResult;
 
 /**
  * +++/\_/\

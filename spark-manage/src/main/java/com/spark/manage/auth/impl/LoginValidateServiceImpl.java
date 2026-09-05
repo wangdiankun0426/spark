@@ -1,17 +1,17 @@
 package com.spark.manage.auth.impl;
 
 import com.google.code.kaptcha.Producer;
-import com.spark.bean.system.vo.LoginVO;
-import com.spark.bean.base.ResultData;
-import com.spark.bean.system.entity.ValidateCode;
+import com.spark.common.bean.sys.vo.LoginVO;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.sys.entity.ValidateCode;
 import com.spark.config.shortMsg.AlibabaShortMsgService;
 import com.spark.config.email.EmailService;
-import com.spark.constant.ObjectCacheKey;
-import com.spark.enums.ErrorCodeEnum;
+import com.spark.common.constant.ObjectCacheKey;
+import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.config.redis.RedisService;
-import com.spark.enums.LoginTypeEnum;
+import com.spark.common.enums.LoginTypeEnum;
 import com.spark.manage.auth.ILoginValidateService;
-import com.spark.utils.StringUtil;
+import com.spark.common.utils.StringUtil;
 import jakarta.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

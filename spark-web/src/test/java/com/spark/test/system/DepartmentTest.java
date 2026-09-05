@@ -1,9 +1,9 @@
 package com.spark.test.system;
 
-import com.spark.bean.system.vo.DepartmentVO;
-import com.spark.bean.system.tree.DepartmentTree;
-import com.spark.manage.system.IDepartmentService;
-import com.spark.utils.JsonUtil;
+import com.spark.common.bean.sys.vo.DepartmentVO;
+import com.spark.common.bean.sys.tree.DepartmentTree;
+import com.spark.manage.sys.IDepartmentService;
+import com.spark.common.utils.JsonUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

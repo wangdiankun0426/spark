@@ -1,13 +1,13 @@
 package com.spark.llm.agent;
 
-import com.spark.bean.llm.query.AgentQuery;
-import com.spark.bean.llm.result.AgentResult;
-import com.spark.bean.llm.result.McpResult;
-import com.spark.bean.llm.result.SkillResult;
-import com.spark.bean.llm.entity.Agent;
-import com.spark.bean.llm.entity.Mcp;
-import com.spark.bean.llm.query.McpQuery;
-import com.spark.enums.AgentToolEnum;
+import com.spark.common.bean.llm.query.AgentQuery;
+import com.spark.common.bean.llm.result.AgentResult;
+import com.spark.common.bean.llm.result.McpResult;
+import com.spark.common.bean.llm.result.SkillResult;
+import com.spark.common.bean.llm.entity.Agent;
+import com.spark.common.bean.llm.entity.Mcp;
+import com.spark.common.bean.llm.query.McpQuery;
+import com.spark.common.enums.AgentToolEnum;
 import com.spark.llm.IAgent;
 import com.spark.dao.llm.AgentDao;
 import com.spark.dao.llm.McpDao;
@@ -18,8 +18,8 @@ import com.spark.llm.model.ModelFactory;
 import com.spark.llm.tools.SearchKnowledge;
 import com.spark.llm.tools.SearchKnowledgeGraph;
 import com.spark.llm.tools.SkillTool;
-import com.spark.utils.CollectionUtil;
-import com.spark.utils.StringUtil;
+import com.spark.common.utils.CollectionUtil;
+import com.spark.common.utils.StringUtil;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.mcp.client.McpClient;
@@ -102,8 +102,8 @@ public class AgentFactory {
                         .build());
         // 组装系统提示词，Agent自定义提示词优先，否则使用默认的工具优先提示词
         String prompt = "你是一个智能助手。当用户提出问题时，请优先使用可用的工具来获取准确信息。如果工具可以提供相关信息，必须先调用工具，不要仅凭自己的知识直接回答。";
-        if (StringUtil.isNotBlank(agent.getSystemPrompt())) {
-            prompt = agent.getSystemPrompt();
+        if (StringUtil.isNotBlank(agent.getSysPrompt())) {
+            prompt = agent.getSysPrompt();
         }
         // 添加工具
         List<Object> toolObjects = new ArrayList<>();
@@ -167,7 +167,7 @@ public class AgentFactory {
         agent.setId(result.getId());
         agent.setName(result.getName());
         agent.setChatModelId(result.getChatModelId());
-        agent.setSystemPrompt(result.getSystemPrompt());
+        agent.setSysPrompt(result.getSysPrompt());
         agent.setMaxMessages(result.getMaxMessages());
         agent.setTools(result.getTools());
         agent.setDescription(result.getDescription());

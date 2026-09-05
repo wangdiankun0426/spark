@@ -1,10 +1,10 @@
 package com.spark.flow.service;
 
-import com.spark.bean.flow.query.FlowTemplateQuery;
-import com.spark.bean.flow.result.FlowTemplateResult;
-import com.spark.bean.flow.vo.FlowTemplateVO;
-import com.spark.bean.base.PageResult;
-import com.spark.bean.base.ResultData;
+import com.spark.common.bean.flow.query.FlowTemplateQuery;
+import com.spark.common.bean.flow.result.FlowTemplateResult;
+import com.spark.common.bean.flow.vo.FlowTemplateVO;
+import com.spark.common.bean.base.PageResult;
+import com.spark.common.bean.base.ResultData;
 
 /**
  * +++/\_/\

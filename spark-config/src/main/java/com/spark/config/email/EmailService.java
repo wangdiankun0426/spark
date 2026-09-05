@@ -1,6 +1,6 @@
 package com.spark.config.email;
 
-import com.spark.utils.StringUtil;
+import com.spark.common.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

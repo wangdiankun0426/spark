@@ -56,7 +56,7 @@ export default [
         }
     },
     {
-        path: '/manage/system/notice/edit/:id',
+        path: '/manage/sys/notice/edit/:id',
         name: 'noticeEdit',
         component: noticeEdit,
         meta: {

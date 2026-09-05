@@ -1,10 +1,10 @@
 package com.spark.llm.service;
 
-import com.spark.bean.llm.query.AgentQuery;
-import com.spark.bean.llm.result.AgentResult;
-import com.spark.bean.llm.vo.AgentVO;
-import com.spark.bean.base.PageResult;
-import com.spark.bean.base.ResultData;
+import com.spark.common.bean.llm.query.AgentQuery;
+import com.spark.common.bean.llm.result.AgentResult;
+import com.spark.common.bean.llm.vo.AgentVO;
+import com.spark.common.bean.base.PageResult;
+import com.spark.common.bean.base.ResultData;
 
 /**
  * +++/\_/\

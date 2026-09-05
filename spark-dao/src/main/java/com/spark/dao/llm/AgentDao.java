@@ -1,8 +1,8 @@
 package com.spark.dao.llm;
 
-import com.spark.bean.llm.entity.Agent;
-import com.spark.bean.llm.query.AgentQuery;
-import com.spark.bean.llm.result.AgentResult;
+import com.spark.common.bean.llm.entity.Agent;
+import com.spark.common.bean.llm.query.AgentQuery;
+import com.spark.common.bean.llm.result.AgentResult;
 import com.spark.dao.BaseDao;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;

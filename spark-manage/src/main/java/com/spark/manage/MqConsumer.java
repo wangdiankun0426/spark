@@ -1,15 +1,15 @@
 package com.spark.manage;
 
 import com.rabbitmq.client.Channel;
-import com.spark.bean.log.entity.LogLogin;
-import com.spark.bean.log.entity.LogOperate;
-import com.spark.bean.system.vo.MessageVO;
-import com.spark.bean.base.ResultData;
-import com.spark.constant.MqQueueKey;
+import com.spark.common.bean.log.entity.LogLogin;
+import com.spark.common.bean.log.entity.LogOperate;
+import com.spark.common.bean.sys.vo.MessageVO;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.constant.MqQueueKey;
 import com.spark.manage.log.ILogLoginService;
 import com.spark.manage.log.ILogOperateService;
-import com.spark.manage.system.IMessageService;
-import com.spark.utils.JsonUtil;
+import com.spark.manage.sys.IMessageService;
+import com.spark.common.utils.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.ExchangeTypes;
@@ -54,25 +54,25 @@ public class MqConsumer {
      * 声明交换机-路由-队列之间的绑定关系
      */
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = MqQueueKey.SYSTEM_MESSAGE),
+            value = @Queue(value = MqQueueKey.SYS_MSG),
             exchange = @Exchange(value = "spark_exchange", type = ExchangeTypes.DIRECT),
-            key = MqQueueKey.SYSTEM_MESSAGE_KEY
+            key = MqQueueKey.SYS_MSG_KEY
     ))
     public void handleSystemMessage(Message message, Channel channel, String msg) {
         try {
             logger.info("rabbitmq [systemMessage] 队列监听到了消息， msg={}", msg);
             MessageVO messageVO = JsonUtil.toObject(msg, MessageVO.class);
             ResultData<Void> createMsgResult = messageService.createMessage(messageVO);
-            logger.info("handle system message createMsgResult={}", createMsgResult);
+            logger.info("handle sys message createMsgResult={}", createMsgResult);
             //手动 ACK
             channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
         } catch (Exception e) {
             // 如果不处理异常，消息会重新入队，这里直接对异常进行处理
-            logger.info("handle system message error, exception", e);
+            logger.info("handle sys message error, exception", e);
             try {
                 channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
             } catch (IOException ex) {
-                logger.error("handle system message nack error, exception", ex);
+                logger.error("handle sys message nack error, exception", ex);
             }
         }
     }

@@ -77,7 +77,7 @@
         <include refid="searchCondition"/>
     </select>
 
-    <select id="queryFormObjList" resultType="com.spark.bean.form.result.FormObjResult">
+    <select id="queryFormObjList" resultType="com.spark.common.bean.form.result.FormObjResult">
         select <include refid="allColumnList"/>
         from form_obj
         where 1 = 1
@@ -89,7 +89,7 @@
         </if>
     </select>
 
-    <select id="queryFormObj" resultType="com.spark.bean.form.result.FormObjResult">
+    <select id="queryFormObj" resultType="com.spark.common.bean.form.result.FormObjResult">
         select <include refid="allColumnList"/>
         from form_obj
         where 1=1

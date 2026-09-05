@@ -162,10 +162,10 @@
 </template>
 
 <script setup>
-import {userDetailAPI} from "@/api/system/user.js";
+import {userDetailAPI} from "@/api/sys/user.js";
 import {logoutAPI} from "@/api/auth/login.js";
-import {queryMyMessageListAPI} from "@/api/system/message.js";
-import {noticeListAPI} from "@/api/system/notice.js";
+import {queryMyMessageListAPI} from "@/api/sys/message.js";
+import {noticeListAPI} from "@/api/sys/notice.js";
 import {ElMessageBox} from "element-plus";
 import {ref, computed, nextTick, watch} from "vue";
 import {ArrowDown, DataAnalysis, FolderOpened, Connection, Search, Setting, Moon, Sunny} from "@element-plus/icons-vue";

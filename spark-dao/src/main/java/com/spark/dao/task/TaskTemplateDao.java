@@ -1,8 +1,8 @@
 package com.spark.dao.task;
 
-import com.spark.bean.task.entity.TaskTemplate;
-import com.spark.bean.task.query.TaskTemplateQuery;
-import com.spark.bean.task.result.TaskTemplateResult;
+import com.spark.common.bean.task.entity.TaskTemplate;
+import com.spark.common.bean.task.query.TaskTemplateQuery;
+import com.spark.common.bean.task.result.TaskTemplateResult;
 import com.spark.dao.BaseDao;
 
 import java.util.List;

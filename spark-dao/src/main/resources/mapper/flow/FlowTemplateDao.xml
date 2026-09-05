@@ -93,7 +93,7 @@
         ${dataScopeSQL}
     </select>
 
-    <select id="queryTemplateList" resultType="com.spark.bean.flow.result.FlowTemplateResult">
+    <select id="queryTemplateList" resultType="com.spark.common.bean.flow.result.FlowTemplateResult">
         select <include refid="allColumnList"/>
         from flow_template
         where 1 = 1
@@ -106,7 +106,7 @@
         </if>
     </select>
 
-    <select id="queryTemplate" resultType="com.spark.bean.flow.result.FlowTemplateResult">
+    <select id="queryTemplate" resultType="com.spark.common.bean.flow.result.FlowTemplateResult">
         select <include refid="allColumnList"/>
         from flow_template
         where 1=1

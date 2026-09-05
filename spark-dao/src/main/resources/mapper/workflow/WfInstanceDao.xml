@@ -60,7 +60,7 @@
         ${dataScopeSQL}
     </select>
 
-    <select id="queryInstanceList" resultType="com.spark.bean.workflow.result.WfInstanceResult">
+    <select id="queryInstanceList" resultType="com.spark.common.bean.workflow.result.WfInstanceResult">
         select <include refid="allColumnList"/>
         from wf_instance ri
         left join wf_template tf on ri.template_id = tf.id
@@ -73,7 +73,7 @@
         </if>
     </select>
 
-    <select id="queryInstance" resultType="com.spark.bean.workflow.result.WfInstanceResult">
+    <select id="queryInstance" resultType="com.spark.common.bean.workflow.result.WfInstanceResult">
         select <include refid="allColumnList"/>
         from wf_instance ri left join wf_template tf on ri.template_id = tf.id where 1=1
         <include refid="searchCondition"/> limit 1

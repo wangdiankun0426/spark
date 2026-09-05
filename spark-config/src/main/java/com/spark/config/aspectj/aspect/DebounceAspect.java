@@ -1,12 +1,12 @@
 package com.spark.config.aspectj.aspect;
 
-import com.spark.bean.base.ResultData;
-import com.spark.bean.base.SessionHolder;
-import com.spark.constant.AspectOrder;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
+import com.spark.common.constant.AspectOrder;
 import com.spark.config.aspectj.annotation.Debounce;
 import com.spark.config.redis.RedisService;
-import com.spark.constant.ObjectCacheKey;
-import com.spark.enums.ErrorCodeEnum;
+import com.spark.common.constant.ObjectCacheKey;
+import com.spark.common.enums.ErrorCodeEnum;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;

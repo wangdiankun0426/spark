@@ -14,19 +14,19 @@
               <el-icon><User /></el-icon>
               <span style="color: var(--sidebar-group-text)">系统数据</span>
             </template>
-            <el-menu-item index="/manage/system/user">
+            <el-menu-item index="/manage/sys/user">
               <span>用户管理</span>
             </el-menu-item>
-            <el-menu-item index="/manage/system/dept">
+            <el-menu-item index="/manage/sys/dept">
               <span>部门管理</span>
             </el-menu-item>
-            <el-menu-item index="/manage/system/role">
+            <el-menu-item index="/manage/sys/role">
               <span>角色管理</span>
             </el-menu-item>
-            <el-menu-item index="/manage/system/notice">
+            <el-menu-item index="/manage/sys/notice">
               <span>公告管理</span>
             </el-menu-item>
-            <el-menu-item index="/manage/system/message">
+            <el-menu-item index="/manage/sys/message">
               <span>消息管理</span>
             </el-menu-item>
           </el-sub-menu>

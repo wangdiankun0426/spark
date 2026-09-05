@@ -104,7 +104,7 @@
   </div>
 </template>
 <script setup name="graphSearch">
-import {searchDocumentAPI, downloadDocumentAPI} from '@/api/kb/document.js'
+import {searchDocumentAPI, downloadDocumentAPI} from '@/api/dms/document.js'
 import {pageGraphListAPI} from '@/api/kg/graph.js'
 import {ref, onMounted} from 'vue'
 import {useRoute, useRouter} from 'vue-router'

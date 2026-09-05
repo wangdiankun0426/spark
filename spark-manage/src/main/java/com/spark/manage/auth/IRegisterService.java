@@ -1,7 +1,7 @@
 package com.spark.manage.auth;
 
-import com.spark.bean.base.ResultData;
-import com.spark.bean.system.vo.RegisterVO;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.sys.vo.RegisterVO;
 
 /**
  * +++/\_/\

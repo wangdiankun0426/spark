@@ -114,7 +114,7 @@
   </div>
 </template>
 <script setup name="search">
-import {searchDocumentAPI, downloadDocumentAPI} from '@/api/kb/document.js'
+import {searchDocumentAPI, downloadDocumentAPI} from '@/api/dms/document.js'
 import {pageKnowledgeListAPI} from '@/api/kb/knowledge.js'
 import {ref, onMounted} from 'vue'
 import {useRoute, useRouter} from 'vue-router'

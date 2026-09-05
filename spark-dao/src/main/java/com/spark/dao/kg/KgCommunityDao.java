@@ -1,8 +1,8 @@
 package com.spark.dao.kg;
 
-import com.spark.bean.kg.entity.KgCommunity;
-import com.spark.bean.kg.query.KgCommunityQuery;
-import com.spark.bean.kg.result.KgCommunityResult;
+import com.spark.common.bean.kg.entity.KgCommunity;
+import com.spark.common.bean.kg.query.KgCommunityQuery;
+import com.spark.common.bean.kg.result.KgCommunityResult;
 import com.spark.dao.BaseDao;
 import org.apache.ibatis.annotations.Param;
 

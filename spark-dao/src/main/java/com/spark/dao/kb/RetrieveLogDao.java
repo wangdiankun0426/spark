@@ -1,14 +1,13 @@
 package com.spark.dao.kb;
 
-import com.spark.bean.kb.entity.RetrieveLog;
-import com.spark.bean.kb.query.RetrieveLogQuery;
-import com.spark.bean.kb.result.HotQueryResult;
-import com.spark.bean.kb.result.PeriodRetrieveCountResult;
-import com.spark.bean.kb.result.RetrieveLogResult;
-import com.spark.bean.kb.result.RetrieveStatsResult;
-import com.spark.bean.kb.result.UserRankResult;
+import com.spark.common.bean.kb.entity.RetrieveLog;
+import com.spark.common.bean.kb.query.RetrieveLogQuery;
+import com.spark.common.bean.kb.result.HotQueryResult;
+import com.spark.common.bean.kb.result.PeriodRetrieveCountResult;
+import com.spark.common.bean.kb.result.RetrieveLogResult;
+import com.spark.common.bean.kb.result.RetrieveStatsResult;
+import com.spark.common.bean.kb.result.UserRankResult;
 import com.spark.dao.BaseDao;
-import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;

@@ -1,9 +1,9 @@
 import manage from '@/pages/manage/index'
-import user from '@/pages/manage/system/user'
-import dept from '@/pages/manage/system/dept'
-import role from '@/pages/manage/system/role'
-import notice from '@/pages/manage/system/notice'
-import message from '@/pages/manage/system/message'
+import user from '@/pages/manage/sys/user'
+import dept from '@/pages/manage/sys/dept'
+import role from '@/pages/manage/sys/role'
+import notice from '@/pages/manage/sys/notice'
+import message from '@/pages/manage/sys/message'
 import logLogin from '@/pages/manage/log/login'
 import logOperate from '@/pages/manage/log/operate'
 import chatMsgManage from '@/pages/manage/chat/msgManage'
@@ -29,14 +29,14 @@ export default [
     {
         path: '/manage',
         name: 'manage',
-        redirect: '/manage/system/user',
+        redirect: '/manage/sys/user',
         component: manage,
         meta: {
             title: '管理后台'
         },
         children: [
             {
-                path: '/manage/system/user',
+                path: '/manage/sys/user',
                 name: 'user',
                 component: user,
                 meta: {
@@ -44,7 +44,7 @@ export default [
                 }
             },
             {
-                path: '/manage/system/dept',
+                path: '/manage/sys/dept',
                 name: 'dept',
                 component: dept,
                 meta: {
@@ -52,7 +52,7 @@ export default [
                 }
             },
             {
-                path: '/manage/system/role',
+                path: '/manage/sys/role',
                 name: 'role',
                 component: role,
                 meta: {
@@ -60,7 +60,7 @@ export default [
                 }
             },
             {
-                path: '/manage/system/notice',
+                path: '/manage/sys/notice',
                 name: 'notice',
                 component: notice,
                 meta: {
@@ -68,7 +68,7 @@ export default [
                 }
             },
             {
-                path: '/manage/system/message',
+                path: '/manage/sys/message',
                 name: 'message',
                 component: message,
                 meta: {

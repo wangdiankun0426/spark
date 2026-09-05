@@ -121,7 +121,7 @@ import { ref, computed, onMounted } from "vue"
 import { useStore } from "vuex"
 import DashboardCard from "@/pages/home/DashboardCard.vue"
 import UserAvatar from "@/components/UserAvatar/index.vue"
-import { userDetailAPI } from "@/api/system/user"
+import { userDetailAPI } from "@/api/sys/user"
 
 const store = useStore()
 const active = ref("home")

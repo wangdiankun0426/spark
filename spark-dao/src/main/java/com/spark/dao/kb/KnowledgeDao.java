@@ -1,8 +1,8 @@
 package com.spark.dao.kb;
 
-import com.spark.bean.kb.entity.Knowledge;
-import com.spark.bean.kb.query.KnowledgeQuery;
-import com.spark.bean.kb.result.KnowledgeResult;
+import com.spark.common.bean.kb.entity.Knowledge;
+import com.spark.common.bean.kb.query.KnowledgeQuery;
+import com.spark.common.bean.kb.result.KnowledgeResult;
 import com.spark.dao.BaseDao;
 import org.apache.ibatis.annotations.Select;
 

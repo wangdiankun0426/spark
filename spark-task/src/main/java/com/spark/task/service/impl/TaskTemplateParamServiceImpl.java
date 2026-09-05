@@ -1,20 +1,20 @@
 package com.spark.task.service.impl;
 
-import com.spark.bean.base.ResultData;
-import com.spark.bean.task.entity.TaskTemplateParam;
-import com.spark.bean.task.query.TaskTemplateParamQuery;
-import com.spark.bean.task.result.TaskTemplateParamResult;
-import com.spark.bean.task.vo.TaskTemplateParamVO;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.task.entity.TaskTemplateParam;
+import com.spark.common.bean.task.query.TaskTemplateParamQuery;
+import com.spark.common.bean.task.result.TaskTemplateParamResult;
+import com.spark.common.bean.task.vo.TaskTemplateParamVO;
 import com.spark.dao.task.TaskTemplateParamDao;
-import com.spark.enums.ErrorCodeEnum;
-import com.spark.enums.TaskParamTypeEnum;
+import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.enums.TaskParamTypeEnum;
 import com.spark.manage.BaseService;
 import com.spark.task.service.ITaskTemplateParamService;
-import com.spark.utils.CollectionUtil;
-import com.spark.utils.StringUtil;
+import com.spark.common.utils.CollectionUtil;
+import com.spark.common.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.spark.utils.BeanUtil;
+import com.spark.common.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

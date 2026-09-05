@@ -1,6 +1,6 @@
 package com.spark.config.redis;
 
-import com.spark.utils.StringUtil;
+import com.spark.common.utils.StringUtil;
 import jakarta.annotation.Resource;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;

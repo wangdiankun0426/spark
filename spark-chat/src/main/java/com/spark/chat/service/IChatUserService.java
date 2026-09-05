@@ -1,8 +1,8 @@
 package com.spark.chat.service;
 
-import com.spark.bean.system.query.UserQuery;
-import com.spark.bean.base.ResultData;
-import com.spark.bean.chat.result.ChatUserResult;
+import com.spark.common.bean.sys.query.UserQuery;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.chat.result.ChatUserResult;
 
 import java.util.List;
 

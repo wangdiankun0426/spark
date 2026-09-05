@@ -1,8 +1,8 @@
 package com.spark.dao.chat;
 
-import com.spark.bean.chat.entity.ChatSpace;
-import com.spark.bean.chat.query.ChatSpaceQuery;
-import com.spark.bean.chat.result.ChatSpaceResult;
+import com.spark.common.bean.chat.entity.ChatSpace;
+import com.spark.common.bean.chat.query.ChatSpaceQuery;
+import com.spark.common.bean.chat.result.ChatSpaceResult;
 import com.spark.dao.BaseDao;
 import org.apache.ibatis.annotations.Select;
 

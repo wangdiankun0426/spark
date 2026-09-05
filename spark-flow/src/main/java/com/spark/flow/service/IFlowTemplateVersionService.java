@@ -1,9 +1,9 @@
 package com.spark.flow.service;
 
-import com.spark.bean.flow.query.FlowTemplateVersionQuery;
-import com.spark.bean.flow.result.FlowTemplateVersionResult;
-import com.spark.bean.flow.vo.FlowTemplateVersionVO;
-import com.spark.bean.base.ResultData;
+import com.spark.common.bean.flow.query.FlowTemplateVersionQuery;
+import com.spark.common.bean.flow.result.FlowTemplateVersionResult;
+import com.spark.common.bean.flow.vo.FlowTemplateVersionVO;
+import com.spark.common.bean.base.ResultData;
 
 /**
  * +++/\_/\

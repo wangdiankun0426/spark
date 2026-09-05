@@ -24,7 +24,7 @@
 
 <script setup>
 import { ref, watch, onMounted, getCurrentInstance } from 'vue'
-import { treeDeptAPI } from '@/api/system/dept'
+import { treeDeptAPI } from '@/api/sys/dept'
 
 defineOptions({ name: 'selectDept' })
 

@@ -144,24 +144,6 @@ CREATE TABLE `sys_message_user` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='消息用户表';
 
-DROP TABLE IF EXISTS `sys_attachment`;
-CREATE TABLE `sys_attachment` (
-  `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `name` varchar(256) NOT NULL COMMENT '文件名称',
-  `size` bigint(12) NOT NULL COMMENT '文件大小',
-  `path` varchar(128) NOT NULL COMMENT '存储路径',
-  `ext` varchar(64) NOT NULL COMMENT '拓展名',
-  `owner_id` bigint(12) NOT NULL COMMENT '上传人id',
-
-  `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
-  `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
-  `created_by` bigint(12) NOT NULL COMMENT '创建人id',
-  `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
-  `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统附件表';
-
 DROP TABLE IF EXISTS `log_login`;
 CREATE TABLE `log_login` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
@@ -264,7 +246,7 @@ CREATE TABLE `llm_agent` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
     `name` varchar(50) NOT NULL COMMENT '名称',
     `chat_model_id` bigint(12) NULL COMMENT '语言模型ID',
-    `system_prompt` varchar(2048) NOT NULL COMMENT '系统提示词',
+    `sys_prompt` varchar(2048) NOT NULL COMMENT '系统提示词',
     `max_messages` int(5) NOT NULL DEFAULT 20 COMMENT '对话记忆大小',
     `tools` varchar(128) NULL COMMENT '工具ID列表',
     `kb_ids` varchar(256) NULL COMMENT '知识库ID列表',
@@ -374,50 +356,6 @@ CREATE TABLE `kb_knowledge` (
     `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识库表';
-
-DROP TABLE IF EXISTS `kb_document`;
-CREATE TABLE `kb_document` (
-    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
-    `prt_id` bigint(12) NOT NULL COMMENT '父id',
-    `document_type` tinyint(3) NOT NULL COMMENT '文档归属类型',
-    `name` varchar(256) NOT NULL COMMENT '名称',
-    `size` bigint(12) NOT NULL COMMENT '大小',
-    `path` varchar(128) NOT NULL COMMENT '存储路径',
-    `ext` varchar(64) NOT NULL COMMENT '拓展名',
-    `owner_id` bigint(12) NOT NULL COMMENT '所有者id',
-
-    `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
-    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
-    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
-    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
-    `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='知识库文档表';
-
-DROP TABLE IF EXISTS `kb_document_event`;
-CREATE TABLE `kb_document_event` (
-      `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
-      `doc_id` bigint(12) NOT NULL COMMENT '文档id',
-      `content_status` int(5) NOT NULL DEFAULT 1 COMMENT '提取文件内容状态',
-      `content_remark` varchar(128)  NULL COMMENT '提取文件内容备注',
-      `chunk_status` int(5) NOT NULL DEFAULT 1 COMMENT '分块状态',
-      `chunk_remark` varchar(128) NULL COMMENT '分块备注',
-      `index_status` int(5) NOT NULL DEFAULT 1 COMMENT '创建索引状态',
-      `index_remark` varchar(128)  NULL COMMENT '创建索引备注',
-      `vector_status` int(5) NOT NULL DEFAULT 1 COMMENT '向量化状态',
-      `vector_remark` varchar(128)  NULL COMMENT '向量化备注',
-      `graph_status` int(5) NOT NULL DEFAULT 1 COMMENT '构建知识图谱状态',
-      `graph_remark` varchar(128)  NULL COMMENT '构建知识图谱备注',
-
-      `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
-      `created_by` bigint(12) NOT NULL COMMENT '创建人id',
-      `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-      `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
-      `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
-      PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='知识库文档事件表';
-
 
 DROP TABLE IF EXISTS `kb_retrieve_log`;
 CREATE TABLE `kb_retrieve_log` (
@@ -968,3 +906,65 @@ CREATE TABLE `task_template_param` (
    `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务模板参数表';
+
+DROP TABLE IF EXISTS `dms_document`;
+CREATE TABLE `dms_document` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `prt_id` bigint(12) NOT NULL COMMENT '父id',
+    `document_type` tinyint(3) NOT NULL COMMENT '文档归属类型',
+    `name` varchar(256) NOT NULL COMMENT '名称',
+    `size` bigint(12) NOT NULL COMMENT '大小',
+    `path` varchar(128) NOT NULL COMMENT '存储路径',
+    `ext` varchar(64) NOT NULL COMMENT '拓展名',
+    `owner_id` bigint(12) NOT NULL COMMENT '所有者id',
+
+    `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='知识库文档表';
+
+DROP TABLE IF EXISTS `dms_document_event`;
+CREATE TABLE `dms_document_event` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `doc_id` bigint(12) NOT NULL COMMENT '文档id',
+    `content_status` int(5) NOT NULL DEFAULT 1 COMMENT '提取文件内容状态',
+    `content_remark` varchar(128)  NULL COMMENT '提取文件内容备注',
+    `chunk_status` int(5) NOT NULL DEFAULT 1 COMMENT '分块状态',
+    `chunk_remark` varchar(128) NULL COMMENT '分块备注',
+    `index_status` int(5) NOT NULL DEFAULT 1 COMMENT '创建索引状态',
+    `index_remark` varchar(128)  NULL COMMENT '创建索引备注',
+    `vector_status` int(5) NOT NULL DEFAULT 1 COMMENT '向量化状态',
+    `vector_remark` varchar(128)  NULL COMMENT '向量化备注',
+    `graph_status` int(5) NOT NULL DEFAULT 1 COMMENT '构建知识图谱状态',
+    `graph_remark` varchar(128)  NULL COMMENT '构建知识图谱备注',
+
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='文档事件表';
+
+
+DROP TABLE IF EXISTS `sys_attachment`;
+CREATE TABLE `sys_attachment` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `name` varchar(256) NOT NULL COMMENT '文件名称',
+    `size` bigint(12) NOT NULL COMMENT '文件大小',
+    `path` varchar(128) NOT NULL COMMENT '存储路径',
+    `ext` varchar(64) NOT NULL COMMENT '拓展名',
+    `owner_id` bigint(12) NOT NULL COMMENT '上传人id',
+
+    `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统附件表';

@@ -1,7 +1,7 @@
 package com.spark.task.service;
 
-import com.spark.bean.base.ResultData;
-import com.spark.bean.task.result.TaskInstanceResult;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.task.result.TaskInstanceResult;
 
 import java.util.Map;
 

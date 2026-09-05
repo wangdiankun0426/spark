@@ -1,9 +1,9 @@
 package com.spark.workflow.service;
 
-import com.spark.bean.base.ResultData;
-import com.spark.bean.workflow.query.WfTemplateVersionQuery;
-import com.spark.bean.workflow.result.WfTemplateVersionResult;
-import com.spark.bean.workflow.vo.WfTemplateVersionVO;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.workflow.query.WfTemplateVersionQuery;
+import com.spark.common.bean.workflow.result.WfTemplateVersionResult;
+import com.spark.common.bean.workflow.vo.WfTemplateVersionVO;
 
 /**
  * +++/\_/\

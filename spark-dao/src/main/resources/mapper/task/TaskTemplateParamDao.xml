@@ -46,7 +46,7 @@
         where template_id = #{templateId}
     </update>
 
-    <select id="queryTaskTemplateParamList" resultType="com.spark.bean.task.result.TaskTemplateParamResult">
+    <select id="queryTaskTemplateParamList" resultType="com.spark.common.bean.task.result.TaskTemplateParamResult">
         select <include refid="allColumnList" />
         from task_template_param
         where 1=1

@@ -1,10 +1,10 @@
 package com.spark.llm.service;
 
-import com.spark.bean.base.PageResult;
-import com.spark.bean.base.ResultData;
-import com.spark.bean.llm.query.McpQuery;
-import com.spark.bean.llm.result.McpResult;
-import com.spark.bean.llm.vo.McpVO;
+import com.spark.common.bean.base.PageResult;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.llm.query.McpQuery;
+import com.spark.common.bean.llm.result.McpResult;
+import com.spark.common.bean.llm.vo.McpVO;
 
 /**
  * +++/\_/\

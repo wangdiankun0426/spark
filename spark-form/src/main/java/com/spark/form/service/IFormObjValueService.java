@@ -1,11 +1,11 @@
 package com.spark.form.service;
 
-import com.spark.bean.base.ResultData;
-import com.spark.bean.form.query.FormObjQuery;
-import com.spark.bean.form.query.FormObjValueQuery;
-import com.spark.bean.form.result.FormObjResult;
-import com.spark.bean.form.result.FormObjValueResult;
-import com.spark.bean.form.vo.FormObjValueVO;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.form.query.FormObjQuery;
+import com.spark.common.bean.form.query.FormObjValueQuery;
+import com.spark.common.bean.form.result.FormObjResult;
+import com.spark.common.bean.form.result.FormObjValueResult;
+import com.spark.common.bean.form.vo.FormObjValueVO;
 
 import java.util.List;
 

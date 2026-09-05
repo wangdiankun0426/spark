@@ -55,7 +55,7 @@
 </template>
 <script setup>
 import {ref} from "vue";
-import {myMessageListAPI} from "@/api/system/message";
+import {myMessageListAPI} from "@/api/sys/message";
 
 const active = ref("message");
 const messageList = ref([]);

@@ -1,9 +1,9 @@
 package com.spark.form.service;
 
-import com.spark.bean.base.PageResult;
-import com.spark.bean.base.ResultData;
-import com.spark.bean.form.query.FormVersionQuery;
-import com.spark.bean.form.result.FormVersionResult;
+import com.spark.common.bean.base.PageResult;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.form.query.FormVersionQuery;
+import com.spark.common.bean.form.result.FormVersionResult;
 
 /**
  * +++/\_/\

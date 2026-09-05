@@ -68,7 +68,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { downloadSystemAttachmentAPI } from '@/api/system/attachment.js'
+import { downloadAttachmentAPI } from '@/api/dms/attachment.js'
 import { chunkUploadFile } from '@/utils/chunkUploadUtil.js'
 
 defineOptions({
@@ -252,7 +252,7 @@ function handlePreview(file) {
  * @param file 附件信息（含 id、name）
  */
 function handleDownload(file) {
-  downloadSystemAttachmentAPI({ id: file.id }).then(blob => {
+  downloadAttachmentAPI({ id: file.id }).then(blob => {
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url

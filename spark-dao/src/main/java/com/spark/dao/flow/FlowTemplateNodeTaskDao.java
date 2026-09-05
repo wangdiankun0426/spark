@@ -1,8 +1,8 @@
 package com.spark.dao.flow;
 
-import com.spark.bean.flow.entity.FlowTemplateNodeTask;
-import com.spark.bean.flow.query.FlowTemplateNodeTaskQuery;
-import com.spark.bean.flow.result.FlowTemplateNodeTaskResult;
+import com.spark.common.bean.flow.entity.FlowTemplateNodeTask;
+import com.spark.common.bean.flow.query.FlowTemplateNodeTaskQuery;
+import com.spark.common.bean.flow.result.FlowTemplateNodeTaskResult;
 import com.spark.dao.BaseDao;
 
 import java.util.List;

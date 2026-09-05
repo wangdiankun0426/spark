@@ -1,8 +1,8 @@
 package com.spark.dao.flow;
 
-import com.spark.bean.flow.entity.FlowInstanceNode;
-import com.spark.bean.flow.query.FlowInstanceNodeQuery;
-import com.spark.bean.flow.result.FlowInstanceNodeResult;
+import com.spark.common.bean.flow.entity.FlowInstanceNode;
+import com.spark.common.bean.flow.query.FlowInstanceNodeQuery;
+import com.spark.common.bean.flow.result.FlowInstanceNodeResult;
 import com.spark.dao.BaseDao;
 
 import java.util.List;

@@ -1,8 +1,8 @@
 package com.spark.dao.llm;
 
-import com.spark.bean.llm.entity.Skill;
-import com.spark.bean.llm.query.SkillQuery;
-import com.spark.bean.llm.result.SkillResult;
+import com.spark.common.bean.llm.entity.Skill;
+import com.spark.common.bean.llm.query.SkillQuery;
+import com.spark.common.bean.llm.result.SkillResult;
 import com.spark.dao.BaseDao;
 import org.apache.ibatis.annotations.Param;
 

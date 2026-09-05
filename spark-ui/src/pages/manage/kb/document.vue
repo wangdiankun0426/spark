@@ -259,7 +259,7 @@
 
 <script setup name="document">
 import {getCurrentInstance, ref} from 'vue';
-import {pageDocumentListAPI, updateDocumentAPI, queryDocumentDetailAPI, deleteDocumentAPI} from '@/api/kb/document';
+import {pageDocumentListAPI, updateDocumentAPI, queryDocumentDetailAPI, deleteDocumentAPI} from '@/api/dms/document.js';
 import FormView from '@/components/FormView';
 import DocumentIcon from '@/components/DocumentIcon';
 import DocumentEvent from '@/components/DocumentEvent';

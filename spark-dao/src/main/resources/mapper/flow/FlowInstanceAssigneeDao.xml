@@ -42,7 +42,7 @@
         where id = #{id}
     </update>
 
-    <select id="queryInstanceAssigneeList" resultType="com.spark.bean.flow.result.FlowInstanceAssigneeResult">
+    <select id="queryInstanceAssigneeList" resultType="com.spark.common.bean.flow.result.FlowInstanceAssigneeResult">
         select <include refid="allColumnList" />
         from flow_instance_assignee
         where 1=1
@@ -50,7 +50,7 @@
         order by sort asc, id asc
     </select>
 
-    <select id="queryInstanceAssignee" resultType="com.spark.bean.flow.result.FlowInstanceAssigneeResult">
+    <select id="queryInstanceAssignee" resultType="com.spark.common.bean.flow.result.FlowInstanceAssigneeResult">
         select <include refid="allColumnList" />
         from flow_instance_assignee
         where 1=1

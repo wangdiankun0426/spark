@@ -99,7 +99,7 @@
         ${dataScopeSQL}
     </select>
 
-    <select id="queryMcpList" resultType="com.spark.bean.llm.result.McpResult">
+    <select id="queryMcpList" resultType="com.spark.common.bean.llm.result.McpResult">
         select <include refid="allColumnList"/>
         from llm_mcp
         where 1 = 1
@@ -112,7 +112,7 @@
         </if>
     </select>
 
-    <select id="queryMcp" resultType="com.spark.bean.llm.result.McpResult">
+    <select id="queryMcp" resultType="com.spark.common.bean.llm.result.McpResult">
         select <include refid="allColumnList"/>
         from llm_mcp
         where 1=1

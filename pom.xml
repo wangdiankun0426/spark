@@ -24,6 +24,7 @@
         <module>spark-kg</module>
         <module>spark-task</module>
         <module>spark-workflow</module>
+        <module>spark-dms</module>
     </modules>
 
     <properties>

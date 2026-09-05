@@ -1,8 +1,8 @@
 package com.spark.dao.flow;
 
-import com.spark.bean.flow.entity.FlowInstanceCopy;
-import com.spark.bean.flow.query.FlowInstanceCopyQuery;
-import com.spark.bean.flow.result.FlowInstanceCopyResult;
+import com.spark.common.bean.flow.entity.FlowInstanceCopy;
+import com.spark.common.bean.flow.query.FlowInstanceCopyQuery;
+import com.spark.common.bean.flow.result.FlowInstanceCopyResult;
 import com.spark.dao.BaseDao;
 
 import java.util.List;

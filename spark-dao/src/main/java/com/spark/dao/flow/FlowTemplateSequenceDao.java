@@ -1,6 +1,6 @@
 package com.spark.dao.flow;
 
-import com.spark.bean.flow.entity.FlowTemplateSequence;
+import com.spark.common.bean.flow.entity.FlowTemplateSequence;
 import com.spark.dao.BaseDao;
 import org.apache.ibatis.annotations.Param;
 

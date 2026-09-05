@@ -1,9 +1,9 @@
 package com.spark.llm.tools;
 
-import com.spark.bean.base.ResultData;
+import com.spark.common.bean.base.ResultData;
 import com.spark.llm.retrieve.Neo4jRetrieve;
-import com.spark.utils.CollectionUtil;
-import com.spark.utils.StringUtil;
+import com.spark.common.utils.CollectionUtil;
+import com.spark.common.utils.StringUtil;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;
 import org.slf4j.Logger;

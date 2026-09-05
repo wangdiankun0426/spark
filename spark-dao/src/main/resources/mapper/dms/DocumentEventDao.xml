@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.dms.DocumentEventDao" >
+    <sql id="allColumnList" >
+        id , doc_id , content_status , content_remark, index_status, index_remark, chunk_status, chunk_remark, vector_status, vector_remark, graph_status, graph_remark,
+        delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="docId != null">
+            and doc_id = #{docId}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="docId != null">
+            and doc_id = #{docId}
+        </if>
+        <if test="contentStatus != null">
+            and content_status = #{contentStatus}
+        </if>
+        <if test="noContentStatus != null">
+            and content_status != #{noContentStatus}
+        </if>
+        <if test="indexStatus != null">
+            and index_status = #{indexStatus}
+        </if>
+        <if test="chunkStatus != null">
+            and chunk_status = #{chunkStatus}
+        </if>
+        <if test="noChunkStatus != null">
+            and chunk_status != #{noChunkStatus}
+        </if>
+        <if test="vectorStatus != null">
+            and vector_status = #{vectorStatus}
+        </if>
+        <if test="graphStatus != null">
+            and graph_status = #{graphStatus}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <sql id="sortCondition">
+        <choose>
+            <when test="sorts != null and sorts.size() > 0">
+                <foreach item="value" index="key" collection="sorts.entrySet()" separator=",">
+                    ${value}
+                </foreach>
+            </when>
+            <otherwise>
+                id desc
+            </otherwise>
+        </choose>
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into dms_document_event ( doc_id , content_status , content_remark , index_status, index_remark, chunk_status, chunk_remark, vector_status, vector_remark, graph_status, graph_remark,
+                                        delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values ( #{docId} , #{contentStatus} , #{contentRemark} , #{indexStatus}, #{indexRemark}, #{chunkStatus}, #{chunkRemark}, #{vectorStatus}, #{vectorRemark}, #{graphStatus}, #{graphRemark},
+                1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="deleteById">
+        update dms_document_event set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <update id="updateById">
+        update dms_document_event  set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        <if test="contentStatus != null">
+            , content_status = #{contentStatus}
+        </if>
+        <if test="contentRemark != null">
+            , content_remark = #{contentRemark}
+        </if>
+        <if test="indexStatus != null">
+            , index_status = #{indexStatus}
+        </if>
+        <if test="indexRemark != null">
+            , index_remark = #{indexRemark}
+        </if>
+        <if test="chunkStatus != null">
+            , chunk_status = #{chunkStatus}
+        </if>
+        <if test="chunkRemark != null">
+            , chunk_remark = #{chunkRemark}
+        </if>
+        <if test="vectorStatus != null">
+            , vector_status = #{vectorStatus}
+        </if>
+        <if test="vectorRemark != null">
+            , vector_remark = #{vectorRemark}
+        </if>
+        <if test="graphStatus != null">
+            , graph_status = #{graphStatus}
+        </if>
+        <if test="graphRemark != null">
+            , graph_remark = #{graphRemark}
+        </if>
+        where id = #{id}
+    </update>
+
+    <select id="queryDocumentEventCount" resultType="java.lang.Integer">
+        select count(1)
+        from dms_document_event
+        where 1 = 1
+        <include refid="searchCondition"/>
+        ${dataScopeSQL}
+    </select>
+
+    <select id="queryDocumentEventList" resultType="com.spark.common.bean.dms.result.DocumentEventResult">
+        select <include refid="allColumnList"/>
+        from dms_document_event
+        where 1 = 1
+        <include refid="searchCondition"/>
+        ${dataScopeSQL}
+        order by
+        <include refid="sortCondition"/>
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="queryDocumentEvent" resultType="com.spark.common.bean.dms.result.DocumentEventResult">
+        select <include refid="allColumnList"/>
+        from dms_document_event
+        where 1=1
+        <include refid="searchCondition"/>
+        limit 1
+    </select>
+</mapper>

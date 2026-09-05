@@ -20,12 +20,12 @@
         </if>
     </sql>
 
-    <insert id="insert" parameterType="com.spark.bean.log.entity.LogLogin">
+    <insert id="insert" parameterType="com.spark.common.bean.log.entity.LogLogin">
         insert into log_login (ipaddress,login_type,login_platform,session_id, delete_flag, created_dt, created_by,updated_dt, updated_by)
         values (#{ipaddress}, #{loginType}, #{loginPlatform}, #{sessionId}, 1 , now(), #{createdBy}, now(), #{updatedBy})
     </insert>
 
-    <select id="queryLogLoginList" resultType="com.spark.bean.log.result.LogLoginResult">
+    <select id="queryLogLoginList" resultType="com.spark.common.bean.log.result.LogLoginResult">
         select <include refid="Base_Column_List"/>
         from log_login
         where 1=1

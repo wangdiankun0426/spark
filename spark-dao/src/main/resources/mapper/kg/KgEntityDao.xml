@@ -105,7 +105,7 @@
         <include refid="searchCondition"/>
     </select>
 
-    <select id="queryKgEntityList" resultType="com.spark.bean.kg.result.KgEntityResult">
+    <select id="queryKgEntityList" resultType="com.spark.common.bean.kg.result.KgEntityResult">
         select <include refid="allColumnList"/>
         from kg_entity
         where 1=1
@@ -114,7 +114,7 @@
         <if test="page == true">limit #{startRow}, #{pageSize}</if>
     </select>
 
-    <select id="queryKgEntity" resultType="com.spark.bean.kg.result.KgEntityResult">
+    <select id="queryKgEntity" resultType="com.spark.common.bean.kg.result.KgEntityResult">
         select <include refid="allColumnList"/>
         from kg_entity
         where 1=1
@@ -130,7 +130,7 @@
         </foreach>
     </update>
 
-    <select id="queryKgEntityCountByGraphIds" resultType="com.spark.bean.kg.result.KgEntityCountResult">
+    <select id="queryKgEntityCountByGraphIds" resultType="com.spark.common.bean.kg.result.KgEntityCountResult">
         select graph_id, count(1) as entity_count
         from kg_entity
         where delete_flag = 1

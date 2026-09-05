@@ -105,7 +105,7 @@
         ${dataScopeSQL}
     </select>
 
-    <select id="queryKnowledgeList" resultType="com.spark.bean.kb.result.KnowledgeResult">
+    <select id="queryKnowledgeList" resultType="com.spark.common.bean.kb.result.KnowledgeResult">
         select <include refid="allColumnList"/>
         from kb_knowledge
         where 1 = 1
@@ -118,7 +118,7 @@
         </if>
     </select>
 
-    <select id="queryKnowledge" resultType="com.spark.bean.kb.result.KnowledgeResult">
+    <select id="queryKnowledge" resultType="com.spark.common.bean.kb.result.KnowledgeResult">
         select <include refid="allColumnList"/>
         from kb_knowledge
         where 1=1

@@ -1,7 +1,7 @@
 package com.spark.llm.memory;
 
-import com.spark.constant.ObjectCacheKey;
-import com.spark.utils.StringUtil;
+import com.spark.common.constant.ObjectCacheKey;
+import com.spark.common.utils.StringUtil;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ChatMessageDeserializer;
 import dev.langchain4j.data.message.ChatMessageSerializer;

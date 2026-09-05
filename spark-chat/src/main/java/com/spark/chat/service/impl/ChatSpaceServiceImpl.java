@@ -1,13 +1,13 @@
 package com.spark.chat.service.impl;
 
-import com.spark.bean.base.ResultData;
-import com.spark.bean.chat.entity.ChatSpace;
-import com.spark.bean.chat.query.ChatSpaceQuery;
-import com.spark.bean.chat.result.ChatSpaceResult;
-import com.spark.bean.chat.vo.ChatSpaceVO;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.chat.entity.ChatSpace;
+import com.spark.common.bean.chat.query.ChatSpaceQuery;
+import com.spark.common.bean.chat.result.ChatSpaceResult;
+import com.spark.common.bean.chat.vo.ChatSpaceVO;
 import com.spark.dao.chat.ChatSpaceDao;
-import com.spark.enums.ErrorCodeEnum;
-import com.spark.enums.ObjectTypeEnum;
+import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.enums.ObjectTypeEnum;
 import com.spark.manage.BaseService;
 import com.spark.chat.service.IChatSpaceService;
 import org.springframework.beans.factory.annotation.Autowired;

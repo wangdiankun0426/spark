@@ -23,7 +23,7 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { pageRoleListAPI } from '@/api/system/role'
+import { pageRoleListAPI } from '@/api/sys/role'
 
 defineOptions({ name: 'selectRole' })
 

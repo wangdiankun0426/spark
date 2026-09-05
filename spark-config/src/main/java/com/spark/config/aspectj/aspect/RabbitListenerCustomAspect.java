@@ -1,10 +1,9 @@
 package com.spark.config.aspectj.aspect;
 
-import com.spark.utils.TraceLogUtil;
+import com.spark.common.utils.TraceLogUtil;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
-import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;

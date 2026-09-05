@@ -1,11 +1,11 @@
 package com.spark.llm.store;
 
-import com.spark.bean.kg.entity.KgEntity;
-import com.spark.constant.ESIndexName;
+import com.spark.common.bean.kg.entity.KgEntity;
+import com.spark.common.constant.ESIndexName;
 import com.spark.llm.model.ModelFactory;
-import com.spark.utils.CollectionUtil;
-import com.spark.utils.JsonUtil;
-import com.spark.utils.StringUtil;
+import com.spark.common.utils.CollectionUtil;
+import com.spark.common.utils.JsonUtil;
+import com.spark.common.utils.StringUtil;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;

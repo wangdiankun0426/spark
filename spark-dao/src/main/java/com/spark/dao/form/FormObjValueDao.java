@@ -1,8 +1,8 @@
 package com.spark.dao.form;
 
-import com.spark.bean.form.entity.FormObjValue;
-import com.spark.bean.form.query.FormObjValueQuery;
-import com.spark.bean.form.result.FormObjValueResult;
+import com.spark.common.bean.form.entity.FormObjValue;
+import com.spark.common.bean.form.query.FormObjValueQuery;
+import com.spark.common.bean.form.result.FormObjValueResult;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;

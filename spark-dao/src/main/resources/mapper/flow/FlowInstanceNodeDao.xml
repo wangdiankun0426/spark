@@ -59,7 +59,7 @@
         where id = #{id}
     </update>
 
-    <select id="queryInstanceNode" resultType="com.spark.bean.flow.result.FlowInstanceNodeResult">
+    <select id="queryInstanceNode" resultType="com.spark.common.bean.flow.result.FlowInstanceNodeResult">
         select <include refid="allColumnList"/>
         from flow_instance_node
         where 1 = 1
@@ -68,7 +68,7 @@
         limit 1
     </select>
 
-    <select id="queryInstanceNodeList" resultType="com.spark.bean.flow.result.FlowInstanceNodeResult">
+    <select id="queryInstanceNodeList" resultType="com.spark.common.bean.flow.result.FlowInstanceNodeResult">
         select <include refid="allColumnList"/>
         from flow_instance_node
         where 1 = 1

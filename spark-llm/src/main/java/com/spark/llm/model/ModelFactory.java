@@ -1,16 +1,16 @@
 package com.spark.llm.model;
 
-import com.spark.bean.llm.entity.Model;
-import com.spark.bean.llm.entity.Provider;
-import com.spark.bean.llm.query.ProviderQuery;
-import com.spark.bean.llm.query.ModelQuery;
-import com.spark.bean.llm.result.ProviderResult;
-import com.spark.bean.llm.result.ModelResult;
+import com.spark.common.bean.llm.entity.Model;
+import com.spark.common.bean.llm.entity.Provider;
+import com.spark.common.bean.llm.query.ProviderQuery;
+import com.spark.common.bean.llm.query.ModelQuery;
+import com.spark.common.bean.llm.result.ProviderResult;
+import com.spark.common.bean.llm.result.ModelResult;
 import com.spark.dao.llm.ModelDao;
 import com.spark.dao.llm.ProviderDao;
-import com.spark.enums.ModelTypeEnum;
-import com.spark.enums.StatusEnum;
-import com.spark.utils.CollectionUtil;
+import com.spark.common.enums.ModelTypeEnum;
+import com.spark.common.enums.StatusEnum;
+import com.spark.common.utils.CollectionUtil;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;

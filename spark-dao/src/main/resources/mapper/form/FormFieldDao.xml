@@ -45,14 +45,14 @@
          </foreach>
     </insert>
 
-    <select id="queryFormFieldList" resultType="com.spark.bean.form.result.FormFieldResult">
+    <select id="queryFormFieldList" resultType="com.spark.common.bean.form.result.FormFieldResult">
         select <include refid="allColumnList"/>
         from form_field
         where delete_flag = 1
         <include refid="searchCondition"/>
     </select>
 
-    <select id="queryFormField" resultType="com.spark.bean.form.result.FormFieldResult">
+    <select id="queryFormField" resultType="com.spark.common.bean.form.result.FormFieldResult">
         select <include refid="allColumnList"/>
         from form_field
         where delete_flag = 1

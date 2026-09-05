@@ -1,8 +1,8 @@
 package com.spark.dao.workflow;
 
-import com.spark.bean.workflow.entity.WfInstanceNode;
-import com.spark.bean.workflow.query.WfInstanceNodeQuery;
-import com.spark.bean.workflow.result.WfInstanceNodeResult;
+import com.spark.common.bean.workflow.entity.WfInstanceNode;
+import com.spark.common.bean.workflow.query.WfInstanceNodeQuery;
+import com.spark.common.bean.workflow.result.WfInstanceNodeResult;
 import com.spark.dao.BaseDao;
 import org.apache.ibatis.annotations.Select;
 

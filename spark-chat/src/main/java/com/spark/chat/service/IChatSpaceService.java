@@ -1,8 +1,8 @@
 package com.spark.chat.service;
 
-import com.spark.bean.base.ResultData;
-import com.spark.bean.chat.entity.ChatSpace;
-import com.spark.bean.chat.vo.ChatSpaceVO;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.chat.entity.ChatSpace;
+import com.spark.common.bean.chat.vo.ChatSpaceVO;
 
 /**
  * +++/\_/\

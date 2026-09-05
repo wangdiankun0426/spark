@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.sys.DepartmentDao" >
+    <sql id="Base_Column_List" >
+    id, name,prt_id,code,header_id,dept_num,status,order_num,wecom_id, delete_flag,created_by, created_dt, updated_by, updated_dt
+    </sql>
+
+    <sql id="condition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="prtId != null">
+            and prt_id = #{prtId}
+        </if>
+        <if test="name != null">
+            and name = #{name}
+        </if>
+        <if test="code != null">
+            and code like concat(#{code}, '%')
+        </if>
+        <if test="codes != null and codes.size() > 0">
+            and code in (
+            <foreach collection="codes" item="code" separator=",">
+                #{code}
+            </foreach>
+            )
+        </if>
+        <if test="deptNum != null">
+            and dept_num = #{deptNum}
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <select id="queryDepartment" resultType="com.spark.common.bean.sys.result.DepartmentResult">
+        select <include refid="Base_Column_List"/>
+        from sys_department
+        where 1=1
+        <include refid="condition"/>
+        limit 1
+    </select>
+
+    <insert id="insert" parameterType="com.spark.common.bean.sys.entity.Department">
+        insert into sys_department (id, name,prt_id,code, header_id,dept_num,status,order_num,wecom_id, delete_flag,created_by, created_dt, updated_by, updated_dt)
+        values (#{id}, #{name}, #{prtId}, #{code}, #{headerId}, #{deptNum}, #{status}, #{orderNum}, #{wecomId}, 1 , #{createdBy} , now(), #{updatedBy}, now())
+    </insert>
+
+    <select id="queryDepartmentList" resultType="com.spark.common.bean.sys.result.DepartmentResult">
+        select <include refid="Base_Column_List"/>
+        from sys_department
+        where 1=1
+        <include refid="condition"/>
+        order by prt_id, order_num, id
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+
+    <update id="updateById" parameterType="com.spark.common.bean.sys.entity.Department">
+        update sys_department
+        set updated_dt = #{updatedDt}, updated_by = #{updatedBy}
+        <if test="name != null">
+            ,name = #{name}
+        </if>
+        <if test="headerId != null">
+            ,header_id = #{headerId}
+        </if>
+        <if test="deptNum != null">
+            ,dept_num = #{deptNum}
+        </if>
+        <if test="status != null">
+            ,status = #{status}
+        </if>
+        <if test="orderNum != null">
+            ,order_num = #{orderNum}
+        </if>
+        <if test="wecomId != null">
+            ,wecom_id = #{wecomId}
+        </if>
+        <if test="prtId != null">
+            ,prt_id = #{prtId}
+        </if>
+        <if test="code != null">
+            ,code = #{code}
+        </if>
+        where id = #{id}
+    </update>
+</mapper>

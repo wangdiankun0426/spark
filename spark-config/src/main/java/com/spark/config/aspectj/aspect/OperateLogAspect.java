@@ -1,14 +1,14 @@
 package com.spark.config.aspectj.aspect;
 
-import com.spark.constant.AspectOrder;
+import com.spark.common.constant.AspectOrder;
 import com.spark.config.aspectj.annotation.OperateLog;
-import com.spark.bean.log.entity.LogOperate;
-import com.spark.bean.base.BaseException;
-import com.spark.bean.base.ResultData;
-import com.spark.bean.base.SessionHolder;
+import com.spark.common.bean.log.entity.LogOperate;
+import com.spark.common.bean.base.BaseException;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.config.rabbitmq.MqProducer;
-import com.spark.enums.ErrorCodeEnum;
-import com.spark.utils.JsonUtil;
+import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.utils.JsonUtil;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;

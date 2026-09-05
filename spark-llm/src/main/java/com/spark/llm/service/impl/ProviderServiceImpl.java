@@ -1,20 +1,20 @@
 package com.spark.llm.service.impl;
 
-import com.spark.bean.base.PageResult;
-import com.spark.bean.base.ResultData;
-import com.spark.bean.llm.entity.Provider;
-import com.spark.bean.llm.query.ProviderQuery;
-import com.spark.bean.llm.result.ProviderResult;
-import com.spark.bean.llm.vo.ProviderVO;
+import com.spark.common.bean.base.PageResult;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.llm.entity.Provider;
+import com.spark.common.bean.llm.query.ProviderQuery;
+import com.spark.common.bean.llm.result.ProviderResult;
+import com.spark.common.bean.llm.vo.ProviderVO;
 import com.spark.dao.llm.ProviderDao;
-import com.spark.enums.ErrorCodeEnum;
+import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.llm.model.ModelFactory;
-import com.spark.manage.BaseService;
 import com.spark.llm.service.IProviderService;
-import com.spark.utils.CollectionUtil;
+import com.spark.common.utils.CollectionUtil;
+import com.spark.manage.BaseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.spark.utils.BeanUtil;
+import com.spark.common.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

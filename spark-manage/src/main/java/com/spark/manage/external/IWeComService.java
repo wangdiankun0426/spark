@@ -1,6 +1,6 @@
 package com.spark.manage.external;
 
-import com.spark.bean.base.ResultData;
+import com.spark.common.bean.base.ResultData;
 
 /**
  * +++/\_/\

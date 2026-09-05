@@ -1,12 +1,11 @@
 package com.spark.dao.kg;
 
-import com.spark.bean.kg.entity.KgEntity;
-import com.spark.bean.kg.query.KgEntityQuery;
-import com.spark.bean.kg.result.KgEntityCountResult;
-import com.spark.bean.kg.result.KgEntityResult;
+import com.spark.common.bean.kg.entity.KgEntity;
+import com.spark.common.bean.kg.query.KgEntityQuery;
+import com.spark.common.bean.kg.result.KgEntityCountResult;
+import com.spark.common.bean.kg.result.KgEntityResult;
 import com.spark.dao.BaseDao;
 import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 

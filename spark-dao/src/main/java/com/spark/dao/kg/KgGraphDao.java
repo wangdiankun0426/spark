@@ -1,8 +1,8 @@
 package com.spark.dao.kg;
 
-import com.spark.bean.kg.entity.KgGraph;
-import com.spark.bean.kg.query.KgGraphQuery;
-import com.spark.bean.kg.result.KgGraphResult;
+import com.spark.common.bean.kg.entity.KgGraph;
+import com.spark.common.bean.kg.query.KgGraphQuery;
+import com.spark.common.bean.kg.result.KgGraphResult;
 import com.spark.dao.BaseDao;
 import org.apache.ibatis.annotations.Select;
 

@@ -56,7 +56,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { pageUserListAPI } from '@/api/system/user.js'
+import { pageUserListAPI } from '@/api/sys/user.js'
 
 const props = defineProps({ form: { type: Object, required: true } })
 const emit = defineEmits(['update'])

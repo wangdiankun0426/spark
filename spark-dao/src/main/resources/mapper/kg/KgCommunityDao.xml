@@ -69,7 +69,7 @@
         <include refid="searchCondition"/>
     </select>
 
-    <select id="queryKgCommunityList" resultType="com.spark.bean.kg.result.KgCommunityResult">
+    <select id="queryKgCommunityList" resultType="com.spark.common.bean.kg.result.KgCommunityResult">
         select <include refid="allColumnList"/>
         from kg_community
         where 1=1
@@ -78,7 +78,7 @@
         <if test="page == true">limit #{startRow}, #{pageSize}</if>
     </select>
 
-    <select id="queryKgCommunity" resultType="com.spark.bean.kg.result.KgCommunityResult">
+    <select id="queryKgCommunity" resultType="com.spark.common.bean.kg.result.KgCommunityResult">
         select <include refid="allColumnList"/>
         from kg_community
         where 1=1

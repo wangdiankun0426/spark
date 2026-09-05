@@ -1,22 +1,22 @@
 package com.spark.chat.service.impl;
 
 import com.spark.config.aspectj.annotation.DataScope;
-import com.spark.bean.system.query.UserQuery;
-import com.spark.bean.system.result.UserResult;
-import com.spark.bean.base.ResultData;
-import com.spark.bean.base.SessionHolder;
-import com.spark.bean.chat.query.ChatMsgQuery;
-import com.spark.bean.chat.query.ChatSpaceQuery;
-import com.spark.bean.chat.result.ChatSpaceResult;
-import com.spark.bean.chat.result.ChatUserResult;
-import com.spark.dao.system.UserDao;
+import com.spark.common.bean.sys.query.UserQuery;
+import com.spark.common.bean.sys.result.UserResult;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
+import com.spark.common.bean.chat.query.ChatMsgQuery;
+import com.spark.common.bean.chat.query.ChatSpaceQuery;
+import com.spark.common.bean.chat.result.ChatSpaceResult;
+import com.spark.common.bean.chat.result.ChatUserResult;
+import com.spark.dao.sys.UserDao;
 import com.spark.dao.chat.ChatMsgDao;
 import com.spark.dao.chat.ChatSpaceDao;
-import com.spark.enums.ChatMsgStatusEnum;
-import com.spark.enums.ErrorCodeEnum;
+import com.spark.common.enums.ChatMsgStatusEnum;
+import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.chat.service.IChatUserService;
-import com.spark.utils.CollectionUtil;
-import com.spark.utils.BeanUtil;
+import com.spark.common.utils.CollectionUtil;
+import com.spark.common.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

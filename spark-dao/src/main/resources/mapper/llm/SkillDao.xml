@@ -79,7 +79,7 @@
         ${dataScopeSQL}
     </select>
 
-    <select id="querySkillList" resultType="com.spark.bean.llm.result.SkillResult">
+    <select id="querySkillList" resultType="com.spark.common.bean.llm.result.SkillResult">
         select <include refid="listColumnList"/>
         from llm_skill
         where 1 = 1
@@ -92,7 +92,7 @@
         </if>
     </select>
 
-    <select id="querySkill" resultType="com.spark.bean.llm.result.SkillResult">
+    <select id="querySkill" resultType="com.spark.common.bean.llm.result.SkillResult">
         select <include refid="allColumnList"/>
         from llm_skill
         where 1=1
@@ -100,13 +100,13 @@
         limit 1
     </select>
 
-    <select id="querySkillByName" resultType="com.spark.bean.llm.result.SkillResult">
+    <select id="querySkillByName" resultType="com.spark.common.bean.llm.result.SkillResult">
         select id , name from llm_skill
         where delete_flag = 1 and name = #{name}
         limit 1
     </select>
 
-    <select id="queryEnabledSkillList" resultType="com.spark.bean.llm.result.SkillResult">
+    <select id="queryEnabledSkillList" resultType="com.spark.common.bean.llm.result.SkillResult">
         select id , name , description from llm_skill
         where delete_flag = 1 and status = 1
         and id in (
@@ -116,7 +116,7 @@
         )
     </select>
 
-    <select id="queryEnabledSkillByName" resultType="com.spark.bean.llm.result.SkillResult">
+    <select id="queryEnabledSkillByName" resultType="com.spark.common.bean.llm.result.SkillResult">
         select id , name , content from llm_skill
         where delete_flag = 1 and status = 1 and name = #{name}
         and id in (

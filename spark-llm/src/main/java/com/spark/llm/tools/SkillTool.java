@@ -1,9 +1,9 @@
 package com.spark.llm.tools;
 
-import com.spark.bean.llm.result.SkillResult;
+import com.spark.common.bean.llm.result.SkillResult;
 import com.spark.dao.llm.SkillDao;
-import com.spark.utils.CollectionUtil;
-import com.spark.utils.StringUtil;
+import com.spark.common.utils.CollectionUtil;
+import com.spark.common.utils.StringUtil;
 import dev.langchain4j.agent.tool.Tool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

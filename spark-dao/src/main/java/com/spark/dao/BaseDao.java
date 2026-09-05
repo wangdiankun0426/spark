@@ -1,7 +1,7 @@
 package com.spark.dao;
 
-import com.spark.bean.base.BaseEntity;
-import com.spark.bean.base.SessionHolder;
+import com.spark.common.bean.base.BaseEntity;
+import com.spark.common.bean.base.SessionHolder;
 
 import java.sql.Timestamp;
 

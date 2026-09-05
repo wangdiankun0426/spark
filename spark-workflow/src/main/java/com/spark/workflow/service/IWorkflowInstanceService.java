@@ -1,13 +1,13 @@
 package com.spark.workflow.service;
 
-import com.spark.bean.base.PageResult;
-import com.spark.bean.base.ResultData;
-import com.spark.bean.workflow.entity.WfInstance;
-import com.spark.bean.workflow.query.WfInstanceQuery;
-import com.spark.bean.workflow.query.WfInstanceNodeQuery;
-import com.spark.bean.workflow.result.WfInstanceResult;
-import com.spark.bean.workflow.result.WfInstanceNodeResult;
-import com.spark.bean.workflow.vo.WfRunVO;
+import com.spark.common.bean.base.PageResult;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.workflow.entity.WfInstance;
+import com.spark.common.bean.workflow.query.WfInstanceQuery;
+import com.spark.common.bean.workflow.query.WfInstanceNodeQuery;
+import com.spark.common.bean.workflow.result.WfInstanceResult;
+import com.spark.common.bean.workflow.result.WfInstanceNodeResult;
+import com.spark.common.bean.workflow.vo.WfRunVO;
 
 import java.util.List;
 

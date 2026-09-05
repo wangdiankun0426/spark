@@ -1,13 +1,13 @@
 package com.spark.workflow.engine.executor;
 
-import com.spark.bean.base.ResultData;
-import com.spark.constant.TaskParamCode;
-import com.spark.enums.ErrorCodeEnum;
-import com.spark.enums.WorkflowTemplateTypeEnum;
-import com.spark.kb.service.IDocumentService;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.constant.TaskParamCode;
+import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.enums.WorkflowTemplateTypeEnum;
+import com.spark.dms.service.IDocumentService;
 import com.spark.manage.BaseService;
-import com.spark.utils.MapUtil;
-import com.spark.utils.StringUtil;
+import com.spark.common.utils.MapUtil;
+import com.spark.common.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

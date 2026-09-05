@@ -1,12 +1,12 @@
 package com.spark.kb.service;
 
-import com.spark.bean.base.PageResult;
-import com.spark.bean.base.ResultData;
-import com.spark.bean.kb.query.KnowledgeQuery;
-import com.spark.bean.kb.query.RetrieveTestQuery;
-import com.spark.bean.kb.result.KnowledgeResult;
-import com.spark.bean.kb.result.RetrieveTestResult;
-import com.spark.bean.kb.vo.KnowledgeVO;
+import com.spark.common.bean.base.PageResult;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.kb.query.KnowledgeQuery;
+import com.spark.common.bean.kb.query.RetrieveTestQuery;
+import com.spark.common.bean.kb.result.KnowledgeResult;
+import com.spark.common.bean.kb.result.RetrieveTestResult;
+import com.spark.common.bean.kb.vo.KnowledgeVO;
 
 /**
  * +++/\_/\

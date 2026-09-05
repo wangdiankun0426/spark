@@ -1,13 +1,13 @@
 package com.spark.form.service.impl;
 
-import com.spark.bean.base.PageResult;
-import com.spark.bean.base.ResultData;
-import com.spark.bean.form.query.FormVersionQuery;
-import com.spark.bean.form.result.FormVersionResult;
+import com.spark.common.bean.base.PageResult;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.form.query.FormVersionQuery;
+import com.spark.common.bean.form.result.FormVersionResult;
 import com.spark.dao.form.FormVersionDao;
 import com.spark.form.service.IFormVersionService;
 import com.spark.manage.BaseService;
-import com.spark.utils.CollectionUtil;
+import com.spark.common.utils.CollectionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

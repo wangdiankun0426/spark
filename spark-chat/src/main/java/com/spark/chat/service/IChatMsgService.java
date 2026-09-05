@@ -1,11 +1,11 @@
 package com.spark.chat.service;
 
-import com.spark.bean.base.PageResult;
-import com.spark.bean.base.ResultData;
-import com.spark.bean.chat.entity.ChatMsg;
-import com.spark.bean.chat.query.ChatMsgQuery;
-import com.spark.bean.chat.result.ChatMsgResult;
-import com.spark.bean.chat.vo.ChatMsgVO;
+import com.spark.common.bean.base.PageResult;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.chat.entity.ChatMsg;
+import com.spark.common.bean.chat.query.ChatMsgQuery;
+import com.spark.common.bean.chat.result.ChatMsgResult;
+import com.spark.common.bean.chat.vo.ChatMsgVO;
 import jakarta.websocket.Session;
 
 import java.util.List;

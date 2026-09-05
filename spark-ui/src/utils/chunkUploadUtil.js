@@ -3,8 +3,8 @@ import {
     uploadAttachmentChunkAPI,
     queryAttachmentChunksAPI,
     mergeAttachmentUploadAPI,
-    uploadSystemAttachmentAPI
-} from '@/api/system/attachment.js'
+    uploadAttachmentAPI
+} from '@/api/dms/attachment.js'
 
 // 默认分片阈值：1MB，不超过直接整包上传
 const DEFAULT_THRESHOLD = 1024 * 1024
@@ -47,7 +47,7 @@ async function directUpload(file, options) {
     const onStatus = options.onStatus || (() => {})
     const onProgress = options.onProgress || (() => {})
     onStatus('文件未超过 1MB，直接上传中')
-    const res = await uploadSystemAttachmentAPI(file)
+    const res = await uploadAttachmentAPI(file)
     if (res.code !== 200 || !res.data) {
         throw new Error(res.message || '文件上传失败')
     }

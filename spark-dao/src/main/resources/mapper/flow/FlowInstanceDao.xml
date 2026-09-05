@@ -141,7 +141,7 @@
         ${dataScopeSQL}
     </select>
 
-    <select id="queryInstanceList" resultType="com.spark.bean.flow.result.FlowInstanceResult">
+    <select id="queryInstanceList" resultType="com.spark.common.bean.flow.result.FlowInstanceResult">
         select <include refid="allColumnList"/>
         from flow_instance
         where 1 = 1
@@ -154,7 +154,7 @@
         </if>
     </select>
 
-    <select id="queryInstance" resultType="com.spark.bean.flow.result.FlowInstanceResult">
+    <select id="queryInstance" resultType="com.spark.common.bean.flow.result.FlowInstanceResult">
         select <include refid="allColumnList"/>
         from flow_instance
         where 1=1

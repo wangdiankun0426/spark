@@ -1,6 +1,6 @@
 package com.spark.task;
 
-import com.spark.bean.base.ResultData;
+import com.spark.common.bean.base.ResultData;
 import com.spark.task.service.ITaskInstanceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

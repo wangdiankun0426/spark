@@ -3,9 +3,9 @@ package com.spark.test.flowable;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import com.spark.bean.base.BaseException;
-import com.spark.enums.ErrorCodeEnum;
-import com.spark.utils.StringUtil;
+import com.spark.common.bean.base.BaseException;
+import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.utils.StringUtil;
 import org.flowable.bpmn.model.*;
 import org.flowable.engine.RepositoryService;
 import org.flowable.engine.repository.Deployment;

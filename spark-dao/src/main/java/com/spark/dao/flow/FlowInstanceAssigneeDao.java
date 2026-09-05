@@ -1,8 +1,8 @@
 package com.spark.dao.flow;
 
-import com.spark.bean.flow.entity.FlowInstanceAssignee;
-import com.spark.bean.flow.query.FlowInstanceAssigneeQuery;
-import com.spark.bean.flow.result.FlowInstanceAssigneeResult;
+import com.spark.common.bean.flow.entity.FlowInstanceAssignee;
+import com.spark.common.bean.flow.query.FlowInstanceAssigneeQuery;
+import com.spark.common.bean.flow.result.FlowInstanceAssigneeResult;
 import com.spark.dao.BaseDao;
 
 import java.util.List;

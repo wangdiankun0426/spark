@@ -1,6 +1,6 @@
 package com.spark.task;
 
-import com.spark.utils.FileUtil;
+import com.spark.common.utils.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

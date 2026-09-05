@@ -1,6 +1,6 @@
 package com.spark.config.rabbitmq;
 
-import com.spark.utils.TraceLogUtil;
+import com.spark.common.utils.TraceLogUtil;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessagePostProcessor;

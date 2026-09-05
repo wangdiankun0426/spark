@@ -43,7 +43,7 @@
         ${dataScopeSQL}
     </select>
 
-    <select id="queryCopyList" resultType="com.spark.bean.flow.result.FlowInstanceCopyResult">
+    <select id="queryCopyList" resultType="com.spark.common.bean.flow.result.FlowInstanceCopyResult">
         select <include refid="allColumnList"/>
         from flow_instance_copy
         where 1 = 1

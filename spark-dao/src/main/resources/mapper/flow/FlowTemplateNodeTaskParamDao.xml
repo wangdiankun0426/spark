@@ -44,7 +44,7 @@
         where id = #{id}
     </update>
 
-    <select id="queryTemplateNodeTaskParamList" resultType="com.spark.bean.flow.result.FlowTemplateNodeTaskParamResult">
+    <select id="queryTemplateNodeTaskParamList" resultType="com.spark.common.bean.flow.result.FlowTemplateNodeTaskParamResult">
         select <include refid="allColumnList"/>
         from flow_template_node_task_param
         where 1 = 1

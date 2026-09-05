@@ -1,18 +1,18 @@
 package com.spark.llm.retrieve;
 
 import com.alibaba.fastjson2.JSON;
-import com.spark.bean.base.ResultData;
-import com.spark.bean.kg.entity.KgEntity;
-import com.spark.bean.kg.entity.RelationEdge;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.kg.entity.KgEntity;
+import com.spark.common.bean.kg.entity.RelationEdge;
 import com.spark.config.redis.RedisService;
-import com.spark.constant.ObjectCacheKey;
+import com.spark.common.constant.ObjectCacheKey;
 import com.spark.llm.model.ModelFactory;
 import com.spark.llm.store.KgEntityVectorService;
 import com.spark.llm.store.Neo4jGraphStore;
 import com.spark.prompt.PromptTemplateLoader;
-import com.spark.utils.CollectionUtil;
-import com.spark.utils.EncryptUtil;
-import com.spark.utils.StringUtil;
+import com.spark.common.utils.CollectionUtil;
+import com.spark.common.utils.EncryptUtil;
+import com.spark.common.utils.StringUtil;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.input.Prompt;
 import org.slf4j.Logger;

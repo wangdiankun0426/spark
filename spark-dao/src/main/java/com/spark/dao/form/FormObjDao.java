@@ -1,10 +1,9 @@
 package com.spark.dao.form;
 
-import com.spark.bean.form.entity.FormObj;
-import com.spark.bean.form.query.FormObjQuery;
-import com.spark.bean.form.result.FormObjResult;
+import com.spark.common.bean.form.entity.FormObj;
+import com.spark.common.bean.form.query.FormObjQuery;
+import com.spark.common.bean.form.result.FormObjResult;
 import com.spark.dao.BaseDao;
-import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 

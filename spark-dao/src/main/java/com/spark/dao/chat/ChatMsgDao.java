@@ -1,8 +1,8 @@
 package com.spark.dao.chat;
 
-import com.spark.bean.chat.entity.ChatMsg;
-import com.spark.bean.chat.query.ChatMsgQuery;
-import com.spark.bean.chat.result.ChatMsgResult;
+import com.spark.common.bean.chat.entity.ChatMsg;
+import com.spark.common.bean.chat.query.ChatMsgQuery;
+import com.spark.common.bean.chat.result.ChatMsgResult;
 import com.spark.dao.BaseDao;
 
 import java.util.List;

@@ -1,6 +1,6 @@
 package com.spark.task.service;
 
-import com.spark.bean.base.ResultData;
+import com.spark.common.bean.base.ResultData;
 
 import java.util.concurrent.CompletableFuture;
 

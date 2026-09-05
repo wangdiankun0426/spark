@@ -1,8 +1,8 @@
 package com.spark.dao.form;
 
-import com.spark.bean.form.entity.FormVersion;
-import com.spark.bean.form.query.FormVersionQuery;
-import com.spark.bean.form.result.FormVersionResult;
+import com.spark.common.bean.form.entity.FormVersion;
+import com.spark.common.bean.form.query.FormVersionQuery;
+import com.spark.common.bean.form.result.FormVersionResult;
 import com.spark.dao.BaseDao;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;

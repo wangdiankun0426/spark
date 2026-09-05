@@ -1,6 +1,6 @@
 package com.spark.config.aspectj.annotation;
 
-import com.spark.enums.OperateTypeEnum;
+import com.spark.common.enums.OperateTypeEnum;
 import org.springframework.core.annotation.Order;
 
 import java.lang.annotation.*;

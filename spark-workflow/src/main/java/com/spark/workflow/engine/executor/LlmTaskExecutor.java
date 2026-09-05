@@ -1,14 +1,14 @@
 package com.spark.workflow.engine.executor;
 
-import com.spark.bean.base.ResultData;
-import com.spark.bean.system.query.AttachmentQuery;
-import com.spark.bean.system.result.AttachmentResult;
-import com.spark.dao.system.AttachmentDao;
-import com.spark.enums.ErrorCodeEnum;
-import com.spark.enums.WorkflowTemplateTypeEnum;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.sys.query.AttachmentQuery;
+import com.spark.common.bean.sys.result.AttachmentResult;
+import com.spark.common.utils.*;
+import com.spark.dao.dms.AttachmentDao;
+import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.enums.WorkflowTemplateTypeEnum;
 import com.spark.llm.model.ModelFactory;
 import com.spark.manage.BaseService;
-import com.spark.utils.*;
 import dev.langchain4j.model.chat.ChatModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

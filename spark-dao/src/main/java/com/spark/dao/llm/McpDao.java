@@ -1,8 +1,8 @@
 package com.spark.dao.llm;
 
-import com.spark.bean.llm.entity.Mcp;
-import com.spark.bean.llm.query.McpQuery;
-import com.spark.bean.llm.result.McpResult;
+import com.spark.common.bean.llm.entity.Mcp;
+import com.spark.common.bean.llm.query.McpQuery;
+import com.spark.common.bean.llm.result.McpResult;
 import com.spark.dao.BaseDao;
 
 import java.util.List;

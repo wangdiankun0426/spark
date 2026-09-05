@@ -1,8 +1,8 @@
 package com.spark.test;
 
-import com.spark.bean.system.vo.MessageVO;
+import com.spark.common.bean.sys.vo.MessageVO;
 import com.spark.config.rabbitmq.MqProducer;
-import com.spark.utils.JsonUtil;
+import com.spark.common.utils.JsonUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -1,6 +1,6 @@
 package com.spark.flow.service;
 
-import com.spark.bean.base.ResultData;
+import com.spark.common.bean.base.ResultData;
 
 /**
  * +++/\_/\

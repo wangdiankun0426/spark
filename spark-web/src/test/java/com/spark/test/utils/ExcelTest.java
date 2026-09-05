@@ -1,7 +1,7 @@
 package com.spark.test.utils;
 
 
-import com.spark.utils.ExcelUtil;
+import com.spark.common.utils.ExcelUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 

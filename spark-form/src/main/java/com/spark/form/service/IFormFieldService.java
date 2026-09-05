@@ -1,8 +1,8 @@
 package com.spark.form.service;
 
-import com.spark.bean.base.ResultData;
-import com.spark.bean.form.query.FormFieldQuery;
-import com.spark.bean.form.result.FormFieldResult;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.form.query.FormFieldQuery;
+import com.spark.common.bean.form.result.FormFieldResult;
 
 import java.util.List;
 

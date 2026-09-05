@@ -48,7 +48,7 @@
         select count(1) from wf_instance_node where 1 = 1 <include refid="searchCondition"/>
     </select>
 
-    <select id="queryInstanceNodeList" resultType="com.spark.bean.workflow.result.WfInstanceNodeResult">
+    <select id="queryInstanceNodeList" resultType="com.spark.common.bean.workflow.result.WfInstanceNodeResult">
         select <include refid="allColumnList"/> from wf_instance_node where 1 = 1
         <include refid="searchCondition"/> order by <include refid="sortCondition"/>
         <if test="page == true">limit #{startRow}, #{pageSize}</if>

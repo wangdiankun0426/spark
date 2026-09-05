@@ -72,7 +72,7 @@
         <include refid="searchCondition" />
     </select>
 
-    <select id="queryRetrieveLogList" resultType="com.spark.bean.kb.result.RetrieveLogResult">
+    <select id="queryRetrieveLogList" resultType="com.spark.common.bean.kb.result.RetrieveLogResult">
         select <include refid="allColumnList" />
         from kb_retrieve_log
         where 1=1
@@ -84,7 +84,7 @@
     </select>
 
     <!-- 检索统计 -->
-    <select id="queryRetrieveStats" resultType="com.spark.bean.kb.result.RetrieveStatsResult">
+    <select id="queryRetrieveStats" resultType="com.spark.common.bean.kb.result.RetrieveStatsResult">
         select
             count(*) as totalRetrieveCount,
             COALESCE(avg(avg_similarity), 0) as avgSimilarity,
@@ -99,7 +99,7 @@
     </select>
 
     <!-- 热门查询 -->
-    <select id="queryHotQueries" resultType="com.spark.bean.kb.result.HotQueryResult">
+    <select id="queryHotQueries" resultType="com.spark.common.bean.kb.result.HotQueryResult">
         select
             query,
             count(*) as queryCount,
@@ -112,7 +112,7 @@
     </select>
 
     <!-- 用户使用排行 -->
-    <select id="queryUserRank" resultType="com.spark.bean.kb.result.UserRankResult">
+    <select id="queryUserRank" resultType="com.spark.common.bean.kb.result.UserRankResult">
         select
             created_by as userId,
             count(*) as retrieveCount
@@ -124,7 +124,7 @@
     </select>
 
     <!-- 时段检索次数 -->
-    <select id="queryRetrieveCountByPeriod" resultType="com.spark.bean.kb.result.PeriodRetrieveCountResult">
+    <select id="queryRetrieveCountByPeriod" resultType="com.spark.common.bean.kb.result.PeriodRetrieveCountResult">
         select
             count(case when created_dt &gt;= #{todayStart} then 1 end) as todayCount,
             count(case when created_dt &gt;= #{weekStart} then 1 end) as weekCount,

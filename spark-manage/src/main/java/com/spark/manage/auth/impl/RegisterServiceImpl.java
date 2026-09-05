@@ -1,32 +1,30 @@
 package com.spark.manage.auth.impl;
 
-import com.spark.bean.base.BaseAssert;
-import com.spark.bean.system.entity.User;
-import com.spark.bean.system.entity.UserProfile;
-import com.spark.bean.system.entity.ValidateCode;
-import com.spark.bean.system.query.UserQuery;
-import com.spark.bean.system.result.UserResult;
-import com.spark.bean.system.vo.RegisterVO;
-import com.spark.bean.base.ResultData;
-import com.spark.config.redis.RedisService;
-import com.spark.constant.ObjectCacheKey;
-import com.spark.dao.system.UserDao;
-import com.spark.dao.system.UserProfileDao;
-import com.spark.enums.*;
+import com.spark.common.bean.base.BaseAssert;
+import com.spark.common.bean.sys.entity.User;
+import com.spark.common.bean.sys.entity.UserProfile;
+import com.spark.common.bean.sys.entity.ValidateCode;
+import com.spark.common.bean.sys.query.UserQuery;
+import com.spark.common.bean.sys.result.UserResult;
+import com.spark.common.bean.sys.vo.RegisterVO;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.enums.LoginTypeEnum;
+import com.spark.common.enums.ObjectTypeEnum;
+import com.spark.common.enums.StatusEnum;
+import com.spark.dao.sys.UserDao;
+import com.spark.dao.sys.UserProfileDao;
 import com.spark.manage.BaseService;
 import com.spark.manage.auth.ILoginValidateService;
 import com.spark.manage.auth.IRegisterService;
-import com.spark.utils.DecryptUtil;
-import com.spark.utils.EncryptUtil;
-import com.spark.utils.StringUtil;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.common.utils.DecryptUtil;
+import com.spark.common.utils.EncryptUtil;
+import com.spark.common.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.sql.Timestamp;
 
 /**
  * +++/\_/\

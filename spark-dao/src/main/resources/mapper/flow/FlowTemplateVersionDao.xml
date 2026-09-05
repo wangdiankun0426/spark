@@ -75,7 +75,7 @@
         ${dataScopeSQL}
     </select>
 
-    <select id="queryTemplateVersionList" resultType="com.spark.bean.flow.result.FlowTemplateVersionResult">
+    <select id="queryTemplateVersionList" resultType="com.spark.common.bean.flow.result.FlowTemplateVersionResult">
         select <include refid="allColumnList"/>
         from flow_template_version
         where 1 = 1
@@ -88,7 +88,7 @@
         </if>
     </select>
 
-    <select id="queryTemplateVersion" resultType="com.spark.bean.flow.result.FlowTemplateVersionResult">
+    <select id="queryTemplateVersion" resultType="com.spark.common.bean.flow.result.FlowTemplateVersionResult">
         select <include refid="allColumnList"/>
         from flow_template_version
         where 1=1

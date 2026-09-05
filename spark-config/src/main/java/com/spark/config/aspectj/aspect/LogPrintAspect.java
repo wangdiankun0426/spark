@@ -1,8 +1,8 @@
 package com.spark.config.aspectj.aspect;
 
-import com.spark.constant.AspectOrder;
+import com.spark.common.constant.AspectOrder;
 import com.spark.config.aspectj.annotation.LogIgnore;
-import com.spark.utils.JsonUtil;
+import com.spark.common.utils.JsonUtil;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;

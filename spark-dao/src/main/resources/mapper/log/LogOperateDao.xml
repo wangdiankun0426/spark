@@ -26,12 +26,12 @@
         </if>
     </sql>
 
-    <insert id="insert" parameterType="com.spark.bean.log.entity.LogOperate">
+    <insert id="insert" parameterType="com.spark.common.bean.log.entity.LogOperate">
         insert into log_operate (type , obj_id , code , consume , remark , delete_flag , created_by , created_dt , updated_by , updated_dt)
         values (#{type}, #{objId}, #{code}, #{consume}, #{remark}, 1 , #{createdBy}, now(), #{updatedBy}, now())
     </insert>
 
-    <select id="queryLogOperateList" resultType="com.spark.bean.log.result.LogOperateResult">
+    <select id="queryLogOperateList" resultType="com.spark.common.bean.log.result.LogOperateResult">
         select <include refid="Base_Column_List"/>
         from log_operate
         where 1=1
