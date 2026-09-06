@@ -8,6 +8,9 @@ import com.spark.common.bean.workflow.query.WfTemplateVersionQuery;
 import com.spark.common.bean.workflow.result.WfTemplateResult;
 import com.spark.common.bean.workflow.result.WfTemplateVersionResult;
 import com.spark.common.bean.workflow.vo.WfTemplateVersionVO;
+import com.spark.common.enums.OperateTypeEnum;
+import com.spark.config.aspectj.annotation.LogPrint;
+import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.dao.workflow.WfTemplateDao;
 import com.spark.dao.workflow.WfTemplateVersionDao;
 import com.spark.common.enums.ErrorCodeEnum;
@@ -31,6 +34,7 @@ import java.util.List;
  * @since 2026-08-11 10:00:00
  */
 @Service
+@LogPrint
 public class WorkflowVersionServiceImpl extends BaseService<WfTemplateVersionQuery, WfTemplateVersionResult> implements IWorkflowVersionService {
     private final static Logger logger = LoggerFactory.getLogger(WorkflowVersionServiceImpl.class);
     @Autowired
@@ -45,6 +49,7 @@ public class WorkflowVersionServiceImpl extends BaseService<WfTemplateVersionQue
      * @return 保存结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.WORKFLOW_VERSION_SAVE)
     public ResultData<Void> saveVersion(WfTemplateVersionVO versionVO) {
         ResultData<Void> result = new ResultData<>();
         if (versionVO == null || versionVO.getTemplateId() == null) {
@@ -76,11 +81,10 @@ public class WorkflowVersionServiceImpl extends BaseService<WfTemplateVersionQue
         template.setId(versionVO.getTemplateId());
         template.setRevId(version.getId());
         template.setRevNum(newRevNum);
-        // updateById中form_id为无条件更新，此处需回填保持绑定关系不变
         template.setFormId(templateResult.getFormId());
         count = templateDao.updateDBById(template);
         if (count < 1) {
-            logger.error("saveVersion error, update template rev fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         result.setCode(ResultData.OK);

@@ -74,7 +74,7 @@ public class TaskTemplateParamServiceImpl extends BaseService<TaskTemplateParamQ
         BeanUtil.copyProperties(taskTemplateParamVO, taskTemplateParam);
         int count = taskTemplateParamDao.insertDB(taskTemplateParam);
         if (count < 1) {
-            logger.error("createTaskTemplateParam error, insert db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         result.setObjId(taskTemplateParam.getId());
@@ -98,7 +98,7 @@ public class TaskTemplateParamServiceImpl extends BaseService<TaskTemplateParamQ
         BeanUtil.copyProperties(taskTemplateParamVO, taskTemplateParam);
         int count = taskTemplateParamDao.updateDBById(taskTemplateParam);
         if (count < 1) {
-            logger.error("updateTaskTemplateParam error, update db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         result.setObjId(taskTemplateParam.getId());
@@ -122,7 +122,7 @@ public class TaskTemplateParamServiceImpl extends BaseService<TaskTemplateParamQ
         taskTemplateParam.setId(taskTemplateParamVO.getId());
         int count = taskTemplateParamDao.deleteDBById(taskTemplateParam);
         if (count < 1) {
-            logger.error("deleteTaskTemplateParam error, delete db fail");
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
         result.setObjId(taskTemplateParam.getId());

@@ -5,6 +5,7 @@ import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.sys.entity.Attachment;
 import com.spark.common.bean.sys.query.AttachmentQuery;
 import com.spark.common.bean.sys.result.AttachmentResult;
+import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.common.constant.ObjectCacheKey;
 import com.spark.dao.dms.AttachmentDao;
@@ -50,6 +51,7 @@ import java.util.UUID;
  * 系统附件服务实现
  */
 @Service
+@LogPrint
 public class AttachmentServiceImpl extends BaseService<AttachmentQuery, AttachmentResult> implements IAttachmentService {
     private final static Logger logger = LoggerFactory.getLogger(AttachmentServiceImpl.class);
     private final static long MAX_CHUNK_SIZE = 1L * 1024 * 1024;
@@ -97,6 +99,7 @@ public class AttachmentServiceImpl extends BaseService<AttachmentQuery, Attachme
      * @return 附件结果（含存储路径和文件名）
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.ATTACHMENT_DOWNLOAD)
     public ResultData<AttachmentResult> downloadAttachment(AttachmentQuery query) {
         ResultData<AttachmentResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -115,6 +118,7 @@ public class AttachmentServiceImpl extends BaseService<AttachmentQuery, Attachme
             return result;
         }
         result.setData(attachmentResult);
+        result.setObjId(attachmentResult.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -125,6 +129,7 @@ public class AttachmentServiceImpl extends BaseService<AttachmentQuery, Attachme
      * @return 附件详情（含名称、后缀、大小）
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.ATTACHMENT_DETAIL)
     public ResultData<AttachmentResult> queryAttachmentDetail(AttachmentQuery query) {
         ResultData<AttachmentResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -139,6 +144,7 @@ public class AttachmentServiceImpl extends BaseService<AttachmentQuery, Attachme
         // 存储路径不对外暴露
         attachmentResult.setPath(null);
         result.setData(attachmentResult);
+        result.setObjId(attachmentResult.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -325,7 +331,7 @@ public class AttachmentServiceImpl extends BaseService<AttachmentQuery, Attachme
         attachment.setOwnerId(SessionHolder.getCurrentUserId());
         int count = attachmentDao.insertDB(attachment);
         if (count < 1) {
-            logger.error("saveAttachment error, insert db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         AttachmentResult attachmentResult = new AttachmentResult();

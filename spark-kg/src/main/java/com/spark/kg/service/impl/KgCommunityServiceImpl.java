@@ -47,15 +47,29 @@ public class KgCommunityServiceImpl extends BaseService<KgCommunityQuery, KgComm
         return result;
     }
 
+    /**
+     * 补充列表淑君
+     * @param list 列表
+     */
     @Override
     protected void supplyList(List<KgCommunityResult> list) {
     }
 
+    /**
+     * 查询数据
+     * @param query 查询参数
+     * @return
+     */
     @Override
     protected int queryCount(KgCommunityQuery query) {
         return kgCommunityDao.queryKgCommunityCount(query);
     }
 
+    /**
+     * 查询列表
+     * @param query 查询参数
+     * @return
+     */
     @Override
     protected List<KgCommunityResult> queryList(KgCommunityQuery query) {
         return kgCommunityDao.queryKgCommunityList(query);

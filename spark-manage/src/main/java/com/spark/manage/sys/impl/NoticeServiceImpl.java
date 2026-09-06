@@ -13,6 +13,9 @@ import com.spark.common.bean.sys.result.NoticeObjResult;
 import com.spark.common.bean.sys.result.NoticeResult;
 import com.spark.common.bean.sys.result.UserResult;
 import com.spark.common.bean.sys.vo.NoticeVO;
+import com.spark.common.enums.OperateTypeEnum;
+import com.spark.config.aspectj.annotation.LogPrint;
+import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.dao.sys.DepartmentDao;
 import com.spark.dao.sys.NoticeDao;
 import com.spark.dao.sys.NoticeObjDao;
@@ -49,6 +52,7 @@ import java.util.stream.Collectors;
  * @since 2024/5/6 13:36
  */
 @Service
+@LogPrint
 public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> implements INoticeService {
     private final static Logger logger = LoggerFactory.getLogger(NoticeServiceImpl.class);
     @Autowired
@@ -68,6 +72,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
      * @return 创建结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.NOTICE_INSERT)
     public ResultData<Void> createNotice(NoticeVO noticeVO) {
         ResultData<Void> result = new ResultData<>();
         Long userId = SessionHolder.getCurrentUserId();
@@ -83,6 +88,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
         BeanUtil.copyProperties(noticeVO, notice);
         int count = noticeDao.insertDB(notice);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         Long noticeId = notice.getId();
@@ -90,9 +96,11 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
         if (CollectionUtil.isNotEmpty(objIds)) {
             count = noticeObjDao.batchInsert(noticeId, objIds, userId);
             if (count < 1) {
+                result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
                 return result;
             }
         }
+        result.setObjId(noticeId);
         result.setCode(ResultData.OK);
         return result;
     }
@@ -104,6 +112,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
      * @return 修改结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.NOTICE_UPDATE)
     public ResultData<Void> updateNotice(NoticeVO noticeVO) {
         ResultData<Void> result = new ResultData<>();
         Long userId = SessionHolder.getCurrentUserId();
@@ -130,11 +139,13 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
         BeanUtil.copyProperties(noticeVO, notice);
         int count = noticeDao.updateDBById(notice);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         if (noticeVO.getUpdateObjIds()) {
             count = noticeObjDao.deleteByNoticeId(noticeVO.getId(), userId);
             if (count < 0) {
+                result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
                 return result;
             }
             List<Long> objIds = noticeVO.getObjIds();
@@ -142,10 +153,12 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
                 objIds = objIds.stream().distinct().collect(Collectors.toList());
                 count = noticeObjDao.batchInsert(notice.getId(), objIds, userId);
                 if (count < 1) {
+                    result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
                     return result;
                 }
             }
         }
+        result.setObjId(noticeVO.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -157,6 +170,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
      * @return 删除结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.NOTICE_DELIST)
     public ResultData<Void> delistNotice(NoticeVO noticeVO) {
         ResultData<Void> result = new ResultData<>();
         Long userId = SessionHolder.getCurrentUserId();
@@ -184,8 +198,10 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
         notice.setStatus(NoticeStatusEnum.DELISTED.getValue());
         int count = noticeDao.updateDBById(notice);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
+        result.setObjId(noticeVO.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -197,6 +213,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
      * @return 删除结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.NOTICE_DELETE)
     public ResultData<Void> deleteNotice(NoticeVO noticeVO) {
         ResultData<Void> result = new ResultData<>();
         Long userId = SessionHolder.getCurrentUserId();
@@ -223,12 +240,15 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
         notice.setId(noticeVO.getId());
         int count = noticeDao.deleteDBById(notice);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
         count = noticeObjDao.deleteByNoticeId(notice.getId(), userId);
         if (count < 0) {
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
+        result.setObjId(noticeVO.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -240,6 +260,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
      * @return 查询结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.NOTICE_DETAIL)
     public ResultData<NoticeResult> detailNotice(NoticeQuery query) {
         ResultData<NoticeResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -261,6 +282,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
             noticeResult.setObjNames(objNames);
         }
         result.setData(noticeResult);
+        result.setObjId(query.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -291,6 +313,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
      * @return 保存结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.NOTICE_SAVE_TEXT)
     public ResultData<Void> saveNoticeText(NoticeVO noticeVO) {
         ResultData<Void> result = new ResultData<>();
         if (noticeVO == null || noticeVO.getId() == null || StringUtil.isBlank(noticeVO.getContent())) {
@@ -318,6 +341,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
             }
         }
         result = TextUtil.writeToText(filePath, noticeVO.getContent());
+        result.setObjId(noticeVO.getId());
         return result;
     }
 
@@ -378,6 +402,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
         List<NoticeResult> noticeList = noticeDao.queryNoticeList(query);
         this.supplyList(noticeList);
         result.setData(noticeList);
+        result.setObjId(query.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -388,6 +413,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
      * @return  文本
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.NOTICE_VIEW_TEXT)
     public ResultData<String> viewNoticeText(NoticeQuery query) {
         ResultData<String> result = new ResultData<>();
         if (query == null || query.getId() == null) {

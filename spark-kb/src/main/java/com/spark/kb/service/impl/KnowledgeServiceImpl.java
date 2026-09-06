@@ -7,7 +7,6 @@ import com.spark.common.bean.kb.entity.Knowledge;
 import com.spark.common.bean.dms.query.DocumentQuery;
 import com.spark.common.bean.kb.query.KnowledgeQuery;
 import com.spark.common.bean.kb.query.RetrieveTestQuery;
-import com.spark.common.bean.dms.result.DocumentCountResult;
 import com.spark.common.bean.dms.result.DocumentResult;
 import com.spark.common.bean.kb.result.KnowledgeResult;
 import com.spark.common.bean.kb.result.RetrieveItemResult;
@@ -18,6 +17,7 @@ import com.spark.common.bean.llm.result.ModelResult;
 import com.spark.common.bean.kb.result.RetrieveDetailItem;
 import com.spark.common.bean.kb.result.RetrieveDetailResult;
 import com.spark.config.aspectj.annotation.DataScope;
+import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.dao.dms.DocumentDao;
 import com.spark.dao.kb.KnowledgeDao;
@@ -58,6 +58,7 @@ import java.util.stream.Collectors;
  * @since 2026-07-17 10:00:00
  */
 @Service
+@LogPrint
 public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeResult> implements IKnowledgeService {
     private final static Logger logger = LoggerFactory.getLogger(KnowledgeServiceImpl.class);
     @Autowired
@@ -121,9 +122,10 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
         knowledge.setId(id);
         int count = knowledgeDao.insertDB(knowledge);
         if (count < 1) {
-            logger.error("createKnowledge error, insert db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
+        result.setObjId(knowledge.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -156,9 +158,10 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
         }
         int count = knowledgeDao.updateDBById(knowledge);
         if (count < 1) {
-            logger.error("updateKnowledge error, update db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
+        result.setObjId(knowledge.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -187,9 +190,10 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
         knowledge.setId(knowledgeVO.getId());
         int count = knowledgeDao.deleteDBById(knowledge);
         if (count < 1) {
-            logger.error("deleteKnowledge error, delete db fail");
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
+        result.setObjId(knowledge.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -218,6 +222,7 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
      * @return 详情
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.KNOWLEDGE_DETAIL)
     public ResultData<KnowledgeResult> queryKnowledgeDetail(KnowledgeQuery query) {
         ResultData<KnowledgeResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -230,6 +235,7 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
             return result;
         }
         result.setData(knowledgeResult);
+        result.setObjId(knowledgeResult.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -240,6 +246,7 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
      * @return 检索测试结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.KNOWLEDGE_RETRIEVE_TEST)
     public ResultData<RetrieveTestResult> testRetrieve(RetrieveTestQuery query) {
         ResultData<RetrieveTestResult> result = new ResultData<>();
         if (query == null || query.getKbId() == null || StringUtil.isBlank(query.getQuery())) {
@@ -301,6 +308,7 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
         supplyDocName(items);
         testResult.setItems(items);
         result.setData(testResult);
+        result.setObjId(knowledge.getId());
         result.setCode(ResultData.OK);
         return result;
     }

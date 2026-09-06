@@ -69,6 +69,7 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
         BeanUtil.copyProperties(messageVO, message);
         int count = messageDao.insertDB(message);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         if (CollectionUtil.isEmpty(messageVO.getUserIds())) {
@@ -77,6 +78,7 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
         }
         count = messageUserDao.batchInsert(message.getId(), messageVO.getUserIds(), SessionHolder.getCurrentUserId());
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         result.setCode(ResultData.OK);
@@ -153,13 +155,16 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
         message.setRefId(userId);
         int count = messageDao.insertDB(message);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         List<Long> userIds = messageVO.getUserIds().stream().distinct().collect(Collectors.toList());
         count = messageUserDao.batchInsert(message.getId(), userIds, userId);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
+        result.setObjId(message.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -193,12 +198,15 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
         message.setId(messageVO.getId());
         int count = messageDao.deleteDBById(message);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
         count = messageUserDao.deleteByMsgId(messageVO.getId(), userId, new Date());
         if (count < 1) {
-            logger.warn("deleteMessage warn, no message user deleted, messageId: {}", messageVO.getId());
+            result.setErrorCode(ErrorCodeEnum.DEPT_NOT_EXIST);
+            return result;
         }
+        result.setObjId(messageVO.getId());
         result.setCode(ResultData.OK);
         return result;
     }

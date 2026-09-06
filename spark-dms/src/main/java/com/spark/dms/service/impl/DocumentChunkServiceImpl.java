@@ -12,6 +12,9 @@ import com.spark.common.bean.dms.result.DocumentEventResult;
 import com.spark.common.bean.dms.result.DocumentResult;
 import com.spark.common.bean.kb.result.KnowledgeResult;
 import com.spark.common.constant.ESIndexName;
+import com.spark.common.enums.OperateTypeEnum;
+import com.spark.config.aspectj.annotation.LogPrint;
+import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.dao.dms.DocumentDao;
 import com.spark.dao.dms.DocumentEventDao;
 import com.spark.dao.kb.KnowledgeDao;
@@ -51,6 +54,7 @@ import java.util.stream.Collectors;
  * @since 2026/7/16 13:26
  */
 @Service
+@LogPrint
 public class DocumentChunkServiceImpl implements IDocumentChunkService {
     private final static Logger logger = LoggerFactory.getLogger(DocumentChunkServiceImpl.class);
     @Autowired
@@ -250,6 +254,7 @@ public class DocumentChunkServiceImpl implements IDocumentChunkService {
      * @return 操作结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_EVENT_UPDATE)
     public ResultData<Void> rechunkDocument(Long docId) {
         ResultData<Void> result = new ResultData<>();
         if (docId == null) {
@@ -294,6 +299,7 @@ public class DocumentChunkServiceImpl implements IDocumentChunkService {
             logger.error("rechunkDocument error, docId={}", docId, e);
             result.setErrorCode(ErrorCodeEnum.SYSTEM_ERROR);
         }
+        result.setObjId(docId);
         return result;
     }
 
@@ -306,6 +312,7 @@ public class DocumentChunkServiceImpl implements IDocumentChunkService {
      * @return 操作结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_CHUNK_EDIT)
     public ResultData<Void> updateChunk(Long docId, Integer chunkIndex, String content) {
         ResultData<Void> result = new ResultData<>();
         if (docId == null || chunkIndex == null || StringUtil.isBlank(content)) {
@@ -339,6 +346,7 @@ public class DocumentChunkServiceImpl implements IDocumentChunkService {
             logger.error("updateChunk error, docId={}, chunkIndex={}", docId, chunkIndex, e);
             result.setErrorCode(ErrorCodeEnum.SYSTEM_ERROR);
         }
+        result.setObjId(docId);
         return result;
     }
 

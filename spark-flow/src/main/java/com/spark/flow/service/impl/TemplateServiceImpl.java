@@ -77,7 +77,7 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
         templateVersion.setProcessId(processId);
         int count = templateVersionDao.insertDB(templateVersion);
         if (count < 1) {
-            logger.error("createTemplate error, insert db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         FlowTemplate template = new FlowTemplate();
@@ -90,7 +90,7 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
         template.setId(templateId);
         count = templateDao.insertDB(template);
         if (count < 1) {
-            logger.error("createTemplate error, insert db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         result.setCode(ResultData.OK);
@@ -120,7 +120,7 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
         BeanUtil.copyProperties(templateVO, template);
         int count = templateDao.updateDBById(template);
         if (count < 1) {
-            logger.error("updateTemplate error, update db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         result.setCode(ResultData.OK);
@@ -150,7 +150,7 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
         template.setId(templateVO.getId());
         int count = templateDao.deleteDBById(template);
         if (count < 1) {
-            logger.error("deleteTemplate error, delete db fail");
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
         result.setCode(ResultData.OK);

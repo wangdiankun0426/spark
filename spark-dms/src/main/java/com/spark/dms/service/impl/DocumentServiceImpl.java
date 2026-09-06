@@ -21,6 +21,7 @@ import com.spark.common.bean.sys.query.AttachmentQuery;
 import com.spark.common.bean.sys.result.AttachmentResult;
 import com.spark.common.enums.*;
 import com.spark.config.aspectj.annotation.DataScope;
+import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.common.constant.ESIndexName;
 import com.spark.dao.dms.DocumentDao;
@@ -66,6 +67,7 @@ import java.util.stream.Collectors;
  * @since 2024-12-07 19:08:01
  */
 @Service
+@LogPrint
 public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResult> implements IDocumentService {
     private final static Logger logger = LoggerFactory.getLogger(DocumentServiceImpl.class);
     @Autowired
@@ -92,7 +94,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
      * @return 归档结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KNOWLEDGE_DOCUMENT_INSERT)
+    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_INSERT)
     public ResultData<Long> fileDocument(Long attId, Long prtId) {
         ResultData<Long> result = new ResultData<>();
         if (attId == null) {
@@ -141,7 +143,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         document.setDeptId(deptId);
         int count = documentDao.insertDB(document);
         if (count < 1) {
-            logger.error("archiveDocument error, insert db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         DocumentEvent event = new DocumentEvent();
@@ -161,7 +163,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         event.setUpdatedBy(userId);
         count = documentEventDao.insertDB(event);
         if (count < 1) {
-            logger.error("archiveDocument error, insert event db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         result.setData(docId);
@@ -176,7 +178,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
      * @return 修改结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KNOWLEDGE_DOCUMENT_UPDATE)
+    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_UPDATE)
     public ResultData<Void> updateDocument(DocumentVO documentVO) {
         ResultData<Void> result = new ResultData<>();
         if (documentVO == null || documentVO.getId() == null) {
@@ -194,7 +196,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         BeanUtil.copyProperties(documentVO, document);
         int count = documentDao.updateDBById(document);
         if (count < 1) {
-            logger.error("updateDocument error, update db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         result.setObjId(documentVO.getId());
@@ -208,7 +210,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
      * @return 删除结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KNOWLEDGE_DOCUMENT_DELETE)
+    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_DELETE)
     public ResultData<Void> deleteDocument(DocumentVO documentVO) {
         ResultData<Void> result = new ResultData<>();
         if (documentVO == null || documentVO.getId() == null) {
@@ -226,7 +228,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         document.setId(documentVO.getId());
         int count = documentDao.deleteDBById(document);
         if (count < 1) {
-            logger.error("deleteDocument error, delete db fail");
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
         result.setObjId(documentVO.getId());
@@ -258,6 +260,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
      * @return 文档详情
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_DETAIL)
     public ResultData<DocumentResult> queryDocumentDetail(DocumentQuery query) {
         ResultData<DocumentResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -278,6 +281,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         String prtName = this.queryPrtName(documentType, prtId);
         documentResult.setPrtName(prtName);
         result.setData(documentResult);
+        result.setObjId(documentResult.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -289,6 +293,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
      * @return 搜索结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_SEARCH)
     public ResultData<PageResult<Map>> searchDocument(DocumentSearchQuery query) {
         ResultData<PageResult<Map>> result = new ResultData<>();
         if (query == null) {
@@ -299,6 +304,104 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         } else if (DocumentSearchTypeEnum.SEMANTIC.getValue().equals(query.getSearchType())) {
             result = searchDocumentSemantic(query);
         }
+        return result;
+    }
+
+    /**
+     * 下载文档
+     * @param query 查询参数
+     * @return 文档结果
+     */
+    @Override
+    public ResultData<DocumentResult> downloadDocument(DocumentQuery query) {
+        ResultData<DocumentResult> result = new ResultData<>();
+        if (query == null || query.getId() == null || StringUtil.isBlank(query.getExt())) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        DocumentResult documentResult = documentDao.queryDocument(query);
+        if (documentResult == null) {
+            result.setErrorCode(ErrorCodeEnum.DOCUMENT_NOT_EXIST);
+            return result;
+        }
+        String filePath = FileUtil.getFileNameWithoutExt(documentResult.getPath())+"."+query.getExt();
+        File file = new File(filePath);
+        if (!file.exists()) {
+            logger.error("downloadDocument file not exist, filePath={}",filePath);
+            result.setErrorCode(ErrorCodeEnum.FILE_NOT_EXIST);
+            return result;
+        }
+        documentResult.setPath(filePath);
+        result.setData(documentResult);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 批量删除文档
+     * @param ids 文档ID列表
+     * @return 删除结果
+     */
+    @Override
+    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_DELETE)
+    public ResultData<Void> batchDeleteDocument(List<Long> ids) {
+        ResultData<Void> result = new ResultData<>();
+        if (CollectionUtil.isEmpty(ids)) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        int successCount = 0;
+        for (Long id : ids) {
+            try {
+                Document document = new Document();
+                document.setId(id);
+                int count = documentDao.deleteDBById(document);
+                if (count > 0) {
+                    successCount++;
+                }
+            } catch (Exception e) {
+                logger.error("batchDeleteDocument error, id={}", id, e);
+            }
+        }
+        logger.info("batchDeleteDocument success, total={}, success={}", ids.size(), successCount);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 批量重新处理文档
+     * @param ids 文档ID列表
+     * @return 处理结果
+     */
+    @Override
+    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_EVENT_UPDATE)
+    public ResultData<Void> batchReprocessDocument(List<Long> ids) {
+        ResultData<Void> result = new ResultData<>();
+        if (CollectionUtil.isEmpty(ids)) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        int successCount = 0;
+        for (Long id : ids) {
+            try {
+                DocumentEventQuery eventQuery = new DocumentEventQuery();
+                eventQuery.setDocId(id);
+                DocumentEventResult eventResult = documentEventDao.queryDocumentEvent(eventQuery);
+                if (eventResult != null) {
+                    DocumentEvent updateEvent = new DocumentEvent();
+                    updateEvent.setId(eventResult.getId());
+                    updateEvent.setChunkStatus(DocumentEventStatusEnum.PENDING.getValue());
+                    updateEvent.setVectorStatus(DocumentEventStatusEnum.PENDING.getValue());
+                    updateEvent.setGraphStatus(DocumentEventStatusEnum.PENDING.getValue());
+                    documentEventDao.updateById(updateEvent);
+                    successCount++;
+                }
+            } catch (Exception e) {
+                logger.error("batchReprocessDocument error, id={}", id, e);
+            }
+        }
+        logger.info("batchReprocessDocument success, total={}, success={}", ids.size(), successCount);
+        result.setCode(ResultData.OK);
         return result;
     }
 
@@ -460,104 +563,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         result.setCode(ResultData.OK);
         return result;
     }
-
-    /**
-     * 下载文档
-     * @param query 查询参数
-     * @return 文档结果
-     */
-    @Override
-    public ResultData<DocumentResult> downloadDocument(DocumentQuery query) {
-        ResultData<DocumentResult> result = new ResultData<>();
-        if (query == null || query.getId() == null || StringUtil.isBlank(query.getExt())) {
-            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
-            return result;
-        }
-        DocumentResult documentResult = documentDao.queryDocument(query);
-        if (documentResult == null) {
-            result.setErrorCode(ErrorCodeEnum.DOCUMENT_NOT_EXIST);
-            return result;
-        }
-        String filePath = FileUtil.getFileNameWithoutExt(documentResult.getPath())+"."+query.getExt();
-        File file = new File(filePath);
-        if (!file.exists()) {
-            logger.error("downloadDocument file not exist, filePath={}",filePath);
-            result.setErrorCode(ErrorCodeEnum.FILE_NOT_EXIST);
-            return result;
-        }
-        documentResult.setPath(filePath);
-        result.setData(documentResult);
-        result.setCode(ResultData.OK);
-        return result;
-    }
-
-    /**
-     * 批量删除文档
-     * @param ids 文档ID列表
-     * @return 删除结果
-     */
-    @Override
-    @OperateLog(operateType = OperateTypeEnum.KNOWLEDGE_DOCUMENT_DELETE)
-    public ResultData<Void> batchDeleteDocument(List<Long> ids) {
-        ResultData<Void> result = new ResultData<>();
-        if (CollectionUtil.isEmpty(ids)) {
-            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
-            return result;
-        }
-        int successCount = 0;
-        for (Long id : ids) {
-            try {
-                Document document = new Document();
-                document.setId(id);
-                int count = documentDao.deleteDBById(document);
-                if (count > 0) {
-                    successCount++;
-                }
-            } catch (Exception e) {
-                logger.error("batchDeleteDocument error, id={}", id, e);
-            }
-        }
-        logger.info("batchDeleteDocument success, total={}, success={}", ids.size(), successCount);
-        result.setCode(ResultData.OK);
-        return result;
-    }
-
-    /**
-     * 批量重新处理文档
-     * @param ids 文档ID列表
-     * @return 处理结果
-     */
-    @Override
-    public ResultData<Void> batchReprocessDocument(List<Long> ids) {
-        ResultData<Void> result = new ResultData<>();
-        if (CollectionUtil.isEmpty(ids)) {
-            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
-            return result;
-        }
-        int successCount = 0;
-        for (Long id : ids) {
-            try {
-                DocumentEventQuery eventQuery = new DocumentEventQuery();
-                eventQuery.setDocId(id);
-                DocumentEventResult eventResult = documentEventDao.queryDocumentEvent(eventQuery);
-                if (eventResult != null) {
-                    DocumentEvent updateEvent = new DocumentEvent();
-                    updateEvent.setId(eventResult.getId());
-                    updateEvent.setChunkStatus(DocumentEventStatusEnum.PENDING.getValue());
-                    updateEvent.setVectorStatus(DocumentEventStatusEnum.PENDING.getValue());
-                    updateEvent.setGraphStatus(DocumentEventStatusEnum.PENDING.getValue());
-                    documentEventDao.updateById(updateEvent);
-                    successCount++;
-                }
-            } catch (Exception e) {
-                logger.error("batchReprocessDocument error, id={}", id, e);
-            }
-        }
-        logger.info("batchReprocessDocument success, total={}, success={}", ids.size(), successCount);
-        result.setCode(ResultData.OK);
-        return result;
-    }
-
+    
     /**
      * 补充列表数据
      * @param list 列表数据

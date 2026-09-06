@@ -17,6 +17,7 @@ import com.spark.common.enums.ObjectTypeEnum;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.config.aspectj.annotation.DataScope;
+import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.dao.workflow.WfTemplateDao;
 import com.spark.dao.workflow.WfTemplateVersionDao;
@@ -46,6 +47,7 @@ import java.util.List;
  * @since 2026-08-11 10:00:00
  */
 @Service
+@LogPrint
 public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplateResult> implements IWorkflowService {
     private final static Logger logger = LoggerFactory.getLogger(WorkflowServiceImpl.class);
     @Autowired
@@ -132,7 +134,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
         BeanUtil.copyProperties(templateVO, template);
         int count = templateDao.updateDBById(template);
         if (count < 1) {
-            logger.error("updateWorkflow error, update db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         result.setObjId(templateVO.getId());
@@ -171,7 +173,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
         template.setId(templateVO.getId());
         int count = templateDao.deleteDBById(template);
         if (count < 1) {
-            logger.error("deleteWorkflow error, delete db fail");
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
         result.setObjId(templateVO.getId());
@@ -200,6 +202,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
      * @return
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.WORKFLOW_DETAIL)
     public ResultData<WfTemplateResult> queryWorkflowDetail(WfTemplateQuery query) {
         ResultData<WfTemplateResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -213,6 +216,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
         }
         fillFormJson(templateResult);
         result.setData(templateResult);
+        result.setObjId(templateResult.getId());
         result.setCode(ResultData.OK);
         return result;
     }

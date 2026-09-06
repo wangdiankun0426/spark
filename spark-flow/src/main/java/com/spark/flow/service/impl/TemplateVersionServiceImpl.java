@@ -111,7 +111,7 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
         templateVersion.setBpmPath(bpmnPath);
         int count = templateversionDao.insertDB(templateVersion);
         if (count < 1) {
-            logger.error("createTemplateVersion error, insert db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         FlowTemplate template = new FlowTemplate();
@@ -120,7 +120,7 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
         template.setRevId(templateVersion.getId());
         count = templateDao.updateDBById(template);
         if (count < 1) {
-            logger.error("createTemplateVersion error, update db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         List<FlowTemplateNode> templateNodes = new ArrayList<>();

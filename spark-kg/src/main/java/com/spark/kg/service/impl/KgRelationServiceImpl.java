@@ -12,7 +12,7 @@ import com.spark.common.bean.kg.result.KgEntityResult;
 import com.spark.common.bean.kg.result.KgGraphResult;
 import com.spark.common.bean.kg.result.KgRelationResult;
 import com.spark.common.bean.kg.vo.KgRelationVO;
-import com.spark.config.aspectj.annotation.DataScope;
+import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.dao.kg.KgEntityDao;
 import com.spark.dao.kg.KgGraphDao;
@@ -51,6 +51,7 @@ import java.util.Set;
  * 知识图谱关系服务实现
  */
 @Service
+@LogPrint
 public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelationResult> implements IKgRelationService {
     private final static Logger logger = LoggerFactory.getLogger(KgRelationServiceImpl.class);
     @Autowired
@@ -115,7 +116,7 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
         }
         int count = kgRelationDao.insertDB(kgRelation);
         if (count < 1) {
-            logger.error("createKgRelation error, insert db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         Long id = kgRelation.getId();
@@ -132,6 +133,7 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
         } catch (Exception e) {
             logger.error("createKgRelation graphStore error, id={}", id, e);
         }
+        result.setObjId(id);
         result.setCode(ResultData.OK);
         return result;
     }
@@ -167,7 +169,7 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
         BeanUtil.copyProperties(kgRelationVO, kgRelation);
         int count = kgRelationDao.updateDBById(kgRelation);
         if (count < 1) {
-            logger.error("updateKgRelation error, update db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         // 同步更新 Neo4j 边
@@ -185,6 +187,7 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
         } catch (Exception e) {
             logger.error("updateKgRelation graphStore error, id={}", kgRelationResult.getId(), e);
         }
+        result.setObjId(kgRelationVO.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -213,7 +216,7 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
         kgRelation.setId(kgRelationVO.getId());
         int count = kgRelationDao.deleteDBById(kgRelation);
         if (count < 1) {
-            logger.error("deleteKgRelation error, delete db fail");
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
         // 同步删除 Neo4j 边
@@ -222,30 +225,9 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
         } catch (Exception e) {
             logger.error("deleteKgRelation graphStore error, id={}", kgRelationVO.getId(), e);
         }
+        result.setObjId(kgRelationVO.getId());
         result.setCode(ResultData.OK);
         return result;
-    }
-
-    /**
-     * 校验关系两端实体属于同一图谱
-     * @param graphId 图谱 id
-     * @param headEntityId 头实体 id
-     * @param tailEntityId 尾实体 id
-     * @return 是否校验通过
-     */
-    private boolean validateRelationEntities(Long graphId, Long headEntityId, Long tailEntityId) {
-        if (graphId == null || headEntityId == null || tailEntityId == null) {
-            return false;
-        }
-        KgEntityQuery headQuery = new KgEntityQuery();
-        headQuery.setId(headEntityId);
-        KgEntityResult headEntity = kgEntityDao.queryKgEntity(headQuery);
-        KgEntityQuery tailQuery = new KgEntityQuery();
-        tailQuery.setId(tailEntityId);
-        KgEntityResult tailEntity = kgEntityDao.queryKgEntity(tailQuery);
-        return headEntity != null && tailEntity != null
-                && Objects.equals(headEntity.getGraphId(), graphId)
-                && Objects.equals(tailEntity.getGraphId(), graphId);
     }
 
     /**
@@ -254,7 +236,6 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
      * @return 分页结果
      */
     @Override
-    @DataScope
     public ResultData<PageResult<KgRelationResult>> pageKgRelationList(KgRelationQuery query) {
         ResultData<PageResult<KgRelationResult>> result = new ResultData<>();
         if (query == null) {
@@ -272,6 +253,7 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
      * @return 详情
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.KG_RELATION_DETAIL)
     public ResultData<KgRelationResult> queryKgRelationDetail(KgRelationQuery query) {
         ResultData<KgRelationResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -284,6 +266,7 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
             return result;
         }
         result.setData(kgRelationResult);
+        result.setObjId(kgRelationResult.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -345,6 +328,28 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
     }
 
     /**
+     * 校验关系两端实体属于同一图谱
+     * @param graphId 图谱 id
+     * @param headEntityId 头实体 id
+     * @param tailEntityId 尾实体 id
+     * @return 是否校验通过
+     */
+    private boolean validateRelationEntities(Long graphId, Long headEntityId, Long tailEntityId) {
+        if (graphId == null || headEntityId == null || tailEntityId == null) {
+            return false;
+        }
+        KgEntityQuery headQuery = new KgEntityQuery();
+        headQuery.setId(headEntityId);
+        KgEntityResult headEntity = kgEntityDao.queryKgEntity(headQuery);
+        KgEntityQuery tailQuery = new KgEntityQuery();
+        tailQuery.setId(tailEntityId);
+        KgEntityResult tailEntity = kgEntityDao.queryKgEntity(tailQuery);
+        return headEntity != null && tailEntity != null
+                && Objects.equals(headEntity.getGraphId(), graphId)
+                && Objects.equals(tailEntity.getGraphId(), graphId);
+    }
+
+    /**
      * 查询数量
      * @param query 查询参数
      * @return 数量
@@ -362,14 +367,5 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
     @Override
     protected List<KgRelationResult> queryList(KgRelationQuery query) {
         return kgRelationDao.queryKgRelationList(query);
-    }
-
-    /**
-     * 查询最大ID
-     * @return 最大ID
-     */
-    @Override
-    protected Long queryMaxId() {
-        return kgRelationDao.queryKgRelationMaxId();
     }
 }

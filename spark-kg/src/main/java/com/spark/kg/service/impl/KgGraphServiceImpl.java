@@ -3,26 +3,22 @@ package com.spark.kg.service.impl;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
-import com.spark.common.bean.dms.result.DocumentCountResult;
 import com.spark.common.bean.kg.entity.KgCommunity;
 import com.spark.common.bean.kg.entity.KgEntity;
 import com.spark.common.bean.kg.entity.KgGraph;
 import com.spark.common.bean.kg.query.KgEntityQuery;
 import com.spark.common.bean.kg.query.KgGraphQuery;
-import com.spark.common.bean.kg.result.KgEntityCountResult;
 import com.spark.common.bean.kg.result.KgEntityResult;
 import com.spark.common.bean.kg.result.KgGraphResult;
-import com.spark.common.bean.kg.result.KgRelationCountResult;
 import com.spark.common.bean.kg.vo.KgGraphVO;
 import com.spark.common.bean.llm.query.ModelQuery;
 import com.spark.common.bean.llm.result.ModelResult;
 import com.spark.config.aspectj.annotation.DataScope;
+import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.OperateLog;
-import com.spark.dao.dms.DocumentDao;
 import com.spark.dao.kg.KgCommunityDao;
 import com.spark.dao.kg.KgEntityDao;
 import com.spark.dao.kg.KgGraphDao;
-import com.spark.dao.kg.KgRelationDao;
 import com.spark.dao.llm.ModelDao;
 import com.spark.common.enums.DataScopeEnum;
 import com.spark.common.enums.ErrorCodeEnum;
@@ -68,6 +64,7 @@ import java.util.stream.Collectors;
  * 知识图谱服务实现
  */
 @Service
+@LogPrint
 public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult> implements IKgGraphService {
     private final static Logger logger = LoggerFactory.getLogger(KgGraphServiceImpl.class);
     @Autowired
@@ -75,11 +72,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
     @Autowired
     private KgEntityDao kgEntityDao;
     @Autowired
-    private KgRelationDao kgRelationDao;
-    @Autowired
     private ModelDao modelDao;
-    @Autowired
-    private DocumentDao documentDao;
     @Autowired
     private Neo4jGraphStore graphStore;
     @Autowired
@@ -113,9 +106,10 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
         kgGraph.setId(id);
         int count = kgGraphDao.insertDB(kgGraph);
         if (count < 1) {
-            logger.error("createKgGraph error, insert db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
+        result.setObjId(id);
         result.setCode(ResultData.OK);
         return result;
     }
@@ -144,9 +138,10 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
         BeanUtil.copyProperties(kgGraphVO, kgGraph);
         int count = kgGraphDao.updateDBById(kgGraph);
         if (count < 1) {
-            logger.error("updateKgGraph error, update db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
+        result.setObjId(kgGraph.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -175,7 +170,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
         kgGraph.setId(kgGraphVO.getId());
         int count = kgGraphDao.deleteDBById(kgGraph);
         if (count < 1) {
-            logger.error("deleteKgGraph error, delete db fail");
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
         // 同步清理 Neo4j 图数据
@@ -190,6 +185,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
         } catch (Exception e) {
             logger.error("deleteKgGraph entityVector error, graphId={}", kgGraphVO.getId(), e);
         }
+        result.setObjId(kgGraph.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -218,6 +214,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
      * @return 详情
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.KG_GRAPH_DETAIL)
     public ResultData<KgGraphResult> queryKgGraphDetail(KgGraphQuery query) {
         ResultData<KgGraphResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -230,67 +227,9 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
             return result;
         }
         result.setData(kgGraphResult);
+        result.setObjId(kgGraphResult.getId());
         result.setCode(ResultData.OK);
         return result;
-    }
-
-    /**
-     * 补充列表数据
-     * @param list 列表
-     */
-    @Override
-    protected void supplyList(List<KgGraphResult> list) {
-        if (CollectionUtil.isEmpty(list)) {
-            return;
-        }
-        super.supplyCreatedByName(list);
-        super.supplyUpdatedByName(list);
-        list.forEach(kr -> kr.setStatusName(StatusEnum.indexOf(kr.getStatus()).getDesc()));
-        Set<Long> modelIds = new HashSet<>();
-        for (KgGraphResult kr : list) {
-            if (kr.getExtractModelId() != null) {
-                modelIds.add(kr.getExtractModelId());
-            }
-        }
-        Map<Long, String> modelNameMap = new HashMap<>();
-        if (!modelIds.isEmpty()) {
-            ModelQuery modelQuery = new ModelQuery();
-            modelQuery.setIds(new ArrayList<>(modelIds));
-            List<ModelResult> modelList = modelDao.queryModelList(modelQuery);
-            for (ModelResult model : modelList) {
-                modelNameMap.put(model.getId(), model.getName());
-            }
-        }
-        list.forEach(kr -> kr.setExtractModelName(modelNameMap.get(kr.getExtractModelId())));
-    }
-
-    /**
-     * 查询数量
-     * @param query 查询参数
-     * @return 数量
-     */
-    @Override
-    protected int queryCount(KgGraphQuery query) {
-        return kgGraphDao.queryKgGraphCount(query);
-    }
-
-    /**
-     * 查询列表
-     * @param query 查询参数
-     * @return 列表
-     */
-    @Override
-    protected List<KgGraphResult> queryList(KgGraphQuery query) {
-        return kgGraphDao.queryKgGraphList(query);
-    }
-
-    /**
-     * 查询最大ID
-     * @return 最大ID
-     */
-    @Override
-    protected Long queryMaxId() {
-        return kgGraphDao.queryKgGraphMaxId();
     }
 
     /**
@@ -362,7 +301,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
     @OperateLog(operateType = OperateTypeEnum.KG_GRAPH_UPDATE)
     public ResultData<Void> buildGraphRAGIndex(Long graphId) {
         ResultData<Void> result = new ResultData<>();
-        if (graphId == null || !checkGraphAccess(graphId)) {
+        if (!checkGraphAccess(graphId)) {
             result.setErrorCode(graphId == null ? ErrorCodeEnum.INVALID_PARAM : ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
@@ -446,62 +385,6 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
         logger.info("buildGraphRAGIndex success, graphId={}, total={}, success={}", graphId, communities.size(), successCount);
         result.setCode(ResultData.OK);
         return result;
-    }
-
-    /**
-     * 校验当前用户对图谱的访问权限
-     * @param graphId 图谱 id
-     * @return 是否有权限
-     */
-    private boolean checkGraphAccess(Long graphId) {
-        if (graphId == null) {
-            return false;
-        }
-        KgGraphQuery query = new KgGraphQuery();
-        query.setId(graphId);
-        KgGraphResult graph = kgGraphDao.queryKgGraph(query);
-        if (graph == null) {
-            return false;
-        }
-        Long userId = SessionHolder.getCurrentUserId();
-        if (userId == null || Objects.equals(userId, 101L)) {
-            return Objects.equals(userId, 101L);
-        }
-        DataScopeEnum scope = DataScopeEnum.indexOf(SessionHolder.getCurrentDataScop());
-        if (scope == DataScopeEnum.ALL_ACCESS) {
-            return true;
-        }
-        if (scope == DataScopeEnum.ONLY_DEPART) {
-            return Objects.equals(graph.getDeptId(), SessionHolder.getCurrentDeptId());
-        }
-        if (scope == DataScopeEnum.DEPART_AND_SUB_DEPART) {
-            String deptIds = SessionHolder.getCurrentDeptIds();
-            if (StringUtil.isBlank(deptIds) || graph.getDeptId() == null) {
-                return false;
-            }
-            for (String deptId : deptIds.split(",")) {
-                if (String.valueOf(graph.getDeptId()).equals(deptId.trim())) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        return Objects.equals(graph.getCreatedBy(), userId);
-    }
-
-    /**
-     * 校验实体所属图谱并返回图谱 id
-     * @param entityId 实体 id
-     * @return 图谱 id
-     */
-    private Long getAccessibleEntityGraphId(Long entityId) {
-        if (entityId == null) {
-            return null;
-        }
-        KgEntityQuery query = new KgEntityQuery();
-        query.setId(entityId);
-        KgEntityResult entity = kgEntityDao.queryKgEntity(query);
-        return entity != null && checkGraphAccess(entity.getGraphId()) ? entity.getGraphId() : null;
     }
 
     /**
@@ -625,6 +508,62 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
     }
 
     /**
+     * 校验当前用户对图谱的访问权限
+     * @param graphId 图谱 id
+     * @return 是否有权限
+     */
+    private boolean checkGraphAccess(Long graphId) {
+        if (graphId == null) {
+            return false;
+        }
+        KgGraphQuery query = new KgGraphQuery();
+        query.setId(graphId);
+        KgGraphResult graph = kgGraphDao.queryKgGraph(query);
+        if (graph == null) {
+            return false;
+        }
+        Long userId = SessionHolder.getCurrentUserId();
+        if (userId == null || Objects.equals(userId, 101L)) {
+            return Objects.equals(userId, 101L);
+        }
+        DataScopeEnum scope = DataScopeEnum.indexOf(SessionHolder.getCurrentDataScop());
+        if (scope == DataScopeEnum.ALL_ACCESS) {
+            return true;
+        }
+        if (scope == DataScopeEnum.ONLY_DEPART) {
+            return Objects.equals(graph.getDeptId(), SessionHolder.getCurrentDeptId());
+        }
+        if (scope == DataScopeEnum.DEPART_AND_SUB_DEPART) {
+            String deptIds = SessionHolder.getCurrentDeptIds();
+            if (StringUtil.isBlank(deptIds) || graph.getDeptId() == null) {
+                return false;
+            }
+            for (String deptId : deptIds.split(",")) {
+                if (String.valueOf(graph.getDeptId()).equals(deptId.trim())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return Objects.equals(graph.getCreatedBy(), userId);
+    }
+
+    /**
+     * 校验实体所属图谱并返回图谱 id
+     * @param entityId 实体 id
+     * @return 图谱 id
+     */
+    private Long getAccessibleEntityGraphId(Long entityId) {
+        if (entityId == null) {
+            return null;
+        }
+        KgEntityQuery query = new KgEntityQuery();
+        query.setId(entityId);
+        KgEntityResult entity = kgEntityDao.queryKgEntity(query);
+        return entity != null && checkGraphAccess(entity.getGraphId()) ? entity.getGraphId() : null;
+    }
+
+    /**
      * 解析 LLM 返回的 JSON 对象，兼容代码块包裹
      * @param response LLM 响应文本
      * @return JSON对象
@@ -648,4 +587,65 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
             return null;
         }
     }
+
+
+    /**
+     * 补充列表数据
+     * @param list 列表
+     */
+    @Override
+    protected void supplyList(List<KgGraphResult> list) {
+        if (CollectionUtil.isEmpty(list)) {
+            return;
+        }
+        super.supplyCreatedByName(list);
+        super.supplyUpdatedByName(list);
+        list.forEach(kr -> kr.setStatusName(StatusEnum.indexOf(kr.getStatus()).getDesc()));
+        Set<Long> modelIds = new HashSet<>();
+        for (KgGraphResult kr : list) {
+            if (kr.getExtractModelId() != null) {
+                modelIds.add(kr.getExtractModelId());
+            }
+        }
+        Map<Long, String> modelNameMap = new HashMap<>();
+        if (!modelIds.isEmpty()) {
+            ModelQuery modelQuery = new ModelQuery();
+            modelQuery.setIds(new ArrayList<>(modelIds));
+            List<ModelResult> modelList = modelDao.queryModelList(modelQuery);
+            for (ModelResult model : modelList) {
+                modelNameMap.put(model.getId(), model.getName());
+            }
+        }
+        list.forEach(kr -> kr.setExtractModelName(modelNameMap.get(kr.getExtractModelId())));
+    }
+
+    /**
+     * 查询数量
+     * @param query 查询参数
+     * @return 数量
+     */
+    @Override
+    protected int queryCount(KgGraphQuery query) {
+        return kgGraphDao.queryKgGraphCount(query);
+    }
+
+    /**
+     * 查询列表
+     * @param query 查询参数
+     * @return 列表
+     */
+    @Override
+    protected List<KgGraphResult> queryList(KgGraphQuery query) {
+        return kgGraphDao.queryKgGraphList(query);
+    }
+
+    /**
+     * 查询最大ID
+     * @return 最大ID
+     */
+    @Override
+    protected Long queryMaxId() {
+        return kgGraphDao.queryKgGraphMaxId();
+    }
+
 }

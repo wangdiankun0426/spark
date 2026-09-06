@@ -9,7 +9,7 @@ import com.spark.common.bean.kg.query.KgGraphQuery;
 import com.spark.common.bean.kg.result.KgEntityResult;
 import com.spark.common.bean.kg.result.KgGraphResult;
 import com.spark.common.bean.kg.vo.KgEntityVO;
-import com.spark.config.aspectj.annotation.DataScope;
+import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.dao.kg.KgEntityDao;
 import com.spark.dao.kg.KgGraphDao;
@@ -50,6 +50,7 @@ import java.util.Set;
  * 知识图谱实体服务实现
  */
 @Service
+@LogPrint
 public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResult> implements IKgEntityService {
     private final static Logger logger = LoggerFactory.getLogger(KgEntityServiceImpl.class);
     @Autowired
@@ -93,7 +94,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
         }
         int count = kgEntityDao.insertDB(kgEntity);
         if (count < 1) {
-            logger.error("createKgEntity error, insert db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         Long id = kgEntity.getId();
@@ -115,6 +116,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
         } catch (Exception e) {
             logger.error("createKgEntity vectorize error, id={}", id, e);
         }
+        result.setObjId(kgEntity.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -143,7 +145,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
         BeanUtil.copyProperties(kgEntityVO, kgEntity);
         int count = kgEntityDao.updateDBById(kgEntity);
         if (count < 1) {
-            logger.error("updateKgEntity error, update db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         // 同步更新 Neo4j 节点属性
@@ -176,6 +178,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
         } catch (Exception e) {
             logger.error("updateKgEntity vectorize error, id={}", kgEntityVO.getId(), e);
         }
+        result.setObjId(kgEntityVO.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -204,7 +207,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
         kgEntity.setId(kgEntityVO.getId());
         int count = kgEntityDao.deleteDBById(kgEntity);
         if (count < 1) {
-            logger.error("deleteKgEntity error, delete db fail");
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
         // 同步删除 Neo4j 节点及其关联边
@@ -219,6 +222,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
         } catch (Exception e) {
             logger.error("deleteKgEntity vectorize error, id={}", kgEntityVO.getId(), e);
         }
+        result.setObjId(kgEntityVO.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -229,7 +233,6 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
      * @return 分页结果
      */
     @Override
-    @DataScope
     public ResultData<PageResult<KgEntityResult>> pageKgEntityList(KgEntityQuery query) {
         ResultData<PageResult<KgEntityResult>> result = new ResultData<>();
         if (query == null) {
@@ -247,6 +250,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
      * @return 详情
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.KG_ENTITY_DETAIL)
     public ResultData<KgEntityResult> queryKgEntityDetail(KgEntityQuery query) {
         ResultData<KgEntityResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -259,19 +263,19 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
             return result;
         }
         result.setData(kgEntityResult);
+        result.setObjId(kgEntityResult.getId());
         result.setCode(ResultData.OK);
         return result;
     }
 
     /**
-     * 合并实体（消歧）
+     * 合并实体
      * @param mainEntityId 主实体 id
      * @param mergedEntityIds 被合并的实体 id 列表
      * @return 合并结果
      */
     @Override
     @OperateLog(operateType = OperateTypeEnum.KG_ENTITY_MERGE)
-    @Transactional(rollbackFor = Exception.class)
     public ResultData<Void> mergeKgEntity(Long mainEntityId, List<Long> mergedEntityIds) {
         ResultData<Void> result = new ResultData<>();
         if (mainEntityId == null || CollectionUtil.isEmpty(mergedEntityIds)) {
@@ -314,7 +318,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
             KgEntity entity = new KgEntity();
             entity.setId(mergedId);
             entity.setStatus(StatusEnum.ABNORMAL.getValue());
-            kgEntityDao.updateDBById(entity);
+            int i = kgEntityDao.updateDBById(entity);
             // Neo4j 迁移关系并删除旧节点，保持双库一致
             try {
                 graphStore.migrateRelations(mainEntityId, mergedId);
@@ -328,6 +332,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
                 logger.error("mergeKgEntity vectorize error, mergedId={}", mergedId, e);
             }
         }
+        result.setObjId(mainEntityId);
         result.setCode(ResultData.OK);
         return result;
     }
@@ -339,6 +344,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
      * @return 审核结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.KG_ENTITY_AUDIT)
     public ResultData<Void> auditKgEntity(Long entityId, Integer auditStatus) {
         ResultData<Void> result = new ResultData<>();
         if (entityId == null || auditStatus == null) {
@@ -357,9 +363,10 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
         entity.setAuditStatus(auditStatus);
         int count = kgEntityDao.updateDBById(entity);
         if (count < 1) {
-            logger.error("auditKgEntity error, update db fail, entityId={}", entityId);
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
+        result.setObjId(entity.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -371,6 +378,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
      * @return 审核结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.KG_ENTITY_AUDIT)
     public ResultData<Void> batchAuditKgEntity(List<Long> entityIds, Integer auditStatus) {
         ResultData<Void> result = new ResultData<>();
         if (CollectionUtil.isEmpty(entityIds) || auditStatus == null) {

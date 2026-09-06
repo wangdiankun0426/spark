@@ -94,7 +94,7 @@ public class FormObjValueServiceImpl implements IFormObjValueService {
         }
         count = formObjValueDao.batchInsert(list);
         if (count < 1) {
-            logger.error("saveFormObjValues batch insert db fail!");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         result.setCode(ResultData.OK);

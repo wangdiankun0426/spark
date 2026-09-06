@@ -51,7 +51,7 @@ public class LogLoginServiceImpl extends BaseService<LogLoginQuery,LogLoginResul
         ResultData<Void> result = new ResultData<>();
         int count = logLoginDao.insertDB(logLogin);
         if (count < 1) {
-            logger.error("createLogLogin insert db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         result.setCode(ResultData.OK);

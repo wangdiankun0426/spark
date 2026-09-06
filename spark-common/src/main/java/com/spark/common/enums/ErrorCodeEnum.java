@@ -24,7 +24,9 @@ public enum ErrorCodeEnum {
     FILE_CREATE_FAIL(504, "文件创建失败"),
     NO_PERMISSION(506, "无操作权限"),
     OPERATE_TOO_FREQUENT(507, "操作过于频繁，请稍后再试"),
-    OPERATE_DATA_FAIL(508, "操作数据失败，请稍后再试"),
+    INSERT_DATA_FAIL(508, "新增数据失败，请稍后再试"),
+    UPDATE_DATA_FAIL(509, "修改数据失败，请稍后再试"),
+    DELETE_DATA_FAIL(510, "删除数据失败，请稍后再试"),
     // 登录相关状态码
     NOT_LOGIN(601, "用户未登录"),
     LONG_PASSWORD_ERROR(602, "密码错误"),
@@ -113,7 +115,6 @@ public enum ErrorCodeEnum {
     WORKFLOW_ALREADY_PUBLISHED(2410, "WorkFlow已发布"),
     WORKFLOW_HAS_RUN_HISTORY(2411, "存在运行记录不允许删除"),
     WORKFLOW_CATEGORY_INVALID(2412, "分类标签无效"),
-
     // 技能相关状态码
     SKILL_NOT_EXIST(2501, "技能不存在"),
     SKILL_NAME_EXIST(2502, "同名技能已存在"),

@@ -9,6 +9,7 @@ import com.spark.common.bean.llm.result.McpResult;
 import com.spark.common.bean.llm.result.ProviderResult;
 import com.spark.common.bean.llm.vo.McpVO;
 import com.spark.config.aspectj.annotation.DataScope;
+import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.dao.llm.McpDao;
 import com.spark.dao.llm.ProviderDao;
@@ -43,6 +44,7 @@ import java.util.stream.Collectors;
  * @since 2026/07/19 15:40:00
  */
 @Service
+@LogPrint
 public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements IMcpService {
     private final static Logger logger = LoggerFactory.getLogger(McpServiceImpl.class);
     @Autowired
@@ -69,16 +71,17 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        Mcp Mcp = new Mcp();
-        BeanUtil.copyProperties(mcpVO, Mcp);
-        if (Mcp.getStatus() == null) {
-            Mcp.setStatus(StatusEnum.NORMAL.getValue());
+        Mcp mcp = new Mcp();
+        BeanUtil.copyProperties(mcpVO, mcp);
+        if (mcp.getStatus() == null) {
+            mcp.setStatus(StatusEnum.NORMAL.getValue());
         }
-        int count = mcpDao.insertDB(Mcp);
+        int count = mcpDao.insertDB(mcp);
         if (count < 1) {
-            logger.error("createMcp error, insert db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
+        result.setObjId(mcp.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -107,15 +110,16 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        Mcp Mcp = new Mcp();
-        BeanUtil.copyProperties(mcpVO, Mcp);
-        int count = mcpDao.updateDBById(Mcp);
+        Mcp mcp = new Mcp();
+        BeanUtil.copyProperties(mcpVO, mcp);
+        int count = mcpDao.updateDBById(mcp);
         if (count < 1) {
-            logger.error("updateMcp error, update db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         // 配置变更后断开旧连接，下次使用时会按新配置重连
         mcpClientManager.disconnect(mcpVO.getId());
+        result.setObjId(mcp.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -144,11 +148,12 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
         Mcp.setId(mcpVO.getId());
         int count = mcpDao.deleteDBById(Mcp);
         if (count < 1) {
-            logger.error("deleteMcp error, delete db fail");
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
         // 同步断开MCP客户端连接
         mcpClientManager.disconnect(mcpVO.getId());
+        result.setObjId(mcpVO.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -177,6 +182,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
      * @return 详情
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.MCP_DETAIL)
     public ResultData<McpResult> queryMcpDetail(McpQuery query) {
         ResultData<McpResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -190,6 +196,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
         }
         supplySingle(mcpResult);
         result.setData(mcpResult);
+        result.setObjId(mcpResult.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -200,6 +207,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
      * @return 测试结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.MCP_TEST)
     public ResultData<Void> testConnection(McpVO mcpVO) {
         ResultData<Void> result = new ResultData<>();
         if (mcpVO == null || mcpVO.getId() == null) {
@@ -224,13 +232,14 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
             }
             // 触发listTools验证连通性
             int toolCount = client.listTools().size();
-            logger.info("MCP服务器连通性测试成功, name: {}, tools: {}", mcpVO.getName(), toolCount);
+            logger.info("mcp connect success, name={}, tools={}", mcpVO.getName(), toolCount);
             // 测试完毕断开（避免占用资源，正式使用时按需重连）
             mcpClientManager.disconnect(mcpVO.getId());
+            result.setObjId(mcpVO.getId());
             result.setCode(ResultData.OK);
             return result;
         } catch (Exception e) {
-            logger.error("MCP服务器连通性测试失败, name: {}", mcpVO.getName(), e);
+            logger.error("mcp connect fail, name={}", mcpVO.getName(), e);
             result.setErrorCode(ErrorCodeEnum.MCP_CONNECT_FAIL);
             return result;
         }

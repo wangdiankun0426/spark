@@ -17,6 +17,7 @@ import com.spark.common.bean.workflow.result.WfTemplateVersionResult;
 import com.spark.common.bean.workflow.vo.WfRunVO;
 import com.spark.common.bean.form.entity.FormObjValue;
 import com.spark.common.bean.form.vo.FormObjValueVO;
+import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.dao.workflow.WfInstanceDao;
 import com.spark.dao.workflow.WfInstanceNodeDao;
 import com.spark.dao.workflow.WfTemplateDao;
@@ -52,6 +53,7 @@ import java.util.stream.Collectors;
  * workFlow实例Service实现
  */
 @Service
+@LogPrint
 public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, WfInstanceResult> implements IWorkflowInstanceService {
     private static final Logger logger = LoggerFactory.getLogger(WorkflowInstanceServiceImpl.class);
     @Autowired

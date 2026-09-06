@@ -331,7 +331,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         instanceAssignee.setStatus(instanceVO.getStatus());
         int count = instanceAssigneeDao.updateDBById(instanceAssignee);
         if (count < 1) {
-            logger.error("approveInstance error, update db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         FlowApproveTypeEnum approveTypeEnum = FlowApproveTypeEnum.indexOf(flowTemplateNodeResult.getApproveType());
@@ -437,7 +437,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         updateAssignee.setStatus(FlowInstanceStatusEnum.TRANSFERRED.getValue());
         int count = instanceAssigneeDao.updateDBById(updateAssignee);
         if (count < 1) {
-            logger.error("transferInstance error, update db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         // 新审批人加入集合，继承当前审批顺序
@@ -599,7 +599,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         updateInstance.setStatus(FlowInstanceStatusEnum.WITHDRAWN.getValue());
         int count = instanceDao.updateDBById(updateInstance);
         if (count < 1) {
-            logger.error("recallInstance error, update db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         // 删除Flowable实例，触发PROCESS_CANCELLED事件（因状态已为WITHDRAWN不会被覆盖）
@@ -799,7 +799,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         updateAssignee.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
         int count = instanceAssigneeDao.updateDBById(updateAssignee);
         if (count < 1) {
-            logger.error("activateNextAssignee error, update db fail");
+            logger.error("update db fail");
             return true;
         }
         flowMessageService.sendFlowNotice(flowableInstanceId, MessageTypeEnum.FLOW_TODO.getType());

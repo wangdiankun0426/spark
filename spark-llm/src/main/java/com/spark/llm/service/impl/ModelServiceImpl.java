@@ -8,9 +8,12 @@ import com.spark.common.bean.llm.query.ModelQuery;
 import com.spark.common.bean.llm.result.ProviderResult;
 import com.spark.common.bean.llm.result.ModelResult;
 import com.spark.common.bean.llm.vo.ModelVO;
+import com.spark.config.aspectj.annotation.DataScope;
+import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.dao.llm.ModelDao;
 import com.spark.dao.llm.ProviderDao;
 import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.ModelTypeEnum;
 import com.spark.common.enums.ObjectTypeEnum;
 import com.spark.common.enums.StatusEnum;
@@ -53,6 +56,7 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
      * @return 创建结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.MODEL_INSERT)
     public ResultData<Void> createModel(ModelVO modelVO) {
         ResultData<Void> result = new ResultData<>();
         if (modelVO == null) {
@@ -65,10 +69,11 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
         model.setId(id);
         int count = modelDao.insertDB(model);
         if (count < 1) {
-            logger.error("createModel error, insert db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
-        logger.info("Model created with id: {}, cache cleared", model.getId());
+        logger.info("model created with id={}, cache cleared", model.getId());
+        result.setObjId(model.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -79,6 +84,7 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
      * @return 修改结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.MODEL_UPDATE)
     public ResultData<Void> updateModel(ModelVO modelVO) {
         ResultData<Void> result = new ResultData<>();
         if (modelVO == null || modelVO.getId() == null) {
@@ -96,12 +102,13 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
         BeanUtil.copyProperties(modelVO, model);
         int count = modelDao.updateDBById(model);
         if (count < 1) {
-            logger.error("updateModel error, update db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         // 清除模型缓存，确保下次获取时使用最新配置
         modelFactory.clearModelCache(modelVO.getId());
-        logger.info("Model updated with id: {}, cache cleared", modelVO.getId());
+        logger.info("model updated with id={}, cache cleared", modelVO.getId());
+        result.setObjId(modelVO.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -112,6 +119,7 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
      * @return  删除结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.MODEL_DELETE)
     public ResultData<Void> deleteModel(ModelVO modelVO) {
         ResultData<Void> result = new ResultData<>();
         if (modelVO == null || modelVO.getId() == null) {
@@ -129,12 +137,13 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
         model.setId(modelVO.getId());
         int count = modelDao.deleteDBById(model);
         if (count < 1) {
-            logger.error("deleteModel error, delete db fail");
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
         // 清除模型缓存
         modelFactory.clearModelCache(modelVO.getId());
-        logger.info("Model deleted with id: {}, cache cleared", modelVO.getId());
+        logger.info("Model deleted with id={}, cache cleared", modelVO.getId());
+        result.setObjId(modelVO.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -145,6 +154,7 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
      * @return 分页结果
      */
     @Override
+    @DataScope
     public ResultData<PageResult<ModelResult>> pageModelList(ModelQuery query) {
         ResultData<PageResult<ModelResult>> result = new ResultData<>();
         if (query == null) {
@@ -162,6 +172,7 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
      * @return 详情
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.MODEL_DETAIL)
     public ResultData<ModelResult> queryModelDetail(ModelQuery query) {
         ResultData<ModelResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -174,6 +185,7 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
             return result;
         }
         result.setData(modelResult);
+        result.setObjId(modelResult.getId());
         result.setCode(ResultData.OK);
         return result;
     }

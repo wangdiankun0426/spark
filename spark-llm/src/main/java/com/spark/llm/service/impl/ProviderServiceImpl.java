@@ -6,8 +6,11 @@ import com.spark.common.bean.llm.entity.Provider;
 import com.spark.common.bean.llm.query.ProviderQuery;
 import com.spark.common.bean.llm.result.ProviderResult;
 import com.spark.common.bean.llm.vo.ProviderVO;
+import com.spark.config.aspectj.annotation.DataScope;
+import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.dao.llm.ProviderDao;
 import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.enums.OperateTypeEnum;
 import com.spark.llm.model.ModelFactory;
 import com.spark.llm.service.IProviderService;
 import com.spark.common.utils.CollectionUtil;
@@ -43,6 +46,7 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
      * @return 创建结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.PROVIDER_INSERT)
     public ResultData<Void> createProvider(ProviderVO providerVO) {
         ResultData<Void> result = new ResultData<>();
         if (providerVO == null) {
@@ -53,9 +57,10 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
         BeanUtil.copyProperties(providerVO, provider);
         int count = providerDao.insertDB(provider);
         if (count < 1) {
-            logger.error("createProvider error, insert db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
+        result.setObjId(provider.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -66,6 +71,7 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
      * @return 修改结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.PROVIDER_UPDATE)
     public ResultData<Void> updateProvider(ProviderVO providerVO) {
         ResultData<Void> result = new ResultData<>();
         if (providerVO == null || providerVO.getId() == null) {
@@ -83,11 +89,12 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
         BeanUtil.copyProperties(providerVO, provider);
         int count = providerDao.updateDBById(provider);
         if (count < 1) {
-            logger.error("updateProvider error, update db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         // 厂商密钥变更后清空该厂商下所有模型缓存，确保下次使用时使用最新密钥
         modelFactory.clearModelCacheByProvider(providerVO.getId());
+        result.setObjId(providerVO.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -98,6 +105,7 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
      * @return  删除结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.PROVIDER_DELETE)
     public ResultData<Void> deleteProvider(ProviderVO providerVO) {
         ResultData<Void> result = new ResultData<>();
         if (providerVO == null || providerVO.getId() == null) {
@@ -115,11 +123,12 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
         provider.setId(providerVO.getId());
         int count = providerDao.deleteDBById(provider);
         if (count < 1) {
-            logger.error("deleteProvider error, delete db fail");
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
         // 厂商删除后清空该厂商下所有模型缓存
         modelFactory.clearModelCacheByProvider(providerVO.getId());
+        result.setObjId(providerVO.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -130,6 +139,7 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
      * @return 分页结果
      */
     @Override
+    @DataScope
     public ResultData<PageResult<ProviderResult>> pageProviderList(ProviderQuery query) {
         ResultData<PageResult<ProviderResult>> result = new ResultData<>();
         if (query == null) {
@@ -147,6 +157,7 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
      * @return 详情
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.PROVIDER_DELETE)
     public ResultData<ProviderResult> queryProviderDetail(ProviderQuery query) {
         ResultData<ProviderResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -159,6 +170,7 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
             return result;
         }
         result.setData(providerResult);
+        result.setObjId(providerResult.getId());
         result.setCode(ResultData.OK);
         return result;
     }

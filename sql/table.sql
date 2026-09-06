@@ -4,13 +4,13 @@ CREATE TABLE `sys_user` (
     `login_name` varchar(200) NOT NULL COMMENT '登录名',
     `password` varchar(72) NOT NULL COMMENT '密码',
     `name` varchar(200) NOT NULL COMMENT '用户名',
-    `dept_id` bigint(12) NOT NULL COMMENT '所属部门id',
     `phone` varchar(20) NULL COMMENT '手机号' unique ,
     `email` varchar(20) NULL COMMENT '邮箱' unique ,
     `sex` int(1) NULL COMMENT '性别',
     `avatar` varchar(32) NULL COMMENT '头像',
     `status` int(1) NOT NULL DEFAULT 1 COMMENT '状态',
 
+    `dept_id` bigint(12) NOT NULL COMMENT '所属部门id',
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
     `created_by` bigint(12) NOT NULL COMMENT '创建人id',
     `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -731,7 +731,6 @@ CREATE TABLE kg_entity (
        description VARCHAR(1024) DEFAULT NULL COMMENT '实体描述',
        status TINYINT(1) DEFAULT 1 COMMENT '状态（0-禁用 1-启用）',
 
-       dept_id BIGINT(20) DEFAULT NULL COMMENT '部门 id',
        delete_flag TINYINT(1) DEFAULT 1 COMMENT '删除标记位（1-有效 -1-删除）',
        created_by BIGINT(20) DEFAULT NULL COMMENT '创建人',
        created_dt DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -753,7 +752,6 @@ CREATE TABLE kg_relation (
      confidence DECIMAL(3,2) DEFAULT 1.00 COMMENT '置信度',
      status TINYINT(1) DEFAULT 1 COMMENT '状态（0-禁用 1-启用）',
 
-     dept_id BIGINT(20) DEFAULT NULL COMMENT '部门 id',
      delete_flag TINYINT(1) DEFAULT 1 COMMENT '删除标记位（1-有效 -1-删除）',
      created_by BIGINT(20) DEFAULT NULL COMMENT '创建人',
      created_dt DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -771,7 +769,6 @@ CREATE TABLE `kg_community` (
     `summary` TEXT NULL COMMENT '社区摘要',
     `member_count` INT(10) NOT NULL DEFAULT 0 COMMENT '成员实体数量',
 
-    `dept_id` BIGINT(20) DEFAULT NULL COMMENT '部门 id',
     `delete_flag` TINYINT(1) DEFAULT 1 COMMENT '删除标记位（1-有效 -1-删除）',
     `created_by` BIGINT(20) DEFAULT NULL COMMENT '创建人',
     `created_dt` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -786,7 +783,7 @@ CREATE TABLE `wf_template` (
     `id` bigint(12) NOT NULL COMMENT '主键',
     `name` varchar(128) NOT NULL COMMENT '工作流名称',
     `description` varchar(512) NULL COMMENT '描述',
-    `status` int(2) NOT NULL DEFAULT -1 COMMENT '状态：-1关闭/1开启',
+    `status` int(2) NOT NULL DEFAULT -1 COMMENT '状态',
     `rev_id` bigint(12) NULL COMMENT '当前生效版本ID',
     `rev_num` varchar(12) NULL COMMENT '当前生效版本号',
     `form_id` bigint(12) NOT NULL COMMENT '表单ID',
@@ -924,7 +921,7 @@ CREATE TABLE `task_template_param` (
 
 DROP TABLE IF EXISTS `dms_document`;
 CREATE TABLE `dms_document` (
-    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `id` bigint(12) NOT NULL COMMENT '主键',
     `prt_id` bigint(12) NOT NULL COMMENT '父id',
     `document_type` tinyint(3) NOT NULL COMMENT '文档归属类型',
     `name` varchar(256) NOT NULL COMMENT '名称',
@@ -966,9 +963,9 @@ CREATE TABLE `dms_document_event` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='文档事件表';
 
 
-DROP TABLE IF EXISTS `sys_attachment`;
-CREATE TABLE `sys_attachment` (
-    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+DROP TABLE IF EXISTS `dms_attachment`;
+CREATE TABLE `dms_attachment` (
+    `id` bigint(12) NOT NULL COMMENT '主键',
     `name` varchar(256) NOT NULL COMMENT '文件名称',
     `size` bigint(12) NOT NULL COMMENT '文件大小',
     `path` varchar(128) NOT NULL COMMENT '存储路径',

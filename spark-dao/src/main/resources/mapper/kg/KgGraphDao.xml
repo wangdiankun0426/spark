@@ -92,8 +92,11 @@
         from kg_graph
         where 1=1
         <include refid="searchCondition"/>
-        order by <include refid="sortCondition"/>
-        <if test="page == true">limit #{startRow}, #{pageSize}</if>
+        order by
+        <include refid="sortCondition"/>
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
     </select>
 
     <select id="queryKgGraph" resultType="com.spark.common.bean.kg.result.KgGraphResult">

@@ -57,8 +57,8 @@ import java.util.stream.Collectors;
  * @author wangdiankun
  * @since 2024/2/17 18:52
  */
-@LogPrint
 @Service
+@LogPrint
 public class UserServiceImpl extends BaseService<UserQuery, UserResult> implements IUserService, InitializingBean {
     private final static Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
     @Autowired
@@ -109,7 +109,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         }
         int count = userDao.insertDB(user);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.OPERATE_DATA_FAIL);
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         UserProfile userProfile = new UserProfile();
@@ -117,7 +117,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         userProfile.setWecomId(userVO.getWecomId());
         count = userProfileDao.insertDB(userProfile);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.OPERATE_DATA_FAIL);
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         userVO.setId(userId);
@@ -166,7 +166,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         user.setStatus(userVO.getStatus());
         int count = userDao.updateDBById(user);
         if (count < 0) {
-            result.setErrorCode(ErrorCodeEnum.OPERATE_DATA_FAIL);
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         UserProfile userProfile = new UserProfile();
@@ -174,7 +174,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         userProfile.setWecomId(userVO.getWecomId());
         count = userProfileDao.updateDBById(userProfile);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.OPERATE_DATA_FAIL);
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         result.setObjId(userVO.getId());
@@ -274,7 +274,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         user.setPassword(newMd5);
         int count = userDao.updateById(user);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.OPERATE_DATA_FAIL);
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         result.setObjId(userId);
@@ -344,7 +344,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         user.setAvatar(uuid);
         int count = userDao.updateById(user);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.OPERATE_DATA_FAIL);
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         result.setCode(ResultData.OK);
@@ -399,24 +399,21 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         if (userId == null) {
             return;
         }
-        List<Long> menuIdList = new ArrayList<>();
-        List<String> menuIdStrs = roleDao.queryUserMenuIds(userId);
-        if (CollectionUtil.isEmpty(menuIdStrs)) {
-            userResult.setMenuIds(menuIdList);
+        List<String> menuIdsList = roleDao.queryUserMenuIds(userId);
+        if (CollectionUtil.isEmpty(menuIdsList)) {
+            userResult.setMenuIds(List.of(10L));
             return;
         }
         Set<Long> menuIdSet = new HashSet<>();
-        menuIdSet.add(10L);
-        for (String menuIdStr : menuIdStrs) {
-            String[] idArray = menuIdStr.split(",");
+        for (String menuIds : menuIdsList) {
+            String[] idArray = menuIds.split(",");
             for (String idStr : idArray) {
                 if (StringUtil.isNumeric(idStr)) {
                     menuIdSet.add(Long.valueOf(idStr));
                 }
             }
         }
-        menuIdList.addAll(menuIdSet);
-        userResult.setMenuIds(menuIdList);
+        userResult.setMenuIds(new ArrayList<>(menuIdSet));
     }
 
     /**

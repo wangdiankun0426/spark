@@ -1,5 +1,6 @@
 package com.spark.manage.sys.impl;
 
+import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.common.bean.sys.result.UserResult;
 import com.spark.common.bean.sys.vo.DepartmentVO;
@@ -46,6 +47,7 @@ import java.util.stream.Collectors;
  * @since 2024/2/17 19:39
  */
 @Service
+@LogPrint
 public class DepartmentServiceImpl extends BaseService<DepartmentQuery, DepartmentResult> implements IDepartmentService {
     private final static Logger logger = LoggerFactory.getLogger(DepartmentServiceImpl.class);
     @Autowired
@@ -83,6 +85,7 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
         }
         int count = departmentDao.insertDB(department);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         result.setObjId(deptId);
@@ -149,6 +152,7 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
         }
         int count = departmentDao.updateDBById(department);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         result.setObjId(departmentVO.getId());
@@ -178,10 +182,12 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
         }
         int count = departmentDao.deleteSubDepartment(departmentResult.getCode(), SessionHolder.getCurrentUserId());
         if (count < 0) {
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
         count = userDao.resetUserDeptByDeptId(departmentVO.getId());
         if (count < 0) {
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
         result.setObjId(departmentVO.getId());
@@ -223,8 +229,7 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
         DepartmentQuery departmentQuery = new DepartmentQuery();
         departmentQuery.setId(dept.getPrtId());
         DepartmentResult departmentResult = departmentDao.queryDepartment(departmentQuery);
-
-        if(departmentResult != null && StringUtil.isNotBlank(departmentResult.getCode())) {
+        if (departmentResult != null && StringUtil.isNotBlank(departmentResult.getCode())) {
             code = departmentResult.getCode();
         }
         String orgCode = this.genDepartmentCode(dept.getPrtId());

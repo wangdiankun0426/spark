@@ -7,8 +7,10 @@ import com.spark.common.bean.llm.query.SkillQuery;
 import com.spark.common.bean.llm.result.SkillResult;
 import com.spark.common.bean.llm.vo.SkillVO;
 import com.spark.config.aspectj.annotation.DataScope;
+import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.dao.llm.SkillDao;
 import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.llm.agent.AgentFactory;
 import com.spark.llm.service.ISkillService;
@@ -46,6 +48,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
      * @return 创建结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.SKILL_INSERT)
     public ResultData<Void> createSkill(SkillVO skillVO) {
         ResultData<Void> result = new ResultData<>();
         if (skillVO == null || StringUtil.isBlank(skillVO.getName())
@@ -64,7 +67,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
         }
         int count = skillDao.insertDB(skill);
         if (count < 1) {
-            logger.error("createSkill error, insert db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         result.setCode(ResultData.OK);
@@ -77,6 +80,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
      * @return 修改结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.SKILL_UPDATE)
     public ResultData<Void> updateSkill(SkillVO skillVO) {
         ResultData<Void> result = new ResultData<>();
         if (skillVO == null || skillVO.getId() == null) {
@@ -101,7 +105,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
         BeanUtil.copyProperties(skillVO, skill);
         int count = skillDao.updateDBById(skill);
         if (count < 1) {
-            logger.error("updateSkill error, update db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         // 目录是装配期快照，技能变更后需重建绑定该技能的Agent缓存
@@ -116,6 +120,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
      * @return 删除结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.SKILL_DELETE)
     public ResultData<Void> deleteSkill(SkillVO skillVO) {
         ResultData<Void> result = new ResultData<>();
         if (skillVO == null || skillVO.getId() == null) {
@@ -133,7 +138,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
         skill.setId(skillVO.getId());
         int count = skillDao.deleteDBById(skill);
         if (count < 1) {
-            logger.error("deleteSkill error, delete db fail");
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
         // 目录是装配期快照，技能变更后需重建绑定该技能的Agent缓存
@@ -166,6 +171,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
      * @return 详情
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.SKILL_DETAIL)
     public ResultData<SkillResult> querySkillDetail(SkillQuery query) {
         ResultData<SkillResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -179,6 +185,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
         }
         skillResult.setStatusName(StatusEnum.indexOf(skillResult.getStatus()).getDesc());
         result.setData(skillResult);
+        result.setObjId(skillResult.getId());
         result.setCode(ResultData.OK);
         return result;
     }

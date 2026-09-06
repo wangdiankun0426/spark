@@ -3,7 +3,7 @@
 <mapper namespace="com.spark.dao.kg.KgEntityDao" >
     <sql id="allColumnList" >
         id , graph_id , name , type , description , source_id , source_type , confidence , audit_status , status ,
-        dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+        delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="searchCondition">
@@ -58,9 +58,9 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into kg_entity (graph_id , name , type , description , source_id , source_type , confidence , audit_status , status ,
-        dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+                               delete_flag , created_by , created_dt , updated_by , updated_dt)
         values (#{graphId} , #{name} , #{type} , #{description} , #{sourceId} , #{sourceType} , #{confidence} , #{auditStatus} , #{status} ,
-        #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+                1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">
@@ -110,8 +110,11 @@
         from kg_entity
         where 1=1
         <include refid="searchCondition"/>
-        order by <include refid="sortCondition"/>
-        <if test="page == true">limit #{startRow}, #{pageSize}</if>
+        order by
+        <include refid="sortCondition"/>
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
     </select>
 
     <select id="queryKgEntity" resultType="com.spark.common.bean.kg.result.KgEntityResult">

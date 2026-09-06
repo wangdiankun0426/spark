@@ -2,8 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.kg.KgCommunityDao" >
     <sql id="allColumnList" >
-        id , graph_id , community_index , name , summary , member_count ,
-        dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , graph_id , community_index , name , summary , member_count , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="searchCondition">
@@ -40,9 +39,9 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into kg_community (graph_id, community_index, name, summary, member_count,
-        dept_id, delete_flag, created_by, created_dt, updated_by, updated_dt)
+                                  delete_flag, created_by, created_dt, updated_by, updated_dt)
         values (#{graphId}, #{communityIndex}, #{name}, #{summary}, #{memberCount},
-        #{deptId}, 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+                1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">
@@ -74,8 +73,11 @@
         from kg_community
         where 1=1
         <include refid="searchCondition"/>
-        order by <include refid="sortCondition"/>
-        <if test="page == true">limit #{startRow}, #{pageSize}</if>
+        order by
+        <include refid="sortCondition"/>
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
     </select>
 
     <select id="queryKgCommunity" resultType="com.spark.common.bean.kg.result.KgCommunityResult">

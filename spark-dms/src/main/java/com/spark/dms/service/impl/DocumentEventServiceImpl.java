@@ -5,6 +5,7 @@ import com.spark.common.bean.dms.entity.DocumentEvent;
 import com.spark.common.bean.dms.query.DocumentEventQuery;
 import com.spark.common.bean.dms.result.DocumentEventResult;
 import com.spark.common.bean.dms.vo.DocumentEventVO;
+import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.dao.dms.DocumentEventDao;
 import com.spark.common.enums.ErrorCodeEnum;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
  * @since 2024/12/7 下午11:24
  */
 @Service
+@LogPrint
 public class DocumentEventServiceImpl implements IDocumentEventService {
     private final static Logger logger = LoggerFactory.getLogger(DocumentEventServiceImpl.class);
     @Autowired
@@ -37,6 +39,7 @@ public class DocumentEventServiceImpl implements IDocumentEventService {
      * @return 文档事件详情
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_EVENT_DETAIL)
     public ResultData<DocumentEventResult> queryDocumentEventDetail(DocumentEventQuery query) {
         ResultData<DocumentEventResult> result = new ResultData<>();
         if (query == null || query.getDocId() == null) {
@@ -49,6 +52,7 @@ public class DocumentEventServiceImpl implements IDocumentEventService {
             return result;
         }
         result.setData(documentEventResult);
+        result.setObjId(documentEventResult.getDocId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -77,9 +81,10 @@ public class DocumentEventServiceImpl implements IDocumentEventService {
         BeanUtil.copyProperties(documentEventVO, documentEvent);
         int count = documentEventDao.updateDBById(documentEvent);
         if (count < 1) {
-            logger.error("updateDocumentEvent error, update db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
+        result.setObjId(documentEventVO.getId());
         result.setCode(ResultData.OK);
         return result;
     }

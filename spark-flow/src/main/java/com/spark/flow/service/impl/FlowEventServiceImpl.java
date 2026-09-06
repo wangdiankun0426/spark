@@ -161,6 +161,9 @@ public class FlowEventServiceImpl extends BaseFlowService implements FlowEventSe
             instanceNode.setId(instanceNodeResult.getId());
             instanceNode.setAssigneeSetId(setId);
             int count = instanceNodeDao.updateDBById(instanceNode);
+            if (count < 1) {
+                logger.error("handleTaskCreated error, update db fail");
+            }
             // 构造催办任务实例
             this.generateFlowUrgeTaskInstance(templateNodeResult.getUrgeEnabled(), templateNodeResult.getUrgeInterval(), instanceResult.getId(), instanceNodeResult.getId());
             // 发送待办通知
@@ -267,7 +270,7 @@ public class FlowEventServiceImpl extends BaseFlowService implements FlowEventSe
         instanceNode.setStatus(status);
         int count = instanceNodeDao.updateDBById(instanceNode);
         if (count < 1) {
-            logger.error("onCompletedUserTask error, update instance node error");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         if (FlowInstanceStatusEnum.REJECTED.getValue().equals(status)) {

@@ -1,5 +1,6 @@
 package com.spark.manage.sys.impl;
 
+import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.common.bean.sys.entity.Role;
 import com.spark.common.bean.sys.query.RoleQuery;
@@ -32,6 +33,7 @@ import java.util.List;
  * @since 2024/2/25 21:36
  */
 @Service
+@LogPrint
 public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implements IRoleService {
     private final static Logger logger = LoggerFactory.getLogger(RoleServiceImpl.class);
     @Autowired
@@ -65,6 +67,7 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
         role.setId(roleId);
         int count = roleDao.insertDB(role);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         result.setObjId(roleId);
@@ -116,6 +119,7 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
         role.setMenuIds(menuIds);
         int count = roleDao.updateDBById(role);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         result.setObjId(roleVO.getId());
@@ -140,6 +144,7 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
         role.setId(roleVO.getId());
         int count = roleDao.deleteDBById(role);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
         result.setObjId(roleVO.getId());
@@ -176,8 +181,7 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
         if (menuIdList == null || menuIdList.isEmpty()) {
             return null;
         }
-        String menuIds = StringUtil.join(menuIdList, ",");
-        return menuIds;
+        return StringUtil.join(menuIdList, ",");
     }
 
     /**

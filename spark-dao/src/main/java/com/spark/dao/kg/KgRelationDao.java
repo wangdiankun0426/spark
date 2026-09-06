@@ -67,13 +67,6 @@ public interface KgRelationDao extends BaseDao<KgRelation> {
     KgRelationResult queryKgRelation(KgRelationQuery query);
 
     /**
-     * 查询最大ID
-     * @return 最大ID
-     */
-    @Select("select max(id) from kg_relation")
-    Long queryKgRelationMaxId();
-
-    /**
      * 批量更新头实体 id（用于实体合并）
      * @param oldEntityId 旧实体 id
      * @param newEntityId 新实体 id

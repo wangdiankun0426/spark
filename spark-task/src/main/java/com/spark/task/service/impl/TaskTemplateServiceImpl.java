@@ -57,7 +57,7 @@ public class TaskTemplateServiceImpl extends BaseService<TaskTemplateQuery, Task
         BeanUtil.copyProperties(taskTemplateVO, taskTemplate);
         int count = taskTemplateDao.insertDB(taskTemplate);
         if (count < 1) {
-            logger.error("createTaskTemplate error, insert db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         result.setObjId(taskTemplate.getId());
@@ -88,7 +88,7 @@ public class TaskTemplateServiceImpl extends BaseService<TaskTemplateQuery, Task
         BeanUtil.copyProperties(taskTemplateVO, taskTemplate);
         int count = taskTemplateDao.updateDBById(taskTemplate);
         if (count < 1) {
-            logger.error("updateTaskTemplate error, update db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         result.setObjId(taskTemplate.getId());
@@ -120,7 +120,7 @@ public class TaskTemplateServiceImpl extends BaseService<TaskTemplateQuery, Task
         taskTemplate.setId(taskTemplateVO.getId());
         int count = taskTemplateDao.deleteDBById(taskTemplate);
         if (count < 1) {
-            logger.error("deleteTaskTemplate error, delete db fail");
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
         // 级联删除该模板下的参数

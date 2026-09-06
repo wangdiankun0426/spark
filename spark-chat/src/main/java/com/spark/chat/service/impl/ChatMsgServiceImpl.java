@@ -350,6 +350,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         chatMsg.setSignStatus(ChatMsgStatusEnum.OK.getValue());
         int count = chatMsgDao.updateDBById(chatMsg);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         result.setCode(ResultData.OK);
@@ -373,6 +374,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         chatMsg.setReadStatus(ChatMsgStatusEnum.OK.getValue());
         int count = chatMsgDao.updateDBById(chatMsg);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         result.setCode(ResultData.OK);

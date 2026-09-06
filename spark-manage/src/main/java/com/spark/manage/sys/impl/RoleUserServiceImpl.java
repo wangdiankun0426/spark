@@ -1,5 +1,6 @@
 package com.spark.manage.sys.impl;
 
+import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.common.bean.sys.query.RoleUserQuery;
 import com.spark.common.bean.sys.query.UserQuery;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
  * @since 2024/3/26 16:29
  */
 @Service
+@LogPrint
 public class RoleUserServiceImpl extends BaseService<RoleUserQuery, RoleUserResult> implements IRoleUserService {
     @Autowired
     private RoleUserDao roleUserDao;

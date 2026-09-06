@@ -147,6 +147,7 @@ public class GlobalFlowableEventListener implements FlowableEventListener {
         int count = instanceDao.updateByFlowableInstanceId(instance);
         if (count <= 0) {
             logger.error("handleProcessCompleted error, update db fail");
+            return;
         }
         // 发送完结通知
         flowMessageService.sendFlowNotice(instanceId, MessageTypeEnum.FLOW_COMPLETED.getType());
@@ -172,6 +173,7 @@ public class GlobalFlowableEventListener implements FlowableEventListener {
         int count = instanceDao.updateByFlowableInstanceId(instance);
         if (count <= 0) {
             logger.error("handleProcessCancelled error, update db fail");
+            return;
         }
         // 发送驳回通知
         flowMessageService.sendFlowNotice(instanceId, MessageTypeEnum.FLOW_REJECTED.getType());

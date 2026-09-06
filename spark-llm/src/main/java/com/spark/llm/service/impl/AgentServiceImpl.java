@@ -1,6 +1,7 @@
 package com.spark.llm.service.impl;
 
 import com.spark.config.aspectj.annotation.DataScope;
+import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.kb.query.KnowledgeQuery;
@@ -26,6 +27,7 @@ import com.spark.dao.llm.SkillDao;
 import com.spark.common.enums.AgentToolEnum;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.ObjectTypeEnum;
+import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.llm.agent.AgentFactory;
 import com.spark.llm.service.IAgentService;
@@ -79,6 +81,7 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
      * @return 创建结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.AGENT_INSERT)
     public ResultData<Void> createAgent(AgentVO agentVO) {
         ResultData<Void> result = new ResultData<>();
         if (agentVO == null) {
@@ -91,9 +94,10 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
         agent.setId(id);
         int count = agentDao.insertDB(agent);
         if (count < 1) {
-            logger.error("createAgent error, insert db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
+        result.setObjId(agent.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -104,6 +108,7 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
      * @return 修改结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.AGENT_UPDATE)
     public ResultData<Void> updateAgent(AgentVO agentVO) {
         ResultData<Void> result = new ResultData<>();
         if (agentVO == null || agentVO.getId() == null) {
@@ -121,11 +126,12 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
         BeanUtil.copyProperties(agentVO, agent);
         int count = agentDao.updateDBById(agent);
         if (count < 1) {
-            logger.error("updateAgent error, update db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         // 清掉agent缓存
         agentFactory.clearAgentCache(agentVO.getId());
+        result.setObjId(agent.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -136,6 +142,7 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
      * @return  删除结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.AGENT_DELETE)
     public ResultData<Void> deleteAgent(AgentVO agentVO) {
         ResultData<Void> result = new ResultData<>();
         if (agentVO == null || agentVO.getId() == null) {
@@ -153,11 +160,12 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
         agent.setId(agentVO.getId());
         int count = agentDao.deleteDBById(agent);
         if (count < 1) {
-            logger.error("deleteAgent error, delete db fail");
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
         // 清掉agent缓存
         agentFactory.clearAgentCache(agentVO.getId());
+        result.setObjId(agent.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -186,6 +194,7 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
      * @return 详情
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.AGENT_DETAIL)
     public ResultData<AgentResult> queryAgentDetail(AgentQuery query) {
         ResultData<AgentResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -198,6 +207,7 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
             return result;
         }
         result.setData(agentResult);
+        result.setObjId(agentResult.getId());
         result.setCode(ResultData.OK);
         return result;
     }

@@ -19,6 +19,7 @@ import com.spark.common.bean.kb.vo.RetrieveLogVO;
 import com.spark.common.bean.sys.query.UserQuery;
 import com.spark.common.bean.sys.result.UserResult;
 import com.spark.config.aspectj.annotation.DataScope;
+import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.dao.dms.DocumentDao;
 import com.spark.dao.kb.KnowledgeDao;
 import com.spark.dao.kb.RetrieveLogDao;
@@ -57,6 +58,7 @@ import java.util.Set;
  * @since 2026-08-28 16:30:00
  */
 @Service
+@LogPrint
 public class RetrieveLogServiceImpl extends BaseService<RetrieveLogQuery, RetrieveLogResult> implements IRetrieveLogService {
     private final static Logger logger = LoggerFactory.getLogger(RetrieveLogServiceImpl.class);
     @Autowired
@@ -170,7 +172,7 @@ public class RetrieveLogServiceImpl extends BaseService<RetrieveLogQuery, Retrie
         BeanUtil.copyProperties(retrieveLogVO, retrieveLog);
         int count = retrieveLogDao.updateDBById(retrieveLog);
         if (count < 1) {
-            logger.error("feedback error, update db fail, id={}", retrieveLogVO.getId());
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
         result.setCode(ResultData.OK);

@@ -13,6 +13,9 @@ import com.spark.common.bean.form.result.FormResult;
 import com.spark.common.bean.form.result.FormVersionResult;
 import com.spark.common.bean.form.vo.FormFieldVO;
 import com.spark.common.bean.form.vo.FormVO;
+import com.spark.common.enums.OperateTypeEnum;
+import com.spark.config.aspectj.annotation.LogPrint;
+import com.spark.config.aspectj.annotation.OperateLog;
 import com.spark.dao.form.FormDao;
 import com.spark.dao.form.FormFieldDao;
 import com.spark.dao.form.FormVersionDao;
@@ -45,6 +48,7 @@ import java.util.UUID;
  * @since 2024-07-01 09:11:13
  */
 @Service
+@LogPrint
 public class FormServiceImpl extends BaseService<FormQuery, FormResult> implements IFormService {
     private final static Logger logger = LoggerFactory.getLogger(FormServiceImpl.class);
     @Autowired
@@ -62,6 +66,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
      * @return 创建结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.FORM_INSERT)
     public ResultData<Form> createForm(FormVO formVO) {
         ResultData<Form> result = new ResultData<>();
         if (formVO == null) {
@@ -95,6 +100,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
             return result;
         }
         result.setData(form);
+        result.setObjId(formId);
         result.setCode(ResultData.OK);
         return result;
     }
@@ -105,6 +111,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
      * @return 修改结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.FORM_UPDATE)
     public ResultData<Void> updateForm(FormVO formVO) {
         ResultData<Void> result = new ResultData<>();
         if (formVO == null || formVO.getId() == null) {
@@ -115,9 +122,10 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         BeanUtil.copyProperties(formVO, form);
         int count = formDao.updateDBById(form);
         if (count < 1) {
-            logger.error("updateForm error, update db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
+        result.setObjId(form.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -128,6 +136,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
      * @return  删除结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.FORM_DELETE)
     public ResultData<Void> deleteForm(FormVO formVO) {
         ResultData<Void> result = new ResultData<>();
         if (formVO == null || formVO.getId() == null) {
@@ -138,9 +147,10 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         form.setId(formVO.getId());
         int count = formDao.deleteDBById(form);
         if (count < 1) {
-            logger.error("deleteForm error, delete db fail");
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
+        result.setObjId(form.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -168,6 +178,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
      * @return 表单详情
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.FORM_DETAIL)
     public ResultData<FormResult> queryFormDetail(FormQuery query) {
         ResultData<FormResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -180,6 +191,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
             return result;
         }
         result.setData(formResult);
+        result.setObjId(formResult.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -227,6 +239,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
      * @return 保存结果
      */
     @Override
+    @OperateLog(operateType = OperateTypeEnum.FORM_SAVE)
     public ResultData<Void> saveFormJson(FormVO formVO) {
         ResultData<Void> result = new ResultData<>();
         if (formVO == null || formVO.getId() == null) {
@@ -280,9 +293,10 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         form.setRevNum(revNum);
         count = formDao.updateDBById(form);
         if (count < 1) {
-            logger.error("saveFormJson error, update from db fail");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
+        result.setObjId(formId);
         result.setCode(ResultData.OK);
         return result;
     }
