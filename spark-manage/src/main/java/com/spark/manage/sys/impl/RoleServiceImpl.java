@@ -60,6 +60,8 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
         role.setName(roleVO.getName());
         role.setDataScope(roleVO.getDataScope());
         role.setStatus(roleVO.getStatus());
+        String menuIds = this.buildMenuIds(roleVO);
+        role.setMenuIds(menuIds);
         role.setId(roleId);
         int count = roleDao.insertDB(role);
         if (count < 1) {
@@ -110,6 +112,8 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
         role.setName(roleVO.getName());
         role.setDataScope(roleVO.getDataScope());
         role.setStatus(roleVO.getStatus());
+        String menuIds = this.buildMenuIds(roleVO);
+        role.setMenuIds(menuIds);
         int count = roleDao.updateDBById(role);
         if (count < 1) {
             return result;
@@ -157,6 +161,23 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
         for (RoleResult roleResult : list) {
             roleResult.setDataScopeName(DataScopeEnum.indexOf(roleResult.getDataScope()).getDesc());
         }
+    }
+
+    /**
+     * 拼接角色菜单ID为逗号字符串
+     * @param roleVO 角色参数
+     * @return 逗号分隔的菜单ID字符串
+     */
+    private String buildMenuIds(RoleVO roleVO) {
+        if (roleVO == null) {
+            return null;
+        }
+        List<Long> menuIdList = roleVO.getMenuIds();
+        if (menuIdList == null || menuIdList.isEmpty()) {
+            return null;
+        }
+        String menuIds = StringUtil.join(menuIdList, ",");
+        return menuIds;
     }
 
     /**

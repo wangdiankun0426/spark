@@ -62,6 +62,7 @@ CREATE TABLE `sys_role` (
     `name` varchar(128) NOT NULL COMMENT '名称',
     `data_scope` int(4) NOT NULL DEFAULT 1 COMMENT '数据权限',
     `status` int(1) NOT NULL DEFAULT 1 COMMENT '状态',
+    `menu_ids` varchar(1024) NULL COMMENT '菜单ID列表',
 
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
     `created_by` bigint(12) NOT NULL COMMENT '创建人id',
@@ -84,6 +85,20 @@ CREATE TABLE `sys_role_user` (
     `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='用户角色关联表';
+
+DROP TABLE IF EXISTS `sys_menu`;
+CREATE TABLE `sys_menu` (
+    `id` bigint(12) NOT NULL COMMENT '主键',
+    `name` varchar(128) NOT NULL COMMENT '菜单名称',
+    `parent_id` bigint(12) NOT NULL DEFAULT 0 COMMENT '上级菜单id，一级菜单为0',
+
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='菜单表';
 
 DROP TABLE IF EXISTS `sys_notice`;
 CREATE TABLE `sys_notice` (

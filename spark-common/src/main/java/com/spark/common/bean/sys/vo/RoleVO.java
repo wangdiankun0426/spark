@@ -3,6 +3,8 @@ package com.spark.common.bean.sys.vo;
 import com.spark.common.bean.base.BaseVO;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * +++/\_/\
  * + ( °w° )=
@@ -29,4 +31,9 @@ public class RoleVO extends BaseVO {
      * 状态 StatusEnum
      */
     private Integer status;
+
+    /**
+     * 菜单ID列表
+     */
+    private List<Long> menuIds;
 }

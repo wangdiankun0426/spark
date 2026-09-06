@@ -51,3 +51,14 @@ export function getEmailCodeAPI(param) {
         params: param
     })
 }
+
+/**
+ * 查询session
+ * @returns {Promise<AxiosResponse<any>>}
+ */
+export function getSessionAPI() {
+    return request({
+        url: '/auth/session',
+        method: 'get'
+    })
+}

@@ -4,9 +4,6 @@
     <div class="flow-header">
       <div class="flow-header-left">
         <div class="flow-header-title">
-          <el-icon class="flow-header-icon">
-            <Share />
-          </el-icon>
           流程模板
         </div>
         <div class="flow-header-subtitle">浏览流程模板并发起新流程</div>
@@ -22,10 +19,16 @@
         <el-button type="primary" @click="handleOpenCreateForm">
           <el-icon><Plus /></el-icon>新增流程模板
         </el-button>
-        <el-button @click="formTemplateVisible = true">
+        <el-button
+            v-if="hasMenu(5013)"
+            @click="formTemplateVisible = true"
+        >
           <el-icon><Document /></el-icon>表单模板
         </el-button>
-        <el-button @click="taskTemplateVisible = true">
+        <el-button
+            v-if="hasMenu(5014)"
+            @click="taskTemplateVisible = true"
+        >
           <el-icon><List /></el-icon>任务模板
         </el-button>
       </div>
@@ -46,7 +49,6 @@
           :description="item.remark || '暂无备注'"
           :disabled="item.status !== 1"
           :height="300"
-          @click="handleOpenTemplate(item.id)"
       >
         <!-- 状态徽章 -->
         <template #badge>
@@ -54,20 +56,36 @@
             {{ item.statusName }}
           </span>
         </template>
-
         <!-- 配置标签 -->
         <template #tags>
           <el-tag size="small" effect="light" round v-if="item.typeName">{{ item.typeName }}</el-tag>
           <el-tag size="small" effect="light" round>版本 v{{ item.revNum }}</el-tag>
           <el-tag size="small" effect="light" round v-if="item.createdByName">{{ item.createdByName }}</el-tag>
         </template>
-
         <!-- 底部操作 -->
         <template #action>
-          <span class="action-item" @click.stop="handleOpenRecord(item)">记录</span>
-          <span class="action-item" @click.stop="handleOpenDesigner(item)">设计</span>
-          <span class="action-item action-edit" @click.stop="handleOpenUpdateForm(item)">修改</span>
-          <span class="action-item action-danger" @click.stop="handleDelete(item)">删除</span>
+          <span
+              v-if="hasMenu(5011)"
+              class="action-item"
+              @click.stop="handleOpenInstance(item)"
+          >流程实例</span>
+          <span
+              v-if="hasMenu(5012)"
+              class="action-item"
+              @click.stop="handleOpenDesigner(item)"
+          >设计流程</span>
+          <span
+              class="action-item"
+              @click="handleOpenTemplate(item.id)"
+          >申请</span>
+          <span
+              class="action-item action-edit"
+              @click.stop="handleOpenUpdateForm(item)"
+          >修改</span>
+          <span
+              class="action-item action-danger"
+              @click.stop="handleDelete(item)"
+          >删除</span>
         </template>
       </info-card>
     </div>
@@ -216,6 +234,7 @@ import TaskTemplateDrawer from '@/components/TaskTemplateDrawer/index.vue';
 import InfoCard from '@/components/InfoCard/index.vue';
 import store from "@/store/index.js";
 import { useRoute, useRouter } from 'vue-router';
+import {hasMenu} from "@/utils/menuUtil.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -534,7 +553,7 @@ function handleSubmitTemplateDrawer() {
  * 查看该流程模板的运行实例
  * @param item
  */
-function handleOpenRecord(item) {
+function handleOpenInstance(item) {
   router.push({ path: '/flow/instance', query: { templateId: item.id } });
 }
 
@@ -594,11 +613,6 @@ function handleDelete(item) {
   font-size: 20px;
   font-weight: 700;
   color: $color-text-primary;
-}
-
-.flow-header-icon {
-  font-size: 24px;
-  color: $color-primary;
 }
 
 .flow-header-subtitle {

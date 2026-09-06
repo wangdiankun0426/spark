@@ -9,24 +9,34 @@
             mode="vertical"
             class="flow-el-menu"
         >
-          <el-menu-item index="/flow/application">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><flow-list/></el-icon>
+          <el-menu-item v-if="hasMenu(501)" index="/flow/application">
+            <el-icon style="font-size: 24px;">
+              <flow-application/>
+            </el-icon>
             <template #title>流程申请</template>
           </el-menu-item>
-          <el-menu-item index="/flow/myApplication">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><my-applied-list/></el-icon>
+          <el-menu-item v-if="hasMenu(502)" index="/flow/myApplication">
+            <el-icon style="font-size: 24px;">
+              <my-application/>
+            </el-icon>
             <template #title>我的申请</template>
           </el-menu-item>
-          <el-menu-item index="/flow/myTodo">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><my-pending-list/></el-icon>
+          <el-menu-item v-if="hasMenu(503)" index="/flow/myTodo">
+            <el-icon style="font-size: 24px;">
+              <my-todo/>
+            </el-icon>
             <template #title>我的待办</template>
           </el-menu-item>
-          <el-menu-item index="/flow/myDone">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><my-applied-list/></el-icon>
+          <el-menu-item v-if="hasMenu(504)" index="/flow/myDone">
+            <el-icon style="font-size: 24px;">
+              <my-done/>
+            </el-icon>
             <template #title>我的已办</template>
           </el-menu-item>
-          <el-menu-item index="/flow/copyMe">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><copy-me/></el-icon>
+          <el-menu-item v-if="hasMenu(505)" index="/flow/copyMe">
+            <el-icon style="font-size: 24px;">
+              <copy-me/>
+            </el-icon>
             <template #title>抄送给我</template>
           </el-menu-item>
         </el-menu>
@@ -44,10 +54,12 @@
 
 import {computed} from "vue";
 import {useRoute} from "vue-router";
-import FlowList from "@/assets/icons/flowList.vue";
-import MyAppliedList from "@/assets/icons/myAppliedList.vue";
-import MyPendingList from "@/assets/icons/myPendingList.vue";
+import FlowApplication from "@/assets/icons/flowApplication.vue";
+import MyTodo from "@/assets/icons/myTodo.vue";
+import MyDone from "@/assets/icons/myDone.vue";
 import CopyMe from "@/assets/icons/copyMe.vue";
+import {hasMenu} from "@/utils/menuUtil.js";
+import MyApplication from "@/assets/icons/myApplication.vue";
 
 const route = useRoute();
 

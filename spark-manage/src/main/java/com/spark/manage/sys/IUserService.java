@@ -49,17 +49,10 @@ public interface IUserService {
 
     /**
      * 查询用户详情
-     * @param userVO 查询参数
+     * @param  query 查询参数
      * @return 查询结果
      */
-    ResultData<UserResult> queryUserDetail(UserVO userVO);
-
-    /**
-     * 强制退出
-     * @param loginVO 退出的参数
-     * @return 退出结果
-     */
-    ResultData<Void> forceLogout(LoginVO loginVO);
+    ResultData<UserResult> queryUserDetail(UserQuery query);
 
     /**
      * 修改密码

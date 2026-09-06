@@ -32,8 +32,8 @@
   </div>
 </template>
 <script setup>
-import {userDetailAPI, uploadAvatarAPI} from "@/api/sys/user";
-import {ref, computed} from "vue";
+import {uploadAvatarAPI} from "@/api/sys/user";
+import {computed} from "vue";
 import {useStore} from "vuex";
 import {toast} from "uview-plus";
 import UserAvatar from "@/components/UserAvatar/index.vue"

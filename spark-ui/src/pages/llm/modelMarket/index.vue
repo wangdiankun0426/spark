@@ -4,9 +4,6 @@
     <div class="market-header">
       <div class="market-header-left">
         <div class="market-header-title">
-          <el-icon class="market-header-icon">
-            <Cpu />
-          </el-icon>
           模型市场
         </div>
         <div class="market-header-subtitle">浏览各厂商提供的语言模型、向量模型与排序模型，按需选用</div>
@@ -119,7 +116,6 @@
               :description="model.description || '暂无描述'"
               :disabled="!canChat(model)"
               :height="300"
-              @click="handleSelectModel(model)"
           >
             <!-- 模型类型 + 启用状态 -->
             <template #badge>
@@ -127,21 +123,21 @@
                 {{ model.typeName || typeText(model.type) }}
               </span>
               <el-tag :type="model.status === 1 ? 'success' : 'info'" size="small">
-                {{ model.status === 1 ? '已启用' : '已停用' }}
+                {{ model.statusName }}
               </el-tag>
             </template>
-
-            <!-- 参数标签（仅语言模型） -->
+            <!-- 参数标签 -->
             <template #tags>
               <template v-if="model.type === 1">
                 <el-tag size="small" :type="model.enableThinking === 1 ? 'success' : 'info'">
-                  {{ model.enableThinking === 1 ? '思考：开启' : '思考：未开启' }}
+                  思考：{{ model.enableThinking === 1 ? '开启' : '未开启' }}
                 </el-tag>
-                <el-tag size="small" type="warning">温度：{{ model.temperature }}</el-tag>
+                <el-tag size="small" type="warning">
+                  温度：{{ model.temperature }}
+                </el-tag>
               </template>
             </template>
-
-            <!-- 底部元信息：厂商 + 备注 -->
+            <!-- 底部元信息 -->
             <template #meta>
               <span class="meta-item" v-if="model.providerName">
                 <el-icon><OfficeBuilding /></el-icon>
@@ -152,15 +148,21 @@
                 <span>{{ model.remark }}</span>
               </span>
             </template>
-
             <!-- 底部操作 -->
             <template #action>
-              <span v-if="canChat(model)" class="action-item">
-                使用
-                <el-icon><ArrowRight /></el-icon>
-              </span>
-              <span class="action-item action-edit" @click.stop="handleOpenUpdateModel(model)">修改</span>
-              <span class="action-item action-danger" @click.stop="handleDeleteModel(model)">删除</span>
+              <span
+                  v-if="canChat(model)"
+                  class="action-item"
+                  @click="handleSelectModel(model)"
+              >使用</span>
+              <span
+                  class="action-item action-edit"
+                  @click.stop="handleOpenUpdateModel(model)"
+              >修改</span>
+              <span
+                  class="action-item action-danger"
+                  @click.stop="handleDeleteModel(model)"
+              >删除</span>
             </template>
           </info-card>
         </div>
@@ -407,7 +409,7 @@ import LlmChat from '@/components/Chat/llmChat.vue'
 import InfoCard from '@/components/InfoCard/index.vue'
 import {
   Search, Cpu, Grid, Collection, Histogram, Box,
-  OfficeBuilding, InfoFilled, ArrowRight, Plus
+  OfficeBuilding, InfoFilled, Plus
 } from '@element-plus/icons-vue'
 
 const loading = ref(false)
@@ -488,7 +490,7 @@ const emptyText = computed(() => {
 })
 
 /**
- * 加载模型厂商列表（拉全量）
+ * 加载模型厂商列表
  */
 function loadProviders() {
   pageProviderListAPI({ page: false }).then(res => {
@@ -497,7 +499,7 @@ function loadProviders() {
 }
 
 /**
- * 分页加载模型列表（按当前厂商、类型、关键字从接口查询）
+ * 分页加载模型列表
  */
 function loadModels() {
   loading.value = true
@@ -517,7 +519,7 @@ function loadModels() {
 }
 
 /**
- * 立即触发模型检索（回车、失焦、清空时调用），回到第一页
+ * 立即触发模型检索，回到第一页
  */
 function handleSearch() {
   if (searchTimer) {
@@ -649,7 +651,7 @@ function handleSubmitProviderForm() {
 }
 
 /**
- * 删除厂商（二次确认，联动刷新列表与模型）
+ * 删除厂商
  * @param provider
  */
 function handleDeleteProvider(provider) {
@@ -782,7 +784,7 @@ function handleSubmitModelForm() {
 }
 
 /**
- * 删除模型（二次确认）
+ * 删除模型
  * @param model
  */
 function handleDeleteModel(model) {
@@ -842,7 +844,7 @@ function typeText(type) {
 }
 
 /**
- * 判断模型是否可对话（仅启用状态的语言模型可对话）
+ * 判断模型是否可对话
  * @param model
  */
 function canChat(model) {
@@ -892,11 +894,6 @@ function handleSelectModel(model) {
   font-size: 20px;
   font-weight: 700;
   color: $color-text-primary;
-}
-
-.market-header-icon {
-  font-size: 24px;
-  color: $color-primary;
 }
 
 .market-header-subtitle {

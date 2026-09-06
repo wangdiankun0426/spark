@@ -43,7 +43,8 @@ export default [
         name: 'flowDesigner',
         component: flowDesigner,
         meta: {
-            title: '流程设计器'
+            title: '流程设计器',
+            menuId: 5012
         }
     },
     {
@@ -51,7 +52,8 @@ export default [
         name: 'workflowDesigner',
         component: workflowIndex,
         meta: {
-            title: '工作流设计器'
+            title: '工作流设计器',
+            menuId: 2022
         }
     },
     {

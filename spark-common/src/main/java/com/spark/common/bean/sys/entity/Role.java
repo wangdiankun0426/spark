@@ -27,4 +27,8 @@ public class Role extends BaseEntity {
      * 状态 StatusEnum
      */
     private Integer status;
+    /**
+     * 菜单ID列表
+     */
+    private String menuIds;
 }

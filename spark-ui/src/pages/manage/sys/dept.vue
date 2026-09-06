@@ -136,8 +136,8 @@
 </template>
 
 <script setup>
-import {createDeptAPI, treeDeptAPI, updateDeptAPI, deleteDeptAPI} from '@/api/sys/dept.js';
-import {pageUserListAPI} from '@/api/sys/user.js';
+import {createDeptAPI, treeDeptAPI, updateDeptAPI, deleteDeptAPI} from '@/api/manage/sys/dept.js';
+import {pageUserListAPI} from '@/api/manage/sys/user.js';
 import {ElMessage, ElMessageBox} from "element-plus";
 import {getCurrentInstance, nextTick, ref} from 'vue';
 

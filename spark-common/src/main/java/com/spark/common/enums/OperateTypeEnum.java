@@ -17,6 +17,7 @@ public enum OperateTypeEnum {
     USER_UPDATE(11, "修改用户"),
     USER_DELETE(12, "删除用户"),
     USER_UPDATE_PASSWORD(13, "修改密码"),
+    USER_DETAIL(14, "查询用户详情"),
     // 部门相关的操作记录
     DEPT_INSERT(20, "新增部门"),
     DEPT_UPDATE(21, "修改部门"),

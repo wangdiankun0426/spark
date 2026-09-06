@@ -22,7 +22,8 @@ export default [
                 name: 'agent',
                 component: agent,
                 meta: {
-                    title: 'Agent'
+                    title: 'Agent',
+                    menuId: 201
                 }
             },
             {
@@ -30,7 +31,8 @@ export default [
                 name: 'llmWorkflow',
                 component: workflowHub,
                 meta: {
-                    title: 'WorkFlow'
+                    title: 'WorkFlow',
+                    menuId: 202
                 }
             },
             {
@@ -38,7 +40,8 @@ export default [
                 name: 'modelMarket',
                 component: modelMarket,
                 meta: {
-                    title: '模型市场'
+                    title: '模型市场',
+                    menuId: 203
                 }
             },
             {
@@ -46,7 +49,8 @@ export default [
                 name: 'llmSkill',
                 component: skill,
                 meta: {
-                    title: '技能库'
+                    title: '技能库',
+                    menuId: 204
                 }
             },
             {
@@ -54,7 +58,8 @@ export default [
                 name: 'llmMcp',
                 component: mcp,
                 meta: {
-                    title: 'MCP服务'
+                    title: 'MCP服务',
+                    menuId: 205
                 }
             },
             {
@@ -62,7 +67,8 @@ export default [
                 name: 'workflowInstance',
                 component: WorkflowInstance,
                 meta: {
-                    title: '我的运行'
+                    title: '运行记录',
+                    menuId: 2021
                 }
             },
         ]

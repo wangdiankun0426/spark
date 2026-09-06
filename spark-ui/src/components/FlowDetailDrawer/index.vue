@@ -197,9 +197,6 @@ const instanceLevel = computed({
   set: (val) => emit('update:level', val)
 })
 
-/** 详情场景（已有申请人）时紧急程度不允许修改，仅发起流程时可选 */
-const levelReadonly = computed(() => !!props.createdByName)
-
 /** 表单模型，供 el-form 必填校验取值 */
 const formModel = reactive({
   name: instanceName,

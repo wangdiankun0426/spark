@@ -9,33 +9,33 @@
             mode="vertical"
             class="llm-el-menu"
         >
-          <el-menu-item index="/llm/agent">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+          <el-menu-item v-if="hasMenu(201)" index="/llm/agent">
+            <el-icon style="font-size: 24px;">
               <Agent/>
             </el-icon>
             <template #title>Agent</template>
           </el-menu-item>
-          <el-menu-item index="/llm/workflow">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+          <el-menu-item v-if="hasMenu(202)" index="/llm/workflow">
+            <el-icon style="font-size: 24px;">
               <Workflow/>
             </el-icon>
             <template #title>WorkFlow</template>
           </el-menu-item>
-          <el-menu-item index="/llm/modelMarket">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+          <el-menu-item v-if="hasMenu(203)" index="/llm/modelMarket">
+            <el-icon style="font-size: 24px;">
               <ModelMarket/>
             </el-icon>
             <template #title>模型市场</template>
           </el-menu-item>
-          <el-menu-item index="/llm/skill">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+          <el-menu-item v-if="hasMenu(204)" index="/llm/skill">
+            <el-icon style="font-size: 24px;">
               <Skill/>
             </el-icon>
             <template #title>技能库</template>
           </el-menu-item>
-          <el-menu-item index="/llm/mcp">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
-              <Connection/>
+          <el-menu-item v-if="hasMenu(205)" index="/llm/mcp">
+            <el-icon style="font-size: 24px;">
+              <Mcp/>
             </el-icon>
             <template #title>MCP服务</template>
           </el-menu-item>
@@ -58,7 +58,8 @@ import Agent from "@/assets/icons/agent.vue";
 import ModelMarket from "@/assets/icons/modelMarket.vue";
 import Workflow from "@/assets/icons/workflow.vue";
 import Skill from "@/assets/icons/skill.vue";
-import { Connection } from '@element-plus/icons-vue';
+import {hasMenu} from "@/utils/menuUtil.js";
+import Mcp from "@/assets/icons/mcp.vue";
 
 const route = useRoute();
 

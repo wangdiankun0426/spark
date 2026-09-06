@@ -4,7 +4,6 @@
     <div class="wf-header">
       <div class="wf-header-left">
         <div class="wf-header-title">
-          <el-icon class="wf-header-icon"><MagicStick /></el-icon>
           WORKFLOW
         </div>
         <div class="wf-header-subtitle">浏览AI工作流，快速运行或在线编辑</div>
@@ -20,7 +19,7 @@
         <el-button type="primary" @click="handleOpenCreateForm">
           <el-icon><Plus /></el-icon>新增WorkFlow
         </el-button>
-        <el-button @click="formTemplateVisible = true">
+        <el-button @click="formTemplateVisible = true" v-if="hasMenu(2023)">
           <el-icon><Document /></el-icon>表单模板
         </el-button>
       </div>
@@ -41,7 +40,6 @@
           :description="item.description || '暂无描述'"
           :disabled="item.status !== 1"
           :height="280"
-          @click="handleOpenRun(item)"
       >
         <!--状态徽章-->
         <template #badge>
@@ -49,19 +47,36 @@
             {{ item.statusName }}
           </span>
         </template>
-
         <!--标签-->
         <template #tags>
           <el-tag size="small" effect="light" round>版本 {{ item.revNum || '-' }}</el-tag>
           <el-tag v-if="item.createdByName" size="small" effect="light" round>{{ item.createdByName }}</el-tag>
         </template>
-
         <!--底部操作-->
         <template #action>
-          <span class="action-item" @click.stop="handleOpenRecord(item)">记录</span>
-          <span class="action-item" @click.stop="handleOpenDesigner(item)">设计流程</span>
-          <span class="action-item action-edit" @click.stop="handleOpenUpdateForm(item)">修改</span>
-          <span class="action-item action-danger" @click.stop="handleDelete(item)">删除</span>
+          <span
+              class="action-item"
+              @click.stop="handleOpenRecord(item)"
+              v-if="hasMenu(2021)"
+          >运行记录</span>
+          <span
+              class="action-item"
+              @click.stop="handleOpenDesigner(item)"
+              v-if="hasMenu(2022)"
+          >设计流程</span>
+          <span
+              v-if="item.status === 1"
+              class="action-item"
+              @click="handleOpenRun(item)"
+          >使用</span>
+          <span
+              class="action-item action-edit"
+              @click.stop="handleOpenUpdateForm(item)"
+          >修改</span>
+          <span
+              class="action-item action-danger"
+              @click.stop="handleDelete(item)"
+          >删除</span>
         </template>
       </info-card>
     </div>
@@ -110,9 +125,14 @@
           </el-select>
         </el-form-item>
         <el-form-item label="状态" prop="status">
-          <el-select v-model="form.status" style="width:100%">
-            <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
-          </el-select>
+          <el-switch
+              v-model="form.status"
+              :active-value="1"
+              :inactive-value="-1"
+              active-text="已启用"
+              inactive-text="已停用"
+              inline-prompt
+          />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -123,8 +143,11 @@
       </template>
     </el-drawer>
 
-    <!-- 表单模板抽屉（复用管理端） -->
-    <form-template-drawer v-model="formTemplateVisible" :type="4" />
+    <!-- 表单模板抽屉 -->
+    <form-template-drawer
+        v-model="formTemplateVisible"
+        :type="4"
+    />
   </div>
 </template>
 
@@ -144,6 +167,7 @@ import RunInstanceDrawer from '@/components/WfRunInstanceDrawer/index.vue';
 import FormTemplateDrawer from '@/components/FormTemplateDrawer/index.vue';
 import InfoCard from '@/components/InfoCard/index.vue';
 import { MagicStick, Search, Plus } from '@element-plus/icons-vue';
+import {hasMenu} from "@/utils/menuUtil.js";
 
 const router = useRouter();
 const keyword = ref('');
@@ -172,10 +196,6 @@ const formRules = {
 const formOptions = ref([]);
 // 表单模板抽屉显隐
 const formTemplateVisible = ref(false);
-const statusOptions = [
-  { label: '关闭', value: -1 },
-  { label: '开启', value: 1 }
-];
 
 const themes = ['blue', 'green', 'purple', 'orange', 'cyan', 'pink', 'indigo'];
 let searchTimer = null;
@@ -413,11 +433,6 @@ function handleDelete(item) {
   font-size: 20px;
   font-weight: 700;
   color: $color-text-primary;
-}
-
-.wf-header-icon {
-  font-size: 24px;
-  color: $color-primary;
 }
 
 .wf-header-subtitle {

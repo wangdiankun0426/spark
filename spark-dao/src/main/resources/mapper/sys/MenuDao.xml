@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.sys.MenuDao" >
+    <sql id="Base_Column_List" >
+        id , name , parent_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <select id="queryMenuList" resultType="com.spark.common.bean.sys.entity.Menu">
+        select <include refid="Base_Column_List"/>
+        from  sys_menu
+        where delete_flag = 1
+        order by parent_id asc, id asc
+    </select>
+</mapper>

@@ -4,23 +4,23 @@
       <div class="logo-box">
         <img src="../assets/images/logo.png" width="50" height="40"/>
       </div>
-      <el-menu-item index="/home">
+      <el-menu-item v-if="hasMenu(10)" index="/home">
         <el-icon><DataAnalysis /></el-icon>
         <span>首页</span>
       </el-menu-item>
-      <el-menu-item index="/llm">
+      <el-menu-item v-if="hasMenu(20)" index="/llm">
         <el-icon><Ai /></el-icon>
         <span>AI应用</span>
       </el-menu-item>
-      <el-menu-item index="/kb">
+      <el-menu-item v-if="hasMenu(30)" index="/kb">
         <el-icon><FolderOpened /></el-icon>
         <span>知识库</span>
       </el-menu-item>
-      <el-menu-item index="/kg">
+      <el-menu-item v-if="hasMenu(40)" index="/kg">
         <el-icon><GraphV2 /></el-icon>
         <span>知识图谱</span>
       </el-menu-item>
-      <el-menu-item index="/flow">
+      <el-menu-item v-if="hasMenu(50)" index="/flow">
         <el-icon><Connection /></el-icon>
         <span>流程中心</span>
       </el-menu-item>
@@ -31,7 +31,10 @@
 
       <div class="tool-box">
         <!-- 主题切换 -->
-        <div class="tool-item" :title="currentTheme === 'light' ? '切换为深色主题' : '切换为浅色主题'" @click="toggleTheme">
+        <div v-if="hasMenu(101)" class="tool-item"
+             :title="currentTheme === 'light' ? '切换为深色主题' : '切换为浅色主题'"
+             @click="toggleTheme"
+        >
           <el-icon style="font-size: 20px">
             <Sunny v-if="currentTheme === 'light'" />
             <Moon v-else />
@@ -39,6 +42,7 @@
         </div>
         <!-- 搜索快捷功能 -->
         <el-popover
+            v-if="hasMenu(102)"
             v-model:visible="searchVisible"
             trigger="click"
             placement="bottom"
@@ -73,11 +77,12 @@
           </div>
         </el-popover>
         <!-- 通讯录 -->
-        <div class="tool-item" @click="openContactDrawer" title="通讯录">
+        <div v-if="hasMenu(103)" class="tool-item" @click="openContactDrawer" title="通讯录">
           <el-icon style="font-size: 20px"><ContactList /></el-icon>
         </div>
         <!-- 消息 -->
         <el-popover
+            v-if="hasMenu(104)"
             trigger="click"
             placement="bottom"
             :width="360"
@@ -108,6 +113,11 @@
                         {{ item.title }}
                       </el-tag>
                       <p class="nav-message-content">{{ item.content }}</p>
+                      <!-- 可跳转消息提供显式详情入口 -->
+                      <div v-if="isClickableMessage(item.refId)" class="nav-message-detail">
+                        <span>详情</span>
+                        <el-icon><Right /></el-icon>
+                      </div>
                     </div>
                   </el-timeline-item>
                 </el-timeline>
@@ -145,7 +155,7 @@
           </div>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item @click="openUserInfoForm">个人中心</el-dropdown-item>
+              <el-dropdown-item v-if="hasMenu(105)" @click="openUserInfoForm">个人中心</el-dropdown-item>
               <el-dropdown-item @click="handleLogout">退出系统</el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -162,24 +172,24 @@
 </template>
 
 <script setup>
-import {userDetailAPI} from "@/api/sys/user.js";
-import {logoutAPI} from "@/api/auth/login.js";
-import {queryMyMessageListAPI} from "@/api/sys/message.js";
-import {noticeListAPI} from "@/api/sys/notice.js";
+import {getSessionAPI, logoutAPI} from "@/api/manage/auth/login.js";
+import {queryMyMessageListAPI} from "@/api/manage/sys/message.js";
+import {noticeListAPI} from "@/api/manage/sys/notice.js";
 import {ElMessageBox} from "element-plus";
 import {ref, computed, nextTick, watch} from "vue";
-import {ArrowDown, DataAnalysis, FolderOpened, Connection, Search, Setting, Moon, Sunny} from "@element-plus/icons-vue";
+import {ArrowDown, DataAnalysis, FolderOpened, Connection, Search, Setting, Moon, Sunny, Right} from "@element-plus/icons-vue";
 import { useRouter, useRoute } from 'vue-router';
 import {useStore} from "vuex";
 import {getTheme, applyTheme, setTheme} from '@/utils/themeUtil';
+import {hasMenu} from '@/utils/menuUtil.js';
 import UserAvatar from '@/components/UserAvatar';
 import UserProfile from '@/components/UserProfile';
 import Contacts from '@/components/Chat/contacts.vue';
 import ContactList from "@/assets/icons/contactList.vue";
 import GraphV2 from "@/assets/icons/graphV2.vue";
 import Ai from "@/assets/icons/ai.vue";
-import FlowListIcon from '@/assets/icons/flowList.vue';
-import MyPendingListIcon from '@/assets/icons/myPendingList.vue';
+import FlowApplicationIcon from '@/assets/icons/flowApplication.vue';
+import MyDoneIcon from '@/assets/icons/myDone.vue';
 import KnowledgeIcon from '@/assets/icons/knowledge.vue';
 import GraphIcon from '@/assets/icons/graph.vue';
 import AgentIcon from '@/assets/icons/agent.vue';
@@ -224,21 +234,23 @@ const searchInputRef = ref(null);
 
 // 快捷功能列表
 const shortcutList = ref([
-  { name: '流程申请', path: '/flow/application', icon: FlowListIcon },
-  { name: '我的待办', path: '/flow/myTodo', icon: MyPendingListIcon },
-  { name: '知识库', path: '/kb/knowledge', icon: KnowledgeIcon },
-  { name: '知识图谱', path: '/kg/graph', icon: GraphIcon },
-  { name: 'Agent', path: '/llm/agent', icon: AgentIcon },
-  { name: '模型市场', path: '/llm/modelMarket', icon: ModelMarketIcon }
+  { name: '流程申请', path: '/flow/application', icon: FlowApplicationIcon, menuId: 501 },
+  { name: '我的待办', path: '/flow/myTodo', icon: MyDoneIcon, menuId: 503 },
+  { name: '知识库', path: '/kb/knowledge', icon: KnowledgeIcon, menuId: 301 },
+  { name: '知识图谱', path: '/kg/graph', icon: GraphIcon, menuId: 401 },
+  { name: 'Agent', path: '/llm/agent', icon: AgentIcon, menuId: 201 },
+  { name: '模型市场', path: '/llm/modelMarket', icon: ModelMarketIcon, menuId: 203 }
 ]);
 
-// 按关键字过滤快捷功能
+// 按菜单权限与关键字过滤快捷功能
 const filteredShortcuts = computed(() => {
   const kw = searchKeyword.value.trim();
-  if (!kw) {
-    return shortcutList.value;
-  }
-  return shortcutList.value.filter(item => item.name.includes(kw));
+  return shortcutList.value.filter(item => {
+    if (!hasMenu(item.menuId)) {
+      return false;
+    }
+    return !kw || item.name.includes(kw);
+  });
 });
 
 /**
@@ -266,7 +278,7 @@ watch(searchVisible, (val) => {
  * 拉取当前登录用户详情并同步至 store（登录后首次进入时触发）
  */
 function getUserDetail() {
-  userDetailAPI().then(res => {
+  getSessionAPI().then(res => {
     store.dispatch('user/setUserInfo', { userInfo: res.data })
   })
 }
@@ -277,6 +289,9 @@ getUserDetail()
  * 打开个人中心弹窗
  */
 function openUserInfoForm() {
+  if (!hasMenu(105)) {
+    return;
+  }
   userInfoVisible.value = true;
 }
 
@@ -596,6 +611,20 @@ function handleViewNotice(row) {
     transition: $transition-fast;
     &.is-link:hover {
       background-color: $color-primary-soft;
+    }
+  }
+  .nav-message-detail {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed $border-color-light;
+    color: $color-primary;
+    font-size: 12px;
+    .el-icon {
+      font-size: 12px;
     }
   }
   .nav-message-footer {

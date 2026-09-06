@@ -27,4 +27,11 @@ public interface ILoginService {
      * @return
      */
     ResultData<Void> logout();
+
+    /**
+     * 强制退出
+     * @param loginVO 退出的参数
+     * @return 退出结果
+     */
+    ResultData<Void> forceLogout(LoginVO loginVO);
 }

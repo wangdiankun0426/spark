@@ -107,11 +107,13 @@
 
     <!-- 底部导航栏 -->
     <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#1890ff">
-      <up-tabbar-item name="home" icon="home-fill" text="首页"/>
-      <up-tabbar-item name="flow" icon="order" text="流程"/>
-      <up-tabbar-item name="llm" icon="grid-fill" text="AI+"/>
-      <up-tabbar-item name="message" icon="chat-fill" text="消息"/>
-      <up-tabbar-item name="my" icon="account" text="我的"/>
+      <up-tabbar-item
+          v-for="tab in tabBarItems"
+          :key="tab.name"
+          :name="tab.name"
+          :icon="tab.icon"
+          :text="tab.text"
+      />
     </up-tabbar>
   </view>
 </template>
@@ -121,10 +123,19 @@ import { ref, computed, onMounted } from "vue"
 import { useStore } from "vuex"
 import DashboardCard from "@/pages/home/DashboardCard.vue"
 import UserAvatar from "@/components/UserAvatar/index.vue"
-import { userDetailAPI } from "@/api/sys/user"
+import {getSessionAPI} from "@/api/auth/login";
+import {checkMenuAccess, MENU_IDS, visibleTabs} from "@/utils/menuUtil";
 
 const store = useStore()
 const active = ref("home")
+
+// 页面显示时校验个人中心菜单权限
+onShow(() => {
+  checkMenuAccess(MENU_IDS.HOME);
+});
+
+// 按菜单权限过滤后的底部导航项
+const tabBarItems = computed(() => visibleTabs())
 
 const userInfo = computed(() => store.getters["user/getUserInfo"] || {
   id: undefined,
@@ -137,7 +148,7 @@ onMounted(() => {
 })
 
 function loadUserInfo() {
-  userDetailAPI().then(res => {
+  getSessionAPI().then(res => {
     if (res.code === 200) {
       store.dispatch("user/setUserInfo", { userInfo: res.data })
     }

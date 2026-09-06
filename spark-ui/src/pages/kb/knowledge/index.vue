@@ -4,9 +4,6 @@
     <div class="knowledge-header">
       <div class="knowledge-header-left">
         <div class="knowledge-header-title">
-          <el-icon class="knowledge-header-icon">
-            <Collection />
-          </el-icon>
           知识库
         </div>
         <div class="knowledge-header-subtitle">浏览知识库切片与召回参数，支撑语义检索与问答</div>
@@ -42,7 +39,6 @@
           :description="item.description || '暂无描述'"
           :disabled="item.status === 0"
           :height="340"
-          @click="handleOpenDocument(item)"
       >
         <!-- 状态徽章 -->
         <template #badge>
@@ -79,6 +75,11 @@
         </template>
         <!-- 底部操作 -->
         <template #action>
+           <span
+               v-if="hasMenu(3011)"
+               class="action-item action-edit"
+               @click="handleOpenDocument(item)"
+           >知识库文档</span>
           <span
               class="action-item action-edit"
               @click.stop="handleOpenUpdateForm(item)"
@@ -319,6 +320,7 @@ import {
   Collection, Search, Plus, Histogram, Sort
 } from '@element-plus/icons-vue'
 import InfoCard from '@/components/InfoCard/index.vue'
+import {hasMenu} from "@/utils/menuUtil.js";
 
 const router = useRouter()
 
@@ -592,11 +594,6 @@ function handleDelete(item) {
   font-size: 20px;
   font-weight: 700;
   color: $color-text-primary;
-}
-
-.knowledge-header-icon {
-  font-size: 24px;
-  color: $color-primary;
 }
 
 .knowledge-header-subtitle {

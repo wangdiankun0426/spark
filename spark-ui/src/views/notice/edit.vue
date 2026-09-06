@@ -8,7 +8,7 @@
   </div>
 </template>
 <script setup>
-import {noticeSaveTextAPI, noticeViewTextAPI} from '@/api/sys/notice.js';
+import {noticeSaveTextAPI, noticeViewTextAPI} from '@/api/manage/sys/notice.js';
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 import {ElMessage} from "element-plus";

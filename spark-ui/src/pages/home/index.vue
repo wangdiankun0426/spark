@@ -16,11 +16,22 @@
               </div>
             </div>
             <div class="welcome-right">
-              <el-button size="large" class="welcome-btn" type="primary" @click="openProfile">
+              <el-button
+                  v-if="hasMenu(105)"
+                  size="large"
+                  class="welcome-btn"
+                  type="primary"
+                  @click="openProfile"
+              >
                 <el-icon><User /></el-icon>
                 <span>个人中心</span>
               </el-button>
-              <el-button size="large" class="welcome-btn" type="danger" @click="handleLogout">
+              <el-button
+                  size="large"
+                  class="welcome-btn"
+                  type="danger"
+                  @click="handleLogout"
+              >
                 <el-icon><SwitchButton /></el-icon>
                 <span>退出系统</span>
               </el-button>
@@ -48,8 +59,8 @@
       <el-col :span="6">
         <div class="shortcut-panel">
           <div class="section-title">快捷功能</div>
-          <el-row :gutter="12">
-            <el-col v-for="item in shortcutList" :key="item.path" :span="8">
+          <el-row v-if="visibleShortcuts.length" :gutter="12">
+            <el-col v-for="item in visibleShortcuts" :key="item.path" :span="8">
               <div class="shortcut-card" @click="goShortcut(item.path)">
                 <el-icon class="shortcut-icon"><component :is="item.icon" /></el-icon>
                 <div class="shortcut-name">{{ item.name }}</div>
@@ -217,16 +228,17 @@ import {
   User,
   CaretTop
 } from '@element-plus/icons-vue'
-import { logoutAPI } from '@/api/auth/login.js'
+import { logoutAPI } from '@/api/manage/auth/login.js'
 import UserAvatar from '@/components/UserAvatar'
 import UserProfile from '@/components/UserProfile'
-import FlowListIcon from '@/assets/icons/flowList.vue'
-import MyPendingListIcon from '@/assets/icons/myPendingList.vue'
+import FlowApplicationIcon from '@/assets/icons/flowApplication.vue'
+import MyDoneIcon from '@/assets/icons/myDone.vue'
 import KnowledgeIcon from '@/assets/icons/knowledge.vue'
 import AgentIcon from '@/assets/icons/agent.vue'
 import WorkflowIcon from '@/assets/icons/workflow.vue'
 import ModelMarketIcon from '@/assets/icons/modelMarket.vue'
 import GraphIcon from '@/assets/icons/graph.vue'
+import {hasMenu} from '@/utils/menuUtil.js'
 import SearchDocumentIcon from '@/assets/icons/searchDocument.vue'
 
 const router = useRouter()
@@ -246,13 +258,16 @@ const dataList = ref([
 
 // 快捷功能入口列表
 const shortcutList = ref([
-  { name: '流程申请', path: '/flow/application', icon: FlowListIcon },
-  { name: '我的待办', path: '/flow/myTodo', icon: MyPendingListIcon },
-  { name: '知识库', path: '/kb/knowledge', icon: KnowledgeIcon },
-  { name: '知识图谱', path: '/kg/graph', icon: GraphIcon },
-  { name: 'Agent', path: '/llm/agent', icon: AgentIcon },
-  { name: '模型市场', path: '/llm/modelMarket', icon: ModelMarketIcon }
+  { name: '流程申请', path: '/flow/application', icon: FlowApplicationIcon, menuId: 501 },
+  { name: '我的待办', path: '/flow/myTodo', icon: MyDoneIcon, menuId: 504 },
+  { name: '知识库', path: '/kb/knowledge', icon: KnowledgeIcon, menuId: 301 },
+  { name: '知识图谱', path: '/kg/graph', icon: GraphIcon, menuId: 401 },
+  { name: 'Agent', path: '/llm/agent', icon: AgentIcon, menuId: 201 },
+  { name: '模型市场', path: '/llm/modelMarket', icon: ModelMarketIcon, menuId: 203 }
 ])
+
+// 有菜单权限的快捷入口
+const visibleShortcuts = computed(() => shortcutList.value.filter(item => hasMenu(item.menuId)))
 
 // 知识库解析与检索评测假数据（后续接入真实接口后替换）
 const kbEvalMetrics = ref([

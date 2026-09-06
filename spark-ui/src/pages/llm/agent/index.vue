@@ -4,9 +4,6 @@
     <div class="agent-header">
       <div class="agent-header-left">
         <div class="agent-header-title">
-          <el-icon class="agent-header-icon">
-            <MagicStick />
-          </el-icon>
           AGENT
         </div>
         <div class="agent-header-subtitle">选择合适的Agent，开启智能对话</div>
@@ -40,7 +37,6 @@
           :description="agent.description || '暂无描述'"
           :disabled="agent.status !== 1"
           :height="360"
-          @click="handleSelectAgent(agent)"
       >
         <!-- 状态徽章 -->
         <template #badge>
@@ -104,9 +100,13 @@
             </el-tag>
           </div>
         </template>
-
         <!-- 底部操作 -->
         <template #action>
+           <span
+               v-if="agent.status === 1"
+               class="action-item"
+               @click="handleSelectAgent(agent)"
+           >使用</span>
           <span class="action-item action-edit" @click.stop="handleOpenUpdateForm(agent)">修改</span>
           <span class="action-item action-danger" @click.stop="handleDelete(agent)">删除</span>
         </template>
@@ -698,11 +698,6 @@ function handleDelete(agent) {
   font-size: 20px;
   font-weight: 700;
   color: $color-text-primary;
-}
-
-.agent-header-icon {
-  font-size: 24px;
-  color: $color-primary;
 }
 
 .agent-header-subtitle {

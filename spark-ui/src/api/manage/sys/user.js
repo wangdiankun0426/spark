@@ -1,4 +1,4 @@
-import request from '@/api/request'
+import request from '@/api/request.js'
 
 /**
  * 查询用户详情
@@ -65,19 +65,6 @@ export function deleteUserAPI(data)  {
 }
 
 /**
- * 强制退出
- * @param data
- * @returns {Promise<AxiosResponse<any>>}
- */
-export function forceLogoutAPI(data)  {
-  return request({
-    url: '/sys/user/forceLogout',
-    method: 'post',
-    params: data
-  })
-}
-
-/**
  * 修改密码
  * @param data
  * @returns {Promise<AxiosResponse<any>>}
@@ -87,16 +74,5 @@ export function updatePasswordAPI(data) {
     url: '/sys/user/updatePassword',
     method: 'post',
     params: data
-  })
-}
-
-/**
- * 同步企业微信组织架构
- * @returns {Promise<AxiosResponse<any>>}
- */
-export function syncWeComOrganizationAPI() {
-  return request({
-    url: '/weCom/syncOrganization',
-    method: 'get'
   })
 }

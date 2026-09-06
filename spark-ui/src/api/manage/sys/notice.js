@@ -1,4 +1,4 @@
-import request from '@/api/request'
+import request from '@/api/request.js'
 
 // 创建公告
 export function createNoticeAPI(data) {

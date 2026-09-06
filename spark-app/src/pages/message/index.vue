@@ -45,19 +45,32 @@
     </view>
 
     <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#0052cc">
-      <up-tabbar-item name="home" icon="home-fill" text="首页"/>
-      <up-tabbar-item name="flow" icon="order" text="流程"/>
-      <up-tabbar-item name="llm" icon="grid-fill" text="AI+"/>
-      <up-tabbar-item name="message" icon="chat-fill" text="消息"/>
-      <up-tabbar-item name="my" icon="account" text="我的"/>
+      <up-tabbar-item
+          v-for="tab in tabBarItems"
+          :key="tab.name"
+          :name="tab.name"
+          :icon="tab.icon"
+          :text="tab.text"
+      />
     </up-tabbar>
   </view>
 </template>
 <script setup>
-import {ref} from "vue";
+import {ref, computed} from "vue";
+import {onShow} from "@dcloudio/uni-app";
+import {MENU_IDS, visibleTabs, checkMenuAccess} from "@/utils/menuUtil";
 import {myMessageListAPI} from "@/api/sys/message";
 
 const active = ref("message");
+
+// 按菜单权限过滤后的底部导航项（随用户菜单权限响应式更新）
+const tabBarItems = computed(() => visibleTabs());
+
+// 页面显示时校验消息菜单权限
+onShow(() => {
+  checkMenuAccess(MENU_IDS.MESSAGE);
+});
+
 const messageList = ref([]);
 const loading = ref(true);
 

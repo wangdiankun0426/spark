@@ -28,7 +28,7 @@
 
       <!-- 空状态 -->
       <view v-else-if="instanceList.length === 0" class="empty-box">
-        <up-empty text="暂无流程" icon="list"/>
+        <up-empty :text="activeTab ? '暂无流程' : '暂无可用功能'" icon="list"/>
       </view>
 
       <!-- 实例卡片 -->
@@ -45,14 +45,14 @@
           </view>
           <view class="card-info-row">
             <text class="info-label">紧急程度</text>
-            <text class="info-value">{{ levelText(item.level) }}</text>
+            <text class="info-value">{{ item.levelName }}</text>
           </view>
           <view class="card-info-row">
-            <text class="info-label">{{ tabIndex === 3 ? '抄送人' : '申请人' }}</text>
+            <text class="info-label">{{ isCopyTab ? '抄送人' : '申请人' }}</text>
             <text class="info-value">{{ item.createdByName }}</text>
           </view>
           <view class="card-info-row">
-            <text class="info-label">{{ tabIndex === 3 ? '抄送时间' : '申请时间' }}</text>
+            <text class="info-label">{{ isCopyTab ? '抄送时间' : '申请时间' }}</text>
             <text class="info-value">{{ item.createdDt }}</text>
           </view>
         </view>
@@ -61,17 +61,20 @@
     </scroll-view>
 
     <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#0052cc">
-      <up-tabbar-item name="home" icon="home-fill" text="首页"/>
-      <up-tabbar-item name="flow" icon="order" text="流程"/>
-      <up-tabbar-item name="llm" icon="grid-fill" text="AI+"/>
-      <up-tabbar-item name="message" icon="chat-fill" text="消息"/>
-      <up-tabbar-item name="my" icon="account" text="我的"/>
+      <up-tabbar-item
+          v-for="tab in tabBarItems"
+          :key="tab.name"
+          :name="tab.name"
+          :icon="tab.icon"
+          :text="tab.text"
+      />
     </up-tabbar>
   </view>
 </template>
 <script setup>
-import {ref} from "vue";
+import {ref, computed} from "vue";
 import {onShow} from "@dcloudio/uni-app";
+import {MENU_IDS, hasMenu, visibleTabs, checkMenuAccess} from "@/utils/menuUtil";
 import {
   pageMyApplicationListAPI,
   pageMyTodoListAPI,
@@ -80,43 +83,42 @@ import {
 } from "@/api/flow/instance";
 
 const active = ref("flow");
-const tabList = [
-  {name: '我的申请'},
-  {name: '我的待办'},
-  {name: '我的已办'},
-  {name: '抄送给我'}
+
+// 按菜单权限过滤后的底部导航项
+const tabBarItems = computed(() => visibleTabs());
+// 流程中心页签配置
+const FLOW_TAB_CONFIGS = [
+  {name: '我的申请', menuId: MENU_IDS.FLOW_MY_APPLY, api: pageMyApplicationListAPI, type: 1},
+  {name: '我的待办', menuId: MENU_IDS.FLOW_MY_TODO, api: pageMyTodoListAPI, type: 3},
+  {name: '我的已办', menuId: MENU_IDS.FLOW_MY_DONE, api: pageMyDoneListAPI, type: 4},
+  {name: '抄送给我', menuId: MENU_IDS.FLOW_COPY_TO_ME, api: pageCopyMyListAPI, type: 5}
 ];
+// 当前用户可见页签
+const visibleTabList = computed(() => FLOW_TAB_CONFIGS.filter(cfg => hasMenu(cfg.menuId)));
+const tabList = computed(() => visibleTabList.value.map(cfg => ({name: cfg.name})));
 const tabIndex = ref(0);
+// 当前激活页签配置
+const activeTab = computed(() => visibleTabList.value[tabIndex.value]);
+const isCopyTab = computed(() => (activeTab.value ? activeTab.value.type === 5 : false));
 const instanceList = ref([]);
 const loading = ref(false);
 const loadStatus = ref('loadmore');
 const query = ref({pageNo: 1, pageSize: 15});
 const total = ref(0);
-// 页签对应的列表接口：1 我的申请 3 我的待办 4 我的已办 5 抄送给我
-const tabApiList = [pageMyApplicationListAPI, pageMyTodoListAPI, pageMyDoneListAPI, pageCopyMyListAPI];
-// 页签对应的详情类型（详情页按类型展示操作按钮，5 抄送只读）
-const tabTypeList = [1, 3, 4, 5];
-
-/**
- * 紧急程度文案
- * @param level 紧急程度
- */
-function levelText(level) {
-  const levelMap = {1: '一般', 2: '重要', 3: '紧急'};
-  return levelMap[level] || '一般';
-}
 
 /**
  * 查询当前页签列表
  */
 function handleGetInstanceList() {
-  const api = tabApiList[tabIndex.value];
-  if (!api) {
+  const tab = activeTab.value;
+  if (!tab) {
+    instanceList.value = [];
+    loadStatus.value = 'nomore';
     return;
   }
   loading.value = true;
   loadStatus.value = 'loading';
-  api(query.value).then(res => {
+  tab.api(query.value).then(res => {
     if (res.code === 200 && res.data) {
       const rows = res.data.rows || [];
       instanceList.value = query.value.pageNo === 1 ? rows : instanceList.value.concat(rows);
@@ -155,12 +157,21 @@ function handleLoadMore() {
 }
 
 /**
- * 从详情页返回时刷新当前页签（审批后状态变化）
+ * 页面显示时校验流程中心菜单权限并刷新当前页签
  */
 onShow(() => {
-  query.value.pageNo = 1;
-  instanceList.value = [];
-  handleGetInstanceList();
+  checkMenuAccess(MENU_IDS.FLOW).then(allowed => {
+    if (!allowed) {
+      return;
+    }
+    // 页签下标越界（可能因权限调整导致页签减少）时回到第一个可见页签
+    if (tabIndex.value >= visibleTabList.value.length) {
+      tabIndex.value = 0;
+    }
+    query.value.pageNo = 1;
+    instanceList.value = [];
+    handleGetInstanceList();
+  });
 });
 
 /**
@@ -169,7 +180,7 @@ onShow(() => {
  */
 function handleInstanceClick(item) {
   uni.navigateTo({
-    url: '/pages/flow/instanceDetail?id=' + (item.instanceId || item.id) + '&type=' + tabTypeList[tabIndex.value]
+    url: '/pages/flow/instanceDetail?id=' + (item.instanceId || item.id) + '&type=' + (activeTab.value ? activeTab.value.type : 1)
   });
 }
 

@@ -21,15 +21,8 @@ export default [
                 name: 'knowledge',
                 component: knowledge,
                 meta: {
-                    title: '知识库'
-                }
-            },
-            {
-                path: '/kb/search',
-                name: 'search',
-                component: search,
-                meta: {
-                    title: '知识文档'
+                    title: '知识库',
+                    menuId: 301
                 }
             },
             {
@@ -37,7 +30,17 @@ export default [
                 name: 'knowledgeDocument',
                 component: knowledgeDocument,
                 meta: {
-                    title: '知识库文档'
+                    title: '知识库文档',
+                    menuId: 3011
+                }
+            },
+            {
+                path: '/kb/search',
+                name: 'search',
+                component: search,
+                meta: {
+                    title: '知识检索',
+                    menuId: 302
                 }
             },
             {
@@ -45,7 +48,8 @@ export default [
                 name: 'kbTest',
                 component: kbTest,
                 meta: {
-                    title: '检索测试'
+                    title: '检索测试',
+                    menuId: 303
                 }
             },
             {
@@ -53,7 +57,8 @@ export default [
                 name: 'kbStats',
                 component: kbStats,
                 meta: {
-                    title: '检索统计'
+                    title: '检索统计',
+                    menuId: 304
                 }
             },
         ]

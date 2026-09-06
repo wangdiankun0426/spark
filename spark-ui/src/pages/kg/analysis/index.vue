@@ -2,10 +2,6 @@
   <div class="analysis-container">
     <div class="kd-header">
       <div class="kd-header-left">
-        <el-button text @click="handleBack">
-          <el-icon><ArrowLeft /></el-icon>返回
-        </el-button>
-        <el-divider direction="vertical" />
         <div class="kd-header-title">
           <el-icon class="kd-header-icon"><DataAnalysis /></el-icon>
           <span>图谱分析 - {{ graphName }}</span>
@@ -216,10 +212,6 @@ async function loadAll() {
     pagerankData.value.forEach(r => { r.type = typeMap[r.id] || '-' })
     centralityData.value.forEach(r => { r.type = typeMap[r.id] || '-' })
   }
-}
-
-function handleBack() {
-  router.push({ path: '/kg/graph' })
 }
 </script>
 

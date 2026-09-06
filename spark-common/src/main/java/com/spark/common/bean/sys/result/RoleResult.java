@@ -32,6 +32,11 @@ public class RoleResult extends BaseResult {
     private String dataScopeName;
 
     /**
+     * 菜单ID列表
+     */
+    private String menuIds;
+
+    /**
      * 状态 StatusEnum
      */
     private Integer status;

@@ -1,4 +1,4 @@
-import request from '@/api/request'
+import request from '@/api/request.js'
 
 /**
  * 登录
@@ -57,15 +57,27 @@ export function getEmailCodeAPI(param) {
     })
 }
 
+
 /**
- * 用户注册
- * @param data 注册参数
+ * 强制退出
+ * @param data
  * @returns {Promise<AxiosResponse<any>>}
  */
-export function registerAPI(data) {
+export function forceLogoutAPI(data)  {
     return request({
-        url: '/auth/register',
+        url: '/auth/forceLogout',
         method: 'post',
         params: data
+    })
+}
+
+/**
+ * 查询session
+ * @returns {Promise<AxiosResponse<any>>}
+ */
+export function getSessionAPI() {
+    return request({
+        url: '/auth/session',
+        method: 'get'
     })
 }

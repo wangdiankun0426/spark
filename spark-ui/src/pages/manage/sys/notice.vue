@@ -207,8 +207,8 @@
 
 <script setup>
 import {getCurrentInstance, ref} from 'vue';
-import {pageNoticeListAPI,createNoticeAPI, updateNoticeAPI, noticeDetailAPI, deleteNoticeAPI, delistNoticeAPI} from '@/api/sys/notice';
-import {pageUserListAPI} from '@/api/sys/user';
+import {pageNoticeListAPI,createNoticeAPI, updateNoticeAPI, noticeDetailAPI, deleteNoticeAPI, delistNoticeAPI} from '@/api/manage/sys/notice';
+import {pageUserListAPI} from '@/api/manage/sys/user';
 import SelectUser from '@/components/SelectUser';
 import SelectDept from '@/components/SelectDept';
 import {ElMessage, ElMessageBox} from "element-plus";

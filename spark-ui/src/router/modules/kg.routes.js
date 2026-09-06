@@ -24,7 +24,8 @@ export default [
                 name: 'graph',
                 component: graph,
                 meta: {
-                    title: '知识图谱'
+                    title: '知识图谱',
+                    menuId: 401
                 }
             },
             {
@@ -32,7 +33,8 @@ export default [
                 name: 'graphDetail',
                 component: graphDetail,
                 meta: {
-                    title: '图谱详情'
+                    title: '图谱详情',
+                    menuId: 4011
                 }
             },
             {
@@ -40,7 +42,8 @@ export default [
                 name: 'graphSearch',
                 component: graphSearch,
                 meta: {
-                    title: '文档检索'
+                    title: '知识检索',
+                    menuId: 402
                 }
             },
             {
@@ -48,7 +51,8 @@ export default [
                 name: 'graphDocument',
                 component: graphDocument,
                 meta: {
-                    title: '图谱文档'
+                    title: '图谱文档',
+                    menuId: 4012
                 }
             },
             {
@@ -56,7 +60,8 @@ export default [
                 name: 'kgEntity',
                 component: kgEntity,
                 meta: {
-                    title: '实体'
+                    title: '图谱实体',
+                    menuId: 4013
                 }
             },
             {
@@ -64,7 +69,8 @@ export default [
                 name: 'kgRelation',
                 component: kgRelation,
                 meta: {
-                    title: '关系'
+                    title: '图谱关系',
+                    menuId: 4014
                 }
             },
             {
@@ -72,7 +78,8 @@ export default [
                 name: 'kgAudit',
                 component: kgAudit,
                 meta: {
-                    title: '实体审核'
+                    title: '实体审核',
+                    menuId: 403
                 }
             },
             {
@@ -80,7 +87,8 @@ export default [
                 name: 'kgAnalysis',
                 component: kgAnalysis,
                 meta: {
-                    title: '图谱分析'
+                    title: '图谱分析',
+                    menuId: 404
                 }
             },
         ]

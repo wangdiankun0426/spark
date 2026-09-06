@@ -202,7 +202,7 @@
 
 <script setup>
 import {getCurrentInstance, ref} from 'vue';
-import {pageMessageListAPI, sendMessageAPI, deleteMessageAPI} from '@/api/sys/message';
+import {pageMessageListAPI, sendMessageAPI, deleteMessageAPI} from '@/api/manage/sys/message';
 import SelectUser from '@/components/SelectUser';
 import {ElMessage, ElMessageBox} from "element-plus";
 import {Search} from '@element-plus/icons-vue';

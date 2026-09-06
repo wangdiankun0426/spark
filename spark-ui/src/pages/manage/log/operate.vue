@@ -63,7 +63,7 @@
 </template>
 
 <script setup>
-import {pageLogOperateListAPI, logOperateTypeListAPI} from '@/api/log/logOperate.js';
+import {pageLogOperateListAPI, logOperateTypeListAPI} from '@/api/manage/log/logOperate.js';
 import {ref} from 'vue';
 
 const total = ref(0);

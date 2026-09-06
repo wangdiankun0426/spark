@@ -23,7 +23,7 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { pageUserListAPI } from '@/api/sys/user'
+import { pageUserListAPI } from '@/api/manage/sys/user'
 
 defineOptions({ name: 'selectUser' })
 

@@ -2,17 +2,6 @@ import request from '@/api/request'
 import store from '@/store'
 
 /**
- * 查询当前用户数据
- * @returns {Promise<AxiosResponse<any>>}
- */
-export function userDetailAPI() {
-  return request({
-    url: '/sys/user/detail',
-    method: 'get',
-  })
-}
-
-/**
  * 分页查询用户列表
  * @param query
  * @returns {Promise<AxiosResponse<any>>}

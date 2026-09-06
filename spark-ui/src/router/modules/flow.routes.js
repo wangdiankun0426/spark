@@ -21,7 +21,8 @@ export default [
                 name: 'flowApplication',
                 component: flowApplication,
                 meta: {
-                    title: '流程申请'
+                    title: '流程申请',
+                    menuId: 501
                 },
             },
             {
@@ -29,7 +30,8 @@ export default [
                 name: 'flowInstance',
                 component: flowInstance,
                 meta: {
-                    title: '流程实例'
+                    title: '流程实例',
+                    menuId: 5011
                 }
             },
             {
@@ -37,7 +39,8 @@ export default [
                 name: 'myApplication',
                 component: myApplication,
                 meta: {
-                    title: '我的申请'
+                    title: '我的申请',
+                    menuId: 502
                 },
             },
             {
@@ -45,7 +48,8 @@ export default [
                 name: 'myTodo',
                 component: myTodo,
                 meta: {
-                    title: '我的待办'
+                    title: '我的待办',
+                    menuId: 503
                 },
             },
             {
@@ -53,7 +57,8 @@ export default [
                 name: 'myDone',
                 component: myDone,
                 meta: {
-                    title: '我的已办'
+                    title: '我的已办',
+                    menuId: 504
                 },
             },
             {
@@ -61,7 +66,8 @@ export default [
                 name: 'copyMe',
                 component: copyMe,
                 meta: {
-                    title: '抄送给我'
+                    title: '抄送给我',
+                    menuId: 505
                 },
             }
         ]

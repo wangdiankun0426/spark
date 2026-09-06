@@ -16,6 +16,7 @@ import kgRoutes from './modules/kg.routes'
 
 // 导入 utils
 import { isAdmin } from '../utils/utils.js'
+import {hasMenu} from "@/utils/menuUtil.js";
 
 // 将所有需要挂载到 layout 的模块注入 children
 layoutRoutes[0].children = [
@@ -23,7 +24,7 @@ layoutRoutes[0].children = [
         path: '/home',
         name: 'home',
         component: () => import('@/pages/home/index'),
-        meta: { title: '首页' },
+        meta: { title: '首页', menuId: 10 },
         children: [
             { path: '/home/index', name: 'home', component: () => import('@/pages/home/index') }
         ]
@@ -47,17 +48,21 @@ const router = createRouter({
 })
 
 // 全局前置守卫
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
     // 设置标题
     document.title = to.meta.title ? `星火云应用平台 - ${to.meta.title}` : '星火云应用平台'
-
     // 管理端权限校验
     if (to.path.startsWith('/manage')) {
         if (!isAdmin()) {
             return next('/noPermission')
         }
     }
-
+    // 菜单权限校验：需要菜单权限的路由，无权直达跳无权限页
+    if (to.meta.menuId != null) {
+        if (!hasMenu(to.meta.menuId)) {
+            return next('/noPermission')
+        }
+    }
     next()
 })
 

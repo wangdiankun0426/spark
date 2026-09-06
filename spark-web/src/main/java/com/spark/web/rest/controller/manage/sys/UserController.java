@@ -76,22 +76,12 @@ public class UserController {
 
     /**
      * 查询用户详情
-     * @param userVO 查询参数
+     * @param query 查询参数
      * @return 查询结果
      */
     @GetMapping("detail")
-    public ResultData<UserResult> queryUserDetail(UserVO userVO) {
-        return userService.queryUserDetail(userVO);
-    }
-
-    /**
-     * 强制退出
-     * @param loginVO 退出的参数
-     * @return 退出结果
-     */
-    @PostMapping("forceLogout")
-    public ResultData<Void> forceLogout(LoginVO loginVO) {
-        return userService.forceLogout(loginVO);
+    public ResultData<UserResult> queryUserDetail(UserQuery query) {
+        return userService.queryUserDetail(query);
     }
 
     /**

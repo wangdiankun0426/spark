@@ -16,7 +16,7 @@
     </view>
 
     <!-- Agent列表 -->
-    <scroll-view v-if="tabIndex === 0" class="llm-list" scroll-y>
+    <scroll-view v-if="activeTabKey === 'agent'" class="llm-list" scroll-y>
       <!-- 加载中 -->
       <view v-if="agentLoading" class="loading-box">
         <up-loading-icon text="加载中..."/>
@@ -76,7 +76,7 @@
     </scroll-view>
 
     <!-- WorkFlow 运行实例列表 -->
-    <scroll-view v-else-if="tabIndex === 1" class="llm-list" scroll-y @scrolltolower="loadMoreInstances">
+    <scroll-view v-else-if="activeTabKey === 'workflow'" class="llm-list" scroll-y @scrolltolower="loadMoreInstances">
       <!-- 加载中 -->
       <view v-if="instanceLoading && instanceList.length === 0" class="loading-box">
         <up-loading-icon text="加载中..."/>
@@ -122,7 +122,7 @@
     </scroll-view>
 
     <!-- 模型市场 -->
-    <view v-else-if="tabIndex === 2" class="market-container">
+    <view v-else-if="activeTabKey === 'model'" class="market-container">
       <!-- 厂商筛选 -->
       <scroll-view class="provider-scroll" scroll-x>
         <view class="provider-tags">
@@ -189,18 +189,27 @@
       </scroll-view>
     </view>
 
+    <!-- 无任何页签权限时展示空态 -->
+    <view v-else class="empty-box">
+      <up-empty text="暂无可用功能" icon="grid-fill"/>
+    </view>
+
     <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#0052cc">
-      <up-tabbar-item name="home" icon="home-fill" text="首页"/>
-      <up-tabbar-item name="flow" icon="order" text="流程"/>
-      <up-tabbar-item name="llm" icon="grid-fill" text="AI+"/>
-      <up-tabbar-item name="message" icon="chat-fill" text="消息"/>
-      <up-tabbar-item name="my" icon="account" text="我的"/>
+      <up-tabbar-item
+          v-for="tab in tabBarItems"
+          :key="tab.name"
+          :name="tab.name"
+          :icon="tab.icon"
+          :text="tab.text"
+      />
     </up-tabbar>
   </view>
 </template>
 
 <script setup>
-import {ref} from "vue"
+import {ref, computed} from "vue"
+import {onShow} from "@dcloudio/uni-app"
+import {MENU_IDS, hasMenu, visibleTabs, checkMenuAccess} from "@/utils/menuUtil"
 import {agentPageListAPI} from "@/api/llm/agent"
 import {pageInstanceListAPI} from "@/api/workflow/instance"
 import {pageModelListAPI} from "@/api/llm/model"
@@ -208,12 +217,25 @@ import {pageProviderListAPI} from "@/api/llm/provider"
 import UserAvatar from '@/components/UserAvatar/index.vue'
 
 const active = ref("llm")
-const tabList = [
-  {name: 'Agent'},
-  {name: 'WorkFlow'},
-  {name: '模型市场'}
+
+// 按菜单权限过滤后的底部导航项
+const tabBarItems = computed(() => visibleTabs())
+
+// AI+ 三个页签配置
+const TAB_CONFIGS = [
+  {key: 'agent', name: 'Agent', menuId: MENU_IDS.AI_AGENT},
+  {key: 'workflow', name: 'WorkFlow', menuId: MENU_IDS.AI_WORKFLOW},
+  {key: 'model', name: '模型市场', menuId: MENU_IDS.AI_MODEL_MARKET}
 ]
+// 当前用户可见页签
+const allowedTabs = computed(() => TAB_CONFIGS.filter(tab => hasMenu(tab.menuId)))
+const tabList = computed(() => allowedTabs.value.map(tab => ({name: tab.name})))
 const tabIndex = ref(0)
+// 当前激活页签 key
+const activeTabKey = computed(() => {
+  const tab = allowedTabs.value[tabIndex.value]
+  return tab ? tab.key : ''
+})
 
 // Agent 相关
 const agentList = ref([])
@@ -234,8 +256,20 @@ const modelLoading = ref(false)
 const modelLoaded = ref(false)
 const activeProviderId = ref(null)
 
-// 初始化加载第一个页签
-getAgentList()
+/**
+ * 按页签key懒加载对应列表（已加载过则不重复请求）
+ * @param key 页签key（agent/workflow/model）
+ */
+function loadTab(key) {
+  if (key === 'agent' && !agentLoading.value && !agentLoaded.value) {
+    getAgentList()
+  } else if (key === 'workflow' && !instanceLoading.value && !instanceLoaded.value) {
+    loadInstances()
+  } else if (key === 'model' && !modelLoading.value && !modelLoaded.value) {
+    loadProviders()
+    loadModels()
+  }
+}
 
 /**
  * 切换页签（按需加载）
@@ -243,15 +277,28 @@ getAgentList()
 function handleTabChange(tab) {
   const index = tab.index
   tabIndex.value = index
-
-  if (index === 0 && !agentLoaded.value) {
-    getAgentList()
-  } else if (index === 1 && !instanceLoaded.value) {
-    loadInstances()
-  } else if (index === 2 && !modelLoaded.value) {
-    loadProviders()
-    loadModels()
+  const tabDef = allowedTabs.value[index]
+  if (tabDef) {
+    loadTab(tabDef.key)
   }
+}
+
+// 页面显示时校验 AI+ 菜单权限并懒加载当前可见页签
+onShow(async () => {
+  const allowed = await checkMenuAccess(MENU_IDS.AI_APP)
+  if (!allowed) {
+    return
+  }
+  // 页签下标越界（可能因权限调整导致页签减少）时回到第一个可见页签
+  if (tabIndex.value >= allowedTabs.value.length) {
+    tabIndex.value = 0
+  }
+  loadTab(activeTabKey.value)
+})
+
+// 冷启动时若已缓存菜单权限则先懒加载首个可见页签（会话未缓存时由 onShow 兜底加载）
+if (activeTabKey.value) {
+  loadTab(activeTabKey.value)
 }
 
 /**

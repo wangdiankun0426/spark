@@ -1,15 +1,11 @@
 <template>
   <div class="error-page-container">
     <div class="error-content">
-      <el-result icon="error" title="403" sub-title="很抱歉，您没有权限访问此页面。">
-        <template #extra>
-          <div class="action-buttons">
-            <el-button type="primary" class="primary-btn" @click="$router.push('/')">返回首页</el-button>
-            <el-button class="secondary-btn" @click="handleContactAdmin">联系管理员</el-button>
-          </div>
-        </template>
-      </el-result>
-
+      <el-result
+          icon="error"
+          title="403"
+          sub-title="很抱歉，您没有权限访问此页面。"
+      />
       <div class="background-decor">
         <div class="circle circle-1"></div>
         <div class="circle circle-2"></div>
@@ -19,11 +15,7 @@
 </template>
 
 <script setup>
-import { ElMessage } from 'element-plus';
 
-const handleContactAdmin = () => {
-  ElMessage.info('请联系系统管理员为您分配相应权限。');
-};
 </script>
 
 <style lang="scss" scoped>
@@ -61,46 +53,6 @@ const handleContactAdmin = () => {
     color: #64748b;
     font-size: 16px;
     font-weight: 400;
-  }
-}
-
-.action-buttons {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  margin-top: 20px;
-
-  .primary-btn {
-    padding: 12px 28px;
-    height: auto;
-    font-weight: 600;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(244, 63, 94, 0.2);
-    background: linear-gradient(135deg, #f43f5e 0%, #fb7185 100%);
-    border: none;
-    transition: all 0.3s ease;
-
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 16px rgba(244, 63, 94, 0.3);
-      opacity: 0.9;
-    }
-  }
-
-  .secondary-btn {
-    padding: 12px 28px;
-    height: auto;
-    font-weight: 600;
-    border-radius: 12px;
-    color: #475569;
-    border: 1.5px solid #e2e8f0;
-    transition: all 0.3s ease;
-
-    &:hover {
-      background: #f8fafc;
-      border-color: #cbd5e1;
-      color: #1e293b;
-    }
   }
 }
 

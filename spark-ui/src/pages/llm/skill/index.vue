@@ -4,9 +4,6 @@
     <div class="skill-header">
       <div class="skill-header-left">
         <div class="skill-header-title">
-          <el-icon class="skill-header-icon">
-            <component :is="Skill" />
-          </el-icon>
           技能库
         </div>
         <div class="skill-header-subtitle">浏览平台沉淀的技能，智能体命中技能时将按其指令执行</div>
@@ -42,7 +39,6 @@
           :description="skill.description || '暂无描述'"
           :disabled="skill.status !== 1"
           :height="220"
-          @click="handleOpenSkill(skill)"
       >
         <!-- 状态徽章 -->
         <template #badge>
@@ -54,8 +50,18 @@
         </template>
         <!-- 底部操作-->
         <template #action>
-          <span class="action-item action-edit" @click.stop="handleOpenUpdateForm(skill)">修改</span>
-          <span class="action-item action-danger" @click.stop="handleDelete(skill)">删除</span>
+          <span
+              class="action-item"
+              @click="handleOpenSkill(skill)"
+          >详情</span>
+          <span
+              class="action-item action-edit"
+              @click.stop="handleOpenUpdateForm(skill)"
+          >修改</span>
+          <span
+              class="action-item action-danger"
+              @click.stop="handleDelete(skill)"
+          >删除</span>
         </template>
       </info-card>
     </div>
@@ -433,11 +439,6 @@ function handleDelete(skill) {
   font-size: 20px;
   font-weight: 700;
   color: $color-text-primary;
-}
-
-.skill-header-icon {
-  font-size: 24px;
-  color: $color-primary;
 }
 
 .skill-header-subtitle {

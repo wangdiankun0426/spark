@@ -1,6 +1,17 @@
 <template>
 </template>
 <script setup>
+import {onPageNotFound} from '@dcloudio/uni-app';
+
+// 打开不存在的页面时 兜底跳转 404
+onPageNotFound(() => {
+  uni.redirectTo({
+    url: '/pages/error/notFound',
+    fail: () => {
+      uni.reLaunch({url: '/pages/error/notFound'});
+    }
+  });
+});
 </script>
 <style lang="scss">
 @import 'node_modules/uview-plus/index.scss';

@@ -38,7 +38,6 @@
           :description="item.description || '暂无描述'"
           :disabled="item.status === 0"
           :height="340"
-          @click="handleOpenDocument(item)"
       >
         <!-- 状态徽章 -->
         <template #badge>
@@ -46,7 +45,6 @@
             {{ item.statusName }}
           </span>
         </template>
-
         <!-- 配置标签 -->
         <template #tags>
           <el-tag size="small" effect="light" round>抽取模型：{{ item.extractModelName }}</el-tag>
@@ -97,17 +95,23 @@
         </template>
         <!-- 底部操作 -->
         <template #action>
+           <span
+               v-if="hasMenu(4012)"
+               class="action-item"
+               @click="handleOpenDocument(item)"
+           >文档</span>
           <span
+              v-if="hasMenu(4013)"
               class="action-item"
               @click.stop="handleOpenEntity(item)"
-          >实体
-          </span>
+          >实体</span>
           <span
+              v-if="hasMenu(4014)"
               class="action-item"
               @click.stop="handleOpenRelation(item)"
-          >关系
-          </span>
+          >关系</span>
           <span
+              v-if="hasMenu(4011)"
               class="action-item"
               @click.stop="handleOpenGraphDetail(item)"
           >图谱</span>
@@ -307,6 +311,7 @@ import {
 import { pageModelListAPI } from '@/api/llm/model.js'
 import { Connection, Search, Plus, Delete, Box, Share } from '@element-plus/icons-vue'
 import InfoCard from '@/components/InfoCard/index.vue'
+import {hasMenu} from "@/utils/menuUtil.js";
 
 const router = useRouter()
 

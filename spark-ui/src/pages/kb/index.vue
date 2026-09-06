@@ -9,20 +9,28 @@
             mode="vertical"
             class="kb-el-menu"
         >
-          <el-menu-item index="/kb/knowledge">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><Knowledge/></el-icon>
+          <el-menu-item v-if="hasMenu(301)" index="/kb/knowledge">
+            <el-icon style="font-size: 24px;">
+              <Knowledge/>
+            </el-icon>
             <template #title>知识库</template>
           </el-menu-item>
-          <el-menu-item index="/kb/search">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><search-document/></el-icon>
+          <el-menu-item v-if="hasMenu(302)" index="/kb/search">
+            <el-icon style="font-size: 24px;">
+              <search-document/>
+            </el-icon>
             <template #title>知识检索</template>
           </el-menu-item>
-          <el-menu-item index="/kb/test">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><Test/></el-icon>
+          <el-menu-item v-if="hasMenu(303)" index="/kb/test">
+            <el-icon style="font-size: 24px;">
+              <Test/>
+            </el-icon>
             <template #title>检索测试</template>
           </el-menu-item>
-          <el-menu-item index="/kb/stats">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><Chart/></el-icon>
+          <el-menu-item v-if="hasMenu(304)" index="/kb/stats">
+            <el-icon style="font-size: 24px;">
+              <Chart/>
+            </el-icon>
             <template #title>检索统计</template>
           </el-menu-item>
         </el-menu>
@@ -44,6 +52,7 @@ import Knowledge from "@/assets/icons/knowledge.vue";
 import SearchDocument from "@/assets/icons/searchDocument.vue";
 import Test from "@/assets/icons/test.vue";
 import Chart from "@/assets/icons/chart.vue";
+import {hasMenu} from "@/utils/menuUtil.js";
 
 const route = useRoute();
 

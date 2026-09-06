@@ -266,10 +266,11 @@
 </template>
 
 <script setup>
-import {pageUserListAPI, createUserAPI, updateUserAPI, deleteUserAPI, userDetailAPI, syncWeComOrganizationAPI} from '@/api/sys/user';
+import {pageUserListAPI, createUserAPI, updateUserAPI, deleteUserAPI, userDetailAPI} from '@/api/manage/sys/user';
+import {syncWeComOrganizationAPI} from '@/api/manage/external/weCom.js';
 import {ElMessage, ElMessageBox} from "element-plus";
-import {treeDeptAPI} from "@/api/sys/dept";
-import {pageRoleListAPI} from '@/api/sys/role';
+import {treeDeptAPI} from "@/api/manage/sys/dept";
+import {pageRoleListAPI} from '@/api/manage/sys/role';
 import {getCurrentInstance, ref} from 'vue';
 import UserAvatar from '@/components/UserAvatar';
 

@@ -1,7 +1,7 @@
 /**
  * 用户模块 - 管理用户登录状态和信息
  */
-import {loginAPI} from "@/api/auth/login.js";
+import {loginAPI} from "@/api/manage/auth/login.js";
 import {localStorageKey} from "@/utils/keyUtils.js";
 
 /**

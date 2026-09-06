@@ -4,9 +4,6 @@
     <div class="mcp-header">
       <div class="mcp-header-left">
         <div class="mcp-header-title">
-          <el-icon class="mcp-header-icon">
-            <Connection />
-          </el-icon>
           MCP服务
         </div>
         <div class="mcp-header-subtitle">管理供智能体接入调用的 MCP 服务器，统一维护传输与连通参数</div>
@@ -40,7 +37,6 @@
           :description="item.description || '暂无描述'"
           :disabled="item.status !== 1"
           :height="300"
-          @click="handleOpenDetail(item)"
       >
         <!-- 状态徽章 -->
         <template #badge>
@@ -64,9 +60,12 @@
             </div>
           </div>
         </template>
-
         <!-- 底部操作 -->
         <template #action>
+           <span
+               class="action-item"
+               @click="handleOpenDetail(item)"
+           >详情</span>
           <span
               class="action-item action-test"
               :class="{ 'is-loading': !!testingMap[item.id] }"
@@ -74,8 +73,14 @@
           >
             <el-icon><Loading v-if="testingMap[item.id]" /><Connection v-else /></el-icon>测试
           </span>
-          <span class="action-item action-edit" @click.stop="handleOpenUpdate(item)">修改</span>
-          <span class="action-item action-danger" @click.stop="handleDelete(item)">删除</span>
+          <span
+              class="action-item action-edit"
+              @click.stop="handleOpenUpdate(item)"
+          >修改</span>
+          <span
+              class="action-item action-danger"
+              @click.stop="handleDelete(item)"
+          >删除</span>
         </template>
       </info-card>
     </div>
@@ -706,11 +711,6 @@ function parseEnv(envStr) {
   font-size: 20px;
   font-weight: 700;
   color: $color-text-primary;
-}
-
-.mcp-header-icon {
-  font-size: 24px;
-  color: $color-primary;
 }
 
 .mcp-header-subtitle {

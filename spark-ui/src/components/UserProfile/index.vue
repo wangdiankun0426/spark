@@ -86,7 +86,7 @@ import { ref, computed, watch, getCurrentInstance } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { useStore } from 'vuex'
-import { updatePasswordAPI } from '@/api/sys/user.js'
+import { updatePasswordAPI } from '@/api/manage/sys/user.js'
 import { des } from '@/utils/encryptUtil.js'
 import UserAvatar from '@/components/UserAvatar'
 

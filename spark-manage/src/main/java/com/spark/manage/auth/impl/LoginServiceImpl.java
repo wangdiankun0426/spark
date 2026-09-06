@@ -151,6 +151,27 @@ public class LoginServiceImpl extends BaseService implements ILoginService {
     }
 
     /**
+     * 强制退出
+     * @param loginVO 退出的参数
+     * @return 退出结果
+     */
+    @Override
+    public ResultData<Void> forceLogout(LoginVO loginVO) {
+        ResultData<Void> result = new ResultData<>();
+        if (loginVO == null || StringUtil.isBlank(loginVO.getSessionId())) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        String sessionIdKey = ObjectCacheKey.LOGIN_SESSION + loginVO.getSessionId();
+        boolean bo = redisService.del(sessionIdKey);
+        if (!bo)  {
+            return result;
+        }
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
      * 检查登录类型参数
      * @param loginVO 登录参数
      * @return 检查结果

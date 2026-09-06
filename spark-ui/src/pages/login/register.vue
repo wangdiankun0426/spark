@@ -95,7 +95,8 @@
 </template>
 
 <script setup>
-import { getValidateCodeAPI, registerAPI } from '@/api/auth/login.js';
+import { getValidateCodeAPI } from '@/api/manage/auth/login.js';
+import { registerAPI } from '@/api/manage/auth/register.js';
 import { des } from '@/utils/encryptUtil.js';
 import Validate from '@/assets/icons/validate.vue';
 import { ref, getCurrentInstance } from "vue";

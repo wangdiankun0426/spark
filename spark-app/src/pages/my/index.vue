@@ -16,7 +16,7 @@
 
     <div class="my-card">
       <view class="quick-grid">
-        <view class="quick-item" @click="goContacts">
+        <view v-if="hasMenu(MENU_IDS.CONTACTS)" class="quick-item" @click="goContacts">
           <view class="quick-icon-wrap" style="background-color: #e6f7ff;">
             <up-icon name="man-add-fill" size="32" color="#1890ff"></up-icon>
           </view>
@@ -72,22 +72,34 @@
     />
 
     <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#0052cc">
-      <up-tabbar-item name="home" icon="home-fill" text="首页"/>
-      <up-tabbar-item name="flow" icon="order" text="流程"/>
-      <up-tabbar-item name="llm" icon="grid-fill" text="AI+"/>
-      <up-tabbar-item name="message" icon="chat-fill" text="消息"/>
-      <up-tabbar-item name="my" icon="account" text="我的"/>
+      <up-tabbar-item
+          v-for="tab in tabBarItems"
+          :key="tab.name"
+          :name="tab.name"
+          :icon="tab.icon"
+          :text="tab.text"
+      />
     </up-tabbar>
   </div>
 </template>
 <script setup>
 import {logoutAPI} from "@/api/auth/login";
 import {ref, computed} from "vue";
+import {onShow} from "@dcloudio/uni-app";
 import {useStore} from "vuex";
+import {MENU_IDS, hasMenu, visibleTabs, checkMenuAccess} from "@/utils/menuUtil";
 import UserAvatar from "@/components/UserAvatar/index.vue"
 
 const store = useStore();
 const active = ref("my");
+
+// 按菜单权限过滤后的底部导航项
+const tabBarItems = computed(() => visibleTabs());
+
+// 页面显示时校验个人中心菜单权限
+onShow(() => {
+  checkMenuAccess(MENU_IDS.MY);
+});
 const userInfo = computed(() => store.getters["user/getUserInfo"] || {
   id: undefined,
   name: undefined,

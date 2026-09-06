@@ -25,7 +25,7 @@
         </view>
         <view class="info-row">
           <text class="info-label">紧急程度</text>
-          <text class="info-value">{{ levelText }}</text>
+          <text class="info-value">{{ instance.levelName }}</text>
         </view>
         <view class="info-row">
           <text class="info-label">备注</text>
@@ -181,14 +181,6 @@ function handleLoadDetail() {
     nodePermission.value = res.data.permission;
   });
 }
-
-/**
- * 紧急程度文案
- */
-const levelText = computed(() => {
-  const levelMap = {1: '一般', 2: '重要', 3: '紧急'};
-  return levelMap[instance.value.level] || '一般';
-});
 
 /**
  * 过滤隐藏字段的表单组件

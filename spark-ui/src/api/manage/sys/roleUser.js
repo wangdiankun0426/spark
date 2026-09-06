@@ -1,4 +1,4 @@
-import request from '@/api/request'
+import request from '@/api/request.js'
 
 // 添加用户
 export function addUserAPI(data) {

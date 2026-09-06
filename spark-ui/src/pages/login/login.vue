@@ -318,7 +318,7 @@
 </template>
 
 <script setup>
-import { getValidateCodeAPI, getMessageCodeAPI, getEmailCodeAPI } from '@/api/auth/login.js';
+import { getValidateCodeAPI, getMessageCodeAPI, getEmailCodeAPI } from '@/api/manage/auth/login.js';
 import { des } from '@/utils/encryptUtil.js';
 import Validate from '@/assets/icons/validate.vue';
 import { ref, getCurrentInstance } from "vue";

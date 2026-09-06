@@ -9,20 +9,28 @@
             mode="vertical"
             class="kg-el-menu"
         >
-          <el-menu-item index="/kg/graph">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><Graph/></el-icon>
+          <el-menu-item v-if="hasMenu(401)" index="/kg/graph">
+            <el-icon style="font-size: 24px;">
+              <Graph/>
+            </el-icon>
             <template #title>知识图谱</template>
           </el-menu-item>
-          <el-menu-item index="/kg/search">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><SearchDocument/></el-icon>
+          <el-menu-item v-if="hasMenu(402)" index="/kg/search">
+            <el-icon style="font-size: 24px;">
+              <SearchDocument/>
+            </el-icon>
             <template #title>知识检索</template>
           </el-menu-item>
-          <el-menu-item index="/kg/audit">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><Validate/></el-icon>
+          <el-menu-item v-if="hasMenu(403)" index="/kg/audit">
+            <el-icon style="font-size: 24px;">
+              <Review/>
+            </el-icon>
             <template #title>实体审核</template>
           </el-menu-item>
-          <el-menu-item index="/kg/analysis">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><DataAnalysis/></el-icon>
+          <el-menu-item v-if="hasMenu(404)" index="/kg/analysis">
+            <el-icon style="font-size: 24px;">
+              <Chart/>
+            </el-icon>
             <template #title>图谱分析</template>
           </el-menu-item>
         </el-menu>
@@ -40,11 +48,11 @@
 
 import {computed} from "vue";
 import {useRoute} from "vue-router";
-import Knowledge from "@/assets/icons/knowledge.vue";
 import SearchDocument from "@/assets/icons/searchDocument.vue";
 import Graph from "@/assets/icons/graph.vue";
-import Validate from "@/assets/icons/validate.vue";
-import { Box, Share, DataAnalysis } from "@element-plus/icons-vue";
+import {hasMenu} from "@/utils/menuUtil.js";
+import Review from "@/assets/icons/review.vue";
+import Chart from "@/assets/icons/chart.vue";
 
 const route = useRoute();
 

@@ -1,15 +1,11 @@
 <template>
   <div class="error-page-container">
     <div class="error-content">
-      <el-result icon="warning" title="404" sub-title="抱歉，您访问的页面不存在或已被移除。">
-        <template #extra>
-          <div class="action-buttons">
-            <el-button type="primary" class="primary-btn" @click="$router.push('/')">返回首页</el-button>
-            <el-button class="secondary-btn" @click="$router.back()">返回上一页</el-button>
-          </div>
-        </template>
-      </el-result>
-
+      <el-result
+          icon="warning"
+          title="404"
+          sub-title="抱歉，您访问的页面不存在或已被移除。"
+      />
       <div class="background-decor">
         <div class="circle circle-1"></div>
         <div class="circle circle-2"></div>
@@ -57,43 +53,6 @@
     color: #64748b;
     font-size: 16px;
     font-weight: 400;
-  }
-}
-
-.action-buttons {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  margin-top: 20px;
-
-  .primary-btn {
-    padding: 12px 28px;
-    height: auto;
-    font-weight: 600;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-    transition: all 0.3s ease;
-
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
-    }
-  }
-
-  .secondary-btn {
-    padding: 12px 28px;
-    height: auto;
-    font-weight: 600;
-    border-radius: 12px;
-    color: #475569;
-    border: 1.5px solid #e2e8f0;
-    transition: all 0.3s ease;
-
-    &:hover {
-      background: #f8fafc;
-      border-color: #cbd5e1;
-      color: #1e293b;
-    }
   }
 }
 
