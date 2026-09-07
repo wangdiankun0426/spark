@@ -20,7 +20,7 @@
         </if>
     </sql>
 
-    <insert id="insert">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into flow_instance_copy ( instance_id , user_id , node_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
         values (#{instanceId} , #{userId} , #{nodeId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>

@@ -49,7 +49,7 @@
         </choose>
     </sql>
 
-    <insert id="insert">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into form_obj (obj_id , form_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
         values (#{objId} , #{formId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>

@@ -523,8 +523,11 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
             return false;
         }
         Long userId = SessionHolder.getCurrentUserId();
-        if (userId == null || Objects.equals(userId, 101L)) {
-            return Objects.equals(userId, 101L);
+        if (userId == null) {
+            return false;
+        }
+        if (SessionHolder.isAdmin()) {
+            return true;
         }
         DataScopeEnum scope = DataScopeEnum.indexOf(SessionHolder.getCurrentDataScop());
         if (scope == DataScopeEnum.ALL_ACCESS) {

@@ -75,6 +75,7 @@ public class WorkflowVersionServiceImpl extends BaseService<WfTemplateVersionQue
         int count = templateVersionDao.insertDB(version);
         if (count < 1) {
             logger.error("saveVersion error, insert version db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         WfTemplate template = new WfTemplate();

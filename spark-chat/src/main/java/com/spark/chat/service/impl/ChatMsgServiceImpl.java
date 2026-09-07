@@ -112,6 +112,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         }
         int count = chatMsgDao.insertDB(chatMsg);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         result.setData(chatMsg);

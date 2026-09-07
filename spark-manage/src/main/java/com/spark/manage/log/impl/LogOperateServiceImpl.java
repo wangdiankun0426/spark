@@ -46,6 +46,7 @@ public class LogOperateServiceImpl extends BaseService<LogOperateQuery, LogOpera
         int count = logOperateDao.insertDB(logOperate);
         if (count < 1) {
             logger.error("createLogOperate create db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         result.setCode(ResultData.OK);

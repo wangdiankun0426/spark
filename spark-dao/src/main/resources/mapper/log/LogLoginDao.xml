@@ -20,7 +20,7 @@
         </if>
     </sql>
 
-    <insert id="insert" parameterType="com.spark.common.bean.log.entity.LogLogin">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into log_login (ipaddress,login_type,login_platform,session_id, delete_flag, created_dt, created_by,updated_dt, updated_by)
         values (#{ipaddress}, #{loginType}, #{loginPlatform}, #{sessionId}, 1 , now(), #{createdBy}, now(), #{updatedBy})
     </insert>

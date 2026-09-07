@@ -197,6 +197,7 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
         int count = instanceDao.insertDB(instance);
         if (count < 1) {
             logger.error("runWorkflow error, insert instance fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         Session session = new Session();

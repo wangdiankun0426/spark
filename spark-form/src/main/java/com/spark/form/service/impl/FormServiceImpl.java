@@ -81,6 +81,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         int count = formVersionDao.insertDB(formVersion);
         if (count < 1) {
             logger.error("createForm error, insert form version db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         Form form = new Form();
@@ -97,6 +98,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         count = formDao.insertDB(form);
         if (count < 1) {
             logger.error("createForm error, insert form db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         result.setData(form);
@@ -276,6 +278,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         int count = formVersionDao.insertDB(formVersion);
         if (count < 1) {
             logger.error("saveFormJson error, insert form version db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         Long revId = formVersion.getId();

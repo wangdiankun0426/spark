@@ -49,9 +49,9 @@
         </choose>
     </sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into llm_model ( id,provider_id , type , name , description , remark , enable_thinking , temperature , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values ( #{id}, #{providerId} , #{type} , #{name} , #{description} , #{remark} , IFNULL(#{enableThinking}, -1) , IFNULL(#{temperature}, 0.1) , IFNULL(#{status}, 1) , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    <insert id="insert">
+        insert into llm_model (id, provider_id , type , name , description , remark , enable_thinking , temperature , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{id}, #{providerId} , #{type} , #{name} , #{description} , #{remark} , IFNULL(#{enableThinking}, -1) , IFNULL(#{temperature}, 0.1) , IFNULL(#{status}, 1) , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">

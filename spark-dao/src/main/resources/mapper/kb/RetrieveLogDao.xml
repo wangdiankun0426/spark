@@ -44,9 +44,9 @@
     <!-- 普通记录表：数据库自增 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into kb_retrieve_log (kb_id , query , strategy , retrieve_count , qa_hit , avg_similarity ,
-        max_similarity , cost_time , feedback_score , feedback_remark , delete_flag , created_by , created_dt , updated_by , updated_dt)
+                                     max_similarity , cost_time , feedback_score , feedback_remark , delete_flag , created_by , created_dt , updated_by , updated_dt)
         values (#{kbId} , #{query} , #{strategy} , #{retrieveCount} , #{qaHit} , #{avgSimilarity} ,
-        #{maxSimilarity} , #{costTime} , #{feedbackScore} , #{feedbackRemark} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+                #{maxSimilarity} , #{costTime} , #{feedbackScore} , #{feedbackRemark} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="updateById">

@@ -56,12 +56,14 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
         chatSpace.setReceiverId(chatSpaceVO.getReceiverId());
         int count = chatSpaceDao.insertDB(chatSpace);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         chatSpace.setSenderId(chatSpaceVO.getReceiverId());
         chatSpace.setReceiverId(chatSpaceVO.getSenderId());
         count = chatSpaceDao.insertDB(chatSpace);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         result.setData(chatSpace);

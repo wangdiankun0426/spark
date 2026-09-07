@@ -6,6 +6,7 @@ import com.spark.common.bean.sys.query.UserQuery;
 import com.spark.common.bean.sys.result.DepartmentResult;
 import com.spark.common.bean.sys.result.RoleUserResult;
 import com.spark.common.bean.sys.result.UserResult;
+import com.spark.common.enums.*;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.DecryptUtil;
 import com.spark.common.utils.EncryptUtil;
@@ -19,10 +20,6 @@ import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.dao.sys.*;
-import com.spark.common.enums.ErrorCodeEnum;
-import com.spark.common.enums.ObjectTypeEnum;
-import com.spark.common.enums.OperateTypeEnum;
-import com.spark.common.enums.StatusEnum;
 import com.spark.manage.sys.IDepartmentService;
 import com.spark.manage.sys.IUserService;
 import com.spark.manage.BaseService;
@@ -107,6 +104,10 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         if (user.getStatus() == null) {
             user.setStatus(StatusEnum.NORMAL.getValue());
         }
+        user.setRoleType(userVO.getRoleType());
+        if (user.getRoleType() == null) {
+            user.setRoleType(RoleTypeEnum.COMMON.getValue());
+        }
         int count = userDao.insertDB(user);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
@@ -164,6 +165,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         user.setEmail(userVO.getEmail());
         user.setSex(userVO.getSex());
         user.setStatus(userVO.getStatus());
+        user.setRoleType(userVO.getRoleType());
         int count = userDao.updateDBById(user);
         if (count < 0) {
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);

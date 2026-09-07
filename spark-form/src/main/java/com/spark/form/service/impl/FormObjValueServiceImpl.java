@@ -75,6 +75,7 @@ public class FormObjValueServiceImpl implements IFormObjValueService {
         int count = formObjDao.insertDB(formObj);
         if (count < 1) {
             logger.error("insert data error");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         List<FormObjValue> list = new ArrayList<>();

@@ -60,4 +60,9 @@ public class User extends BaseEntity {
      */
     private Integer status;
 
+    /**
+     * 角色类型
+     */
+    private Integer roleType;
+
 }

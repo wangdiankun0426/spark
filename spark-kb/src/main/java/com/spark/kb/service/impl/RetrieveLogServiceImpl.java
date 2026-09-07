@@ -110,6 +110,7 @@ public class RetrieveLogServiceImpl extends BaseService<RetrieveLogQuery, Retrie
         }
         int count = retrieveLogDao.insertDB(log);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         result.setCode(ResultData.OK);

@@ -46,7 +46,7 @@
         </choose>
     </sql>
 
-    <insert id="insert">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into llm_mcp (name , transport , provider_id , command , args , url , env , timeout , description , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
         values (#{name} , #{transport} , #{providerId} , #{command} , #{args} , #{url} , #{env} , #{timeout} , #{description} , #{status} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>

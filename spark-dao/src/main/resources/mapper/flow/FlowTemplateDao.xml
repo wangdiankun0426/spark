@@ -46,7 +46,7 @@
         </choose>
     </sql>
 
-    <insert id="insert">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into flow_template ( id, name , process_id , form_id , type , rev_num , rev_id, status, remark , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
         values (#{id} , #{name} , #{processId} , #{formId} , #{type} , #{revNum} , #{revId} , #{status} , #{remark} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>

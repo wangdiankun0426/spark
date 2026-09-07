@@ -1,6 +1,7 @@
 package com.spark.common.bean.sys.result;
 
 import com.spark.common.bean.base.BaseResult;
+import com.spark.common.enums.RoleTypeEnum;
 import com.spark.common.enums.SexEnum;
 import com.spark.common.enums.StatusEnum;
 import lombok.Data;
@@ -90,6 +91,16 @@ public class UserResult extends BaseResult {
     private Integer status;
 
     /**
+     * 角色类型
+     */
+    private Integer roleType;
+
+    /**
+     * 角色类型
+     */
+    private String roleTypeName;
+
+    /**
      * 企业微信用户ID
      */
     private String wecomId;
@@ -116,5 +127,12 @@ public class UserResult extends BaseResult {
             return null;
         }
         return StatusEnum.indexOf(this.status).getDesc();
+    }
+
+    public String getRoleTypeName() {
+        if (this.roleType == null) {
+            return null;
+        }
+        return RoleTypeEnum.indexOf(this.roleType).getDesc();
     }
 }

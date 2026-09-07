@@ -87,6 +87,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
         int count = templateVersionDao.insertDB(version);
         if (count < 1) {
             logger.error("createWorkflow error, insert version db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         WfTemplate template = new WfTemplate();
@@ -98,6 +99,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
         count = templateDao.insertDB(template);
         if (count < 1) {
             logger.error("createWorkflow error, insert template db fail");
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         result.setObjId(templateId);

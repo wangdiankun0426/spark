@@ -43,7 +43,7 @@
         </choose>
     </sql>
 
-    <insert id="insert">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into flow_instance_node (instance_id , node_id , name, type , assignee_set_id, status , delete_flag , created_by , created_dt , updated_by , updated_dt)
         values (#{instanceId} , #{nodeId} , #{name} , #{type} , #{assigneeSetId} , #{status}  , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>

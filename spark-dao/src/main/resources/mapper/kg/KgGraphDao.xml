@@ -43,9 +43,9 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into kg_graph (id, name , description , entity_types , relation_types , extract_model_id , chunk_size , overlap , status ,
-        dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+                              dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
         values (#{id}, #{name} , #{description} , #{entityTypes} , #{relationTypes} , #{extractModelId} , #{chunkSize} , #{overlap} , #{status} ,
-        #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+                #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">

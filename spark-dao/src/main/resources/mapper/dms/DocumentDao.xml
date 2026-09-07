@@ -49,7 +49,7 @@
         </choose>
     </sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insert">
         insert into dms_document ( id, prt_id, document_type , name , size , path , ext , owner_id, dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
         values ( #{id}, #{prtId}, #{documentType}, #{name} , #{size} , #{path} , #{ext} , #{ownerId}, #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>

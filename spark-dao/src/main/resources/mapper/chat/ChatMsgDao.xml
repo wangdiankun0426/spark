@@ -47,7 +47,7 @@
         limit 1
     </select>
 
-    <insert id="insert" parameterType="com.spark.common.bean.chat.entity.ChatMsg" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into chat_msg (space_id, sender_id,receiver_id,message,sign_status,read_status, delete_flag,created_by, created_dt, updated_by, updated_dt)
         values (#{spaceId}, #{senderId}, #{receiverId}, #{message}, #{signStatus}, #{readStatus}, 1 , #{createdBy} , now(), #{updatedBy}, now())
     </insert>

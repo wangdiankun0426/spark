@@ -7,6 +7,7 @@ import com.spark.common.bean.base.BaseQuery;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.enums.DataScopeEnum;
 import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.enums.RoleTypeEnum;
 import com.spark.common.utils.StringUtil;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
@@ -58,7 +59,7 @@ public class DataScopeAspect {
     @Before(value = ("pointcut()"))
     public void doBefore(JoinPoint joinPoint) {
         // 管理员不过滤权限
-        if (isAdmin()) {
+        if (SessionHolder.isAdmin()) {
             return;
         }
         // 获得注解
@@ -108,14 +109,6 @@ public class DataScopeAspect {
             baseQuery.setDataScopeSQL(sql.toString());
         }
         logger.info("DataScopeAspect sql={}", sql);
-    }
-
-    /**
-     * 是否为管理员
-     * @return
-     */
-    private boolean isAdmin() {
-        return SessionHolder.getCurrentSessionId() != null && SessionHolder.getCurrentUserId() == 101;
     }
 
     /**

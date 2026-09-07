@@ -9,6 +9,7 @@ CREATE TABLE `sys_user` (
     `sex` int(1) NULL COMMENT '性别',
     `avatar` varchar(32) NULL COMMENT '头像',
     `status` int(1) NOT NULL DEFAULT 1 COMMENT '状态',
+    `role_type` int(11) NOT NULL DEFAULT 1 COMMENT '角色类型',
 
     `dept_id` bigint(12) NOT NULL COMMENT '所属部门id',
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
@@ -284,8 +285,8 @@ DROP TABLE IF EXISTS `llm_skill`;
 CREATE TABLE `llm_skill` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
     `name` varchar(100) NOT NULL COMMENT '技能名称',
-    `description` varchar(255) NOT NULL COMMENT '技能一句话描述（注入装配目录，供模型判断是否命中）',
-    `content` mediumtext NOT NULL COMMENT '技能指令正文（Markdown）',
+    `description` varchar(255) NOT NULL COMMENT '技能描述',
+    `content` mediumtext NOT NULL COMMENT '技能正文',
     `status` int(1) NOT NULL DEFAULT 1 COMMENT '状态：1:启用，-1:禁用',
 
     `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
@@ -334,7 +335,7 @@ DROP TABLE IF EXISTS `chat_msg_att`;
 CREATE TABLE `chat_msg_att` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
     `msg_id` bigint(12) NOT NULL COMMENT '聊天消息id',
-    `msg_att_type` int(2) NOT NULL COMMENT '消息附件类型 0 未知类型 1 rag引用文件',
+    `msg_att_type` int(2) NOT NULL COMMENT '消息附件类型',
     `doc_id` bigint(12) NOT NULL COMMENT '文档id',
     `doc_name` varchar(256) NOT NULL COMMENT '文档名称',
 
@@ -396,7 +397,7 @@ CREATE TABLE `kb_retrieve_log` (
 
 DROP TABLE IF EXISTS `flow_template`;
 CREATE TABLE `flow_template` (
-     `id` bigint(12) NOT NULL COMMENT '主键',
+     `id` bigint(12) NOT NULL COMMENT '主键,后两位固定11',
      `name` varchar(128) NOT NULL COMMENT '名称',
      `process_id` varchar(128) NOT NULL COMMENT '模板id',
      `form_id` bigint(12) NOT NULL COMMENT '表单id',
@@ -528,7 +529,7 @@ CREATE TABLE `flow_template_msg` (
 
 DROP TABLE IF EXISTS `flow_instance`;
 CREATE TABLE `flow_instance` (
-     `id` bigint(12) NOT NULL COMMENT '主键',
+     `id` bigint(12) NOT NULL COMMENT '主键,后两位固定12',
      `template_id` bigint(12) NOT NULL COMMENT '流程模板id',
      `template_rev_id` bigint(12) NOT NULL COMMENT '流程模板版本id',
      `form_id` bigint(12) NOT NULL COMMENT '表单id',
@@ -619,7 +620,7 @@ CREATE TABLE `flow_instance_copy` (
 
 DROP TABLE IF EXISTS `form`;
 CREATE TABLE `form` (
-    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `id` bigint(12) NOT NULL COMMENT '主键,后两位固定06',
     `type` int(1) NOT NULL COMMENT '表单类型',
     `name`varchar(64) NOT NULL COMMENT '名称',
     `rev_id` bigint(12) NOT NULL COMMENT '当前版本id',
@@ -701,13 +702,13 @@ CREATE TABLE `form_obj_value` (
 
 DROP TABLE IF EXISTS `kg_graph`;
 CREATE TABLE kg_graph (
-      id BIGINT(20) NOT NULL COMMENT '主键 id',
+      id BIGINT(20) NOT NULL COMMENT '主键id,后两位固定16',
       name VARCHAR(128) NOT NULL COMMENT '图谱名称',
       description VARCHAR(512) DEFAULT NULL COMMENT '图谱描述',
       entity_types TEXT DEFAULT NULL COMMENT '实体类型 schema（JSON 数组）',
       relation_types TEXT DEFAULT NULL COMMENT '关系类型 schema（JSON 数组）',
       extract_model_id BIGINT(20) DEFAULT NULL COMMENT '抽取模型 id',
-      status TINYINT(1) DEFAULT 1 COMMENT '状态（0-禁用 1-启用）',
+      status TINYINT(1) DEFAULT 1 COMMENT '状态',
 
       dept_id BIGINT(20) DEFAULT NULL COMMENT '部门 id',
       delete_flag TINYINT(1) DEFAULT 1 COMMENT '删除标记位（1-有效 -1-删除）',
@@ -716,7 +717,7 @@ CREATE TABLE kg_graph (
       updated_by BIGINT(20) DEFAULT NULL COMMENT '修改人',
       updated_dt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
       PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识图谱配置表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识图谱表';
 
 DROP TABLE IF EXISTS `kg_entity`;
 CREATE TABLE kg_entity (
@@ -774,13 +775,12 @@ CREATE TABLE `kg_community` (
     `created_dt` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_by` BIGINT(20) DEFAULT NULL COMMENT '修改人',
     `updated_dt` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
-    PRIMARY KEY (`id`),
-    INDEX `idx_graph_id` (`graph_id`)
+    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='图谱社区表';
 
 DROP TABLE IF EXISTS `wf_template`;
 CREATE TABLE `wf_template` (
-    `id` bigint(12) NOT NULL COMMENT '主键',
+    `id` bigint(12) NOT NULL COMMENT '主键,后两位固定17',
     `name` varchar(128) NOT NULL COMMENT '工作流名称',
     `description` varchar(512) NULL COMMENT '描述',
     `status` int(2) NOT NULL DEFAULT -1 COMMENT '状态',
@@ -794,32 +794,29 @@ CREATE TABLE `wf_template` (
     `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
     `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
-    PRIMARY KEY (`id`),
-    KEY `idx_dept_id` (`dept_id`),
-    KEY `idx_status` (`status`)
+    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工作流模板表';
 
 DROP TABLE IF EXISTS `wf_template_version`;
 CREATE TABLE `wf_template_version` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
     `template_id` bigint(12) NOT NULL COMMENT '工作流模板ID',
-    `rev_code` int(5) NOT NULL COMMENT '版本序号（1开始递增）',
-    `rev_num` varchar(12) NOT NULL COMMENT '版本号（0.1/0.2/...）',
-    `dag_json` mediumtext NULL COMMENT 'DAG图定义（节点+边，JSON）',
-    `global_vars` text NULL COMMENT '全局变量定义（JSON）',
+    `rev_code` int(5) NOT NULL COMMENT '版本序号',
+    `rev_num` varchar(12) NOT NULL COMMENT '版本号',
+    `dag_json` mediumtext NULL COMMENT 'DAG图定义',
+    `global_vars` text NULL COMMENT '全局变量定义',
 
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识',
     `created_by` bigint(12) NOT NULL COMMENT '创建人id',
     `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
     `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
-    PRIMARY KEY (`id`),
-    KEY `idx_template_id` (`template_id`)
+    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工作流模板版本表';
 
 DROP TABLE IF EXISTS `wf_instance`;
 CREATE TABLE `wf_instance` (
-    `id` bigint(12) NOT NULL COMMENT '主键',
+    `id` bigint(12) NOT NULL COMMENT '主键,后两位固定18',
     `template_id` bigint(12) NOT NULL COMMENT '工作流模板ID',
     `rev_id` bigint(12) NOT NULL COMMENT '执行版本ID',
     `rev_num` varchar(12) NOT NULL COMMENT '执行版本号',
@@ -834,11 +831,7 @@ CREATE TABLE `wf_instance` (
     `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
     `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
-    PRIMARY KEY (`id`),
-    KEY `idx_template_id` (`template_id`),
-    KEY `idx_status` (`status`),
-    KEY `idx_created_by` (`created_by`),
-    KEY `idx_created_dt` (`created_dt`)
+    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='工作流实例表';
 
 DROP TABLE IF EXISTS `wf_instance_node`;
@@ -861,8 +854,7 @@ CREATE TABLE `wf_instance_node` (
     `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
     `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
-    PRIMARY KEY (`id`),
-    KEY `idx_instance_id` (`instance_id`)
+    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='工作流实例节点表';
 
 DROP TABLE IF EXISTS `task_instance`;
@@ -921,7 +913,7 @@ CREATE TABLE `task_template_param` (
 
 DROP TABLE IF EXISTS `dms_document`;
 CREATE TABLE `dms_document` (
-    `id` bigint(12) NOT NULL COMMENT '主键',
+    `id` bigint(12) NOT NULL COMMENT '主键,后两位固定09',
     `prt_id` bigint(12) NOT NULL COMMENT '父id',
     `document_type` tinyint(3) NOT NULL COMMENT '文档归属类型',
     `name` varchar(256) NOT NULL COMMENT '名称',
@@ -962,10 +954,9 @@ CREATE TABLE `dms_document_event` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='文档事件表';
 
-
 DROP TABLE IF EXISTS `dms_attachment`;
 CREATE TABLE `dms_attachment` (
-    `id` bigint(12) NOT NULL COMMENT '主键',
+    `id` bigint(12) NOT NULL COMMENT '主键,后两位固定07',
     `name` varchar(256) NOT NULL COMMENT '文件名称',
     `size` bigint(12) NOT NULL COMMENT '文件大小',
     `path` varchar(128) NOT NULL COMMENT '存储路径',

@@ -38,4 +38,9 @@ public class Session {
      * 数据权限
      */
     private Integer dataScope;
+
+    /**
+     * 角色类型
+     */
+    private Integer roleType;
 }

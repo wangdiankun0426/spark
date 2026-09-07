@@ -8,10 +8,7 @@ import com.spark.common.bean.sys.query.UserQuery;
 import com.spark.common.bean.sys.result.UserResult;
 import com.spark.common.bean.sys.vo.RegisterVO;
 import com.spark.common.bean.base.ResultData;
-import com.spark.common.enums.ErrorCodeEnum;
-import com.spark.common.enums.LoginTypeEnum;
-import com.spark.common.enums.ObjectTypeEnum;
-import com.spark.common.enums.StatusEnum;
+import com.spark.common.enums.*;
 import com.spark.dao.sys.UserDao;
 import com.spark.dao.sys.UserProfileDao;
 import com.spark.manage.BaseService;
@@ -87,12 +84,13 @@ public class RegisterServiceImpl extends BaseService implements IRegisterService
         user.setDeptId(102L);
         user.setSex(registerVO.getSex());
         user.setStatus(StatusEnum.NORMAL.getValue());
+        user.setRoleType(RoleTypeEnum.COMMON.getValue());
         user.setCreatedBy(userId);
         user.setUpdatedBy(userId);
         int count = userDao.insertDB(user);
         if (count < 1) {
             logger.error("register error, insert user fail");
-            result.setErrorCode(ErrorCodeEnum.SYSTEM_ERROR);
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         // 创建用户扩展信息
@@ -100,7 +98,11 @@ public class RegisterServiceImpl extends BaseService implements IRegisterService
         userProfile.setId(userId);
         userProfile.setCreatedBy(userId);
         userProfile.setUpdatedBy(userId);
-        userProfileDao.insertDB(userProfile);
+        count = userProfileDao.insertDB(userProfile);
+        if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
+            return result;
+        }
         result.setCode(ResultData.OK);
         return result;
     }

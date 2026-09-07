@@ -2,6 +2,7 @@ package com.spark.common.bean.base;
 
 import com.spark.common.bean.sys.entity.Session;
 import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.enums.RoleTypeEnum;
 
 /**
  * +++/\_/\
@@ -38,6 +39,11 @@ public class SessionHolder {
      * 部门ids
      */
     private static final ThreadLocal<String> currentDeptIds = new ThreadLocal<>();
+
+    /**
+     * 角色类型位
+     */
+    private static final ThreadLocal<Integer> currentRoleType = new ThreadLocal<>();
 
     /**
      * 上下文
@@ -84,6 +90,14 @@ public class SessionHolder {
         return currentDeptIds.get();
     }
 
+    public static void setCurrentRoleType(Integer roleType) {
+        currentRoleType.set(roleType);
+    }
+
+    public static Integer getCurrentRoleType() {
+        return currentRoleType.get();
+    }
+
     /**
      * 设置上下文
      * @param baseContext
@@ -111,6 +125,7 @@ public class SessionHolder {
         setCurrentDeptId(session.getDeptId());
         setCurrentDataScop(session.getDataScope());
         setCurrentDeptIds(session.getDeptIds());
+        setCurrentRoleType(session.getRoleType());
     }
 
     /**
@@ -122,6 +137,20 @@ public class SessionHolder {
         currentDeptId.remove();
         currentDataScop.remove();
         currentDeptIds.remove();
+        currentRoleType.remove();
         context.remove();
+    }
+
+    /**
+     * 判读当前用户，当前空间，是否为管理员
+     * @return
+     */
+    public static boolean isAdmin(){
+        Integer roleType = getCurrentRoleType();
+        if (roleType == null) {
+            return false;
+        }
+        return RoleTypeEnum.hasRole(SessionHolder.getCurrentRoleType(), RoleTypeEnum.SYS_ADMIN)
+                || RoleTypeEnum.hasRole(SessionHolder.getCurrentRoleType(), RoleTypeEnum.ORG_ADMIN);
     }
 }

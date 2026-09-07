@@ -63,9 +63,9 @@
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into dms_document_event ( doc_id , content_status , content_remark , index_status, index_remark, chunk_status, chunk_remark, vector_status, vector_remark, graph_status, graph_remark,
+        insert into dms_document_event (doc_id , content_status , content_remark , index_status, index_remark, chunk_status, chunk_remark, vector_status, vector_remark, graph_status, graph_remark,
                                         delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values ( #{docId} , #{contentStatus} , #{contentRemark} , #{indexStatus}, #{indexRemark}, #{chunkStatus}, #{chunkRemark}, #{vectorStatus}, #{vectorRemark}, #{graphStatus}, #{graphRemark},
+        values (#{docId} , #{contentStatus} , #{contentRemark} , #{indexStatus}, #{indexRemark}, #{chunkStatus}, #{chunkRemark}, #{vectorStatus}, #{vectorRemark}, #{graphStatus}, #{graphRemark},
                 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 

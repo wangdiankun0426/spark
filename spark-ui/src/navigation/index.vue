@@ -24,7 +24,7 @@
         <el-icon><Connection /></el-icon>
         <span>流程中心</span>
       </el-menu-item>
-      <el-menu-item index="/manage" v-if="userInfo.id === 101 && !isDesktop">
+      <el-menu-item index="/manage" v-if="isAdmin() && !isDesktop">
         <el-icon><Setting /></el-icon>
         <span>管理后台</span>
       </el-menu-item>
@@ -197,6 +197,7 @@ import ModelMarketIcon from '@/assets/icons/modelMarket.vue';
 import Bell from "@/assets/icons/bell.vue";
 import SearchV2 from "@/assets/icons/searchV2.vue";
 import {isDesktop} from "@/utils/desktop.js";
+import {isAdmin} from "@/utils/utils.js";
 const router = useRouter();
 const route = useRoute();
 const store = useStore()

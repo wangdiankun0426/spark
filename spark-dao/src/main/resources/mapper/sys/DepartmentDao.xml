@@ -51,7 +51,7 @@
         limit 1
     </select>
 
-    <insert id="insert" parameterType="com.spark.common.bean.sys.entity.Department">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into sys_department (id, name,prt_id,code, header_id,dept_num,status,order_num,wecom_id, delete_flag,created_by, created_dt, updated_by, updated_dt)
         values (#{id}, #{name}, #{prtId}, #{code}, #{headerId}, #{deptNum}, #{status}, #{orderNum}, #{wecomId}, 1 , #{createdBy} , now(), #{updatedBy}, now())
     </insert>
