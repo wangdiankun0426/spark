@@ -37,7 +37,7 @@
     <el-table
         :data="logList"
         highlight-current-row
-        height="calc(100vh - 234px)">
+        height="calc(100vh - 235px)">
       <el-table-column prop="id" label="编号" width="100" align="center"/>
       <el-table-column prop="typeName" label="操作类型" align="center"/>
       <el-table-column prop="consume" label="用时（毫秒）" align="center"/>

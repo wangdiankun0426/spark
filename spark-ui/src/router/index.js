@@ -24,9 +24,15 @@ layoutRoutes[0].children = [
         path: '/home',
         name: 'home',
         component: () => import('@/pages/home/index'),
-        meta: { title: '首页', menuId: 10 },
+        meta: {
+            title: '首页'
+        },
         children: [
-            { path: '/home/index', name: 'home', component: () => import('@/pages/home/index') }
+            {
+                path: '/home/index',
+                name: 'home',
+                component: () => import('@/pages/home/index')
+            }
         ]
     },
     ...manageRoutes,

@@ -24,7 +24,7 @@
     <el-table
         :data="logList"
         highlight-current-row
-        height="calc(100vh - 234px)"
+        height="calc(100vh - 235px)"
     >
       <el-table-column prop="id" label="编号" width="100" align="center"/>
       <el-table-column prop="createdByName" label="登录人" align="center"/>

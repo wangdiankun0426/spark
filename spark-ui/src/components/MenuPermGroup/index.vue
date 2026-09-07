@@ -6,6 +6,7 @@
             :class="depth === 0 ? 'menu-perm-root' : ''"
             :model-value="stateOf(node).checked"
             :indeterminate="stateOf(node).indeterminate"
+            :disabled="stateOf(node).disabled"
             @change="(checked) => onToggle(node, checked)"
         >
           {{ node.name }}

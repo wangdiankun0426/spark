@@ -5,7 +5,6 @@ import {getSessionAPI} from "@/api/auth/login.js";
  * 菜单权限标识：
  */
 export const MENU_IDS = {
-  HOME: 10,       // 首页
   AI_APP: 20,     // AI应用
   FLOW: 50,       // 流程中心
   CONTACTS: 103,  // 通讯录
@@ -44,13 +43,13 @@ export function hasMenu(menuId) {
 export function visibleTabs() {
   // 底部导航tab项
   const TAB_ITEMS = [
-    {name: 'home', icon: 'home-fill', text: '首页', menuId: MENU_IDS.HOME},
+    {name: 'home', icon: 'home-fill', text: '首页', always: true},
     {name: 'flow', icon: 'order', text: '流程', menuId: MENU_IDS.FLOW},
     {name: 'llm', icon: 'grid-fill', text: 'AI+', menuId: MENU_IDS.AI_APP},
     {name: 'message', icon: 'chat-fill', text: '消息', menuId: MENU_IDS.MESSAGE},
     {name: 'my', icon: 'account', text: '我的', menuId: MENU_IDS.MY},
   ];
-  return TAB_ITEMS.filter(item => hasMenu(item.menuId));
+  return TAB_ITEMS.filter(item => hasMenu(item.menuId) || item.always);
 }
 
 /**

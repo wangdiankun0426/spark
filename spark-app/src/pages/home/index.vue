@@ -124,15 +124,9 @@ import { useStore } from "vuex"
 import DashboardCard from "@/pages/home/DashboardCard.vue"
 import UserAvatar from "@/components/UserAvatar/index.vue"
 import {getSessionAPI} from "@/api/auth/login";
-import {checkMenuAccess, MENU_IDS, visibleTabs} from "@/utils/menuUtil";
-
+import {visibleTabs} from "@/utils/menuUtil";
 const store = useStore()
 const active = ref("home")
-
-// 页面显示时校验个人中心菜单权限
-onShow(() => {
-  checkMenuAccess(MENU_IDS.HOME);
-});
 
 // 按菜单权限过滤后的底部导航项
 const tabBarItems = computed(() => visibleTabs())

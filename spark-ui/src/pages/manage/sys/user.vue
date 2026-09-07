@@ -115,7 +115,7 @@
       <el-table
           :data="userList"
           highlight-current-row
-          height="calc(100vh - 270px)"
+          height="calc(100vh - 280px)"
       >
         <el-table-column label="" width="60" align="center">
           <template #default="scope">
