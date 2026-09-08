@@ -7,6 +7,7 @@ import co.elastic.clients.elasticsearch.core.SearchResponse;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import com.spark.common.bean.dms.result.DocumentResult;
 import com.spark.common.bean.kb.query.KnowledgeQuery;
 import com.spark.common.bean.kb.result.KnowledgeResult;
 import com.spark.common.bean.kg.query.KgGraphQuery;
@@ -96,16 +97,17 @@ public class ESVectorStore {
      * 文档分块入库
      * 采用Small-to-Big 父子分块策略中的父分块阶段，仅写入父块到 chunk 索引
      * 分块参数按文档归属类型读取：KNOWLEDGE 读知识库配置，KG_GRAPH 读知识图谱配置
-     * @param docId 文档ID
+     * @param document 文档
      * @param content 文档内容
-     * @param prtId 父ID
-     * @param documentType 文档归属类型
      */
-    public void addChunk(Long docId, String content, Long prtId, Integer documentType) {
-        if (StringUtil.isBlank(content) || prtId == null) {
-            logger.warn("addChunk skip, content blank or prtId null, docId={}, prtId={}", docId, prtId);
+    public void addChunk(DocumentResult document, String content) {
+        if (StringUtil.isBlank(content) || document == null || document.getPath() == null) {
+            logger.warn("addChunk skip, content blank or document null");
             return;
         }
+        Integer documentType = document.getDocumentType();
+        Long prtId = document.getPrtId();
+        Long docId = document.getId();
         int chunkSize;
         int overlap;
         if (ObjectTypeEnum.KG_GRAPH.getValue().equals(documentType)) {
@@ -137,7 +139,7 @@ public class ESVectorStore {
                 logger.warn("addChunk skip, parent chunks empty, docId={}, prtId={}", docId, prtId);
                 return;
             }
-            saveChunksToES(parentChunks, docId, prtId, documentType);
+            saveChunksToES(parentChunks, document);
             logger.info("addChunk success, prtId={}, docId={}, parentChunkSize={}, strategy={}", prtId, docId, parentChunks.size(), chunkStrategy);
             return;
         }
@@ -146,28 +148,27 @@ public class ESVectorStore {
             logger.warn("addChunk skip, parent chunks empty, docId={}, prtId={}", docId, prtId);
             return;
         }
-        saveChunksToES(parentChunks, docId, prtId, documentType);
+        saveChunksToES(parentChunks, document);
         logger.info("addChunk success, prtId={}, docId={}, parentChunkSize={}", prtId, docId, parentChunks.size());
     }
 
     /**
      * 保存分块到ES
      * @param parentChunks 分块列表
-     * @param docId 文档ID
-     * @param prtId 父ID
-     * @param documentType 文档类型
+     * @param document 文档I
      */
-    private void saveChunksToES(List<String> parentChunks, Long docId, Long prtId, Integer documentType) {
+    private void saveChunksToES(List<String> parentChunks, DocumentResult document) {
         // 把历史的分片删掉
-        this.deleteChunkByDocId(docId);
+        this.deleteChunkByDocId(document.getId());
         for (int parentIndex = 0; parentIndex < parentChunks.size(); parentIndex++) {
             String parentContent = parentChunks.get(parentIndex);
             Long chunkId = System.currentTimeMillis();
             Map<String, Object> chunkData = new HashMap<>();
             chunkData.put("id", chunkId);
-            chunkData.put("prtId", prtId);
-            chunkData.put("documentType", documentType);
-            chunkData.put("docId", docId);
+            chunkData.put("tenantId", document.getTenantId());
+            chunkData.put("prtId", document.getPrtId());
+            chunkData.put("documentType", document.getDocumentType());
+            chunkData.put("docId", document.getId());
             chunkData.put("chunkIndex", parentIndex + 1);
             chunkData.put("content", parentContent);
             IndexQuery parentQuery = new IndexQueryBuilder()
@@ -181,15 +182,16 @@ public class ESVectorStore {
     /**
      * 文档向量化入库
      * 读取已落地的父块，做子分块 + embedding 写入向量索引，按需生成 QA
-     * @param docId 文档ID
-     * @param prtId 父ID
-     * @param documentType 文档归属类型
+     * @param document 文档
      */
-    public void addVector(Long docId, Long prtId, Integer documentType) {
-        if (docId == null || prtId == null) {
-            logger.warn("addVector skip, docId or prtId null, docId={}, prtId={}", docId, prtId);
+    public void addVector(DocumentResult document) {
+        if (document == null || document.getId() == null || document.getPrtId() == null) {
+            logger.warn("addVector skip, docId or prtId null");
             return;
         }
+        Long prtId = document.getPrtId();
+        Long docId = document.getId();
+        Integer documentType = document.getDocumentType();
         KnowledgeQuery kbQuery = new KnowledgeQuery();
         kbQuery.setId(prtId);
         KnowledgeResult knowledgeResult = knowledgeDao.queryKnowledge(kbQuery);
@@ -221,6 +223,7 @@ public class ESVectorStore {
                 Response<Embedding> embedResp = embeddingModel.embed(childContent);
                 Map<String, Object> childData = new HashMap<>();
                 childData.put("id", childId);
+                childData.put("tenantId", document.getTenantId());
                 childData.put("chunkId", chunkId);
                 childData.put("prtId", prtId);
                 childData.put("documentType", documentType);
@@ -235,7 +238,7 @@ public class ESVectorStore {
                 elasticsearchOperations.index(childQuery, IndexCoordinates.of(ESIndexName.DOCUMENT_VECTOR_INDEX_NAME));
             }
             if (StatusEnum.NORMAL.getValue().equals(knowledgeResult.getEnableQa())) {
-                addQA(prtId, documentType, docId, chunkId, parentContent, knowledgeResult.getVectorModelId());
+                addQA(document, chunkId, parentContent, knowledgeResult.getVectorModelId());
             }
         }
         logger.info("addVector success, prtId={}, docId={}, parentChunkSize={}", prtId, docId, parentChunks.size());
@@ -282,14 +285,12 @@ public class ESVectorStore {
 
     /**
      * 入库QA
-     * @param prtId 父ID
-     * @param documentType 文档归属类型
-     * @param docId 文档ID
+     * @param document 文档
      * @param chunkId 文档分块ID
      * @param parentContent 父块内容
      * @param vectorModelId 向量模型id
      */
-    private void addQA(Long prtId, Integer documentType, Long docId, Long chunkId, String parentContent, Long vectorModelId) {
+    private void addQA(DocumentResult document, Long chunkId, String parentContent, Long vectorModelId) {
         try {
             Map<String, Object> variables = Map.of("document", parentContent);
             Prompt prompt = PromptTemplateLoader.create("prompts/qa-prompt.txt", variables);
@@ -311,10 +312,11 @@ public class ESVectorStore {
                 Long qaId = System.currentTimeMillis();
                 Map<String, Object> qaData = new HashMap<>();
                 qaData.put("id", qaId);
+                qaData.put("tenantId", document.getTenantId());
                 qaData.put("chunkId", chunkId);
-                qaData.put("prtId", prtId);
-                qaData.put("documentType", documentType);
-                qaData.put("docId", docId);
+                qaData.put("prtId", document.getPrtId());
+                qaData.put("documentType", document.getDocumentType());
+                qaData.put("docId", document.getId());
                 qaData.put("question", question);
                 qaData.put("answer", answer);
                 qaData.put("questionEmbedding", qaResp.content().vectorAsList());
@@ -325,7 +327,7 @@ public class ESVectorStore {
                 elasticsearchOperations.index(qaQuery, IndexCoordinates.of(ESIndexName.DOCUMENT_QA_VECTOR_INDEX_NAME));
             }
         } catch (Exception e) {
-            logger.error("indexQA error, prtId={}, docId={}, chunkId={}", prtId, docId, chunkId, e);
+            logger.error("indexQA error, chunkId={}", chunkId, e);
         }
     }
 

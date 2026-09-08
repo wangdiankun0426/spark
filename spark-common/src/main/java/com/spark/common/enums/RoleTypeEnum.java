@@ -14,8 +14,6 @@ public enum RoleTypeEnum {
     UNKNOWN(0, "未知类型"),
     COMMON(1, "普通用户"),
     ORG_ADMIN(2, "组织管理员"),
-    SYS_ADMIN(4, "系统管理员"),
-
     ;
 
     private Integer value;

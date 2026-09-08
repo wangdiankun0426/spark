@@ -2,6 +2,7 @@ package com.spark.llm.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.llm.entity.Model;
 import com.spark.common.bean.llm.query.ProviderQuery;
 import com.spark.common.bean.llm.query.ModelQuery;
@@ -9,7 +10,7 @@ import com.spark.common.bean.llm.result.ProviderResult;
 import com.spark.common.bean.llm.result.ModelResult;
 import com.spark.common.bean.llm.vo.ModelVO;
 import com.spark.config.aspectj.annotation.DataScope;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.llm.ModelDao;
 import com.spark.dao.llm.ProviderDao;
 import com.spark.common.enums.ErrorCodeEnum;
@@ -56,7 +57,7 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
      * @return 创建结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.MODEL_INSERT)
+    @LogOperate(operateType = OperateTypeEnum.MODEL_INSERT)
     public ResultData<Void> createModel(ModelVO modelVO) {
         ResultData<Void> result = new ResultData<>();
         if (modelVO == null) {
@@ -84,7 +85,7 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
      * @return 修改结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.MODEL_UPDATE)
+    @LogOperate(operateType = OperateTypeEnum.MODEL_UPDATE)
     public ResultData<Void> updateModel(ModelVO modelVO) {
         ResultData<Void> result = new ResultData<>();
         if (modelVO == null || modelVO.getId() == null) {
@@ -119,7 +120,7 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
      * @return  删除结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.MODEL_DELETE)
+    @LogOperate(operateType = OperateTypeEnum.MODEL_DELETE)
     public ResultData<Void> deleteModel(ModelVO modelVO) {
         ResultData<Void> result = new ResultData<>();
         if (modelVO == null || modelVO.getId() == null) {
@@ -160,6 +161,7 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
         if (query == null) {
             query = new ModelQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<ModelResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);
@@ -172,7 +174,7 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
      * @return 详情
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.MODEL_DETAIL)
+    @LogOperate(operateType = OperateTypeEnum.MODEL_DETAIL)
     public ResultData<ModelResult> queryModelDetail(ModelQuery query) {
         ResultData<ModelResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {

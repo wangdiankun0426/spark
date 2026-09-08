@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.kg.KgCommunityDao" >
     <sql id="allColumnList" >
-        id , graph_id , community_index , name , summary , member_count , delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , tenant_id, graph_id , community_index , name , summary , member_count , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="searchCondition">
@@ -16,11 +16,14 @@
             </foreach>
             )
         </if>
-        <if test="deleteFlag != null and id == null and ids == null">
-            and delete_flag = #{deleteFlag}
+        <if test="tenantId != null">
+            and tenant_id = #{tenantId}
         </if>
         <if test="graphId != null">
             and graph_id = #{graphId}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
         </if>
     </sql>
 
@@ -38,9 +41,9 @@
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into kg_community (graph_id, community_index, name, summary, member_count,
+        insert into kg_community (tenantId, graph_id, community_index, name, summary, member_count,
                                   delete_flag, created_by, created_dt, updated_by, updated_dt)
-        values (#{graphId}, #{communityIndex}, #{name}, #{summary}, #{memberCount},
+        values (#{tenantId}, #{graphId}, #{communityIndex}, #{name}, #{summary}, #{memberCount},
                 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 

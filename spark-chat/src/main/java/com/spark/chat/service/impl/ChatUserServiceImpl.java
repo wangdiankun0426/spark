@@ -56,9 +56,9 @@ public class ChatUserServiceImpl implements IChatUserService {
             return result;
         }
         if (query == null) {
-            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
-            return result;
+            query = new UserQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         List<UserResult> userList = userDao.queryUserList(query);
         if (CollectionUtil.isEmpty(userList)) {
             result.setCode(ResultData.OK);

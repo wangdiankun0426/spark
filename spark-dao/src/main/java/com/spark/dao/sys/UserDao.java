@@ -22,13 +22,6 @@ import java.util.List;
 public interface UserDao extends BaseDao<User> {
 
     /**
-     * 查询最大id
-     * @return
-     */
-    @Select("select max(id) from sys_user")
-    Long queryUserMaxId();
-
-    /**
      * 插入数据
      * @param user
      * @return
@@ -80,4 +73,12 @@ public interface UserDao extends BaseDao<User> {
      */
     @Update("update sys_user set dept_id = null where dept_id = #{deptId}")
     int resetUserDeptByDeptId(@Param("deptId") Long deptId);
+
+    /**
+     * 查询最大id
+     * @return
+     */
+    @Select("select max(id) from sys_user")
+    Long queryUserMaxId();
+
 }

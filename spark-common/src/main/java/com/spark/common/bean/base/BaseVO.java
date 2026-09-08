@@ -17,8 +17,15 @@ import java.io.Serializable;
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BaseVO implements Serializable {
+
     /**
      * id
      */
     private Long id;
+
+
+    /**
+     * 租户id
+     */
+    private Long tenantId;
 }

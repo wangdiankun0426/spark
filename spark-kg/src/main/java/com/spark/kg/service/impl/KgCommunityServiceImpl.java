@@ -2,6 +2,7 @@ package com.spark.kg.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.kg.query.KgCommunityQuery;
 import com.spark.common.bean.kg.result.KgCommunityResult;
 import com.spark.dao.kg.KgCommunityDao;
@@ -41,6 +42,7 @@ public class KgCommunityServiceImpl extends BaseService<KgCommunityQuery, KgComm
         if (query == null) {
             query = new KgCommunityQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<KgCommunityResult> pageResult = super.pageList(query);
         result.setData(pageResult);
         result.setCode(ResultData.OK);

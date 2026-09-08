@@ -1,8 +1,7 @@
 package com.spark.config.aspectj.aspect;
 
 import com.spark.common.constant.AspectOrder;
-import com.spark.config.aspectj.annotation.OperateLog;
-import com.spark.common.bean.log.entity.LogOperate;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
@@ -36,15 +35,15 @@ import java.lang.reflect.Method;
 @Aspect
 @Component
 @Order(AspectOrder.OPERATE_LOG)
-public class OperateLogAspect {
-    private final static Logger logger  = LoggerFactory.getLogger(OperateLogAspect.class);
+public class LogOperateAspect {
+    private final static Logger logger  = LoggerFactory.getLogger(LogOperateAspect.class);
     @Autowired
     private MqProducer mqProducer;
 
     /**
      *切点
      */
-    @Pointcut("@annotation(com.spark.config.aspectj.annotation.OperateLog)")
+    @Pointcut("@annotation(com.spark.config.aspectj.annotation.LogOperate)")
     public void pointcut() {}
 
     /**
@@ -60,11 +59,11 @@ public class OperateLogAspect {
             throw new BaseException(ErrorCodeEnum.NOT_LOGIN);
         }
         long start = System.currentTimeMillis();
-        OperateLog annotation = this.getAnnotation(joinPoint);
+        LogOperate annotation = this.getAnnotation(joinPoint);
         if (annotation == null) {
             return null;
         }
-        LogOperate logOperate = new LogOperate();
+        com.spark.common.bean.log.entity.LogOperate logOperate = new com.spark.common.bean.log.entity.LogOperate();
         logOperate.setCreatedBy(userId);
         logOperate.setUpdatedBy(userId);
         logOperate.setType(annotation.operateType().getValue());
@@ -91,9 +90,11 @@ public class OperateLogAspect {
             logger.error("OperateLogAspect error", e);
             logOperate.setCode(ErrorCodeEnum.SYSTEM_ERROR.getValue());
             logOperate.setRemark(e.getMessage());
+            logOperate.setObjId(0L);
         }
         long end = System.currentTimeMillis();
         logOperate.setConsume((int)(end-start));
+        logOperate.setTenantId(SessionHolder.getCurrentTenantId());
         mqProducer.sendOperateLogMq(JsonUtil.toString(logOperate));
         // 方法里面抛出了异常 此处的obj为null
         if (obj == null) {
@@ -105,12 +106,12 @@ public class OperateLogAspect {
     /**
      * 是否存在注解，如果存在就获取
      */
-    private OperateLog getAnnotation(JoinPoint joinPoint) {
+    private LogOperate getAnnotation(JoinPoint joinPoint) {
         Signature signature = joinPoint.getSignature();
         MethodSignature methodSignature = (MethodSignature) signature;
         Method method = methodSignature.getMethod();
         if (method != null) {
-            return method.getAnnotation(OperateLog.class);
+            return method.getAnnotation(LogOperate.class);
         }
         return null;
     }

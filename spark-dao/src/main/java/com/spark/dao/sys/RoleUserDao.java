@@ -34,21 +34,25 @@ public interface RoleUserDao {
 
     /**
      * 批量插入
+     * @param tenantId
      * @param roleId
      * @param userIds
      * @param createdBy
      * @return
      */
-    int batchInsertByRoleId(@Param("roleId") Long roleId, @Param("userIds") List<Long> userIds, @Param("createdBy") Long createdBy);
+    int batchInsertByRoleId(@Param("tenantId")Long tenantId, @Param("roleId") Long roleId,
+                            @Param("userIds") List<Long> userIds, @Param("createdBy") Long createdBy);
 
     /**
      * 批量插入
+     * @param tenantId
      * @param userId
      * @param roleIds
      * @param createdBy
      * @return
      */
-    int batchInsertByUserId(@Param("userId") Long userId, @Param("roleIds") List<Long> roleIds, @Param("createdBy") Long createdBy);
+    int batchInsertByUserId(@Param("tenantId")Long tenantId, @Param("userId") Long userId,
+                            @Param("roleIds") List<Long> roleIds, @Param("createdBy") Long createdBy);
 
     /**
      * 删除关联

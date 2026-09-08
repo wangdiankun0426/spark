@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.kb.RetrieveLogDao" >
     <sql id="allColumnList" >
-        id , kb_id , query , strategy , retrieve_count , qa_hit , avg_similarity , max_similarity ,
+        id , tenant_id, kb_id , query , strategy , retrieve_count , qa_hit , avg_similarity , max_similarity ,
         cost_time , feedback_score , feedback_remark , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
@@ -17,6 +17,9 @@
                 #{id}
             </foreach>
             )
+        </if>
+        <if test="tenantId != null">
+            and tenant_id = #{tenantId}
         </if>
         <if test="kbId != null">
             and kb_id = #{kbId}
@@ -43,9 +46,9 @@
 
     <!-- 普通记录表：数据库自增 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into kb_retrieve_log (kb_id , query , strategy , retrieve_count , qa_hit , avg_similarity ,
+        insert into kb_retrieve_log (tenant_id, kb_id , query , strategy , retrieve_count , qa_hit , avg_similarity ,
                                      max_similarity , cost_time , feedback_score , feedback_remark , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values (#{kbId} , #{query} , #{strategy} , #{retrieveCount} , #{qaHit} , #{avgSimilarity} ,
+        values (#{tenantId}, #{kbId} , #{query} , #{strategy} , #{retrieveCount} , #{qaHit} , #{avgSimilarity} ,
                 #{maxSimilarity} , #{costTime} , #{feedbackScore} , #{feedbackRemark} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
@@ -106,6 +109,9 @@
             COALESCE(avg(avg_similarity), 0) as avgSimilarity
         from kb_retrieve_log
         where delete_flag = 1
+        <if test="tenantId != null">
+            and tenant_id = #{tenantId}
+        </if>
         group by query
         order by queryCount desc
         limit #{limit}
@@ -118,6 +124,9 @@
             count(*) as retrieveCount
         from kb_retrieve_log
         where delete_flag = 1
+        <if test="tenantId != null">
+            and tenant_id = #{tenantId}
+        </if>
         group by created_by
         order by retrieveCount desc
         limit #{limit}
@@ -132,5 +141,8 @@
         from kb_retrieve_log
         where delete_flag = 1
         and created_dt &gt;= #{monthStart}
+        <if test="tenantId != null">
+            and tenant_id = #{tenantId}
+        </if>
     </select>
 </mapper>

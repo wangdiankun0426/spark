@@ -1,7 +1,8 @@
 package com.spark.manage.sys.impl;
 
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.config.aspectj.annotation.LogPrint;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.common.bean.sys.entity.Role;
 import com.spark.common.bean.sys.query.RoleQuery;
 import com.spark.common.bean.sys.result.RoleResult;
@@ -45,7 +46,7 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
      * @return 创建结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.ROLE_INSERT)
+    @LogOperate(operateType = OperateTypeEnum.ROLE_INSERT)
     public ResultData<Void> createRole(RoleVO roleVO) {
         ResultData<Void> result = new ResultData<>();
         if (roleVO == null || StringUtil.isBlank(roleVO.getName())) {
@@ -86,6 +87,7 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
         if (query == null) {
             query = new RoleQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<RoleResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);
@@ -98,7 +100,7 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
      * @return 修改结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.ROLE_UPDATE)
+    @LogOperate(operateType = OperateTypeEnum.ROLE_UPDATE)
     public ResultData<Void> updateRole(RoleVO roleVO) {
         ResultData<Void> result = new ResultData<>();
         if (roleVO == null || roleVO.getId() == null || StringUtil.isBlank(roleVO.getName())) {
@@ -133,7 +135,7 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
      * @return 删除结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.ROLE_DELETE)
+    @LogOperate(operateType = OperateTypeEnum.ROLE_DELETE)
     public ResultData<Void> deleteRole(RoleVO roleVO) {
         ResultData<Void> result = new ResultData<>();
         if (roleVO == null || roleVO.getId() == null) {

@@ -31,11 +31,6 @@ public class User extends BaseEntity {
     private String password;
 
     /**
-     * 所属部门
-     */
-    private Long deptId;
-
-    /**
      * 邮箱
      */
     private String phone;
@@ -61,8 +56,13 @@ public class User extends BaseEntity {
     private Integer status;
 
     /**
-     * 角色类型
+     * 账号类型
      */
-    private Integer roleType;
+    private Integer accountType;
+
+    /**
+     * 当前租户id
+     */
+    private Long currentTenantId;
 
 }

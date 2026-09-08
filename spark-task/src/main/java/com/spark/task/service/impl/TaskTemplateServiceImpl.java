@@ -4,7 +4,10 @@ import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.task.entity.TaskTemplate;
+import com.spark.common.bean.task.entity.TaskTemplateParam;
+import com.spark.common.bean.task.query.TaskTemplateParamQuery;
 import com.spark.common.bean.task.query.TaskTemplateQuery;
+import com.spark.common.bean.task.result.TaskTemplateParamResult;
 import com.spark.common.bean.task.result.TaskTemplateResult;
 import com.spark.common.bean.task.vo.TaskTemplateVO;
 import com.spark.dao.task.TaskTemplateDao;
@@ -53,12 +56,31 @@ public class TaskTemplateServiceImpl extends BaseService<TaskTemplateQuery, Task
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        TaskTemplateQuery templateQuery = new TaskTemplateQuery();
+        templateQuery.setTenantId(0L);
+        templateQuery.setTaskType(taskTemplateVO.getTaskType());
+        TaskTemplateResult taskTemplateResult = taskTemplateDao.queryTaskTemplate(templateQuery);
+        if (taskTemplateResult == null) {
+            result.setErrorCode(ErrorCodeEnum.TASK_TEMPLATE_NOT_EXIST);
+            return result;
+        }
         TaskTemplate taskTemplate = new TaskTemplate();
         BeanUtil.copyProperties(taskTemplateVO, taskTemplate);
         int count = taskTemplateDao.insertDB(taskTemplate);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
+        }
+        TaskTemplateParamQuery templateParamQuery = new TaskTemplateParamQuery();
+        templateParamQuery.setTemplateId(taskTemplateResult.getId());
+        List<TaskTemplateParamResult> taskTemplateParamList = taskTemplateParamDao.queryTaskTemplateParamList(templateParamQuery);
+        if (CollectionUtil.isNotEmpty(taskTemplateParamList)) {
+            for (TaskTemplateParamResult taskTemplateParamResult : taskTemplateParamList) {
+                TaskTemplateParam taskTemplateParam = new TaskTemplateParam();
+                BeanUtil.copyProperties(taskTemplateParamResult, taskTemplateParam);
+                taskTemplateParam.setTemplateId(taskTemplate.getId());
+                taskTemplateParamDao.insertDB(taskTemplateParam);
+            }
         }
         result.setObjId(taskTemplate.getId());
         result.setCode(ResultData.OK);
@@ -145,6 +167,7 @@ public class TaskTemplateServiceImpl extends BaseService<TaskTemplateQuery, Task
         if (query == null) {
             query = new TaskTemplateQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         result.setData(super.pageList(query));
         result.setCode(ResultData.OK);
         return result;

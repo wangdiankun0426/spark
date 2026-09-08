@@ -11,6 +11,10 @@ curl -u elastic -X PUT "http://localhost:9200/spark-qa-vector" -H "Content-Type:
           "index": true,
           "doc_values": true
         },
+        "tenantId": {
+          "type": "long",
+          "index": true
+        },
         "prtId": {
             "type": "long",
             "index": true,

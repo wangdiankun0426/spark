@@ -2,10 +2,13 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.log.LogLoginDao" >
     <sql id="Base_Column_List" >
-    id, ipaddress,login_type,login_platform, session_id, delete_flag, created_dt, created_by,updated_dt, updated_by
+      id, tenant_id, ipaddress,login_type,login_platform, session_id, delete_flag, created_dt, created_by,updated_dt, updated_by
     </sql>
 
     <sql id="condition">
+        <if test="tenantId != null ">
+            AND tenant_id = #{tenantId}
+        </if>
         <if test="ipaddress != null ">
             AND ipaddress = #{ipaddress}
         </if>
@@ -21,8 +24,8 @@
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into log_login (ipaddress,login_type,login_platform,session_id, delete_flag, created_dt, created_by,updated_dt, updated_by)
-        values (#{ipaddress}, #{loginType}, #{loginPlatform}, #{sessionId}, 1 , now(), #{createdBy}, now(), #{updatedBy})
+        insert into log_login (tenant_id, ipaddress,login_type,login_platform,session_id, delete_flag, created_dt, created_by,updated_dt, updated_by)
+        values (#{tenantId},#{ipaddress}, #{loginType}, #{loginPlatform}, #{sessionId}, 1 , now(), #{createdBy}, now(), #{updatedBy})
     </insert>
 
     <select id="queryLogLoginList" resultType="com.spark.common.bean.log.result.LogLoginResult">

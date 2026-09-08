@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.sys.TenantUserDao" >
+    <sql id="Base_Column_List" >
+     stu.id, stu.tenant_id, stu.user_id, stu.role_type, stu.dept_id, su.login_name, su.name as user_name,
+           stu.delete_flag, stu.created_by, stu.created_dt, stu.updated_by, stu.updated_dt
+    </sql>
+
+    <sql id="condition">
+        <if test="tenantId != null">
+            and stu.tenant_id = #{tenantId}
+        </if>
+        <if test="userIds != null and userIds.size() > 0">
+            and stu.user_id in (
+            <foreach collection="userIds" item="userId" separator=",">
+                #{userId}
+            </foreach>
+            )
+        </if>
+        <if test="userId != null">
+            and stu.user_id = #{userId}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and stu.delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <select id="queryTenantUser" resultType="com.spark.common.bean.sys.result.TenantUserResult">
+        select <include refid="Base_Column_List"/>
+        from sys_tenant_user stu
+        left join sys_user su on (stu.user_id = su.id)
+        where 1=1
+        <include refid="condition"/>
+        order by id desc
+        limit 1
+    </select>
+
+    <select id="queryTenantUserList" resultType="com.spark.common.bean.sys.result.TenantUserResult">
+        select <include refid="Base_Column_List"/>
+        from sys_tenant_user stu
+        left join sys_user su on (stu.user_id = su.id)
+        where 1=1
+        <include refid="condition"/>
+        order by stu.role_type desc, stu.id desc
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="queryTenantUserCount" resultType="java.lang.Integer">
+        select count(1)
+        from sys_tenant_user stu
+        where 1=1
+        <include refid="condition"/>
+    </select>
+
+    <insert id="batchInsertByTenantId">
+        insert into sys_tenant_user (tenant_id, user_id, delete_flag, created_by, created_dt, updated_by, updated_dt)
+        values
+        <foreach collection="userIds" item="userId" separator=",">
+            (#{tenantId}, #{userId}, 1, #{createdBy}, now(), #{createdBy}, now())
+        </foreach>
+    </insert>
+</mapper>

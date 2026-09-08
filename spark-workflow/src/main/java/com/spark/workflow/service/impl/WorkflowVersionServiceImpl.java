@@ -10,7 +10,7 @@ import com.spark.common.bean.workflow.result.WfTemplateVersionResult;
 import com.spark.common.bean.workflow.vo.WfTemplateVersionVO;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.config.aspectj.annotation.LogPrint;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.workflow.WfTemplateDao;
 import com.spark.dao.workflow.WfTemplateVersionDao;
 import com.spark.common.enums.ErrorCodeEnum;
@@ -49,7 +49,7 @@ public class WorkflowVersionServiceImpl extends BaseService<WfTemplateVersionQue
      * @return 保存结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.WORKFLOW_VERSION_SAVE)
+    @LogOperate(operateType = OperateTypeEnum.WORKFLOW_VERSION_SAVE)
     public ResultData<Void> saveVersion(WfTemplateVersionVO versionVO) {
         ResultData<Void> result = new ResultData<>();
         if (versionVO == null || versionVO.getTemplateId() == null) {

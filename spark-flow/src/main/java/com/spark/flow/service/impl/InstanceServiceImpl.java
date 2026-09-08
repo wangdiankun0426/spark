@@ -99,6 +99,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         instance.setStatus(FlowInstanceStatusEnum.PENDING.getValue());
         Long instanceId = super.genObjectId(ObjectTypeEnum.FLOW_INSTANCE);
         instance.setId(instanceId);
+        instance.setTenantId(SessionHolder.getCurrentTenantId());
         BaseContext baseContext = new BaseContext();
         baseContext.putVal(FlowInstance.class, instance);
         SessionHolder.setContext(baseContext);
@@ -214,6 +215,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
             query = new FlowInstanceQuery();
         }
         query.setCreatedBy(SessionHolder.getCurrentUserId());
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<FlowInstanceResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);
@@ -231,6 +233,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         if (query == null) {
             query = new FlowInstanceQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         Long userId = SessionHolder.getCurrentUserId();
         FlowInstanceAssigneeQuery instanceAssigneeQuery = new FlowInstanceAssigneeQuery();
         instanceAssigneeQuery.setAssigneeId(userId);
@@ -446,7 +449,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
             this.insertAssignee(assigneeResult, userIds.get(i), FlowInstanceStatusEnum.PROCESSING.getValue(), assigneeResult.getSort() == null ? null : assigneeResult.getSort() + i);
         }
         // 记录操作
-        this.saveFlowDiscuss(assigneeResult.getInstanceId(), assigneeResult.getInstanceNodeId(), FlowInstanceStatusEnum.TRANSFERRED.getValue(), "转办给：" + StringUtil.joinList(super.getObjNames(userIds), ","));
+        this.saveFlowDiscuss(assigneeResult.getInstanceId(), assigneeResult.getInstanceNodeId(), FlowInstanceStatusEnum.TRANSFERRED.getValue(), "转办给：" + StringUtil.join(super.getObjNames(userIds), ","));
         // 发送待办
         flowMessageService.sendFlowNotice(assigneeResult.getFlowableInstanceId(), MessageTypeEnum.FLOW_TODO.getType());
         result.setCode(ResultData.OK);
@@ -478,7 +481,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
             this.insertAssignee(assigneeResult, userId, FlowInstanceStatusEnum.PROCESSING.getValue(), null);
         }
         // 记录操作
-        this.saveFlowDiscuss(assigneeResult.getInstanceId(), assigneeResult.getInstanceNodeId(), FlowInstanceStatusEnum.ADDED_SIGN.getValue(), "加签给了：" + StringUtil.joinList(super.getObjNames(userIds), ","));
+        this.saveFlowDiscuss(assigneeResult.getInstanceId(), assigneeResult.getInstanceNodeId(), FlowInstanceStatusEnum.ADDED_SIGN.getValue(), "加签给了：" + StringUtil.join(super.getObjNames(userIds), ","));
         // 发送待办
         flowMessageService.sendFlowNotice(assigneeResult.getFlowableInstanceId(), MessageTypeEnum.FLOW_TODO.getType());
         result.setCode(ResultData.OK);
@@ -496,6 +499,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         if (query == null) {
             query = new FlowInstanceQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         Long userId = SessionHolder.getCurrentUserId();
         FlowInstanceDiscussQuery instanceAssigneeQuery = new FlowInstanceDiscussQuery();
         instanceAssigneeQuery.setAssigneeId(userId);
@@ -652,7 +656,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
             }
             List<Long> userIds = instanceAssigneeResults.stream().map(FlowInstanceAssigneeResult::getAssigneeId).toList();
             List<String> objNames = super.getObjNames(userIds);
-            instanceNodeResult.setUnAssigneeName(StringUtil.joinList(objNames, ","));
+            instanceNodeResult.setUnAssigneeName(StringUtil.join(objNames, ","));
         });
     }
 

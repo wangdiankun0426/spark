@@ -1,6 +1,7 @@
 package com.spark.flow.service.impl;
 
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.flow.query.FlowInstanceQuery;
 import com.spark.common.bean.flow.query.FlowTemplateMsgQuery;
 import com.spark.common.bean.flow.result.FlowInstanceResult;
@@ -108,6 +109,7 @@ public class FlowMessageServiceImpl extends BaseFlowService implements FlowMessa
         messageVO.setContent(content);
         messageVO.setUserIds(userIds);
         messageVO.setRefId(instanceResult.getId());
+        messageVO.setTenantId(103L);
         mqProducer.sendSystemMessageMq(JsonUtil.toString(messageVO));
         logger.info("sendFlowNotice success, noticeType={}, userIds={}", messageType, userIds);
         result.setCode(ResultData.OK);

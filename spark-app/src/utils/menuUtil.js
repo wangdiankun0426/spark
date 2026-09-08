@@ -9,7 +9,6 @@ export const MENU_IDS = {
   FLOW: 50,       // 流程中心
   CONTACTS: 103,  // 通讯录
   MESSAGE: 104,   // 消息
-  MY: 105,        // 个人中心
 
   // AI应用页签
   AI_AGENT: 201,        // Agent
@@ -37,17 +36,17 @@ export function hasMenu(menuId) {
 }
 
 /**
- * 计算当前用户可见的底部导航项（首页常驻，其余按菜单权限过滤）
+ * 计算当前用户可见的底部导航项（工作台常驻，其余按菜单权限过滤）
  * @returns {Array}
  */
 export function visibleTabs() {
   // 底部导航tab项
   const TAB_ITEMS = [
-    {name: 'home', icon: 'home-fill', text: '首页', always: true},
+    {name: 'home', icon: 'home-fill', text: '工作台', always: true},
     {name: 'flow', icon: 'order', text: '流程', menuId: MENU_IDS.FLOW},
     {name: 'llm', icon: 'grid-fill', text: 'AI+', menuId: MENU_IDS.AI_APP},
     {name: 'message', icon: 'chat-fill', text: '消息', menuId: MENU_IDS.MESSAGE},
-    {name: 'my', icon: 'account', text: '我的', menuId: MENU_IDS.MY},
+    {name: 'my', icon: 'account', text: '我的', always: true},
   ];
   return TAB_ITEMS.filter(item => hasMenu(item.menuId) || item.always);
 }
@@ -74,7 +73,7 @@ export function ensureMenusLoaded() {
 }
 
 /**
- * 页面级菜单权限校验：不具备时提示无权限并跳回首页
+ * 页面级菜单权限校验：不具备时提示无权限并跳无权限页面
  * @param menuId 菜单id
  * @returns {Promise<boolean>} 是否放行
  */

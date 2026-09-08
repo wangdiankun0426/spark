@@ -35,6 +35,12 @@
         </up-form-item>
         <up-form-item
             label-width="100px"
+            label="所属角色"
+        >
+          <up-input v-model="userInfo.roleNames" placeholder="未填写" readonly border="none"/>
+        </up-form-item>
+        <up-form-item
+            label-width="100px"
             label="手机号"
         >
           <up-input v-model="userInfo.phone" placeholder="未填写" readonly border="none"/>
@@ -78,7 +84,10 @@ function onClickLeft() {
  }
 </script>
 <style scoped lang="scss">
-.info-form{
+:deep(.u-navbar__content__title) {
+  color: #ffffff !important;
+}
+.info-form {
   padding-top: 50px;
   width: 90%;
   margin: auto;

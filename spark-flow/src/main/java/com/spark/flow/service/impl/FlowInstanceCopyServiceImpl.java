@@ -116,7 +116,7 @@ public class FlowInstanceCopyServiceImpl extends BaseService<FlowInstanceCopyQue
         }
         if (insertCount > 0) {
             // 记录审批讨论
-            String userNames = StringUtil.joinList(super.getObjNames(userIds), ",");
+            String userNames = StringUtil.join(super.getObjNames(userIds), ",");
             this.saveFlowDiscuss(instanceResult.getId(), copyVO.getNodeId(), FlowInstanceStatusEnum.PROCESSING.getValue(), "抄送给：" + userNames);
         }
         result.setCode(ResultData.OK);
@@ -134,6 +134,7 @@ public class FlowInstanceCopyServiceImpl extends BaseService<FlowInstanceCopyQue
         if (query == null) {
             query = new FlowInstanceCopyQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         query.setUserId(SessionHolder.getCurrentUserId());
         PageResult<FlowInstanceCopyResult> list = super.pageList(query);
         result.setData(list);

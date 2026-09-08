@@ -13,6 +13,7 @@ public enum ObjectTypeEnum {
     UNKNOWN(0,"未知类型"),
     USER(1,"用户"),
     DEPARTMENT(2,"部门"),
+    TENANT(3,"租户"),
     ROLE(4,"角色"),
     CHAT_SPACE(5,"聊天空间"),
     FORM(6,"表单"),

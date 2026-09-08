@@ -9,7 +9,7 @@ import com.spark.common.bean.sys.query.MessageUserQuery;
 import com.spark.common.bean.sys.result.MessageResult;
 import com.spark.common.bean.sys.result.MessageUserResult;
 import com.spark.common.bean.sys.vo.MessageVO;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.sys.MessageDao;
 import com.spark.dao.sys.MessageUserDao;
 import com.spark.common.enums.ErrorCodeEnum;
@@ -108,6 +108,7 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
         List<Long> msgIds = messageUserList.stream().map(MessageUserResult::getMsgId).distinct().collect(Collectors.toList());
         MessageQuery query = new MessageQuery();
         query.setIds(msgIds);
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         List<MessageResult> messageList = messageDao.queryMessageList(query);
         result.setData(messageList);
         result.setCode(ResultData.OK);
@@ -125,6 +126,7 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
         if (query == null) {
             query = new MessageQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         result.setData(super.pageList(query));
         result.setCode(ResultData.OK);
         return result;
@@ -136,7 +138,7 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
      * @return 发送结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.MESSAGE_INSERT)
+    @LogOperate(operateType = OperateTypeEnum.MESSAGE_INSERT)
     public ResultData<Void> sendMessage(MessageVO messageVO) {
         ResultData<Void> result = new ResultData<>();
         Long userId = SessionHolder.getCurrentUserId();
@@ -175,7 +177,7 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
      * @return 删除结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.MESSAGE_DELETE)
+    @LogOperate(operateType = OperateTypeEnum.MESSAGE_DELETE)
     public ResultData<Void> deleteMessage(MessageVO messageVO) {
         ResultData<Void> result = new ResultData<>();
         Long userId = SessionHolder.getCurrentUserId();

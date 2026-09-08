@@ -22,15 +22,15 @@
           </view>
           <text class="quick-label">通讯录</text>
         </view>
-        <view class="quick-item">
-          <view class="quick-icon-wrap" style="background-color: #f6ffed;">
-            <up-icon name="grid-fill" size="32" color="#52c41a"></up-icon>
+        <view class="quick-item" @click="openTenantPopup">
+          <view class="quick-icon-wrap" style="background-color: #e6fffb;">
+            <up-icon name="share-square" size="32" color="#13c2c2"></up-icon>
           </view>
-          <text class="quick-label">开发中</text>
+          <text class="quick-label">切换租户</text>
         </view>
         <view class="quick-item">
           <view class="quick-icon-wrap" style="background-color: #fff7e6;">
-            <up-icon name="tags-fill" size="32" color="#faad14"></up-icon>
+            <up-icon name="server-fill" size="32" color="#faad14"></up-icon>
           </view>
           <text class="quick-label">开发中</text>
         </view>
@@ -71,6 +71,13 @@
         @cancel="modalVisible = false"
     />
 
+    <!-- 切换租户弹层 -->
+    <tenant-switch
+        :show="tenantPopupVisible"
+        :current-tenant-id="userInfo.currentTenantId"
+        @update:show="tenantPopupVisible = $event"
+    />
+
     <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#0052cc">
       <up-tabbar-item
           v-for="tab in tabBarItems"
@@ -85,10 +92,10 @@
 <script setup>
 import {logoutAPI} from "@/api/auth/login";
 import {ref, computed} from "vue";
-import {onShow} from "@dcloudio/uni-app";
 import {useStore} from "vuex";
 import {MENU_IDS, hasMenu, visibleTabs, checkMenuAccess} from "@/utils/menuUtil";
 import UserAvatar from "@/components/UserAvatar/index.vue"
+import TenantSwitch from "@/components/TenantSwitch/index.vue"
 
 const store = useStore();
 const active = ref("my");
@@ -96,17 +103,24 @@ const active = ref("my");
 // 按菜单权限过滤后的底部导航项
 const tabBarItems = computed(() => visibleTabs());
 
-// 页面显示时校验个人中心菜单权限
-onShow(() => {
-  checkMenuAccess(MENU_IDS.MY);
-});
 const userInfo = computed(() => store.getters["user/getUserInfo"] || {
   id: undefined,
   name: undefined,
   loginName: undefined,
-  deptPath: undefined
+  deptPath: undefined,
+  currentTenantId: undefined
 });
 const modalVisible = ref(false);
+
+// 切换租户弹层显隐
+const tenantPopupVisible = ref(false);
+
+/**
+ * 打开切换租户弹层
+ */
+function openTenantPopup() {
+  tenantPopupVisible.value = true;
+}
 
 /**
  * 跳转通讯录

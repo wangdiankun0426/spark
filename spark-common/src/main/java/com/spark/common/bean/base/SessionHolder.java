@@ -1,8 +1,11 @@
 package com.spark.common.bean.base;
 
 import com.spark.common.bean.sys.entity.Session;
+import com.spark.common.enums.AccountTypeEnum;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.RoleTypeEnum;
+
+import java.util.Objects;
 
 /**
  * +++/\_/\
@@ -41,7 +44,7 @@ public class SessionHolder {
     private static final ThreadLocal<String> currentDeptIds = new ThreadLocal<>();
 
     /**
-     * 角色类型位
+     * 角色类型
      */
     private static final ThreadLocal<Integer> currentRoleType = new ThreadLocal<>();
 
@@ -49,6 +52,32 @@ public class SessionHolder {
      * 上下文
      */
     private static final ThreadLocal<BaseContext> context = new ThreadLocal<>();
+
+    /**
+     * 租户id
+     */
+    private static final ThreadLocal<Long> currentTenantId = new ThreadLocal<>();
+
+    /**
+     * 账号类型
+     */
+    private static final ThreadLocal<Integer> accountType = new ThreadLocal<>();
+
+    public static void setAccountType(Integer accountType_) {
+        accountType.set(accountType_);
+    }
+
+    public static Integer getAccountType() {
+        return accountType.get();
+    }
+
+    public static void setCurrentTenantId(Long tenantId) {
+        currentTenantId.set(tenantId);
+    }
+
+    public static Long getCurrentTenantId() {
+        return currentTenantId.get();
+    }
 
     public static void setCurrentDeptId(Long userId) {
         currentDeptId.set(userId);
@@ -126,6 +155,8 @@ public class SessionHolder {
         setCurrentDataScop(session.getDataScope());
         setCurrentDeptIds(session.getDeptIds());
         setCurrentRoleType(session.getRoleType());
+        setCurrentTenantId(session.getTenantId());
+        setAccountType(session.getAccountType());
     }
 
     /**
@@ -139,18 +170,31 @@ public class SessionHolder {
         currentDeptIds.remove();
         currentRoleType.remove();
         context.remove();
+        currentTenantId.remove();
+        accountType.remove();
     }
 
     /**
-     * 判读当前用户，当前空间，是否为管理员
+     * 判断当前用户是否为系统管理员
      * @return
      */
-    public static boolean isAdmin(){
+    public static boolean isSysAdmin(){
+        Integer accountType = getAccountType();
+        if (accountType == null) {
+            return false;
+        }
+        return Objects.equals(AccountTypeEnum.indexOf(accountType).getValue(), AccountTypeEnum.SITE_ADMIN.getValue());
+    }
+
+    /**
+     * 判断当前用户是否为组织管理员
+     * @return
+     */
+    public static boolean isOrgAdmin(){
         Integer roleType = getCurrentRoleType();
         if (roleType == null) {
             return false;
         }
-        return RoleTypeEnum.hasRole(SessionHolder.getCurrentRoleType(), RoleTypeEnum.SYS_ADMIN)
-                || RoleTypeEnum.hasRole(SessionHolder.getCurrentRoleType(), RoleTypeEnum.ORG_ADMIN);
+        return RoleTypeEnum.hasRole(SessionHolder.getCurrentRoleType(), RoleTypeEnum.ORG_ADMIN);
     }
 }

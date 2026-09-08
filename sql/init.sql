@@ -1,13 +1,10 @@
-
-insert into `sys_user`(id, login_name, password, name, dept_id, status, role_type, delete_flag, created_by, created_dt, updated_by, updated_dt)
-values (101, 'admin', 'e10adc3949ba59abbe56e057f20f883e', '管理员', 102, 1, 2, 1, 101, now(), 101, now());
-
-insert into `sys_department`(id, name, prt_id, code, header_id, delete_flag, created_by, created_dt, updated_by, updated_dt)
-values (102, '星火科技', 0, '001', null , 1, 101, now(), 101, now());
-
-INSERT INTO `task_template` (`id`, `name`, `task_type`, `remark`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (1, '知识库文档归档任务', 2, '', 1, 101, now(), 101, now());
-INSERT INTO `task_template_param` (`id`, `template_id`, `name`, `code`, `type`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (1, 1, '待归档文档ID', 'attId', 2, 1, 101, now(), 101, now());
-INSERT INTO `task_template_param` (`id`, `template_id`, `name`, `code`, `type`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (2, 1, '所属知识库ID', 'kbId', 2, 1, 101, now(), 101, now());
+insert into `sys_user`(id, login_name, password, name, status, account_type, delete_flag, created_by, created_dt, updated_by, updated_dt)
+values (101, 'sysadmin', 'e10adc3949ba59abbe56e057f20f883e', '系统管理员', 1, 2, 1, 101, now(), 101, now());
+INSERT INTO `sys_tenant` (`id`, `name`, `status`, `deadline`, `account_count`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`)
+VALUES (103, '演示租户环境', 1, null, 10, 1, 101, now(), 101, now());
+INSERT INTO `task_template` (`id`,`tenant_id`,`name`, `task_type`, `remark`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (1, 0, '知识库文档归档任务', 2, '', 1, 101, now(), 101, now());
+INSERT INTO `task_template_param` (`id`, `tenant_id`,`template_id`, `name`, `code`, `type`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (1,0, 1, '待归档文档ID', 'attId', 2, 1, 101, now(), 101, now());
+INSERT INTO `task_template_param` (`id`, `tenant_id`,`template_id`, `name`, `code`, `type`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (2, 0,1, '所属知识库ID', 'kbId', 2, 1, 101, now(), 101, now());
 
 INSERT INTO `sys_menu` (`id`, `name`, `parent_id`, `delete_flag`, `created_by`, `created_dt`) VALUES
   (10, '首页', 0, 1, 101, now()),
@@ -15,7 +12,6 @@ INSERT INTO `sys_menu` (`id`, `name`, `parent_id`, `delete_flag`, `created_by`, 
   (102, '快捷方式', 10, 1, 101, now()),
   (103, '通讯录', 10, 1, 101, now()),
   (104, '消息', 10, 1, 101, now()),
-  (105, '个人中心', 10, 1, 101, now()),
   (20, 'AI应用', 0, 1, 101, now()),
   (201, 'Agent', 20, 1, 101, now()),
   (202, 'WorkFlow', 20, 1, 101, now()),

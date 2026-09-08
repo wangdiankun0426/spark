@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.sys.DepartmentDao" >
     <sql id="Base_Column_List" >
-    id, name,prt_id,code,header_id,dept_num,status,order_num,wecom_id, delete_flag,created_by, created_dt, updated_by, updated_dt
+        id, tenant_id, name,prt_id,code,header_id,dept_num,status,order_num, delete_flag,created_by, created_dt, updated_by, updated_dt
     </sql>
 
     <sql id="condition">
@@ -15,6 +15,9 @@
                 #{id}
             </foreach>
             )
+        </if>
+        <if test="tenantId != null">
+            and tenant_id = #{tenantId}
         </if>
         <if test="prtId != null">
             and prt_id = #{prtId}
@@ -52,8 +55,8 @@
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into sys_department (id, name,prt_id,code, header_id,dept_num,status,order_num,wecom_id, delete_flag,created_by, created_dt, updated_by, updated_dt)
-        values (#{id}, #{name}, #{prtId}, #{code}, #{headerId}, #{deptNum}, #{status}, #{orderNum}, #{wecomId}, 1 , #{createdBy} , now(), #{updatedBy}, now())
+        insert into sys_department (id, tenant_id, name,prt_id,code, header_id,dept_num,status,order_num, delete_flag,created_by, created_dt, updated_by, updated_dt)
+        values (#{id}, #{tenantId}, #{name}, #{prtId}, #{code}, #{headerId}, #{deptNum}, #{status}, #{orderNum}, 1 , #{createdBy} , now(), #{updatedBy}, now())
     </insert>
 
     <select id="queryDepartmentList" resultType="com.spark.common.bean.sys.result.DepartmentResult">
@@ -84,9 +87,6 @@
         </if>
         <if test="orderNum != null">
             ,order_num = #{orderNum}
-        </if>
-        <if test="wecomId != null">
-            ,wecom_id = #{wecomId}
         </if>
         <if test="prtId != null">
             ,prt_id = #{prtId}

@@ -512,11 +512,10 @@ function goRegister() {
   padding: 0;
   margin: 0;
   position: relative;
-  // 全屏浅色科技风渐变背景
   background: linear-gradient(160deg, #f7faff 0%, #eaf2fe 55%, #e3edfd 100%);
 }
 
-// 左侧 - 透明容器（背景由全屏 anim-bg 提供）
+// 左侧 - 透明容器
 .el-login-sidebar {
   width: 60%;
   height: 100vh;
@@ -526,7 +525,7 @@ function goRegister() {
   color: $color-text-primary;
 }
 
-// 科技风动态背景装饰层（全屏铺满）
+// 科技风动态背景装饰层
 .anim-bg {
   position: absolute;
   inset: 0;
@@ -535,7 +534,7 @@ function goRegister() {
   z-index: 0;
 }
 
-// 科技网格底纹（双层网格 + 边缘羽化）
+// 科技网格底纹
 .anim-grid {
   position: absolute;
   inset: 0;
@@ -545,11 +544,10 @@ function goRegister() {
       linear-gradient(rgba(0, 79, 197, 0.04) 1px, transparent 1px),
       linear-gradient(90deg, rgba(0, 79, 197, 0.04) 1px, transparent 1px);
   background-size: 160px 160px, 160px 160px, 40px 40px, 40px 40px;
-  -webkit-mask-image: radial-gradient(ellipse at 50% 45%, #000 40%, transparent 88%);
   mask-image: radial-gradient(ellipse at 50% 45%, #000 40%, transparent 88%);
 }
 
-// 柔和光晕（蓝青色系，低透明度）
+// 柔和光晕
 .anim-blob {
   position: absolute;
   border-radius: 50%;

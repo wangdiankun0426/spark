@@ -2,6 +2,7 @@ package com.spark.llm.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.llm.entity.Mcp;
 import com.spark.common.bean.llm.query.McpQuery;
 import com.spark.common.bean.llm.query.ProviderQuery;
@@ -10,7 +11,7 @@ import com.spark.common.bean.llm.result.ProviderResult;
 import com.spark.common.bean.llm.vo.McpVO;
 import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.LogPrint;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.llm.McpDao;
 import com.spark.dao.llm.ProviderDao;
 import com.spark.common.enums.ErrorCodeEnum;
@@ -60,7 +61,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
      * @return 创建结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.MCP_INSERT)
+    @LogOperate(operateType = OperateTypeEnum.MCP_INSERT)
     public ResultData<Void> createMcp(McpVO mcpVO) {
         ResultData<Void> result = new ResultData<>();
         if (mcpVO == null || StringUtil.isBlank(mcpVO.getName()) || mcpVO.getTransport() == null) {
@@ -92,7 +93,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
      * @return 修改结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.MCP_UPDATE)
+    @LogOperate(operateType = OperateTypeEnum.MCP_UPDATE)
     public ResultData<Void> updateMcp(McpVO mcpVO) {
         ResultData<Void> result = new ResultData<>();
         if (mcpVO == null || mcpVO.getId() == null) {
@@ -130,7 +131,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
      * @return 删除结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.MCP_DELETE)
+    @LogOperate(operateType = OperateTypeEnum.MCP_DELETE)
     public ResultData<Void> deleteMcp(McpVO mcpVO) {
         ResultData<Void> result = new ResultData<>();
         if (mcpVO == null || mcpVO.getId() == null) {
@@ -170,6 +171,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
         if (query == null) {
             query = new McpQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<McpResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);
@@ -182,7 +184,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
      * @return 详情
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.MCP_DETAIL)
+    @LogOperate(operateType = OperateTypeEnum.MCP_DETAIL)
     public ResultData<McpResult> queryMcpDetail(McpQuery query) {
         ResultData<McpResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -207,7 +209,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
      * @return 测试结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.MCP_TEST)
+    @LogOperate(operateType = OperateTypeEnum.MCP_TEST)
     public ResultData<Void> testConnection(McpVO mcpVO) {
         ResultData<Void> result = new ResultData<>();
         if (mcpVO == null || mcpVO.getId() == null) {

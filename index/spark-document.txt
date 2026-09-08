@@ -11,6 +11,10 @@ curl -u elastic -X PUT "http://localhost:9200/spark-document" -H "Content-Type: 
         "index": true, // 默认true，false不能直接进行查询 排序等操作
         "doc_values": true
       },
+      "tenantId": {
+        "type": "long",
+        "index": true
+      },
       "prtId": {
         "type": "long",
         "index": true

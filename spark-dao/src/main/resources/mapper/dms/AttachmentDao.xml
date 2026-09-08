@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.dms.AttachmentDao" >
     <sql id="Base_Column_List" >
-    id, name, size, path, ext, owner_id, dept_id, delete_flag, created_by, created_dt, updated_by, updated_dt
+      id, tenant_id, name, size, path, ext, owner_id, dept_id, delete_flag, created_by, created_dt, updated_by, updated_dt
     </sql>
 
     <sql id="condition">
@@ -15,6 +15,9 @@
                 #{id}
             </foreach>
             )
+        </if>
+        <if test="tenantId != null">
+            and tenant_id = #{tenantId}
         </if>
         <if test="name != null and name != ''">
             and name like concat('%', #{name}, '%')
@@ -31,8 +34,8 @@
     </sql>
 
     <insert id="insert">
-        insert into dms_attachment(id, name, size, path, ext, owner_id, dept_id, delete_flag, created_by, created_dt, updated_by, updated_dt)
-        values (#{id}, #{name}, #{size}, #{path}, #{ext}, #{ownerId}, #{deptId}, 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into dms_attachment(id, tenant_id, name, size, path, ext, owner_id, dept_id, delete_flag, created_by, created_dt, updated_by, updated_dt)
+        values (#{id}, #{tenantId}, #{name}, #{size}, #{path}, #{ext}, #{ownerId}, #{deptId}, 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">

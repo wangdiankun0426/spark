@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.sys.DepartmentProfileDao" >
+    <insert id="insert">
+        insert into sys_department_profile (id, wecom_id, delete_flag, created_by, created_dt, updated_by, updated_dt)
+        values (#{id}, #{wecomId}, 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="updateById">
+        update sys_department_profile set updated_dt = #{updatedDt}, updated_by = #{updatedBy}
+        <if test="wecomId != null">
+            ,wecom_id = #{wecomId}
+        </if>
+        where id = #{id}
+    </update>
+
+    <update id="deleteById">
+        update sys_department_profile set delete_flag = -1, updated_by = #{updatedBy}, updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+</mapper>

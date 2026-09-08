@@ -74,17 +74,19 @@ public interface RoleDao extends BaseDao<Role> {
 
     /**
      * 查询当前用户最大数据权限
+     * @param tenantId
      * @param userId
      * @return
      */
-    int queryUserMaxDataScope(@Param("userId") Long userId);
+    int queryUserMaxDataScope(@Param("tenantId")Long tenantId, @Param("userId") Long userId);
 
     /**
-     * 查询用户各启用角色的菜单ID列表
+     * 查询用户启用角色的菜单ID列表
+     * @param tenantId
      * @param userId
      * @return
      */
-    List<String> queryUserMenuIds(@Param("userId") Long userId);
+    List<String> queryUserMenuIds(@Param("tenantId")Long tenantId, @Param("userId") Long userId);
 
     /**
      * 查询最大id

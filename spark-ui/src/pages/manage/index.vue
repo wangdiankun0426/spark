@@ -1,13 +1,13 @@
 <template>
   <div>
     <el-container>
-      <el-aside width="64px" class="admin-el-aside">
+      <el-aside width="64px" class="manage-el-aside">
         <el-menu
             :default-active="defaultActive"
             :router='true'
             :collapse="true"
             mode="vertical"
-            class="admin-el-menu"
+            class="manage-el-menu"
         >
           <el-menu-item index="/manage/sys/user">
             <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><User /></el-icon>
@@ -65,7 +65,7 @@ const defaultActive = computed(() => {
 </script>
 
 <style lang="scss" scoped>
-.admin-el-aside {
+.manage-el-aside {
   padding: 0;
   height: calc(100vh - $nav-height);
   background: var(--sidebar-bg);
@@ -74,7 +74,7 @@ const defaultActive = computed(() => {
   overflow-y: auto;
   overflow-x: hidden;
 }
-.admin-el-menu {
+.manage-el-menu {
   border: 0;
   padding: 0;
   margin: 0;

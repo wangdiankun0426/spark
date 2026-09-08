@@ -43,4 +43,14 @@ public class Session {
      * 角色类型
      */
     private Integer roleType;
+
+    /**
+     * 租户id
+     */
+    private Long tenantId;
+
+    /**
+     * 账号类型
+     */
+    private Integer accountType;
 }

@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.llm.ModelDao" >
     <sql id="allColumnList" >
-        id , provider_id , type , name , description , remark , enable_thinking , temperature , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , tenant_id, provider_id , type , name , description , remark , enable_thinking , temperature , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="searchCondition">
@@ -15,6 +15,9 @@
                 #{id}
             </foreach>
             )
+        </if>
+        <if test="tenantId != null">
+            and tenant_id = #{tenantId}
         </if>
         <if test="providerId != null">
             and provider_id = #{providerId}
@@ -50,8 +53,8 @@
     </sql>
 
     <insert id="insert">
-        insert into llm_model (id, provider_id , type , name , description , remark , enable_thinking , temperature , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values (#{id}, #{providerId} , #{type} , #{name} , #{description} , #{remark} , IFNULL(#{enableThinking}, -1) , IFNULL(#{temperature}, 0.1) , IFNULL(#{status}, 1) , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into llm_model (id, tenant_id, provider_id , type , name , description , remark , enable_thinking , temperature , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{id}, #{tenantId}, #{providerId} , #{type} , #{name} , #{description} , #{remark} , IFNULL(#{enableThinking}, -1) , IFNULL(#{temperature}, 0.1) , IFNULL(#{status}, 1) , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">

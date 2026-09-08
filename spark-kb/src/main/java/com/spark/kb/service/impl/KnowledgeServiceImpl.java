@@ -3,6 +3,7 @@ package com.spark.kb.service.impl;
 import com.spark.common.bean.base.BaseAssert;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.kb.entity.Knowledge;
 import com.spark.common.bean.dms.query.DocumentQuery;
 import com.spark.common.bean.kb.query.KnowledgeQuery;
@@ -18,7 +19,7 @@ import com.spark.common.bean.kb.result.RetrieveDetailItem;
 import com.spark.common.bean.kb.result.RetrieveDetailResult;
 import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.LogPrint;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.dms.DocumentDao;
 import com.spark.dao.kb.KnowledgeDao;
 import com.spark.dao.llm.ModelDao;
@@ -78,7 +79,7 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
      * @return 创建结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KNOWLEDGE_INSERT)
+    @LogOperate(operateType = OperateTypeEnum.KNOWLEDGE_INSERT)
     public ResultData<Void> createKnowledge(KnowledgeVO knowledgeVO) {
         ResultData<Void> result = new ResultData<>();
         if (knowledgeVO == null) {
@@ -136,7 +137,7 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
      * @return 修改结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KNOWLEDGE_UPDATE)
+    @LogOperate(operateType = OperateTypeEnum.KNOWLEDGE_UPDATE)
     public ResultData<Void> updateKnowledge(KnowledgeVO knowledgeVO) {
         ResultData<Void> result = new ResultData<>();
         if (knowledgeVO == null || knowledgeVO.getId() == null) {
@@ -172,7 +173,7 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
      * @return 删除结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KNOWLEDGE_DELETE)
+    @LogOperate(operateType = OperateTypeEnum.KNOWLEDGE_DELETE)
     public ResultData<Void> deleteKnowledge(KnowledgeVO knowledgeVO) {
         ResultData<Void> result = new ResultData<>();
         if (knowledgeVO == null || knowledgeVO.getId() == null) {
@@ -210,6 +211,7 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
         if (query == null) {
             query = new KnowledgeQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<KnowledgeResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);
@@ -222,7 +224,7 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
      * @return 详情
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KNOWLEDGE_DETAIL)
+    @LogOperate(operateType = OperateTypeEnum.KNOWLEDGE_DETAIL)
     public ResultData<KnowledgeResult> queryKnowledgeDetail(KnowledgeQuery query) {
         ResultData<KnowledgeResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -246,7 +248,7 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
      * @return 检索测试结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KNOWLEDGE_RETRIEVE_TEST)
+    @LogOperate(operateType = OperateTypeEnum.KNOWLEDGE_RETRIEVE_TEST)
     public ResultData<RetrieveTestResult> testRetrieve(RetrieveTestQuery query) {
         ResultData<RetrieveTestResult> result = new ResultData<>();
         if (query == null || query.getKbId() == null || StringUtil.isBlank(query.getQuery())) {
@@ -305,7 +307,7 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
         ResultData<Void> saveData = retrieveLogService.saveRetrieveLog(query.getKbId(), query.getQuery(), detailResult, costTime);
         BaseAssert.assertTrue(saveData);
         // 补充文档信息
-        supplyDocName(items);
+        this.supplyDocName(items);
         testResult.setItems(items);
         result.setData(testResult);
         result.setObjId(knowledge.getId());

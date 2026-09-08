@@ -15,7 +15,7 @@ import com.spark.common.bean.sys.result.UserResult;
 import com.spark.common.bean.sys.vo.NoticeVO;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.config.aspectj.annotation.LogPrint;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.sys.DepartmentDao;
 import com.spark.dao.sys.NoticeDao;
 import com.spark.dao.sys.NoticeObjDao;
@@ -72,7 +72,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
      * @return 创建结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.NOTICE_INSERT)
+    @LogOperate(operateType = OperateTypeEnum.NOTICE_INSERT)
     public ResultData<Void> createNotice(NoticeVO noticeVO) {
         ResultData<Void> result = new ResultData<>();
         Long userId = SessionHolder.getCurrentUserId();
@@ -112,7 +112,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
      * @return 修改结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.NOTICE_UPDATE)
+    @LogOperate(operateType = OperateTypeEnum.NOTICE_UPDATE)
     public ResultData<Void> updateNotice(NoticeVO noticeVO) {
         ResultData<Void> result = new ResultData<>();
         Long userId = SessionHolder.getCurrentUserId();
@@ -170,7 +170,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
      * @return 删除结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.NOTICE_DELIST)
+    @LogOperate(operateType = OperateTypeEnum.NOTICE_DELIST)
     public ResultData<Void> delistNotice(NoticeVO noticeVO) {
         ResultData<Void> result = new ResultData<>();
         Long userId = SessionHolder.getCurrentUserId();
@@ -213,7 +213,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
      * @return 删除结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.NOTICE_DELETE)
+    @LogOperate(operateType = OperateTypeEnum.NOTICE_DELETE)
     public ResultData<Void> deleteNotice(NoticeVO noticeVO) {
         ResultData<Void> result = new ResultData<>();
         Long userId = SessionHolder.getCurrentUserId();
@@ -260,7 +260,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
      * @return 查询结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.NOTICE_DETAIL)
+    @LogOperate(operateType = OperateTypeEnum.NOTICE_DETAIL)
     public ResultData<NoticeResult> detailNotice(NoticeQuery query) {
         ResultData<NoticeResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -300,6 +300,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<NoticeResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);
@@ -313,7 +314,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
      * @return 保存结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.NOTICE_SAVE_TEXT)
+    @LogOperate(operateType = OperateTypeEnum.NOTICE_SAVE_TEXT)
     public ResultData<Void> saveNoticeText(NoticeVO noticeVO) {
         ResultData<Void> result = new ResultData<>();
         if (noticeVO == null || noticeVO.getId() == null || StringUtil.isBlank(noticeVO.getContent())) {
@@ -353,6 +354,10 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
     @Override
     public ResultData<List<NoticeResult>> queryNoticeList(NoticeQuery query) {
         ResultData<List<NoticeResult>> result = new ResultData<>();
+        if (query == null) {
+            query = new NoticeQuery();
+        }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         Long userId = SessionHolder.getCurrentUserId();
         if (userId == null) {
             result.setErrorCode(ErrorCodeEnum.NOT_LOGIN);
@@ -413,7 +418,7 @@ public class NoticeServiceImpl extends BaseService<NoticeQuery, NoticeResult> im
      * @return  文本
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.NOTICE_VIEW_TEXT)
+    @LogOperate(operateType = OperateTypeEnum.NOTICE_VIEW_TEXT)
     public ResultData<String> viewNoticeText(NoticeQuery query) {
         ResultData<String> result = new ResultData<>();
         if (query == null || query.getId() == null) {

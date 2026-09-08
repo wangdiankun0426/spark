@@ -2,12 +2,15 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.task.TaskTemplateDao" >
     <sql id="allColumnList" >
-        id , name , task_type , remark , delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , tenant_id, name , task_type , remark , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="searchCondition">
         <if test="id != null">
             and id = #{id}
+        </if>
+        <if test="tenantId != null">
+            and tenant_id = #{tenantId}
         </if>
         <if test="name != null and name != ''">
             and name like concat('%', #{name}, '%')
@@ -21,8 +24,8 @@
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into task_template (name , task_type , remark , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values ( #{name} , #{taskType} , #{remark} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into task_template (tenant_id, name , task_type , remark , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values ( #{tenantId}, #{name} , #{taskType} , #{remark} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="updateById">

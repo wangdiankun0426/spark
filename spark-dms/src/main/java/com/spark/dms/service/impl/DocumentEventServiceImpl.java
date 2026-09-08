@@ -6,7 +6,7 @@ import com.spark.common.bean.dms.query.DocumentEventQuery;
 import com.spark.common.bean.dms.result.DocumentEventResult;
 import com.spark.common.bean.dms.vo.DocumentEventVO;
 import com.spark.config.aspectj.annotation.LogPrint;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.dms.DocumentEventDao;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.OperateTypeEnum;
@@ -39,7 +39,7 @@ public class DocumentEventServiceImpl implements IDocumentEventService {
      * @return 文档事件详情
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_EVENT_DETAIL)
+    @LogOperate(operateType = OperateTypeEnum.DOCUMENT_EVENT_DETAIL)
     public ResultData<DocumentEventResult> queryDocumentEventDetail(DocumentEventQuery query) {
         ResultData<DocumentEventResult> result = new ResultData<>();
         if (query == null || query.getDocId() == null) {
@@ -63,7 +63,7 @@ public class DocumentEventServiceImpl implements IDocumentEventService {
      * @return 修改结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_EVENT_UPDATE)
+    @LogOperate(operateType = OperateTypeEnum.DOCUMENT_EVENT_UPDATE)
     public ResultData<Void> updateDocumentEvent(DocumentEventVO documentEventVO) {
         ResultData<Void> result = new ResultData<>();
         if (documentEventVO == null || documentEventVO.getId() == null) {

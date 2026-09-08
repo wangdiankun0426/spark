@@ -2,12 +2,15 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.flow.FlowInstanceCopyDao" >
     <sql id="allColumnList" >
-        id , instance_id , user_id , node_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , tenant_id, instance_id , user_id , node_id , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="searchCondition">
         <if test="id != null">
             and id = #{id}
+        </if>
+        <if test="tenantId != null">
+            and tenant_id = #{tenantId}
         </if>
         <if test="instanceId != null">
             and instance_id = #{instanceId}
@@ -21,8 +24,8 @@
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into flow_instance_copy ( instance_id , user_id , node_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values (#{instanceId} , #{userId} , #{nodeId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into flow_instance_copy ( tenant_id, instance_id , user_id , node_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{tenantId}, #{instanceId} , #{userId} , #{nodeId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">

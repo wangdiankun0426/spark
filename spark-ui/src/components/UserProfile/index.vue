@@ -22,6 +22,9 @@
           <el-form-item label="所属部门">
             {{ userInfo.deptPath }}
           </el-form-item>
+          <el-form-item label="所属角色">
+            {{ userInfo.roleNames }}
+          </el-form-item>
           <el-form-item label="手机号">
             {{ userInfo.phone }}
           </el-form-item>

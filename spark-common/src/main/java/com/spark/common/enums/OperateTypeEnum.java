@@ -22,6 +22,13 @@ public enum OperateTypeEnum {
     DEPT_INSERT(20, "新增部门"),
     DEPT_UPDATE(21, "修改部门"),
     DEPT_DELETE(22, "删除部门"),
+    // 租户相关的操作记录
+    TENANT_INSERT(23, "新增租户"),
+    TENANT_UPDATE(24, "修改租户"),
+    TENANT_DELETE(25, "删除租户"),
+    TENANT_ADD_USER(26, "为租户添加用户"),
+    TENANT_DEL_USER(27, "为租户移除用户"),
+    TENANT_UPDATE_USER_ROLE(28, "修改租户用户角色"),
     // 角色相关的操作记录
     ROLE_INSERT(30, "新增角色"),
     ROLE_UPDATE(31, "修改角色"),

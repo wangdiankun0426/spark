@@ -64,6 +64,7 @@ public class LogOperateServiceImpl extends BaseService<LogOperateQuery, LogOpera
         if (query == null) {
             query = new LogOperateQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<LogOperateResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);

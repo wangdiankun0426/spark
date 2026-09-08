@@ -1,7 +1,8 @@
 package com.spark.llm.service.impl;
 
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.config.aspectj.annotation.DataScope;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.kb.query.KnowledgeQuery;
@@ -81,7 +82,7 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
      * @return 创建结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.AGENT_INSERT)
+    @LogOperate(operateType = OperateTypeEnum.AGENT_INSERT)
     public ResultData<Void> createAgent(AgentVO agentVO) {
         ResultData<Void> result = new ResultData<>();
         if (agentVO == null) {
@@ -108,7 +109,7 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
      * @return 修改结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.AGENT_UPDATE)
+    @LogOperate(operateType = OperateTypeEnum.AGENT_UPDATE)
     public ResultData<Void> updateAgent(AgentVO agentVO) {
         ResultData<Void> result = new ResultData<>();
         if (agentVO == null || agentVO.getId() == null) {
@@ -142,7 +143,7 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
      * @return  删除结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.AGENT_DELETE)
+    @LogOperate(operateType = OperateTypeEnum.AGENT_DELETE)
     public ResultData<Void> deleteAgent(AgentVO agentVO) {
         ResultData<Void> result = new ResultData<>();
         if (agentVO == null || agentVO.getId() == null) {
@@ -182,6 +183,7 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
         if (query == null) {
             query = new AgentQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<AgentResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);
@@ -194,7 +196,7 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
      * @return 详情
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.AGENT_DETAIL)
+    @LogOperate(operateType = OperateTypeEnum.AGENT_DETAIL)
     public ResultData<AgentResult> queryAgentDetail(AgentQuery query) {
         ResultData<AgentResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {

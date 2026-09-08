@@ -5,10 +5,15 @@ import com.spark.common.bean.log.entity.LogLogin;
 import com.spark.common.bean.sys.entity.User;
 import com.spark.common.bean.sys.entity.UserProfile;
 import com.spark.common.bean.sys.query.DepartmentQuery;
+import com.spark.common.bean.sys.query.TenantQuery;
+import com.spark.common.bean.sys.query.TenantUserQuery;
 import com.spark.common.bean.sys.result.DepartmentResult;
+import com.spark.common.bean.sys.result.TenantResult;
+import com.spark.common.bean.sys.result.TenantUserResult;
 import com.spark.common.bean.sys.vo.MessageVO;
 import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.sys.entity.ValidateCode;
+import com.spark.common.bean.sys.vo.TenantUserVO;
 import com.spark.common.enums.*;
 import com.spark.common.utils.*;
 import com.spark.config.aspectj.annotation.LogPrint;
@@ -22,16 +27,15 @@ import com.spark.common.bean.sys.result.UserResult;
 import com.spark.common.bean.sys.vo.LoginVO;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
-import com.spark.dao.sys.DepartmentDao;
-import com.spark.dao.sys.RoleDao;
-import com.spark.dao.sys.UserDao;
-import com.spark.dao.sys.UserProfileDao;
+import com.spark.dao.sys.*;
 import com.spark.manage.BaseService;
 import com.spark.manage.auth.ILoginService;
 import com.spark.config.redis.RedisService;
 import com.spark.manage.auth.ILoginValidateService;
 import com.spark.config.wecom.WeComUtil;
 import com.spark.config.wechat.WeChatUtil;
+import com.spark.manage.sys.ITenantUserService;
+import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,8 +43,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * +++/\_/\
@@ -75,6 +82,12 @@ public class LoginServiceImpl extends BaseService implements ILoginService {
     private UserProfileDao userProfileDao;
     @Autowired
     private WeChatUtil weChatUtil;
+    @Autowired
+    private TenantUserDao tenantUserDao;
+    @Autowired
+    private TenantDao tenantDao;
+    @Autowired
+    private ITenantUserService tenantUserService;
     @Value("${default.user.password}")
     private String defaultUserPassword;
 
@@ -93,15 +106,22 @@ public class LoginServiceImpl extends BaseService implements ILoginService {
             result.setMessage(checkResult.getMessage());
             return result;
         }
-        // 验证登录
-        ResultData<UserResult> validateResult = this.validateLogin(loginVO);
-        if (validateResult.getCode() != ResultData.OK) {
-            result.setCode(validateResult.getCode());
-            result.setMessage(validateResult.getMessage());
+        // 验证登录类型
+        ResultData<UserResult> validateLoginTypeResult = this.validateLoginType(loginVO);
+        if (validateLoginTypeResult.getCode() != ResultData.OK) {
+            result.setCode(validateLoginTypeResult.getCode());
+            result.setMessage(validateLoginTypeResult.getMessage());
+            return result;
+        }
+        UserResult userResult = validateLoginTypeResult.getData();
+        // 验证用户租户
+        ResultData<Void> validateUserTenantData = this.validateUserTenant(userResult);
+        if (validateUserTenantData.getCode() != ResultData.OK) {
+            result.setCode(validateUserTenantData.getCode());
+            result.setMessage(validateUserTenantData.getMessage());
             return result;
         }
         // 缓存用户登录信息
-        UserResult userResult = validateResult.getData();
         Session session = new Session();
         boolean bo = this.cacheUserLoginInfo(userResult, session);
         if (!bo) {
@@ -109,6 +129,7 @@ public class LoginServiceImpl extends BaseService implements ILoginService {
         }
         loginVO.setSessionId(session.getSessionId());
         loginVO.setUserId(userResult.getId());
+        loginVO.setTenantId(userResult.getCurrentTenantId());
         try {
             TraceLogUtil.cacheTrackUserId(loginVO.getUserId());
             TraceLogUtil.generateTrackId(UUID.randomUUID().toString().replaceAll("-",""));
@@ -214,11 +235,11 @@ public class LoginServiceImpl extends BaseService implements ILoginService {
     }
 
     /**
-     * 登录验证
+     * 验证登录类型
      * @param loginVO 登录参数
      * @return 登录验证结果
      */
-    private ResultData<UserResult> validateLogin(LoginVO loginVO) {
+    private ResultData<UserResult> validateLoginType(LoginVO loginVO) {
         ResultData<UserResult> result = new ResultData<>();
         UserResult userResult = null;
         Integer loginType = loginVO.getLoginType();
@@ -308,6 +329,54 @@ public class LoginServiceImpl extends BaseService implements ILoginService {
     }
 
     /**
+     * 验证用户租户
+     * @param userResult
+     * @return
+     */
+    private ResultData<Void> validateUserTenant(UserResult userResult) {
+        ResultData<Void> result = new ResultData<>();
+        if (Objects.equals(AccountTypeEnum.indexOf(userResult.getAccountType()).getValue(), AccountTypeEnum.SITE_ADMIN.getValue())) {
+            result.setCode(ResultData.OK);
+            return result;
+        }
+        Long userId = userResult.getId();
+        TenantUserQuery tenantUserQuery = new TenantUserQuery();
+        tenantUserQuery.setUserId(userId);
+        tenantUserQuery.setPage(false);
+        List<TenantUserResult> tenantUserList = tenantUserDao.queryTenantUserList(tenantUserQuery);
+        if (CollectionUtil.isEmpty(tenantUserList)) {
+            result.setErrorCode(ErrorCodeEnum.USER_NOT_JOIN_NORMAL_TENANT);
+            return result;
+        }
+        List<Long> tenantIds = tenantUserList.stream().map(TenantUserResult::getTenantId).distinct().toList();
+        TenantQuery tenantQuery = new TenantQuery();
+        tenantQuery.setIds(tenantIds);
+        tenantQuery.setStatus(StatusEnum.NORMAL.getValue());
+        tenantQuery.setPage(false);
+        List<TenantResult> tenantList = tenantDao.queryTenantList(tenantQuery);
+        if (CollectionUtil.isEmpty(tenantList)) {
+            result.setErrorCode(ErrorCodeEnum.USER_NOT_JOIN_NORMAL_TENANT);
+            return result;
+        }
+        List<Long> finalTenantIds = tenantList.stream().map(TenantResult::getId).distinct().toList();
+        Map<Long, TenantUserResult> tenantUserMap = tenantUserList.stream().filter(v -> finalTenantIds.contains(v.getTenantId())).collect(Collectors.toMap(TenantUserResult::getTenantId, v -> v, (v1, v2) -> v2));
+        TenantUserResult tenantUserResult = tenantUserMap.get(userResult.getCurrentTenantId());
+        if (tenantUserResult == null) {
+            tenantUserResult = tenantUserMap.get(finalTenantIds.get(0));
+            // 更新用户的当前租户id
+            User user = new User();
+            user.setId(userId);
+            user.setCurrentTenantId(tenantUserResult.getTenantId());
+            userDao.updateDBById(user);
+        }
+        userResult.setRoleType(tenantUserResult.getRoleType());
+        userResult.setDeptId(tenantUserResult.getDeptId());
+        userResult.setCurrentTenantId(tenantUserResult.getTenantId());
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
      * 缓存用户登录信息
      * @param userResult 用户信息
      * @return  缓存结果
@@ -315,21 +384,24 @@ public class LoginServiceImpl extends BaseService implements ILoginService {
     private boolean cacheUserLoginInfo(UserResult userResult, Session session) {
         String sessionId = UUID.randomUUID().toString().replaceAll("-","");
         session.setSessionId(sessionId);
+        Long tenantId = userResult.getCurrentTenantId();
+        session.setTenantId(tenantId);
         session.setUserId(userResult.getId());
         session.setDeptId(userResult.getDeptId());
+        session.setAccountType(userResult.getAccountType());
         session.setRoleType(userResult.getRoleType());
-        int dataScope = roleDao.queryUserMaxDataScope(userResult.getId());
+        int dataScope = roleDao.queryUserMaxDataScope(tenantId, userResult.getId());
         session.setDataScope(dataScope);
         DepartmentQuery departmentQuery = new DepartmentQuery();
+        departmentQuery.setTenantId(tenantId);
         departmentQuery.setId(userResult.getDeptId());
         DepartmentResult department = departmentDao.queryDepartment(departmentQuery);
-        if (department == null) {
-            throw new BaseException(ErrorCodeEnum.DEPT_NOT_EXIST);
+        if (department != null) {
+            departmentQuery.setId(null);
+            departmentQuery.setCode(department.getCode());
+            List<DepartmentResult> departmentList = departmentDao.queryDepartmentList(departmentQuery);
+            session.setDeptIds(StringUtil.join(departmentList.stream().map(DepartmentResult::getId).toList(), ","));
         }
-        departmentQuery.setId(null);
-        departmentQuery.setCode(department.getCode());
-        List<DepartmentResult> departmentList = departmentDao.queryDepartmentList(departmentQuery);
-        session.setDeptIds(StringUtil.join(departmentList.stream().map(DepartmentResult::getId).toList(), ","));
         String sessionIdKey = ObjectCacheKey.LOGIN_SESSION + sessionId;
         return redisService.setStr(sessionIdKey, JsonUtil.toString(session), 60*60);
     }
@@ -346,6 +418,7 @@ public class LoginServiceImpl extends BaseService implements ILoginService {
         logLogin.setLoginType(loginVO.getLoginType());
         logLogin.setCreatedBy(loginVO.getUserId());
         logLogin.setUpdatedBy(loginVO.getUserId());
+        logLogin.setTenantId(loginVO.getTenantId());
         mqProducer.sendLoginLogMq(JsonUtil.toString(logLogin));
     }
 
@@ -361,6 +434,7 @@ public class LoginServiceImpl extends BaseService implements ILoginService {
         messageVO.setContent(String.format(content, userResult.getName(), DateUtil.getCurrentTime(DateUtil.YYYYMMDD_HHMMSS)));
         messageVO.setUserIds(List.of(userResult.getId()));
         messageVO.setRefId(userResult.getId());
+        messageVO.setTenantId(userResult.getCurrentTenantId());
         mqProducer.sendSystemMessageMq(JsonUtil.toString(messageVO));
     }
 
@@ -375,6 +449,12 @@ public class LoginServiceImpl extends BaseService implements ILoginService {
             return null;
         }
         String openid = wxSession.getOpenid();
+        UserProfile existProfile = userProfileDao.queryByWxOpenId(openid);
+        if (existProfile != null) {
+            UserQuery userQuery = new UserQuery();
+            userQuery.setId(existProfile.getId());
+            return userDao.queryUser(userQuery);
+        }
         Long userId = this.genObjectId(ObjectTypeEnum.USER);
         // 插入默认用户
         User user = new User();
@@ -384,11 +464,11 @@ public class LoginServiceImpl extends BaseService implements ILoginService {
         user.setName("微信用户" + tail);
         String encryptedPwd = EncryptUtil.md5(defaultUserPassword);
         user.setPassword(encryptedPwd);
-        user.setDeptId(102L);
         user.setStatus(StatusEnum.NORMAL.getValue());
-        user.setRoleType(RoleTypeEnum.COMMON.getValue());
+        user.setAccountType(AccountTypeEnum.COMMON.getValue());
         user.setCreatedBy(userId);
         user.setUpdatedBy(userId);
+        user.setCurrentTenantId(103L);
         int count = userDao.insertDB(user);
         if (count < 1) {
             logger.error("createWxDefaultUser error, insert user fail");
@@ -401,18 +481,21 @@ public class LoginServiceImpl extends BaseService implements ILoginService {
         wxProfile.setWxUnionId(wxSession.getUnionid());
         wxProfile.setCreatedBy(userId);
         wxProfile.setUpdatedBy(userId);
-        try {
-            userProfileDao.insertDB(wxProfile);
-        } catch (Exception e) {
-            // 并发首登触发唯一索引冲突时回查已绑定账号
-            logger.error("createWxDefaultUser error, insert profile fail", e);
-            UserProfile existProfile = userProfileDao.queryByWxOpenId(openid);
-            if (existProfile != null) {
-                UserQuery userQuery = new UserQuery();
-                userQuery.setId(existProfile.getId());
-                return userDao.queryUser(userQuery);
-            }
+        count = userProfileDao.insertDB(wxProfile);
+        if (count < 1) {
+            logger.error("createWxDefaultUser error, insert user profile fail");
             return null;
+        }
+        // 加入租户
+        try {
+            SessionHolder.setCurrentUserId(userId);
+            TenantUserVO tenantUserVO = new TenantUserVO();
+            tenantUserVO.setTenantId(103L);
+            tenantUserVO.setUserIds(List.of(userId));
+            ResultData<Void> result = tenantUserService.addUser(tenantUserVO);
+            BaseAssert.assertTrue(result);
+        } finally {
+            SessionHolder.clearLocalSession();
         }
         UserQuery userQuery = new UserQuery();
         userQuery.setId(userId);

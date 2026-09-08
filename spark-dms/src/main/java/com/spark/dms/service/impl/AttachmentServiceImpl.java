@@ -6,7 +6,7 @@ import com.spark.common.bean.sys.entity.Attachment;
 import com.spark.common.bean.sys.query.AttachmentQuery;
 import com.spark.common.bean.sys.result.AttachmentResult;
 import com.spark.config.aspectj.annotation.LogPrint;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.common.constant.ObjectCacheKey;
 import com.spark.dao.dms.AttachmentDao;
 import com.spark.common.enums.ErrorCodeEnum;
@@ -70,7 +70,7 @@ public class AttachmentServiceImpl extends BaseService<AttachmentQuery, Attachme
      * @return 上传结果（含附件id、名称、后缀）
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.ATTACHMENT_UPLOAD)
+    @LogOperate(operateType = OperateTypeEnum.ATTACHMENT_UPLOAD)
     public ResultData<AttachmentResult> uploadAttachment(MultipartFile file) {
         ResultData<AttachmentResult> result = new ResultData<>();
         if (file == null) {
@@ -99,7 +99,7 @@ public class AttachmentServiceImpl extends BaseService<AttachmentQuery, Attachme
      * @return 附件结果（含存储路径和文件名）
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.ATTACHMENT_DOWNLOAD)
+    @LogOperate(operateType = OperateTypeEnum.ATTACHMENT_DOWNLOAD)
     public ResultData<AttachmentResult> downloadAttachment(AttachmentQuery query) {
         ResultData<AttachmentResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -129,7 +129,7 @@ public class AttachmentServiceImpl extends BaseService<AttachmentQuery, Attachme
      * @return 附件详情（含名称、后缀、大小）
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.ATTACHMENT_DETAIL)
+    @LogOperate(operateType = OperateTypeEnum.ATTACHMENT_DETAIL)
     public ResultData<AttachmentResult> queryAttachmentDetail(AttachmentQuery query) {
         ResultData<AttachmentResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -269,7 +269,7 @@ public class AttachmentServiceImpl extends BaseService<AttachmentQuery, Attachme
      * @return 附件结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.ATTACHMENT_UPLOAD)
+    @LogOperate(operateType = OperateTypeEnum.ATTACHMENT_UPLOAD)
     public ResultData<AttachmentResult> mergeUploadChunk(String uploadId) {
         ResultData<AttachmentResult> result = new ResultData<>();
         if (StringUtil.isBlank(uploadId)) {

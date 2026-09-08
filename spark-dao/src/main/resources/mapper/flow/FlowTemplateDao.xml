@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.flow.FlowTemplateDao" >
     <sql id="allColumnList" >
-        id , name , process_id , form_id, type, rev_num , rev_id, status, remark , delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , tenant_id, name , process_id , form_id, type, rev_num , rev_id, status, remark , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="searchCondition">
@@ -15,6 +15,9 @@
                 #{id}
             </foreach>
             )
+        </if>
+        <if test="tenantId != null">
+            and tenant_id = #{tenantId}
         </if>
         <if test="name != null and name != ''">
             and name like concat('%', #{name}, '%')
@@ -46,9 +49,9 @@
         </choose>
     </sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into flow_template ( id, name , process_id , form_id , type , rev_num , rev_id, status, remark , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values (#{id} , #{name} , #{processId} , #{formId} , #{type} , #{revNum} , #{revId} , #{status} , #{remark} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    <insert id="insert">
+        insert into flow_template (tenant_id, name , process_id , form_id , type , rev_num , rev_id, status, remark , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{tenantId}, #{name} , #{processId} , #{formId} , #{type} , #{revNum} , #{revId} , #{status} , #{remark} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">

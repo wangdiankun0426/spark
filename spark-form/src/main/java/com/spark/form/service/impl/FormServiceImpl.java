@@ -15,7 +15,7 @@ import com.spark.common.bean.form.vo.FormFieldVO;
 import com.spark.common.bean.form.vo.FormVO;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.config.aspectj.annotation.LogPrint;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.form.FormDao;
 import com.spark.dao.form.FormFieldDao;
 import com.spark.dao.form.FormVersionDao;
@@ -66,7 +66,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
      * @return 创建结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.FORM_INSERT)
+    @LogOperate(operateType = OperateTypeEnum.FORM_INSERT)
     public ResultData<Form> createForm(FormVO formVO) {
         ResultData<Form> result = new ResultData<>();
         if (formVO == null) {
@@ -93,7 +93,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
             form.setType(FormTypeEnum.COMMON.getValue());
         }
         if (form.getOrderNum() == null) {
-            form.setOrderNum(999);
+            form.setOrderNum(99);
         }
         count = formDao.insertDB(form);
         if (count < 1) {
@@ -113,7 +113,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
      * @return 修改结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.FORM_UPDATE)
+    @LogOperate(operateType = OperateTypeEnum.FORM_UPDATE)
     public ResultData<Void> updateForm(FormVO formVO) {
         ResultData<Void> result = new ResultData<>();
         if (formVO == null || formVO.getId() == null) {
@@ -138,7 +138,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
      * @return  删除结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.FORM_DELETE)
+    @LogOperate(operateType = OperateTypeEnum.FORM_DELETE)
     public ResultData<Void> deleteForm(FormVO formVO) {
         ResultData<Void> result = new ResultData<>();
         if (formVO == null || formVO.getId() == null) {
@@ -168,6 +168,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         if (query == null) {
             query = new FormQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<FormResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);
@@ -180,7 +181,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
      * @return 表单详情
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.FORM_DETAIL)
+    @LogOperate(operateType = OperateTypeEnum.FORM_DETAIL)
     public ResultData<FormResult> queryFormDetail(FormQuery query) {
         ResultData<FormResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -241,7 +242,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
      * @return 保存结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.FORM_SAVE)
+    @LogOperate(operateType = OperateTypeEnum.FORM_SAVE)
     public ResultData<Void> saveFormJson(FormVO formVO) {
         ResultData<Void> result = new ResultData<>();
         if (formVO == null || formVO.getId() == null) {
@@ -314,8 +315,9 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         ResultData<List<FormResult>> result = new ResultData<>();
         if (query == null) {
             query = new FormQuery();
-            query.setPage(false);
         }
+        query.setPage(false);
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         List<FormResult> formList = formDao.queryFormList(query);
         this.supplyList(formList);
         result.setData(formList);

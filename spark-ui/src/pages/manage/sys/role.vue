@@ -71,7 +71,8 @@
       />
       <el-table
           :data="roleUserList"
-          height="calc(100vh - 165px)">
+          height="calc(100vh - 165px)"
+      >
         <el-table-column label="" width="60" align="center">
           <template #default="scope">
             <user-avatar :user-id="scope.row.userId" :size="36" />
@@ -167,7 +168,7 @@
           <div class="form-tip">
             <div>角色名称为必填项，建议体现职责范围，如"系统管理员"、"本部门员工"；</div>
             <div>数据权限决定该角色下用户可查看的数据范围，请按业务需要谨慎选择；</div>
-            <div>菜单权限按模块勾选，决定该角色下用户可进入的功能菜单；其中"首页"为常驻菜单，默认选中且不可取消勾选；</div>
+            <div>菜单权限按模块勾选，决定该角色下用户可进入的功能菜单；其中"工作台"为常驻菜单，默认选中且不可取消勾选；</div>
             <div>"本部门及以下部门权限"包含本部门及其所有子部门的数据；</div>
             <div>角色创建后可在右侧用户列表中为该角色添加用户；</div>
             <div>删除角色前请先移除该角色下的所有用户；</div>
@@ -250,11 +251,11 @@ const menuTree = computed(() => {
   return buildTree(0);
 });
 
-// 首页菜单id：首页为常驻菜单，任何角色默认拥有且不可取消勾选
+// 工作台菜单id：工作台为常驻菜单，任何角色默认拥有且不可取消勾选
 const HOME_MENU_ID = 10;
 
 /**
- * 判断节点是否为常驻的首页菜单
+ * 判断节点是否为常驻的工作台菜单
  * @param node 菜单节点
  * @returns {boolean}
  */
@@ -365,7 +366,7 @@ function recomputeEffective() {
       current = current.parentId ? findMenuById(current.parentId) : null;
     }
   });
-  // 首页常驻：始终处于勾选状态
+  // 工作台常驻：始终处于勾选状态
   menuCheckedMap[HOME_MENU_ID] = true;
 }
 
@@ -375,7 +376,7 @@ function recomputeEffective() {
  * @returns {{checked: boolean, indeterminate: boolean, disabled: boolean}}
  */
 function nodeStateOf(node) {
-  // 首页常驻：固定勾选、禁止取消，直接展示为完全选中
+  // 工作台常驻：固定勾选、禁止取消，直接展示为完全选中
   if (isHomeMenu(node)) {
     return { checked: true, indeterminate: false, disabled: true };
   }
@@ -395,7 +396,7 @@ function nodeStateOf(node) {
  * @param checked 是否勾选
  */
 function toggleNode(node, checked) {
-  // 首页为常驻菜单，不允许取消勾选
+  // 工作台为常驻菜单，不允许取消勾选
   if (isHomeMenu(node)) {
     return;
   }
@@ -467,7 +468,7 @@ function openCreateRoleForm() {
   roleForm.value.status = 1;
   clearMenuChecked();
   clearExplicitChecked();
-  // 新增角色默认勾选首页菜单权限（首页为常驻菜单，由 recomputeEffective 统一固定勾选）
+  // 新增角色默认勾选工作台菜单权限（工作台为常驻菜单，由 recomputeEffective 统一固定勾选）
   recomputeEffective();
   roleFormTitle.value = "创建角色";
   roleFormVisible.value = true;

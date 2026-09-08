@@ -42,9 +42,13 @@ public enum ErrorCodeEnum {
     // 用户相关状态码
     USER_SAME_LOGIN_NAME_EXIST(701,"相同登录名的用户已存在"),
     USER_NOT_EXIST(702, "用户不存在"),
+    USER_NOT_JOIN_NORMAL_TENANT(703, "用户未加入可用租户"),
     // 部门相关状态码
     DEPT_NOT_EXIST(801,"部门不存在"),
     DEPT_SAME_NAME_ALREADY_EXIST(802,"相同名称的部门已存在"),
+    // 租户相关状态码
+    TENANT_SAME_NAME_EXIST(811,"相同名称的租户已存在"),
+    TENANT_UNAVAILABLE(812,"租户不可用或未加入"),
     // 角色相关状态码
     ROLE_SAME_NAME_EXIST(901, "相同名称的角色已存在"),
     // 菜单相关状态码

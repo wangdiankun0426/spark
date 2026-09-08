@@ -78,8 +78,12 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
     @Override
     public ResultData<PageResult<WfInstanceResult>> pageInstanceHistory(WfInstanceQuery query) {
         ResultData<PageResult<WfInstanceResult>> result = new ResultData<>();
-        if (query == null) { query = new WfInstanceQuery(); }
-        result.setData(super.pageList(query));
+        if (query == null) {
+            query = new WfInstanceQuery();
+        }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
+        PageResult<WfInstanceResult> list = super.pageList(query);
+        result.setData(list);
         result.setCode(ResultData.OK);
         return result;
     }

@@ -2,6 +2,7 @@ package com.spark.kb.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.kb.entity.RetrieveLog;
 import com.spark.common.bean.dms.query.DocumentQuery;
 import com.spark.common.bean.kb.query.KnowledgeQuery;
@@ -129,6 +130,7 @@ public class RetrieveLogServiceImpl extends BaseService<RetrieveLogQuery, Retrie
         if (query == null) {
             query = new RetrieveLogQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<RetrieveLogResult> pageResult = super.pageList(query);
         result.setData(pageResult);
         result.setCode(ResultData.OK);
@@ -146,6 +148,7 @@ public class RetrieveLogServiceImpl extends BaseService<RetrieveLogQuery, Retrie
         if (query == null) {
             query = new RetrieveLogQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         RetrieveStatsResult stats = retrieveLogDao.queryRetrieveStats(query);
         result.setData(stats);
         result.setCode(ResultData.OK);
@@ -190,24 +193,26 @@ public class RetrieveLogServiceImpl extends BaseService<RetrieveLogQuery, Retrie
         UsageStatsResult stats = new UsageStatsResult();
         // 知识库数量
         KnowledgeQuery knowledgeQuery = new KnowledgeQuery();
+        knowledgeQuery.setTenantId(SessionHolder.getCurrentTenantId());
         int knowledgeCount = knowledgeDao.queryKnowledgeCount(knowledgeQuery);
         stats.setKnowledgeCount((long) knowledgeCount);
         // 文档数量
         DocumentQuery documentQuery = new DocumentQuery();
+        documentQuery.setTenantId(SessionHolder.getCurrentTenantId());
         int documentCount = documentDao.queryDocumentCount(documentQuery);
         stats.setDocumentCount((long) documentCount);
         // 时段检索次数
-        PeriodRetrieveCountResult periodCount = queryPeriodRetrieveCount();
+        PeriodRetrieveCountResult periodCount = this.queryPeriodRetrieveCount();
         if (periodCount != null) {
             stats.setTodayRetrieveCount(periodCount.getTodayCount());
             stats.setWeekRetrieveCount(periodCount.getWeekCount());
             stats.setMonthRetrieveCount(periodCount.getMonthCount());
         }
         // 热门查询
-        List<HotQueryResult> hotQueries = retrieveLogDao.queryHotQueries(10);
+        List<HotQueryResult> hotQueries = retrieveLogDao.queryHotQueries(10, SessionHolder.getCurrentTenantId());
         stats.setHotQueries(hotQueries);
         // 用户使用排行
-        List<UserRankResult> userRankList = retrieveLogDao.queryUserRank(10);
+        List<UserRankResult> userRankList = retrieveLogDao.queryUserRank(10, SessionHolder.getCurrentTenantId());
         supplyUserRankList(userRankList);
         stats.setUserRankList(userRankList);
         result.setData(stats);
@@ -230,7 +235,7 @@ public class RetrieveLogServiceImpl extends BaseService<RetrieveLogQuery, Retrie
         String todayStart = todayStartDateTime.format(formatter);
         String weekStart = weekStartDateTime.format(formatter);
         String monthStart = monthStartDateTime.format(formatter);
-        return retrieveLogDao.queryRetrieveCountByPeriod(todayStart, weekStart, monthStart);
+        return retrieveLogDao.queryRetrieveCountByPeriod(todayStart, weekStart, monthStart, SessionHolder.getCurrentTenantId());
     }
 
     /**

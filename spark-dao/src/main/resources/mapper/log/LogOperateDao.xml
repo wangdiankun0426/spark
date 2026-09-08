@@ -2,10 +2,13 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.log.LogOperateDao" >
     <sql id="Base_Column_List" >
-      id , type , obj_id, code , consume , remark , delete_flag , created_by , created_dt , updated_by , updated_dt
+      id , tenant_id, type , obj_id, code , consume , remark , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="condition">
+        <if test="tenantId != null ">
+            AND tenant_id = #{tenantId}
+        </if>
         <if test="type != null ">
             AND type = #{type}
         </if>
@@ -27,8 +30,8 @@
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into log_operate (type , obj_id , code , consume , remark , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values (#{type}, #{objId}, #{code}, #{consume}, #{remark}, 1 , #{createdBy}, now(), #{updatedBy}, now())
+        insert into log_operate (tenant_id, type , obj_id , code , consume , remark , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{tenantId}, #{type}, #{objId}, #{code}, #{consume}, #{remark}, 1 , #{createdBy}, now(), #{updatedBy}, now())
     </insert>
 
     <select id="queryLogOperateList" resultType="com.spark.common.bean.log.result.LogOperateResult">

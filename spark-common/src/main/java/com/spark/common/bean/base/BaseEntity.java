@@ -52,4 +52,8 @@ public class BaseEntity implements Serializable {
      */
     private Long deptId;
 
+    /**
+     * 租户id
+     */
+    private Long tenantId;
 }

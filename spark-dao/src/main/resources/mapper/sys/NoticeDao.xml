@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.sys.NoticeDao" >
     <sql id="Base_Column_List" >
-    id, title, type, status, delete_flag, created_by, created_dt, updated_by, updated_dt
+      id, tenant_id, title, type, status, delete_flag, created_by, created_dt, updated_by, updated_dt
     </sql>
 
     <sql id="condition">
@@ -16,6 +16,9 @@
             </foreach>
             )
         </if>
+        <if test="tenantId != null">
+            and tenant_id = #{tenantId}
+        </if>
         <if test="status != null">
             and status = #{status}
         </if>
@@ -25,8 +28,8 @@
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into sys_notice(title, type, status , delete_flag,created_by, created_dt, updated_by, updated_dt)
-        values (#{title}, #{type}, 1 ,1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into sys_notice(tenant_id, title, type, status , delete_flag,created_by, created_dt, updated_by, updated_dt)
+        values (#{tenantId}, #{title}, #{type}, 1 ,1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">

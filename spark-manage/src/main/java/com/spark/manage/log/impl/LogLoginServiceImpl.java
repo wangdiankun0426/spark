@@ -69,6 +69,7 @@ public class LogLoginServiceImpl extends BaseService<LogLoginQuery,LogLoginResul
         if (query == null) {
             query = new LogLoginQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<LogLoginResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);

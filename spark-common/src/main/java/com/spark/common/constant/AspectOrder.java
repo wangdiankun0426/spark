@@ -19,17 +19,22 @@ public class AspectOrder {
     public static final int LOG_PRINT = 0;
 
     /**
-     * 防抖切面 - 在日志之后执行
+     * 角色权限切面 - 权限校验，紧随日志打印执行，先于防抖与操作日志
      */
-    public static final int DEBOUNCE = 1;
+    public static final int ROLE_PERMISSION = 1;
+
+    /**
+     * 防抖切面 - 在权限校验之后执行
+     */
+    public static final int DEBOUNCE = 2;
 
     /**
      * 操作日志切面
      */
-    public static final int OPERATE_LOG = 2;
+    public static final int OPERATE_LOG = 3;
 
     /**
      * 数据权限切面
      */
-    public static final int DATA_SCOPE = 3;
+    public static final int DATA_SCOPE = 4;
 }

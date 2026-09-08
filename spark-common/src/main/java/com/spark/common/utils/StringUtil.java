@@ -40,17 +40,10 @@ public class StringUtil {
      * @param separator
      * @return
      */
-    public static String joinList(List list, String separator) {
-        return StringUtils.join(list, separator);
-    }
-
-    /**
-     * 列表转为字符串
-     * @param list  列表
-     * @param separator 列表元素之间的分隔符
-     * @return 列表转为的字符串
-     */
-    public static String join(List<Long> list, String separator) {
+    public static String join(List list, String separator) {
+        if (CollectionUtil.isEmpty(list)) {
+            return null;
+        }
         return StringUtils.join(list, separator);
     }
 

@@ -2,63 +2,72 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.sys.UserDao" >
     <sql id="Base_Column_List" >
-     id , login_name , name , dept_id ,  phone ,  email ,  sex ,  avatar ,  status ,  role_type , delete_flag , created_by ,  created_dt ,  updated_by ,  updated_dt
+     su.id , su.login_name , su.name , su.phone , su.email , su.sex , su.avatar , su.status , su.account_type , su.current_tenant_id , su.delete_flag ,su.created_by , su.created_dt , su.updated_by , su.updated_dt
     </sql>
 
     <sql id="condition">
         <if test="id != null">
-            and id = #{id}
+            and su.id = #{id}
         </if>
         <if test="ids != null and ids.size() > 0">
-            and id in (
+            and su.id in (
             <foreach collection="ids" item="id" separator=",">
                 #{id}
             </foreach>
             )
         </if>
         <if test="loginName != null">
-            and login_name = #{loginName}
+            and su.login_name = #{loginName}
         </if>
         <if test="name != null">
-            and name like concat('%', #{name}, '%')
+            and su.name like concat('%', #{name}, '%')
+        </if>
+        <if test="phone != null">
+            and su.phone = #{phone}
+        </if>
+        <if test="email != null">
+            and su.email = #{email}
+        </if>
+        <if test="sex != null">
+            and su.sex = #{sex}
+        </if>
+        <if test="status != null">
+            and su.status = #{status}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and su.delete_flag = #{deleteFlag}
         </if>
         <if test="deptId != null">
-            and dept_id in (
-                select id from sys_department where code like (select CONCAT(code, '%') from sys_department where id = #{deptId})
+            and stu.dept_id in (
+            select id from sys_department where code like (select CONCAT(code, '%') from sys_department where id = #{deptId})
             )
         </if>
         <if test="deptIds != null and deptIds.size() > 0">
-            and dept_id in (
+            and stu.dept_id in (
             <foreach collection="deptIds" item="deptId" separator=",">
                 #{deptId}
             </foreach>
             )
         </if>
-        <if test="phone != null">
-            and phone = #{phone}
-        </if>
-        <if test="email != null">
-            and email = #{email}
-        </if>
-        <if test="sex != null">
-            and sex = #{sex}
-        </if>
-        <if test="status != null">
-            and status = #{status}
-        </if>
-        <if test="deleteFlag != null and id == null and ids == null">
-            and delete_flag = #{deleteFlag}
+        <if test="tenantId != null">
+            and stu.tenant_id = #{tenantId}
         </if>
     </sql>
 
     <insert id="insert">
-        insert into sys_user( id , login_name , password , name ,  dept_id ,  phone ,  email ,  sex ,  avatar ,  status ,  delete_flag , created_by ,  created_dt ,  updated_by ,  updated_dt )
-        values (#{id}, #{loginName}, #{password}, #{name}, #{deptId}, #{phone}, #{email}, #{sex}, #{avatar}, #{status}, 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into sys_user(id , login_name , password , name ,  phone ,  email ,  sex ,  avatar ,  status , account_type, current_tenant_id,  delete_flag , created_by ,  created_dt ,  updated_by ,  updated_dt )
+        values (#{id}, #{loginName}, #{password}, #{name}, #{phone}, #{email}, #{sex}, #{avatar}, #{status}, #{accountType}, #{currentTenantId}, 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <select id="queryUserList" resultType="com.spark.common.bean.sys.result.UserResult">
         select <include refid="Base_Column_List"/>
-        from  sys_user
+        <if test="deptId != null or deptIds != null or tenantId != null">
+            , stu.tenant_id, stu.dept_id, stu.role_type
+        </if>
+        from  sys_user su
+        <if test="deptId != null or deptIds != null or tenantId != null">
+            left join sys_tenant_user stu on (su.id = stu.user_id)
+        </if>
         where 1=1
         <include refid="condition"/>
         ${dataScopeSQL}
@@ -69,15 +78,24 @@
 
     <select id="queryUserCount" resultType="java.lang.Integer">
         select count(1)
-        from  sys_user
+        from  sys_user su
+        <if test="deptId != null or deptIds != null or tenantId != null">
+            left join sys_tenant_user stu on (su.id = stu.user_id)
+        </if>
         where 1=1
         <include refid="condition"/>
         ${dataScopeSQL}
     </select>
 
     <select id="queryUser" resultType="com.spark.common.bean.sys.result.UserResult">
-        select <include refid="Base_Column_List"/>,  password 
-        from  sys_user
+        select <include refid="Base_Column_List"/>,  password
+        <if test="deptId != null or deptIds != null or tenantId != null">
+            , stu.tenant_id, stu.dept_id, stu.role_type
+        </if>
+        from  sys_user su
+        <if test="deptId != null or deptIds != null or tenantId != null">
+            left join sys_tenant_user stu on (su.id = stu.user_id)
+        </if>
         where 1=1
         <include refid="condition"/>
         limit 1
@@ -95,9 +113,6 @@
         <if test="loginName != null">
             ,login_name = #{loginName}
         </if>
-        <if test="deptId != null">
-            ,dept_id = #{deptId}
-        </if>
         <if test="phone != null">
             ,phone = #{phone}
         </if>
@@ -113,8 +128,8 @@
         <if test="status != null">
             ,status = #{status}
         </if>
-        <if test="roleType != null">
-            ,role_type = #{roleType}
+        <if test="currentTenantId != null">
+            ,current_tenant_id = #{currentTenantId}
         </if>
         where id = #{id}
     </update>

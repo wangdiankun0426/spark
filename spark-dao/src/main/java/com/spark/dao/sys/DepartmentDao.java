@@ -81,6 +81,8 @@ public interface DepartmentDao extends BaseDao<Department> {
      * @param wecomId 企业微信部门ID
      * @return 部门信息
      */
-    @Select("select * from sys_department where wecom_id = #{wecomId} limit 1")
+    @Select("select d.*, dp.wecom_id wecom_id from sys_department d " +
+            "inner join sys_department_profile dp on dp.id = d.id and dp.delete_flag = 1 and dp.wecom_id = #{wecomId} " +
+            "where d.delete_flag = 1 limit 1")
     DepartmentResult queryByWecomId(@Param("wecomId") Long wecomId);
 }

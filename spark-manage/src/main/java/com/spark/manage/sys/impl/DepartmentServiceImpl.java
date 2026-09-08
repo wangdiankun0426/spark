@@ -1,11 +1,12 @@
 package com.spark.manage.sys.impl;
 
 import com.spark.config.aspectj.annotation.LogPrint;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.common.bean.sys.result.UserResult;
 import com.spark.common.bean.sys.vo.DepartmentVO;
 import com.spark.common.constant.ObjectCacheKey;
 import com.spark.common.bean.sys.entity.Department;
+import com.spark.common.bean.sys.entity.DepartmentProfile;
 import com.spark.common.bean.sys.query.DepartmentQuery;
 import com.spark.common.bean.sys.query.UserQuery;
 import com.spark.common.bean.sys.result.DepartmentResult;
@@ -13,6 +14,7 @@ import com.spark.common.bean.sys.tree.DepartmentTree;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.dao.sys.DepartmentDao;
+import com.spark.dao.sys.DepartmentProfileDao;
 import com.spark.dao.sys.UserDao;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.ErrorCodeEnum;
@@ -53,6 +55,8 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
     @Autowired
     private DepartmentDao departmentDao;
     @Autowired
+    private DepartmentProfileDao departmentProfileDao;
+    @Autowired
     private RedisService redisService;
     @Autowired
     private UserDao userDao;
@@ -63,7 +67,7 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
      * @return 结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.DEPT_INSERT)
+    @LogOperate(operateType = OperateTypeEnum.DEPT_INSERT)
     public ResultData<Void> createDepartment(DepartmentVO departmentVO) {
         ResultData<Void> result = this.validateCreateDepartmentParam(departmentVO);
         if (result.getCode() != ResultData.OK) {
@@ -78,12 +82,19 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
         department.setDeptNum(departmentVO.getDeptNum());
         department.setStatus(departmentVO.getStatus());
         department.setOrderNum(departmentVO.getOrderNum());
-        department.setWecomId(departmentVO.getWecomId());
         this.supplyDepartmentCode(department);
         if (department.getStatus() == null) {
             department.setStatus(StatusEnum.NORMAL.getValue());
         }
         int count = departmentDao.insertDB(department);
+        if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
+            return result;
+        }
+        DepartmentProfile departmentProfile = new DepartmentProfile();
+        departmentProfile.setId(deptId);
+        departmentProfile.setWecomId(departmentVO.getWecomId());
+        count = departmentProfileDao.insertDB(departmentProfile);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
@@ -102,6 +113,7 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
         ResultData<List<DepartmentTree>> result = new ResultData<>();
         DepartmentQuery query = new DepartmentQuery();
         query.setPage(false);
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         List<DepartmentResult> departmentList = departmentDao.queryDepartmentList(query);
         if (CollectionUtil.isEmpty(departmentList)) {
             result.setCode(ResultData.OK);
@@ -126,7 +138,7 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
      * @return 结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.DEPT_UPDATE)
+    @LogOperate(operateType = OperateTypeEnum.DEPT_UPDATE)
     public ResultData<Void> updateDepartment(DepartmentVO departmentVO) {
         ResultData<Void> result = this.validateUpdateDepartmentParam(departmentVO);
         if (result.getCode() != ResultData.OK) {
@@ -140,7 +152,6 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
         department.setDeptNum(departmentVO.getDeptNum());
         department.setStatus(departmentVO.getStatus());
         department.setOrderNum(departmentVO.getOrderNum());
-        department.setWecomId(departmentVO.getWecomId());
         // prtId变化时重新生成部门层级码
         if (departmentVO.getPrtId() != null) {
             DepartmentQuery prtQuery = new DepartmentQuery();
@@ -155,6 +166,7 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
+        this.upsertDepartmentProfile(departmentVO.getId(), departmentVO.getWecomId());
         result.setObjId(departmentVO.getId());
         result.setCode(ResultData.OK);
         return result;
@@ -166,7 +178,7 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
      * @return 删除结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.DEPT_DELETE)
+    @LogOperate(operateType = OperateTypeEnum.DEPT_DELETE)
     public ResultData<Void> deleteDepartment(DepartmentVO departmentVO) {
         ResultData<Void> result = new ResultData<>();
         if (departmentVO == null || departmentVO.getId() == null) {
@@ -181,6 +193,11 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
             return result;
         }
         int count = departmentDao.deleteSubDepartment(departmentResult.getCode(), SessionHolder.getCurrentUserId());
+        if (count < 0) {
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
+            return result;
+        }
+        count = departmentProfileDao.deleteByDeptCode(departmentResult.getCode(), SessionHolder.getCurrentUserId());
         if (count < 0) {
             result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
@@ -376,6 +393,33 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
         }
         result.setCode(ResultData.OK);
         return result;
+    }
+
+    /**
+     * 维护部门扩展信息
+     * 无扩展记录且需写企业微信ID时新增，已有记录则更新企业微信ID
+     * @param deptId 部门id
+     * @param wecomId 企业微信部门id
+     */
+    private void upsertDepartmentProfile(Long deptId, Long wecomId) {
+        DepartmentProfile existProfile = departmentProfileDao.queryByDeptId(deptId);
+        if (existProfile == null) {
+            if (wecomId == null) {
+                return;
+            }
+            DepartmentProfile departmentProfile = new DepartmentProfile();
+            departmentProfile.setId(deptId);
+            departmentProfile.setWecomId(wecomId);
+            departmentProfileDao.insertDB(departmentProfile);
+            return;
+        }
+        if (wecomId == null) {
+            return;
+        }
+        DepartmentProfile departmentProfile = new DepartmentProfile();
+        departmentProfile.setId(deptId);
+        departmentProfile.setWecomId(wecomId);
+        departmentProfileDao.updateDBById(departmentProfile);
     }
 
     /**

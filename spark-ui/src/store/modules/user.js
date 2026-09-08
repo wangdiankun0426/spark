@@ -48,6 +48,7 @@ const mutations = {
     state.userInfo = null;
     state.token = '';
     localStorage.removeItem(localStorageKey.TOKEN);
+    localStorage.removeItem(localStorageKey.USERINFO);
   }
 }
 

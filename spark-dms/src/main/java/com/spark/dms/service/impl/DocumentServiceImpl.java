@@ -22,7 +22,7 @@ import com.spark.common.bean.sys.result.AttachmentResult;
 import com.spark.common.enums.*;
 import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.LogPrint;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.common.constant.ESIndexName;
 import com.spark.dao.dms.DocumentDao;
 import com.spark.dao.dms.DocumentEventDao;
@@ -94,7 +94,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
      * @return 归档结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_INSERT)
+    @LogOperate(operateType = OperateTypeEnum.DOCUMENT_INSERT)
     public ResultData<Long> fileDocument(Long attId, Long prtId) {
         ResultData<Long> result = new ResultData<>();
         if (attId == null) {
@@ -178,7 +178,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
      * @return 修改结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_UPDATE)
+    @LogOperate(operateType = OperateTypeEnum.DOCUMENT_UPDATE)
     public ResultData<Void> updateDocument(DocumentVO documentVO) {
         ResultData<Void> result = new ResultData<>();
         if (documentVO == null || documentVO.getId() == null) {
@@ -210,7 +210,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
      * @return 删除结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_DELETE)
+    @LogOperate(operateType = OperateTypeEnum.DOCUMENT_DELETE)
     public ResultData<Void> deleteDocument(DocumentVO documentVO) {
         ResultData<Void> result = new ResultData<>();
         if (documentVO == null || documentVO.getId() == null) {
@@ -248,6 +248,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         if (query == null) {
             query = new DocumentQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<DocumentResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);
@@ -260,7 +261,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
      * @return 文档详情
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_DETAIL)
+    @LogOperate(operateType = OperateTypeEnum.DOCUMENT_DETAIL)
     public ResultData<DocumentResult> queryDocumentDetail(DocumentQuery query) {
         ResultData<DocumentResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -293,7 +294,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
      * @return 搜索结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_SEARCH)
+    @LogOperate(operateType = OperateTypeEnum.DOCUMENT_SEARCH)
     public ResultData<PageResult<Map>> searchDocument(DocumentSearchQuery query) {
         ResultData<PageResult<Map>> result = new ResultData<>();
         if (query == null) {
@@ -343,7 +344,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
      * @return 删除结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_DELETE)
+    @LogOperate(operateType = OperateTypeEnum.DOCUMENT_DELETE)
     public ResultData<Void> batchDeleteDocument(List<Long> ids) {
         ResultData<Void> result = new ResultData<>();
         if (CollectionUtil.isEmpty(ids)) {
@@ -374,7 +375,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
      * @return 处理结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_EVENT_UPDATE)
+    @LogOperate(operateType = OperateTypeEnum.DOCUMENT_EVENT_UPDATE)
     public ResultData<Void> batchReprocessDocument(List<Long> ids) {
         ResultData<Void> result = new ResultData<>();
         if (CollectionUtil.isEmpty(ids)) {
@@ -443,6 +444,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         if (query.getPrtId() != null) {
             bqb.must(tq -> tq.term(x -> x.field("prtId").value(query.getPrtId())));
         }
+        bqb.must(tq -> tq.term(x -> x.field("tenantId").value(SessionHolder.getCurrentTenantId())));
 
 //        bqb.must(rq -> rq.range(x -> x.term(l -> l.field("createdDt").gte(String.valueOf(query.getCreatedStartTime().getTime())))));
 //        bqb.must(rq -> rq.range(x -> x.term(l -> l.field("createdDt").lte(String.valueOf(query.getCreatedEndTime().getTime())))));
@@ -520,7 +522,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
             result.setErrorCode(ErrorCodeEnum.FILE_ES_INDEX_NOT_EXIST);
             return result;
         }
-        // KNN 召回文档ID列表（已按相关性降序）
+        // KNN 召回文档ID列表
         List<Long> docIds = esRetrieve.retrieveDocumentIds(query.getKeyWord(), query.getDocumentType(), query.getPrtId());
         if (CollectionUtil.isEmpty(docIds)) {
             PageResult<Map> pageResult = new PageResult<>();

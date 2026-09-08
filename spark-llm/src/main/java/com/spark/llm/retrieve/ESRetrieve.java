@@ -6,6 +6,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.kb.result.KnowledgeResult;
 import com.spark.common.bean.kb.result.RetrieveDetailItem;
 import com.spark.common.bean.kb.result.RetrieveDetailResult;
@@ -127,7 +128,7 @@ public class ESRetrieve {
             return detailResult;
         }
         // 先尝试QA检索
-        List<RetrieveDetailItem> qaItems = retrieveQADetail(query, kbIds, knowledge);
+        List<RetrieveDetailItem> qaItems = this.retrieveQADetail(query, kbIds, knowledge);
         if (CollectionUtil.isNotEmpty(qaItems)) {
             detailResult.setItems(qaItems);
             detailResult.setQaHit(true);
@@ -136,13 +137,13 @@ public class ESRetrieve {
             return detailResult;
         }
         // 向量+BM25混合检索
-        List<RetrieveDetailItem> vectorItems = retrieveByVectorDetail(query, kbIds, knowledge);
+        List<RetrieveDetailItem> vectorItems = this.retrieveByVectorDetail(query, kbIds, knowledge);
         if (CollectionUtil.isEmpty(vectorItems)) {
             detailResult.setStrategy(RetrieveStrategyEnum.EMPTY.getCode());
             return detailResult;
         }
         // Rerank重排序
-        List<RetrieveDetailItem> rerankedItems = rerankDetailResult(query, vectorItems, knowledge);
+        List<RetrieveDetailItem> rerankedItems = this.rerankDetailResult(query, vectorItems, knowledge);
         detailResult.setItems(rerankedItems);
         detailResult.setStrategy(RetrieveStrategyEnum.VECTOR_BM25_RERANK.getCode());
         return detailResult;
@@ -176,7 +177,7 @@ public class ESRetrieve {
                                 .k(knnSize)
                                 .numCandidates(numCandidates)
                                 .similarity(similarity);
-                        Query filter = documentFilter(documentType, prtId);
+                        Query filter = this.documentFilter(documentType, prtId);
                         if (filter != null) {
                             k.filter(filter);
                         }
@@ -281,7 +282,7 @@ public class ESRetrieve {
             EmbeddingModel embeddingModel = getEmbeddingModel(knowledge.getVectorModelId());
             Response<Embedding> embedResp = embeddingModel.embed(query);
             Embedding embedding = embedResp.content();
-            Query filter = kbIdFilter(kbIds);
+            Query filter = this.kbIdFilter(kbIds);
             SearchRequest knnRequest = SearchRequest.of(b -> b
                     .index(ESIndexName.DOCUMENT_QA_VECTOR_INDEX_NAME)
                     .knn(k -> k
@@ -325,7 +326,6 @@ public class ESRetrieve {
      * @return 检索结果（contents为父块文本列表，references含docId）
      */
     private RetrieveResult retrieveByVector(String query, List<Long> kbIds, KnowledgeResult knowledge) {
-        logger.info("retrieveByVector query={}, kbIds={}", query, kbIds);
         RetrieveResult result = new RetrieveResult();
         result.setContents(new ArrayList<>());
         result.setReferences(new ArrayList<>());
@@ -333,7 +333,7 @@ public class ESRetrieve {
             EmbeddingModel embeddingModel = getEmbeddingModel(knowledge.getVectorModelId());
             Response<Embedding> embedResp = embeddingModel.embed(query);
             Embedding embedding = embedResp.content();
-            Query filter = kbIdFilter(kbIds);
+            Query filter = this.kbIdFilter(kbIds);
             Integer retrieveTopK = knowledge.getRetrieveTopK() == null ? topK : knowledge.getRetrieveTopK();
             float minSimilarity = knowledge.getMinSimilarity() == null ? similarity : knowledge.getMinSimilarity().floatValue();
             // 1.执行BM25查询
@@ -498,7 +498,11 @@ public class ESRetrieve {
         List<FieldValue> values = kbIds.stream()
                 .map(id -> FieldValue.of(id.longValue()))
                 .collect(Collectors.toList());
-        return Query.of(q -> q.terms(t -> t.field("prtId").terms(tv -> tv.value(values))));
+        return Query.of(q -> {
+            q.term(x -> x.field("tenantId").value(SessionHolder.getCurrentTenantId()));
+            q.terms(t -> t.field("prtId").terms(tv -> tv.value(values)));
+            return q;
+        });
     }
 
     /**
@@ -518,6 +522,7 @@ public class ESRetrieve {
             if (prtId != null) {
                 b.must(m -> m.term(t -> t.field("prtId").value(prtId)));
             }
+            b.must(m -> m.term(t -> t.field("tenantId").value(SessionHolder.getCurrentTenantId())));
             return b;
         }));
     }
@@ -530,7 +535,6 @@ public class ESRetrieve {
      * @return 详细结果列表
      */
     private List<RetrieveDetailItem> retrieveQADetail(String query, List<Long> kbIds, KnowledgeResult knowledge) {
-        logger.info("retrieveQADetail query={}, kbIds={}", query, kbIds);
         List<RetrieveDetailItem> items = new ArrayList<>();
         try {
             int retrieveTopK = knowledge.getRetrieveTopK() == null ? topK : knowledge.getRetrieveTopK();
@@ -538,7 +542,7 @@ public class ESRetrieve {
             EmbeddingModel embeddingModel = getEmbeddingModel(knowledge.getVectorModelId());
             Response<Embedding> embedResp = embeddingModel.embed(query);
             Embedding embedding = embedResp.content();
-            Query filter = kbIdFilter(kbIds);
+            Query filter = this.kbIdFilter(kbIds);
             SearchRequest knnRequest = SearchRequest.of(b -> b
                     .index(ESIndexName.DOCUMENT_QA_VECTOR_INDEX_NAME)
                     .knn(k -> k
@@ -582,13 +586,12 @@ public class ESRetrieve {
      * @return 详细结果列表
      */
     private List<RetrieveDetailItem> retrieveByVectorDetail(String query, List<Long> kbIds, KnowledgeResult knowledge) {
-        logger.info("retrieveByVectorDetail query={}, kbIds={}", query, kbIds);
         List<RetrieveDetailItem> items = new ArrayList<>();
         try {
             EmbeddingModel embeddingModel = getEmbeddingModel(knowledge.getVectorModelId());
             Response<Embedding> embedResp = embeddingModel.embed(query);
             Embedding embedding = embedResp.content();
-            Query filter = kbIdFilter(kbIds);
+            Query filter = this.kbIdFilter(kbIds);
             Integer retrieveTopK = knowledge.getRetrieveTopK() == null ? topK : knowledge.getRetrieveTopK();
             float minSimilarity = knowledge.getMinSimilarity() == null ? similarity : knowledge.getMinSimilarity().floatValue();
             // 1.执行BM25查询

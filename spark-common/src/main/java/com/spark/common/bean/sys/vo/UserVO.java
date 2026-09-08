@@ -63,9 +63,9 @@ public class UserVO extends BaseVO {
     private Integer status;
 
     /**
-     * 角色类型
+     * 账号类型
      */
-    private Integer roleType;
+    private Integer accountType;
 
     /**
      * 企业微信用户ID

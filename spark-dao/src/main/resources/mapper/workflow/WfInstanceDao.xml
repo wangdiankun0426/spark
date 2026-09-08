@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.workflow.WfInstanceDao" >
     <sql id="allColumnList" >
-        ri.id , ri.template_id , tf.name as template_name , ri.rev_id , ri.rev_num , ri.status , ri.error_msg , ri.finished_dt , ri.duration_ms , ri.dept_id , ri.delete_flag , ri.created_by , ri.created_dt , ri.updated_by , ri.updated_dt
+        ri.id , ri.tenant_id, ri.template_id , tf.name as template_name , ri.rev_id , ri.rev_num , ri.status , ri.error_msg , ri.finished_dt , ri.duration_ms , ri.dept_id , ri.delete_flag , ri.created_by , ri.created_dt , ri.updated_by , ri.updated_dt
     </sql>
 
     <sql id="searchCondition">
@@ -13,6 +13,9 @@
             and ri.id in (
                 <foreach collection="ids" item="id" separator=",">#{id}</foreach>
             )
+        </if>
+        <if test="tenantId != null">
+            and ri.tenant_id = #{tenantId}
         </if>
         <if test="templateId != null">
             and ri.template_id = #{templateId}
@@ -35,16 +38,19 @@
     </sql>
 
     <insert id="insert">
-        insert into wf_instance (id, template_id , rev_id , rev_num , status , error_msg , finished_dt , duration_ms , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values (#{id}, #{templateId} , #{revId} , #{revNum} , #{status} , #{errorMsg} , #{finishedDt} , #{durationMs} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into wf_instance (id, tenant_id, template_id , rev_id , rev_num , status , error_msg , finished_dt , duration_ms , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{id}, #{tenantId}, #{templateId} , #{revId} , #{revNum} , #{status} , #{errorMsg} , #{finishedDt} , #{durationMs} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">
-        update wf_instance set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt} where id = #{id}
+        update wf_instance
+        set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
     </update>
 
     <update id="updateById">
-        update wf_instance set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        update wf_instance
+        set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
         <if test="status != null">, status = #{status}</if>
         <if test="errorMsg != null">, error_msg = #{errorMsg}</if>
         <if test="finishedDt != null">, finished_dt = #{finishedDt}</if>
@@ -75,7 +81,10 @@
 
     <select id="queryInstance" resultType="com.spark.common.bean.workflow.result.WfInstanceResult">
         select <include refid="allColumnList"/>
-        from wf_instance ri left join wf_template tf on ri.template_id = tf.id where 1=1
-        <include refid="searchCondition"/> limit 1
+        from wf_instance ri
+        left join wf_template tf on ri.template_id = tf.id
+        where 1=1
+        <include refid="searchCondition"/>
+         limit 1
     </select>
 </mapper>

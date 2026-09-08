@@ -15,7 +15,7 @@ import com.spark.common.bean.llm.query.ModelQuery;
 import com.spark.common.bean.llm.result.ModelResult;
 import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.LogPrint;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.kg.KgCommunityDao;
 import com.spark.dao.kg.KgEntityDao;
 import com.spark.dao.kg.KgGraphDao;
@@ -51,7 +51,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * +++/\_/\
@@ -90,7 +89,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
      * @return 创建结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KG_GRAPH_INSERT)
+    @LogOperate(operateType = OperateTypeEnum.KG_GRAPH_INSERT)
     public ResultData<Void> createKgGraph(KgGraphVO kgGraphVO) {
         ResultData<Void> result = new ResultData<>();
         if (kgGraphVO == null || kgGraphVO.getName() == null) {
@@ -120,7 +119,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
      * @return 修改结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KG_GRAPH_UPDATE)
+    @LogOperate(operateType = OperateTypeEnum.KG_GRAPH_UPDATE)
     public ResultData<Void> updateKgGraph(KgGraphVO kgGraphVO) {
         ResultData<Void> result = new ResultData<>();
         if (kgGraphVO == null || kgGraphVO.getId() == null) {
@@ -152,7 +151,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
      * @return 删除结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KG_GRAPH_DELETE)
+    @LogOperate(operateType = OperateTypeEnum.KG_GRAPH_DELETE)
     public ResultData<Void> deleteKgGraph(KgGraphVO kgGraphVO) {
         ResultData<Void> result = new ResultData<>();
         if (kgGraphVO == null || kgGraphVO.getId() == null) {
@@ -202,6 +201,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
         if (query == null) {
             query = new KgGraphQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<KgGraphResult> pageResult = super.pageList(query);
         result.setData(pageResult);
         result.setCode(ResultData.OK);
@@ -214,7 +214,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
      * @return 详情
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KG_GRAPH_DETAIL)
+    @LogOperate(operateType = OperateTypeEnum.KG_GRAPH_DETAIL)
     public ResultData<KgGraphResult> queryKgGraphDetail(KgGraphQuery query) {
         ResultData<KgGraphResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -298,7 +298,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
      * @return 构建结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KG_GRAPH_UPDATE)
+    @LogOperate(operateType = OperateTypeEnum.KG_GRAPH_UPDATE)
     public ResultData<Void> buildGraphRAGIndex(Long graphId) {
         ResultData<Void> result = new ResultData<>();
         if (!checkGraphAccess(graphId)) {
@@ -526,7 +526,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
         if (userId == null) {
             return false;
         }
-        if (SessionHolder.isAdmin()) {
+        if (SessionHolder.isSysAdmin() || SessionHolder.isOrgAdmin()) {
             return true;
         }
         DataScopeEnum scope = DataScopeEnum.indexOf(SessionHolder.getCurrentDataScop());

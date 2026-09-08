@@ -2,6 +2,7 @@ package com.spark.workflow.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.workflow.entity.WfTemplate;
 import com.spark.common.bean.workflow.entity.WfTemplateVersion;
 import com.spark.common.bean.workflow.query.WfTemplateQuery;
@@ -18,7 +19,7 @@ import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.LogPrint;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.workflow.WfTemplateDao;
 import com.spark.dao.workflow.WfTemplateVersionDao;
 import com.spark.dao.workflow.WfInstanceDao;
@@ -67,7 +68,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
      * @return
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.WORKFLOW_INSERT)
+    @LogOperate(operateType = OperateTypeEnum.WORKFLOW_INSERT)
     public ResultData<Void> createWorkflow(WfTemplateVO templateVO) {
         ResultData<Void> result = new ResultData<>();
         if (templateVO == null || StringUtil.isBlank(templateVO.getName())) {
@@ -113,7 +114,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
      * @return
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.WORKFLOW_UPDATE)
+    @LogOperate(operateType = OperateTypeEnum.WORKFLOW_UPDATE)
     public ResultData<Void> updateWorkflow(WfTemplateVO templateVO) {
         ResultData<Void> result = new ResultData<>();
         if (templateVO == null || templateVO.getId() == null || templateVO.getFormId() == null) {
@@ -150,7 +151,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
      * @return
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.WORKFLOW_DELETE)
+    @LogOperate(operateType = OperateTypeEnum.WORKFLOW_DELETE)
     public ResultData<Void> deleteWorkflow(WfTemplateVO templateVO) {
         ResultData<Void> result = new ResultData<>();
         if (templateVO == null || templateVO.getId() == null) {
@@ -192,7 +193,10 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
     @DataScope
     public ResultData<PageResult<WfTemplateResult>> pageWorkflowList(WfTemplateQuery query) {
         ResultData<PageResult<WfTemplateResult>> result = new ResultData<>();
-        if (query == null) { query = new WfTemplateQuery(); }
+        if (query == null) {
+            query = new WfTemplateQuery();
+        }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         result.setData(super.pageList(query));
         result.setCode(ResultData.OK);
         return result;
@@ -204,7 +208,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
      * @return
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.WORKFLOW_DETAIL)
+    @LogOperate(operateType = OperateTypeEnum.WORKFLOW_DETAIL)
     public ResultData<WfTemplateResult> queryWorkflowDetail(WfTemplateQuery query) {
         ResultData<WfTemplateResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {

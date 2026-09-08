@@ -1,6 +1,7 @@
 package com.spark.common.bean.sys.result;
 
 import com.spark.common.bean.base.BaseResult;
+import com.spark.common.enums.AccountTypeEnum;
 import com.spark.common.enums.RoleTypeEnum;
 import com.spark.common.enums.SexEnum;
 import com.spark.common.enums.StatusEnum;
@@ -58,7 +59,7 @@ public class UserResult extends BaseResult {
     /**
      * 角色名称
      */
-    private List<String> roleNames;
+    private String roleNames;
 
     /**
      * 具有权限的菜单id
@@ -91,14 +92,19 @@ public class UserResult extends BaseResult {
     private Integer status;
 
     /**
-     * 角色类型
+     * 账号类型
      */
-    private Integer roleType;
+    private Integer accountType;
 
     /**
-     * 角色类型
+     * 当前租户id
      */
-    private String roleTypeName;
+    private Long currentTenantId;
+
+    /**
+     * 账号类型
+     */
+    private String accountTypeName;
 
     /**
      * 企业微信用户ID
@@ -115,6 +121,18 @@ public class UserResult extends BaseResult {
      */
     private String statusName;
 
+    /**
+     * 角色类型
+     */
+    private Integer roleType;
+
+    public String getRoleTypeName() {
+        if (this.roleType == null) {
+            return null;
+        }
+        return RoleTypeEnum.indexOf(this.roleType).getDesc();
+    }
+
     public String getSexName() {
         if (this.sex == null) {
             return null;
@@ -129,10 +147,10 @@ public class UserResult extends BaseResult {
         return StatusEnum.indexOf(this.status).getDesc();
     }
 
-    public String getRoleTypeName() {
-        if (this.roleType == null) {
+    public String getAccountTypeName() {
+        if (this.accountType == null) {
             return null;
         }
-        return RoleTypeEnum.indexOf(this.roleType).getDesc();
+        return AccountTypeEnum.indexOf(this.accountType).getDesc();
     }
 }

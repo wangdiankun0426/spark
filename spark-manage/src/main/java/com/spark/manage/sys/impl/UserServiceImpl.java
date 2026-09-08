@@ -1,18 +1,23 @@
 package com.spark.manage.sys.impl;
 
+import com.spark.common.bean.base.BaseAssert;
+import com.spark.common.bean.sys.entity.TenantUser;
 import com.spark.common.bean.sys.query.DepartmentQuery;
 import com.spark.common.bean.sys.query.RoleUserQuery;
+import com.spark.common.bean.sys.query.TenantUserQuery;
 import com.spark.common.bean.sys.query.UserQuery;
 import com.spark.common.bean.sys.result.DepartmentResult;
 import com.spark.common.bean.sys.result.RoleUserResult;
+import com.spark.common.bean.sys.result.TenantUserResult;
 import com.spark.common.bean.sys.result.UserResult;
+import com.spark.common.bean.sys.vo.TenantUserVO;
 import com.spark.common.enums.*;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.DecryptUtil;
 import com.spark.common.utils.EncryptUtil;
 import com.spark.common.utils.StringUtil;
 import com.spark.config.aspectj.annotation.LogPrint;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.common.bean.sys.entity.User;
 import com.spark.common.bean.sys.entity.UserProfile;
 import com.spark.common.bean.sys.vo.UserVO;
@@ -21,6 +26,7 @@ import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.dao.sys.*;
 import com.spark.manage.sys.IDepartmentService;
+import com.spark.manage.sys.ITenantUserService;
 import com.spark.manage.sys.IUserService;
 import com.spark.manage.BaseService;
 import org.slf4j.Logger;
@@ -70,6 +76,10 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
     private RoleDao roleDao;
     @Autowired
     private IDepartmentService departmentService;
+    @Autowired
+    private ITenantUserService tenantUserService;
+    @Autowired
+    private TenantUserDao tenantUserDao;
     @Value("${encrypt.privateKey}")
     private String privateKey;
     @Value("${user.avatar.path}")
@@ -83,7 +93,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
      * @return 创建结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.USER_INSERT)
+    @LogOperate(operateType = OperateTypeEnum.USER_INSERT)
     public ResultData<Void> createUser(UserVO userVO) {
         ResultData<Void> result = this.validateCreateUserParam(userVO);
         if (result.getCode() != ResultData.OK) {
@@ -101,12 +111,13 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         user.setEmail(userVO.getEmail());
         user.setSex(userVO.getSex());
         user.setStatus(userVO.getStatus());
+        user.setCurrentTenantId(SessionHolder.getCurrentTenantId());
         if (user.getStatus() == null) {
             user.setStatus(StatusEnum.NORMAL.getValue());
         }
-        user.setRoleType(userVO.getRoleType());
-        if (user.getRoleType() == null) {
-            user.setRoleType(RoleTypeEnum.COMMON.getValue());
+        user.setAccountType(userVO.getAccountType());
+        if (user.getAccountType() == null) {
+            user.setAccountType(AccountTypeEnum.COMMON.getValue());
         }
         int count = userDao.insertDB(user);
         if (count < 1) {
@@ -121,7 +132,14 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
+        // 加入租户
+        TenantUserVO tenantUserVO = new TenantUserVO();
+        tenantUserVO.setTenantId(SessionHolder.getCurrentTenantId());
+        tenantUserVO.setUserIds(List.of(userId));
+        result = tenantUserService.addUser(tenantUserVO);
+        BaseAssert.assertTrue(result);
         userVO.setId(userId);
+        // 添加角色
         result = this.addUserRole(userVO);
         result.setObjId(userId);
         return result;
@@ -138,6 +156,9 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         if (query == null) {
             query = new UserQuery();
         }
+        if (!SessionHolder.isSysAdmin()) {
+            query.setTenantId(SessionHolder.getCurrentTenantId());
+        }
         PageResult<UserResult> pageResult = super.pageList(query);
         result.setData(pageResult);
         result.setCode(ResultData.OK);
@@ -150,7 +171,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
      * @return 修改结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.USER_UPDATE)
+    @LogOperate(operateType = OperateTypeEnum.USER_UPDATE)
     public ResultData<Void> updateUser(UserVO userVO) {
         ResultData<Void> result = this.validateUpdateUserParam(userVO);
         if (result.getCode() != ResultData.OK) {
@@ -160,12 +181,10 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         user.setId(userVO.getId());
         user.setName(userVO.getName());
         user.setLoginName(userVO.getLoginName());
-        user.setDeptId(userVO.getDeptId());
         user.setPhone(userVO.getPhone());
         user.setEmail(userVO.getEmail());
         user.setSex(userVO.getSex());
         user.setStatus(userVO.getStatus());
-        user.setRoleType(userVO.getRoleType());
         int count = userDao.updateDBById(user);
         if (count < 0) {
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
@@ -179,6 +198,13 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
+        if (userVO.getDeptId() != null) {
+            count = tenantUserDao.updateTenantUserDeptId(SessionHolder.getCurrentTenantId(), userVO.getId(), userVO.getDeptId(), SessionHolder.getCurrentUserId());
+            if (count < 1) {
+                result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
+                return result;
+            }
+        }
         result.setObjId(userVO.getId());
         result.setCode(ResultData.OK);
         return result;
@@ -190,7 +216,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
      * @return 删除结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.USER_DELETE)
+    @LogOperate(operateType = OperateTypeEnum.USER_DELETE)
     public ResultData<Void> deleteUser(UserVO userVO) {
         ResultData<Void> result = new ResultData<>();
         if (userVO == null || userVO.getId() == null) {
@@ -214,23 +240,22 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
      * @return 查询结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.USER_DETAIL)
+    @LogOperate(operateType = OperateTypeEnum.USER_DETAIL)
     public ResultData<UserResult> queryUserDetail(UserQuery query) {
         ResultData<UserResult> result = new ResultData<>();
         if (query.getId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        UserQuery userQuery = new UserQuery();
-        userQuery.setId(query.getId());
-        UserResult userResult = userDao.queryUser(userQuery);
+        UserResult userResult = userDao.queryUser(query);
         if (userResult == null) {
             result.setErrorCode(ErrorCodeEnum.USER_NOT_EXIST);
             return result;
         }
         userResult.setPassword(null);
+        this.supplyUserTenantInfo(userResult);
         this.supplyUserDeptInfo(userResult);
-        this.supplyUserRole(userResult);
+        this.supplyUserRoleInfo(userResult);
         this.supplyUserMenu(userResult);
         result.setData(userResult);
         result.setObjId(query.getId());
@@ -244,7 +269,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
      * @return 修改结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.USER_UPDATE_PASSWORD)
+    @LogOperate(operateType = OperateTypeEnum.USER_UPDATE_PASSWORD)
     public ResultData<Void> updatePassword(UserVO userVO) {
         ResultData<Void> result  = new ResultData<>();
         if (StringUtil.isBlank(userVO.getOldPassword()) || StringUtil.isBlank(userVO.getNewPassword())) {
@@ -354,6 +379,23 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
     }
 
     /**
+     * 补充租户数据
+     * @param userResult
+     */
+    private void supplyUserTenantInfo(UserResult userResult) {
+        TenantUserQuery tenantUserQuery = new TenantUserQuery();
+        tenantUserQuery.setTenantId(SessionHolder.getCurrentTenantId());
+        tenantUserQuery.setUserId(userResult.getId());
+        TenantUserResult tenantUserResult = tenantUserDao.queryTenantUser(tenantUserQuery);
+        if (tenantUserResult == null) {
+            return;
+        }
+        userResult.setTenantId(tenantUserResult.getTenantId());
+        userResult.setRoleType(tenantUserResult.getRoleType());
+        userResult.setDeptId(tenantUserResult.getDeptId());
+    }
+
+    /**
      * 补充部门数据
      * @param userResult  用户
      */
@@ -370,19 +412,19 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         }
         userResult.setDeptName(departmentResult.getName());
         ResultData<String> deptPathData = departmentService.supplyDeptPath(departmentResult);
-        if (deptPathData.getCode() != ResultData.OK) {
-            return;
+        if (deptPathData.getCode() == ResultData.OK) {
+            userResult.setDeptPath(deptPathData.getData());
         }
-        userResult.setDeptPath(deptPathData.getData());
     }
 
     /**
-     * 补充用户角色
+     * 补充用户角色信息
      * @param userResult  用户
      */
-    private void supplyUserRole(UserResult userResult) {
+    private void supplyUserRoleInfo(UserResult userResult) {
         Long userId = userResult.getId();
         RoleUserQuery roleUserQuery = new RoleUserQuery();
+        roleUserQuery.setTenantId(SessionHolder.getCurrentTenantId());
         roleUserQuery.setUserId(userId);
         List<RoleUserResult> roleUserList = roleUserDao.queryRoleUserList(roleUserQuery);
         if (CollectionUtil.isEmpty(roleUserList)) {
@@ -390,6 +432,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         }
         List<Long> roleIds = roleUserList.stream().map(RoleUserResult::getRoleId).distinct().collect(Collectors.toList());
         userResult.setRoleIds(roleIds);
+        userResult.setRoleNames(StringUtil.join(super.getObjNames(roleIds), "、"));
     }
 
     /**
@@ -401,7 +444,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         if (userId == null) {
             return;
         }
-        List<String> menuIdsList = roleDao.queryUserMenuIds(userId);
+        List<String> menuIdsList = roleDao.queryUserMenuIds(SessionHolder.getCurrentTenantId(), userId);
         if (CollectionUtil.isEmpty(menuIdsList)) {
             userResult.setMenuIds(List.of(10L));
             return;
@@ -494,7 +537,8 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         Long userId = userVO.getId();
         List<Long> roleIds = userVO.getRoleIds();
         Long createdBy = SessionHolder.getCurrentUserId();
-        int count = roleUserDao.batchInsertByUserId(userId, roleIds, createdBy);
+        Long tenantId = SessionHolder.getCurrentTenantId();
+        int count = roleUserDao.batchInsertByUserId(tenantId, userId, roleIds, createdBy);
         if (count < 1) {
             return result;
         }

@@ -1,7 +1,6 @@
 package com.spark.config.aspectj.annotation;
 
 import com.spark.common.enums.OperateTypeEnum;
-import org.springframework.core.annotation.Order;
 
 import java.lang.annotation.*;
 
@@ -18,9 +17,7 @@ import java.lang.annotation.*;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-// 值越小 优先级越高
-@Order(-1)
-public @interface OperateLog {
+public @interface LogOperate {
     /**
      * 操作类型
      * @return

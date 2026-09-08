@@ -67,4 +67,14 @@ public class BaseResult implements Serializable {
      * 删除标记位
      */
     private Integer deleteFlag;
+
+    /**
+     * 部门id
+     */
+    private Long deptId;
+
+    /**
+     * 租户id
+     */
+    private Long tenantId;
 }

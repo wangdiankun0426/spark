@@ -2,10 +2,13 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.sys.RoleUserDao" >
     <sql id="Base_Column_List" >
-    id, role_id, user_id, delete_flag,created_by, created_dt, updated_by, updated_dt
+      id, tenant_id, role_id, user_id, delete_flag,created_by, created_dt, updated_by, updated_dt
     </sql>
 
     <sql id="condition">
+        <if test="tenantId != null">
+            and tenant_id = #{tenantId}
+        </if>
         <if test="roleId != null">
             and role_id = #{roleId}
         </if>
@@ -49,18 +52,18 @@
     </select>
 
     <insert id="batchInsertByRoleId">
-        insert into sys_role_user (role_id, user_id, delete_flag,created_by, created_dt, updated_by, updated_dt)
+        insert into sys_role_user (tenant_id, role_id, user_id, delete_flag,created_by, created_dt, updated_by, updated_dt)
         values
         <foreach collection="userIds" item="userId" separator=",">
-            (#{roleId}, #{userId}, 1, #{createdBy}, now(), #{createdBy}, now())
+            (#{tenantId}, #{roleId}, #{userId}, 1, #{createdBy}, now(), #{createdBy}, now())
         </foreach>
     </insert>
 
     <insert id="batchInsertByUserId">
-        insert into sys_role_user (role_id, user_id, delete_flag,created_by, created_dt, updated_by, updated_dt)
+        insert into sys_role_user (tenant_id, role_id, user_id, delete_flag,created_by, created_dt, updated_by, updated_dt)
         values
         <foreach collection="roleIds" item="roleId" separator=",">
-            (#{roleId}, #{userId}, 1, #{createdBy}, now(), #{createdBy}, now())
+            (#{tenantId},#{roleId}, #{userId}, 1, #{createdBy}, now(), #{createdBy}, now())
         </foreach>
     </insert>
 </mapper>

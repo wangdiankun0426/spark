@@ -1,7 +1,7 @@
 package com.spark.manage.sys.impl;
 
 import com.spark.config.aspectj.annotation.LogPrint;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.common.bean.sys.query.RoleUserQuery;
 import com.spark.common.bean.sys.query.UserQuery;
 import com.spark.common.bean.sys.result.RoleUserResult;
@@ -47,7 +47,7 @@ public class RoleUserServiceImpl extends BaseService<RoleUserQuery, RoleUserResu
      * @return 结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.ROLE_ADD_USER)
+    @LogOperate(operateType = OperateTypeEnum.ROLE_ADD_USER)
     public ResultData<Void> addUser(RoleUserVO roleUserVO) {
         ResultData<Void> result = new ResultData<>();
         if (roleUserVO == null || roleUserVO.getRoleId() == null || CollectionUtil.isEmpty(roleUserVO.getUserIds())) {
@@ -68,11 +68,13 @@ public class RoleUserServiceImpl extends BaseService<RoleUserQuery, RoleUserResu
             result.setCode(ResultData.OK);
             return result;
         }
-        int count = roleUserDao.batchInsertByRoleId(roleUserVO.getRoleId(), userIds, SessionHolder.getCurrentUserId());
+        Long createdBy = SessionHolder.getCurrentUserId();
+        Long tenantId = SessionHolder.getCurrentTenantId();
+        int count = roleUserDao.batchInsertByRoleId(tenantId, roleId, userIds, createdBy);
         if (count < 1) {
             return result;
         }
-        result.setObjId(roleUserVO.getRoleId());
+        result.setObjId(roleId);
         result.setCode(ResultData.OK);
         return result;
     }
@@ -83,7 +85,7 @@ public class RoleUserServiceImpl extends BaseService<RoleUserQuery, RoleUserResu
      * @return 结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.ROLE_DEL_USER)
+    @LogOperate(operateType = OperateTypeEnum.ROLE_DEL_USER)
     public ResultData<Void> removeUser(RoleUserVO roleUserVO) {
         ResultData<Void> result = new ResultData<>();
         if (roleUserVO == null || roleUserVO.getRoleId() == null || roleUserVO.getUserId() == null) {

@@ -4,6 +4,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.dms.entity.DocumentEvent;
 import com.spark.common.bean.dms.query.DocumentEventQuery;
 import com.spark.common.bean.dms.query.DocumentQuery;
@@ -14,7 +15,7 @@ import com.spark.common.bean.kb.result.KnowledgeResult;
 import com.spark.common.constant.ESIndexName;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.config.aspectj.annotation.LogPrint;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.dms.DocumentDao;
 import com.spark.dao.dms.DocumentEventDao;
 import com.spark.dao.kb.KnowledgeDao;
@@ -88,6 +89,7 @@ public class DocumentChunkServiceImpl implements IDocumentChunkService {
         BoolQuery.Builder bqb = QueryBuilders.bool();
         // term 精确匹配 ，通常用于非分词字段或 keyword 类型的字段
         bqb.must(tq -> tq.term(x -> x.field("docId").value(query.getId())));
+        bqb.must(tq -> tq.term(x -> x.field("tenantId").value(SessionHolder.getCurrentTenantId())));
         // 构建排序参数
         Sort sort = Sort.by(new Sort.Order(Sort.Direction.ASC,"id"));
         // 构建分页参数
@@ -219,6 +221,7 @@ public class DocumentChunkServiceImpl implements IDocumentChunkService {
             // 查询分块总数
             BoolQuery.Builder bqb = QueryBuilders.bool();
             bqb.must(tq -> tq.term(x -> x.field("docId").value(docId)));
+            bqb.must(tq -> tq.term(x -> x.field("tenantId").value(SessionHolder.getCurrentTenantId())));
             NativeQueryBuilder countQuery = new NativeQueryBuilder()
                     .withQuery(bqb.build()._toQuery());
             long chunkCount = elasticsearchOperations.count(countQuery.build(), IndexCoordinates.of(ESIndexName.DOCUMENT_CHUNK_INDEX_NAME));
@@ -254,7 +257,7 @@ public class DocumentChunkServiceImpl implements IDocumentChunkService {
      * @return 操作结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_EVENT_UPDATE)
+    @LogOperate(operateType = OperateTypeEnum.DOCUMENT_EVENT_UPDATE)
     public ResultData<Void> rechunkDocument(Long docId) {
         ResultData<Void> result = new ResultData<>();
         if (docId == null) {
@@ -312,7 +315,7 @@ public class DocumentChunkServiceImpl implements IDocumentChunkService {
      * @return 操作结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.DOCUMENT_CHUNK_EDIT)
+    @LogOperate(operateType = OperateTypeEnum.DOCUMENT_CHUNK_EDIT)
     public ResultData<Void> updateChunk(Long docId, Integer chunkIndex, String content) {
         ResultData<Void> result = new ResultData<>();
         if (docId == null || chunkIndex == null || StringUtil.isBlank(content)) {
@@ -327,7 +330,7 @@ public class DocumentChunkServiceImpl implements IDocumentChunkService {
                 return result;
             }
             // 查询分块
-            Map<String, Object> chunkMap = queryChunkByIndex(docId, chunkIndex);
+            Map<String, Object> chunkMap = this.queryChunkByIndex(docId, chunkIndex);
             if (chunkMap == null || chunkMap.get("id") == null) {
                 result.setErrorCode(ErrorCodeEnum.DOCUMENT_NOT_EXIST);
                 return result;
@@ -360,6 +363,7 @@ public class DocumentChunkServiceImpl implements IDocumentChunkService {
         BoolQuery.Builder bqb = QueryBuilders.bool();
         bqb.must(tq -> tq.term(x -> x.field("docId").value(docId)));
         bqb.must(tq -> tq.term(x -> x.field("chunkIndex").value(chunkIndex)));
+        bqb.must(tq -> tq.term(x -> x.field("tenantId").value(SessionHolder.getCurrentTenantId())));
         NativeQueryBuilder queryBuilder = new NativeQueryBuilder().withQuery(bqb.build()._toQuery());
         SearchHits<Map> hits = elasticsearchOperations.search(queryBuilder.build(), Map.class, IndexCoordinates.of(ESIndexName.DOCUMENT_CHUNK_INDEX_NAME));
         if (hits.hasSearchHits()) {

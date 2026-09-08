@@ -84,6 +84,11 @@ public class BaseQuery implements Serializable {
     private Long deptId;
 
     /**
+     * 租户id
+     */
+    private Long tenantId;
+
+    /**
      * 排序列表
      */
     private Map<String, String> sorts;

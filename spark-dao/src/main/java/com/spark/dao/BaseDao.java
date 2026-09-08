@@ -31,6 +31,9 @@ public interface BaseDao<T extends BaseEntity> {
         if (t.getDeptId() == null) {
             t.setDeptId(SessionHolder.getCurrentDeptId());
         }
+        if (t.getTenantId() == null) {
+            t.setTenantId(SessionHolder.getCurrentTenantId());
+        }
         if (t.getUpdatedBy() == null) {
             t.setUpdatedBy(SessionHolder.getCurrentUserId());
         }

@@ -2,12 +2,13 @@ package com.spark.llm.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.llm.entity.Provider;
 import com.spark.common.bean.llm.query.ProviderQuery;
 import com.spark.common.bean.llm.result.ProviderResult;
 import com.spark.common.bean.llm.vo.ProviderVO;
 import com.spark.config.aspectj.annotation.DataScope;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.llm.ProviderDao;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.OperateTypeEnum;
@@ -46,7 +47,7 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
      * @return 创建结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.PROVIDER_INSERT)
+    @LogOperate(operateType = OperateTypeEnum.PROVIDER_INSERT)
     public ResultData<Void> createProvider(ProviderVO providerVO) {
         ResultData<Void> result = new ResultData<>();
         if (providerVO == null) {
@@ -71,7 +72,7 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
      * @return 修改结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.PROVIDER_UPDATE)
+    @LogOperate(operateType = OperateTypeEnum.PROVIDER_UPDATE)
     public ResultData<Void> updateProvider(ProviderVO providerVO) {
         ResultData<Void> result = new ResultData<>();
         if (providerVO == null || providerVO.getId() == null) {
@@ -105,7 +106,7 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
      * @return  删除结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.PROVIDER_DELETE)
+    @LogOperate(operateType = OperateTypeEnum.PROVIDER_DELETE)
     public ResultData<Void> deleteProvider(ProviderVO providerVO) {
         ResultData<Void> result = new ResultData<>();
         if (providerVO == null || providerVO.getId() == null) {
@@ -145,6 +146,7 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
         if (query == null) {
             query = new ProviderQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<ProviderResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);
@@ -157,7 +159,7 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
      * @return 详情
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.PROVIDER_DELETE)
+    @LogOperate(operateType = OperateTypeEnum.PROVIDER_DELETE)
     public ResultData<ProviderResult> queryProviderDetail(ProviderQuery query) {
         ResultData<ProviderResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {

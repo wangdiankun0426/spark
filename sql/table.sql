@@ -4,14 +4,14 @@ CREATE TABLE `sys_user` (
     `login_name` varchar(200) NOT NULL COMMENT '登录名',
     `password` varchar(72) NOT NULL COMMENT '密码',
     `name` varchar(200) NOT NULL COMMENT '用户名',
-    `phone` varchar(20) NULL COMMENT '手机号' unique ,
-    `email` varchar(20) NULL COMMENT '邮箱' unique ,
+    `phone` varchar(20) NULL COMMENT '手机号' ,
+    `email` varchar(64) NULL COMMENT '邮箱' ,
     `sex` int(1) NULL COMMENT '性别',
     `avatar` varchar(32) NULL COMMENT '头像',
     `status` int(1) NOT NULL DEFAULT 1 COMMENT '状态',
-    `role_type` int(11) NOT NULL DEFAULT 1 COMMENT '角色类型',
+    `account_type` int(2) NOT NULL DEFAULT 1 COMMENT '账号类型',
+    `current_tenant_id` bigint(12) NOT NULL DEFAULT 0 COMMENT '当前租户id',
 
-    `dept_id` bigint(12) NOT NULL COMMENT '所属部门id',
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
     `created_by` bigint(12) NOT NULL COMMENT '创建人id',
     `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -40,6 +40,7 @@ CREATE TABLE `sys_user_profile` (
 DROP TABLE IF EXISTS `sys_department`;
 CREATE TABLE `sys_department` (
     `id` bigint(12) NOT NULL COMMENT '主键,后两位固定02',
+    `tenant_id` bigint(12) NOT NULL DEFAULT 0 COMMENT '租户id',
     `name` varchar(128) NOT NULL COMMENT '名称',
     `prt_id` bigint(12) NOT NULL DEFAULT '0' COMMENT '父部门id,根节点的prtId=0',
     `code` varchar(36)  NOT NULL COMMENT '层级节点码',
@@ -47,7 +48,6 @@ CREATE TABLE `sys_department` (
     `dept_num` varchar(36) NULL COMMENT '部门编号',
     `status` int(1) NOT NULL DEFAULT 1 COMMENT '状态',
     `order_num` int(2) NOT NULL DEFAULT 99 COMMENT '排序号',
-    `wecom_id` bigint(12) NULL COMMENT '企业微信部门ID',
 
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
     `created_by` bigint(12) NOT NULL COMMENT '创建人id',
@@ -57,9 +57,56 @@ CREATE TABLE `sys_department` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='部门信息表';
 
+DROP TABLE IF EXISTS `sys_department_profile`;
+CREATE TABLE `sys_department_profile` (
+    `id` bigint(12) NOT NULL COMMENT '主键,后两位固定02',
+    `wecom_id` bigint(12) NULL COMMENT '企业微信部门ID',
+
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_wecom_id` (`wecom_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='部门扩展信息表';
+
+DROP TABLE IF EXISTS `sys_tenant`;
+CREATE TABLE `sys_tenant` (
+    `id` bigint(12) NOT NULL COMMENT '主键,后两位固定03',
+    `name` varchar(200) NOT NULL COMMENT '租户名',
+    `status` int(1) NOT NULL DEFAULT 1 COMMENT '状态',
+    `deadline` timestamp NULL DEFAULT NULL COMMENT '截止时间',
+    `account_count` int(10) NOT NULL DEFAULT 10 COMMENT '账号数量',
+
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='租户表';
+
+DROP TABLE IF EXISTS `sys_tenant_user`;
+CREATE TABLE `sys_tenant_user` (
+   `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+   `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
+   `user_id` bigint(12) NOT NULL COMMENT '用户id',
+   `role_type` int(11) NOT NULL DEFAULT 1 COMMENT '角色类型',
+   `dept_id` bigint(12) NOT NULL DEFAULT 0 COMMENT '部门id',
+
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='租户用户表';
+
 DROP TABLE IF EXISTS `sys_role`;
 CREATE TABLE `sys_role` (
     `id` bigint(12) NOT NULL COMMENT '主键,后两位固定04',
+    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
     `name` varchar(128) NOT NULL COMMENT '名称',
     `data_scope` int(4) NOT NULL DEFAULT 1 COMMENT '数据权限',
     `status` int(1) NOT NULL DEFAULT 1 COMMENT '状态',
@@ -76,6 +123,7 @@ CREATE TABLE `sys_role` (
 DROP TABLE IF EXISTS `sys_role_user`;
 CREATE TABLE `sys_role_user` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `tenant_id` bigint(12) NOT NULL DEFAULT 0 COMMENT '租户id',
     `role_id` bigint(12) NOT NULL COMMENT '角色id',
     `user_id` bigint(12) NOT NULL COMMENT '用户id',
 
@@ -104,6 +152,7 @@ CREATE TABLE `sys_menu` (
 DROP TABLE IF EXISTS `sys_notice`;
 CREATE TABLE `sys_notice` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
     `title` varchar(64) NOT NULL COMMENT '公告标题',
     `type` int(1) NOT NULL COMMENT '公告类型',
     `status` int(1) NOT NULL COMMENT '公告状态',
@@ -133,6 +182,7 @@ CREATE TABLE `sys_notice_obj` (
 DROP TABLE IF EXISTS `sys_message`;
 CREATE TABLE `sys_message` (
    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+   `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
    `type` int(2) NOT NULL COMMENT '消息类型',
    `title` varchar(64) NOT NULL COMMENT '消息标题',
    `content` varchar(512) NOT NULL COMMENT '消息内容',
@@ -163,6 +213,7 @@ CREATE TABLE `sys_message_user` (
 DROP TABLE IF EXISTS `log_login`;
 CREATE TABLE `log_login` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
     `ipaddress` varchar(36) NOT NULL default '未知' COMMENT 'ip地址',
     `login_type` int(2) NOT NULL default 1 COMMENT '登录类型',
     `login_platform` int(2) NOT NULL default 1 COMMENT '登录平台',
@@ -179,11 +230,12 @@ CREATE TABLE `log_login` (
 DROP TABLE IF EXISTS `log_operate`;
 CREATE TABLE `log_operate` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
     `type` int(5) NOT NULL COMMENT '操作类型',
     `obj_id` bigint(12) NOT NULL COMMENT '操作对象id',
     `code` int(5) NULL COMMENT '操作状态码',
     `consume` int(5) NULL COMMENT '耗时',
-    `remark` varchar(36) NULL COMMENT '备注',
+    `remark` varchar(1024) NULL COMMENT '备注',
 
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
     `created_by` bigint(12) NOT NULL COMMENT '创建人id',
@@ -196,6 +248,7 @@ CREATE TABLE `log_operate` (
 DROP TABLE IF EXISTS `llm_provider`;
 CREATE TABLE `llm_provider` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
     `name` varchar(50) NOT NULL COMMENT '厂商名称',
     `icon` varchar(128) NOT NULL COMMENT '厂商图标',
     `api_url` varchar(128) NOT NULL COMMENT 'API地址',
@@ -216,6 +269,7 @@ CREATE TABLE `llm_provider` (
 DROP TABLE IF EXISTS `llm_model`;
 CREATE TABLE `llm_model` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
     `provider_id` bigint(12) NOT NULL COMMENT '供应商id',
     `type` int(5) NOT NULL COMMENT '模型类型',
     `name` varchar(50) NOT NULL COMMENT '模型名称',
@@ -237,15 +291,16 @@ CREATE TABLE `llm_model` (
 DROP TABLE IF EXISTS `llm_mcp`;
 CREATE TABLE `llm_mcp` (
       `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
-      `name` varchar(64) NOT NULL COMMENT '服务器名称（唯一标识）',
-      `transport` tinyint(3) NOT NULL COMMENT '传输类型：1:STDIO，2:SSE',
+      `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
+      `name` varchar(64) NOT NULL COMMENT '服务器名称',
+      `transport` tinyint(3) NOT NULL COMMENT '传输类型',
       `provider_id` bigint(12) NULL COMMENT '厂商id',
-      `command` varchar(255) NULL COMMENT 'STDIO命令，如 node/python/java',
-      `args` varchar(512) NULL COMMENT 'STDIO命令参数，JSON数组',
-      `url` varchar(255) NULL COMMENT 'SSE模式URL，如 http://localhost:8080/mcp',
-      `env` varchar(512) NULL COMMENT '环境变量，JSON对象',
+      `command` varchar(255) NULL COMMENT 'STDIO命令',
+      `args` varchar(512) NULL COMMENT 'STDIO命令参数',
+      `url` varchar(255) NULL COMMENT 'SSE模式URL',
+      `env` varchar(512) NULL COMMENT '环境变量',
       `timeout` bigint(12) NULL COMMENT '连接超时毫秒',
-      `status` int(1) NOT NULL DEFAULT 1 COMMENT '状态：1:启用，-1:禁用',
+      `status` int(1) NOT NULL DEFAULT 1 COMMENT '状态',
       `description` varchar(255) NULL COMMENT '描述',
 
       `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
@@ -260,6 +315,7 @@ CREATE TABLE `llm_mcp` (
 DROP TABLE IF EXISTS `llm_agent`;
 CREATE TABLE `llm_agent` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
     `name` varchar(50) NOT NULL COMMENT '名称',
     `chat_model_id` bigint(12) NULL COMMENT '语言模型ID',
     `sys_prompt` varchar(2048) NOT NULL COMMENT '系统提示词',
@@ -284,6 +340,7 @@ CREATE TABLE `llm_agent` (
 DROP TABLE IF EXISTS `llm_skill`;
 CREATE TABLE `llm_skill` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
     `name` varchar(100) NOT NULL COMMENT '技能名称',
     `description` varchar(255) NOT NULL COMMENT '技能描述',
     `content` mediumtext NOT NULL COMMENT '技能正文',
@@ -350,6 +407,7 @@ CREATE TABLE `chat_msg_att` (
 DROP TABLE IF EXISTS `kb_knowledge`;
 CREATE TABLE `kb_knowledge` (
     `id` bigint(12) NOT NULL COMMENT '主键,后两位固定14',
+    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
     `name` varchar(128) NOT NULL COMMENT '知识库名称',
     `description` varchar(512) NULL COMMENT '描述',
     `parent_chunk_size` int(8) NOT NULL DEFAULT 800 COMMENT '父块大小',
@@ -376,6 +434,7 @@ CREATE TABLE `kb_knowledge` (
 DROP TABLE IF EXISTS `kb_retrieve_log`;
 CREATE TABLE `kb_retrieve_log` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
     `kb_id` bigint(12) NOT NULL COMMENT '知识库ID',
     `query` varchar(500) NOT NULL COMMENT '检索查询内容',
     `strategy` varchar(50) NULL COMMENT '检索策略',
@@ -398,6 +457,7 @@ CREATE TABLE `kb_retrieve_log` (
 DROP TABLE IF EXISTS `flow_template`;
 CREATE TABLE `flow_template` (
      `id` bigint(12) NOT NULL COMMENT '主键,后两位固定11',
+     `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
      `name` varchar(128) NOT NULL COMMENT '名称',
      `process_id` varchar(128) NOT NULL COMMENT '模板id',
      `form_id` bigint(12) NOT NULL COMMENT '表单id',
@@ -530,6 +590,7 @@ CREATE TABLE `flow_template_msg` (
 DROP TABLE IF EXISTS `flow_instance`;
 CREATE TABLE `flow_instance` (
      `id` bigint(12) NOT NULL COMMENT '主键,后两位固定12',
+     `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
      `template_id` bigint(12) NOT NULL COMMENT '流程模板id',
      `template_rev_id` bigint(12) NOT NULL COMMENT '流程模板版本id',
      `form_id` bigint(12) NOT NULL COMMENT '表单id',
@@ -621,6 +682,7 @@ CREATE TABLE `flow_instance_copy` (
 DROP TABLE IF EXISTS `form`;
 CREATE TABLE `form` (
     `id` bigint(12) NOT NULL COMMENT '主键,后两位固定06',
+    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
     `type` int(1) NOT NULL COMMENT '表单类型',
     `name`varchar(64) NOT NULL COMMENT '名称',
     `rev_id` bigint(12) NOT NULL COMMENT '当前版本id',
@@ -703,6 +765,7 @@ CREATE TABLE `form_obj_value` (
 DROP TABLE IF EXISTS `kg_graph`;
 CREATE TABLE kg_graph (
       id BIGINT(20) NOT NULL COMMENT '主键id,后两位固定16',
+      `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
       name VARCHAR(128) NOT NULL COMMENT '图谱名称',
       description VARCHAR(512) DEFAULT NULL COMMENT '图谱描述',
       entity_types TEXT DEFAULT NULL COMMENT '实体类型 schema（JSON 数组）',
@@ -722,6 +785,7 @@ CREATE TABLE kg_graph (
 DROP TABLE IF EXISTS `kg_entity`;
 CREATE TABLE kg_entity (
        id BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '主键 id',
+       `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
        graph_id BIGINT(20) NOT NULL COMMENT '图谱 id',
        name VARCHAR(256) NOT NULL COMMENT '实体名称',
        type VARCHAR(64) DEFAULT NULL COMMENT '实体类型',
@@ -743,6 +807,7 @@ CREATE TABLE kg_entity (
 DROP TABLE IF EXISTS `kg_relation`;
 CREATE TABLE kg_relation (
      id BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '主键 id',
+     `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
      graph_id BIGINT(20) NOT NULL COMMENT '图谱 id',
      head_entity_id BIGINT(20) NOT NULL COMMENT '头实体 id',
      tail_entity_id BIGINT(20) NOT NULL COMMENT '尾实体 id',
@@ -764,6 +829,7 @@ CREATE TABLE kg_relation (
 DROP TABLE IF EXISTS `kg_community`;
 CREATE TABLE `kg_community` (
     `id` BIGINT(20) NOT NULL COMMENT '主键',
+    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
     `graph_id` BIGINT(20) NOT NULL COMMENT '图谱 id',
     `community_index` INT(10) NOT NULL COMMENT '社区序号',
     `name` VARCHAR(128) NOT NULL COMMENT '社区名称',
@@ -781,6 +847,7 @@ CREATE TABLE `kg_community` (
 DROP TABLE IF EXISTS `wf_template`;
 CREATE TABLE `wf_template` (
     `id` bigint(12) NOT NULL COMMENT '主键,后两位固定17',
+    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
     `name` varchar(128) NOT NULL COMMENT '工作流名称',
     `description` varchar(512) NULL COMMENT '描述',
     `status` int(2) NOT NULL DEFAULT -1 COMMENT '状态',
@@ -817,6 +884,7 @@ CREATE TABLE `wf_template_version` (
 DROP TABLE IF EXISTS `wf_instance`;
 CREATE TABLE `wf_instance` (
     `id` bigint(12) NOT NULL COMMENT '主键,后两位固定18',
+    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
     `template_id` bigint(12) NOT NULL COMMENT '工作流模板ID',
     `rev_id` bigint(12) NOT NULL COMMENT '执行版本ID',
     `rev_num` varchar(12) NOT NULL COMMENT '执行版本号',
@@ -883,6 +951,7 @@ CREATE TABLE `task_instance` (
 DROP TABLE IF EXISTS `task_template`;
 CREATE TABLE `task_template` (
      `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+     `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
      `name` varchar(128) NOT NULL COMMENT '任务名称',
      `task_type` int(3) NOT NULL COMMENT '任务类型',
      `remark` varchar(255) NULL COMMENT '备注',
@@ -914,6 +983,7 @@ CREATE TABLE `task_template_param` (
 DROP TABLE IF EXISTS `dms_document`;
 CREATE TABLE `dms_document` (
     `id` bigint(12) NOT NULL COMMENT '主键,后两位固定09',
+    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
     `prt_id` bigint(12) NOT NULL COMMENT '父id',
     `document_type` tinyint(3) NOT NULL COMMENT '文档归属类型',
     `name` varchar(256) NOT NULL COMMENT '名称',
@@ -957,6 +1027,7 @@ CREATE TABLE `dms_document_event` (
 DROP TABLE IF EXISTS `dms_attachment`;
 CREATE TABLE `dms_attachment` (
     `id` bigint(12) NOT NULL COMMENT '主键,后两位固定07',
+    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
     `name` varchar(256) NOT NULL COMMENT '文件名称',
     `size` bigint(12) NOT NULL COMMENT '文件大小',
     `path` varchar(128) NOT NULL COMMENT '存储路径',

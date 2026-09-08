@@ -1,5 +1,6 @@
 package com.spark.flow.service.impl;
 
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
@@ -169,6 +170,7 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
         if (query == null) {
             query = new FlowTemplateQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<FlowTemplateResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);

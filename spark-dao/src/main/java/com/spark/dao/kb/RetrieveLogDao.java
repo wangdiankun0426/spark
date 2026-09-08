@@ -75,14 +75,14 @@ public interface RetrieveLogDao extends BaseDao<RetrieveLog> {
      * @param limit 返回条数
      * @return 热门查询列表
      */
-    List<HotQueryResult> queryHotQueries(@Param("limit") Integer limit);
+    List<HotQueryResult> queryHotQueries(@Param("limit") Integer limit, @Param("tenantId")Long tenantId);
 
     /**
      * 查询用户使用排行
      * @param limit 返回条数
      * @return 用户排行列表
      */
-    List<UserRankResult> queryUserRank(@Param("limit") Integer limit);
+    List<UserRankResult> queryUserRank(@Param("limit") Integer limit, @Param("tenantId")Long tenantId);
 
     /**
      * 查询时段检索次数
@@ -91,7 +91,6 @@ public interface RetrieveLogDao extends BaseDao<RetrieveLog> {
      * @param monthStart 本月起始时间
      * @return 时段统计结果
      */
-    PeriodRetrieveCountResult queryRetrieveCountByPeriod(@Param("todayStart") String todayStart,
-                                                         @Param("weekStart") String weekStart,
-                                                         @Param("monthStart") String monthStart);
+    PeriodRetrieveCountResult queryRetrieveCountByPeriod(@Param("todayStart") String todayStart, @Param("weekStart") String weekStart,
+                                                         @Param("monthStart") String monthStart, @Param("tenantId")Long tenantId);
 }

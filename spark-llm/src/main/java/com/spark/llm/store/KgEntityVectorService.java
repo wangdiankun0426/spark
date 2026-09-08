@@ -52,10 +52,6 @@ public class KgEntityVectorService {
     @Autowired
     private ModelFactory modelFactory;
     /**
-     * 向量维度
-     */
-    private static final int VECTOR_DIMENSIONS = 1024;
-    /**
      * 语义召回候选数
      */
     private static final int NUM_CANDIDATES = 200;
@@ -63,38 +59,6 @@ public class KgEntityVectorService {
      * 语义召回最低余弦相似度
      */
     private static final float MIN_SIMILARITY = 0.5f;
-
-    /**
-     * 启动时创建实体向量索引
-     */
-    @PostConstruct
-    public void initIndex() {
-        try {
-            boolean exists = client.indices()
-                    .exists(e -> e.index(ESIndexName.KG_ENTITY_VECTOR_INDEX_NAME))
-                    .value();
-            if (exists) {
-                logger.info("KgEntityVectorService index already exists");
-                return;
-            }
-            CreateIndexRequest request = CreateIndexRequest.of(b -> b
-                    .index(ESIndexName.KG_ENTITY_VECTOR_INDEX_NAME)
-                    .mappings(m -> m
-                            .properties("id", p -> p.long_(l -> l))
-                            .properties("graphId", p -> p.long_(l -> l))
-                            .properties("name", p -> p.keyword(k -> k))
-                            .properties("type", p -> p.keyword(k -> k))
-                            .properties("description", p -> p.text(t -> t))
-                            .properties("embedding", p -> p.denseVector(d -> d
-                                    .dims(VECTOR_DIMENSIONS)
-                                    .index(true)
-                                    .similarity("cosine")))));
-            client.indices().create(request);
-            logger.info("KgEntityVectorService index created successfully");
-        } catch (Exception e) {
-            logger.error("KgEntityVectorService initIndex error", e);
-        }
-    }
 
     /**
      * 向量化实体写入ES
@@ -113,6 +77,7 @@ public class KgEntityVectorService {
             Response<Embedding> embedResp = embeddingModel.embed(text);
             Map<String, Object> data = new HashMap<>();
             data.put("id", entity.getId());
+            data.put("tenantId", entity.getTenantId());
             data.put("graphId", entity.getGraphId());
             data.put("name", entity.getName());
             data.put("type", entity.getType());
@@ -152,8 +117,7 @@ public class KgEntityVectorService {
             return;
         }
         try {
-            elasticsearchOperations.delete(entityId.toString(),
-                    IndexCoordinates.of(ESIndexName.KG_ENTITY_VECTOR_INDEX_NAME));
+            elasticsearchOperations.delete(entityId.toString(), IndexCoordinates.of(ESIndexName.KG_ENTITY_VECTOR_INDEX_NAME));
         } catch (Exception e) {
             logger.error("deleteEntityVector error, entityId={}", entityId, e);
         }
@@ -202,7 +166,7 @@ public class KgEntityVectorService {
             EmbeddingModel embeddingModel = modelFactory.getDefaultEmbeddingModel();
             Response<Embedding> embedResp = embeddingModel.embed(question);
             Embedding embedding = embedResp.content();
-            Query filter = graphIdFilter(graphIds);
+            Query filter = this.graphIdFilter(graphIds);
             SearchRequest request = SearchRequest.of(b -> b
                     .index(ESIndexName.KG_ENTITY_VECTOR_INDEX_NAME)
                     .knn(k -> k

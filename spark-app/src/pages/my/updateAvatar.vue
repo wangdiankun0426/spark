@@ -84,7 +84,10 @@ function beforeRead(file) {
 }
 </script>
 <style scoped lang="scss">
-.update-avatar-form{
+:deep(.u-navbar__content__title) {
+  color: #ffffff !important;
+}
+.update-avatar-form {
   padding-top: 50px;
   width: 90%;
   margin: auto;

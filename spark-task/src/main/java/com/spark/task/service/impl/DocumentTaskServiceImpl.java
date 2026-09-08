@@ -204,6 +204,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                     DocumentResult documentResult = docMap.get(docId);
                     Map<String, Object> document = new HashMap<>();
                     document.put("id", documentResult.getId());
+                    document.put("tenantId", documentResult.getTenantId());
                     document.put("prtId", documentResult.getPrtId());
                     document.put("documentType", documentResult.getDocumentType());
                     document.put("name", documentResult.getName());
@@ -296,7 +297,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                         documentEventDao.updateDBById(documentEvent);
                         continue;
                     }
-                    vectorStore.addChunk(docId, content, documentResult.getPrtId(), documentResult.getDocumentType());
+                    vectorStore.addChunk(documentResult, content);
                     DocumentEvent documentEvent = new DocumentEvent();
                     documentEvent.setId(documentEventResult.getId());
                     documentEvent.setChunkStatus(DocumentEventStatusEnum.SUCCESS.getValue());
@@ -353,7 +354,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                         continue;
                     }
                     DocumentResult documentResult = docMap.get(docId);
-                    vectorStore.addVector(docId, documentResult.getPrtId(), documentResult.getDocumentType());
+                    vectorStore.addVector(documentResult);
                     DocumentEvent documentEvent = new DocumentEvent();
                     documentEvent.setId(documentEventResult.getId());
                     documentEvent.setVectorStatus(DocumentEventStatusEnum.SUCCESS.getValue());
@@ -487,7 +488,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
             }
             // 统一持久化关系
             List<KgRelation> relations = new ArrayList<>(relationMap.values());
-            this.saveRelations(relations, graphId, docId);
+            this.saveRelations(relations, graphId, docId, documentResult.getTenantId());
             String remark = String.format("构建知识图谱成功,分块%d,实体%d,关系%d", chunks.size(), entities.size(), relations.size());
             this.updateGraphStatus(eventId, DocumentEventStatusEnum.SUCCESS.getValue(), remark);
         } catch (Exception e) {
@@ -710,8 +711,9 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
      * @param graphId 图谱 id
      * @param docId 文档 id
      */
-    private void saveRelations(List<KgRelation> relations, Long graphId, Long docId) {
+    private void saveRelations(List<KgRelation> relations, Long graphId, Long docId, Long tenantId) {
         for (KgRelation relation : relations) {
+            relation.setTenantId(tenantId);
             relation.setGraphId(graphId);
             relation.setSourceId(docId);
             if (relation.getSourceType() == null) {

@@ -26,6 +26,7 @@ public class MqTest {
     public void sendMsg() {
         for (int i = 0; i < 10 ; i++) {
             MessageVO messageVO = new MessageVO();
+            messageVO.setTenantId(103L);
             messageVO.setType(i);
             String msg = JsonUtil.toString(messageVO);
             mqProducer.sendSystemMessageMq(msg);

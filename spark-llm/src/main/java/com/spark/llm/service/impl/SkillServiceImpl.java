@@ -2,12 +2,13 @@ package com.spark.llm.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.llm.entity.Skill;
 import com.spark.common.bean.llm.query.SkillQuery;
 import com.spark.common.bean.llm.result.SkillResult;
 import com.spark.common.bean.llm.vo.SkillVO;
 import com.spark.config.aspectj.annotation.DataScope;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.llm.SkillDao;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.OperateTypeEnum;
@@ -48,7 +49,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
      * @return 创建结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.SKILL_INSERT)
+    @LogOperate(operateType = OperateTypeEnum.SKILL_INSERT)
     public ResultData<Void> createSkill(SkillVO skillVO) {
         ResultData<Void> result = new ResultData<>();
         if (skillVO == null || StringUtil.isBlank(skillVO.getName())
@@ -80,7 +81,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
      * @return 修改结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.SKILL_UPDATE)
+    @LogOperate(operateType = OperateTypeEnum.SKILL_UPDATE)
     public ResultData<Void> updateSkill(SkillVO skillVO) {
         ResultData<Void> result = new ResultData<>();
         if (skillVO == null || skillVO.getId() == null) {
@@ -120,7 +121,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
      * @return 删除结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.SKILL_DELETE)
+    @LogOperate(operateType = OperateTypeEnum.SKILL_DELETE)
     public ResultData<Void> deleteSkill(SkillVO skillVO) {
         ResultData<Void> result = new ResultData<>();
         if (skillVO == null || skillVO.getId() == null) {
@@ -159,6 +160,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
         if (query == null) {
             query = new SkillQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<SkillResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);
@@ -171,7 +173,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
      * @return 详情
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.SKILL_DETAIL)
+    @LogOperate(operateType = OperateTypeEnum.SKILL_DETAIL)
     public ResultData<SkillResult> querySkillDetail(SkillQuery query) {
         ResultData<SkillResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {

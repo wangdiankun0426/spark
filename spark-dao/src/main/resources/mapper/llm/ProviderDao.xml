@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.llm.ProviderDao" >
     <sql id="allColumnList" >
-        id , name , icon , api_url , description , remark , order_num , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , tenant_id, name , icon , api_url , description , remark , order_num , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="searchCondition">
@@ -15,6 +15,9 @@
                 #{id}
             </foreach>
             )
+        </if>
+        <if test="tenantId != null">
+            and tenant_id = #{tenantId}
         </if>
         <if test="deleteFlag != null and id == null and ids == null">
             and delete_flag = #{deleteFlag}
@@ -38,8 +41,8 @@
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into llm_provider ( name , icon , api_url , secret_key , description , remark , order_num , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values ( #{name} , #{icon} , #{apiUrl} , #{secretKey} , #{description} , #{remark} , #{orderNum} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into llm_provider ( tenant_id, name , icon , api_url , secret_key , description , remark , order_num , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values ( #{tenantId}, #{name} , #{icon} , #{apiUrl} , #{secretKey} , #{description} , #{remark} , #{orderNum} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">

@@ -73,7 +73,7 @@ function submitPasswordForm() {
     newPassword: des(passwordForm.value.newPassword)
   }
   updatePasswordAPI(data).then(res => {
-    if (res.code != 200) {
+    if (res.code !== 200) {
       return ;
     }
     toast("密码修改成功");
@@ -81,6 +81,9 @@ function submitPasswordForm() {
 }
 </script>
 <style scoped lang="scss">
+:deep(.u-navbar__content__title) {
+  color: #ffffff !important;
+}
 .update-password-form{
   padding-top: 50px;
   width: 90%;

@@ -2,11 +2,11 @@
   <div>
     <el-menu :default-active="defaultActive" router mode="horizontal">
       <div class="logo-box">
-        <img src="../assets/images/logo.png" width="50" height="40"/>
+        <img src="../assets/images/logo.png" width="46" height="40"/>
       </div>
       <el-menu-item v-if="hasMenu(10)" index="/home">
         <el-icon><DataAnalysis /></el-icon>
-        <span>首页</span>
+        <span>工作台</span>
       </el-menu-item>
       <el-menu-item v-if="hasMenu(20)" index="/llm">
         <el-icon><Ai /></el-icon>
@@ -24,9 +24,13 @@
         <el-icon><Connection /></el-icon>
         <span>流程中心</span>
       </el-menu-item>
-      <el-menu-item index="/manage" v-if="isAdmin() && !isDesktop">
+      <el-menu-item index="/manage" v-if="isOrgAdmin() && !isDesktop">
         <el-icon><Setting /></el-icon>
         <span>管理后台</span>
+      </el-menu-item>
+      <el-menu-item index="/siteManage" v-if="isSysAdmin() && !isDesktop">
+        <el-icon><Setting /></el-icon>
+        <span>站点管理</span>
       </el-menu-item>
 
       <div class="tool-box">
@@ -155,7 +159,8 @@
           </div>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item v-if="hasMenu(105)" @click="openUserInfoForm">个人中心</el-dropdown-item>
+              <el-dropdown-item @click="openUserInfoForm">个人中心</el-dropdown-item>
+              <el-dropdown-item @click="openTenantSwitch">切换租户</el-dropdown-item>
               <el-dropdown-item @click="handleLogout">退出系统</el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -168,6 +173,9 @@
 
     <!--个人中心弹窗-->
     <user-profile v-model="userInfoVisible" />
+
+    <!--切换租户抽屉-->
+    <tenant-switch v-model="tenantSwitchVisible" :current-tenant-id="userInfo.currentTenantId" />
   </div>
 </template>
 
@@ -184,6 +192,7 @@ import {getTheme, applyTheme, setTheme} from '@/utils/themeUtil';
 import {hasMenu} from '@/utils/menuUtil.js';
 import UserAvatar from '@/components/UserAvatar';
 import UserProfile from '@/components/UserProfile';
+import TenantSwitch from '@/components/TenantSwitch';
 import Contacts from '@/components/Chat/contacts.vue';
 import ContactList from "@/assets/icons/contactList.vue";
 import GraphV2 from "@/assets/icons/graphV2.vue";
@@ -197,7 +206,7 @@ import ModelMarketIcon from '@/assets/icons/modelMarket.vue';
 import Bell from "@/assets/icons/bell.vue";
 import SearchV2 from "@/assets/icons/searchV2.vue";
 import {isDesktop} from "@/utils/desktop.js";
-import {isAdmin} from "@/utils/utils.js";
+import {isOrgAdmin, isSysAdmin} from "@/utils/utils.js";
 const router = useRouter();
 const route = useRoute();
 const store = useStore()
@@ -218,6 +227,9 @@ function toggleTheme() {
 // 个人中心弹窗显隐
 const userInfoVisible = ref(false);
 
+// 切换租户抽屉显隐
+const tenantSwitchVisible = ref(false);
+
 // 通讯录抽屉显隐
 const contactVisible = ref(false);
 
@@ -226,6 +238,13 @@ const contactVisible = ref(false);
  */
 function openContactDrawer() {
   contactVisible.value = true;
+}
+
+/**
+ * 打开切换租户抽屉
+ */
+function openTenantSwitch() {
+  tenantSwitchVisible.value = true;
 }
 
 // 搜索快捷功能相关
@@ -276,7 +295,7 @@ watch(searchVisible, (val) => {
 });
 
 /**
- * 拉取当前登录用户详情并同步至 store（登录后首次进入时触发）
+ * 拉取当前登录用户详情并同步至 store
  */
 function getUserDetail() {
   getSessionAPI().then(res => {
@@ -290,9 +309,6 @@ getUserDetail()
  * 打开个人中心弹窗
  */
 function openUserInfoForm() {
-  if (!hasMenu(105)) {
-    return;
-  }
   userInfoVisible.value = true;
 }
 
@@ -413,15 +429,15 @@ function handleViewNotice(row) {
 </script>
 
 <style lang="scss" scoped>
-// 导航栏整体 - 跟随主题变量（深色蓝渐变 / 浅色白）
+// 导航栏整体 - 跟随主题变量
 .el-menu {
   background: var(--nav-bg) !important;
   box-shadow: var(--nav-shadow);
 }
-// 左侧 logo 区域（绝对定位，不参与菜单居中布局）
+// 左侧 logo 区域
 .logo-box {
   position: absolute;
-  left: 10px;
+  left: 12px;
   top: 0;
   display: flex;
   align-items: center;

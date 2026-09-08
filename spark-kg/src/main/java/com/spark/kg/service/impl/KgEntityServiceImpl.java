@@ -10,7 +10,7 @@ import com.spark.common.bean.kg.result.KgEntityResult;
 import com.spark.common.bean.kg.result.KgGraphResult;
 import com.spark.common.bean.kg.vo.KgEntityVO;
 import com.spark.config.aspectj.annotation.LogPrint;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.kg.KgEntityDao;
 import com.spark.dao.kg.KgGraphDao;
 import com.spark.dao.kg.KgRelationDao;
@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import com.spark.common.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,7 +69,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
      * @return 新增结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KG_ENTITY_INSERT)
+    @LogOperate(operateType = OperateTypeEnum.KG_ENTITY_INSERT)
     public ResultData<Void> createKgEntity(KgEntityVO kgEntityVO) {
         ResultData<Void> result = new ResultData<>();
         if (kgEntityVO == null || kgEntityVO.getGraphId() == null || StringUtil.isBlank(kgEntityVO.getName())) {
@@ -127,7 +126,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
      * @return 修改结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KG_ENTITY_UPDATE)
+    @LogOperate(operateType = OperateTypeEnum.KG_ENTITY_UPDATE)
     public ResultData<Void> updateKgEntity(KgEntityVO kgEntityVO) {
         ResultData<Void> result = new ResultData<>();
         if (kgEntityVO == null || kgEntityVO.getId() == null) {
@@ -189,7 +188,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
      * @return 删除结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KG_ENTITY_DELETE)
+    @LogOperate(operateType = OperateTypeEnum.KG_ENTITY_DELETE)
     public ResultData<Void> deleteKgEntity(KgEntityVO kgEntityVO) {
         ResultData<Void> result = new ResultData<>();
         if (kgEntityVO == null || kgEntityVO.getId() == null) {
@@ -238,6 +237,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
         if (query == null) {
             query = new KgEntityQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<KgEntityResult> pageResult = super.pageList(query);
         result.setData(pageResult);
         result.setCode(ResultData.OK);
@@ -250,7 +250,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
      * @return 详情
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KG_ENTITY_DETAIL)
+    @LogOperate(operateType = OperateTypeEnum.KG_ENTITY_DETAIL)
     public ResultData<KgEntityResult> queryKgEntityDetail(KgEntityQuery query) {
         ResultData<KgEntityResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
@@ -275,7 +275,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
      * @return 合并结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KG_ENTITY_MERGE)
+    @LogOperate(operateType = OperateTypeEnum.KG_ENTITY_MERGE)
     public ResultData<Void> mergeKgEntity(Long mainEntityId, List<Long> mergedEntityIds) {
         ResultData<Void> result = new ResultData<>();
         if (mainEntityId == null || CollectionUtil.isEmpty(mergedEntityIds)) {
@@ -344,7 +344,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
      * @return 审核结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KG_ENTITY_AUDIT)
+    @LogOperate(operateType = OperateTypeEnum.KG_ENTITY_AUDIT)
     public ResultData<Void> auditKgEntity(Long entityId, Integer auditStatus) {
         ResultData<Void> result = new ResultData<>();
         if (entityId == null || auditStatus == null) {
@@ -378,7 +378,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
      * @return 审核结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KG_ENTITY_AUDIT)
+    @LogOperate(operateType = OperateTypeEnum.KG_ENTITY_AUDIT)
     public ResultData<Void> batchAuditKgEntity(List<Long> entityIds, Integer auditStatus) {
         ResultData<Void> result = new ResultData<>();
         if (CollectionUtil.isEmpty(entityIds) || auditStatus == null) {

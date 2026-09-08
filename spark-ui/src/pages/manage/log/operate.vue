@@ -125,7 +125,7 @@ function pageChangeSize(pageSize) {
  */
 function pageChangeNo(pageNo) {
   logQuery.value.pageNo = pageNo;
-  this.getLogList();
+  getLogList();
 }
 </script>
 

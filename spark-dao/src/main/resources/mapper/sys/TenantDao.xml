@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.sys.TenantDao" >
+    <sql id="Base_Column_List" >
+     id , name , status , deadline , account_count , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="condition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="name != null">
+            and name like concat('%', #{name}, '%')
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <!-- 实体对象级别表：手动插入 id，不做数据库自增 -->
+    <insert id="insert">
+        insert into sys_tenant ( id , name , status , deadline , account_count , delete_flag , created_by , created_dt , updated_by , updated_dt )
+        values (#{id}, #{name}, #{status}, #{deadline}, #{accountCount}, 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <select id="queryTenantList" resultType="com.spark.common.bean.sys.result.TenantResult">
+        select <include refid="Base_Column_List"/>
+        from sys_tenant
+        where 1=1
+        <include refid="condition"/>
+        order by id
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="queryTenant" resultType="com.spark.common.bean.sys.result.TenantResult">
+        select <include refid="Base_Column_List"/>
+        from sys_tenant
+        where 1=1
+        <include refid="condition"/>
+        limit 1
+    </select>
+
+    <select id="querySameNameTenant" resultType="com.spark.common.bean.sys.result.TenantResult">
+        select <include refid="Base_Column_List"/>
+        from sys_tenant
+        where name = #{name}
+        limit 1
+    </select>
+
+    <select id="queryTenantCount" resultType="java.lang.Integer">
+        select count(1)
+        from sys_tenant
+        where 1=1
+        <include refid="condition"/>
+    </select>
+
+    <update id="updateById">
+        update sys_tenant
+        set updated_by = #{updatedBy}, updated_dt = #{updatedDt}
+        <if test="name != null">
+            ,name = #{name}
+        </if>
+        <if test="status != null">
+            ,status = #{status}
+        </if>
+        <if test="accountCount != null">
+            ,account_count = #{accountCount}
+        </if>
+        <if test="deadline != null">
+            ,deadline = #{deadline}
+        </if>
+        <if test="deadline == null">
+            ,deadline = null
+        </if>
+        where id = #{id}
+    </update>
+
+    <update id="deleteById">
+        update sys_tenant
+        set delete_flag = -1, updated_by = #{updatedBy}, updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+</mapper>

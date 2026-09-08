@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.kg.KgEntityDao" >
     <sql id="allColumnList" >
-        id , graph_id , name , type , description , source_id , source_type , confidence , audit_status , status ,
+        id , tenant_id, graph_id , name , type , description , source_id , source_type , confidence , audit_status , status ,
         delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
@@ -17,8 +17,8 @@
             </foreach>
             )
         </if>
-        <if test="deleteFlag != null and id == null and ids == null">
-            and delete_flag = #{deleteFlag}
+        <if test="tenantId != null">
+            and tenant_id = #{tenantId}
         </if>
         <if test="graphId != null">
             and graph_id = #{graphId}
@@ -41,6 +41,9 @@
         <if test="status != null">
             and status = #{status}
         </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
     </sql>
 
     <sql id="sortCondition">
@@ -57,9 +60,9 @@
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into kg_entity (graph_id , name , type , description , source_id , source_type , confidence , audit_status , status ,
+        insert into kg_entity (tenant_id, graph_id , name , type , description , source_id , source_type , confidence , audit_status , status ,
                                delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values (#{graphId} , #{name} , #{type} , #{description} , #{sourceId} , #{sourceType} , #{confidence} , #{auditStatus} , #{status} ,
+        values (#{tenantId}, #{graphId} , #{name} , #{type} , #{description} , #{sourceId} , #{sourceType} , #{confidence} , #{auditStatus} , #{status} ,
                 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 

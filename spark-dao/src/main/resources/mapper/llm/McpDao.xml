@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.llm.McpDao" >
     <sql id="allColumnList" >
-        id , name , transport , provider_id , command , args , url , env , timeout , description , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , tenant_id, name , transport , provider_id , command , args , url , env , timeout , description , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="searchCondition">
@@ -16,8 +16,8 @@
             </foreach>
             )
         </if>
-        <if test="deleteFlag != null and id == null and ids == null">
-            and delete_flag = #{deleteFlag}
+        <if test="tenantId != null">
+            and tenant_id = #{tenantId}
         </if>
         <if test="status != null">
             and status = #{status}
@@ -30,6 +30,9 @@
         </if>
         <if test="name != null">
             and name like concat('%', #{name}, '%')
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
         </if>
     </sql>
 
@@ -47,8 +50,8 @@
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into llm_mcp (name , transport , provider_id , command , args , url , env , timeout , description , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values (#{name} , #{transport} , #{providerId} , #{command} , #{args} , #{url} , #{env} , #{timeout} , #{description} , #{status} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into llm_mcp (tenant_id, name , transport , provider_id , command , args , url , env , timeout , description , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{tenantId}, #{name} , #{transport} , #{providerId} , #{command} , #{args} , #{url} , #{env} , #{timeout} , #{description} , #{status} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">

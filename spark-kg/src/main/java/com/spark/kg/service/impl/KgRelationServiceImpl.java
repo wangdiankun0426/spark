@@ -13,7 +13,7 @@ import com.spark.common.bean.kg.result.KgGraphResult;
 import com.spark.common.bean.kg.result.KgRelationResult;
 import com.spark.common.bean.kg.vo.KgRelationVO;
 import com.spark.config.aspectj.annotation.LogPrint;
-import com.spark.config.aspectj.annotation.OperateLog;
+import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.kg.KgEntityDao;
 import com.spark.dao.kg.KgGraphDao;
 import com.spark.dao.kg.KgRelationDao;
@@ -69,7 +69,7 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
      * @return 新增结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KG_RELATION_INSERT)
+    @LogOperate(operateType = OperateTypeEnum.KG_RELATION_INSERT)
     public ResultData<Void> createKgRelation(KgRelationVO kgRelationVO) {
         ResultData<Void> result = new ResultData<>();
         if (kgRelationVO == null || kgRelationVO.getGraphId() == null || kgRelationVO.getHeadEntityId() == null
@@ -103,32 +103,32 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        KgRelation kgRelation = new KgRelation();
-        BeanUtil.copyProperties(kgRelationVO, kgRelation);
-        if (kgRelation.getWeight() == null) {
-            kgRelation.setWeight(1.0);
+        KgRelation relation = new KgRelation();
+        BeanUtil.copyProperties(kgRelationVO, relation);
+        if (relation.getWeight() == null) {
+            relation.setWeight(1.0);
         }
-        if (kgRelation.getStatus() == null) {
-            kgRelation.setStatus(StatusEnum.NORMAL.getValue());
+        if (relation.getStatus() == null) {
+            relation.setStatus(StatusEnum.NORMAL.getValue());
         }
-        if (kgRelation.getSourceId() == null) {
-            kgRelation.setSourceId(SessionHolder.getCurrentUserId());
+        if (relation.getSourceId() == null) {
+            relation.setSourceId(SessionHolder.getCurrentUserId());
         }
-        int count = kgRelationDao.insertDB(kgRelation);
+        int count = kgRelationDao.insertDB(relation);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
-        Long id = kgRelation.getId();
+        Long id = relation.getId();
         // 同步写入 Neo4j 边
         try {
             RelationEdge edge = new RelationEdge();
             edge.setId(id);
-            edge.setGraphId(kgRelation.getGraphId());
-            edge.setHeadEntityId(kgRelation.getHeadEntityId());
-            edge.setTailEntityId(kgRelation.getTailEntityId());
-            edge.setRelationType(kgRelation.getRelationType());
-            edge.setWeight(kgRelation.getWeight());
+            edge.setGraphId(relation.getGraphId());
+            edge.setHeadEntityId(relation.getHeadEntityId());
+            edge.setTailEntityId(relation.getTailEntityId());
+            edge.setRelationType(relation.getRelationType());
+            edge.setWeight(relation.getWeight());
             graphStore.upsertRelation(edge);
         } catch (Exception e) {
             logger.error("createKgRelation graphStore error, id={}", id, e);
@@ -144,7 +144,7 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
      * @return 修改结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KG_RELATION_UPDATE)
+    @LogOperate(operateType = OperateTypeEnum.KG_RELATION_UPDATE)
     public ResultData<Void> updateKgRelation(KgRelationVO kgRelationVO) {
         ResultData<Void> result = new ResultData<>();
         if (kgRelationVO == null || kgRelationVO.getId() == null) {
@@ -198,7 +198,7 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
      * @return 删除结果
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KG_RELATION_DELETE)
+    @LogOperate(operateType = OperateTypeEnum.KG_RELATION_DELETE)
     public ResultData<Void> deleteKgRelation(KgRelationVO kgRelationVO) {
         ResultData<Void> result = new ResultData<>();
         if (kgRelationVO == null || kgRelationVO.getId() == null) {
@@ -241,6 +241,7 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
         if (query == null) {
             query = new KgRelationQuery();
         }
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<KgRelationResult> pageResult = super.pageList(query);
         result.setData(pageResult);
         result.setCode(ResultData.OK);
@@ -253,7 +254,7 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
      * @return 详情
      */
     @Override
-    @OperateLog(operateType = OperateTypeEnum.KG_RELATION_DETAIL)
+    @LogOperate(operateType = OperateTypeEnum.KG_RELATION_DETAIL)
     public ResultData<KgRelationResult> queryKgRelationDetail(KgRelationQuery query) {
         ResultData<KgRelationResult> result = new ResultData<>();
         if (query == null || query.getId() == null) {
