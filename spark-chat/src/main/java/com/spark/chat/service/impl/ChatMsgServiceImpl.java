@@ -29,9 +29,11 @@ import com.spark.dao.llm.AgentDao;
 import com.spark.llm.model.ModelFactory;
 import com.spark.manage.BaseService;
 import com.spark.chat.service.IChatMsgService;
+import com.spark.chat.service.IChatSpaceService;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.JsonUtil;
 import com.spark.common.utils.StringUtil;
+import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.StreamingChatModel;
@@ -67,6 +69,7 @@ import static java.util.stream.Collectors.toList;
 @Service
 public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult> implements IChatMsgService {
     private final static Logger logger = LoggerFactory.getLogger(ChatMsgServiceImpl.class);
+    private final static int MODEL_HISTORY_WINDOW = 20;
     @Autowired
     private ChatSpaceDao chatSpaceDao;
     @Autowired
@@ -83,6 +86,8 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
     private SearchKnowledge searchKnowledge;
     @Autowired
     private ChatMsgAttDao chatMsgAttDao;
+    @Autowired
+    private IChatSpaceService chatSpaceService;
 
     /**
      * 创建聊天消息
@@ -145,6 +150,8 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         chatMsg.setSenderId(chatMsgVO.getReceiverId());
         chatMsg.setReceiverId(chatMsgVO.getSenderId());
         chatMsg.setModelId(agentResult.getChatModelId());
+        chatMsg.setSignStatus(ChatMsgStatusEnum.OK.getValue());
+        chatMsg.setReadStatus(ChatMsgStatusEnum.OK.getValue());
         chatMsg.setCreatedBy(chatMsgVO.getReceiverId());
         chatMsg.setUpdatedBy(chatMsgVO.getReceiverId());
         chatMsg.setCreatedDt(new Timestamp(System.currentTimeMillis()));
@@ -154,6 +161,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         StringBuilder fullAnswer = new StringBuilder();
         IAgent agent = agentFactory.build(chatMsgVO.getReceiverId());
         String question = chatMsgVO.getMessage();
+        chatSpaceService.fillTitleIfBlank(chatMsgVO.getSpaceId(), question, chatMsgVO.getSenderId());
         agent.streamChat(chatMsgVO.getSpaceId(), question)
             .beforeToolExecution(beforeTool -> {
                 // 工具调用前：通知前端正在调用哪个工具
@@ -239,13 +247,16 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         chatMsg.setSpaceId(chatMsgVO.getSpaceId());
         chatMsg.setSenderId(chatMsgVO.getReceiverId());
         chatMsg.setReceiverId(chatMsgVO.getSenderId());
+        chatMsg.setSignStatus(ChatMsgStatusEnum.OK.getValue());
+        chatMsg.setReadStatus(ChatMsgStatusEnum.OK.getValue());
         chatMsg.setCreatedBy(chatMsgVO.getReceiverId());
         chatMsg.setUpdatedBy(chatMsgVO.getReceiverId());
 
+        String question = chatMsgVO.getMessage();
+        chatSpaceService.fillTitleIfBlank(chatMsgVO.getSpaceId(), question, chatMsgVO.getSenderId());
         StringBuilder fullAnswer = new StringBuilder();
         StreamingChatModel streamingChatModel = modelFactory.getStreamingChatModel(modelResult.getId());
-        String question = chatMsgVO.getMessage();
-        List<ChatMessage> messages = List.of(UserMessage.from(question));
+        List<ChatMessage> messages = this.buildModelContextMessages(chatMsgVO);
         Flux.<String> create(sink -> {
             try {
                 streamingChatModel.chat(messages, new StreamingChatResponseHandler() {
@@ -297,6 +308,62 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
             }
             logger.error("llm chat error", throwable);
         }).subscribe();
+    }
+
+    /**
+     * 构造模型对话的多轮上下文消息
+     * @param chatMsgVO 聊天消息
+     * @return 上下文消息列表
+     */
+    private List<ChatMessage> buildModelContextMessages(ChatMsgVO chatMsgVO) {
+        List<ChatMessage> messages = new ArrayList<>();
+        ChatMsgQuery historyQuery = new ChatMsgQuery();
+        historyQuery.setSpaceId(chatMsgVO.getSpaceId());
+        historyQuery.setPage(false);
+        List<ChatMsgResult> historyList = chatMsgDao.queryChatMsgList(historyQuery);
+        List<ChatMsgResult> validList = this.excludeCurrentQuestion(historyList, chatMsgVO);
+        if (CollectionUtil.isEmpty(validList)) {
+            return messages;
+        }
+        int fromIndex = Math.max(0, validList.size() - MODEL_HISTORY_WINDOW);
+        List<ChatMsgResult> windowList = validList.subList(fromIndex, validList.size());
+        for (ChatMsgResult item : windowList) {
+            if (StringUtil.isBlank(item.getMessage())) {
+                continue;
+            }
+            boolean isUserMsg = chatMsgVO.getSenderId().equals(item.getSenderId());
+            if (isUserMsg) {
+                messages.add(UserMessage.from(item.getMessage()));
+            } else {
+                messages.add(AiMessage.from(item.getMessage()));
+            }
+        }
+        return messages;
+    }
+
+    /**
+     * 剔除本次提问，提问在调用本方法前已落库并位于历史末尾
+     * @param historyList 历史消息
+     * @param chatMsgVO 聊天消息
+     * @return 剔除后的历史消息
+     */
+    private List<ChatMsgResult> excludeCurrentQuestion(List<ChatMsgResult> historyList, ChatMsgVO chatMsgVO) {
+        List<ChatMsgResult> result = new ArrayList<>();
+        if (CollectionUtil.isEmpty(historyList)) {
+            return result;
+        }
+        result.addAll(historyList);
+        ChatMsgResult lastMsg = result.get(result.size() - 1);
+        if (chatMsgVO.getId() != null && chatMsgVO.getId().equals(lastMsg.getId())) {
+            result.remove(result.size() - 1);
+            return result;
+        }
+        boolean sameSender = chatMsgVO.getSenderId().equals(lastMsg.getSenderId());
+        boolean sameMessage = chatMsgVO.getMessage().equals(lastMsg.getMessage());
+        if (sameSender && sameMessage) {
+            result.remove(result.size() - 1);
+        }
+        return result;
     }
 
     /**

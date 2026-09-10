@@ -76,8 +76,8 @@
         <up-button v-if="hasPermission(1)" type="primary" size="small" text="通过" @click="openApprovalDialog(3)"/>
         <up-button v-if="hasPermission(2)" type="error" size="small" text="驳回" @click="openApprovalDialog(4)"/>
         <up-button v-if="hasPermission(32)" type="warning" size="small" text="加签" @click="openUserPicker('addSign')"/>
-        <up-button v-if="hasPermission(16)" type="info" size="small" plain text="转办" @click="openUserPicker('transfer')"/>
-        <up-button v-if="hasPermission(64)" type="info" size="small" text="抄送" @click="openUserPicker('copy')"/>
+        <up-button v-if="hasPermission(16)" type="info" plain color="#722ed1" size="small" text="转办" @click="openUserPicker('transfer')"/>
+        <up-button v-if="hasPermission(64)" type="info" plain color="#13c2c2" size="small" text="抄送" @click="openUserPicker('copy')"/>
       </template>
       <!-- 我的申请：催办/撤回 -->
       <template v-else-if="type === 1">
@@ -520,9 +520,12 @@ const handleUserConfirm = useDebounceFn((users) => {
 .detail-footer {
   display: flex;
   gap: 10px;
-  padding: 10px 12px;
+  margin: 8px 12px;
+  padding: 12px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
   background-color: #ffffff;
-  border-top: 1px solid #ebeef5;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(23, 43, 77, 0.12);
 
   :deep(.u-button) {
     flex: 1;

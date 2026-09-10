@@ -12,3 +12,14 @@ export function createChatSpaceAPI(data) {
     params: data
   })
 }
+
+/**
+ * 创建AI会话
+ */
+export function createAiChatSpaceAPI(data) {
+  return request({
+    url: '/chat/space/aiCreate',
+    method: 'post',
+    params: data
+  })
+}

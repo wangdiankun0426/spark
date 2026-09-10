@@ -63,8 +63,8 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
         role.setName(roleVO.getName());
         role.setDataScope(roleVO.getDataScope());
         role.setStatus(roleVO.getStatus());
-        String menuIds = this.buildMenuIds(roleVO);
-        role.setMenuIds(menuIds);
+        String menuCodes = this.buildMenuCodes(roleVO);
+        role.setMenuCodes(menuCodes);
         role.setId(roleId);
         int count = roleDao.insertDB(role);
         if (count < 1) {
@@ -117,8 +117,8 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
         role.setName(roleVO.getName());
         role.setDataScope(roleVO.getDataScope());
         role.setStatus(roleVO.getStatus());
-        String menuIds = this.buildMenuIds(roleVO);
-        role.setMenuIds(menuIds);
+        String menuCodes = this.buildMenuCodes(roleVO);
+        role.setMenuCodes(menuCodes);
         int count = roleDao.updateDBById(role);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
@@ -171,19 +171,19 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
     }
 
     /**
-     * 拼接角色菜单ID为逗号字符串
+     * 拼接角色菜单标识码为逗号字符串
      * @param roleVO 角色参数
-     * @return 逗号分隔的菜单ID字符串
+     * @return 逗号分隔的菜单标识码字符串
      */
-    private String buildMenuIds(RoleVO roleVO) {
+    private String buildMenuCodes(RoleVO roleVO) {
         if (roleVO == null) {
             return null;
         }
-        List<Long> menuIdList = roleVO.getMenuIds();
-        if (menuIdList == null || menuIdList.isEmpty()) {
+        List<String> menuCodeList = roleVO.getMenuCodes();
+        if (menuCodeList == null || menuCodeList.isEmpty()) {
             return null;
         }
-        return StringUtil.join(menuIdList, ",");
+        return StringUtil.join(menuCodeList, ",");
     }
 
     /**

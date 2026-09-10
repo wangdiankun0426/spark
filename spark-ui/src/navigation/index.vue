@@ -2,40 +2,28 @@
   <div>
     <el-menu :default-active="defaultActive" router mode="horizontal">
       <div class="logo-box">
-        <img src="../assets/images/logo.png" width="46" height="40"/>
+        <img src="../assets/images/logo.png" width="46" height="40" @click="$router.push('/home')"/>
       </div>
-      <el-menu-item v-if="hasMenu(10)" index="/home">
-        <el-icon><DataAnalysis /></el-icon>
-        <span>工作台</span>
-      </el-menu-item>
-      <el-menu-item v-if="hasMenu(20)" index="/llm">
+      <el-menu-item v-if="hasMenu(MODULE_CODES.LLM)" index="/llm">
         <el-icon><Ai /></el-icon>
-        <span>AI应用</span>
+        <span>AI管理</span>
       </el-menu-item>
-      <el-menu-item v-if="hasMenu(30)" index="/kb">
-        <el-icon><FolderOpened /></el-icon>
-        <span>知识库</span>
-      </el-menu-item>
-      <el-menu-item v-if="hasMenu(40)" index="/kg">
-        <el-icon><GraphV2 /></el-icon>
-        <span>知识图谱</span>
-      </el-menu-item>
-      <el-menu-item v-if="hasMenu(50)" index="/flow">
+      <el-menu-item v-if="hasMenu(MODULE_CODES.BUS)" index="/bus">
         <el-icon><Connection /></el-icon>
-        <span>流程中心</span>
+        <span>业务管理</span>
       </el-menu-item>
-      <el-menu-item index="/manage" v-if="isOrgAdmin() && !isDesktop">
+      <el-menu-item index="/org" v-if="isOrgAdmin()">
         <el-icon><Setting /></el-icon>
-        <span>管理后台</span>
+        <span>组织管理</span>
       </el-menu-item>
-      <el-menu-item index="/siteManage" v-if="isSysAdmin() && !isDesktop">
+      <el-menu-item index="/site" v-if="isSysAdmin()">
         <el-icon><Setting /></el-icon>
         <span>站点管理</span>
       </el-menu-item>
 
       <div class="tool-box">
         <!-- 主题切换 -->
-        <div v-if="hasMenu(101)" class="tool-item"
+        <div class="tool-item"
              :title="currentTheme === 'light' ? '切换为深色主题' : '切换为浅色主题'"
              @click="toggleTheme"
         >
@@ -44,49 +32,8 @@
             <Moon v-else />
           </el-icon>
         </div>
-        <!-- 搜索快捷功能 -->
-        <el-popover
-            v-if="hasMenu(102)"
-            v-model:visible="searchVisible"
-            trigger="click"
-            placement="bottom"
-            :width="320"
-            popper-class="nav-search-popover"
-        >
-          <template #reference>
-            <div class="tool-item" :class="{ 'is-active': searchVisible }" title="快捷功能">
-              <el-icon style="font-size: 20px"><SearchV2 /></el-icon>
-            </div>
-          </template>
-          <div class="nav-search-panel">
-            <el-input
-                v-model="searchKeyword"
-                placeholder="搜索快捷功能"
-                clearable
-                :prefix-icon="Search"
-                ref="searchInputRef"
-            />
-            <div class="nav-search-list">
-              <div
-                  v-for="item in filteredShortcuts"
-                  :key="item.path"
-                  class="nav-search-item"
-                  @click="handleSelectShortcut(item)"
-              >
-                <el-icon class="nav-search-icon"><component :is="item.icon" /></el-icon>
-                <span class="nav-search-name">{{ item.name }}</span>
-              </div>
-              <el-empty v-if="filteredShortcuts.length === 0" description="无匹配项" :image-size="50"/>
-            </div>
-          </div>
-        </el-popover>
-        <!-- 通讯录 -->
-        <div v-if="hasMenu(103)" class="tool-item" @click="openContactDrawer" title="通讯录">
-          <el-icon style="font-size: 20px"><ContactList /></el-icon>
-        </div>
         <!-- 消息 -->
         <el-popover
-            v-if="hasMenu(104)"
             trigger="click"
             placement="bottom"
             :width="360"
@@ -168,9 +115,6 @@
       </div>
     </el-menu>
 
-    <!--通讯录抽屉-->
-    <contacts v-model="contactVisible" />
-
     <!--个人中心弹窗-->
     <user-profile v-model="userInfoVisible" />
 
@@ -185,27 +129,16 @@ import {queryMyMessageListAPI} from "@/api/manage/sys/message.js";
 import {noticeListAPI} from "@/api/manage/sys/notice.js";
 import {ElMessageBox} from "element-plus";
 import {ref, computed, nextTick, watch} from "vue";
-import {ArrowDown, DataAnalysis, FolderOpened, Connection, Search, Setting, Moon, Sunny, Right} from "@element-plus/icons-vue";
+import {ArrowDown, Connection, Setting, Moon, Sunny, Right} from "@element-plus/icons-vue";
 import { useRouter, useRoute } from 'vue-router';
 import {useStore} from "vuex";
 import {getTheme, applyTheme, setTheme} from '@/utils/themeUtil';
-import {hasMenu} from '@/utils/menuUtil.js';
+import {hasMenu, MODULE_CODES} from '@/utils/menuUtil.js';
 import UserAvatar from '@/components/UserAvatar';
 import UserProfile from '@/components/UserProfile';
 import TenantSwitch from '@/components/TenantSwitch';
-import Contacts from '@/components/Chat/contacts.vue';
-import ContactList from "@/assets/icons/contactList.vue";
-import GraphV2 from "@/assets/icons/graphV2.vue";
 import Ai from "@/assets/icons/ai.vue";
-import FlowApplicationIcon from '@/assets/icons/flowApplication.vue';
-import MyDoneIcon from '@/assets/icons/myDone.vue';
-import KnowledgeIcon from '@/assets/icons/knowledge.vue';
-import GraphIcon from '@/assets/icons/graph.vue';
-import AgentIcon from '@/assets/icons/agent.vue';
-import ModelMarketIcon from '@/assets/icons/modelMarket.vue';
 import Bell from "@/assets/icons/bell.vue";
-import SearchV2 from "@/assets/icons/searchV2.vue";
-import {isDesktop} from "@/utils/desktop.js";
 import {isOrgAdmin, isSysAdmin} from "@/utils/utils.js";
 const router = useRouter();
 const route = useRoute();
@@ -230,16 +163,6 @@ const userInfoVisible = ref(false);
 // 切换租户抽屉显隐
 const tenantSwitchVisible = ref(false);
 
-// 通讯录抽屉显隐
-const contactVisible = ref(false);
-
-/**
- * 打开通讯录抽屉
- */
-function openContactDrawer() {
-  contactVisible.value = true;
-}
-
 /**
  * 打开切换租户抽屉
  */
@@ -251,27 +174,6 @@ function openTenantSwitch() {
 const searchVisible = ref(false);
 const searchKeyword = ref('');
 const searchInputRef = ref(null);
-
-// 快捷功能列表
-const shortcutList = ref([
-  { name: '流程申请', path: '/flow/application', icon: FlowApplicationIcon, menuId: 501 },
-  { name: '我的待办', path: '/flow/myTodo', icon: MyDoneIcon, menuId: 503 },
-  { name: '知识库', path: '/kb/knowledge', icon: KnowledgeIcon, menuId: 301 },
-  { name: '知识图谱', path: '/kg/graph', icon: GraphIcon, menuId: 401 },
-  { name: 'Agent', path: '/llm/agent', icon: AgentIcon, menuId: 201 },
-  { name: '模型市场', path: '/llm/modelMarket', icon: ModelMarketIcon, menuId: 203 }
-]);
-
-// 按菜单权限与关键字过滤快捷功能
-const filteredShortcuts = computed(() => {
-  const kw = searchKeyword.value.trim();
-  return shortcutList.value.filter(item => {
-    if (!hasMenu(item.menuId)) {
-      return false;
-    }
-    return !kw || item.name.includes(kw);
-  });
-});
 
 /**
  * 选中快捷功能后跳转
@@ -293,17 +195,6 @@ watch(searchVisible, (val) => {
     });
   }
 });
-
-/**
- * 拉取当前登录用户详情并同步至 store
- */
-function getUserDetail() {
-  getSessionAPI().then(res => {
-    store.dispatch('user/setUserInfo', { userInfo: res.data })
-  })
-}
-
-getUserDetail()
 
 /**
  * 打开个人中心弹窗
@@ -410,10 +301,10 @@ function handleMessageClick(item) {
   if (refType === 12) {
     if (item.type === 2 || item.type === 5) {
       // 待办/催办通知 -> 我的待办
-      router.push({ path: '/flow/myTodo', query: { id: refId } }).catch(() => {});
+      router.push({ path: '/home/flow/myTodo', query: { id: refId } }).catch(() => {});
     } else if (item.type === 3 || item.type === 4) {
       // 完结/驳回通知 -> 我的申请
-      router.push({ path: '/flow/myApplication', query: { id: refId } }).catch(() => {});
+      router.push({ path: '/home/flow/myApplication', query: { id: refId } }).catch(() => {});
     }
   }
 }
@@ -444,6 +335,7 @@ function handleViewNotice(row) {
   height: 100%;
   width: 60px;
   overflow: hidden;
+  cursor: pointer;
 }
 // 一级菜单项基础样式
 .el-menu-item {

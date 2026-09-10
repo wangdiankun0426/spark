@@ -28,4 +28,9 @@ public class ChatSpaceQuery extends BaseQuery {
      * 接收人id
      */
     private Long receiverId;
+
+    /**
+     * 会话类型
+     */
+    private Integer spaceType;
 }

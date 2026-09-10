@@ -172,11 +172,11 @@ public abstract class BaseService<Q extends BaseQuery, R extends BaseResult> {
         }
         Map<Long, String> userNameMap = userList.stream().collect(Collectors.toMap(UserResult::getId, UserResult::getName));
         for (BaseResult baseResult : list) {
-            Long createdBy = baseResult.getCreatedBy();
-            if (!userNameMap.containsKey(createdBy)) {
+            Long updatedBy = baseResult.getUpdatedBy();
+            if (!userNameMap.containsKey(updatedBy)) {
                 continue;
             }
-            baseResult.setUpdatedByName(userNameMap.get(createdBy));
+            baseResult.setUpdatedByName(userNameMap.get(updatedBy));
         }
     }
 

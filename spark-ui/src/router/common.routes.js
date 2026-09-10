@@ -1,11 +1,10 @@
-// router/modules/common.routes.js
 import login from '@/pages/login/login.vue'
 import oauthLogin from '@/pages/login/oauthLogin.vue'
 import register from '@/pages/login/register.vue'
 import formDesigner from '@/views/formDesigner/index.vue'
 import noticeEdit from '@/views/notice/edit.vue'
 import noticeView from '@/views/notice/view.vue'
-import flowDesigner from '@/views/flow/designer/index.vue'
+import flowDesigner from '@/views/flowDesigner/index.vue'
 import workflowIndex from "@/views/workflowDesigner/index.vue";
 
 export default [
@@ -44,7 +43,6 @@ export default [
         component: flowDesigner,
         meta: {
             title: '流程设计器',
-            menuId: 5012
         }
     },
     {
@@ -53,7 +51,6 @@ export default [
         component: workflowIndex,
         meta: {
             title: '工作流设计器',
-            menuId: 2022
         }
     },
     {

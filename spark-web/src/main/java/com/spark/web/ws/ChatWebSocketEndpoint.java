@@ -126,7 +126,9 @@ public class ChatWebSocketEndpoint {
             logger.info("ws create fail");
             return;
         }
-        dataContent.setChatMsg(createData.getData());
+        ChatMsg createChatMsg = createData.getData();
+        chatMsgVO.setId(createChatMsg.getId());
+        dataContent.setChatMsg(createChatMsg);
         // 发送人和接收人一致 则不需要发送
         if (receiverId.equals(senderId)) {
             return;

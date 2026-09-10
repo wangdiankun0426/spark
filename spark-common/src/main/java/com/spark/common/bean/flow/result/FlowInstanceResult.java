@@ -117,4 +117,14 @@ public class FlowInstanceResult extends BaseResult {
      * 节点权限
      */
     private Integer permission;
+
+    /**
+     * 流程类型
+     */
+    private Integer type;
+
+    /**
+     * 流程类型
+     */
+    private String typeName;
 }

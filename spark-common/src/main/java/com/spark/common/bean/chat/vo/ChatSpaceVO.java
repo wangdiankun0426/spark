@@ -29,4 +29,14 @@ public class ChatSpaceVO extends BaseEntity {
      * 接收人id
      */
     private Long receiverId;
+
+    /**
+     * 会话类型
+     */
+    private Integer spaceType;
+
+    /**
+     * 会话标题
+     */
+    private String title;
 }

@@ -13,6 +13,7 @@ import com.spark.dao.sys.UserDao;
 import com.spark.dao.chat.ChatMsgDao;
 import com.spark.dao.chat.ChatSpaceDao;
 import com.spark.common.enums.ChatMsgStatusEnum;
+import com.spark.common.enums.ChatSpaceTypeEnum;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.chat.service.IChatUserService;
 import com.spark.common.utils.CollectionUtil;
@@ -72,6 +73,7 @@ public class ChatUserServiceImpl implements IChatUserService {
         });
         ChatSpaceQuery spaceQuery = new ChatSpaceQuery();
         spaceQuery.setSenderId(SessionHolder.getCurrentUserId());
+        spaceQuery.setSpaceType(ChatSpaceTypeEnum.USER.getValue());
         List<ChatSpaceResult> spaceList = chatSpaceDao.queryChatSpaceList(spaceQuery);
         if (CollectionUtil.isEmpty(spaceList)) {
             result.setData(list);

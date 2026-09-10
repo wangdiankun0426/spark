@@ -82,4 +82,10 @@
         <include refid="condition"/>
     </select>
 
+    <update id="deleteBySpaceId">
+        update chat_msg
+        set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = now()
+        where space_id = #{spaceId}
+    </update>
+
 </mapper>

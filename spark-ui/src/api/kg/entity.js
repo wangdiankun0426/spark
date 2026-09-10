@@ -64,29 +64,3 @@ export function deleteEntityAPI(data) {
         params: data
     })
 }
-
-/**
- * 审核实体
- * @param {Object} data { entityId, auditStatus }
- * @returns {Promise}
- */
-export function auditEntityAPI(data) {
-    return request({
-        url: '/kg/entity/audit',
-        method: 'post',
-        params: data
-    })
-}
-
-/**
- * 批量审核实体
- * @param {Object} data { entityIds, auditStatus }
- * @returns {Promise}
- */
-export function batchAuditEntityAPI(data) {
-    return request({
-        url: '/kg/entity/batchAudit',
-        method: 'post',
-        params: data
-    })
-}

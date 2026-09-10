@@ -44,6 +44,10 @@
             <text class="instance-status" :class="'status-' + item.status">{{ item.statusName }}</text>
           </view>
           <view class="card-info-row">
+            <text class="info-label">流程类型</text>
+            <text class="info-value">{{ item.typeName }}</text>
+          </view>
+          <view class="card-info-row">
             <text class="info-label">紧急程度</text>
             <text class="info-value">{{ item.levelName }}</text>
           </view>
@@ -73,8 +77,8 @@
 </template>
 <script setup>
 import {ref, computed} from "vue";
-import {onShow} from "@dcloudio/uni-app";
-import {MENU_IDS, hasMenu, visibleTabs, checkMenuAccess} from "@/utils/menuUtil";
+import {onLoad} from "@dcloudio/uni-app";
+import {visibleTabs} from "@/utils/menuUtil";
 import {
   pageMyApplicationListAPI,
   pageMyTodoListAPI,
@@ -86,25 +90,36 @@ const active = ref("flow");
 
 // 按菜单权限过滤后的底部导航项
 const tabBarItems = computed(() => visibleTabs());
-// 流程中心页签配置
-const FLOW_TAB_CONFIGS = [
-  {name: '我的申请', menuId: MENU_IDS.FLOW_MY_APPLY, api: pageMyApplicationListAPI, type: 1},
-  {name: '我的待办', menuId: MENU_IDS.FLOW_MY_TODO, api: pageMyTodoListAPI, type: 3},
-  {name: '我的已办', menuId: MENU_IDS.FLOW_MY_DONE, api: pageMyDoneListAPI, type: 4},
-  {name: '抄送给我', menuId: MENU_IDS.FLOW_COPY_TO_ME, api: pageCopyMyListAPI, type: 5}
+// 流程中心页签
+const visibleTabList = [
+  {name: '我的申请', api: pageMyApplicationListAPI, type: 1},
+  {name: '我的待办', api: pageMyTodoListAPI, type: 3},
+  {name: '我的已办', api: pageMyDoneListAPI, type: 4},
+  {name: '抄送给我', api: pageCopyMyListAPI, type: 5}
 ];
-// 当前用户可见页签
-const visibleTabList = computed(() => FLOW_TAB_CONFIGS.filter(cfg => hasMenu(cfg.menuId)));
-const tabList = computed(() => visibleTabList.value.map(cfg => ({name: cfg.name})));
+const tabList = computed(() => visibleTabList.map(cfg => ({name: cfg.name})));
 const tabIndex = ref(0);
 // 当前激活页签配置
-const activeTab = computed(() => visibleTabList.value[tabIndex.value]);
+const activeTab = computed(() => visibleTabList[tabIndex.value]);
 const isCopyTab = computed(() => (activeTab.value ? activeTab.value.type === 5 : false));
 const instanceList = ref([]);
 const loading = ref(false);
 const loadStatus = ref('loadmore');
 const query = ref({pageNo: 1, pageSize: 15});
 const total = ref(0);
+
+/**
+ * 页面加载：支持从首页带 tab 参数直达指定页签（下标 0 申请 / 1 待办 / 2 已办 / 3 抄送），
+ * 同时补上首屏列表加载（原先只有切换页签才请求，首次进入列表是空的）
+ * @param options 页面参数
+ */
+onLoad(options => {
+  const index = Number(options && options.tab);
+  if (!Number.isNaN(index) && index >= 0 && index < visibleTabList.length) {
+    tabIndex.value = index;
+  }
+  handleGetInstanceList();
+});
 
 /**
  * 查询当前页签列表
@@ -155,24 +170,6 @@ function handleLoadMore() {
   query.value.pageNo = query.value.pageNo + 1;
   handleGetInstanceList();
 }
-
-/**
- * 页面显示时校验流程中心菜单权限并刷新当前页签
- */
-onShow(() => {
-  checkMenuAccess(MENU_IDS.FLOW).then(allowed => {
-    if (!allowed) {
-      return;
-    }
-    // 页签下标越界（可能因权限调整导致页签减少）时回到第一个可见页签
-    if (tabIndex.value >= visibleTabList.value.length) {
-      tabIndex.value = 0;
-    }
-    query.value.pageNo = 1;
-    instanceList.value = [];
-    handleGetInstanceList();
-  });
-});
 
 /**
  * 点击流程实例进入详情
@@ -249,6 +246,7 @@ function handleOnTabChange(index) {
   border-radius: 8px;
   padding: 12px;
   margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(23, 43, 77, 0.08);
   display: flex;
   flex-direction: column;
   gap: 6px;

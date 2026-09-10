@@ -1,11 +1,33 @@
 <template>
   <div class="login-box safe-area-page">
-    <div class="login-header">
-      <text class="login-title">登录</text><br>
-      <text class="login-subtitle">(欢迎使用星火云应用平台)</text>
-    </div>
-    <div class="login-middle">
-      <div class="login-middle-form">
+    <!-- 科技风背景装饰层：纯 CSS 实现，规避小程序不支持的 SVG / blur / mask -->
+    <view class="login-bg">
+      <view class="bg-grid"></view>
+      <view class="bg-blob bg-blob-1"></view>
+      <view class="bg-blob bg-blob-2"></view>
+      <view class="bg-orbit bg-orbit-1"></view>
+      <view class="bg-orbit bg-orbit-2"></view>
+      <view class="bg-dot bg-dot-1"></view>
+      <view class="bg-dot bg-dot-2"></view>
+      <view class="bg-dot bg-dot-3"></view>
+    </view>
+
+    <!-- 品牌区 -->
+    <view class="login-brand">
+      <text class="login-title">星火云应用平台</text>
+      <view class="brand-bar"></view>
+      <text class="login-subtitle">欢迎使用 — 星火云应用平台</text>
+    </view>
+
+    <!-- 登录表单区 -->
+    <view class="login-card">
+      <view class="login-card-head">
+        <view class="login-card-bar"></view>
+        <text class="login-card-title">{{ loginForm.loginType === 1 ? '密码登录' : (loginForm.loginType === 2 ? '手机号登录' : '邮箱登录') }}</text>
+      </view>
+      <!-- 表单区固定高度：密码登录 3 行、手机号/邮箱登录 2 行，
+           固定高度可避免切换登录方式时下方按钮与整页布局跳动 -->
+      <view class="login-form-body">
         <up-form labelWidth="60">
           <!--账号登录-->
           <div v-if = "loginForm.loginType === 1">
@@ -141,7 +163,7 @@
             </up-form-item>
           </div>
         </up-form>
-      </div>
+      </view>
       <div class="login-middle-btn">
         <up-button
             class="login-submit-btn"
@@ -152,35 +174,37 @@
           <text class="login-text">登 录</text>
         </up-button>
       </div>
-    </div>
+    </view>
 
-    <up-divider text="其他方式登录"  textColor="#0052cc"
-                lineColor="#0052cc"/>
+    <!-- 其他方式登录 -->
+    <view class="login-other">
+      <up-divider text="其他方式登录" textColor="#9296a5" lineColor="#d9e2f2"/>
 
-    <div class="login-type-icons">
-      <view class="login-type-icon-item" v-if="loginForm.loginType !== 1" @click="switchLoginType(1)">
-        <view class="icon-circle">
-          <up-icon name="lock" size="24" color="#0052cc"></up-icon>
+      <div class="login-type-icons">
+        <view class="login-type-icon-item" v-if="loginForm.loginType !== 1" @click="switchLoginType(1)">
+          <view class="icon-circle">
+            <up-icon name="lock" size="24" color="#004fc5"></up-icon>
+          </view>
         </view>
-      </view>
-      <view class="login-type-icon-item" v-if="loginForm.loginType !== 2" @click="switchLoginType(2)">
-        <view class="icon-circle">
-          <up-icon name="phone" size="24" color="#0052cc"></up-icon>
+        <view class="login-type-icon-item" v-if="loginForm.loginType !== 2" @click="switchLoginType(2)">
+          <view class="icon-circle">
+            <up-icon name="phone" size="24" color="#004fc5"></up-icon>
+          </view>
         </view>
-      </view>
-      <view class="login-type-icon-item" v-if="loginForm.loginType !== 3" @click="switchLoginType(3)">
-        <view class="icon-circle">
-          <up-icon name="email" size="24" color="#0052cc"></up-icon>
+        <view class="login-type-icon-item" v-if="loginForm.loginType !== 3" @click="switchLoginType(3)">
+          <view class="icon-circle">
+            <up-icon name="email" size="24" color="#004fc5"></up-icon>
+          </view>
         </view>
-      </view>
-      <!-- #ifdef MP-WEIXIN -->
-      <view class="login-type-icon-item" @click="wxQuickLogin">
-        <view class="icon-circle">
-          <up-icon name="weixin-fill" size="24" color="#07c160"></up-icon>
+        <!-- #ifdef MP-WEIXIN -->
+        <view class="login-type-icon-item" @click="wxQuickLogin">
+          <view class="icon-circle">
+            <up-icon name="weixin-fill" size="24" color="#07c160"></up-icon>
+          </view>
         </view>
-      </view>
-      <!-- #endif -->
-    </div>
+        <!-- #endif -->
+      </div>
+    </view>
     <!-- 版权说明 -->
     <view class="login-copyright">
       <text class="copyright-text">Copyright © 2024-2026 evancloud.top All Rights Reserved.</text>
@@ -369,39 +393,211 @@ function submitLoginForm() {
 </script>
 <style scoped lang="scss">
 .login-box {
-  padding: 0;
+  position: relative;
+  box-sizing: border-box;
+  padding: 0 48rpx;
   height: 100vh;
+  overflow-y: auto;
+  background-image: linear-gradient(160deg, $spark-color-bg-start 0%, $spark-color-bg-mid 55%, $spark-color-bg-end 100%);
 }
-.login-header {
-  padding-top: 200px;
-  padding-bottom:10px;
-  width: 90%;
-  margin: auto;
-}
-.login-middle {
-  width: 90%;
-  margin: auto;
+
+.login-bg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
   overflow: hidden;
+  pointer-events: none;
 }
-.login-middle-form {
-  padding: 5px 10px 5px 10px;
-  border-radius: 10px;
+
+.bg-grid {
+  position: absolute;
+  left: -10%;
+  top: -10%;
+  width: 120%;
+  height: 120%;
+  opacity: 0.7;
+  background-image:
+      linear-gradient(rgba(0, 79, 197, 0.06) 1rpx, transparent 1rpx),
+      linear-gradient(90deg, rgba(0, 79, 197, 0.06) 1rpx, transparent 1rpx);
+  background-size: 80rpx 80rpx;
 }
-.login-type-btn {
-  float: left;
-  margin-left: 10rpx;
+
+.bg-blob {
+  position: absolute;
+  border-radius: 50%;
+  animation: blobFloat 18s ease-in-out infinite alternate;
+}
+
+.bg-blob-1 {
+  width: 520rpx;
+  height: 520rpx;
+  left: -160rpx;
+  top: -140rpx;
+  background-image: radial-gradient(circle at 30% 30%, rgba(147, 197, 253, 0.55) 0%, rgba(191, 219, 254, 0.25) 45%, rgba(191, 219, 254, 0) 72%);
+}
+
+.bg-blob-2 {
+  width: 480rpx;
+  height: 480rpx;
+  right: -150rpx;
+  top: 700rpx;
+  background-image: radial-gradient(circle at 60% 40%, rgba(165, 243, 252, 0.5) 0%, rgba(205, 226, 252, 0.22) 45%, rgba(205, 226, 252, 0) 72%);
+  animation-delay: -6s;
+}
+
+@keyframes blobFloat {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30rpx, -24rpx) scale(1.08);
+  }
+  66% {
+    transform: translate(-24rpx, 20rpx) scale(0.95);
+  }
+  100% {
+    transform: translate(16rpx, -12rpx) scale(1.04);
+  }
+}
+
+.bg-orbit {
+  position: absolute;
+  border: 1rpx dashed rgba(0, 79, 197, 0.22);
+  border-radius: 50%;
+  animation: orbitSpin 30s linear infinite;
+}
+
+.bg-orbit-1 {
+  width: 360rpx;
+  height: 360rpx;
+  right: -120rpx;
+  top: -80rpx;
+}
+
+.bg-orbit-2 {
+  width: 240rpx;
+  height: 240rpx;
+  left: -80rpx;
+  bottom: 120rpx;
+  border-color: rgba(0, 150, 255, 0.18);
+  animation-direction: reverse;
+  animation-duration: 24s;
+}
+
+@keyframes orbitSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.bg-dot {
+  position: absolute;
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background-color: rgba(0, 120, 255, 0.45);
+  box-shadow: 0 0 16rpx rgba(0, 120, 255, 0.4);
+  animation: dotFloat 8s ease-in-out infinite alternate;
+}
+
+.bg-dot-1 {
+  left: 18%;
+  top: 20%;
+}
+
+.bg-dot-2 {
+  right: 16%;
+  top: 30%;
+  animation-delay: -3s;
+}
+
+.bg-dot-3 {
+  left: 30%;
+  bottom: 22%;
+  animation-delay: -6s;
+}
+
+@keyframes dotFloat {
+  0% {
+    transform: translateY(0);
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateY(-28rpx);
+    opacity: 1;
+  }
+}
+
+.login-brand {
+  position: relative;
+  z-index: 1;
+  padding-top: 300rpx;
+  padding-bottom: 56rpx;
 }
 
 .login-title {
-  font-size: 36px;
-  font-weight: bolder;
-  color: #0052cc;
+  display: block;
+  font-size: 52rpx;
+  font-weight: 700;
+  letter-spacing: 4rpx;
+  // 小程序不支持 background-clip: text，故以品牌色兜底
+  color: $spark-color-primary;
+  /* #ifdef H5 */
+  background-image: linear-gradient(90deg, #004fc5 0%, #0072e0 45%, #00b8d9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* #endif */
+}
+
+.brand-bar {
+  width: 96rpx;
+  height: 8rpx;
+  margin: 20rpx 0;
+  border-radius: 8rpx;
+  background-image: linear-gradient(90deg, #004fc5 0%, #00b8d9 100%);
 }
 
 .login-subtitle {
-  color: #3f78cd;
-  font-size: 18px;
-  font-weight: bolder;
+  display: block;
+  font-size: 26rpx;
+  color: $spark-color-text-secondary;
+  letter-spacing: 1rpx;
+}
+
+/* 登录表单区：直接落在背景上，不用白色卡片包裹 */
+.login-card {
+  position: relative;
+  z-index: 1;
+}
+
+.login-card-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.login-form-body {
+  min-height: 200px;
+}
+
+.login-card-bar {
+  width: 8rpx;
+  height: 32rpx;
+  margin-right: 14rpx;
+  border-radius: 8rpx;
+  background-image: linear-gradient(180deg, #004fc5, #00b8d9);
+}
+
+.login-card-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: $spark-color-text;
 }
 
 .code-input-wrap {
@@ -425,36 +621,53 @@ function submitLoginForm() {
   font-size: 18px;
 }
 
+.login-other {
+  position: relative;
+  z-index: 1;
+  margin-top: 40rpx;
+}
+
 .login-type-icons {
   display: flex;
+  justify-content: center;
+  margin-top: 16rpx;
 }
 
 .login-type-icon-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-left: 10px;
+  // 用 margin 代替 flex gap，兼容低版本小程序基础库
+  margin: 0 20rpx;
 }
 
 .icon-circle {
-  width: 35px;
-  height: 35px;
+  width: 84rpx;
+  height: 84rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #fff;
+  border-radius: 50%;
+  background-color: #ffffff;
+  border: 1rpx solid rgba(0, 79, 197, 0.12);
+  box-shadow: 0 6rpx 18rpx rgba(26, 111, 232, 0.1);
 }
 
 .login-middle-btn {
-  margin-top: 20px;
+  margin-top: 32rpx;
   overflow: hidden;
 }
 
 .login-submit-btn {
-  background-color: #0052cc;
-  height: 50px;
-  font-weight: bolder;
-  font-size: 20px;
+  height: 88rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  letter-spacing: 4rpx;
+  color: #ffffff;
+  border-radius: 12rpx;
+  background-color: $spark-color-primary;
+  background-image: linear-gradient(90deg, #004fc5 0%, #0072e0 100%);
+  box-shadow: 0 12rpx 28rpx rgba(0, 79, 197, 0.28);
 }
 
 .logout-text {
@@ -464,15 +677,15 @@ function submitLoginForm() {
 }
 
 .login-copyright {
-  position: fixed;
-  bottom: 20px;
-  left: 0;
-  right: 0;
+  position: relative;
+  z-index: 1;
+  margin-top: 40rpx;
+  padding-bottom: 40rpx;
   text-align: center;
 }
 
 .copyright-text {
-  font-size: 12px;
+  font-size: 22rpx;
   color: #909399;
 }
 </style>

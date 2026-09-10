@@ -64,7 +64,7 @@ public class DataScopeAspect {
         // 获得注解
         DataScope annotation = getAnnotation(joinPoint);
         if (annotation == null) {
-            logger.error("DataScopeAspect annotation is null");
+            logger.error("annotation is null");
             return;
         }
         String tableAlias = annotation.tableAlias();
@@ -74,6 +74,7 @@ public class DataScopeAspect {
             throw new BaseException(ErrorCodeEnum.NOT_LOGIN);
         }
         Integer dataScope = SessionHolder.getCurrentDataScop();
+        logger.info("dataScope={}", dataScope);
         StringBuilder sql = new StringBuilder();
         switch (DataScopeEnum.indexOf(dataScope)) {
             case UNKNOWN:
@@ -106,8 +107,8 @@ public class DataScopeAspect {
         if (StringUtil.isNotBlank(sql.toString())) {
             BaseQuery baseQuery = (BaseQuery) joinPoint.getArgs()[0];
             baseQuery.setDataScopeSQL(sql.toString());
+            logger.info("scope sql={}", sql);
         }
-        logger.info("DataScopeAspect sql={}", sql);
     }
 
     /**

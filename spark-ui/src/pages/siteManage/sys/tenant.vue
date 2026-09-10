@@ -155,10 +155,10 @@
 </template>
 
 <script setup>
-import {pageTenantListAPI, createTenantAPI, updateTenantAPI, deleteTenantAPI} from '@/api/siteManage/sys/tenant.js';
-import {addTenantUserAPI, pageTenantUserListAPI, removeTenantUserAPI, updateTenantUserRoleTypeAPI} from '@/api/siteManage/sys/tenantUser.js';
+import {pageTenantListAPI, createTenantAPI, updateTenantAPI, deleteTenantAPI} from '@/api/manage/sys/tenant.js';
+import {addTenantUserAPI, pageTenantUserListAPI, removeTenantUserAPI, updateTenantUserRoleTypeAPI} from '@/api/manage/sys/tenantUser.js';
 import {ElMessage, ElMessageBox} from 'element-plus';
-import SelectUser from '@/components/SelectUser';
+import SelectUser from '@/components/SelectUser/index.vue';
 import UserAvatar from '@/components/UserAvatar/index.vue';
 import {ref} from 'vue';
 

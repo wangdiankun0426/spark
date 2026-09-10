@@ -2,6 +2,7 @@ package com.spark.web.rest.controller.manage.sys;
 
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.sys.entity.Menu;
+import com.spark.common.bean.sys.tree.MenuTree;
 import com.spark.manage.sys.IMenuService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,5 +33,14 @@ public class MenuController {
     @GetMapping("list")
     private ResultData<List<Menu>> listMenu() {
         return menuService.listMenu();
+    }
+
+    /**
+     * 查询菜单树
+     * @return 查询结果
+     */
+    @GetMapping("tree")
+    private ResultData<List<MenuTree>> listMenuTree() {
+        return menuService.listMenuTree();
     }
 }

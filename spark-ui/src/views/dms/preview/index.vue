@@ -94,7 +94,7 @@
   </div>
 </template>
 
-<script setup name="documentPreview">
+<script setup>
 import { ref, computed, onBeforeUnmount, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import VueOfficeDocx from '@vue-office/docx'

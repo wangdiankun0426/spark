@@ -7,7 +7,7 @@
         </div>
 
         <div class="my-info-right">
-          <text class="my-name-text">{{userInfo.name}}（{{userInfo.loginName}}）<br>
+          <text class="my-name-text">{{userInfo.name}}<br>
             <text class="my-dept-text">{{userInfo.deptPath}}</text>
           </text>
         </div>
@@ -16,7 +16,7 @@
 
     <div class="my-card">
       <view class="quick-grid">
-        <view v-if="hasMenu(MENU_IDS.CONTACTS)" class="quick-item" @click="goContacts">
+        <view class="quick-item" @click="goContact">
           <view class="quick-icon-wrap" style="background-color: #e6f7ff;">
             <up-icon name="man-add-fill" size="32" color="#1890ff"></up-icon>
           </view>
@@ -28,17 +28,17 @@
           </view>
           <text class="quick-label">切换租户</text>
         </view>
-        <view class="quick-item">
+        <view class="quick-item" @click="comingSoon('常见问题')">
           <view class="quick-icon-wrap" style="background-color: #fff7e6;">
-            <up-icon name="server-fill" size="32" color="#faad14"></up-icon>
+            <up-icon name="question-circle-fill" size="32" color="#faad14"></up-icon>
           </view>
-          <text class="quick-label">开发中</text>
+          <text class="quick-label">常见问题</text>
         </view>
-        <view class="quick-item">
+        <view class="quick-item" @click="comingSoon('联系客服')">
           <view class="quick-icon-wrap" style="background-color: #f9f0ff;">
-            <up-icon name="star-fill" size="32" color="#722ed1"></up-icon>
+            <up-icon name="kefu-ermai" size="32" color="#722ed1"></up-icon>
           </view>
-          <text class="quick-label">开发中</text>
+          <text class="quick-label">联系客服</text>
         </view>
       </view>
     </div>
@@ -93,7 +93,7 @@
 import {logoutAPI} from "@/api/auth/login";
 import {ref, computed} from "vue";
 import {useStore} from "vuex";
-import {MENU_IDS, hasMenu, visibleTabs, checkMenuAccess} from "@/utils/menuUtil";
+import {visibleTabs} from "@/utils/menuUtil";
 import UserAvatar from "@/components/UserAvatar/index.vue"
 import TenantSwitch from "@/components/TenantSwitch/index.vue"
 
@@ -106,7 +106,6 @@ const tabBarItems = computed(() => visibleTabs());
 const userInfo = computed(() => store.getters["user/getUserInfo"] || {
   id: undefined,
   name: undefined,
-  loginName: undefined,
   deptPath: undefined,
   currentTenantId: undefined
 });
@@ -123,11 +122,19 @@ function openTenantPopup() {
 }
 
 /**
+ * 未开放功能提示
+ * @param name 功能名称
+ */
+function comingSoon(name) {
+  uni.showToast({title: name + '功能开发中', icon: 'none'});
+}
+
+/**
  * 跳转通讯录
  */
-function goContacts() {
+function goContact() {
   uni.navigateTo({
-    url: '/views/contacts/index'
+    url: '/views/contact/index'
   })
 }
 
@@ -170,9 +177,13 @@ function handleOnTabChange(index) {
 
 .my-header {
   padding-top: 30px;
-  height: 150px;
+  height: 190px;
   width: 100%;
-  background-color: #0052cc;
+  background-image: linear-gradient(180deg,
+          #0067ff 0%,
+          #3f8fff 60px,
+          #7db3ff 120px,
+          #ffffff 190px);
 }
 
 .my-avatar-row {
@@ -213,12 +224,14 @@ function handleOnTabChange(index) {
   width: 90%;
   margin: auto;
   background-color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.85);
   border-radius: 10px;
   overflow: hidden;
   padding: 16px 8px;
   position: relative;
   top: -30px;
   z-index: 1;
+  box-shadow: 0 6px 20px rgba(0, 52, 120, 0.12);
 }
 
 .my-content {
@@ -250,8 +263,8 @@ function handleOnTabChange(index) {
 }
 
 .quick-label {
-  font-size: 16px;
-  color: #333;
+  font-size: 14px;
+  color: #9e9e9e;
 }
 
 .my-cell-group {
@@ -270,13 +283,17 @@ function handleOnTabChange(index) {
 
 .logout-button {
   width: 100%;
-  background-color: #0052cc !important;
-  height: 50px;
+  height: 88rpx;
+  border-radius: 12rpx;
+  background-color: #004fc5 !important;
+  background-image: linear-gradient(90deg, #004fc5 0%, #0072e0 100%);
+  box-shadow: 0 12rpx 28rpx rgba(0, 79, 197, 0.28);
 }
 
 .logout-text {
-  font-size: 20px;
-  font-weight: bolder;
+  font-size: 32rpx;
+  font-weight: 700;
+  letter-spacing: 4rpx;
   color: #ffffff;
 }
 </style>

@@ -2,11 +2,9 @@ package com.spark.dao.kg;
 
 import com.spark.common.bean.kg.entity.KgRelation;
 import com.spark.common.bean.kg.query.KgRelationQuery;
-import com.spark.common.bean.kg.result.KgRelationCountResult;
 import com.spark.common.bean.kg.result.KgRelationResult;
 import com.spark.dao.BaseDao;
 import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
@@ -83,11 +81,4 @@ public interface KgRelationDao extends BaseDao<KgRelation> {
      */
     int updateTailEntityId(@Param("oldEntityId") Long oldEntityId,
                            @Param("newEntityId") Long newEntityId);
-
-    /**
-     * 按图谱 id 批量统计关系数量
-     * @param graphIds 图谱 id 列表
-     * @return 每条记录包含 graphId 与对应关系数量
-     */
-    List<KgRelationCountResult> queryKgRelationCountByGraphIds(@Param("graphIds") List<Long> graphIds);
 }

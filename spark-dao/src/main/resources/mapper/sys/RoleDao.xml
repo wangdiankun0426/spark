@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.sys.RoleDao" >
     <sql id="Base_Column_List" >
-     id , tenant_id, name ,  data_scope ,  status ,  menu_ids ,  delete_flag , created_by ,  created_dt ,  updated_by ,  updated_dt
+     id , tenant_id, name ,  data_scope ,  status ,  menu_codes ,  delete_flag , created_by ,  created_dt ,  updated_by ,  updated_dt
     </sql>
 
     <sql id="condition">
@@ -28,8 +28,8 @@
     </select>
 
     <insert id="insert">
-        insert into sys_role( id , tenant_id, name ,  data_scope ,  status ,  menu_ids ,  delete_flag , created_by ,  created_dt ,  updated_by ,  updated_dt )
-        values (#{id}, #{tenantId}, #{name}, #{dataScope}, #{status}, #{menuIds}, 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into sys_role( id , tenant_id, name ,  data_scope ,  status ,  menu_codes ,  delete_flag , created_by ,  created_dt ,  updated_by ,  updated_dt )
+        values (#{id}, #{tenantId}, #{name}, #{dataScope}, #{status}, #{menuCodes}, 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <select id="queryRoleList" resultType="com.spark.common.bean.sys.result.RoleResult">
@@ -69,11 +69,11 @@
         <if test="status != null">
             ,status = #{status}
         </if>
-        <if test="menuIds != null">
-            ,menu_ids = #{menuIds}
+        <if test="menuCodes != null">
+            ,menu_codes = #{menuCodes}
         </if>
-        <if test="menuIds == null">
-            ,menu_ids = null
+        <if test="menuCodes == null">
+            ,menu_codes = null
         </if>
         where id = #{id}
     </update>
@@ -86,19 +86,19 @@
 
     <select id="queryUserMaxDataScope" resultType="java.lang.Integer">
         select IFNULL(max(data_scope),1)
-        from  sys_role
+        from sys_role
         where delete_flag = 1
           and tenant_id = #{tenantId}
-          and id in (select role_id from sys_role_user where user_id = #{userId})
+          and id in (select role_id from sys_role_user where delete_flag = 1 and user_id = #{userId})
     </select>
 
-    <select id="queryUserMenuIds" resultType="java.lang.String">
-        select menu_ids
+    <select id="queryUserMenuCodes" resultType="java.lang.String">
+        select menu_codes
         from  sys_role
         where delete_flag = 1
           and tenant_id = #{tenantId}
           and status = 1
           and id in (select role_id from sys_role_user where delete_flag = 1 and user_id = #{userId})
-          and menu_ids is not null and menu_ids != ''
+          and menu_codes is not null and menu_codes != ''
     </select>
 </mapper>

@@ -48,35 +48,4 @@ public class KgSearchController {
     public ResultData<Map<String, Object>> findShortestPath(@RequestParam Long fromEntityId, @RequestParam Long toEntityId) {
         return kgGraphService.findShortestPath(fromEntityId, toEntityId);
     }
-
-    /**
-     * PageRank 算法
-     * @param graphId 图谱 id
-     * @param maxIterations 最大迭代次数
-     * @return 分数结果
-     */
-    @GetMapping("pagerank")
-    public ResultData<Map<Long, Double>> pageRank(@RequestParam Long graphId, @RequestParam(defaultValue = "20") int maxIterations) {
-        return kgGraphService.pageRank(graphId, maxIterations);
-    }
-
-    /**
-     * 中心度算法
-     * @param graphId 图谱 id
-     * @return 分数结果
-     */
-    @GetMapping("centrality")
-    public ResultData<Map<Long, Double>> centrality(@RequestParam Long graphId) {
-        return kgGraphService.centrality(graphId);
-    }
-
-    /**
-     * 连通分量算法
-     * @param graphId 图谱 id
-     * @return 连通分量结果
-     */
-    @GetMapping("components")
-    public ResultData<Map<Integer, List<Long>>> connectedComponents(@RequestParam Long graphId) {
-        return kgGraphService.connectedComponents(graphId);
-    }
 }

@@ -3,9 +3,7 @@ package com.spark.kb.service;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.kb.query.KnowledgeQuery;
-import com.spark.common.bean.kb.query.RetrieveTestQuery;
 import com.spark.common.bean.kb.result.KnowledgeResult;
-import com.spark.common.bean.kb.result.RetrieveTestResult;
 import com.spark.common.bean.kb.vo.KnowledgeVO;
 
 /**
@@ -53,11 +51,4 @@ public interface IKnowledgeService {
      * @return 详情
      */
     ResultData<KnowledgeResult> queryKnowledgeDetail(KnowledgeQuery query);
-
-    /**
-     * 检索测试
-     * @param query 检索测试查询条件
-     * @return 检索测试结果
-     */
-    ResultData<RetrieveTestResult> testRetrieve(RetrieveTestQuery query);
 }

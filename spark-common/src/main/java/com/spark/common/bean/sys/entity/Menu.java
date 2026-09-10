@@ -21,7 +21,17 @@ public class Menu extends BaseEntity {
     private String name;
 
     /**
-     * 上级菜单id
+     * 上级菜单标识码，顶级菜单为空
      */
-    private Long parentId;
+    private String parentCode;
+
+    /**
+     * 标识码
+     */
+    private String code;
+
+    /**
+     * 类型 MenuTypeEnum
+     */
+    private Integer type;
 }

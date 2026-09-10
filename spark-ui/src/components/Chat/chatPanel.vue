@@ -2,18 +2,28 @@
   <div class="chat-panel">
     <!-- 标题栏 -->
     <div class="chat-panel-header">
-      <el-icon class="chat-panel-header-icon">
-        <ChatDotRound />
-      </el-icon>
-      <span v-if="target && target.id">{{ target.name }}</span>
-      <span v-else class="chat-panel-header-tip">请选择聊天对象</span>
+      <slot name="header-left">
+        <el-icon class="chat-panel-header-icon">
+          <ChatDotRound />
+        </el-icon>
+        <span v-if="target && target.id">{{ target.name }}</span>
+        <span v-else class="chat-panel-header-tip">请选择聊天对象</span>
+      </slot>
+      <div class="chat-panel-header-right">
+        <slot name="header-right"></slot>
+      </div>
     </div>
 
     <!-- 消息区 -->
-    <el-scrollbar ref="scrollbarRef" class="chat-body" always>
-      <el-divider border-style="dashed">
-        <span class="chat-tip">{{ chatMsgs.length ? '以下是最新消息' : '暂无最新消息' }}</span>
+    <el-scrollbar ref="scrollbarRef" class="chat-body" :class="{ 'chat-body-fill': fill }" always>
+      <el-divider v-if="chatMsgs.length" border-style="dashed">
+        <span class="chat-tip">以下是最新消息</span>
       </el-divider>
+      <slot v-else name="empty">
+        <el-divider border-style="dashed">
+          <span class="chat-tip">暂无最新消息</span>
+        </el-divider>
+      </slot>
       <div
           v-for="(chatMsg, idx) in chatMsgs"
           :key="idx"
@@ -86,31 +96,25 @@
       </div>
     </el-scrollbar>
 
-    <!-- 输入区 -->
+    <!-- 输入区：回车发送、Shift + 回车换行，不再放发送按钮 -->
     <div class="chat-footer">
       <el-input
           v-model="message"
           :rows="4"
           type="textarea"
-          maxlength="200"
+          :maxlength="maxLength"
           show-word-limit
+          :placeholder="placeholder"
           :disabled="!target || !target.id"
-          placeholder="请输入聊天内容 回车快速发出"
-          @keyup.enter="sendMessage"
+          @keydown.enter="handleEnter"
       />
       <div class="chat-toolbar">
         <el-button
-            v-if="target && target.chatSpaceId"
+            v-if="activeSpaceId"
             link
             type="primary"
             @click="openChatMessage"
         >聊天记录</el-button>
-        <el-button
-            type="primary"
-            class="chat-send-btn"
-            :disabled="!target || !target.id || !message"
-            @click="sendMessage"
-        >发 送</el-button>
       </div>
     </div>
 
@@ -118,7 +122,7 @@
     <chat-message
         v-model="recordDrawer"
         :title="recordTitle"
-        :space-id="target && target.chatSpaceId"
+        :space-id="activeSpaceId"
         :target-type="targetType"
     />
   </div>
@@ -130,23 +134,40 @@ import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
 import { MagicStick, Cpu, ChatDotRound, CopyDocument, Loading } from '@element-plus/icons-vue'
 import { createChatSpaceAPI } from '@/api/chat/space.js'
-import { getNoReadMsgListAPI } from '@/api/chat/msg.js'
+import { getNoReadMsgListAPI, getMsgListAPI } from '@/api/chat/msg.js'
 import { getCurrentDate } from '@/utils/dateUtil.js'
 import UserAvatar from '@/components/UserAvatar/index.vue'
-import ChatMessage from '@/components/Chat/ChatMessage.vue'
+import ChatMessage from '@/components/Chat/chatMessage.vue'
 import LlmReferences from '@/components/Chat/llmReferences.vue'
 
+// 流式回复看门狗超时时间，超时后解除发送锁定
+const STREAM_WATCHDOG_TIMEOUT = 1000 * 120
+
 const props = defineProps({
-  // 聊天对象 { id, name, chatSpaceId }
+  // 聊天对象 { id, name, chatSpaceId, sessionKey }
   target: { type: Object, default: () => ({}) },
   // 对方类型：agent=智能体，model=模型，user=用户
-  targetType: { type: String, default: 'agent' }
+  targetType: { type: String, default: 'agent' },
+  // 历史消息加载模式：unread=仅未读，all=全量
+  historyMode: { type: String, default: 'unread' },
+  // 多会话场景下按 spaceId 过滤消息，避免同一对象的不同会话串消息
+  filterBySpaceId: { type: Boolean, default: false },
+  // 懒创建会话：非空时由父组件负责创建空间并返回 spaceId
+  spaceCreator: { type: Function, default: null },
+  // 消息区高度自适应父容器
+  fill: { type: Boolean, default: false },
+  // 流式回复期间锁定发送，避免两条回复交叉拼接
+  lockWhileStreaming: { type: Boolean, default: false },
+  // 输入内容长度上限
+  maxLength: { type: Number, default: 200 },
+  // 输入框占位文案
+  placeholder: { type: String, default: '请输入聊天内容，回车发送，Shift + 回车换行' }
 })
 
 const emit = defineEmits([
   // 收到对方消息时触发，父组件用于更新用户列表未读数
   'message-received',
-  // 聊天空间创建成功时触发，payload: { targetId, spaceId }
+  // 聊天空间创建成功时触发，payload: { targetId, spaceId, sessionKey }
   'space-created'
 ])
 
@@ -159,19 +180,50 @@ const chatMsgs = ref([])
 const scrollbarRef = ref(null)
 const recordDrawer = ref(false)
 const recordTitle = ref('')
+// 当前会话空间id，懒创建场景下由父组件创建后回填
+const activeSpaceId = ref((props.target && props.target.chatSpaceId) || null)
+const sending = ref(false)
+const streaming = ref(false)
 
+// 流式回复看门狗定时器
+let streamWatchdog = null
 // 组件是否已销毁，避免销毁后触发 onclose 自动重连
 let destroyed = false
 
 const currentTargetId = computed(() => props.target && props.target.id)
 
 /**
- * target 变化时重新初始化当前对话
+ * 会话身份键，AI会话由父组件提供稳定的 sessionKey，其余沿用对象id
  */
-watch(currentTargetId, (newId, oldId) => {
-  if (newId && newId !== oldId) {
-    initChat()
+function targetKey() {
+  const target = props.target || {}
+  if (target.sessionKey) {
+    return 'k:' + target.sessionKey
   }
+  return 'i:' + (target.id || '')
+}
+
+// 已加载的会话身份键
+let lastLoadedKey = targetKey()
+
+/**
+ * 空间id变化只同步，不重新加载，避免懒创建回填时清空刚发出的提问
+ */
+watch(() => props.target && props.target.chatSpaceId, (val) => {
+  activeSpaceId.value = val || null
+})
+
+/**
+ * 会话身份变化时重新初始化当前对话
+ */
+watch(() => [props.target && props.target.id, props.target && props.target.sessionKey], () => {
+  const key = targetKey()
+  if (key === lastLoadedKey) {
+    return
+  }
+  lastLoadedKey = key
+  activeSpaceId.value = (props.target && props.target.chatSpaceId) || null
+  initChat()
 })
 
 onMounted(() => {
@@ -183,6 +235,10 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   destroyed = true
+  if (streamWatchdog) {
+    clearTimeout(streamWatchdog)
+    streamWatchdog = null
+  }
   if (websocket.value) {
     // 先清空回调再 close，避免异步 close 事件触发时 websocket.value 已为 null
     websocket.value.onclose = null
@@ -203,11 +259,15 @@ function initChat() {
 }
 
 /**
- * 确保聊天空间已创建，存在则加载未读消息
+ * 确保聊天空间已创建，存在则加载历史消息
  */
 function ensureChatSpace() {
-  if (props.target.chatSpaceId) {
-    loadNoReadMsgs()
+  if (activeSpaceId.value) {
+    loadMsgs()
+    return
+  }
+  // 懒创建模式：空间由父组件在首条消息发出时创建
+  if (props.spaceCreator) {
     return
   }
   const data = {
@@ -218,16 +278,21 @@ function ensureChatSpace() {
     if (res.code !== 200) {
       return
     }
-    emit('space-created', { targetId: props.target.id, spaceId: res.data.spaceId })
+    emit('space-created', {
+      targetId: props.target.id,
+      spaceId: res.data.spaceId,
+      sessionKey: props.target.sessionKey
+    })
   })
 }
 
 /**
- * 加载未读消息
+ * 加载当前空间的历史消息
  */
-function loadNoReadMsgs() {
-  const query = { spaceId: props.target.chatSpaceId }
-  getNoReadMsgListAPI(query).then(res => {
+function loadMsgs() {
+  const query = { spaceId: activeSpaceId.value }
+  const api = props.historyMode === 'all' ? getMsgListAPI : getNoReadMsgListAPI
+  api(query).then(res => {
     if (res.code !== 200) {
       return
     }
@@ -236,6 +301,19 @@ function loadNoReadMsgs() {
     }
     scrollToBottom()
   })
+}
+
+/**
+ * 判断消息是否属于当前会话
+ */
+function isCurrentSpaceMsg(chatMsg) {
+  if (!props.filterBySpaceId) {
+    return currentTargetId.value === chatMsg.senderId
+  }
+  if (!chatMsg.spaceId) {
+    return false
+  }
+  return chatMsg.spaceId === activeSpaceId.value
 }
 
 /**
@@ -252,14 +330,76 @@ function scrollToBottom() {
 }
 
 /**
+ * 启动流式回复看门狗，超时后自动解除发送锁定
+ */
+function startStreamWatchdog() {
+  streaming.value = true
+  if (streamWatchdog) {
+    clearTimeout(streamWatchdog)
+  }
+  streamWatchdog = setTimeout(() => {
+    streaming.value = false
+    streamWatchdog = null
+  }, STREAM_WATCHDOG_TIMEOUT)
+}
+
+/**
+ * 结束流式回复看门狗
+ */
+function stopStreamWatchdog() {
+  streaming.value = false
+  if (streamWatchdog) {
+    clearTimeout(streamWatchdog)
+    streamWatchdog = null
+  }
+}
+
+/**
+ * 输入框回车：回车直接发送，Shift + 回车换行
+ * @param e 键盘事件
+ */
+function handleEnter(e) {
+  // 中文输入法组词过程中的回车是「选词确认」，不能当作发送
+  if (e.isComposing || e.keyCode === 229) {
+    return
+  }
+  // Shift + 回车保留换行
+  if (e.shiftKey) {
+    return
+  }
+  e.preventDefault()
+  sendMessage()
+}
+
+/**
  * 发送消息
  */
-function sendMessage() {
+async function sendMessage() {
   if (!message.value) {
     return
   }
+  if (sending.value) {
+    return
+  }
+  if (props.lockWhileStreaming && streaming.value) {
+    ElMessage.warning('正在回复中 请稍候')
+    return
+  }
+  // 懒创建：首条消息发出前先创建空间
+  if (!activeSpaceId.value) {
+    if (!props.spaceCreator) {
+      return
+    }
+    sending.value = true
+    const spaceId = await props.spaceCreator()
+    sending.value = false
+    if (!spaceId) {
+      return
+    }
+    activeSpaceId.value = spaceId
+  }
   const chatMsg = {
-    spaceId: props.target.chatSpaceId,
+    spaceId: activeSpaceId.value,
     senderId: userInfo.value.id,
     receiverId: props.target.id,
     message: message.value,
@@ -270,13 +410,16 @@ function sendMessage() {
   chatMsgs.value.push(chatMsg)
   scrollToBottom()
   message.value = ''
+  if (props.lockWhileStreaming) {
+    startStreamWatchdog()
+  }
 }
 
 /**
  * 打开聊天记录
  */
 function openChatMessage() {
-  if (!props.target.chatSpaceId) {
+  if (!activeSpaceId.value) {
     return
   }
   recordTitle.value = '与 ' + props.target.name + ' 的聊天记录'
@@ -353,8 +496,8 @@ function setOnopenMessage() {
  * 处理 agent 思考中消息（action === 6）
  */
 function handleThinkingMessage(chatMsg) {
-  // 仅处理当前选中 target 的思考消息
-  if (currentTargetId.value !== chatMsg.senderId) {
+  // 仅处理当前会话的思考消息
+  if (!isCurrentSpaceMsg(chatMsg)) {
     return
   }
   // 流式追加：若上一条消息有 thinkingContent（是同一次回复的思考消息）
@@ -395,9 +538,13 @@ function setOnmessageMessage(event) {
   }
   // 通知父组件：收到对方消息，父组件用于更新用户列表未读数
   emit('message-received', chatMsg)
-  // 仅处理当前选中 target 的消息
-  if (currentTargetId.value !== chatMsg.senderId) {
+  // 仅处理当前会话的消息
+  if (!isCurrentSpaceMsg(chatMsg)) {
     return
+  }
+  // 收到带id的完整消息说明本次回复结束，解除发送锁定
+  if (chatMsg.id !== undefined) {
+    stopStreamWatchdog()
   }
   // 检查上一条是否为思考消息（同一次回复）
   if (chatMsgs.value.length > 0) {
@@ -480,6 +627,13 @@ function setOncloseMessage() {
   margin-bottom: $spacing-md;
 }
 
+.chat-panel-header-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
 .chat-panel-header-icon {
   font-size: 22px;
   position: relative;
@@ -497,6 +651,12 @@ function setOncloseMessage() {
   border-radius: $border-radius-md;
   margin-bottom: $spacing-md;
   overflow: hidden;
+}
+
+.chat-body-fill {
+  height: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .chat-tip {
@@ -670,14 +830,9 @@ function setOncloseMessage() {
 .chat-toolbar {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: $spacing-md;
   margin-top: $spacing-sm;
-}
-
-.chat-send-btn {
-  margin-left: auto;
-  height: 36px;
-  width: 72px;
 }
 
 ::v-deep(.github-markdown-body) {

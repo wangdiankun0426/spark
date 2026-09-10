@@ -33,7 +33,7 @@ public class RoleVO extends BaseVO {
     private Integer status;
 
     /**
-     * 菜单ID列表
+     * 菜单标识码列表
      */
-    private List<Long> menuIds;
+    private List<String> menuCodes;
 }

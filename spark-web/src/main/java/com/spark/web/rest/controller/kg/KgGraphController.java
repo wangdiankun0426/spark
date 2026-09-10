@@ -101,14 +101,4 @@ public class KgGraphController {
     public ResultData<Map<String, Object>> queryGraphStats(@RequestParam Long graphId) {
         return kgGraphService.queryGraphStats(graphId);
     }
-
-    /**
-     * 构建 GraphRAG 索引
-     * @param graphId 图谱 id
-     * @return 构建结果
-     */
-    @PostMapping("buildGraphRAG")
-    public ResultData<Void> buildGraphRAGIndex(@RequestParam Long graphId) {
-        return kgGraphService.buildGraphRAGIndex(graphId);
-    }
 }

@@ -25,26 +25,3 @@ export function logOperateTypeListAPI(query)  {
         params: query
     })
 }
-
-/**
- * 查询操作日志统计
- * @returns {Promise<AxiosResponse<any>>}
- */
-export function getOperateStatisticsAPI() {
-    return request({
-        url: '/log/operate/statistics',
-        method: 'get'
-    })
-}
-
-/**
- * 查询对象操作记录列表
- * @returns {Promise<AxiosResponse<any>>}
- */
-export function queryObjOperateLogListAPI(query) {
-    return request({
-        url: '/log/operate/objList',
-        method: 'get',
-        params: query
-    })
-}

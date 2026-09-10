@@ -13,6 +13,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
+import {getSessionAPI} from "@/api/manage/auth/login.js";
 
 const router = useRouter()
 const route = useRoute()
@@ -41,9 +42,11 @@ function handleOAuthLogin() {
   }
   store.dispatch('user/login', { loginForm }).then(res => {
     if (res.code === 200) {
-      statusText.value = '登录成功，正在跳转...'
-      ElMessage.success('登录成功')
-      router.push({ path: '/' })
+      getSessionAPI().then(res => {
+        statusText.value = '登录成功，正在跳转...'
+        ElMessage.success('登录成功')
+        router.push({ path: '/' })
+      })
     } else {
       statusText.value = '登录失败：' + (res.message || '授权验证失败')
     }

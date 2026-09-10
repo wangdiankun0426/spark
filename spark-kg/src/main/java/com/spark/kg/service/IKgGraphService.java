@@ -72,13 +72,6 @@ public interface IKgGraphService {
     ResultData<Map<String, Object>> queryGraphStats(Long graphId);
 
     /**
-     * 构建 GraphRAG 索引
-     * @param graphId 图谱 id
-     * @return 构建结果
-     */
-    ResultData<Void> buildGraphRAGIndex(Long graphId);
-
-    /**
      * 图谱推理
      * @param question 问题
      * @param graphIds 图谱 id 列表
@@ -93,26 +86,4 @@ public interface IKgGraphService {
      * @return 路径数据
      */
     ResultData<Map<String, Object>> findShortestPath(Long fromEntityId, Long toEntityId);
-
-    /**
-     * 计算 PageRank
-     * @param graphId 图谱 id
-     * @param maxIterations 最大迭代次数
-     * @return 分数结果
-     */
-    ResultData<Map<Long, Double>> pageRank(Long graphId, int maxIterations);
-
-    /**
-     * 计算节点中心度
-     * @param graphId 图谱 id
-     * @return 分数结果
-     */
-    ResultData<Map<Long, Double>> centrality(Long graphId);
-
-    /**
-     * 查询连通分量
-     * @param graphId 图谱 id
-     * @return 连通分量结果
-     */
-    ResultData<Map<Integer, List<Long>>> connectedComponents(Long graphId);
 }

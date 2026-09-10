@@ -18,8 +18,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import Index from '@/views/flow/designer/canvas/index.vue'
-import { NODE_COMPONENTS } from '@/views/flow/designer/nodes'
+import Index from '@/views/flowDesigner/canvas/index.vue'
+import { NODE_COMPONENTS } from '@/views/flowDesigner/nodes'
 
 const props = defineProps({
   bpmJson: Object,

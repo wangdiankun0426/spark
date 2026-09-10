@@ -1,40 +1,22 @@
 // router/modules/layout.routes.js
 import index from '@/pages/index.vue'
-import llmRoutes from "@/router/modules/llm.routes.js";
-import kbRoutes from "@/router/modules/kb.routes.js";
-import kgRoutes from "@/router/modules/kg.routes.js";
-import flowRoutes from "@/router/modules/flow.routes.js";
-import manageRoutes from "@/router/modules/manage.routes.js";
-import siteManages from "@/router/modules/siteManage.routes.js";
+import llmManageRoutes from "@/router/modules/llmManage.routes.js";
+import sysManageRoutes from "@/router/modules/orgManage.routes.js";
+import siteManageRoutes from "@/router/modules/siteManage.routes.js";
+import busManageRoutes from "@/router/modules/busManage.routes.js";
+import homeRoutes from "@/router/modules/home.routes.js";
 
 export default [
     {
         path: '/',
         name: 'index',
         component: index,
-        redirect: '/home',
         children: [
-            {
-                path: '/home',
-                name: 'home',
-                component: () => import('@/pages/home/index'),
-                meta: {
-                    title: '工作台'
-                },
-                children: [
-                    {
-                        path: '/home/index',
-                        name: 'home',
-                        component: () => import('@/pages/home/index')
-                    }
-                ]
-            },
-            ...llmRoutes,
-            ...kbRoutes,
-            ...kgRoutes,
-            ...flowRoutes,
-            ...manageRoutes,
-            ...siteManages,
+            ...homeRoutes,
+            ...llmManageRoutes,
+            ...sysManageRoutes,
+            ...siteManageRoutes,
+            ...busManageRoutes,
         ]
     }
 ]

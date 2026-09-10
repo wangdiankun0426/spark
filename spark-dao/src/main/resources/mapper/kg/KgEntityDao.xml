@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.kg.KgEntityDao" >
     <sql id="allColumnList" >
-        id , tenant_id, graph_id , name , type , description , source_id , source_type , confidence , audit_status , status ,
+        id , tenant_id, graph_id , name , type , description , source_id , status ,
         delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
@@ -32,12 +32,6 @@
         <if test="sourceId != null">
             and source_id = #{sourceId}
         </if>
-        <if test="sourceType != null">
-            and source_type = #{sourceType}
-        </if>
-        <if test="auditStatus != null">
-            and audit_status = #{auditStatus}
-        </if>
         <if test="status != null">
             and status = #{status}
         </if>
@@ -60,9 +54,9 @@
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into kg_entity (tenant_id, graph_id , name , type , description , source_id , source_type , confidence , audit_status , status ,
+        insert into kg_entity (tenant_id, graph_id , name , type , description , source_id , status ,
                                delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values (#{tenantId}, #{graphId} , #{name} , #{type} , #{description} , #{sourceId} , #{sourceType} , #{confidence} , #{auditStatus} , #{status} ,
+        values (#{tenantId}, #{graphId} , #{name} , #{type} , #{description} , #{sourceId} , #{status} ,
                 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
@@ -87,15 +81,6 @@
         </if>
         <if test="sourceId != null">
             , source_id = #{sourceId}
-        </if>
-        <if test="sourceType != null">
-            , source_type = #{sourceType}
-        </if>
-        <if test="confidence != null">
-            , confidence = #{confidence}
-        </if>
-        <if test="auditStatus != null">
-            , audit_status = #{auditStatus}
         </if>
         <if test="status != null">
             , status = #{status}
@@ -126,25 +111,5 @@
         where 1=1
         <include refid="searchCondition"/>
         limit 1
-    </select>
-
-    <update id="deleteDBByIds">
-        update kg_entity set delete_flag = -1 , updated_dt = now()
-        where delete_flag = 1 and id in
-        <foreach collection="list" item="id" open="(" separator="," close=")">
-            #{id}
-        </foreach>
-    </update>
-
-    <select id="queryKgEntityCountByGraphIds" resultType="com.spark.common.bean.kg.result.KgEntityCountResult">
-        select graph_id, count(1) as entity_count
-        from kg_entity
-        where delete_flag = 1
-        and graph_id in (
-        <foreach collection="graphIds" item="graphId" separator=",">
-            #{graphId}
-        </foreach>
-        )
-        group by graph_id
     </select>
 </mapper>

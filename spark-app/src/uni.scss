@@ -54,15 +54,23 @@ $uni-spacing-col-base: 8px;
 $uni-spacing-col-lg: 12px;
 
 /* 透明度 */
-$uni-opacity-disabled: 0.3; // 组件禁用态的透明度
+$uni-opacity-disabled: 0.3;
 
-/* 文章场景相关 */
-$uni-color-title: #2C405A; // 文章标题颜色
+$uni-color-title: #2C405A;
 $uni-font-size-title:20px;
-$uni-color-subtitle: #555555; // 二级标题颜色
+$uni-color-subtitle: #555555;
 $uni-font-size-subtitle:26px;
-$uni-color-paragraph: #3F536E; // 文章段落颜色
+$uni-color-paragraph: #3F536E;
 $uni-font-size-paragraph:15px;
+
+$spark-color-primary: #004fc5;
+$spark-color-primary-light: #0072e0;
+$spark-color-accent: #00b8d9;
+$spark-color-text: #172b4d;
+$spark-color-text-secondary: #5e6c84;
+$spark-color-bg-start: #f7faff;
+$spark-color-bg-mid: #eaf2fe;
+$spark-color-bg-end: #e3edfd;
 
 /* uview-plus 颜色变量 */
 @import 'node_modules/uview-plus/theme.scss';

@@ -42,21 +42,6 @@ public class KgEntity extends BaseEntity {
     private Long sourceId;
 
     /**
-     * 来源类型 KgSourceTypeEnum
-     */
-    private Integer sourceType;
-
-    /**
-     * 置信度分数 (0.0-1.0)
-     */
-    private Double confidence;
-
-    /**
-     * 审核状态 KgAuditStatusEnum
-     */
-    private Integer auditStatus;
-
-    /**
      * 状态
      */
     private Integer status;

@@ -5,20 +5,11 @@ import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.flow.entity.FlowInstanceCopy;
 import com.spark.common.bean.flow.entity.FlowInstanceDiscuss;
-import com.spark.common.bean.flow.query.FlowInstanceCopyQuery;
-import com.spark.common.bean.flow.query.FlowInstanceNodeQuery;
-import com.spark.common.bean.flow.query.FlowInstanceQuery;
-import com.spark.common.bean.flow.query.FlowTemplateNodeQuery;
-import com.spark.common.bean.flow.result.FlowInstanceCopyResult;
-import com.spark.common.bean.flow.result.FlowInstanceNodeResult;
-import com.spark.common.bean.flow.result.FlowInstanceResult;
-import com.spark.common.bean.flow.result.FlowTemplateNodeResult;
+import com.spark.common.bean.flow.query.*;
+import com.spark.common.bean.flow.result.*;
 import com.spark.common.bean.flow.vo.FlowInstanceCopyVO;
+import com.spark.common.enums.*;
 import com.spark.dao.flow.*;
-import com.spark.common.enums.ErrorCodeEnum;
-import com.spark.common.enums.FlowInstanceLevelEnum;
-import com.spark.common.enums.FlowInstanceStatusEnum;
-import com.spark.common.enums.FlowTemplateNodePermissionEnum;
 import com.spark.flow.service.IFlowInstanceCopyService;
 import com.spark.manage.BaseService;
 import com.spark.common.utils.CollectionUtil;
@@ -54,6 +45,8 @@ public class FlowInstanceCopyServiceImpl extends BaseService<FlowInstanceCopyQue
     private FlowTemplateNodeDao templateNodeDao;
     @Autowired
     private FlowInstanceDiscussDao instanceDiscussDao;
+    @Autowired
+    private FlowTemplateDao templateDao;
 
     /**
      * 抄送流程实例
@@ -172,12 +165,19 @@ public class FlowInstanceCopyServiceImpl extends BaseService<FlowInstanceCopyQue
         if (CollectionUtil.isEmpty(list)) {
             return;
         }
+        super.supplyCreatedByName(list);
         List<Long> instanceIds = list.stream().map(FlowInstanceCopyResult::getInstanceId).distinct().toList();
         FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
         instanceQuery.setIds(instanceIds);
         instanceQuery.setPage(false);
         List<FlowInstanceResult> instanceList = instanceDao.queryInstanceList(instanceQuery);
         Map<Long, FlowInstanceResult> instanceMap = instanceList.stream().collect(Collectors.toMap(FlowInstanceResult::getId, e -> e));
+        List<Long> templateIds = instanceList.stream().map(FlowInstanceResult::getTemplateId).toList();
+        FlowTemplateQuery templateQuery = new FlowTemplateQuery();
+        templateQuery.setIds(templateIds);
+        templateQuery.setPage(false);
+        List<FlowTemplateResult> templateList = templateDao.queryTemplateList(templateQuery);
+        Map<Long, String> flowTypeMap = templateList.stream().collect(Collectors.toMap(FlowTemplateResult::getId, v -> FlowTypeEnum.indexOf(v.getType()).getDesc()));
         if (CollectionUtil.isNotEmpty(list)) {
             list.forEach(item -> {
                 FlowInstanceResult instanceResult = instanceMap.get(item.getInstanceId());
@@ -189,7 +189,7 @@ public class FlowInstanceCopyServiceImpl extends BaseService<FlowInstanceCopyQue
                 item.setLevelName(FlowInstanceLevelEnum.indexOf(instanceResult.getLevel()).getDesc());
                 item.setDeptName(this.getObjName(instanceResult.getDeptId()));
                 item.setAppByName(this.getObjName(instanceResult.getCreatedBy()));
-                item.setCreatedByName(this.getObjName(item.getCreatedBy()));
+                item.setTypeName(flowTypeMap.get(instanceResult.getTemplateId()));
             });
         }
     }

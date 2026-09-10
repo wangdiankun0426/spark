@@ -4,6 +4,7 @@ import com.spark.common.bean.chat.entity.ChatMsg;
 import com.spark.common.bean.chat.query.ChatMsgQuery;
 import com.spark.common.bean.chat.result.ChatMsgResult;
 import com.spark.dao.BaseDao;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -53,4 +54,12 @@ public interface ChatMsgDao extends BaseDao<ChatMsg> {
      * @return
      */
     int queryChatMsgCount(ChatMsgQuery query);
+
+    /**
+     * 按空间删除消息
+     * @param spaceId 空间id
+     * @param updatedBy 修改人id
+     * @return 删除条数
+     */
+    int deleteBySpaceId(@Param("spaceId") Long spaceId, @Param("updatedBy") Long updatedBy);
 }

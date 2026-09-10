@@ -1,18 +1,18 @@
-import siteManage from '@/pages/siteManage/index'
+import site from '@/pages/siteManage/index'
 import tenant from "@/pages/siteManage/sys/tenant.vue";
 
 export default [
     {
-        path: '/siteManage',
-        name: 'siteManage',
-        redirect: '/siteManage/sys/tenant',
-        component: siteManage,
+        path: '/site',
+        name: 'site',
+        redirect: '/site/sys/tenant',
+        component: site,
         meta: {
             title: '站点管理'
         },
         children: [
             {
-                path: '/siteManage/sys/tenant',
+                path: '/site/sys/tenant',
                 name: 'tenant',
                 component: tenant,
                 meta: {

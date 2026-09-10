@@ -62,9 +62,9 @@ public class UserResult extends BaseResult {
     private String roleNames;
 
     /**
-     * 具有权限的菜单id
+     * 具有权限的菜单标识码
      */
-    private List<Long> menuIds;
+    private List<String> menuCodes;
 
     /**
      * 手机号

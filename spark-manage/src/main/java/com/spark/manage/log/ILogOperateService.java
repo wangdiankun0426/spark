@@ -40,24 +40,4 @@ public interface ILogOperateService {
      */
     ResultData<List<Map<String, Object>>> queryLogOperateTypeList();
 
-    /**
-     * 分页查询我的操作记录
-     * @param query 查询参数
-     * @return 列表
-     */
-    ResultData<PageResult<LogOperateResult>> pageMyLogOperateList(LogOperateQuery query);
-
-    /**
-     * 查询操作日志统计
-     * @return 列表
-     */
-    ResultData<List<Map<String, Object>>> queryOperateStatistics();
-
-    /**
-     * 查询对象操作记录列表
-     * @param query 查询参数
-     * @return 列表
-     */
-    ResultData<List<LogOperateResult>> queryObjLogOperateList(LogOperateQuery query);
-
 }

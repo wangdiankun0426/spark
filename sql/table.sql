@@ -110,7 +110,7 @@ CREATE TABLE `sys_role` (
     `name` varchar(128) NOT NULL COMMENT '名称',
     `data_scope` int(4) NOT NULL DEFAULT 1 COMMENT '数据权限',
     `status` int(1) NOT NULL DEFAULT 1 COMMENT '状态',
-    `menu_ids` varchar(1024) NULL COMMENT '菜单ID列表',
+    `menu_codes` varchar(2048) NULL COMMENT '菜单标识码列表，逗号分隔',
 
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
     `created_by` bigint(12) NOT NULL COMMENT '创建人id',
@@ -137,9 +137,11 @@ CREATE TABLE `sys_role_user` (
 
 DROP TABLE IF EXISTS `sys_menu`;
 CREATE TABLE `sys_menu` (
-    `id` bigint(12) NOT NULL COMMENT '主键',
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
     `name` varchar(128) NOT NULL COMMENT '菜单名称',
-    `parent_id` bigint(12) NOT NULL DEFAULT 0 COMMENT '上级菜单id，一级菜单为0',
+    `parent_code` varchar(64) NOT NULL DEFAULT '' COMMENT '上级菜单标识码',
+    `code` varchar(64) NOT NULL COMMENT '标识码',
+    `type` int(1) NOT NULL DEFAULT 1 COMMENT '类型',
 
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
     `created_by` bigint(12) NOT NULL COMMENT '创建人id',
@@ -361,13 +363,16 @@ CREATE TABLE `chat_space` (
   `space_id` bigint(12) NOT NULL COMMENT '空间主键，后两位固定05',
   `sender_id` bigint(12) NOT NULL COMMENT '发送人id',
   `receiver_id` bigint(12) NOT NULL COMMENT '接收人id',
+  `space_type` int(1) NOT NULL DEFAULT 1 COMMENT '会话类型',
+  `title` varchar(100) NULL COMMENT '会话标题',
 
   `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
   `created_by` bigint(12) NOT NULL COMMENT '创建人id',
   `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
   `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  INDEX `idx_sender_type` (`sender_id`, `space_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='聊天空间表';
 
 DROP TABLE IF EXISTS `chat_msg`;
@@ -430,29 +435,6 @@ CREATE TABLE `kb_knowledge` (
     `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识库表';
-
-DROP TABLE IF EXISTS `kb_retrieve_log`;
-CREATE TABLE `kb_retrieve_log` (
-    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
-    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
-    `kb_id` bigint(12) NOT NULL COMMENT '知识库ID',
-    `query` varchar(500) NOT NULL COMMENT '检索查询内容',
-    `strategy` varchar(50) NULL COMMENT '检索策略',
-    `retrieve_count` int(11) DEFAULT 0 COMMENT '召回数量',
-    `qa_hit` tinyint(3) DEFAULT 0 COMMENT 'QA是否命中 0否 1是',
-    `avg_similarity` double DEFAULT 0 COMMENT '平均相似度',
-    `max_similarity` double DEFAULT 0 COMMENT '最高相似度',
-    `cost_time` bigint(20) DEFAULT 0 COMMENT '耗时(毫秒)',
-    `feedback_score` tinyint(3) NULL COMMENT '用户反馈评分 1-5',
-    `feedback_remark` varchar(500) NULL COMMENT '用户反馈备注',
-
-    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
-    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
-    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
-    `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='知识库检索日志表';
 
 DROP TABLE IF EXISTS `flow_template`;
 CREATE TABLE `flow_template` (
@@ -790,9 +772,6 @@ CREATE TABLE kg_entity (
        name VARCHAR(256) NOT NULL COMMENT '实体名称',
        type VARCHAR(64) DEFAULT NULL COMMENT '实体类型',
        source_id BIGINT(20) NOT NULL COMMENT '来源 id' ,
-       source_type INT(3) DEFAULT 1 COMMENT '来源类型',
-       confidence DECIMAL(3,2) DEFAULT 1.00 COMMENT '置信度',
-       audit_status INT(3) DEFAULT 0 COMMENT '审核状态',
        description VARCHAR(1024) DEFAULT NULL COMMENT '实体描述',
        status TINYINT(1) DEFAULT 1 COMMENT '状态（0-禁用 1-启用）',
 
@@ -825,25 +804,6 @@ CREATE TABLE kg_relation (
      updated_dt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
      PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识图谱关系表';
-
-DROP TABLE IF EXISTS `kg_community`;
-CREATE TABLE `kg_community` (
-    `id` BIGINT(20) NOT NULL COMMENT '主键',
-    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
-    `graph_id` BIGINT(20) NOT NULL COMMENT '图谱 id',
-    `community_index` INT(10) NOT NULL COMMENT '社区序号',
-    `name` VARCHAR(128) NOT NULL COMMENT '社区名称',
-    `summary` TEXT NULL COMMENT '社区摘要',
-    `member_count` INT(10) NOT NULL DEFAULT 0 COMMENT '成员实体数量',
-
-    `delete_flag` TINYINT(1) DEFAULT 1 COMMENT '删除标记位（1-有效 -1-删除）',
-    `created_by` BIGINT(20) DEFAULT NULL COMMENT '创建人',
-    `created_dt` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `updated_by` BIGINT(20) DEFAULT NULL COMMENT '修改人',
-    `updated_dt` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='图谱社区表';
-
 DROP TABLE IF EXISTS `wf_template`;
 CREATE TABLE `wf_template` (
     `id` bigint(12) NOT NULL COMMENT '主键,后两位固定17',

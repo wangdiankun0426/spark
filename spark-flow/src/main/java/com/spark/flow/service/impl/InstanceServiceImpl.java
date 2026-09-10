@@ -7,6 +7,7 @@ import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.flow.entity.FlowInstance;
 import com.spark.common.bean.flow.entity.FlowInstanceAssignee;
 import com.spark.common.bean.flow.entity.FlowInstanceDiscuss;
+import com.spark.common.bean.flow.entity.FlowTemplate;
 import com.spark.common.bean.flow.query.*;
 import com.spark.common.bean.flow.result.*;
 import com.spark.common.bean.flow.vo.FlowInstanceVO;
@@ -16,18 +17,12 @@ import com.spark.common.bean.form.query.FormVersionQuery;
 import com.spark.common.bean.form.result.FormObjValueResult;
 import com.spark.common.bean.form.result.FormVersionResult;
 import com.spark.common.bean.form.vo.FormObjValueVO;
+import com.spark.common.enums.*;
 import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.dao.flow.*;
 import com.spark.dao.form.FormObjValueDao;
 import com.spark.dao.form.FormVersionDao;
-import com.spark.common.enums.ErrorCodeEnum;
-import com.spark.common.enums.FlowApproveTypeEnum;
-import com.spark.common.enums.FlowInstanceLevelEnum;
-import com.spark.common.enums.FlowInstanceStatusEnum;
-import com.spark.common.enums.FlowTemplateNodePermissionEnum;
-import com.spark.common.enums.MessageTypeEnum;
-import com.spark.common.enums.ObjectTypeEnum;
 import com.spark.flow.service.FlowMessageService;
 import com.spark.flow.service.FlowableService;
 import com.spark.flow.service.IFlowInstanceService;
@@ -80,6 +75,8 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
     private FlowTemplateNodeDao templateNodeDao;
     @Autowired
     private FlowMessageService flowMessageService;
+    @Autowired
+    private FlowTemplateDao templateDao;
 
     /**
      * 创建流程实例
@@ -670,14 +667,20 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
             return;
         }
         super.supplyCreatedByName(list);
+        List<Long> templateIds = list.stream().map(FlowInstanceResult::getTemplateId).toList();
+        FlowTemplateQuery templateQuery = new FlowTemplateQuery();
+        templateQuery.setIds(templateIds);
+        templateQuery.setPage(false);
+        List<FlowTemplateResult> templateList = templateDao.queryTemplateList(templateQuery);
+        Map<Long, String> flowTypeMap = templateList.stream().collect(Collectors.toMap(FlowTemplateResult::getId, v -> FlowTypeEnum.indexOf(v.getType()).getDesc()));
         list.forEach(item -> {
             item.setStatusName(FlowInstanceStatusEnum.indexOf(item.getStatus()).getDesc());
             item.setLevelName(FlowInstanceLevelEnum.indexOf(item.getLevel()).getDesc());
             if (item.getDeptId() != null) {
                 item.setDeptName(this.getObjName(item.getDeptId()));
             }
+            item.setTypeName(flowTypeMap.get(item.getTemplateId()));
         });
-
     }
 
     /**

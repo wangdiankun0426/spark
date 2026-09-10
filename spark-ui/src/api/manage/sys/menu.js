@@ -7,3 +7,11 @@ export function listMenuAPI() {
         method: 'get'
     })
 }
+
+// 查询菜单树
+export function treeMenuAPI() {
+    return request({
+        url: '/sys/menu/tree',
+        method: 'get'
+    })
+}

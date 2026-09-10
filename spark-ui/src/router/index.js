@@ -26,21 +26,31 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
     // 设置标题
     document.title = to.meta.title ? `星火云应用平台 - ${to.meta.title}` : '星火云应用平台'
+    // 根据角色分发路由
+    if (to.path === '/') {
+        if (isOrgAdmin()) {
+            return next('/org')
+        } else if (isSysAdmin()) {
+            return next('/siteManage')
+        } else {
+            return next('/home')
+        }
+    }
     // 系统后台权限校验
     if (to.path.startsWith('/siteManage')) {
         if (!isSysAdmin()) {
             return next('/noPermission')
         }
     }
-    // 管理后台权限校验
-    if (to.path.startsWith('/manage')) {
+    // 组织管理权限校验
+    if (to.path.startsWith('/org')) {
         if (!isOrgAdmin()) {
             return next('/noPermission')
         }
     }
     // 菜单权限校验：需要菜单权限的路由，无权直达跳无权限页
-    if (to.meta.menuId != null) {
-        if (!hasMenu(to.meta.menuId)) {
+    if (to.meta.menuCode) {
+        if (!hasMenu(to.meta.menuCode)) {
             return next('/noPermission')
         }
     }

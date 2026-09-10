@@ -16,11 +16,11 @@ public enum RoleTypeEnum {
     ORG_ADMIN(2, "组织管理员"),
     ;
 
-    private Integer value;
+    private int value;
 
     private String desc;
 
-    public Integer getValue() {
+    public int getValue() {
         return value;
     }
 
@@ -28,14 +28,14 @@ public enum RoleTypeEnum {
         return desc;
     }
 
-    RoleTypeEnum(Integer value, String desc) {
+    RoleTypeEnum(int value, String desc) {
         this.value = value;
         this.desc = desc;
     }
 
-    public static RoleTypeEnum indexOf(Integer value){
-        for(RoleTypeEnum item:values()){
-            if(item.getValue().equals(value)){
+    public static RoleTypeEnum indexOf(int value){
+        for (RoleTypeEnum item:values()) {
+            if (item.getValue() == value) {
                 return item;
             }
         }
@@ -50,5 +50,13 @@ public enum RoleTypeEnum {
      */
     public static boolean hasRole(Integer roleType, RoleTypeEnum role) {
         return roleType != null && (roleType & role.getValue()) == role.getValue();
+    }
+
+    public void setValue(int value) {
+        this.value = value;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
     }
 }

@@ -3,7 +3,6 @@ package com.spark.kg.service.impl;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
-import com.spark.common.bean.kg.entity.KgCommunity;
 import com.spark.common.bean.kg.entity.KgEntity;
 import com.spark.common.bean.kg.entity.KgGraph;
 import com.spark.common.bean.kg.query.KgEntityQuery;
@@ -16,7 +15,6 @@ import com.spark.common.bean.llm.result.ModelResult;
 import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.LogOperate;
-import com.spark.dao.kg.KgCommunityDao;
 import com.spark.dao.kg.KgEntityDao;
 import com.spark.dao.kg.KgGraphDao;
 import com.spark.dao.llm.ModelDao;
@@ -34,7 +32,6 @@ import com.spark.manage.BaseService;
 import com.spark.prompt.PromptTemplateLoader;
 import com.spark.common.utils.BeanUtil;
 import com.spark.common.utils.CollectionUtil;
-import com.spark.common.utils.MapUtil;
 import com.spark.common.utils.StringUtil;
 import com.alibaba.fastjson2.JSONObject;
 import dev.langchain4j.model.chat.ChatModel;
@@ -74,8 +71,6 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
     private ModelDao modelDao;
     @Autowired
     private Neo4jGraphStore graphStore;
-    @Autowired
-    private KgCommunityDao kgCommunityDao;
     @Autowired
     private ModelFactory modelFactory;
     @Autowired
@@ -293,101 +288,6 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
     }
 
     /**
-     * 构建 GraphRAG 索引
-     * @param graphId 图谱 id
-     * @return 构建结果
-     */
-    @Override
-    @LogOperate(operateType = OperateTypeEnum.KG_GRAPH_UPDATE)
-    public ResultData<Void> buildGraphRAGIndex(Long graphId) {
-        ResultData<Void> result = new ResultData<>();
-        if (!checkGraphAccess(graphId)) {
-            result.setErrorCode(graphId == null ? ErrorCodeEnum.INVALID_PARAM : ErrorCodeEnum.NO_PERMISSION);
-            return result;
-        }
-        // 1. 清除旧社区数据
-        Long userId = SessionHolder.getCurrentUserId();
-        kgCommunityDao.deleteByGraphId(graphId, userId);
-        // 2. 调用 Louvain 社区检测
-        Map<Integer, List<Long>> communities;
-        try {
-            communities = graphStore.detectCommunities(graphId);
-        } catch (Exception e) {
-            logger.error("buildGraphRAGIndex detectCommunities fail, graphId={}", graphId, e);
-            result.setErrorCode(ErrorCodeEnum.SYSTEM_ERROR);
-            return result;
-        }
-        if (MapUtil.isEmpty(communities)) {
-            logger.warn("buildGraphRAGIndex no communities found, graphId={}", graphId);
-            result.setCode(ResultData.OK);
-            return result;
-        }
-        // 3. 遍历社区，生成摘要并入库
-        ChatModel chatModel = modelFactory.getDefaultNoThinkChatModel();
-        int successCount = 0;
-        for (Map.Entry<Integer, List<Long>> entry : communities.entrySet()) {
-            int communityIndex = entry.getKey();
-            List<Long> memberIds = entry.getValue();
-            if (CollectionUtil.isEmpty(memberIds)) {
-                continue;
-            }
-            try {
-                // 查询社区成员实体信息
-                KgEntityQuery entityQuery = new KgEntityQuery();
-                entityQuery.setIds(memberIds);
-                entityQuery.setPage(false);
-                List<KgEntityResult> entityResults = kgEntityDao.queryKgEntityList(entityQuery);
-                if (CollectionUtil.isEmpty(entityResults)) {
-                    continue;
-                }
-                // 构建社区成员摘要文本
-                StringBuilder membersText = new StringBuilder();
-                for (int i = 0; i < entityResults.size(); i++) {
-                    KgEntityResult e = entityResults.get(i);
-                    membersText.append(i + 1).append(". ").append(e.getName());
-                    if (StringUtil.isNotBlank(e.getType())) {
-                        membersText.append("（").append(e.getType()).append("）");
-                    }
-                    if (StringUtil.isNotBlank(e.getDescription())) {
-                        membersText.append("：").append(e.getDescription());
-                    }
-                    membersText.append("\n");
-                }
-                // 调用 LLM 生成社区名称和摘要
-                Map<String, Object> variables = new HashMap<>();
-                variables.put("members", membersText.toString());
-                Prompt prompt = PromptTemplateLoader.create("prompts/kg-community-summary.txt", variables);
-                String response = chatModel.chat(prompt.text());
-                JSONObject summaryObj = parseJsonObject(response);
-                String name = summaryObj != null ? summaryObj.getString("name") : null;
-                String summary = summaryObj != null ? summaryObj.getString("summary") : null;
-                if (StringUtil.isBlank(name)) {
-                    name = "社区-" + communityIndex;
-                }
-                if (StringUtil.isBlank(summary)) {
-                    summary = "包含 " + memberIds.size() + " 个实体的社区";
-                }
-                // 入库
-                KgCommunity community = new KgCommunity();
-                community.setGraphId(graphId);
-                community.setCommunityIndex(communityIndex);
-                community.setName(name);
-                community.setSummary(summary);
-                community.setMemberCount(memberIds.size());
-                community.setCreatedBy(101L);
-                community.setUpdatedBy(101L);
-                kgCommunityDao.insertDB(community);
-                successCount++;
-            } catch (Exception e) {
-                logger.error("buildGraphRAGIndex community error, graphId={}, communityIndex={}", graphId, communityIndex, e);
-            }
-        }
-        logger.info("buildGraphRAGIndex success, graphId={}, total={}, success={}", graphId, communities.size(), successCount);
-        result.setCode(ResultData.OK);
-        return result;
-    }
-
-    /**
      * 图谱推理
      * @param question 问题
      * @param graphIds 图谱 id 列表
@@ -451,58 +351,6 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
             return result;
         }
         result.setData(graphStore.findShortestPath(fromEntityId, toEntityId));
-        result.setCode(ResultData.OK);
-        return result;
-    }
-
-    /**
-     * 计算 PageRank
-     * @param graphId 图谱 id
-     * @param maxIterations 最大迭代次数
-     * @return 分数结果
-     */
-    @Override
-    public ResultData<Map<Long, Double>> pageRank(Long graphId, int maxIterations) {
-        ResultData<Map<Long, Double>> result = new ResultData<>();
-        if (!checkGraphAccess(graphId) || maxIterations < 1 || maxIterations > 100) {
-            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
-            return result;
-        }
-        result.setData(graphStore.calculatePageRank(graphId, maxIterations));
-        result.setCode(ResultData.OK);
-        return result;
-    }
-
-    /**
-     * 计算节点中心度
-     * @param graphId 图谱 id
-     * @return 分数结果
-     */
-    @Override
-    public ResultData<Map<Long, Double>> centrality(Long graphId) {
-        ResultData<Map<Long, Double>> result = new ResultData<>();
-        if (!checkGraphAccess(graphId)) {
-            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
-            return result;
-        }
-        result.setData(graphStore.calculateCentrality(graphId));
-        result.setCode(ResultData.OK);
-        return result;
-    }
-
-    /**
-     * 查询连通分量
-     * @param graphId 图谱 id
-     * @return 连通分量结果
-     */
-    @Override
-    public ResultData<Map<Integer, List<Long>>> connectedComponents(Long graphId) {
-        ResultData<Map<Integer, List<Long>>> result = new ResultData<>();
-        if (!checkGraphAccess(graphId)) {
-            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
-            return result;
-        }
-        result.setData(graphStore.findConnectedComponents(graphId));
         result.setCode(ResultData.OK);
         return result;
     }

@@ -70,4 +70,13 @@ public class FlowInstanceCopyResult extends BaseResult {
      **/
     private String appByName;
 
+    /**
+     * 流程类型
+     */
+    private Integer type;
+
+    /**
+     * 流程类型
+     */
+    private String typeName;
 }

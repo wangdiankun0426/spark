@@ -2,10 +2,8 @@ package com.spark.dao.kg;
 
 import com.spark.common.bean.kg.entity.KgEntity;
 import com.spark.common.bean.kg.query.KgEntityQuery;
-import com.spark.common.bean.kg.result.KgEntityCountResult;
 import com.spark.common.bean.kg.result.KgEntityResult;
 import com.spark.dao.BaseDao;
-import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -64,18 +62,4 @@ public interface KgEntityDao extends BaseDao<KgEntity> {
      * @return 单条数据
      */
     KgEntityResult queryKgEntity(KgEntityQuery query);
-
-    /**
-     * 按 id 批量软删除实体
-     * @param ids 实体 id 列表
-     * @return 影响行数
-     */
-    int deleteDBByIds(List<Long> ids);
-
-    /**
-     * 按图谱 id 批量统计实体数量
-     * @param graphIds 图谱 id 列表
-     * @return 每条记录包含 graphId 与对应实体数量
-     */
-    List<KgEntityCountResult> queryKgEntityCountByGraphIds(@Param("graphIds") List<Long> graphIds);
 }

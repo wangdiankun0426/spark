@@ -1,26 +1,17 @@
 package com.spark.kb.service.impl;
 
-import com.spark.common.bean.base.BaseAssert;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.kb.entity.Knowledge;
-import com.spark.common.bean.dms.query.DocumentQuery;
 import com.spark.common.bean.kb.query.KnowledgeQuery;
-import com.spark.common.bean.kb.query.RetrieveTestQuery;
-import com.spark.common.bean.dms.result.DocumentResult;
 import com.spark.common.bean.kb.result.KnowledgeResult;
-import com.spark.common.bean.kb.result.RetrieveItemResult;
-import com.spark.common.bean.kb.result.RetrieveTestResult;
 import com.spark.common.bean.kb.vo.KnowledgeVO;
 import com.spark.common.bean.llm.query.ModelQuery;
 import com.spark.common.bean.llm.result.ModelResult;
-import com.spark.common.bean.kb.result.RetrieveDetailItem;
-import com.spark.common.bean.kb.result.RetrieveDetailResult;
 import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.LogOperate;
-import com.spark.dao.dms.DocumentDao;
 import com.spark.dao.kb.KnowledgeDao;
 import com.spark.dao.llm.ModelDao;
 import com.spark.common.enums.ChunkStrategyEnum;
@@ -29,8 +20,6 @@ import com.spark.common.enums.ObjectTypeEnum;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.kb.service.IKnowledgeService;
-import com.spark.kb.service.IRetrieveLogService;
-import com.spark.llm.retrieve.ESRetrieve;
 import com.spark.manage.BaseService;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.StringUtil;
@@ -45,9 +34,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * +++/\_/\
@@ -65,13 +52,7 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
     @Autowired
     private KnowledgeDao knowledgeDao;
     @Autowired
-    private DocumentDao documentDao;
-    @Autowired
     private ModelDao modelDao;
-    @Autowired
-    private ESRetrieve esRetrieve;
-    @Autowired
-    private IRetrieveLogService retrieveLogService;
 
     /**
      * 创建知识库
@@ -240,110 +221,6 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
         result.setObjId(knowledgeResult.getId());
         result.setCode(ResultData.OK);
         return result;
-    }
-
-    /**
-     * 检索测试
-     * @param query 检索测试查询条件
-     * @return 检索测试结果
-     */
-    @Override
-    @LogOperate(operateType = OperateTypeEnum.KNOWLEDGE_RETRIEVE_TEST)
-    public ResultData<RetrieveTestResult> testRetrieve(RetrieveTestQuery query) {
-        ResultData<RetrieveTestResult> result = new ResultData<>();
-        if (query == null || query.getKbId() == null || StringUtil.isBlank(query.getQuery())) {
-            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
-            return result;
-        }
-        // 查询知识库配置
-        KnowledgeQuery knowledgeQuery = new KnowledgeQuery();
-        knowledgeQuery.setId(query.getKbId());
-        KnowledgeResult knowledge = knowledgeDao.queryKnowledge(knowledgeQuery);
-        if (knowledge == null) {
-            result.setErrorCode(ErrorCodeEnum.KNOWLEDGE_NOT_EXIST);
-            return result;
-        }
-        // 覆盖知识库配置参数
-        if (query.getTopK() != null) {
-            knowledge.setRetrieveTopK(query.getTopK());
-        }
-        if (query.getMinSimilarity() != null) {
-            knowledge.setMinSimilarity(query.getMinSimilarity());
-        }
-        if (query.getEnableQa() != null) {
-            knowledge.setEnableQa(query.getEnableQa());
-        }
-        // 执行检索测试
-        long startTime = System.currentTimeMillis();
-        List<Long> kbIds = new ArrayList<>();
-        kbIds.add(query.getKbId());
-        RetrieveDetailResult detailResult = esRetrieve.retrieveDetail(query.getQuery(), kbIds, knowledge);
-        long costTime = System.currentTimeMillis() - startTime;
-        // 构建测试结果
-        RetrieveTestResult testResult = new RetrieveTestResult();
-        testResult.setQuery(query.getQuery());
-        testResult.setCostTime(costTime);
-        testResult.setStrategy(detailResult.getStrategy());
-        testResult.setQaHit(detailResult.getQaHit());
-        testResult.setRetrieveCount(0);
-        // 构建检索项结果
-        List<RetrieveItemResult> items = new ArrayList<>();
-        if (CollectionUtil.isNotEmpty(detailResult.getItems())) {
-            testResult.setRetrieveCount(detailResult.getItems().size());
-            for (int i = 0; i < detailResult.getItems().size(); i++) {
-                RetrieveDetailItem detailItem = detailResult.getItems().get(i);
-                RetrieveItemResult item = new RetrieveItemResult();
-                item.setDocId(detailItem.getDocId());
-                item.setChunkId(detailItem.getChunkId());
-                item.setChunkIndex(detailItem.getChunkIndex());
-                item.setContent(detailItem.getContent());
-                item.setScore(detailItem.getScore());
-                item.setRank(i + 1);
-                item.setSourceType(detailItem.getSourceType());
-                items.add(item);
-            }
-        }
-        // 记录检索日志
-        ResultData<Void> saveData = retrieveLogService.saveRetrieveLog(query.getKbId(), query.getQuery(), detailResult, costTime);
-        BaseAssert.assertTrue(saveData);
-        // 补充文档信息
-        this.supplyDocName(items);
-        testResult.setItems(items);
-        result.setData(testResult);
-        result.setObjId(knowledge.getId());
-        result.setCode(ResultData.OK);
-        return result;
-    }
-
-    /**
-     * 补充检索结果文档名称
-     * @param items 检索结果列表
-     */
-    private void supplyDocName(List<RetrieveItemResult> items) {
-        if (CollectionUtil.isEmpty(items)) {
-            return;
-        }
-        Set<Long> docIds = items.stream()
-                .map(RetrieveItemResult::getDocId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-        if (CollectionUtil.isEmpty(docIds)) {
-            return;
-        }
-        DocumentQuery docQuery = new DocumentQuery();
-        docQuery.setPage(false);
-        docQuery.setIds(new ArrayList<>(docIds));
-        List<DocumentResult> docList = documentDao.queryDocumentList(docQuery);
-        if (CollectionUtil.isEmpty(docList)) {
-            return;
-        }
-        Map<Long, String> docNameMap = new HashMap<>();
-        for (DocumentResult docResult : docList) {
-            docNameMap.put(docResult.getId(), docResult.getName());
-        }
-        for (RetrieveItemResult item : items) {
-            item.setDocName(docNameMap.get(item.getDocId()));
-        }
     }
 
     /**

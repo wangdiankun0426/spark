@@ -60,7 +60,7 @@
           <div class="feature-item">
             <div class="feature-icon"><el-icon><MagicStick /></el-icon></div>
             <div class="feature-text">
-              <div class="feature-name">AI应用</div>
+              <div class="feature-name">AI管理</div>
               <div class="feature-desc">智能对话与工作流编排</div>
             </div>
           </div>
@@ -139,8 +139,9 @@
 
     <!-- 右侧 -->
     <div class="el-login-main">
-      <div>
-        <h2 style="color: #304156; font-size: 26px;">
+      <div class="login-title-row">
+        <span class="login-title-bar"></span>
+        <h2 class="login-title">
           <strong>{{ loginForm.loginType === 1 ? '密码登录' : (loginForm.loginType === 2 ? '手机号登录' : '邮箱登录') }}</strong>
         </h2>
       </div>
@@ -280,14 +281,14 @@
         <span style="font-size: 12px">其他方式登录</span>
       </el-divider>
 
-      <div style="margin: 20px">
+      <div class="login-type-row">
         <el-tooltip
             content="密码登录"
             placement="bottom"
             v-if="loginForm.loginType !== 1"
         >
-          <el-button circle @click="switchLoginType(1)">
-            <el-icon style="font-size: 18px"><Lock /></el-icon>
+          <el-button circle class="login-type-btn" @click="switchLoginType(1)">
+            <el-icon style="font-size: 20px"><Lock /></el-icon>
           </el-button>
         </el-tooltip>
         <el-tooltip
@@ -295,8 +296,8 @@
             placement="bottom"
             v-if="loginForm.loginType !== 2"
         >
-          <el-button circle @click="switchLoginType(2)">
-            <el-icon style="font-size: 18px"><Iphone /></el-icon>
+          <el-button circle class="login-type-btn" @click="switchLoginType(2)">
+            <el-icon style="font-size: 20px"><Iphone /></el-icon>
           </el-button>
         </el-tooltip>
         <el-tooltip
@@ -304,8 +305,8 @@
             placement="bottom"
             v-if="loginForm.loginType !== 3"
         >
-          <el-button circle @click="switchLoginType(3)">
-            <el-icon style="font-size: 18px"><Message /></el-icon>
+          <el-button circle class="login-type-btn" @click="switchLoginType(3)">
+            <el-icon style="font-size: 20px"><Message /></el-icon>
           </el-button>
         </el-tooltip>
       </div>
@@ -318,7 +319,7 @@
 </template>
 
 <script setup>
-import { getValidateCodeAPI, getMessageCodeAPI, getEmailCodeAPI } from '@/api/manage/auth/login.js';
+import {getValidateCodeAPI, getMessageCodeAPI, getEmailCodeAPI, getSessionAPI} from '@/api/manage/auth/login.js';
 import { des } from '@/utils/encryptUtil.js';
 import Validate from '@/assets/icons/validate.vue';
 import { ref, getCurrentInstance } from "vue";
@@ -481,7 +482,10 @@ function submitLoginForm() {
       }
       store.dispatch('user/login', {loginForm: data}).then(res => {
         if (res.code === 200) {
-          router.push({ path: "/" }).catch(() => { });
+          getSessionAPI().then(res => {
+            store.dispatch('user/setUserInfo', { userInfo: res.data })
+            router.push({ path: '/' })
+          })
         } else {
           if (res.code === 604) {
             getValidateImg();
@@ -515,7 +519,6 @@ function goRegister() {
   background: linear-gradient(160deg, #f7faff 0%, #eaf2fe 55%, #e3edfd 100%);
 }
 
-// 左侧 - 透明容器
 .el-login-sidebar {
   width: 60%;
   height: 100vh;
@@ -525,7 +528,6 @@ function goRegister() {
   color: $color-text-primary;
 }
 
-// 科技风动态背景装饰层
 .anim-bg {
   position: absolute;
   inset: 0;
@@ -534,7 +536,6 @@ function goRegister() {
   z-index: 0;
 }
 
-// 科技网格底纹
 .anim-grid {
   position: absolute;
   inset: 0;
@@ -547,7 +548,6 @@ function goRegister() {
   mask-image: radial-gradient(ellipse at 50% 45%, #000 40%, transparent 88%);
 }
 
-// 柔和光晕
 .anim-blob {
   position: absolute;
   border-radius: 50%;
@@ -588,7 +588,6 @@ function goRegister() {
   }
 }
 
-// 旋转轨道环（虚线 + 缓慢自转，边缘小光点）
 .anim-orbit {
   position: absolute;
   border: 1px dashed rgba(0, 79, 197, 0.22);
@@ -622,7 +621,6 @@ function goRegister() {
   }
 }
 
-// 数据流网络线条与节点
 .anim-net {
   position: absolute;
   inset: 0;
@@ -685,7 +683,6 @@ function goRegister() {
   }
 }
 
-// 微光粒子
 .anim-dot {
   position: absolute;
   width: 6px;
@@ -712,7 +709,6 @@ function goRegister() {
   }
 }
 
-// 简约网格
 .sidebar-content {
   margin: 140px 80px 20px 80px;
   text-align: left;
@@ -720,7 +716,6 @@ function goRegister() {
   z-index: 1;
 }
 
-// 平台标题 - 蓝青渐变科技字效
 .sidebar-title {
   font-size: 32px;
   font-weight: 700;
@@ -731,7 +726,6 @@ function goRegister() {
   -webkit-text-fill-color: transparent;
 }
 
-// 核心功能卡片
 .sidebar-features {
   margin-top: 32px;
   display: grid;
@@ -753,8 +747,6 @@ function goRegister() {
   position: relative;
   overflow: hidden;
   transition: all 0.2s;
-
-  // 左侧科技感渐变光条，悬停时点亮
   &::before {
     content: '';
     position: absolute;
@@ -810,7 +802,6 @@ function goRegister() {
   white-space: nowrap;
 }
 
-// 客户端下载入口（固定在左侧栏左下角，一字排开）
 .sidebar-downloads {
   position: absolute;
   left: 40px;
@@ -852,7 +843,6 @@ function goRegister() {
   }
 }
 
-// 未上线客户端置灰虚线样式
 .download-item--soon {
   color: $color-text-secondary;
   border-style: dashed;
@@ -863,7 +853,6 @@ function goRegister() {
   }
 }
 
-// 右侧 - 登录表单区
 .el-login-main {
   display: flex;
   flex-direction: column;
@@ -885,6 +874,52 @@ function goRegister() {
   height: 44px;
 }
 
+.login-title-row {
+  display: flex;
+  align-items: center;
+}
+
+.login-title-bar {
+  width: 4px;
+  height: 22px;
+  margin-right: 10px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, $color-primary, #00b8d9);
+}
+
+.login-title {
+  font-size: 26px;
+  color: $color-text-primary;
+}
+
+.login-type-row {
+  display: flex;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.login-type-row .login-type-btn {
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  margin: 0 16px 0 0;
+  color: $color-primary;
+  border: 1px solid rgba(0, 79, 197, 0.12);
+  border-radius: 50%;
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(26, 111, 232, 0.1);
+  transition: all 0.2s;
+
+  &:hover,
+  &:focus {
+    color: $color-primary;
+    border-color: rgba(0, 79, 197, 0.32);
+    background-color: #ffffff;
+    box-shadow: 0 6px 16px rgba(26, 111, 232, 0.18);
+    transform: translateY(-1px);
+  }
+}
+
 .login-code {
   margin-left: 5px;
   width: 32%;
@@ -901,7 +936,6 @@ function goRegister() {
   }
 }
 
-// 分隔线：文字底色与白色卡片一致，横线在文字两侧正常断开
 ::v-deep(.el-divider__text) {
   background-color: #ffffff !important;
   color: $color-text-placeholder;

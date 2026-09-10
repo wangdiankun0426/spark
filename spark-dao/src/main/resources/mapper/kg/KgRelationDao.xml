@@ -134,16 +134,4 @@
         update kg_relation set tail_entity_id = #{newEntityId} , updated_dt = now()
         where tail_entity_id = #{oldEntityId} and delete_flag = 1
     </update>
-
-    <select id="queryKgRelationCountByGraphIds" resultType="com.spark.common.bean.kg.result.KgRelationCountResult">
-        select graph_id, count(1) as relation_count
-        from kg_relation
-        where delete_flag = 1
-        and graph_id in (
-        <foreach collection="graphIds" item="graphId" separator=",">
-            #{graphId}
-        </foreach>
-        )
-        group by graph_id
-    </select>
 </mapper>

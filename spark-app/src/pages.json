@@ -80,7 +80,7 @@
       }
     },
     {
-      "path": "views/contacts/index",
+      "path": "views/contact/index",
       "style": {
         "navigationStyle": "custom"
       }

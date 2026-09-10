@@ -3,9 +3,7 @@ package com.spark.web.rest.controller.kb;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.kb.query.KnowledgeQuery;
-import com.spark.common.bean.kb.query.RetrieveTestQuery;
 import com.spark.common.bean.kb.result.KnowledgeResult;
-import com.spark.common.bean.kb.result.RetrieveTestResult;
 import com.spark.common.bean.kb.vo.KnowledgeVO;
 import com.spark.kb.service.IKnowledgeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,15 +75,5 @@ public class KnowledgeController {
     @GetMapping("detail")
     public ResultData<KnowledgeResult> queryKnowledgeDetail(KnowledgeQuery query) {
         return knowledgeService.queryKnowledgeDetail(query);
-    }
-
-    /**
-     * 检索测试
-     * @param query 检索测试参数
-     * @return 响应结果
-     */
-    @GetMapping("testRetrieve")
-    public ResultData<RetrieveTestResult> testRetrieve(RetrieveTestQuery query) {
-        return knowledgeService.testRetrieve(query);
     }
 }

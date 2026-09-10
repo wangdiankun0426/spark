@@ -22,7 +22,6 @@ import com.spark.dao.kg.KgEntityDao;
 import com.spark.dao.kg.KgGraphDao;
 import com.spark.dao.kg.KgRelationDao;
 import com.spark.common.enums.DocumentEventStatusEnum;
-import com.spark.common.enums.KgAuditStatusEnum;
 import com.spark.common.enums.KgSourceTypeEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.llm.model.ModelFactory;
@@ -589,9 +588,6 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
             entity.setName(name);
             entity.setType(obj.getString("type"));
             entity.setDescription(obj.getString("description"));
-            entity.setConfidence(obj.getDouble("confidence"));
-            entity.setSourceType(KgSourceTypeEnum.LLM.getValue());
-            entity.setAuditStatus(KgAuditStatusEnum.PENDING.getValue());
             entity.setStatus(StatusEnum.NORMAL.getValue());
             list.add(entity);
         }
@@ -676,12 +672,6 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
         for (KgEntity entity : entities) {
             entity.setGraphId(graphId);
             entity.setSourceId(docId);
-            if (entity.getSourceType() == null) {
-                entity.setSourceType(KgSourceTypeEnum.LLM.getValue());
-            }
-            if (entity.getAuditStatus() == null) {
-                entity.setAuditStatus(KgAuditStatusEnum.PENDING.getValue());
-            }
             entity.setStatus(StatusEnum.NORMAL.getValue());
             entity.setCreatedBy(101L);
             entity.setUpdatedBy(101L);

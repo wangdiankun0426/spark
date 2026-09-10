@@ -140,7 +140,7 @@
   </div>
 </template>
 
-<script setup name="documentChunk">
+<script setup>
 import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { Loading, InfoFilled, RefreshRight } from '@element-plus/icons-vue'

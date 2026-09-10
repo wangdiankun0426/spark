@@ -444,21 +444,20 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         if (userId == null) {
             return;
         }
-        List<String> menuIdsList = roleDao.queryUserMenuIds(SessionHolder.getCurrentTenantId(), userId);
-        if (CollectionUtil.isEmpty(menuIdsList)) {
-            userResult.setMenuIds(List.of(10L));
+        List<String> menuCodesList = roleDao.queryUserMenuCodes(SessionHolder.getCurrentTenantId(), userId);
+        if (CollectionUtil.isEmpty(menuCodesList)) {
             return;
         }
-        Set<Long> menuIdSet = new HashSet<>();
-        for (String menuIds : menuIdsList) {
-            String[] idArray = menuIds.split(",");
-            for (String idStr : idArray) {
-                if (StringUtil.isNumeric(idStr)) {
-                    menuIdSet.add(Long.valueOf(idStr));
+        Set<String> menuCodeSet = new HashSet<>();
+        for (String menuCodes : menuCodesList) {
+            String[] codeArray = menuCodes.split(",");
+            for (String code : codeArray) {
+                if (StringUtil.isNotBlank(code)) {
+                    menuCodeSet.add(code.trim());
                 }
             }
         }
-        userResult.setMenuIds(new ArrayList<>(menuIdSet));
+        userResult.setMenuCodes(new ArrayList<>(menuCodeSet));
     }
 
     /**

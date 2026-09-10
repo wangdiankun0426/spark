@@ -46,32 +46,4 @@ public class LogOperateController {
     public ResultData<List<Map<String, Object>>> queryLogOperateTypeList() {
         return logOperateService.queryLogOperateTypeList();
     }
-
-    /**
-     * 查询操作日志
-     * @return 列表
-     */
-    @GetMapping("pageMyList")
-    public ResultData<PageResult<LogOperateResult>> queryMyOperateLog(LogOperateQuery query) {
-        return logOperateService.pageMyLogOperateList(query);
-    }
-
-    /**
-     * 查询操作日志统计
-     * @return 列表
-     */
-    @GetMapping("statistics")
-    public ResultData<List<Map<String, Object>>> queryOperateStatistics() {
-        return logOperateService.queryOperateStatistics();
-    }
-
-    /**
-     * 查询对象操作记录列表
-     * @param query 查询参数
-     * @return 列表
-     */
-    @GetMapping("objList")
-    public ResultData<List<LogOperateResult>> queryObjLogOperateList(LogOperateQuery query) {
-        return logOperateService.queryObjLogOperateList(query);
-    }
 }

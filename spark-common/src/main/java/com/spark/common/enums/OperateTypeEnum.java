@@ -64,7 +64,6 @@ public enum OperateTypeEnum {
     KNOWLEDGE_UPDATE(81, "修改知识库"),
     KNOWLEDGE_DELETE(82, "删除知识库"),
     KNOWLEDGE_DETAIL(83, "查询知识库详情"),
-    KNOWLEDGE_RETRIEVE_TEST(84, "知识库检索测试"),
     // MCP服务器相关的操作记录
     MCP_INSERT(90, "新增MCP服务器"),
     MCP_UPDATE(91, "修改MCP服务器"),
@@ -82,7 +81,6 @@ public enum OperateTypeEnum {
     KG_ENTITY_DELETE(112, "删除图谱实体"),
     KG_ENTITY_DETAIL(113, "查询图谱实体详情"),
     KG_ENTITY_MERGE(114, "合并图谱实体"),
-    KG_ENTITY_AUDIT(115, "审核图谱实体"),
     // 图谱关系相关的操作记录
     KG_RELATION_INSERT(120, "新增图谱关系"),
     KG_RELATION_UPDATE(121, "修改图谱关系"),

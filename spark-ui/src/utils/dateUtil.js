@@ -14,6 +14,37 @@ export function getCurrentDate() {
 }
 
 /**
+ * 格式化会话时间：今天显示时分，昨天显示昨天，同年显示月日，跨年显示年月日
+ * @param value 时间
+ * @returns {string}
+ */
+export function formatChatTime(value) {
+    if (!value) {
+        return '';
+    }
+    var dt = new Date(value);
+    if (isNaN(dt.getTime())) {
+        return '';
+    }
+    var now = new Date();
+    var hour = dt.getHours().toString().padStart(2, '0');
+    var minute = dt.getMinutes().toString().padStart(2, '0');
+    if (dt.toDateString() === now.toDateString()) {
+        return `${hour}:${minute}`;
+    }
+    var yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    if (dt.toDateString() === yesterday.toDateString()) {
+        return '昨天';
+    }
+    var month = dt.getMonth() + 1;
+    var date = dt.getDate();
+    if (dt.getFullYear() === now.getFullYear()) {
+        return `${month}-${date}`;
+    }
+    return `${dt.getFullYear()}-${month}-${date}`;
+}
+
+/**
  * 解析日期
  * @param value
  * @param args

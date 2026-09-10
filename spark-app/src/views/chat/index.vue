@@ -33,7 +33,7 @@
         <view class="chat-msg-header">
           <template v-if="chatMsg.senderId === userInfo.id">
             <view class="chat-time">{{ chatMsg.createdDt }}</view>
-            <user-avatar type="self" name="我" :size="32"/>
+            <user-avatar type="user" :userId="chatMsg.senderId" :size="32"/>
           </template>
           <template v-else>
             <user-avatar v-if="targetType === 'user'" type="user" :userId="chatMsg.senderId" :name="target.name" :size="32"/>
@@ -73,24 +73,19 @@
       </view>
     </scroll-view>
 
-    <!-- 输入区 -->
+    <!-- 输入区-->
     <view class="chat-footer">
       <view class="input-wrapper">
-        <textarea
+        <input
             v-model="message"
             :maxlength="200"
             :disabled="!target || !target.id"
             placeholder="请输入聊天内容"
-            :show-confirm-bar="false"
+            confirm-type="send"
+            :confirm-hold="true"
             class="chat-input"
+            @confirm="handleConfirm"
         />
-      </view>
-      <view class="send-row">
-        <button
-            class="send-btn"
-            :disabled="!target || !target.id || !message"
-            @click="sendMessage"
-        >发送</button>
       </view>
     </view>
 
@@ -101,7 +96,7 @@
 import { ref, computed, watch, onMounted, onUnmounted, getCurrentInstance } from "vue"
 import { onShow } from "@dcloudio/uni-app"
 import { useStore } from "vuex"
-import { createChatSpaceAPI } from "@/api/chat/space.js"
+import { createChatSpaceAPI, createAiChatSpaceAPI } from "@/api/chat/space.js"
 import { getNoReadMsgListAPI } from "@/api/chat/msg.js"
 import { renderMarkdown } from "@/utils/markdownUtil.js"
 import UserAvatar from "@/components/UserAvatar/index.vue"
@@ -201,29 +196,42 @@ function ensureChatSpace() {
   return createChatSpace()
 }
 
+/**
+ * 创建会话空间
+ */
 function createChatSpace() {
-  const data = {
-    senderId: userInfo.value.id,
-    receiverId: target.value.id
+  if (targetType.value === 'user') {
+    return createChatSpaceAPI({
+      senderId: userInfo.value.id,
+      receiverId: target.value.id
+    }).then(handleSpaceCreated)
   }
-  return createChatSpaceAPI(data).then(res => {
-    if (res.code !== 200) {
-      return
+  return createAiChatSpaceAPI({
+    receiverId: target.value.id
+  }).then(handleSpaceCreated)
+}
+
+/**
+ * 会话创建成功后的公共处理：回填 spaceId、通知上一页、加载消息
+ * @param res 创建接口响应
+ */
+function handleSpaceCreated(res) {
+  if (res.code !== 200) {
+    return
+  }
+  target.value.chatSpaceId = res.data.spaceId
+  try {
+    const eventChannel = proxy.getOpenerEventChannel && proxy.getOpenerEventChannel()
+    if (eventChannel && eventChannel.emit) {
+      eventChannel.emit('space-created', {
+        targetId: target.value.id,
+        spaceId: res.data.spaceId
+      })
     }
-    target.value.chatSpaceId = res.data.spaceId
-    try {
-      const eventChannel = proxy.getOpenerEventChannel && proxy.getOpenerEventChannel()
-      if (eventChannel && eventChannel.emit) {
-        eventChannel.emit('space-created', {
-          targetId: target.value.id,
-          spaceId: res.data.spaceId
-        })
-      }
-    } catch (e) {
-      console.error('通知space-created失败', e)
-    }
-    return loadNoReadMsgs()
-  })
+  } catch (e) {
+    console.error('通知space-created失败', e)
+  }
+  return loadNoReadMsgs()
 }
 
 function loadNoReadMsgs() {
@@ -249,6 +257,19 @@ function scrollToBottom() {
 
 function onScroll(e) {
   scrollHeight.value = e.detail.scrollHeight
+}
+
+/**
+ * 键盘「发送」/回车 提交
+ * 小程序端 confirm 事件会带回最终输入值，优先取用，避免与 v-model 的同步时序打架
+ * @param e 事件对象
+ */
+function handleConfirm(e) {
+  const value = e && e.detail ? e.detail.value : undefined
+  if (typeof value === 'string') {
+    message.value = value
+  }
+  sendMessage()
 }
 
 function sendMessage() {
@@ -619,51 +640,28 @@ function goBack() {
   right: 0;
   bottom: 0;
   background-color: #fff;
-  padding: 10px 10px 20px;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
   border-top: 1px solid #e9e9e9;
   z-index: 100;
   box-sizing: border-box;
 }
 
+/* 单行输入框容器：发送按钮去掉后由输入框占满整行 */
 .input-wrapper {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 16px;
   background-color: #f5f7fa;
   border-radius: 10px;
-  padding: 8px 16px;
-  min-height: 120px;
-  max-height: 120px;
 }
 
 .chat-input {
-  width: 100%;
-  height: 110px;
+  flex: 1;
+  height: 24px;
   font-size: 15px;
-  line-height: 1.6;
   background-color: transparent;
   border: none;
-  overflow-y: auto;
-  resize: none;
-}
-
-.send-row {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: 8px;
-}
-
-.send-btn {
-  background-color: #0052cc;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  height: 40px;
-  font-size: 16px;
-  font-weight: 500;
-  margin: 0;
-}
-
-.send-btn[disabled] {
-  background-color: #c9cdd4;
-  color: #999;
 }
 
 /* Markdown 渲染样式（作用于 up-parse 内部节点） */

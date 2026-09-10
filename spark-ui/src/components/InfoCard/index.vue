@@ -1,65 +1,77 @@
 <template>
   <!--
-    通用信息卡片：
-    - 通过 slot 暴露 badge / tags / meta / action 四个差异化区域
-    - 主题色由 theme prop 控制，复用 variables.scss 中的 agent 主题 token
-    - 卡片高度固定（默认 300px），标签区超出时滚动，保证网格整齐
+    通用信息卡片（简约版）：
+    - 固定四部分：图标 + 标题 / 备注 / 底部工具栏
+    - 备注最多两行，超出省略号
+    - 工具栏按钮由 actions 驱动，一行最多 4 个，超出的折叠进「···」气泡
+    - 统一配色，不再按 theme 区分颜色
   -->
-  <div
-      class="info-card"
-      :class="[{ 'info-card-disabled': disabled }, 'theme-' + theme]"
-      :style="{ height: height + 'px' }"
-      @click="handleClick"
-  >
-    <!-- 顶部：头像 + 名称 + 徽章 -->
-    <div class="info-card-top">
-      <div class="info-card-avatar">
-        <el-icon class="info-card-avatar-icon">
+  <div class="info-card" :class="{ 'is-disabled': disabled }">
+    <!-- 图标 + 标题 -->
+    <div class="info-card-head">
+      <span class="info-card-icon">
+        <el-icon>
           <component :is="icon" />
         </el-icon>
-      </div>
-      <div class="info-card-name-row">
-        <div class="info-card-name" :title="title">{{ title }}</div>
-        <div class="info-card-id">{{ idText }}</div>
-      </div>
-      <div class="info-card-badge" v-if="$slots.badge">
-        <slot name="badge" />
-      </div>
+      </span>
+      <span class="info-card-title" :title="title">{{ title }}</span>
     </div>
 
-    <!-- 描述 -->
-    <div class="info-card-desc">{{ description }}</div>
+    <!-- 备注：最多两行 -->
+    <div class="info-card-desc" :title="description">{{ description }}</div>
 
-    <!-- 标签区：由调用方通过 slot 自定义，超长可滚动 -->
-    <div class="info-card-tags" v-if="$slots.tags">
-      <slot name="tags" />
-    </div>
+    <!-- 工具栏 -->
+    <div class="info-card-bar" v-if="actions.length">
+      <template v-for="(act, i) in visibleActions" :key="act.key || i">
+        <span v-if="i > 0" class="info-card-bar-split">|</span>
+        <span
+            class="info-card-bar-btn"
+            :class="{ 'is-disabled': act.disabled || act.loading }"
+            @click="handleAction(act)"
+        >
+          <el-icon v-if="act.loading" class="info-card-bar-loading"><Loading /></el-icon>
+          <span class="info-card-bar-label">{{ act.label }}</span>
+        </span>
+      </template>
 
-    <!-- 底部：元信息 + 操作 -->
-    <div class="info-card-footer">
-      <div class="info-card-meta" v-if="$slots.meta">
-        <slot name="meta" />
-      </div>
-      <div class="info-card-action" v-if="$slots.action">
-        <slot name="action" />
-      </div>
+      <!-- 超出一行的按钮折叠进气泡 -->
+      <template v-if="hiddenActions.length">
+        <span class="info-card-bar-split">|</span>
+        <el-popover
+            placement="top"
+            trigger="hover"
+            :show-arrow="false"
+            popper-class="info-card-bar-pop"
+        >
+          <template #reference>
+            <span class="info-card-bar-btn info-card-bar-more">···</span>
+          </template>
+          <div class="info-card-bar-pop-list">
+            <template v-for="(act, i) in hiddenActions" :key="act.key || i">
+              <span v-if="i > 0" class="info-card-bar-split">|</span>
+              <span
+                  class="info-card-bar-btn"
+                  :class="{ 'is-disabled': act.disabled || act.loading }"
+                  @click="handleAction(act)"
+              >
+                <el-icon v-if="act.loading" class="info-card-bar-loading"><Loading /></el-icon>
+                <span class="info-card-bar-label">{{ act.label }}</span>
+              </span>
+            </template>
+          </div>
+        </el-popover>
+      </template>
     </div>
   </div>
 </template>
 
 <script setup>
-/**
- * 通用信息卡片
- * 适用于列表式信息展示场景（agent / knowledge / flow 等），统一视觉与结构
- */
+import { computed } from 'vue'
+import { Loading } from '@element-plus/icons-vue'
+
+const MAX_BAR_ACTIONS = 4
 
 const props = defineProps({
-  // 主题色：blue / green / purple / orange / cyan / pink / indigo
-  theme: {
-    type: String,
-    default: 'blue'
-  },
-  // 头像图标组件（Element Plus icon）
   icon: {
     type: [Object, Function],
     required: true
@@ -69,93 +81,88 @@ const props = defineProps({
     type: String,
     default: ''
   },
-  // 编号文案（如 #123）
-  idText: {
-    type: String,
-    default: ''
-  },
-  // 描述文案
+  // 备注文案
   description: {
     type: String,
     default: ''
   },
-  // 是否禁用（已停用 / 已停用等场景）
   disabled: {
     type: Boolean,
     default: false
   },
-  // 卡片固定高度（px）
-  height: {
-    type: Number,
-    default: 300
+  actions: {
+    type: Array,
+    default: () => []
   }
 })
 
-const emit = defineEmits(['click'])
+const emit = defineEmits(['action'])
 
-function handleClick(e) {
-  if (props.disabled) {
+// 工具栏直接展示的按钮
+const visibleActions = computed(() => props.actions.slice(0, MAX_BAR_ACTIONS))
+
+// 收进「···」气泡的按钮
+const hiddenActions = computed(() => props.actions.slice(MAX_BAR_ACTIONS))
+
+/**
+ * 触发工具栏按钮
+ * @param act 按钮配置项
+ */
+function handleAction(act) {
+  if (act.disabled || act.loading) {
     return
   }
-  emit('click', e)
+  if (typeof act.onClick === 'function') {
+    act.onClick(act)
+  }
+  emit('action', act)
 }
 </script>
 
 <style scoped lang="scss">
 .info-card {
-  position: relative;
-  background-color: $bg-card;
-  border-radius: $border-radius-md;
-  padding: $spacing-lg;
-  cursor: pointer;
-  overflow: hidden;
-  transition: $transition-normal;
-  border: 1px solid $border-color;
   display: flex;
   flex-direction: column;
-  gap: $spacing-md;
+  background-color: $bg-card;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-md;
+  overflow: hidden;
+  transition: $transition-normal;
   box-shadow: 0 1px 4px rgba(23, 43, 77, 0.06);
 
   &:hover {
     transform: translateY(-2px);
-    border-color: $border-color;
     box-shadow: 0 4px 16px rgba(0, 79, 197, 0.10);
   }
 }
 
-.info-card-top {
+.info-card-head {
   display: flex;
   align-items: center;
-  gap: $spacing-md;
+  gap: $spacing-sm;
+  padding: $spacing-md $spacing-md 0;
 }
 
-.info-card-avatar {
-  width: 46px;
-  height: 46px;
-  border-radius: 8px;
+.info-card-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: $border-radius-sm;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  transition: $transition-normal;
-  background: var(--info-theme);
+  background-color: $color-primary-light;
+  color: $color-primary;
+
+  .el-icon {
+    font-size: 16px;
+  }
 }
 
-.info-card-avatar-icon {
-  font-size: 24px;
-  color: #ffffff;
-}
-
-.info-card-name-row {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-xs;
-  min-width: 0;
+.info-card-title {
   flex: 1;
-}
-
-.info-card-name {
-  font-size: 15px;
+  min-width: 0;
+  font-size: 14px;
   font-weight: 600;
   color: $color-text-primary;
   overflow: hidden;
@@ -163,196 +170,105 @@ function handleClick(e) {
   white-space: nowrap;
 }
 
-.info-card-id {
-  font-size: 12px;
-  color: $color-text-placeholder;
-  font-weight: 400;
-}
-
-.info-card-badge {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-}
-
 .info-card-desc {
-  font-size: 13px;
-  color: $color-text-secondary;
+  flex: 1;
+  min-height: 38px;
+  padding: $spacing-sm $spacing-md 0;
+  font-size: 12px;
   line-height: 1.6;
+  color: $color-text-secondary;
+  word-break: break-all;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: 40px;
 }
 
-.info-card-tags {
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  gap: $spacing-xs;
-  min-height: 24px;
-  padding: $spacing-xs 0;
-}
-
-.info-card-footer {
-  margin-top: auto;
-  padding-top: $spacing-md;
-  border-top: 1px solid $border-color-light;
+.info-card-bar {
   display: flex;
   align-items: center;
-  gap: $spacing-md;
+  margin-top: $spacing-md;
+  padding: $spacing-md $spacing-md;
+  background-color: #f4f5f7;
+  overflow: hidden;
+}
+
+.info-card-bar-split {
+  flex-shrink: 0;
+  margin: 0 $spacing-sm;
   font-size: 12px;
-  color: $color-text-secondary;
+  line-height: 1;
+  color: $border-color;
 }
 
-.info-card-meta {
-  display: flex;
-  align-items: center;
-  gap: $spacing-md;
-  flex: 1;
+.info-card-bar-btn {
   min-width: 0;
-
-  :deep(.el-icon) {
-    font-size: 14px;
-  }
-}
-
-.info-card-action {
-  margin-left: auto;
-  display: flex;
+  font-size: 12px;
+  line-height: 1;
+  color: $color-text-secondary;
+  cursor: pointer;
+  transition: $transition-fast;
+  display: inline-flex;
   align-items: center;
-  gap: $spacing-md;
-  color: var(--info-theme);
-}
+  gap: $spacing-xs;
 
-// ============== slot 内公共样式（穿透 scoped）==============
-// 徽章：调用方使用 <span class="badge badge-xxx">
-.info-card-badge {
-  :deep(.badge) {
-    flex-shrink: 0;
-    padding: 2px $spacing-sm;
-    font-size: 11px;
-    font-weight: 600;
-    border-radius: $border-radius-sm;
-    line-height: 1.4;
-    display: inline-flex;
-    align-items: center;
-  }
-
-  :deep(.badge-primary) {
+  &:hover {
     color: $color-primary;
-    background-color: $color-primary-soft;
   }
 
-  :deep(.badge-muted) {
-    color: $color-text-placeholder;
-    background-color: $border-color-light;
-  }
-
-  :deep(.badge-theme) {
-    color: var(--info-theme);
-    background-color: var(--info-theme-soft);
-  }
-}
-
-// 元信息项：调用方使用 <span class="meta-item"><el-icon><.../></el-icon>xxx</span>
-.info-card-meta {
-  :deep(.meta-item) {
-    display: inline-flex;
-    align-items: center;
-    gap: $spacing-xs;
-    min-width: 0;
-
-    span {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-  }
-}
-
-// 操作：调用方使用 <span class="action-item">xxx<el-icon><.../></el-icon></span>
-.info-card-action {
-  :deep(.action-item) {
-    display: inline-flex;
-    align-items: center;
-    gap: $spacing-xs;
-    font-weight: 600;
-    transition: $transition-fast;
-    cursor: pointer;
-  }
-
-  :deep(.action-muted) {
+  &.is-disabled {
     color: $color-text-placeholder;
     cursor: default;
-  }
-
-  // el-button 文本按钮在操作区中跟随主题色
-  :deep(.el-button.is-text) {
-    color: var(--info-theme);
-    padding: 0;
 
     &:hover {
-      color: var(--info-theme);
-      background-color: var(--info-theme-soft);
+      color: $color-text-placeholder;
     }
   }
 }
 
-// 标签区中的 el-tag 跟随主题色
-// 仅覆盖无 type 的默认 tag，保留 success / info / warning / danger 的语义色
-.info-card-tags {
-  :deep(.el-tag:not(.el-tag--success):not(.el-tag--info):not(.el-tag--warning):not(.el-tag--danger)) {
-    --el-tag-bg-color: var(--info-theme-soft);
-    --el-tag-text-color: var(--info-theme);
-    --el-tag-border-color: transparent;
-    border-color: transparent;
-    font-weight: 400;
-  }
+// 卡片宽度不足时按钮文案省略，避免撑破工具栏
+.info-card-bar-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-  // 标签分组的小标题（agent 用）
-  :deep(.tag-group) {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: $spacing-xs;
-    width: 100%;
+.info-card-bar-more {
+  flex-shrink: 0;
+  font-weight: 600;
+}
 
-    .tag-group-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: $color-text-secondary;
-      margin-right: $spacing-xs;
-    }
+.info-card-bar-loading {
+  animation: info-card-spin 1s linear infinite;
+}
+
+@keyframes info-card-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
-// 已停用：置灰，禁用 hover 效果
-.info-card-disabled {
-  cursor: not-allowed;
-  opacity: 0.62;
+// 气泡内容由本组件渲染，scoped 样式可直接命中；仅弹层外壳需要全局样式
+:global(.info-card-bar-pop) {
+  padding: 0;
+  border: 1px solid $border-color;
+  box-shadow: 0 4px 16px rgba(0, 79, 197, 0.10);
+}
 
-  .info-card-avatar {
-    background: $color-text-placeholder;
-  }
+.info-card-bar-pop-list {
+  display: flex;
+  align-items: center;
+  padding: $spacing-sm $spacing-md;
+}
+
+// ============== 停用态 ==============
+.info-card.is-disabled {
+  opacity: 0.6;
+  cursor: default;
 
   &:hover {
     transform: none;
-    border-color: $border-color;
     box-shadow: 0 1px 4px rgba(23, 43, 77, 0.06);
   }
 }
-
-// ============== 主题色 ==============
-// 通过 CSS 变量统一驱动卡片各处主题色（头像 / 标签 / 操作文字）
-.theme-blue   { --info-theme: #{$agent-theme-blue};   --info-theme-light: #{lighten($agent-theme-blue, 12%)};   --info-theme-soft: #{$agent-theme-blue-soft}; }
-.theme-green  { --info-theme: #{$agent-theme-green};  --info-theme-light: #{lighten($agent-theme-green, 12%)};  --info-theme-soft: #{$agent-theme-green-soft}; }
-.theme-purple { --info-theme: #{$agent-theme-purple}; --info-theme-light: #{lighten($agent-theme-purple, 12%)}; --info-theme-soft: #{$agent-theme-purple-soft}; }
-.theme-orange { --info-theme: #{$agent-theme-orange}; --info-theme-light: #{lighten($agent-theme-orange, 12%)}; --info-theme-soft: #{$agent-theme-orange-soft}; }
-.theme-cyan   { --info-theme: #{$agent-theme-cyan};   --info-theme-light: #{lighten($agent-theme-cyan, 12%)};   --info-theme-soft: #{$agent-theme-cyan-soft}; }
-.theme-pink   { --info-theme: #{$agent-theme-pink};   --info-theme-light: #{lighten($agent-theme-pink, 12%)};   --info-theme-soft: #{$agent-theme-pink-soft}; }
-.theme-indigo { --info-theme: #{$agent-theme-indigo}; --info-theme-light: #{lighten($agent-theme-indigo, 12%)}; --info-theme-soft: #{$agent-theme-indigo-soft}; }
 </style>

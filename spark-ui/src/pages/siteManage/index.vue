@@ -1,15 +1,15 @@
 <template>
   <div>
     <el-container>
-      <el-aside width="64px" class="siteManage-el-aside">
+      <el-aside width="64px" class="site-el-aside">
         <el-menu
             :default-active="defaultActive"
             :router='true'
             :collapse="true"
             mode="vertical"
-            class="siteManage-el-menu"
+            class="site-el-menu"
         >
-          <el-menu-item index="/siteManage/sys/tenant">
+          <el-menu-item index="/site/sys/tenant">
             <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><User /></el-icon>
             <template #title>租户管理</template>
           </el-menu-item>
@@ -41,7 +41,7 @@ const defaultActive = computed(() => {
 </script>
 
 <style lang="scss" scoped>
-.siteManage-el-aside {
+.site-el-aside {
   padding: 0;
   height: calc(100vh - $nav-height);
   background: var(--sidebar-bg);
@@ -50,7 +50,7 @@ const defaultActive = computed(() => {
   overflow-y: auto;
   overflow-x: hidden;
 }
-.siteManage-el-menu {
+.site-el-menu {
   border: 0;
   padding: 0;
   margin: 0;
