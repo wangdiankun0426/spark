@@ -122,12 +122,12 @@
             <user-avatar :user-id="scope.row.id" :size="36" />
           </template>
         </el-table-column>
-        <el-table-column prop="name" label="用户名" width="80" align="center"/>
+        <el-table-column prop="name" label="用户名" width="120" align="center"/>
         <el-table-column prop="loginName" label="登录名" width="120" align="center"/>
         <el-table-column prop="sexName" label="性别" align="center"/>
         <el-table-column prop="statusName" label="状态" align="center"/>
         <el-table-column prop="phone" label="手机号" width="180" align="center"/>
-        <el-table-column prop="email" label="邮箱" width="180" align="center"/>
+        <el-table-column prop="email" label="邮箱" width="200" align="center"/>
         <el-table-column prop="createdByName" label="创建人" width="120" align="center"/>
         <el-table-column prop="createdDt" label="创建时间" width="180" align="center"/>
         <el-table-column prop="updatedByName" label="修改人" width="120" align="center"/>

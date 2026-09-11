@@ -99,6 +99,8 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         if (result.getCode() != ResultData.OK) {
             return result;
         }
+        result = tenantUserService.checkTenantUserCount(SessionHolder.getCurrentTenantId());
+        BaseAssert.assertTrue(result);
         User user = new User();
         Long userId = super.genObjectId(ObjectTypeEnum.USER);
         user.setId(userId);

@@ -62,4 +62,11 @@ public interface ITenantUserService {
      * @return 切换结果
      */
     ResultData<Void> switchTenant(TenantVO tenantVO);
+
+    /**
+     * 查询租户用户数量是否合规
+     * @param tenantId
+     * @return
+     */
+    ResultData<Void> checkTenantUserCount(Long tenantId);
 }

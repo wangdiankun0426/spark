@@ -31,13 +31,13 @@ router.beforeEach(async (to, from, next) => {
         if (isOrgAdmin()) {
             return next('/org')
         } else if (isSysAdmin()) {
-            return next('/siteManage')
+            return next('/site')
         } else {
             return next('/home')
         }
     }
     // 系统后台权限校验
-    if (to.path.startsWith('/siteManage')) {
+    if (to.path.startsWith('/site')) {
         if (!isSysAdmin()) {
             return next('/noPermission')
         }

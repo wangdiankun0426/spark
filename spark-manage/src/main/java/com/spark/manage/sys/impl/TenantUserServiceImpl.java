@@ -1,5 +1,6 @@
 package com.spark.manage.sys.impl;
 
+import com.spark.common.bean.base.BaseAssert;
 import com.spark.common.bean.sys.entity.Session;
 import com.spark.common.bean.sys.entity.User;
 import com.spark.common.bean.sys.query.DepartmentQuery;
@@ -80,6 +81,8 @@ public class TenantUserServiceImpl extends BaseService<TenantUserQuery, TenantUs
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        result = this.checkTenantUserCount(tenantUserVO.getTenantId());
+        BaseAssert.assertTrue(result);
         List<Long> userIds = tenantUserVO.getUserIds();
         Long tenantId = tenantUserVO.getTenantId();
         TenantUserQuery tenantUserQuery = new TenantUserQuery();
@@ -255,6 +258,36 @@ public class TenantUserServiceImpl extends BaseService<TenantUserQuery, TenantUs
         }
         result.setObjId(tenantId);
         result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 查询租户用户数量是否合规
+     * @param tenantId
+     * @return
+     */
+    @Override
+    public ResultData<Void> checkTenantUserCount(Long tenantId) {
+        ResultData<Void> result = new ResultData<>();
+        if (tenantId == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        TenantQuery tenantQuery = new TenantQuery();
+        tenantQuery.setTenantId(tenantId);
+        TenantResult tenantResult = tenantDao.queryTenant(tenantQuery);
+        if (tenantResult == null) {
+            result.setErrorCode(ErrorCodeEnum.TENANT_NOT_EXIST);
+            return result;
+        }
+        TenantUserQuery tenantUserQuery = new TenantUserQuery();
+        tenantUserQuery.setTenantId(tenantId);
+        int count = tenantUserDao.queryTenantUserCount(tenantUserQuery);
+        if (tenantResult.getAccountCount() > count) {
+            result.setCode(ResultData.OK);
+            return result;
+        }
+        result.setErrorCode(ErrorCodeEnum.TENANT_USER_FULL);
         return result;
     }
 
