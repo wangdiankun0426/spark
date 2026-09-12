@@ -51,6 +51,9 @@ public enum ErrorCodeEnum {
     TENANT_UNAVAILABLE(812,"租户不可用或未加入"),
     TENANT_NOT_EXIST(813,"租户不存在"),
     TENANT_USER_FULL(814,"租户用户已满"),
+    TENANT_CONFIG_NOT_EXIST(815,"租户配置不存在"),
+    TENANT_CONFIG_KEY_EXIST(816,"相同配置key的租户配置已存在"),
+    TENANT_USER_NOT_EXIST(817,"租户用户数据不存在"),
     // 角色相关状态码
     ROLE_SAME_NAME_EXIST(901, "相同名称的角色已存在"),
     // 菜单相关状态码

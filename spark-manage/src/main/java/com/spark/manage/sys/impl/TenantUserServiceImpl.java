@@ -2,6 +2,7 @@ package com.spark.manage.sys.impl;
 
 import com.spark.common.bean.base.BaseAssert;
 import com.spark.common.bean.sys.entity.Session;
+import com.spark.common.bean.sys.entity.TenantUser;
 import com.spark.common.bean.sys.entity.User;
 import com.spark.common.bean.sys.query.DepartmentQuery;
 import com.spark.common.bean.sys.query.TenantQuery;
@@ -30,6 +31,7 @@ import com.spark.config.redis.RedisService;
 import com.spark.dao.sys.*;
 import com.spark.manage.BaseService;
 import com.spark.manage.sys.ITenantUserService;
+import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,11 +77,14 @@ public class TenantUserServiceImpl extends BaseService<TenantUserQuery, TenantUs
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.TENANT_ADD_USER)
-    public ResultData<Void> addUser(TenantUserVO tenantUserVO) {
-        ResultData<Void> result = new ResultData<>();
+    public ResultData<Long> addUser(TenantUserVO tenantUserVO) {
+        ResultData<Long> result = new ResultData<>();
         if (tenantUserVO == null || tenantUserVO.getTenantId() == null || CollectionUtil.isEmpty(tenantUserVO.getUserIds())) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
+        }
+        if (tenantUserVO.getDeptId() == null) {
+            tenantUserVO.setDeptId(0L);
         }
         result = this.checkTenantUserCount(tenantUserVO.getTenantId());
         BaseAssert.assertTrue(result);
@@ -98,7 +103,7 @@ public class TenantUserServiceImpl extends BaseService<TenantUserQuery, TenantUs
             result.setCode(ResultData.OK);
             return result;
         }
-        int count = tenantUserDao.batchInsertByTenantId(tenantId, userIds, SessionHolder.getCurrentUserId());
+        int count = tenantUserDao.batchInsertByTenantId(tenantId, tenantUserVO.getDeptId(), userIds, SessionHolder.getCurrentUserId());
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
@@ -117,11 +122,24 @@ public class TenantUserServiceImpl extends BaseService<TenantUserQuery, TenantUs
     @LogOperate(operateType = OperateTypeEnum.TENANT_DEL_USER)
     public ResultData<Void> removeUser(TenantUserVO tenantUserVO) {
         ResultData<Void> result = new ResultData<>();
-        if (tenantUserVO == null || tenantUserVO.getTenantId() == null || tenantUserVO.getUserId() == null) {
+        if (tenantUserVO == null || tenantUserVO.getUserId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        int count = tenantUserDao.deleteTenantUser(tenantUserVO.getTenantId(), tenantUserVO.getUserId(), SessionHolder.getCurrentUserId());
+        if (tenantUserVO.getTenantId() == null) {
+            tenantUserVO.setTenantId(SessionHolder.getCurrentTenantId());
+        }
+        TenantUserQuery tenantUserQuery = new TenantUserQuery();
+        tenantUserQuery.setTenantId(tenantUserVO.getTenantId());
+        tenantUserQuery.setUserId(tenantUserVO.getUserId());
+        TenantUserResult tenantUserResult = tenantUserDao.queryTenantUser(tenantUserQuery);
+        if (tenantUserResult == null) {
+            result.setErrorCode(ErrorCodeEnum.TENANT_USER_NOT_EXIST);
+            return result;
+        }
+        TenantUser tenantUser = new TenantUser();
+        tenantUser.setId(tenantUserResult.getId());
+        int count = tenantUserDao.deleteDBById(tenantUser);
         if (count < 0) {
             result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
@@ -132,24 +150,31 @@ public class TenantUserServiceImpl extends BaseService<TenantUserQuery, TenantUs
     }
 
     /**
-     * 修改租户用户角色类型
+     * 修改租户用户
      * @param tenantUserVO 修改参数
      * @return 修改结果
      */
     @Override
-    @LogOperate(operateType = OperateTypeEnum.TENANT_UPDATE_USER_ROLE)
-    public ResultData<Void> updateTenantUserRoleType(TenantUserVO tenantUserVO) {
+    @LogOperate(operateType = OperateTypeEnum.TENANT_USER_UPDATE)
+    public ResultData<Void> updateTenantUser(TenantUserVO tenantUserVO) {
         ResultData<Void> result = new ResultData<>();
         if (tenantUserVO == null || tenantUserVO.getTenantId() == null || tenantUserVO.getUserId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        Integer roleType = tenantUserVO.getRoleType();
-        if (!Objects.equals(roleType, RoleTypeEnum.COMMON.getValue()) && !Objects.equals(roleType, RoleTypeEnum.ORG_ADMIN.getValue())) {
-            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+        TenantUserQuery tenantUserQuery = new TenantUserQuery();
+        tenantUserQuery.setTenantId(tenantUserVO.getTenantId());
+        tenantUserQuery.setUserId(tenantUserVO.getUserId());
+        TenantUserResult tenantUserResult = tenantUserDao.queryTenantUser(tenantUserQuery);
+        if (tenantUserResult == null) {
+            result.setErrorCode(ErrorCodeEnum.TENANT_USER_NOT_EXIST);
             return result;
         }
-        int count = tenantUserDao.updateTenantUserRoleType(tenantUserVO.getTenantId(), tenantUserVO.getUserId(), roleType, SessionHolder.getCurrentUserId());
+        TenantUser tenantUser = new TenantUser();
+        tenantUser.setId(tenantUserResult.getId());
+        tenantUser.setDeptId(tenantUserVO.getDeptId());
+        tenantUser.setRoleType(tenantUserVO.getRoleType());
+        int count = tenantUserDao.updateDBById(tenantUser);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
@@ -267,8 +292,8 @@ public class TenantUserServiceImpl extends BaseService<TenantUserQuery, TenantUs
      * @return
      */
     @Override
-    public ResultData<Void> checkTenantUserCount(Long tenantId) {
-        ResultData<Void> result = new ResultData<>();
+    public ResultData<Long> checkTenantUserCount(Long tenantId) {
+        ResultData<Long> result = new ResultData<>();
         if (tenantId == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;

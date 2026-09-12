@@ -27,7 +27,7 @@ public interface ITenantUserService {
      * @param tenantUserVO 添加用户参数
      * @return 添加结果
      */
-    ResultData<Void> addUser(TenantUserVO tenantUserVO);
+    ResultData<Long> addUser(TenantUserVO tenantUserVO);
 
     /**
      * 移除用户
@@ -37,11 +37,11 @@ public interface ITenantUserService {
     ResultData<Void> removeUser(TenantUserVO tenantUserVO);
 
     /**
-     * 修改租户用户角色类型
+     * 修改租户用户
      * @param tenantUserVO 修改参数
      * @return 修改结果
      */
-    ResultData<Void> updateTenantUserRoleType(TenantUserVO tenantUserVO);
+    ResultData<Void> updateTenantUser(TenantUserVO tenantUserVO);
 
     /**
      * 分页查询租户用户列表
@@ -68,5 +68,5 @@ public interface ITenantUserService {
      * @param tenantId
      * @return
      */
-    ResultData<Void> checkTenantUserCount(Long tenantId);
+    ResultData<Long> checkTenantUserCount(Long tenantId);
 }

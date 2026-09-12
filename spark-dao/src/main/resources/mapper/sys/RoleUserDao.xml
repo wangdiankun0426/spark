@@ -66,4 +66,15 @@
             (#{tenantId},#{roleId}, #{userId}, 1, #{createdBy}, now(), #{createdBy}, now())
         </foreach>
     </insert>
+
+    <delete id="deleteRoleUser">
+        update sys_role_user
+        set delete_flag = -1, updated_by = #{updatedBy}, updated_dt = now()
+        where user_id = #{userId}
+        and role_id in (
+        <foreach collection="roleIds" item="roleId" separator=",">
+            #{roleId}
+        </foreach>
+        )
+    </delete>
 </mapper>

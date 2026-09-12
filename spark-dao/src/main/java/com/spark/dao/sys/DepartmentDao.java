@@ -22,13 +22,6 @@ import java.util.List;
 public interface DepartmentDao extends BaseDao<Department> {
 
     /**
-     * 查询最大id
-     * @return
-     */
-    @Select("select max(id) from sys_department")
-    Long queryDeptMaxId();
-
-    /**
      * 获取部门最大的code
      *
      * @param newPrtId
@@ -75,6 +68,13 @@ public interface DepartmentDao extends BaseDao<Department> {
      */
     @Override
     int updateById(Department department);
+
+    /**
+     * 查询最大id
+     * @return
+     */
+    @Select("select max(id) from sys_department")
+    Long queryDeptMaxId();
 
     /**
      * 根据企业微信部门ID查询部门

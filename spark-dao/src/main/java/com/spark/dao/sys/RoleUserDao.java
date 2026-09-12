@@ -56,12 +56,11 @@ public interface RoleUserDao {
 
     /**
      * 删除关联
-     * @param roleId
+     * @param roleIds
      * @param userId
      * @param updatedBy
      * @return
      */
-    @Update("update sys_role_user set delete_flag = -1, updated_by = #{updatedBy}, updated_dt = now() where role_id = #{roleId} and user_id = #{userId}")
-    int deleteRoleUser(@Param("roleId")Long roleId, @Param("userId") Long userId, @Param("updatedBy") Long updatedBy);
+    int deleteRoleUser(@Param("roleIds")List<Long> roleIds, @Param("userId") Long userId, @Param("updatedBy") Long updatedBy);
 
 }

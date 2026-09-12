@@ -73,12 +73,27 @@ public class UserVO extends BaseVO {
     private String wecomId;
 
     /**
-     *
+     * 原密码
      */
     private String oldPassword;
 
     /**
-     *
+     * 新密码
      */
     private String newPassword;
+
+    /**
+     * 微信小程序openid
+     */
+    private String wxOpenId;
+
+    /**
+     * 微信unionid
+     */
+    private String wxUnionId;
+
+    /**
+     * 密码
+     */
+    private String password;
 }

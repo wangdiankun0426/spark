@@ -146,12 +146,12 @@
             </el-button>
             <el-button
                 type="danger"
-                @click="deleteUser(scope.row.id)"
+                @click="removeUser(scope.row.id)"
                 text
             >
               <el-icon><Delete /></el-icon>
               <span style="font-size: 12px; font-weight: 400">
-               删除
+               移除
               </span>
             </el-button>
           </template>
@@ -266,13 +266,14 @@
 </template>
 
 <script setup>
-import {pageUserListAPI, createUserAPI, updateUserAPI, deleteUserAPI, userDetailAPI} from '@/api/manage/sys/user.js';
-import {syncWeComOrganizationAPI} from '@/api/manage/external/weCom.js';
+import {pageUserListAPI, createUserAPI, updateUserAPI, userDetailAPI} from '@/api/manage/sys/user.js';
+import {syncWeComOrgAPI} from '@/api/manage/external/weCom.js';
 import {ElMessage, ElMessageBox} from "element-plus";
 import {treeDeptAPI} from "@/api/manage/sys/dept.js";
 import {pageRoleListAPI} from '@/api/manage/sys/role.js';
 import {getCurrentInstance, ref} from 'vue';
 import UserAvatar from '@/components/UserAvatar/index.vue';
+import {removeTenantUserAPI} from "@/api/manage/sys/tenantUser.js";
 
 const { proxy } = getCurrentInstance();
 const sexOptions = [
@@ -367,7 +368,7 @@ function syncWeComOrganization() {
       }
   ).then(() => {
     syncLoading.value = true;
-    syncWeComOrganizationAPI().then(res => {
+    syncWeComOrgAPI().then(res => {
       if (res.code !== 200) {
         return;
       }
@@ -519,27 +520,27 @@ function closeUserForm() {
 }
 
 /**
- * 删除用户
+ * 移除用户
  * @param id
  * */
-function deleteUser(id) {
-  ElMessageBox.confirm(
-      '是否确定删除此用户?',
-      '提示',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }
-  ).then(() => {
+function removeUser(id) {
+  ElMessageBox.confirm('是否确定从此租户移除该用户?', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(() => {
     const data = {
-      id: id
+      userId: id,
     };
-    deleteUserAPI(data).then(res => {
+    removeTenantUserAPI(data).then(res => {
+      if (res.code !== 200) {
+        return;
+      }
+      ElMessage.success('移除成功');
       getUserList();
-      ElMessage.success("删除用户成功");
     })
-  }).catch(() => {})
+  }).catch(() => {
+  })
 }
 
 /**

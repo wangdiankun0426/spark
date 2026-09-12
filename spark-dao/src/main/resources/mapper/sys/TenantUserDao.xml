@@ -55,10 +55,28 @@
     </select>
 
     <insert id="batchInsertByTenantId">
-        insert into sys_tenant_user (tenant_id, user_id, delete_flag, created_by, created_dt, updated_by, updated_dt)
+        insert into sys_tenant_user (tenant_id, user_id, dept_id, delete_flag, created_by, created_dt, updated_by, updated_dt)
         values
         <foreach collection="userIds" item="userId" separator=",">
-            (#{tenantId}, #{userId}, 1, #{createdBy}, now(), #{createdBy}, now())
+            (#{tenantId}, #{userId}, #{deptId}, 1, #{createdBy}, now(), #{createdBy}, now())
         </foreach>
     </insert>
+
+    <update id="updateById" parameterType="com.spark.common.bean.sys.entity.TenantUser">
+        update sys_tenant_user
+        set updated_dt = #{updatedDt}, updated_by = #{updatedBy}
+        <if test="deptId != null">
+            , dept_id = #{deptId}
+        </if>
+        <if test="roleType != null">
+            , role_type = #{roleType}
+        </if>
+        where id = #{id}
+    </update>
+
+    <update id="deleteById">
+        update sys_tenant_user
+        set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
 </mapper>

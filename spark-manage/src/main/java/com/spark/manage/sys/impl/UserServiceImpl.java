@@ -1,7 +1,6 @@
 package com.spark.manage.sys.impl;
 
 import com.spark.common.bean.base.BaseAssert;
-import com.spark.common.bean.sys.entity.TenantUser;
 import com.spark.common.bean.sys.query.DepartmentQuery;
 import com.spark.common.bean.sys.query.RoleUserQuery;
 import com.spark.common.bean.sys.query.TenantUserQuery;
@@ -26,6 +25,7 @@ import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.dao.sys.*;
 import com.spark.manage.sys.IDepartmentService;
+import com.spark.manage.sys.ITenantConfigService;
 import com.spark.manage.sys.ITenantUserService;
 import com.spark.manage.sys.IUserService;
 import com.spark.manage.BaseService;
@@ -80,12 +80,12 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
     private ITenantUserService tenantUserService;
     @Autowired
     private TenantUserDao tenantUserDao;
+    @Autowired
+    private ITenantConfigService tenantConfigService;
     @Value("${encrypt.privateKey}")
     private String privateKey;
     @Value("${user.avatar.path}")
     private String userAvatarPath;
-    @Value("${default.user.password}")
-    private String defaultUserPassword;
 
     /**
      * 创建用户
@@ -94,26 +94,30 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.USER_INSERT)
-    public ResultData<Void> createUser(UserVO userVO) {
-        ResultData<Void> result = this.validateCreateUserParam(userVO);
-        if (result.getCode() != ResultData.OK) {
-            return result;
-        }
-        result = tenantUserService.checkTenantUserCount(SessionHolder.getCurrentTenantId());
+    public ResultData<Long> createUser(UserVO userVO) {
+        ResultData<Long> result = this.validateCreateUserParam(userVO);
         BaseAssert.assertTrue(result);
+        Long tenantId = SessionHolder.getCurrentTenantId();
+        result = tenantUserService.checkTenantUserCount(tenantId);
+        BaseAssert.assertTrue(result);
+        // 插入主表数据
         User user = new User();
         Long userId = super.genObjectId(ObjectTypeEnum.USER);
         user.setId(userId);
         user.setLoginName(userVO.getLoginName());
-        String password = EncryptUtil.md5(defaultUserPassword);
+        String password = userVO.getPassword();
+        if (StringUtil.isBlank(password)) {
+            ResultData<String> pwdResult = tenantConfigService.queryTenantConfigValue(tenantId, TenantConfigEnum.DEFAULT_PASSWORD.getKey());
+            BaseAssert.assertTrue(pwdResult);
+            password = EncryptUtil.md5(pwdResult.getData());
+        }
         user.setPassword(password);
         user.setName(userVO.getName());
-        user.setDeptId(userVO.getDeptId());
         user.setPhone(userVO.getPhone());
         user.setEmail(userVO.getEmail());
         user.setSex(userVO.getSex());
+        user.setCurrentTenantId(tenantId);
         user.setStatus(userVO.getStatus());
-        user.setCurrentTenantId(SessionHolder.getCurrentTenantId());
         if (user.getStatus() == null) {
             user.setStatus(StatusEnum.NORMAL.getValue());
         }
@@ -126,9 +130,12 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
+        // 插入扩展信息
         UserProfile userProfile = new UserProfile();
         userProfile.setId(userId);
         userProfile.setWecomId(userVO.getWecomId());
+        userProfile.setWxOpenId(userVO.getWxOpenId());
+        userProfile.setWxUnionId(userVO.getWxUnionId());
         count = userProfileDao.insertDB(userProfile);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
@@ -137,13 +144,16 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         // 加入租户
         TenantUserVO tenantUserVO = new TenantUserVO();
         tenantUserVO.setTenantId(SessionHolder.getCurrentTenantId());
+        tenantUserVO.setDeptId(userVO.getDeptId());
         tenantUserVO.setUserIds(List.of(userId));
         result = tenantUserService.addUser(tenantUserVO);
         BaseAssert.assertTrue(result);
         userVO.setId(userId);
         // 添加角色
         result = this.addUserRole(userVO);
+        BaseAssert.assertTrue(result);
         result.setObjId(userId);
+        result.setData(userId);
         return result;
     }
 
@@ -176,11 +186,11 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
     @LogOperate(operateType = OperateTypeEnum.USER_UPDATE)
     public ResultData<Void> updateUser(UserVO userVO) {
         ResultData<Void> result = this.validateUpdateUserParam(userVO);
-        if (result.getCode() != ResultData.OK) {
-            return result;
-        }
+        BaseAssert.assertTrue(result);
+        Long userId = userVO.getId();
+        // 更新主表数据
         User user = new User();
-        user.setId(userVO.getId());
+        user.setId(userId);
         user.setName(userVO.getName());
         user.setLoginName(userVO.getLoginName());
         user.setPhone(userVO.getPhone());
@@ -192,22 +202,26 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
+        // 更新扩展表数据
         UserProfile userProfile = new UserProfile();
-        userProfile.setId(userVO.getId());
+        userProfile.setId(userId);
         userProfile.setWecomId(userVO.getWecomId());
         count = userProfileDao.updateDBById(userProfile);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
-        if (userVO.getDeptId() != null) {
-            count = tenantUserDao.updateTenantUserDeptId(SessionHolder.getCurrentTenantId(), userVO.getId(), userVO.getDeptId(), SessionHolder.getCurrentUserId());
-            if (count < 1) {
-                result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
-                return result;
-            }
-        }
-        result.setObjId(userVO.getId());
+        // 加入租户
+        TenantUserVO tenantUserVO = new TenantUserVO();
+        tenantUserVO.setTenantId(SessionHolder.getCurrentTenantId());
+        tenantUserVO.setDeptId(userVO.getDeptId());
+        tenantUserVO.setUserId(userId);
+        result = tenantUserService.updateTenantUser(tenantUserVO);
+        BaseAssert.assertTrue(result);
+        // 添加角色
+        result = this.addUserRole(userVO);
+        BaseAssert.assertTrue(result);
+        result.setObjId(userId);
         result.setCode(ResultData.OK);
         return result;
     }
@@ -229,8 +243,11 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         user.setId(userVO.getId());
         int count = userDao.deleteDBById(user);
         if (count < 0) {
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
+        // 删除用户所属租户信息
+        tenantUserDao.deleteTenantUserV2(userVO.getId(), SessionHolder.getCurrentUserId());
         result.setObjId(userVO.getId());
         result.setCode(ResultData.OK);
         return result;
@@ -428,6 +445,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         RoleUserQuery roleUserQuery = new RoleUserQuery();
         roleUserQuery.setTenantId(SessionHolder.getCurrentTenantId());
         roleUserQuery.setUserId(userId);
+        roleUserQuery.setPage(false);
         List<RoleUserResult> roleUserList = roleUserDao.queryRoleUserList(roleUserQuery);
         if (CollectionUtil.isEmpty(roleUserList)) {
             return;
@@ -467,8 +485,13 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
      * @param userVO 创建用户参数
      * @return 验证结果
      */
-    private ResultData<Void> validateCreateUserParam(UserVO userVO) {
-        ResultData<Void> result = new ResultData<>();
+    private ResultData<Long> validateCreateUserParam(UserVO userVO) {
+        ResultData<Long> result = new ResultData<>();
+        Long tenantId = SessionHolder.getCurrentTenantId();
+        if (tenantId == null) {
+            result.setErrorCode(ErrorCodeEnum.NOT_LOGIN);
+            return result;
+        }
         if (userVO == null || StringUtil.isBlank(userVO.getLoginName()) || StringUtil.isBlank(userVO.getName())) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
@@ -529,19 +552,47 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
      * @param userVO 创建用户参数
      * @return 验证结果
      */
-    private ResultData<Void> addUserRole(UserVO userVO) {
-        ResultData<Void> result = new ResultData<>();
-        if (userVO.getId() == null || CollectionUtil.isEmpty(userVO.getRoleIds())) {
-           result.setCode(ResultData.OK);
-           return result;
+    private ResultData addUserRole(UserVO userVO) {
+        ResultData result = new ResultData<>();
+        if (userVO.getId() == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        List<Long> addRoleIds = new ArrayList<>();
+        List<Long> delRoleIds = new ArrayList<>();
+        RoleUserQuery roleUserQuery = new RoleUserQuery();
+        roleUserQuery.setTenantId(SessionHolder.getCurrentTenantId());
+        roleUserQuery.setUserId(userVO.getId());
+        roleUserQuery.setPage(false);
+        List<RoleUserResult> existList = roleUserDao.queryRoleUserList(roleUserQuery);
+        if (CollectionUtil.isEmpty(existList) && CollectionUtil.isEmpty(userVO.getRoleIds())) {
+            result.setCode(ResultData.OK);
+            return result;
+        } else if (CollectionUtil.isNotEmpty(existList) && CollectionUtil.isNotEmpty(userVO.getRoleIds())) {
+            delRoleIds = existList.stream().map(RoleUserResult::getRoleId).filter(v -> !userVO.getRoleIds().contains(v)).toList();
+            List<Long> existRoleIds = existList.stream().map(RoleUserResult::getRoleId).toList();
+            addRoleIds = userVO.getRoleIds().stream().filter(v -> !existRoleIds.contains(v)).toList();
+        } else if (CollectionUtil.isEmpty(existList) && CollectionUtil.isNotEmpty(userVO.getRoleIds())) {
+            addRoleIds = userVO.getRoleIds();
+        } else if (CollectionUtil.isNotEmpty(existList) && CollectionUtil.isEmpty(userVO.getRoleIds())) {
+            delRoleIds = existList.stream().map(RoleUserResult::getRoleId).toList();
         }
         Long userId = userVO.getId();
-        List<Long> roleIds = userVO.getRoleIds();
         Long createdBy = SessionHolder.getCurrentUserId();
         Long tenantId = SessionHolder.getCurrentTenantId();
-        int count = roleUserDao.batchInsertByUserId(tenantId, userId, roleIds, createdBy);
-        if (count < 1) {
-            return result;
+        if (CollectionUtil.isNotEmpty(addRoleIds)) {
+            int count = roleUserDao.batchInsertByUserId(tenantId, userId, addRoleIds, createdBy);
+            if (count < 1) {
+                result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
+                return result;
+            }
+        }
+        if (CollectionUtil.isNotEmpty(delRoleIds)) {
+            int count = roleUserDao.deleteRoleUser(delRoleIds, userId, createdBy);
+            if (count < 1) {
+                result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
+                return result;
+            }
         }
         result.setCode(ResultData.OK);
         return result;

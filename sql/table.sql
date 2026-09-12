@@ -87,6 +87,22 @@ CREATE TABLE `sys_tenant` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='租户表';
 
+DROP TABLE IF EXISTS `sys_tenant_config`;
+CREATE TABLE `sys_tenant_config` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
+    `name` varchar(100) NOT NULL COMMENT '配置名称',
+    `key` varchar(100) NOT NULL COMMENT '配置key',
+    `value` varchar(100) NULL COMMENT '配置值',
+
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='租户配置表';
+
 DROP TABLE IF EXISTS `sys_tenant_user`;
 CREATE TABLE `sys_tenant_user` (
    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',

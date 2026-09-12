@@ -11,9 +11,8 @@ import com.spark.common.bean.sys.result.DepartmentResult;
 import com.spark.common.bean.sys.result.TenantResult;
 import com.spark.common.bean.sys.result.TenantUserResult;
 import com.spark.common.bean.sys.vo.MessageVO;
-import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.sys.entity.ValidateCode;
-import com.spark.common.bean.sys.vo.TenantUserVO;
+import com.spark.common.bean.sys.vo.UserVO;
 import com.spark.common.enums.*;
 import com.spark.common.utils.*;
 import com.spark.config.aspectj.annotation.LogPrint;
@@ -28,14 +27,13 @@ import com.spark.common.bean.sys.vo.LoginVO;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.dao.sys.*;
-import com.spark.manage.BaseService;
 import com.spark.manage.auth.ILoginService;
 import com.spark.config.redis.RedisService;
 import com.spark.manage.auth.ILoginValidateService;
 import com.spark.config.wecom.WeComUtil;
 import com.spark.config.wechat.WeChatUtil;
-import com.spark.manage.sys.ITenantUserService;
-import org.apache.poi.ss.formula.functions.T;
+import com.spark.manage.sys.ITenantConfigService;
+import com.spark.manage.sys.IUserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,7 +58,7 @@ import java.util.stream.Collectors;
  */
 @LogPrint
 @Service
-public class LoginServiceImpl extends BaseService implements ILoginService {
+public class LoginServiceImpl implements ILoginService {
     private final static Logger logger = LoggerFactory.getLogger(LoginServiceImpl.class);
     @Autowired
     private UserDao userDao;
@@ -87,9 +85,9 @@ public class LoginServiceImpl extends BaseService implements ILoginService {
     @Autowired
     private TenantDao tenantDao;
     @Autowired
-    private ITenantUserService tenantUserService;
-    @Value("${default.user.password}")
-    private String defaultUserPassword;
+    private IUserService userService;
+    @Autowired
+    private ITenantConfigService tenantConfigService;
 
     /**
      * 登录
@@ -220,7 +218,8 @@ public class LoginServiceImpl extends BaseService implements ILoginService {
                             || StringUtil.isBlank(loginVO.getValidateValue());
         } else if (LoginTypeEnum.WECOM_OAUTH.getValue().equals(loginVO.getLoginType())) {
             checkPredicate = vo ->
-                    StringUtil.isBlank(loginVO.getLoginName());
+                    StringUtil.isBlank(loginVO.getLoginName())
+                            || loginVO.getTenantId() == null ;
         } else if (LoginTypeEnum.WECHAT.getValue().equals(loginVO.getLoginType())) {
             checkPredicate = vo ->
                     StringUtil.isBlank(loginVO.getWxCode());
@@ -282,7 +281,11 @@ public class LoginServiceImpl extends BaseService implements ILoginService {
                 return result;
             }
         } else if (LoginTypeEnum.WECOM_OAUTH.getValue().equals(loginType)) {
-            WeComUserRes userInfo = weComUtil.getUserInfo(loginVO.getLoginName());
+            ResultData<Map<String, String>> mapResult = tenantConfigService.queryTenantConfigMap(loginVO.getTenantId());
+            Map<String, String> configMap = mapResult.getData();
+            String corpId = configMap.get(TenantConfigEnum.WECOM_CORP_ID.getKey());
+            String corpSecret = configMap.get(TenantConfigEnum.WECOM_CORP_SECRET.getKey());
+            WeComUserRes userInfo = weComUtil.getUserInfo(loginVO.getLoginName(), corpId, corpSecret);
             if (userInfo == null || StringUtil.isBlank(userInfo.getUserid())) {
                 result.setErrorCode(ErrorCodeEnum.WECOM_LOGIN_FAIL);
                 return result;
@@ -445,7 +448,7 @@ public class LoginServiceImpl extends BaseService implements ILoginService {
      */
     private UserResult createWeChatDefaultUser(WeChatSessionRes wxSession) {
         if (wxSession == null || StringUtil.isBlank(wxSession.getOpenid())) {
-            logger.warn("createWxDefaultUser skip, invalid wxSession");
+            logger.warn("invalid wxSession");
             return null;
         }
         String openid = wxSession.getOpenid();
@@ -455,60 +458,25 @@ public class LoginServiceImpl extends BaseService implements ILoginService {
             userQuery.setId(existProfile.getId());
             return userDao.queryUser(userQuery);
         }
-        Long userId = this.genObjectId(ObjectTypeEnum.USER);
-        // 插入默认用户
-        User user = new User();
-        user.setId(userId);
-        user.setLoginName("wx_" + openid);
-        String tail = openid.length() > 4 ? openid.substring(openid.length() - 4) : openid;
-        user.setName("微信用户" + tail);
-        String encryptedPwd = EncryptUtil.md5(defaultUserPassword);
-        user.setPassword(encryptedPwd);
-        user.setStatus(StatusEnum.NORMAL.getValue());
-        user.setAccountType(AccountTypeEnum.COMMON.getValue());
-        user.setCreatedBy(userId);
-        user.setUpdatedBy(userId);
-        user.setCurrentTenantId(103L);
-        int count = userDao.insertDB(user);
-        if (count < 1) {
-            logger.error("createWxDefaultUser error, insert user fail");
-            return null;
-        }
-        // 插入用户扩展信息并绑定微信openid
-        UserProfile wxProfile = new UserProfile();
-        wxProfile.setId(userId);
-        wxProfile.setWxOpenId(openid);
-        wxProfile.setWxUnionId(wxSession.getUnionid());
-        wxProfile.setCreatedBy(userId);
-        wxProfile.setUpdatedBy(userId);
-        count = userProfileDao.insertDB(wxProfile);
-        if (count < 1) {
-            logger.error("createWxDefaultUser error, insert user profile fail");
-            return null;
-        }
-        // 加入租户
         try {
-            SessionHolder.setCurrentUserId(userId);
-            TenantUserVO tenantUserVO = new TenantUserVO();
-            tenantUserVO.setTenantId(103L);
-            tenantUserVO.setUserIds(List.of(userId));
-            ResultData<Void> result = tenantUserService.addUser(tenantUserVO);
+            SessionHolder.setCurrentUserId(101L);
+            SessionHolder.setCurrentTenantId(103L);
+            UserVO userVO = new UserVO();
+            userVO.setLoginName("wx_" + openid);
+            String tail = openid.length() > 4 ? openid.substring(openid.length() - 4) : openid;
+            userVO.setName("微信用户" + tail);
+            userVO.setWxOpenId(openid);
+            userVO.setWxUnionId(wxSession.getUnionid());
+            ResultData<Long> result = userService.createUser(userVO);
             BaseAssert.assertTrue(result);
+            UserQuery userQuery = new UserQuery();
+            userQuery.setId(result.getData());
+            return userDao.queryUser(userQuery);
+        } catch (Exception e) {
+            logger.error("createWxDefaultUser error", e);
         } finally {
             SessionHolder.clearLocalSession();
         }
-        UserQuery userQuery = new UserQuery();
-        userQuery.setId(userId);
-        return userDao.queryUser(userQuery);
+        return null;
     }
-
-    /**
-     * 查询最大id
-     * @return 最大id
-     */
-    @Override
-    protected Long queryMaxId() {
-        return userDao.queryUserMaxId();
-    }
-
 }

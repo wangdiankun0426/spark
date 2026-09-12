@@ -37,4 +37,9 @@ public class TenantUserVO extends BaseVO {
      * 角色类型
      */
     private Integer roleType;
+
+    /**
+     * 所属部门
+     */
+    private Long deptId;
 }

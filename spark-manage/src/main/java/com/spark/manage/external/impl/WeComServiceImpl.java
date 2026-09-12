@@ -1,5 +1,6 @@
 package com.spark.manage.external.impl;
 
+import com.spark.common.bean.base.BaseAssert;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.sys.entity.UserProfile;
@@ -7,6 +8,7 @@ import com.spark.common.bean.sys.query.DepartmentQuery;
 import com.spark.common.bean.sys.result.DepartmentResult;
 import com.spark.common.bean.sys.vo.DepartmentVO;
 import com.spark.common.bean.sys.vo.UserVO;
+import com.spark.common.enums.TenantConfigEnum;
 import com.spark.config.wecom.response.WeComDeptListRes;
 import com.spark.config.wecom.response.WeComUserListRes;
 import com.spark.dao.sys.DepartmentDao;
@@ -14,6 +16,7 @@ import com.spark.dao.sys.UserProfileDao;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.manage.external.IWeComService;
 import com.spark.manage.sys.IDepartmentService;
+import com.spark.manage.sys.ITenantConfigService;
 import com.spark.manage.sys.IUserService;
 import com.spark.config.wecom.response.WeComMsg;
 import com.spark.common.enums.WeComMsgTypeEnum;
@@ -54,6 +57,8 @@ public class WeComServiceImpl implements IWeComService {
     private IDepartmentService departmentService;
     @Autowired
     private IUserService userService;
+    @Autowired
+    private ITenantConfigService tenantConfigService;
 
     /**
      * 处理企业微信消息
@@ -91,41 +96,35 @@ public class WeComServiceImpl implements IWeComService {
      * @return 同步结果
      */
     @Override
-    public ResultData<String> syncWeComOrganization() {
-        ResultData<String> result = new ResultData<>();
-        try {
-            SessionHolder.setCurrentUserId(101L);
-            logger.info("start full sync WeCom organization");
-            ResultData<String> deptResult = this.syncDepartment();
-            if (deptResult.getCode() != ResultData.OK) {
-                return deptResult;
-            }
-            ResultData<String> userResult = this.syncUser();
-            if (userResult.getCode() != ResultData.OK) {
-                return userResult;
-            }
-        } finally {
-            SessionHolder.clearLocalSession();
+    public ResultData<Void> syncWeComOrganization() {
+        ResultData<Void> result = new ResultData<>();
+        Long tenantId = SessionHolder.getCurrentTenantId();
+        if (tenantId == null) {
+            result.setErrorCode(ErrorCodeEnum.NOT_LOGIN);
+            return result;
         }
-        result.setData("全量同步完成");
-        result.setCode(ResultData.OK);
-        logger.info("full sync WeCom organization completed");
+        ResultData<Map<String, String>> mapResult = tenantConfigService.queryTenantConfigMap(tenantId);
+        Map<String, String> configMap = mapResult.getData();
+        String corpId = configMap.get(TenantConfigEnum.WECOM_CORP_ID.getKey());
+        String corpSecret = configMap.get(TenantConfigEnum.WECOM_CORP_SECRET.getKey());
+        result = this.syncDepartment(corpId, corpSecret);
+        BaseAssert.assertTrue(result);
+        result = this.syncUser(corpId, corpSecret);
+        BaseAssert.assertTrue(result);
         return result;
     }
 
     /**
      * 同步企业微信部门列表
-     * 获取企业微信全量部门，通过departmentService创建或更新到本地
      * @return 同步结果
      */
-    private ResultData<String> syncDepartment() {
-        ResultData<String> result = new ResultData<>();
+    private ResultData<Void> syncDepartment(String corpId, String corpSecret) {
+        ResultData<Void> result = new ResultData<>();
         try {
-            WeComDeptListRes deptResponse = weComUtil.getDepartmentList(null);
+            WeComDeptListRes deptResponse = weComUtil.getDepartmentList(null, corpId, corpSecret);
             logger.info("syncDepartmentList deptResponse={}", deptResponse);
             if (deptResponse == null || CollectionUtil.isEmpty(deptResponse.getDepartment())) {
                 logger.warn("syncDepartment WeCom department list is empty");
-                result.setData("部门列表为空");
                 result.setCode(ResultData.OK);
                 return result;
             }
@@ -175,7 +174,6 @@ public class WeComServiceImpl implements IWeComService {
                 }
             }
             logger.info("syncDepartment created {} departments, updated {} departments", createCount, updateCount);
-            result.setData(String.format("部门同步完成，创建 %d 个，更新 %d 个", createCount, updateCount));
             result.setCode(ResultData.OK);
         } catch (Exception e) {
             logger.error("syncDepartment error", e);
@@ -186,11 +184,10 @@ public class WeComServiceImpl implements IWeComService {
 
     /**
      * 同步企业微信用户列表
-     * 遍历所有已同步的部门，从企业微信获取用户并通过userService创建或更新
      * @return 同步结果
      */
-    private ResultData<String> syncUser() {
-        ResultData<String> result = new ResultData<>();
+    private ResultData<Void> syncUser(String corpId, String corpSecret) {
+        ResultData<Void> result = new ResultData<>();
         try {
             // 获取所有已同步的部门
             DepartmentQuery deptQuery = new DepartmentQuery();
@@ -198,7 +195,6 @@ public class WeComServiceImpl implements IWeComService {
             List<DepartmentResult> deptList = departmentDao.queryDepartmentList(deptQuery);
             if (deptList == null || deptList.isEmpty()) {
                 logger.warn("syncUser local department list is empty, please sync department first");
-                result.setData("本地部门列表为空，请先同步部门");
                 result.setCode(ResultData.OK);
                 return result;
             }
@@ -206,14 +202,13 @@ public class WeComServiceImpl implements IWeComService {
             List<DepartmentResult> syncedDeptList = deptList.stream().filter(d -> d.getWecomId() != null).toList();
             if (syncedDeptList.isEmpty()) {
                 logger.warn("syncUser no synced WeCom departments found");
-                result.setData("没有已同步企业微信的部门，请先同步部门");
                 result.setCode(ResultData.OK);
                 return result;
             }
             int createCount = 0;
             int updateCount = 0;
             for (DepartmentResult dept : syncedDeptList) {
-                WeComUserListRes userResponse = weComUtil.getUserList(dept.getWecomId());
+                WeComUserListRes userResponse = weComUtil.getUserList(dept.getWecomId(), corpId, corpSecret);
                 if (userResponse == null || userResponse.getUserlist() == null) {
                     continue;
                 }
@@ -237,7 +232,7 @@ public class WeComServiceImpl implements IWeComService {
                         // 创建新用户
                         userVO.setWecomId(weComUser.getUserid());
                         userVO.setLoginName(weComUser.getUserid());
-                        ResultData<Void> createResult = userService.createUser(userVO);
+                        ResultData<Long> createResult = userService.createUser(userVO);
                         if (createResult.getCode() == ResultData.OK) {
                             createCount++;
                         }
@@ -245,7 +240,6 @@ public class WeComServiceImpl implements IWeComService {
                 }
             }
             logger.info("syncUser created ={} users, updated ={} users", createCount, updateCount);
-            result.setData(String.format("用户同步完成，创建 %d 个，更新 %d 个", createCount, updateCount));
             result.setCode(ResultData.OK);
         } catch (Exception e) {
             logger.error("syncUser error", e);

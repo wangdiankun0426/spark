@@ -28,8 +28,9 @@
         <el-table-column prop="statusName" label="状态" width="120" align="center"/>
         <el-table-column prop="accountCount" label="账号数量" width="90" align="center"/>
         <el-table-column prop="deadline" label="截止时间" width="170" align="center"/>
-        <el-table-column fixed="right" label="操作" width="130" align="center">
+        <el-table-column fixed="right" label="操作" width="190" align="center">
           <template #default="scope">
+            <el-button type="primary" text @click="openConfig(scope.row)">配置</el-button>
             <el-button type="success" text @click="openUpdateForm(scope.row)">修改</el-button>
             <el-button type="danger" text @click="deleteRow(scope.row)">删除</el-button>
           </template>
@@ -156,11 +157,14 @@
 
 <script setup>
 import {pageTenantListAPI, createTenantAPI, updateTenantAPI, deleteTenantAPI} from '@/api/manage/sys/tenant.js';
-import {addTenantUserAPI, pageTenantUserListAPI, removeTenantUserAPI, updateTenantUserRoleTypeAPI} from '@/api/manage/sys/tenantUser.js';
+import {addTenantUserAPI, pageTenantUserListAPI, removeTenantUserAPI, updateTenantUserAPI} from '@/api/manage/sys/tenantUser.js';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import SelectUser from '@/components/SelectUser/index.vue';
 import UserAvatar from '@/components/UserAvatar/index.vue';
 import {ref} from 'vue';
+import {useRouter} from 'vue-router';
+
+const router = useRouter();
 
 const list = ref([]);
 const total = ref(0);
@@ -327,7 +331,7 @@ function changeTenantUserRole(row, roleType, actionName) {
       userId: row.userId,
       roleType: roleType,
     };
-    updateTenantUserRoleTypeAPI(data).then(res => {
+    updateTenantUserAPI(data).then(res => {
       if (res.code !== 200) {
         return;
       }
@@ -428,6 +432,20 @@ function deleteRow(row) {
     })
   }).catch(() => {
   })
+}
+
+/**
+ * 跳转到当前租户的配置页面
+ * @param row 租户行数据
+ */
+function openConfig(row) {
+  router.push({
+    path: '/site/sys/tenant/config',
+    query: {
+      tenantId: row.id,
+      tenantName: row.name,
+    },
+  });
 }
 </script>
 

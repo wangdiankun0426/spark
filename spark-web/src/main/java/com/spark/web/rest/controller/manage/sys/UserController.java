@@ -40,7 +40,7 @@ public class UserController {
      * @return 创建结果
      */
     @PostMapping("create")
-    public ResultData<Void> createUser(UserVO userVO) {
+    public ResultData<Long> createUser(UserVO userVO) {
         return userService.createUser(userVO);
     }
 

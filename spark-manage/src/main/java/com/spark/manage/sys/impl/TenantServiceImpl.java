@@ -17,6 +17,7 @@ import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.StringUtil;
 import com.spark.dao.sys.*;
 import com.spark.manage.BaseService;
+import com.spark.manage.sys.ITenantConfigService;
 import com.spark.manage.sys.ITenantService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,8 @@ public class TenantServiceImpl extends BaseService<TenantQuery, TenantResult> im
     private final static Logger logger = LoggerFactory.getLogger(TenantServiceImpl.class);
     @Autowired
     private TenantDao tenantDao;
+    @Autowired
+    private ITenantConfigService tenantConfigService;
 
     /**
      * 创建租户
@@ -76,6 +79,13 @@ public class TenantServiceImpl extends BaseService<TenantQuery, TenantResult> im
         tenant.setDeadline(tenantVO.getDeadline());
         int count = tenantDao.insertDB(tenant);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
+            return result;
+        }
+        // 初始化租户默认配置
+        ResultData<Integer> configResult = tenantConfigService.createDefaultConfig(tenantId);
+        if (configResult.getCode() != ResultData.OK) {
+            logger.error("create tenant default config fail, tenantId={}", tenantId);
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }

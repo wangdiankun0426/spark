@@ -4,9 +4,9 @@ import com.spark.config.wecom.response.WeComDeptListRes;
 import com.spark.config.wecom.response.WeComTokenRes;
 import com.spark.config.wecom.response.WeComUserListRes;
 import com.spark.config.wecom.response.WeComUserRes;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -36,20 +36,22 @@ public class WeComUtil {
      * AccessToken过期时间戳（毫秒）
      */
     private long tokenExpireTime;
-    @Autowired
-    private WeComConfig weComConfig;
 
     /**
      * 获取企业微信AccessToken
      * 优先使用缓存，过期则重新获取
      * @return AccessToken
      */
-    public String getAccessToken() {
+    public String getAccessToken(String corpId, String corpSecret) {
+        if (StringUtils.isBlank(corpId) || StringUtils.isBlank(corpSecret)) {
+            logger.error("corpId or corpSecret is null");
+            return null;
+        }
         if (cachedAccessToken != null && System.currentTimeMillis() < tokenExpireTime) {
             return cachedAccessToken;
         }
         String url = BASE_URL + "/gettoken?corpid={corpid}&corpsecret={corpsecret}";
-        WeComTokenRes response = restTemplate.getForObject(url, WeComTokenRes.class, weComConfig.getCorpId(), weComConfig.getCorpSecret());
+        WeComTokenRes response = restTemplate.getForObject(url, WeComTokenRes.class, corpId, corpSecret);
         if (response == null || response.getErrcode() != null && response.getErrcode() != 0) {
             String errMsg = response != null ? response.getErrmsg() : "response is null";
             logger.error("getAccessToken error, errcode={}, errmsg={}", response != null ? response.getErrcode() : null, errMsg);
@@ -67,8 +69,8 @@ public class WeComUtil {
      * @param deptId 部门ID（不传或传0表示获取全量）
      * @return 部门列表响应
      */
-    public WeComDeptListRes getDepartmentList(Long deptId) {
-        String token = getAccessToken();
+    public WeComDeptListRes getDepartmentList(Long deptId, String corpId, String corpSecret) {
+        String token = getAccessToken(corpId, corpSecret);
         String url = BASE_URL + "/department/list?access_token={token}";
         if (deptId != null && deptId > 0) {
             url = url + "&id={id}";
@@ -82,8 +84,8 @@ public class WeComUtil {
      * @param deptId 部门ID
      * @return 用户列表响应
      */
-    public WeComUserListRes getUserList(Long deptId) {
-        String token = getAccessToken();
+    public WeComUserListRes getUserList(Long deptId, String corpId, String corpSecret) {
+        String token = getAccessToken(corpId, corpSecret);
         String url = BASE_URL + "/user/list?access_token={token}&department_id={deptId}";
         return restTemplate.getForObject(url, WeComUserListRes.class, token, deptId);
     }
@@ -93,8 +95,8 @@ public class WeComUtil {
      * @param code
      * @return 用户列表响应
      */
-    public WeComUserRes getUserInfo(String code) {
-        String token = getAccessToken();
+    public WeComUserRes getUserInfo(String code, String corpId, String corpSecret) {
+        String token = getAccessToken(corpId, corpSecret);
         String url = BASE_URL + "/auth/getuserinfo?access_token={token}&code={code}";
         return restTemplate.getForObject(url, WeComUserRes.class, token, code);
     }

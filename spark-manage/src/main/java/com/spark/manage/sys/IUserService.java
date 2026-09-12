@@ -24,7 +24,7 @@ public interface IUserService {
      * @param userVO 创建用户参数
      * @return 创建结果
      */
-    ResultData<Void> createUser(UserVO userVO);
+    ResultData<Long> createUser(UserVO userVO);
 
     /**
      * 分页查询用户列表

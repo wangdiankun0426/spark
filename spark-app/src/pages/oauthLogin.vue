@@ -19,6 +19,20 @@ const code = ref('')
 const state = ref('')
 
 /**
+ * 解析OAuth授权的state参数
+ * state 格式为「登录类型.租户id」，如 4.103（4：企微oauth2登录，103：租户id）
+ * @param {string} stateValue state参数值
+ * @returns {{loginType: number, tenantId: number|undefined}} 解析结果
+ */
+function parseOAuthState(stateValue) {
+  const [loginType, tenantId] = String(stateValue || '').split('.')
+  return {
+    loginType: Number(loginType),
+    tenantId: tenantId ? Number(tenantId) : undefined
+  }
+}
+
+/**
  * 处理OAuth登录
  */
 function handleOAuthLogin() {
@@ -30,10 +44,12 @@ function handleOAuthLogin() {
     return
   }
   statusText.value = '正在验证授权信息...'
+  const oauthState = parseOAuthState(state.value)
   const loginForm = {
     loginName: code.value,
-    loginType: Number(state.value),
-    loginPlatform: 5
+    loginType: oauthState.loginType,
+    loginPlatform: 5,
+    tenantId: oauthState.tenantId
   }
   store.dispatch('user/login', { loginForm }).then(res => {
     if (res.code === 200) {

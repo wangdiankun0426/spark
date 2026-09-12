@@ -40,13 +40,13 @@ export function removeTenantUserAPI(data) {
 }
 
 /**
- * 修改租户用户角色类型
+ * 修改租户用户
  * @param data 修改参数
  * @returns {Promise<AxiosResponse<any>>}
  */
-export function updateTenantUserRoleTypeAPI(data) {
+export function updateTenantUserAPI(data) {
     return request({
-        url: '/sys/tenant/user/updateRoleType',
+        url: '/sys/tenant/user/update',
         method: 'post',
         params: data
     })

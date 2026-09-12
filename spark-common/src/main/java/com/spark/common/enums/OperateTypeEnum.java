@@ -28,7 +28,7 @@ public enum OperateTypeEnum {
     TENANT_DELETE(25, "删除租户"),
     TENANT_ADD_USER(26, "为租户添加用户"),
     TENANT_DEL_USER(27, "为租户移除用户"),
-    TENANT_UPDATE_USER_ROLE(28, "修改租户用户角色"),
+    TENANT_USER_UPDATE(28, "修改租户用户"),
     // 角色相关的操作记录
     ROLE_INSERT(30, "新增角色"),
     ROLE_UPDATE(31, "修改角色"),
@@ -117,7 +117,11 @@ public enum OperateTypeEnum {
     SKILL_INSERT(180, "新增技能"),
     SKILL_UPDATE(181, "修改技能"),
     SKILL_DELETE(182, "删除技能"),
-    SKILL_DETAIL(183, "查询技能详情")
+    SKILL_DETAIL(183, "查询技能详情"),
+    // 租户配置相关操作记录
+    TENANT_CONFIG_INSERT(184, "新增租户配置"),
+    TENANT_CONFIG_UPDATE(185, "修改租户配置"),
+    TENANT_CONFIG_DELETE(186, "删除租户配置")
 
     ;
 

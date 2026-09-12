@@ -22,6 +22,20 @@ const store = useStore()
 const statusText = ref('正在处理OAuth授权，请稍候...')
 
 /**
+ * 解析OAuth授权的state参数
+ * state 格式为「登录类型.租户id」，如 4.103（4：企微oauth2登录，103：租户id）
+ * @param {string} stateValue state参数值
+ * @returns {{loginType: number, tenantId: number|undefined}} 解析结果
+ */
+function parseOAuthState(stateValue) {
+  const [loginType, tenantId] = String(stateValue || '').split('.')
+  return {
+    loginType: Number(loginType),
+    tenantId: tenantId ? Number(tenantId) : undefined
+  }
+}
+
+/**
  * 处理OAuth登录
  */
 function handleOAuthLogin() {
@@ -35,10 +49,12 @@ function handleOAuthLogin() {
     return
   }
   statusText.value = '正在验证授权信息...'
+  const oauthState = parseOAuthState(state)
   const loginForm = {
     loginName: code,
-    loginType: Number(state),
-    loginPlatform: 4
+    loginType: oauthState.loginType,
+    loginPlatform: 4,
+    tenantId: oauthState.tenantId
   }
   store.dispatch('user/login', { loginForm }).then(res => {
     if (res.code === 200) {

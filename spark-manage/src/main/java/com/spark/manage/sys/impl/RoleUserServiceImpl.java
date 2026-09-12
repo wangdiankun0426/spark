@@ -59,6 +59,7 @@ public class RoleUserServiceImpl extends BaseService<RoleUserQuery, RoleUserResu
         RoleUserQuery roleUserQuery = new RoleUserQuery();
         roleUserQuery.setRoleId(roleId);
         roleUserQuery.setUserIds(userIds);
+        roleUserQuery.setPage(false);
         List<RoleUserResult> existList = roleUserDao.queryRoleUserList(roleUserQuery);
         if (CollectionUtil.isNotEmpty(existList)) {
             List<Long> existUserIds = existList.stream().map(RoleUserResult::getUserId).toList();
@@ -92,8 +93,9 @@ public class RoleUserServiceImpl extends BaseService<RoleUserQuery, RoleUserResu
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        int count = roleUserDao.deleteRoleUser(roleUserVO.getRoleId(), roleUserVO.getUserId(), SessionHolder.getCurrentUserId());
+        int count = roleUserDao.deleteRoleUser(List.of(roleUserVO.getRoleId()), roleUserVO.getUserId(), SessionHolder.getCurrentUserId());
         if (count < 0) {
+            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
         result.setObjId(roleUserVO.getRoleId());

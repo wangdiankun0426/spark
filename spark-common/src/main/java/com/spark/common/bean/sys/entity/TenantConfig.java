@@ -10,24 +10,24 @@ import lombok.Data;
  * + (__ __)//
  *
  * @author wangdiankun
- * @since 2026-09-08 14:00:00
- * 租户用户
+ * @since 2026-09-11 10:00:00
+ * 租户配置
  */
 @Data
-public class TenantUser extends BaseEntity {
+public class TenantConfig extends BaseEntity {
 
     /**
-     * 租户id
+     * 配置名称
      */
-    private Long tenantId;
+    private String name;
 
     /**
-     * 用户id
+     * 配置key
      */
-    private Long userId;
+    private String key;
 
     /**
-     * 角色类型
+     * 配置值
      */
-    private Integer roleType;
+    private String value;
 }

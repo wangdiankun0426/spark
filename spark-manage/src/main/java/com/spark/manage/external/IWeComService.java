@@ -26,6 +26,6 @@ public interface IWeComService {
      * 同步所有部门及用户到本地系统
      * @return 同步结果
      */
-    ResultData<String> syncWeComOrganization();
+    ResultData<Void> syncWeComOrganization();
 
 }

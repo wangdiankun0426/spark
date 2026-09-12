@@ -55,7 +55,7 @@
     </sql>
 
     <insert id="insert">
-        insert into sys_user(id , login_name , password , name ,  phone ,  email ,  sex ,  avatar ,  status , account_type, current_tenant_id,  delete_flag , created_by ,  created_dt ,  updated_by ,  updated_dt )
+        insert into sys_user(id , login_name , password , name ,  phone ,  email , sex , avatar , status , account_type, current_tenant_id,  delete_flag , created_by ,  created_dt ,  updated_by ,  updated_dt )
         values (#{id}, #{loginName}, #{password}, #{name}, #{phone}, #{email}, #{sex}, #{avatar}, #{status}, #{accountType}, #{currentTenantId}, 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
@@ -66,7 +66,7 @@
         </if>
         from  sys_user su
         <if test="deptId != null or deptIds != null or tenantId != null">
-            left join sys_tenant_user stu on (su.id = stu.user_id)
+            left join sys_tenant_user stu on (su.id = stu.user_id and stu.delete_flag = 1)
         </if>
         where 1=1
         <include refid="condition"/>
@@ -80,7 +80,7 @@
         select count(1)
         from  sys_user su
         <if test="deptId != null or deptIds != null or tenantId != null">
-            left join sys_tenant_user stu on (su.id = stu.user_id)
+            left join sys_tenant_user stu on (su.id = stu.user_id and stu.delete_flag = 1)
         </if>
         where 1=1
         <include refid="condition"/>
@@ -94,7 +94,7 @@
         </if>
         from  sys_user su
         <if test="deptId != null or deptIds != null or tenantId != null">
-            left join sys_tenant_user stu on (su.id = stu.user_id)
+            left join sys_tenant_user stu on (su.id = stu.user_id and stu.delete_flag = 1)
         </if>
         where 1=1
         <include refid="condition"/>

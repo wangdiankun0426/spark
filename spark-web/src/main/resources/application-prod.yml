@@ -89,9 +89,6 @@ mybatis:
     cache-enabled: false
     lazy-loading-enabled: true
     aggressive-lazy-loading: false
-default:
-  user:
-    password: 123456
 encrypt:
   privateKey: "!Qaz7410"
 user:
@@ -121,12 +118,6 @@ spark:
       access-key-secret: xxxxxxxxxxxxx
       sign-name: 星火科技
       template-code: SMS_xxxxxxx
-  wecom:
-    corp-id: xxxxxxxxxxxxx
-    agent-id: 1000000
-    corp-secret: xxxxxxxxxxxxx
-    msg-token: xxxxxxxxxxxxx
-    msg-encodingAESKey: xxxxxxxxxxxxx
   wechat:
     app-id: xxxxxxxxxxxxx
     app-secret: xxxxxxxxxxxxx

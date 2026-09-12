@@ -38,7 +38,7 @@ public class TenantUserController {
      * @return 添加结果
      */
     @PostMapping("add")
-    private ResultData<Void> addUser(TenantUserVO tenantUserVO) {
+    private ResultData<Long> addUser(TenantUserVO tenantUserVO) {
         return tenantUserService.addUser(tenantUserVO);
     }
 
@@ -53,13 +53,13 @@ public class TenantUserController {
     }
 
     /**
-     * 修改租户用户角色类型
+     * 修改租户用户
      * @param tenantUserVO 修改参数
      * @return 修改结果
      */
-    @PostMapping("updateRoleType")
-    private ResultData<Void> updateTenantUserRoleType(TenantUserVO tenantUserVO) {
-        return tenantUserService.updateTenantUserRoleType(tenantUserVO);
+    @PostMapping("update")
+    private ResultData<Void> updateTenantUser(TenantUserVO tenantUserVO) {
+        return tenantUserService.updateTenantUser(tenantUserVO);
     }
 
     /**
