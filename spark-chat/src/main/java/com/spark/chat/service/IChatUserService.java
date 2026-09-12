@@ -1,10 +1,9 @@
 package com.spark.chat.service;
 
 import com.spark.common.bean.sys.query.UserQuery;
+import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.chat.result.ChatUserResult;
-
-import java.util.List;
 
 /**
  * +++/\_/\
@@ -18,9 +17,9 @@ import java.util.List;
 public interface IChatUserService {
 
     /**
-     * 查询我的聊天用户列表
-     * @param query
-     * @return
+     * 分页查询我的聊天用户列表
+     * @param query 查询参数
+     * @return 分页结果
      */
-    ResultData<List<ChatUserResult>> queryMyChatUserList(UserQuery query);
+    ResultData<PageResult<ChatUserResult>> pageMyChatUserList(UserQuery query);
 }

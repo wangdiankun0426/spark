@@ -110,7 +110,6 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         chatMsg.setCreatedBy(chatMsgVO.getSenderId());
         chatMsg.setUpdatedBy(chatMsgVO.getSenderId());
         ObjectTypeEnum objEnum = super.getObjEnum(chatMsgVO.getReceiverId());
-        // 如果发送人和接收人是同一人/接收人是agent 则直接标记位已签收已读
         if (chatMsgVO.getSenderId().equals(chatMsgVO.getReceiverId()) || ObjectTypeEnum.AGENT.equals(objEnum)) {
             chatMsg.setSignStatus(ChatMsgStatusEnum.OK.getValue());
             chatMsg.setReadStatus(ChatMsgStatusEnum.OK.getValue());
@@ -156,8 +155,6 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         chatMsg.setUpdatedBy(chatMsgVO.getReceiverId());
         chatMsg.setCreatedDt(new Timestamp(System.currentTimeMillis()));
         chatMsg.setUpdatedDt(new Timestamp(System.currentTimeMillis()));
-        // 立即发送thinking状态
-        this.sendThinking(findSession, chatMsg, "正在思考中...\n");
         StringBuilder fullAnswer = new StringBuilder();
         IAgent agent = agentFactory.build(chatMsgVO.getReceiverId());
         String question = chatMsgVO.getMessage();
@@ -311,6 +308,126 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
     }
 
     /**
+     * 签收聊天消息
+     * @param chatMsgVO 聊天消息
+     * @return 结果
+     */
+    @Override
+    public ResultData<Void> signChatMsg(ChatMsgVO chatMsgVO) {
+        ResultData<Void> result = new ResultData<>();
+        if (chatMsgVO == null || chatMsgVO.getId() == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        ChatMsg chatMsg = new ChatMsg();
+        chatMsg.setId(chatMsgVO.getId());
+        chatMsg.setSignStatus(ChatMsgStatusEnum.OK.getValue());
+        int count = chatMsgDao.updateDBById(chatMsg);
+        if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
+            return result;
+        }
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 阅读聊天消息
+     * @param chatMsgVO 聊天消息
+     * @return 结果
+     */
+    @Override
+    public ResultData<Void> readChatMsg(ChatMsgVO chatMsgVO) {
+        ResultData<Void> result = new ResultData<>();
+        if (chatMsgVO == null || chatMsgVO.getId() == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        ChatMsg chatMsg = new ChatMsg();
+        chatMsg.setId(chatMsgVO.getId());
+        chatMsg.setReadStatus(ChatMsgStatusEnum.OK.getValue());
+        int count = chatMsgDao.updateDBById(chatMsg);
+        if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
+            return result;
+        }
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 查询未读消息列表
+     * @param query 查询参数
+     * @return 列表
+     */
+    @Override
+    public ResultData<List<ChatMsgResult>> queryNoReadChatMsgList(ChatMsgQuery query) {
+        ResultData<List<ChatMsgResult>> result = new ResultData<>();
+        Long userId = SessionHolder.getCurrentUserId();
+        if (userId == null) {
+            result.setErrorCode(ErrorCodeEnum.NOT_LOGIN);
+            return result;
+        }
+        if (query == null || query.getSpaceId() == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        query.setReceiverId(userId);
+        query.setReadStatus(ChatMsgStatusEnum.NO.getValue());
+        query.setPage(false);
+        List<ChatMsgResult> chatMsgList = chatMsgDao.queryChatMsgList(query);
+        if (CollectionUtil.isNotEmpty(chatMsgList)) {
+            List<Long> ids = chatMsgList.stream().map(ChatMsgResult::getId).toList();
+            ChatMsg chatMsg = new ChatMsg();
+            chatMsg.setReadStatus(ChatMsgStatusEnum.OK.getValue());
+            for (Long id : ids) {
+                chatMsg.setId(id);
+                chatMsgDao.updateById(chatMsg);
+            }
+        }
+        this.supplyList(chatMsgList);
+        result.setData(chatMsgList);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 分页查询列表
+     * @param query 查询参数
+     * @return 结果
+     */
+    @Override
+    public ResultData<PageResult<ChatMsgResult>> pageChatMsgList(ChatMsgQuery query) {
+        ResultData<PageResult<ChatMsgResult>> result = new ResultData<>();
+        Long userId = SessionHolder.getCurrentUserId();
+        if (userId == null) {
+            result.setErrorCode(ErrorCodeEnum.NOT_LOGIN);
+            return result;
+        }
+        if (query == null || query.getSpaceId() == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        ChatSpaceQuery chatSpaceQuery = new ChatSpaceQuery();
+        chatSpaceQuery.setSpaceId(query.getSpaceId());
+        ChatSpaceResult chatSpaceResult = chatSpaceDao.queryChatSpace(chatSpaceQuery);
+        if (chatSpaceResult == null) {
+            result.setErrorCode(ErrorCodeEnum.CHAT_SPACE_NOT_EXIST);
+            return result;
+        }
+        Long receiverId = chatSpaceResult.getReceiverId();
+        Long senderId = chatSpaceResult.getSenderId();
+        if (!receiverId.equals(userId) && !senderId.equals(userId)) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
+        PageResult<ChatMsgResult> list = super.pageList(query);
+        result.setData(list);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
      * 构造模型对话的多轮上下文消息
      * @param chatMsgVO 聊天消息
      * @return 上下文消息列表
@@ -402,169 +519,6 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
     }
 
     /**
-     * 签收聊天消息
-     * @param chatMsgVO 聊天消息
-     * @return 结果
-     */
-    @Override
-    public ResultData<Void> signChatMsg(ChatMsgVO chatMsgVO) {
-        ResultData<Void> result = new ResultData<>();
-        if (chatMsgVO == null || chatMsgVO.getId() == null) {
-            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
-            return result;
-        }
-        ChatMsg chatMsg = new ChatMsg();
-        chatMsg.setId(chatMsgVO.getId());
-        chatMsg.setSignStatus(ChatMsgStatusEnum.OK.getValue());
-        int count = chatMsgDao.updateDBById(chatMsg);
-        if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
-            return result;
-        }
-        result.setCode(ResultData.OK);
-        return result;
-    }
-
-    /**
-     * 阅读聊天消息
-     * @param chatMsgVO 聊天消息
-     * @return 结果
-     */
-    @Override
-    public ResultData<Void> readChatMsg(ChatMsgVO chatMsgVO) {
-        ResultData<Void> result = new ResultData<>();
-        if (chatMsgVO == null || chatMsgVO.getId() == null) {
-            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
-            return result;
-        }
-        ChatMsg chatMsg = new ChatMsg();
-        chatMsg.setId(chatMsgVO.getId());
-        chatMsg.setReadStatus(ChatMsgStatusEnum.OK.getValue());
-        int count = chatMsgDao.updateDBById(chatMsg);
-        if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
-            return result;
-        }
-        result.setCode(ResultData.OK);
-        return result;
-    }
-
-    /**
-     * 查询聊天空间消息列表
-     * @param query 查询参数
-     * @return 结果
-     */
-    @Override
-    public ResultData<List<ChatMsgResult>> queryChatSpaceMsgList(ChatMsgQuery query) {
-        ResultData<List<ChatMsgResult>> result = new ResultData<>();
-        Long userId = SessionHolder.getCurrentUserId();
-        if (userId == null) {
-            result.setErrorCode(ErrorCodeEnum.NOT_LOGIN);
-            return result;
-        }
-        if (query == null || query.getSpaceId() == null) {
-            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
-            return result;
-        }
-        ChatSpaceQuery chatSpaceQuery = new ChatSpaceQuery();
-        chatSpaceQuery.setSpaceId(query.getSpaceId());
-        ChatSpaceResult chatSpaceResult = chatSpaceDao.queryChatSpace(chatSpaceQuery);
-        if (chatSpaceResult == null) {
-            result.setErrorCode(ErrorCodeEnum.CHAT_SPACE_NOT_EXIST);
-            return result;
-        }
-        Long receiverId = chatSpaceResult.getReceiverId();
-        Long senderId = chatSpaceResult.getSenderId();
-        if (!receiverId.equals(userId) && !senderId.equals(userId)) {
-            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
-            return result;
-        }
-        query.setPage(false);
-        List<ChatMsgResult> chatMsgList = chatMsgDao.queryChatMsgList(query);
-        this.supplyList(chatMsgList);
-        result.setData(chatMsgList);
-        result.setCode(ResultData.OK);
-        return result;
-    }
-
-    /**
-     * 查询未读消息列表
-     * @param query 查询参数
-     * @return 列表
-     */
-    @Override
-    public ResultData<List<ChatMsgResult>> queryNoReadChatMsgList(ChatMsgQuery query) {
-        ResultData<List<ChatMsgResult>> result = new ResultData<>();
-        Long userId = SessionHolder.getCurrentUserId();
-        if (userId == null) {
-            result.setErrorCode(ErrorCodeEnum.NOT_LOGIN);
-            return result;
-        }
-        if (query == null || query.getSpaceId() == null) {
-            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
-            return result;
-        }
-        query.setReceiverId(userId);
-        query.setReadStatus(ChatMsgStatusEnum.NO.getValue());
-        query.setPage(false);
-        List<ChatMsgResult> chatMsgList = chatMsgDao.queryChatMsgList(query);
-        if (CollectionUtil.isNotEmpty(chatMsgList)) {
-            List<Long> ids = chatMsgList.stream().map(ChatMsgResult::getId).toList();
-            ChatMsg chatMsg = new ChatMsg();
-            chatMsg.setReadStatus(ChatMsgStatusEnum.OK.getValue());
-            for (Long id : ids) {
-                chatMsg.setId(id);
-                chatMsgDao.updateById(chatMsg);
-            }
-        }
-        this.supplyList(chatMsgList);
-        result.setData(chatMsgList);
-        result.setCode(ResultData.OK);
-        return result;
-    }
-
-    /**
-     * 分页查询列表
-     * @param query 查询参数
-     * @return 结果
-     */
-    @Override
-    public ResultData<PageResult<ChatMsgResult>> pageChatMsgList(ChatMsgQuery query) {
-        ResultData<PageResult<ChatMsgResult>> result = new ResultData<>();
-        if (query == null) {
-            query = new ChatMsgQuery();
-        }
-        PageResult<ChatMsgResult> list = super.pageList(query);
-        result.setData(list);
-        result.setCode(ResultData.OK);
-        return result;
-    }
-
-    /**
-     * 分页查询我的消息列表
-     * @param query 查询参数
-     * @return 结果
-     */
-    @Override
-    public ResultData<PageResult<ChatMsgResult>> pageMyChatMsgList(ChatMsgQuery query) {
-        ResultData<PageResult<ChatMsgResult>> result = new ResultData<>();
-        Long userId = SessionHolder.getCurrentUserId();
-        if (userId == null) {
-            result.setErrorCode(ErrorCodeEnum.NOT_LOGIN);
-            return result;
-        }
-        if (query == null) {
-            query = new ChatMsgQuery();
-        }
-        query.setOrSenderId(userId);
-        query.setOrReceiverId(userId);
-        PageResult<ChatMsgResult> list = super.pageList(query);
-        result.setData(list);
-        result.setCode(ResultData.OK);
-        return result;
-    }
-
-    /**
      * 保存聊天消息附件
      * @param msgId 聊天消息id
      * @param refs 参考文档列表
@@ -575,7 +529,6 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
             return;
         }
         try {
-            // 根据docId去重后保存
             List<ChatMsgAtt> list = this.dedupByDocId(refs).stream().map(ref -> {
                 ChatMsgAtt att = new ChatMsgAtt();
                 att.setMsgId(msgId);
@@ -588,7 +541,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
             }).collect(toList());
             chatMsgAttDao.batchInsert(list);
         } catch (Exception e) {
-            logger.error("saveChatMsgAtts error, msgId={}", msgId, e);
+            logger.error("saveChatMsgAttList error, msgId={}", msgId, e);
         }
     }
 
@@ -608,7 +561,6 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         List<ChatMsgAttResult> attList = chatMsgAttDao.queryChatMsgAttList(attQuery);
         Map<Long, List<ChatMsgAttResult>> attMap = new HashMap<>();
         if (CollectionUtil.isNotEmpty(attList)) {
-            // 按msgId分组后，每组按docId去重
             attMap = attList.stream()
                     .collect(Collectors.groupingBy(ChatMsgAttResult::getMsgId))
                     .entrySet().stream()
@@ -637,7 +589,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
     }
 
     /**
-     * 根据docId去重参考文件列表（保留首条，按列表原顺序）
+     * 根据docId去重参考文件列表
      * @param list 参考文件列表
      * @return 去重后的列表
      */

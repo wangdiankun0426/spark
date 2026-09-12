@@ -60,6 +60,16 @@
           :text="tab.text"
       />
     </up-tabbar>
+
+    <!-- 会话记录选择 -->
+    <ai-session-picker
+        v-model:show="sessionPickerShow"
+        :title="sessionPickerTitle"
+        :target-type="sessionTargetType"
+        :receiver-id="sessionTarget.id"
+        @select="handleSessionSelect"
+        @new="handleSessionNew"
+    />
   </view>
 </template>
 
@@ -68,6 +78,8 @@ import { ref, reactive, computed } from "vue"
 import { onShow } from "@dcloudio/uni-app"
 import { useStore } from "vuex"
 import UserAvatar from "@/components/UserAvatar/index.vue"
+import AiSessionPicker from "@/components/AiSessionPicker/index.vue"
+import {useAiSessionPicker} from "@/components/AiSessionPicker/aiSessionUtil"
 import {getSessionAPI} from "@/api/auth/login";
 import {visibleTabs} from "@/utils/menuUtil";
 import {pageMyTodoListAPI} from "@/api/flow/instance"
@@ -77,6 +89,17 @@ import {pageInstanceListAPI} from "@/api/workflow/instance"
 
 const store = useStore()
 const active = ref("home")
+
+// 会话选择弹层：点击智能体/模型后先选会话再进入对话
+const {
+  show: sessionPickerShow,
+  title: sessionPickerTitle,
+  target: sessionTarget,
+  targetType: sessionTargetType,
+  open: openSessionPicker,
+  handleSelect: handleSessionSelect,
+  handleNew: handleSessionNew
+} = useAiSessionPicker()
 
 // 按菜单权限过滤后的底部导航项
 const tabBarItems = computed(() => visibleTabs())
@@ -282,30 +305,11 @@ function handleItemClick(key, item) {
     // 流程详情，type=3 表示「我的待办」
     uni.navigateTo({url: '/pages/flow/instanceDetail?id=' + item.id + '&type=3'})
   } else if (key === 'chat') {
-    // 与模型对话
-    uni.navigateTo({
-      url: '/views/chat/index',
-      success: res => res.eventChannel.emit('setTarget', {
-        target: {id: row.id, name: row.name},
-        targetType: 'model'
-      })
-    })
+    // 与模型对话：先选会话记录
+    openSessionPicker(row, 'model')
   } else if (key === 'agent') {
-    // 与智能体对话，会话创建后回写 chatSpaceId 供下次复用
-    uni.navigateTo({
-      url: '/views/chat/index',
-      events: {
-        'space-created': data => {
-          if (data.targetId === row.id) {
-            row.chatSpaceId = data.spaceId
-          }
-        }
-      },
-      success: res => res.eventChannel.emit('setTarget', {
-        target: {...row},
-        targetType: 'agent'
-      })
-    })
+    // 与智能体对话：先选会话记录
+    openSessionPicker(row, 'agent')
   } else {
     // 工作流运行详情
     uni.navigateTo({url: '/pages/llm/wfInstanceDetail?id=' + item.id})

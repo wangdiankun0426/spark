@@ -1,10 +1,10 @@
 package com.spark.chat.service.impl;
 
+import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.chat.entity.ChatSpace;
 import com.spark.common.bean.chat.query.ChatSpaceQuery;
-import com.spark.common.bean.chat.result.AiChatSpaceResult;
 import com.spark.common.bean.chat.result.ChatSpaceResult;
 import com.spark.common.bean.chat.vo.ChatSpaceVO;
 import com.spark.common.bean.llm.query.AgentQuery;
@@ -30,7 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +47,6 @@ import java.util.Map;
 public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceResult> implements IChatSpaceService {
     private final static Logger logger = LoggerFactory.getLogger(ChatSpaceServiceImpl.class);
     private final static int TITLE_MAX_LENGTH = 50;
-    private final static int LAST_MESSAGE_MAX_LENGTH = 50;
     @Autowired
     private ChatSpaceDao chatSpaceDao;
     @Autowired
@@ -105,7 +103,6 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
 
     /**
      * 创建AI会话
-     * 与用户对话不同，AI会话不幂等且仅插入用户到模型一行，模型不参与会话检索
      * @param chatSpaceVO 会话参数
      * @return 创建结果
      */
@@ -125,18 +122,8 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
         ObjectTypeEnum receiverType = super.getObjEnum(receiverId);
         Integer spaceType;
         if (ObjectTypeEnum.MODEL.equals(receiverType)) {
-            ModelResult modelResult = this.queryValidModel(receiverId);
-            if (modelResult == null) {
-                result.setErrorCode(ErrorCodeEnum.MODEL_NOT_EXIST);
-                return result;
-            }
             spaceType = ChatSpaceTypeEnum.MODEL.getValue();
         } else if (ObjectTypeEnum.AGENT.equals(receiverType)) {
-            AgentResult agentResult = this.queryValidAgent(receiverId);
-            if (agentResult == null) {
-                result.setErrorCode(ErrorCodeEnum.AGENT_NOT_EXIST);
-                return result;
-            }
             spaceType = ChatSpaceTypeEnum.AGENT.getValue();
         } else {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
@@ -159,42 +146,36 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
     }
 
     /**
-     * 查询我的AI会话列表
+     * 分页查询我的会话列表
      * @param query 查询参数
-     * @return 会话列表
+     * @return 分页结果
      */
     @Override
-    public ResultData<List<AiChatSpaceResult>> queryMyAiChatSpaceList(ChatSpaceQuery query) {
-        ResultData<List<AiChatSpaceResult>> result = new ResultData<>();
+    public ResultData<PageResult<ChatSpaceResult>> pageMyChatSpaceList(ChatSpaceQuery query) {
+        ResultData<PageResult<ChatSpaceResult>> result = new ResultData<>();
         Long userId = SessionHolder.getCurrentUserId();
         if (userId == null) {
             result.setErrorCode(ErrorCodeEnum.NOT_LOGIN);
             return result;
         }
         if (query == null) {
-            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
-            return result;
-        }
-        boolean isAiSpace = this.isAiSpaceType(query.getSpaceType());
-        if (!isAiSpace) {
-            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
-            return result;
+            query = new ChatSpaceQuery();
         }
         query.setSenderId(userId);
-        List<AiChatSpaceResult> list = chatSpaceDao.queryMyAiChatSpaceList(query);
-        this.supplyAiChatSpaceList(list);
+        query.setTenantId(SessionHolder.getCurrentTenantId());
+        PageResult<ChatSpaceResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);
         return result;
     }
 
     /**
-     * 重命名我的AI会话
+     * 重命名会话
      * @param chatSpaceVO 会话参数
      * @return 修改结果
      */
     @Override
-    public ResultData<Void> updateAiChatSpaceTitle(ChatSpaceVO chatSpaceVO) {
+    public ResultData<Void> updateChatSpaceTitle(ChatSpaceVO chatSpaceVO) {
         ResultData<Void> result = new ResultData<>();
         if (chatSpaceVO == null || chatSpaceVO.getSpaceId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
@@ -209,12 +190,18 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
             result.setErrorCode(ErrorCodeEnum.NOT_LOGIN);
             return result;
         }
-        ChatSpaceResult chatSpaceResult = this.queryMyAiChatSpace(chatSpaceVO.getSpaceId(), userId);
+        ChatSpaceQuery spaceQuery = new ChatSpaceQuery();
+        spaceQuery.setSpaceId(chatSpaceVO.getSpaceId());
+        ChatSpaceResult chatSpaceResult = chatSpaceDao.queryChatSpace(spaceQuery);
         if (chatSpaceResult == null) {
+            result.setErrorCode(ErrorCodeEnum.CHAT_SPACE_NOT_EXIST);
+            return result;
+        }
+        if (!userId.equals(chatSpaceResult.getSenderId())) {
             result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
-        String title = this.cutOut(chatSpaceVO.getTitle(), TITLE_MAX_LENGTH);
+        String title = this.cutOut(chatSpaceVO.getTitle());
         ChatSpace chatSpace = new ChatSpace();
         chatSpace.setId(chatSpaceResult.getId());
         chatSpace.setTitle(title);
@@ -228,12 +215,12 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
     }
 
     /**
-     * 删除我的AI会话
+     * 删除会话
      * @param chatSpaceVO 会话参数
      * @return 删除结果
      */
     @Override
-    public ResultData<Void> deleteAiChatSpace(ChatSpaceVO chatSpaceVO) {
+    public ResultData<Void> deleteChatSpace(ChatSpaceVO chatSpaceVO) {
         ResultData<Void> result = new ResultData<>();
         if (chatSpaceVO == null || chatSpaceVO.getSpaceId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
@@ -244,8 +231,14 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
             result.setErrorCode(ErrorCodeEnum.NOT_LOGIN);
             return result;
         }
-        ChatSpaceResult chatSpaceResult = this.queryMyAiChatSpace(chatSpaceVO.getSpaceId(), userId);
+        ChatSpaceQuery spaceQuery = new ChatSpaceQuery();
+        spaceQuery.setSpaceId(chatSpaceVO.getSpaceId());
+        ChatSpaceResult chatSpaceResult = chatSpaceDao.queryChatSpace(spaceQuery);
         if (chatSpaceResult == null) {
+            result.setErrorCode(ErrorCodeEnum.CHAT_SPACE_NOT_EXIST);
+            return result;
+        }
+        if (!userId.equals(chatSpaceResult.getSenderId())) {
             result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
@@ -274,7 +267,12 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
             return;
         }
         try {
-            String title = this.buildTitle(content);
+            String title = content.trim();
+            int lineIndex = title.indexOf("\n");
+            if (lineIndex > 0) {
+                title = title.substring(0, lineIndex).trim();
+            }
+            title = this.cutOut(title);
             chatSpaceDao.updateTitleBySpaceId(spaceId, title, updatedBy);
         } catch (Exception e) {
             logger.error("fillTitleIfBlank error, spaceId={}", spaceId, e);
@@ -282,59 +280,29 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
     }
 
     /**
-     * 查询我的AI会话，会话不存在或不属于当前用户时返回空
-     * @param spaceId 空间id
-     * @param userId 用户id
-     * @return 会话
+     * 截断文本
+     *
+     * @param text 原文本
+     * @return 截断后的文本
      */
-    private ChatSpaceResult queryMyAiChatSpace(Long spaceId, Long userId) {
-        ChatSpaceQuery spaceQuery = new ChatSpaceQuery();
-        spaceQuery.setSpaceId(spaceId);
-        ChatSpaceResult chatSpaceResult = chatSpaceDao.queryChatSpace(spaceQuery);
-        if (chatSpaceResult == null) {
-            return null;
+    private String cutOut(String text) {
+        if (text == null || text.length() <= ChatSpaceServiceImpl.TITLE_MAX_LENGTH) {
+            return text;
         }
-        if (!userId.equals(chatSpaceResult.getSenderId())) {
-            return null;
-        }
-        boolean isAiSpace = this.isAiSpaceType(chatSpaceResult.getSpaceType());
-        if (!isAiSpace) {
-            return null;
-        }
-        return chatSpaceResult;
+        return text.substring(0, ChatSpaceServiceImpl.TITLE_MAX_LENGTH);
     }
 
     /**
-     * 判断是否为AI会话类型
-     * @param spaceType 会话类型
-     * @return 是否AI会话
-     */
-    private boolean isAiSpaceType(Integer spaceType) {
-        if (ChatSpaceTypeEnum.MODEL.getValue().equals(spaceType)) {
-            return true;
-        }
-        return ChatSpaceTypeEnum.AGENT.getValue().equals(spaceType);
-    }
-
-    /**
-     * 补充AI会话列表数据
+     * 补充会话列表数据
      * @param list 会话列表
      */
-    private void supplyAiChatSpaceList(List<AiChatSpaceResult> list) {
+    @Override
+    protected void supplyList(List<ChatSpaceResult> list) {
         if (CollectionUtil.isEmpty(list)) {
             return;
         }
         Map<Long, String> receiverNameMap = this.queryReceiverNameMap(list);
-        list.forEach(item -> {
-            item.setModelName(receiverNameMap.get(item.getReceiverId()));
-            String lastMessage = item.getLastMessage();
-            if (StringUtil.isNotBlank(lastMessage)) {
-                item.setLastMessage(this.cutOut(lastMessage, LAST_MESSAGE_MAX_LENGTH));
-            }
-        });
-        Comparator<AiChatSpaceResult> comparator = Comparator.comparing(AiChatSpaceResult::getLastTime,
-                Comparator.nullsLast(Comparator.reverseOrder()));
-        list.sort(comparator);
+        list.forEach(item -> item.setReceiverName(receiverNameMap.get(item.getReceiverId())));
     }
 
     /**
@@ -342,11 +310,11 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
      * @param list 会话列表
      * @return 接收对象id与名称的映射
      */
-    private Map<Long, String> queryReceiverNameMap(List<AiChatSpaceResult> list) {
+    private Map<Long, String> queryReceiverNameMap(List<ChatSpaceResult> list) {
         Map<Long, String> nameMap = new HashMap<>();
         List<Long> modelIds = new ArrayList<>();
         List<Long> agentIds = new ArrayList<>();
-        for (AiChatSpaceResult item : list) {
+        for (ChatSpaceResult item : list) {
             Long receiverId = item.getReceiverId();
             if (receiverId == null) {
                 continue;
@@ -376,72 +344,23 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
     }
 
     /**
-     * 查询可用的语言模型，不存在或未启用时返回空
-     * @param modelId 模型id
-     * @return 模型
+     * 分页查询总数
+     * @param query 查询参数
+     * @return 总数
      */
-    private ModelResult queryValidModel(Long modelId) {
-        ModelQuery modelQuery = new ModelQuery();
-        modelQuery.setId(modelId);
-        ModelResult modelResult = modelDao.queryModel(modelQuery);
-        if (modelResult == null) {
-            return null;
-        }
-        boolean isLanguage = ModelTypeEnum.LANGUAGE.getType().equals(modelResult.getType());
-        if (!isLanguage) {
-            return null;
-        }
-        boolean isNormal = StatusEnum.NORMAL.getValue().equals(modelResult.getStatus());
-        if (!isNormal) {
-            return null;
-        }
-        return modelResult;
+    @Override
+    protected int queryCount(ChatSpaceQuery query){
+        return chatSpaceDao.queryChatSpaceCount(query);
     }
 
     /**
-     * 查询可用的智能体，不存在或未启用时返回空
-     * @param agentId 智能体id
-     * @return 智能体
+     * 分页列表
+     * @param query 查询参数
+     * @return 列表
      */
-    private AgentResult queryValidAgent(Long agentId) {
-        AgentQuery agentQuery = new AgentQuery();
-        agentQuery.setId(agentId);
-        AgentResult agentResult = agentDao.queryAgent(agentQuery);
-        if (agentResult == null) {
-            return null;
-        }
-        boolean isNormal = StatusEnum.NORMAL.getValue().equals(agentResult.getStatus());
-        if (!isNormal) {
-            return null;
-        }
-        return agentResult;
-    }
-
-    /**
-     * 由提问内容生成会话标题，取首行并截断
-     * @param content 提问内容
-     * @return 会话标题
-     */
-    private String buildTitle(String content) {
-        String title = content.trim();
-        int lineIndex = title.indexOf("\n");
-        if (lineIndex > 0) {
-            title = title.substring(0, lineIndex).trim();
-        }
-        return this.cutOut(title, TITLE_MAX_LENGTH);
-    }
-
-    /**
-     * 截断文本
-     * @param text 原文本
-     * @param maxLength 最大长度
-     * @return 截断后的文本
-     */
-    private String cutOut(String text, int maxLength) {
-        if (text == null || text.length() <= maxLength) {
-            return text;
-        }
-        return text.substring(0, maxLength);
+    @Override
+    protected List<ChatSpaceResult> queryList(ChatSpaceQuery query){
+        return chatSpaceDao.queryChatSpaceList(query);
     }
 
     /**

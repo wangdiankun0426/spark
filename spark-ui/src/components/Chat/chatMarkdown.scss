@@ -1,0 +1,50 @@
+@use "@/styles/variables" as *;
+
+/**
+ * 聊天消息中 Markdown 的排版覆盖
+ * v-md-editor 的 github 主题按文档排版：16px 字号、1.5 行高、16px 段间距，在聊天气泡里过于松散
+ * 以 mixin 形式提供，由 chatPanel / chatMessage 在 :deep(.github-markdown-body) 中 @include
+ */
+@mixin chat-markdown {
+  padding: 0;
+  font-size: 14px;
+  line-height: $line-height-compact;
+  // 气泡容器是 pre-line，渲染结果里的换行会被当成换行符，额外撑开段间距
+  white-space: normal;
+
+  p,
+  ul,
+  ol,
+  pre,
+  blockquote,
+  table {
+    margin-bottom: $spacing-sm;
+  }
+
+  li + li {
+    margin-top: 2px;
+  }
+
+  li > p {
+    margin-top: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: $spacing-sm 0 $spacing-xs;
+  }
+
+  // 主题里 code/pre 是 85% 相对字号，基数字号变小后需要固定值
+  code,
+  pre {
+    font-size: 13px;
+  }
+
+  > :last-child {
+    margin-bottom: 0;
+  }
+}

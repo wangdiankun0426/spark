@@ -57,13 +57,6 @@ public interface IChatMsgService {
     ResultData<Void> readChatMsg(ChatMsgVO chatMsgVO);
 
     /**
-     * 查询聊天空间消息列表
-     * @param query
-     * @return
-     */
-    ResultData<List<ChatMsgResult>> queryChatSpaceMsgList(ChatMsgQuery query);
-
-    /**
      * 查询未读消息列表
      * @param query
      * @return
@@ -76,12 +69,4 @@ public interface IChatMsgService {
      * @return
      */
     ResultData<PageResult<ChatMsgResult>> pageChatMsgList(ChatMsgQuery query);
-
-    /**
-     * 分页查询我的消息列表
-     * @param query
-     * @return
-     */
-    ResultData<PageResult<ChatMsgResult>> pageMyChatMsgList(ChatMsgQuery query);
-
 }

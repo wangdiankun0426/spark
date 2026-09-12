@@ -11,50 +11,62 @@
       </slot>
       <div class="chat-panel-header-right">
         <slot name="header-right"></slot>
+        <el-tooltip v-if="activeSpaceId" content="聊天记录" placement="bottom">
+          <span class="toolbar-btn" @click="openChatMessage">
+            <el-icon><ChatLineSquare /></el-icon>
+          </span>
+        </el-tooltip>
       </div>
     </div>
 
     <!-- 消息区 -->
-    <el-scrollbar ref="scrollbarRef" class="chat-body" :class="{ 'chat-body-fill': fill }" always>
-      <el-divider v-if="chatMsgs.length" border-style="dashed">
-        <span class="chat-tip">以下是最新消息</span>
-      </el-divider>
-      <slot v-else name="empty">
+    <el-scrollbar
+        ref="scrollbarRef"
+        class="chat-body"
+        always
+        @scroll="onScroll"
+    >
+      <div v-if="historyLoading" class="chat-tip chat-history-loading">正在加载历史消息...</div>
+      <slot v-if="!chatMessageList.length" name="empty">
         <el-divider border-style="dashed">
           <span class="chat-tip">暂无最新消息</span>
         </el-divider>
       </slot>
       <div
-          v-for="(chatMsg, idx) in chatMsgs"
+          v-for="(chatMsg, idx) in chatMessageList"
           :key="idx"
           class="chat-item"
           :class="{ 'chat-item-self': chatMsg.senderId === userInfo.id }"
       >
-        <!-- 头像 + 时间 -->
+        <el-divider
+            v-if="chatMsg.unreadStart"
+            class="chat-unread-divider"
+            border-style="dashed"
+        >
+          <span class="chat-tip">以下是最新消息</span>
+        </el-divider>
+        <!-- 消息头部 -->
         <div class="chat-header">
-          <!-- 自己发出的消息：使用用户头像 -->
           <user-avatar
-              v-if="chatMsg.senderId === userInfo.id"
+              v-if="chatMsg.senderId === userInfo.id || targetType === 'user'"
               :user-id="chatMsg.senderId"
               :size="28"
           />
-          <!-- 对方是用户：展示对方用户头像 -->
-          <user-avatar
-              v-else-if="targetType === 'user'"
-              :user-id="chatMsg.senderId"
-              :size="28"
-          />
-          <!-- 对方是智能体/模型：根据 targetType 显示固定 icon -->
-          <div v-else class="chat-avatar chat-avatar-ai" :class="'chat-avatar-' + targetType">
+          <div
+              v-else
+              class="chat-avatar chat-avatar-ai"
+              :class="'chat-avatar-' + targetType"
+          >
             <el-icon>
               <MagicStick v-if="targetType === 'agent'" />
               <Cpu v-else />
             </el-icon>
           </div>
-          <span class="chat-time">{{ chatMsg.createdDt }}</span>
+          <span class="chat-time">
+            {{ chatMsg.createdDt }}
+          </span>
         </div>
-        <!-- 消息内容 -->
-        <!-- 自己发出的消息：外层 wrap 包裹工具条与气泡，保证鼠标在两者间移动时 hover 不中断 -->
+        <!-- 我方消息内容 -->
         <div
             v-if="chatMsg.senderId === userInfo.id"
             class="chat-bubble-wrap"
@@ -66,37 +78,61 @@
                 <el-icon><CopyDocument /></el-icon>
               </span>
             </el-tooltip>
-            <!-- 扩展位：后续工具按钮在此追加 -->
           </div>
           <div class="chat-bubble chat-bubble-user">
-            <div class="chat-msg">{{ chatMsg.message }}</div>
+            <v-md-preview class="chat-msg" :text="chatMsg.message" />
           </div>
         </div>
-        <!-- 对方消息 -->
-        <div v-else class="chat-bubble chat-bubble-agent" :class="{ 'chat-bubble-thinking': chatMsg.thinkingContent }">
-          <!-- 思考内容 -->
-          <template v-if="chatMsg.thinkingContent">
-            <div class="thinking-header">
-              <el-icon v-if="!chatMsg.thinkingDone" class="thinking-loading"><Loading /></el-icon>
-              <span class="thinking-label">{{ chatMsg.thinkingDone ? '思考完成' : '思考中...' }}</span>
-            </div>
-            <div class="thinking-content">{{ chatMsg.thinkingContent }}</div>
-          </template>
-          <!-- 正式内容 -->
-          <template v-if="chatMsg.message">
-            <div v-if="chatMsg.thinkingContent" class="thinking-divider"></div>
-            <v-md-preview class="chat-msg" :text="chatMsg.message || ''" />
-          </template>
-          <!-- 引用 -->
-          <llm-references
-              v-if="targetType === 'agent' && chatMsg.references && chatMsg.references.length"
-              :references="chatMsg.references"
-          />
+        <!-- 对方消息内容 -->
+        <div
+            v-else
+            class="chat-bubble-wrap"
+        >
+          <!-- 悬浮工具条 -->
+          <div v-if="chatMsg.message" class="chat-bubble-toolbar">
+            <el-tooltip content="复制" placement="top">
+              <span class="toolbar-btn" @click="copyMessage(chatMsg.message)">
+                <el-icon><CopyDocument /></el-icon>
+              </span>
+            </el-tooltip>
+          </div>
+          <div class="chat-bubble chat-bubble-agent">
+            <!-- 思考内容：占位期间只有状态，服务端推送思考过程后展示在状态下方，思考结束自动折叠 -->
+            <template v-if="chatMsg.thinkingContent || chatMsg.thinkingPending">
+              <div
+                  class="thinking-header"
+                  :class="{ 'thinking-toggle': chatMsg.thinkingContent }"
+                  @click="toggleThinking(chatMsg)"
+              >
+                <el-icon v-if="!chatMsg.thinkingDone" class="thinking-loading"><Loading /></el-icon>
+                <span class="thinking-label">{{ thinkingLabel(chatMsg) }}</span>
+                <el-icon
+                    v-if="chatMsg.thinkingContent"
+                    class="thinking-arrow"
+                    :class="{ 'thinking-arrow-open': !chatMsg.thinkingCollapsed }"
+                ><ArrowRight /></el-icon>
+              </div>
+              <div
+                  v-if="chatMsg.thinkingContent && !chatMsg.thinkingCollapsed"
+                  class="thinking-content"
+              >{{ chatMsg.thinkingContent }}</div>
+            </template>
+            <!-- 正式内容：统一走Markdown -->
+            <template v-if="chatMsg.message">
+              <div v-if="chatMsg.thinkingContent" class="thinking-divider"></div>
+              <v-md-preview class="chat-msg" :text="chatMsg.message" />
+            </template>
+            <!-- 引用 -->
+            <llm-references
+                v-if="targetType === 'agent' && chatMsg.references && chatMsg.references.length"
+                :references="chatMsg.references"
+            />
+          </div>
         </div>
       </div>
     </el-scrollbar>
 
-    <!-- 输入区：回车发送、Shift + 回车换行，不再放发送按钮 -->
+    <!-- 输入区：回车发送、Shift + 回车换行 -->
     <div class="chat-footer">
       <el-input
           v-model="message"
@@ -104,22 +140,14 @@
           type="textarea"
           :maxlength="maxLength"
           show-word-limit
-          :placeholder="placeholder"
-          :disabled="!target || !target.id"
+          :placeholder="replyLocked ? '正在回复中 请稍候' : placeholder"
+          :disabled="!target || !target.id || replyLocked"
           @keydown.enter="handleEnter"
       />
-      <div class="chat-toolbar">
-        <el-button
-            v-if="activeSpaceId"
-            link
-            type="primary"
-            @click="openChatMessage"
-        >聊天记录</el-button>
-      </div>
     </div>
 
     <!-- 聊天记录 -->
-    <chat-message
+    <chat-msg-record
         v-model="recordDrawer"
         :title="recordTitle"
         :space-id="activeSpaceId"
@@ -132,30 +160,21 @@
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
-import { MagicStick, Cpu, ChatDotRound, CopyDocument, Loading } from '@element-plus/icons-vue'
+import { MagicStick, Cpu, ChatDotRound, CopyDocument, Loading, ArrowRight, Clock } from '@element-plus/icons-vue'
 import { createChatSpaceAPI } from '@/api/chat/space.js'
-import { getNoReadMsgListAPI, getMsgListAPI } from '@/api/chat/msg.js'
 import { getCurrentDate } from '@/utils/dateUtil.js'
+import { useChatHistory } from '@/components/Chat/chatMessage.js'
 import UserAvatar from '@/components/UserAvatar/index.vue'
-import ChatMessage from '@/components/Chat/chatMessage.vue'
+import ChatMsgRecord from '@/components/Chat/chatMsgRecord.vue'
 import LlmReferences from '@/components/Chat/llmReferences.vue'
-
-// 流式回复看门狗超时时间，超时后解除发送锁定
-const STREAM_WATCHDOG_TIMEOUT = 1000 * 120
 
 const props = defineProps({
   // 聊天对象 { id, name, chatSpaceId, sessionKey }
   target: { type: Object, default: () => ({}) },
   // 对方类型：agent=智能体，model=模型，user=用户
   targetType: { type: String, default: 'agent' },
-  // 历史消息加载模式：unread=仅未读，all=全量
-  historyMode: { type: String, default: 'unread' },
-  // 多会话场景下按 spaceId 过滤消息，避免同一对象的不同会话串消息
-  filterBySpaceId: { type: Boolean, default: false },
   // 懒创建会话：非空时由父组件负责创建空间并返回 spaceId
   spaceCreator: { type: Function, default: null },
-  // 消息区高度自适应父容器
-  fill: { type: Boolean, default: false },
   // 流式回复期间锁定发送，避免两条回复交叉拼接
   lockWhileStreaming: { type: Boolean, default: false },
   // 输入内容长度上限
@@ -176,21 +195,31 @@ const userInfo = computed(() => store.getters['user/getUserInfo'])
 
 const websocket = ref(null)
 const message = ref('')
-const chatMsgs = ref([])
 const scrollbarRef = ref(null)
 const recordDrawer = ref(false)
 const recordTitle = ref('')
-// 当前会话空间id，懒创建场景下由父组件创建后回填
 const activeSpaceId = ref((props.target && props.target.chatSpaceId) || null)
 const sending = ref(false)
-const streaming = ref(false)
 
-// 流式回复看门狗定时器
-let streamWatchdog = null
+// 消息列表与历史分页加载
+const {
+  list: chatMessageList,
+  loading: historyLoading,
+  loadUnread,
+  loadMore,
+  onScroll,
+  isScrollable,
+  scrollToBottom,
+  reset: resetHistory
+} = useChatHistory(activeSpaceId, scrollbarRef)
+
 // 组件是否已销毁，避免销毁后触发 onclose 自动重连
 let destroyed = false
 
 const currentTargetId = computed(() => props.target && props.target.id)
+
+// 是否为AI会话：AI会话一个会话一个空间，按spaceId过滤消息；用户会话按发送人过滤
+const aiChat = computed(() => props.targetType !== 'user')
 
 /**
  * 会话身份键，AI会话由父组件提供稳定的 sessionKey，其余沿用对象id
@@ -235,10 +264,6 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   destroyed = true
-  if (streamWatchdog) {
-    clearTimeout(streamWatchdog)
-    streamWatchdog = null
-  }
   if (websocket.value) {
     // 先清空回调再 close，避免异步 close 事件触发时 websocket.value 已为 null
     websocket.value.onclose = null
@@ -254,7 +279,7 @@ onBeforeUnmount(() => {
  * 初始化当前对话
  */
 function initChat() {
-  chatMsgs.value = []
+  resetHistory()
   ensureChatSpace()
 }
 
@@ -263,7 +288,7 @@ function initChat() {
  */
 function ensureChatSpace() {
   if (activeSpaceId.value) {
-    loadMsgs()
+    loadChatMessageList()
     return
   }
   // 懒创建模式：空间由父组件在首条消息发出时创建
@@ -287,71 +312,32 @@ function ensureChatSpace() {
 }
 
 /**
- * 加载当前空间的历史消息
+ * 加载当前会话的首屏消息：未读消息 + 内容不足一屏时补一页种子，更早的历史由滚动到顶部时按页加载
  */
-function loadMsgs() {
-  const query = { spaceId: activeSpaceId.value }
-  const api = props.historyMode === 'all' ? getMsgListAPI : getNoReadMsgListAPI
-  api(query).then(res => {
-    if (res.code !== 200) {
-      return
-    }
-    if (res.data !== null) {
-      chatMsgs.value = res.data
-    }
-    scrollToBottom()
-  })
+function loadChatMessageList() {
+  loadUnread()
+    .then(nextTick)
+    .then(() => {
+      // 只补一页，避免未滚动就把历史全部拉出来
+      if (chatMessageList.value.length && isScrollable()) {
+        return
+      }
+      return loadMore()
+    })
+    .then(scrollToBottom)
 }
 
 /**
  * 判断消息是否属于当前会话
  */
 function isCurrentSpaceMsg(chatMsg) {
-  if (!props.filterBySpaceId) {
+  if (!aiChat.value) {
     return currentTargetId.value === chatMsg.senderId
   }
   if (!chatMsg.spaceId) {
     return false
   }
   return chatMsg.spaceId === activeSpaceId.value
-}
-
-/**
- * 滚动到底部
- */
-function scrollToBottom() {
-  nextTick(() => {
-    const scrollbar = scrollbarRef.value
-    if (scrollbar) {
-      scrollbar.update()
-      scrollbar.scrollTo({ top: scrollbar.wrapRef.scrollHeight, behavior: 'smooth' })
-    }
-  })
-}
-
-/**
- * 启动流式回复看门狗，超时后自动解除发送锁定
- */
-function startStreamWatchdog() {
-  streaming.value = true
-  if (streamWatchdog) {
-    clearTimeout(streamWatchdog)
-  }
-  streamWatchdog = setTimeout(() => {
-    streaming.value = false
-    streamWatchdog = null
-  }, STREAM_WATCHDOG_TIMEOUT)
-}
-
-/**
- * 结束流式回复看门狗
- */
-function stopStreamWatchdog() {
-  streaming.value = false
-  if (streamWatchdog) {
-    clearTimeout(streamWatchdog)
-    streamWatchdog = null
-  }
 }
 
 /**
@@ -375,14 +361,12 @@ function handleEnter(e) {
  * 发送消息
  */
 async function sendMessage() {
-  if (!message.value) {
+  const content = message.value.trim()
+  if (!content) {
     return
   }
-  if (sending.value) {
-    return
-  }
-  if (props.lockWhileStreaming && streaming.value) {
-    ElMessage.warning('正在回复中 请稍候')
+  // 会话创建中或回复期间不允许重复发送
+  if (sending.value || replyLocked.value) {
     return
   }
   // 懒创建：首条消息发出前先创建空间
@@ -402,17 +386,22 @@ async function sendMessage() {
     spaceId: activeSpaceId.value,
     senderId: userInfo.value.id,
     receiverId: props.target.id,
-    message: message.value,
+    message: content,
     createdDt: getCurrentDate()
   }
   const dataContent = { action: 2, chatMsg: chatMsg }
   websocket.value.send(JSON.stringify(dataContent))
-  chatMsgs.value.push(chatMsg)
+  chatMessageList.value.push(chatMsg)
+  // AI首响有延迟，本地先挂一个占位气泡，服务端首个思考/回复消息会复用它
+  if (aiChat.value) {
+    createReply({
+      spaceId: activeSpaceId.value,
+      senderId: props.target.id,
+      receiverId: userInfo.value.id
+    }, true)
+  }
   scrollToBottom()
   message.value = ''
-  if (props.lockWhileStreaming) {
-    startStreamWatchdog()
-  }
 }
 
 /**
@@ -493,30 +482,111 @@ function setOnopenMessage() {
 }
 
 /**
- * 处理 agent 思考中消息（action === 6）
+ * 获取进行中的AI回复气泡
+ * 服务端落库后的消息一定带id，用户自己发的消息senderId为自己，两者都不算进行中
+ * @returns 进行中的气泡，没有则返回null
  */
-function handleThinkingMessage(chatMsg) {
-  // 仅处理当前会话的思考消息
-  if (!isCurrentSpaceMsg(chatMsg)) {
+function ongoingReply() {
+  if (!chatMessageList.value.length) {
+    return null
+  }
+  const lastMsg = chatMessageList.value[chatMessageList.value.length - 1]
+  if (lastMsg.id !== undefined || lastMsg.senderId === userInfo.value.id) {
+    return null
+  }
+  return lastMsg
+}
+
+// 是否正在回复中：存在未落定的AI气泡即为回复中，不需要额外的计时器
+// 会话切换、消息列表重载都会自动重置，服务端异常不回复时重新进入会话即可解锁
+const streaming = computed(() => !!ongoingReply())
+
+// 回复期间锁定输入框，禁用并切换占位文案
+const replyLocked = computed(() => props.lockWhileStreaming && streaming.value)
+
+/**
+ * 思考区状态文案，智能体区分思考中与思考完成，模型只有等待回复
+ * @param chatMsg 消息
+ * @returns 状态文案
+ */
+function thinkingLabel(chatMsg) {
+  if (props.targetType !== 'agent') {
+    return '正在回复...'
+  }
+  return chatMsg.thinkingDone ? '思考完成' : '思考中...'
+}
+
+/**
+ * 新建AI回复气泡，思考内容与正式内容分两段展示
+ * @param chatMsg 服务端消息
+ * @param pending 是否为本地占位气泡，等待服务端首个响应
+ * @returns 新建的气泡
+ */
+function createReply(chatMsg, pending) {
+  const reply = {
+    spaceId: chatMsg.spaceId,
+    senderId: chatMsg.senderId,
+    receiverId: chatMsg.receiverId,
+    createdDt: chatMsg.createdDt || getCurrentDate(),
+    thinkingPending: !!pending,
+    thinkingContent: '',
+    thinkingDone: !pending,
+    thinkingCollapsed: false,
+    message: '',
+    references: null
+  }
+  chatMessageList.value.push(reply)
+  return reply
+}
+
+/**
+ * 处理思考状态消息，思考内容追加到当前回复气泡
+ * @param chatMsg 服务端消息
+ */
+function handleThinking(chatMsg) {
+  const reply = ongoingReply() || createReply(chatMsg)
+  // 思考消息先于正式内容到达，思考尚未结束，展开思考过程
+  reply.thinkingDone = false
+  reply.thinkingCollapsed = false
+  reply.thinkingContent += chatMsg.message || ''
+  scrollToBottom()
+}
+
+/**
+ * 折叠/展开思考内容
+ * @param chatMsg 消息
+ */
+function toggleThinking(chatMsg) {
+  if (!chatMsg.thinkingContent) {
     return
   }
-  // 流式追加：若上一条消息有 thinkingContent（是同一次回复的思考消息）
-  if (chatMsgs.value.length > 0) {
-    let lastChatMsg = chatMsgs.value[chatMsgs.value.length - 1]
-    if (lastChatMsg.thinkingContent !== undefined && !lastChatMsg.hasReply) {
-      lastChatMsg.thinkingContent = (lastChatMsg.thinkingContent || '') + (chatMsg.message || '')
-      scrollToBottom()
-      return
+  chatMsg.thinkingCollapsed = !chatMsg.thinkingCollapsed
+}
+
+/**
+ * 处理回复内容，流式分片逐块累加，完整消息直接覆盖，避免同一段内容重复展示
+ * @param chatMsg 服务端消息
+ * @param references RAG参考文档
+ */
+function handleReply(chatMsg, references) {
+  const isComplete = chatMsg.id !== undefined
+  const reply = ongoingReply() || createReply(chatMsg)
+  // 收到正式内容即视为思考结束，清除占位状态并自动折叠思考过程
+  reply.thinkingDone = true
+  reply.thinkingPending = false
+  reply.thinkingCollapsed = true
+  if (isComplete) {
+    reply.id = chatMsg.id
+    // 完整消息携带全量答案，覆盖已累加的分片
+    if (chatMsg.message) {
+      reply.message = chatMsg.message
     }
+  } else {
+    reply.message += chatMsg.message || ''
   }
-  // 新建消息，包含 thinkingContent 字段，正式内容后续填入
-  const newMsg = {
-    ...chatMsg,
-    thinkingContent: chatMsg.message,
-    message: '', // 正式内容后续填这里
-    hasReply: false
+  if (references && references.length) {
+    reply.references = references
   }
-  chatMsgs.value.push(newMsg)
   scrollToBottom()
 }
 
@@ -524,77 +594,36 @@ function handleThinkingMessage(chatMsg) {
  * 收到消息时回调
  */
 function setOnmessageMessage(event) {
-  let parse = JSON.parse(event.data)
-  let chatMsg = parse.chatMsg
-  let references = parse.references
-  // 处理 agent 思考中消息（action === 6）
-  if (parse.action === 6) {
-    handleThinkingMessage(chatMsg)
-    return
-  }
-  if (chatMsg.id !== undefined) {
-    const dataContent = { action: 3, chatMsg: chatMsg }
-    websocket.value.send(JSON.stringify(dataContent))
-  }
-  // 通知父组件：收到对方消息，父组件用于更新用户列表未读数
-  emit('message-received', chatMsg)
+  const parse = JSON.parse(event.data)
+  const chatMsg = parse.chatMsg
   // 仅处理当前会话的消息
   if (!isCurrentSpaceMsg(chatMsg)) {
     return
   }
-  // 收到带id的完整消息说明本次回复结束，解除发送锁定
-  if (chatMsg.id !== undefined) {
-    stopStreamWatchdog()
+  // 思考状态消息
+  if (parse.action === 6) {
+    handleThinking(chatMsg)
+    return
   }
-  // 检查上一条是否为思考消息（同一次回复）
-  if (chatMsgs.value.length > 0) {
-    let lastChatMsg = chatMsgs.value[chatMsgs.value.length - 1]
-    // 只要上一条有 thinkingContent，就把正式内容合并进去
-    if (lastChatMsg.thinkingContent !== undefined && lastChatMsg.senderId === chatMsg.senderId) {
-      lastChatMsg.thinkingDone = true
-      lastChatMsg.message = (lastChatMsg.message || '') + (chatMsg.message || '')
-      if (chatMsg.id !== undefined) {
-        lastChatMsg.id = chatMsg.id
-      }
-      if (references) {
-        lastChatMsg.references = references
-      }
-      if (chatMsg.id !== undefined) {
-        const dataContent = { action: 4, chatMsg: chatMsg }
-        websocket.value.send(JSON.stringify(dataContent))
-      }
-      scrollToBottom()
-      return
-    }
-    // 判断上一条是否为对方的流式临时消息（无 id 且非自己发送）
-    if (lastChatMsg.id === undefined && lastChatMsg.senderId !== userInfo.value.id && lastChatMsg.thinkingContent === undefined) {
-      if (chatMsg.id === undefined) {
-        // 当前是流式 chunk，追加到临时消息
-        lastChatMsg.message = (lastChatMsg.message || '') + (chatMsg.message || '')
-        scrollToBottom()
-        return
-      }
-      // 当前是完整消息，补全 id；message 非空则覆盖流式累积内容
-      lastChatMsg.id = chatMsg.id
-      if (chatMsg.message) {
-        lastChatMsg.message = chatMsg.message
-      }
-      if (references) {
-        lastChatMsg.references = references
-      }
-      const dataContent = { action: 4, chatMsg: chatMsg }
-      websocket.value.send(JSON.stringify(dataContent))
-      scrollToBottom()
-      return
-    }
-  }
-  // 否则作为新消息追加
-  chatMsgs.value.push(chatMsg)
+  // 带id的是落库后的完整消息，说明本次回复结束
   if (chatMsg.id !== undefined) {
-    const dataContent = { action: 4, chatMsg: chatMsg }
+    const dataContent = { action: 3, chatMsg: chatMsg }
     websocket.value.send(JSON.stringify(dataContent))
+    // 通知父组件：收到对方消息，父组件用于刷新会话列表
+    emit('message-received', chatMsg)
   }
-  scrollToBottom()
+  handleReply(chatMsg, parse.references)
+}
+
+/**
+ * 收尾进行中的AI回复气泡，避免一直停在思考中
+ */
+function finalizePendingReply() {
+  const reply = ongoingReply()
+  if (reply) {
+    reply.thinkingDone = true
+    reply.thinkingPending = false
+  }
 }
 
 /**
@@ -605,11 +634,15 @@ function setOncloseMessage() {
   if (destroyed) {
     return
   }
+  // 连接断开后本次回复不会再送达，收尾进行中的气泡
+  finalizePendingReply()
   initWebsocket()
 }
 </script>
 
 <style scoped lang="scss">
+@use "@/components/Chat/chatMarkdown" as chatMd;
+
 .chat-panel {
   display: flex;
   flex-direction: column;
@@ -646,22 +679,29 @@ function setOncloseMessage() {
 }
 
 .chat-body {
-  height: calc(100vh - 274px);
+  flex: 1;
+  min-height: 0;
   border: 1px solid $color-primary;
   border-radius: $border-radius-md;
   margin-bottom: $spacing-md;
   overflow: hidden;
 }
 
-.chat-body-fill {
-  height: auto;
-  flex: 1;
-  min-height: 0;
-}
-
 .chat-tip {
   font-size: 12px;
   color: $color-text-placeholder;
+}
+
+/* 向上加载历史时的提示 */
+.chat-history-loading {
+  padding: $spacing-sm;
+  text-align: center;
+}
+
+/* 未读起点分隔线：撑满消息行宽 */
+.chat-unread-divider {
+  align-self: stretch;
+  margin: 0 0 $spacing-xs;
 }
 
 .chat-item {
@@ -721,6 +761,10 @@ function setOncloseMessage() {
 
 .chat-bubble-wrap {
   position: relative;
+}
+
+/* 只有用户气泡限制宽度，AI气泡保持原有阅读宽度 */
+.chat-item-self .chat-bubble-wrap {
   max-width: 80%;
 }
 
@@ -734,7 +778,6 @@ function setOncloseMessage() {
   position: absolute;
   right: 0;
   top: 100%;
-  // 用 padding 代替 margin：padding 属于工具条自身，鼠标经过间距区域时 wrap 仍保持 hover
   padding-top: $spacing-xs;
   display: flex;
   gap: $spacing-xs;
@@ -752,8 +795,8 @@ function setOncloseMessage() {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 25px;
+  height: 25px;
   border-radius: $border-radius-sm;
   background-color: $bg-card;
   border: 1px solid $border-color;
@@ -767,7 +810,7 @@ function setOncloseMessage() {
   }
 
   .el-icon {
-    font-size: 14px;
+    font-size: 16px;
   }
 }
 
@@ -776,17 +819,25 @@ function setOncloseMessage() {
   color: $color-text-primary;
 }
 
-.chat-bubble-thinking {
-  border-left: 3px solid $agent-theme-orange;
-}
-
 .thinking-header {
   display: flex;
   align-items: center;
   gap: $spacing-xs;
-  margin-bottom: $spacing-xs;
-  padding-bottom: $spacing-xs;
-  border-bottom: 1px dashed $border-color;
+}
+
+/* 有思考内容时才可点击折叠 */
+.thinking-toggle {
+  cursor: pointer;
+}
+
+.thinking-arrow {
+  font-size: 12px;
+  color: $color-text-placeholder;
+  transition: transform $transition-fast;
+}
+
+.thinking-arrow-open {
+  transform: rotate(90deg);
 }
 
 .thinking-label {
@@ -800,9 +851,13 @@ function setOncloseMessage() {
 }
 
 .thinking-content {
+  margin-top: $spacing-xs;
+  padding-top: $spacing-xs;
+  border-top: 1px dashed $border-color;
   font-size: 12px;
   color: $color-text-secondary;
   line-height: $line-height-compact;
+  white-space: pre-line;
 }
 
 .thinking-divider {
@@ -818,6 +873,7 @@ function setOncloseMessage() {
 
 .chat-msg {
   font-size: 14px;
+  font-weight: 500;
   overflow-wrap: break-word;
   line-height: $line-height-base;
   user-select: text;
@@ -827,15 +883,7 @@ function setOncloseMessage() {
   flex-shrink: 0;
 }
 
-.chat-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: $spacing-md;
-  margin-top: $spacing-sm;
-}
-
 ::v-deep(.github-markdown-body) {
-  padding: 0;
+  @include chatMd.chat-markdown;
 }
 </style>

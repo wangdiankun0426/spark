@@ -114,6 +114,16 @@
       <up-empty text="暂无可用功能" icon="grid-fill"/>
     </view>
 
+    <!-- 会话记录选择 -->
+    <ai-session-picker
+        v-model:show="sessionPickerShow"
+        :title="sessionPickerTitle"
+        :target-type="sessionTargetType"
+        :receiver-id="sessionTarget.id"
+        @select="handleSessionSelect"
+        @new="handleSessionNew"
+    />
+
     <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#0052cc">
       <up-tabbar-item
           v-for="tab in tabBarItems"
@@ -133,8 +143,21 @@ import {visibleTabs} from "@/utils/menuUtil";
 import {agentPageListAPI} from "@/api/llm/agent"
 import {pageInstanceListAPI} from "@/api/workflow/instance"
 import {pageModelListAPI} from "@/api/llm/model"
+import AiSessionPicker from "@/components/AiSessionPicker/index.vue"
+import {useAiSessionPicker} from "@/components/AiSessionPicker/aiSessionUtil"
 
 const active = ref("llm")
+
+// 会话选择弹层：点击智能体/模型后先选会话再进入对话
+const {
+  show: sessionPickerShow,
+  title: sessionPickerTitle,
+  target: sessionTarget,
+  targetType: sessionTargetType,
+  open: openSessionPicker,
+  handleSelect: handleSessionSelect,
+  handleNew: handleSessionNew
+} = useAiSessionPicker()
 
 // 按菜单权限过滤后的底部导航项
 const tabBarItems = computed(() => visibleTabs())
@@ -250,26 +273,10 @@ function getAgentList() {
 }
 
 /**
- * 点击智能体进入对话
+ * 点击智能体：先选会话记录再进入对话
  */
 function handleAgentClick(item) {
-  const index = agentList.value.findIndex(a => a.id === item.id)
-  uni.navigateTo({
-    url: '/views/chat/index',
-    events: {
-      'space-created': function(data) {
-        if (data.targetId === item.id && index !== -1) {
-          agentList.value[index].chatSpaceId = data.spaceId
-        }
-      }
-    },
-    success: function(res) {
-      res.eventChannel.emit('setTarget', {
-        target: item,
-        targetType: 'agent'
-      })
-    }
-  })
+  openSessionPicker(item, 'agent')
 }
 
 /**
@@ -338,18 +345,10 @@ function loadModels() {
 }
 
 /**
- * 选择模型进入对话
+ * 选择模型：先选会话记录再进入对话
  */
 function handleSelectModel(model) {
-  uni.navigateTo({
-    url: '/views/chat/index',
-    success: function(res) {
-      res.eventChannel.emit('setTarget', {
-        target: {id: model.id, name: model.name},
-        targetType: 'model'
-      })
-    }
-  })
+  openSessionPicker(model, 'model')
 }
 
 /**

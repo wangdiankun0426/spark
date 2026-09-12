@@ -381,6 +381,7 @@ CREATE TABLE `chat_space` (
   `receiver_id` bigint(12) NOT NULL COMMENT '接收人id',
   `space_type` int(1) NOT NULL DEFAULT 1 COMMENT '会话类型',
   `title` varchar(100) NULL COMMENT '会话标题',
+  `tenant_id` bigint(12) DEFAULT NULL COMMENT '租户id',
 
   `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
   `created_by` bigint(12) NOT NULL COMMENT '创建人id',

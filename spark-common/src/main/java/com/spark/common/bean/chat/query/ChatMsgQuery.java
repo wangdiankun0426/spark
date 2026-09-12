@@ -33,14 +33,4 @@ public class ChatMsgQuery extends BaseQuery {
      * 阅读状态 -1 未读 1 已读
      */
     private Integer readStatus;
-
-    /**
-     * 发送人
-     */
-    private Long orSenderId;
-
-    /**
-     * 接收人id
-     */
-    private Long orReceiverId;
 }

@@ -1,6 +1,7 @@
 package com.spark.web.rest.controller.chat;
 
 import com.spark.common.bean.sys.query.UserQuery;
+import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.chat.result.ChatUserResult;
 import com.spark.chat.service.IChatUserService;
@@ -8,8 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 /**
  * +++/\_/\
@@ -27,14 +26,14 @@ public class ChatUserController {
     private IChatUserService chatUserService;
 
     /**
-     * 查询我的聊天用户列表
+     * 分页查询我的聊天用户列表，带会话空间id与未读数
      *
      * @param query 查询参数
-     * @return 结果
+     * @return 分页结果
      */
-    @GetMapping("myList")
-    public ResultData<List<ChatUserResult>> queryMyChatUserList(UserQuery query) {
-        return chatUserService.queryMyChatUserList(query);
+    @GetMapping("pageMyList")
+    public ResultData<PageResult<ChatUserResult>> pageMyChatUserList(UserQuery query) {
+        return chatUserService.pageMyChatUserList(query);
     }
 
 }

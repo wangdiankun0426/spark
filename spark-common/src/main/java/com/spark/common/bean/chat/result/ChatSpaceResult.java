@@ -39,4 +39,9 @@ public class ChatSpaceResult extends BaseResult {
      * 会话标题
      */
     private String title;
+
+    /**
+     * 接收对象名称，用户/语言模型/智能体
+     */
+    private String receiverName;
 }

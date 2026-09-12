@@ -2,7 +2,6 @@ package com.spark.dao.chat;
 
 import com.spark.common.bean.chat.entity.ChatSpace;
 import com.spark.common.bean.chat.query.ChatSpaceQuery;
-import com.spark.common.bean.chat.result.AiChatSpaceResult;
 import com.spark.common.bean.chat.result.ChatSpaceResult;
 import com.spark.dao.BaseDao;
 import org.apache.ibatis.annotations.Param;
@@ -20,6 +19,7 @@ import java.util.List;
  * @since 2024/4/17 19:25
  */
 public interface ChatSpaceDao extends BaseDao<ChatSpace> {
+
     /**
      * 查询聊天空间列表
      * @param spaceQuery
@@ -28,18 +28,18 @@ public interface ChatSpaceDao extends BaseDao<ChatSpace> {
     List<ChatSpaceResult> queryChatSpaceList(ChatSpaceQuery spaceQuery);
 
     /**
+     * 查询聊天空间数量
+     * @param spaceQuery
+     * @return
+     */
+    int queryChatSpaceCount(ChatSpaceQuery spaceQuery);
+
+    /**
      * 查询聊天空间
      * @param spaceQuery
      * @return
      */
     ChatSpaceResult queryChatSpace(ChatSpaceQuery spaceQuery);
-
-    /**
-     * 查询我的AI会话列表
-     * @param spaceQuery 查询参数
-     * @return 会话列表
-     */
-    List<AiChatSpaceResult> queryMyAiChatSpaceList(ChatSpaceQuery spaceQuery);
 
     /**
      * 插入数据

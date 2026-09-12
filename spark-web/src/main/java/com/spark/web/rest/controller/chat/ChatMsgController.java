@@ -39,26 +39,6 @@ public class ChatMsgController {
     }
 
     /**
-     * 查询聊天空间消息列表
-     * @param query 查询参数
-     * @return 列表
-     */
-    @GetMapping("list")
-    public ResultData<List<ChatMsgResult>> queryChatSpaceMsgList(ChatMsgQuery query) {
-        return chatMsgService.queryChatSpaceMsgList(query);
-    }
-
-    /**
-     * 分页查询我的消息列表
-     * @param query 查询参数
-     * @return 列表
-     */
-    @GetMapping("pageMyList")
-    public ResultData<PageResult<ChatMsgResult>> pageMyChatMsgList(ChatMsgQuery query) {
-        return chatMsgService.pageMyChatMsgList(query);
-    }
-
-    /**
      * 分页查询列表
      * @param query 查询参数
      * @return 列表

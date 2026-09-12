@@ -26,13 +26,13 @@ export function createAiChatSpaceAPI(data) {
 }
 
 /**
- * 查询我的AI会话列表
+ * 分页查询我的AI会话列表，支持按接收人与标题检索
  * @param query 查询参数
  * @returns {Promise<AxiosResponse<any>>}
  */
-export function getMyAiChatSpaceListAPI(query) {
+export function pageMyChatSpaceListAPI(query) {
     return request({
-        url: '/chat/space/aiMyList',
+        url: '/chat/space/pageMyList',
         method: 'get',
         params: query
     })
@@ -43,9 +43,9 @@ export function getMyAiChatSpaceListAPI(query) {
  * @param data 会话参数
  * @returns {Promise<AxiosResponse<any>>}
  */
-export function updateAiChatSpaceTitleAPI(data) {
+export function updateChatSpaceTitleAPI(data) {
     return request({
-        url: '/chat/space/aiRename',
+        url: '/chat/space/rename',
         method: 'post',
         params: data
     })
@@ -56,9 +56,9 @@ export function updateAiChatSpaceTitleAPI(data) {
  * @param data 会话参数
  * @returns {Promise<AxiosResponse<any>>}
  */
-export function deleteAiChatSpaceAPI(data) {
+export function deleteChatSpaceAPI(data) {
     return request({
-        url: '/chat/space/aiDelete',
+        url: '/chat/space/delete',
         method: 'post',
         params: data
     })

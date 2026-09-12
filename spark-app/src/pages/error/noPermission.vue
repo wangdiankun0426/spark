@@ -1,11 +1,5 @@
 <template>
-  <view class="status-page safe-area-page">
-    <view class="page-header">
-      <view class="page-header-back">
-        <up-icon name="arrow-left" color="#ffffff" size="18"/>
-      </view>
-      <text class="page-header-title">无权限</text>
-    </view>
+  <view class="status-page">
     <view class="status-body">
       <view class="status-num">403</view>
       <text class="status-title">暂无访问权限</text>

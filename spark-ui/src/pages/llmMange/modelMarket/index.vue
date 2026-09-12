@@ -20,7 +20,6 @@
             @clear="handleSearch"
         />
         <el-button
-            style="margin-left: 20px;"
             type="primary"
             @click="handleOpenCreateModel">
           <el-icon><Plus /></el-icon>新增模型
@@ -824,6 +823,12 @@ function handleProviderCommand(command, provider) {
 .market-header-subtitle {
   font-size: 13px;
   color: $color-text-secondary;
+}
+
+.market-header-right {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
 }
 
 .market-body {

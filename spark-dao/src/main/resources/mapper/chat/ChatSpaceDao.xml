@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.chat.ChatSpaceDao" >
     <sql id="Base_Column_List" >
-    id, space_id, sender_id,receiver_id, space_type, title, delete_flag,created_by, created_dt, updated_by, updated_dt
+      id, tenant_id, space_id, sender_id,receiver_id, space_type, title, delete_flag,created_by, created_dt, updated_by, updated_dt
     </sql>
 
     <sql id="condition">
@@ -28,6 +28,9 @@
         <if test="spaceType != null">
             and space_type = #{spaceType}
         </if>
+        <if test="title != null and title != ''">
+            and title like concat('%', #{title}, '%')
+        </if>
         <if test="deleteFlag != null and id == null and ids == null">
             and delete_flag = #{deleteFlag}
         </if>
@@ -35,6 +38,17 @@
 
     <select id="queryChatSpaceList" resultType="com.spark.common.bean.chat.result.ChatSpaceResult">
         select <include refid="Base_Column_List"/>
+        from chat_space
+        where 1=1
+        <include refid="condition"/>
+        order by id desc
+        <if test="page == true">
+            limit #{startRow} , #{pageSize}
+        </if>
+    </select>
+
+    <select id="queryChatSpaceCount" resultType="java.lang.Integer">
+        select count(1)
         from chat_space
         where 1=1
         <include refid="condition"/>
@@ -48,21 +62,9 @@
         limit 1
     </select>
 
-    <select id="queryMyAiChatSpaceList" resultType="com.spark.common.bean.chat.result.AiChatSpaceResult">
-        select cs.id, cs.space_id, cs.sender_id, cs.receiver_id, cs.space_type, cs.title,
-               cs.delete_flag, cs.created_by, cs.created_dt, cs.updated_by, cs.updated_dt,
-               (select m.message from chat_msg m where m.space_id = cs.space_id and m.delete_flag = 1 order by m.id desc limit 1) as last_message,
-               (select m.created_dt from chat_msg m where m.space_id = cs.space_id and m.delete_flag = 1 order by m.id desc limit 1) as last_time
-        from chat_space cs
-        where cs.space_type = #{spaceType}
-          and cs.sender_id = #{senderId}
-          and cs.delete_flag = 1
-        order by cs.id desc
-    </select>
-
     <insert id="insert">
-        insert into chat_space (space_id, sender_id,receiver_id, space_type, title, delete_flag,created_by, created_dt, updated_by, updated_dt)
-        values (#{spaceId}, #{senderId}, #{receiverId}, IFNULL(#{spaceType}, 1), #{title}, 1, #{createdBy} , #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into chat_space (tenant_id, space_id , sender_id,receiver_id, space_type, title, delete_flag,created_by, created_dt, updated_by, updated_dt)
+        values ( #{tenantId}, #{spaceId}, #{senderId}, #{receiverId}, IFNULL(#{spaceType}, 1), #{title}, 1, #{createdBy} , #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="updateById" parameterType="com.spark.common.bean.chat.entity.ChatSpace">

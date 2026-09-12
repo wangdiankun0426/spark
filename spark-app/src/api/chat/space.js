@@ -23,3 +23,16 @@ export function createAiChatSpaceAPI(data) {
     params: data
   })
 }
+
+/**
+ * 分页查询我的AI会话列表，支持按接收人与标题检索
+ * @param params 查询参数，含 spaceType、receiverId、title、pageNo、pageSize
+ * @returns {Promise<AxiosResponse<any>>}
+ */
+export function pageMyChatSpaceListAPI(params) {
+  return request({
+    url: '/chat/space/pageMyList',
+    method: 'get',
+    params: params
+  })
+}

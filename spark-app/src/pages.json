@@ -44,6 +44,12 @@
       }
     },
     {
+      "path": "views/chat/chatMsgRecord",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/flow/index",
       "style": {
         "navigationStyle": "custom"

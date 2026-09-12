@@ -7,7 +7,26 @@
       append-to-body
       class="chat-record-drawer"
   >
-    <el-scrollbar class="record-body" always>
+    <!-- 检索区 -->
+    <div class="record-search">
+      <el-date-picker
+          v-model="dateRange"
+          type="daterange"
+          value-format="YYYY-MM-DD HH:mm:ss"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          clearable
+          @change="handleSearch"
+      />
+    </div>
+    <el-scrollbar
+        ref="scrollbarRef"
+        class="record-body"
+        always
+        @scroll="onScroll"
+    >
+      <div v-if="historyLoading" class="record-loading">正在加载历史消息...</div>
       <div class="chat-list">
         <div
             v-for="(chatMsg, idx) in chatHisMsgs"
@@ -15,22 +34,18 @@
             class="chat-item"
             :class="{ 'chat-item-self': chatMsg.senderId === userInfo.id }"
         >
-          <!-- 头像 + 时间 -->
+          <!-- 消息头部 -->
           <div class="chat-header">
-            <!-- 自己发出的消息：使用用户头像 -->
             <user-avatar
-                v-if="chatMsg.senderId === userInfo.id"
+                v-if="chatMsg.senderId === userInfo.id || targetType === 'user'"
                 :user-id="chatMsg.senderId"
                 :size="28"
             />
-            <!-- 对方是用户：展示对方用户头像 -->
-            <user-avatar
-                v-else-if="targetType === 'user'"
-                :user-id="chatMsg.senderId"
-                :size="28"
-            />
-            <!-- 对方是智能体/模型：根据 targetType 显示固定 icon -->
-            <div v-else class="chat-avatar chat-avatar-ai" :class="'chat-avatar-' + targetType">
+            <div
+                v-else
+                class="chat-avatar chat-avatar-ai"
+                :class="'chat-avatar-' + targetType"
+            >
               <el-icon>
                 <MagicStick v-if="targetType === 'agent'" />
                 <Cpu v-else />
@@ -41,12 +56,13 @@
           <!-- 消息内容 -->
           <div
               class="chat-bubble"
-              :class="[
-                chatMsg.senderId === userInfo.id ? 'chat-bubble-user' : 'chat-bubble-agent'
-              ]"
+              :class="[chatMsg.senderId === userInfo.id ? 'chat-bubble-user' : 'chat-bubble-agent']"
           >
-            <div class="chat-msg" v-if="chatMsg.senderId === userInfo.id">{{ chatMsg.message }}</div>
-            <v-md-preview v-else class="chat-msg" :text="chatMsg.message || ''" />
+            <!-- 消息内容统一走Markdown -->
+            <v-md-preview
+                class="chat-msg"
+                :text="chatMsg.message || ''"
+            />
             <llm-references
                 v-if="targetType === 'agent' && chatMsg.references && chatMsg.references.length"
                 :references="chatMsg.references"
@@ -62,7 +78,7 @@
 import { ref, computed, watch } from 'vue'
 import { useStore } from 'vuex'
 import { MagicStick, Cpu } from '@element-plus/icons-vue'
-import { getMsgListAPI } from '@/api/chat/msg.js'
+import { useChatHistory } from '@/components/Chat/chatMessage.js'
 import UserAvatar from '@/components/UserAvatar/index.vue'
 import LlmReferences from '@/components/Chat/llmReferences.vue'
 
@@ -83,13 +99,38 @@ const visible = computed({
   set: (val) => emit('update:modelValue', val)
 })
 
-const chatHisMsgs = ref([])
+const scrollbarRef = ref(null)
+// 检索时间范围 [开始时间, 结束时间]
+const dateRange = ref(null)
+
+// 聊天记录列表与历史分页加载（向上滚动加载更早的历史）
+const spaceIdRef = computed(() => props.spaceId)
+// 检索条件，传给分页接口
+const historyFilter = computed(() => {
+  if (!dateRange.value || dateRange.value.length !== 2) {
+    return {}
+  }
+  return {
+    createdStartTime: dateRange.value[0],
+    // 结束日期取当天最后一秒，保证结束当天的消息被包含
+    createdEndTime: dateRange.value[1].slice(0, 10) + ' 23:59:59'
+  }
+})
+const {
+  list: chatHisMsgs,
+  loading: historyLoading,
+  loadMore,
+  onScroll,
+  scrollToBottom,
+  reset: resetHistory
+} = useChatHistory(spaceIdRef, scrollbarRef, historyFilter)
 
 /**
- * 抽屉打开时按 spaceId 加载历史消息
+ * 抽屉打开时按 spaceId 加载聊天记录，检索条件重置
  */
 watch(visible, (isOpen) => {
   if (isOpen && props.spaceId) {
+    dateRange.value = null
     loadChatRecords()
   }
 })
@@ -104,30 +145,53 @@ watch(() => props.spaceId, (newId) => {
 })
 
 /**
- * 加载聊天记录
+ * 检索条件变化后重新加载聊天记录
+ * @param range 所选时间范围，清空时为 null
+ */
+function handleSearch(range) {
+  dateRange.value = range || null
+  loadChatRecords()
+}
+
+/**
+ * 加载聊天记录：打开时取最新一页，更早的历史由滚动到顶部时按页加载
  */
 function loadChatRecords() {
-  const query = { spaceId: props.spaceId }
-  getMsgListAPI(query).then(res => {
-    if (res.code !== 200) {
-      return
-    }
-    chatHisMsgs.value = res.data || []
-  })
+  resetHistory()
+  loadMore().then(scrollToBottom)
 }
 </script>
 
 <style scoped lang="scss">
+@use "@/components/Chat/chatMarkdown" as chatMd;
+
 :deep(.el-drawer__body) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   padding: 0;
 }
 
+.record-search {
+  flex-shrink: 0;
+  padding: $spacing-md $spacing-md 0;
+}
+
 .record-body {
-  height: calc(100vh - 110px);
+  flex: 1;
+  min-height: 0;
+  height: calc(100vh - 160px);
   margin: $spacing-md;
   border: 1px solid $border-color;
   border-radius: $border-radius-md;
   padding: $spacing-sm $spacing-xs;
+}
+
+.record-loading {
+  padding: $spacing-sm;
+  text-align: center;
+  font-size: 12px;
+  color: $color-text-placeholder;
 }
 
 .chat-list {
@@ -210,12 +274,14 @@ function loadChatRecords() {
 
 .chat-msg {
   font-size: 14px;
+  font-weight: 500;
   overflow-wrap: break-word;
   line-height: $line-height-base;
   user-select: text;
+  white-space: pre-line;
 }
 
 ::v-deep(.github-markdown-body) {
-  padding: 0;
+  @include chatMd.chat-markdown;
 }
 </style>

@@ -1,13 +1,13 @@
 import request from '@/api/request'
 
 /**
- * 查询用户列表（通讯录）
- * @param params
+ * 分页查询我的聊天用户列表，带会话空间id与未读数
+ * @param params 查询参数，含 pageNo、pageSize、name
  * @returns {Promise<AxiosResponse<any>>}
  */
-export function userMyListAPI(params) {
+export function pageUserMyListAPI(params) {
   return request({
-    url: '/chat/user/myList',
+    url: '/chat/user/pageMyList',
     method: 'get',
     params: params
   })

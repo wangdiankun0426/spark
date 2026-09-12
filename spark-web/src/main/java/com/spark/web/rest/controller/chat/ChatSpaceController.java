@@ -1,9 +1,10 @@
 package com.spark.web.rest.controller.chat;
 
+import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.chat.entity.ChatSpace;
 import com.spark.common.bean.chat.query.ChatSpaceQuery;
-import com.spark.common.bean.chat.result.AiChatSpaceResult;
+import com.spark.common.bean.chat.result.ChatSpaceResult;
 import com.spark.common.bean.chat.vo.ChatSpaceVO;
 import com.spark.chat.service.IChatSpaceService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,8 +12,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 /**
  * +++/\_/\
@@ -51,32 +50,32 @@ public class ChatSpaceController {
     }
 
     /**
-     * 查询我的AI会话列表
+     * 分页查询我的会话列表，支持按接收人与标题检索
      * @param query 查询参数
-     * @return 会话列表
+     * @return 分页结果
      */
-    @GetMapping("aiMyList")
-    public ResultData<List<AiChatSpaceResult>> queryMyAiChatSpaceList(ChatSpaceQuery query) {
-        return chatSpaceService.queryMyAiChatSpaceList(query);
+    @GetMapping("pageMyList")
+    public ResultData<PageResult<ChatSpaceResult>> pageMyChatSpaceList(ChatSpaceQuery query) {
+        return chatSpaceService.pageMyChatSpaceList(query);
     }
 
     /**
-     * 重命名我的AI会话
+     * 重命名会话
      * @param chatSpaceVO 会话参数
      * @return 修改结果
      */
-    @PostMapping("aiRename")
-    public ResultData<Void> updateAiChatSpaceTitle(ChatSpaceVO chatSpaceVO) {
-        return chatSpaceService.updateAiChatSpaceTitle(chatSpaceVO);
+    @PostMapping("rename")
+    public ResultData<Void> updateChatSpaceTitle(ChatSpaceVO chatSpaceVO) {
+        return chatSpaceService.updateChatSpaceTitle(chatSpaceVO);
     }
 
     /**
-     * 删除我的AI会话
+     * 删除会话
      * @param chatSpaceVO 会话参数
      * @return 删除结果
      */
-    @PostMapping("aiDelete")
-    public ResultData<Void> deleteAiChatSpace(ChatSpaceVO chatSpaceVO) {
-        return chatSpaceService.deleteAiChatSpace(chatSpaceVO);
+    @PostMapping("delete")
+    public ResultData<Void> deleteChatSpace(ChatSpaceVO chatSpaceVO) {
+        return chatSpaceService.deleteChatSpace(chatSpaceVO);
     }
 }

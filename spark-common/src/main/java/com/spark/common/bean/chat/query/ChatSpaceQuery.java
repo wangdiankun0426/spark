@@ -33,4 +33,9 @@ public class ChatSpaceQuery extends BaseQuery {
      * 会话类型
      */
     private Integer spaceType;
+
+    /**
+     * 会话标题，模糊匹配
+     */
+    private String title;
 }

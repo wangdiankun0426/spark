@@ -28,11 +28,11 @@
         <if test="senderId != null">
             and sender_id = #{senderId}
         </if>
-        <if test="orReceiverId != null">
-            or receiver_id = #{orReceiverId}
+        <if test="createdStartTime != null">
+            and created_dt > #{createdStartTime}
         </if>
-        <if test="orSenderId != null">
-            or sender_id = #{orSenderId}
+        <if test="createdEndTime != null">
+            and #{createdEndTime} > created_dt
         </if>
         <if test="deleteFlag != null and id == null and ids == null">
             and delete_flag = #{deleteFlag}
@@ -57,7 +57,7 @@
         from chat_msg
         where 1=1
         <include refid="condition"/>
-        order by id
+        order by id desc
         <if test="page == true">
             limit #{startRow}, #{pageSize}
         </if>

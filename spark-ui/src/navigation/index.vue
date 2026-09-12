@@ -5,15 +5,15 @@
         <img src="../assets/images/logo.png" width="46" height="40" @click="$router.push('/home')"/>
       </div>
       <el-menu-item v-if="hasMenu(MODULE_CODES.LLM)" index="/llm">
-        <el-icon><Ai /></el-icon>
+        <el-icon><HelpFilled /></el-icon>
         <span>AI管理</span>
       </el-menu-item>
       <el-menu-item v-if="hasMenu(MODULE_CODES.BUS)" index="/bus">
-        <el-icon><Connection /></el-icon>
+        <el-icon><Menu /></el-icon>
         <span>业务管理</span>
       </el-menu-item>
       <el-menu-item index="/org" v-if="isOrgAdmin()">
-        <el-icon><OfficeBuilding /></el-icon>
+        <el-icon><UserFilled /></el-icon>
         <span>组织管理</span>
       </el-menu-item>
       <el-menu-item index="/site" v-if="isSysAdmin()">
@@ -124,12 +124,12 @@
 </template>
 
 <script setup>
-import {getSessionAPI, logoutAPI} from "@/api/manage/auth/login.js";
+import {logoutAPI} from "@/api/manage/auth/login.js";
 import {queryMyMessageListAPI} from "@/api/manage/sys/message.js";
 import {noticeListAPI} from "@/api/manage/sys/notice.js";
 import {ElMessageBox} from "element-plus";
 import {ref, computed, nextTick, watch} from "vue";
-import {ArrowDown, Connection, Setting, Moon, Sunny, Right} from "@element-plus/icons-vue";
+import {ArrowDown, Setting, Moon, Sunny, Right} from "@element-plus/icons-vue";
 import { useRouter, useRoute } from 'vue-router';
 import {useStore} from "vuex";
 import {getTheme, applyTheme, setTheme} from '@/utils/themeUtil';
@@ -137,7 +137,6 @@ import {hasMenu, MODULE_CODES} from '@/utils/menuUtil.js';
 import UserAvatar from '@/components/UserAvatar';
 import UserProfile from '@/components/UserProfile';
 import TenantSwitch from '@/components/TenantSwitch';
-import Ai from "@/assets/icons/ai.vue";
 import Bell from "@/assets/icons/bell.vue";
 import {isOrgAdmin, isSysAdmin} from "@/utils/utils.js";
 const router = useRouter();

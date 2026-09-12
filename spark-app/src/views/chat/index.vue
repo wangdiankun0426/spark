@@ -9,35 +9,63 @@
         <text v-if="target && target.id">{{ target.name }}</text>
         <text v-else class="header-tip">请选择聊天对象</text>
       </view>
+      <!-- 聊天记录 -->
+      <view
+          v-if="target && target.chatSpaceId"
+          class="header-record"
+          @click="openChatRecord"
+      >
+        <up-icon name="clock" size="20" color="#fff"></up-icon>
+      </view>
     </view>
 
     <!-- 消息区 -->
     <scroll-view
-        ref="scrollviewRef"
         scroll-y="true"
         class="chat-body"
         :scroll-top="scrollTop"
+        :scroll-into-view="scrollIntoView"
         @scroll="onScroll"
     >
-      <view class="chat-divider">
-        <text class="chat-tip">{{ chatMsgs.length ? '以下是最新消息' : '暂无最新消息' }}</text>
+      <view v-if="historyLoading" class="chat-tip chat-history-loading">正在加载历史消息...</view>
+      <view v-if="!chatMessageList.length" class="chat-divider">
+        <text class="chat-tip">暂无最新消息</text>
       </view>
 
       <view
-          v-for="(chatMsg, idx) in chatMsgs"
+          v-for="(chatMsg, idx) in chatMessageList"
           :key="idx"
+          :id="chatMsg.id === undefined ? '' : 'msg-' + chatMsg.id"
           class="chat-item"
           :class="{ 'chat-item-self': chatMsg.senderId === userInfo.id }"
       >
-        <!-- 时间 + 头像 -->
+        <!-- 未读消息起点，向上加载的历史在该分隔线上方 -->
+        <view v-if="chatMsg.unreadStart" class="chat-divider chat-unread-divider">
+          <text class="chat-tip">以下是最新消息</text>
+        </view>
+        <!-- 消息头部 -->
         <view class="chat-msg-header">
           <template v-if="chatMsg.senderId === userInfo.id">
             <view class="chat-time">{{ chatMsg.createdDt }}</view>
-            <user-avatar type="user" :userId="chatMsg.senderId" :size="32"/>
+            <user-avatar
+                type="user"
+                :userId="chatMsg.senderId"
+                :size="32"
+            />
           </template>
           <template v-else>
-            <user-avatar v-if="targetType === 'user'" type="user" :userId="chatMsg.senderId" :name="target.name" :size="32"/>
-            <user-avatar v-else :type="targetType" :size="32"/>
+            <user-avatar
+                v-if="targetType === 'user'"
+                type="user"
+                :userId="chatMsg.senderId"
+                :name="target.name"
+                :size="32"
+            />
+            <user-avatar
+                v-else
+                :type="targetType"
+                :size="32"
+            />
             <view class="chat-time">{{ chatMsg.createdDt }}</view>
           </template>
         </view>
@@ -45,27 +73,46 @@
         <!-- 消息内容 -->
         <view class="chat-msg-content">
           <!-- 自己发出的消息 -->
-          <view v-if="chatMsg.senderId === userInfo.id" class="chat-bubble chat-bubble-user markdown-body">
-            <up-parse :content="renderMarkdown(chatMsg.message)"></up-parse>
+          <view
+              v-if="chatMsg.senderId === userInfo.id"
+              class="chat-bubble chat-bubble-user markdown-body"
+          >
+            <up-parse
+                :content="renderMarkdown(chatMsg.message)"
+                :tag-style="MD_TAG_STYLE"
+            ></up-parse>
           </view>
 
           <!-- 对方消息 -->
-          <view v-else class="chat-bubble chat-bubble-agent" :class="{ 'chat-bubble-thinking': chatMsg.thinkingContent }">
-            <!-- 思考内容 -->
-            <template v-if="chatMsg.thinkingContent">
-              <view class="thinking-header">
+          <view v-else class="chat-bubble chat-bubble-agent">
+            <!-- 思考内容：占位期间只有状态，服务端推送思考过程后展示在状态下方，思考结束自动折叠 -->
+            <template v-if="chatMsg.thinkingContent || chatMsg.thinkingPending">
+              <view class="thinking-header" @click="toggleThinking(chatMsg)">
                 <view v-if="!chatMsg.thinkingDone" class="thinking-loading">
                   <up-icon name="reload" size="14" color="#f5a623"></up-icon>
                 </view>
-                <text class="thinking-label">{{ chatMsg.thinkingDone ? '思考完成' : '思考中...' }}</text>
+                <text class="thinking-label">{{ thinkingLabel(chatMsg) }}</text>
+                <up-icon
+                    v-if="chatMsg.thinkingContent"
+                    name="arrow-right"
+                    size="12"
+                    color="#999"
+                    :class="{ 'thinking-arrow-open': !chatMsg.thinkingCollapsed }"
+                ></up-icon>
               </view>
-              <view class="thinking-content">{{ chatMsg.thinkingContent }}</view>
+              <view
+                  v-if="chatMsg.thinkingContent && !chatMsg.thinkingCollapsed"
+                  class="thinking-content"
+              >{{ chatMsg.thinkingContent }}</view>
             </template>
-            <!-- 正式内容 -->
+            <!-- 正式内容：统一走Markdown -->
             <template v-if="chatMsg.message">
               <view v-if="chatMsg.thinkingContent" class="thinking-divider"></view>
-              <view class="chat-msg-text markdown-body">
-                <up-parse :content="renderMarkdown(chatMsg.message)"></up-parse>
+              <view class="markdown-body">
+                <up-parse
+                    :content="renderMarkdown(chatMsg.message)"
+                    :tag-style="MD_TAG_STYLE"
+                ></up-parse>
               </view>
             </template>
           </view>
@@ -97,23 +144,32 @@ import { ref, computed, watch, onMounted, onUnmounted, getCurrentInstance } from
 import { onShow } from "@dcloudio/uni-app"
 import { useStore } from "vuex"
 import { createChatSpaceAPI, createAiChatSpaceAPI } from "@/api/chat/space.js"
-import { getNoReadMsgListAPI } from "@/api/chat/msg.js"
-import { renderMarkdown } from "@/utils/markdownUtil.js"
+import { renderMarkdown, MD_TAG_STYLE } from "@/utils/markdownUtil.js"
+import { useChatHistory } from "@/views/chat/chatMessage.js"
 import UserAvatar from "@/components/UserAvatar/index.vue"
 
 const { proxy } = getCurrentInstance()
 const store = useStore()
-const scrollviewRef = ref(null)
 const message = ref("")
-const chatMsgs = ref([])
-const scrollTop = ref(0)
-const scrollHeight = ref(0)
 
 const websocket = ref(null)
 const userInfo = computed(() => store.getters["user/getUserInfo"] || {})
 const target = ref({})
 const targetType = ref('agent')
 const currentTargetId = computed(() => target.value && target.value.id)
+
+// 消息列表与历史分页加载
+const spaceIdRef = computed(() => target.value && target.value.chatSpaceId)
+const {
+  list: chatMessageList,
+  loading: historyLoading,
+  scrollTop,
+  scrollIntoView,
+  loadUnread,
+  onScroll,
+  scrollToBottom,
+  reset: resetHistory
+} = useChatHistory(spaceIdRef)
 
 // 防止重复初始化
 const userInfoLoaded = ref(false)
@@ -178,7 +234,7 @@ function initUserInfo() {
 function initChat() {
   if (chatIniting.value) return
   chatIniting.value = true
-  chatMsgs.value = []
+  resetHistory()
   ensureChatSpace().finally(() => {
     chatIniting.value = false
   })
@@ -186,7 +242,7 @@ function initChat() {
 
 function ensureChatSpace() {
   if (target.value.chatSpaceId) {
-    return loadNoReadMsgs()
+    return loadNoReadMessageList()
   }
   if (!userInfo.value.id) {
     return initUserInfo().then(() => {
@@ -231,32 +287,16 @@ function handleSpaceCreated(res) {
   } catch (e) {
     console.error('通知space-created失败', e)
   }
-  return loadNoReadMsgs()
+  return loadNoReadMessageList()
 }
 
-function loadNoReadMsgs() {
+/**
+ * 加载首屏消息：未读消息 + 条数不足一页时补一页种子，更早的历史由滚动到顶部时按页加载
+ * @returns {Promise<void>}
+ */
+function loadNoReadMessageList() {
   if (!target.value.chatSpaceId) return Promise.resolve()
-  const query = { spaceId: target.value.chatSpaceId }
-  return getNoReadMsgListAPI(query).then(res => {
-    if (res.code !== 200) {
-      return
-    }
-    if (res.data !== null) {
-      chatMsgs.value = res.data
-    }
-    scrollToBottom()
-  })
-}
-
-function scrollToBottom() {
-  setTimeout(() => {
-    scrollHeight.value = scrollHeight.value + 100
-    scrollTop.value = scrollHeight.value
-  }, 100)
-}
-
-function onScroll(e) {
-  scrollHeight.value = e.detail.scrollHeight
+  return loadUnread().then(scrollToBottom)
 }
 
 /**
@@ -290,7 +330,15 @@ function sendMessage() {
   }
   const dataContent = { action: 2, chatMsg: chatMsg }
   sendWebSocketData(dataContent)
-  chatMsgs.value.push(chatMsg)
+  chatMessageList.value.push(chatMsg)
+  // AI首响有延迟，本地先挂一个占位气泡，服务端首个思考/回复消息会复用它
+  if (targetType.value !== 'user') {
+    createReply({
+      spaceId: target.value.chatSpaceId,
+      senderId: target.value.id,
+      receiverId: userInfo.value.id
+    }, true)
+  }
 
   message.value = ''
   scrollToBottom()
@@ -365,22 +413,101 @@ function sendWebSocketData(data) {
   websocket.value.send(dataStr)
 }
 
-function handleThinkingMessage(chatMsg) {
-  if (currentTargetId.value !== chatMsg.senderId) return
-  if (chatMsgs.value.length > 0) {
-    let lastChatMsg = chatMsgs.value[chatMsgs.value.length - 1]
-    if (lastChatMsg.thinkingContent !== undefined && !lastChatMsg.hasReply) { lastChatMsg.thinkingContent = (lastChatMsg.thinkingContent || '') + (chatMsg.message || '')
-      scrollToBottom()
-      return
-    }
+/**
+ * 获取进行中的AI回复气泡
+ * 服务端落库后的消息一定带id，用户自己发的消息senderId为自己，两者都不算进行中
+ * @returns 进行中的气泡，没有则返回null
+ */
+function ongoingReply() {
+  if (!chatMessageList.value.length) {
+    return null
   }
-  const newMsg = {
-    ...chatMsg,
-    thinkingContent: chatMsg.message,
+  const lastMsg = chatMessageList.value[chatMessageList.value.length - 1]
+  if (lastMsg.id !== undefined || lastMsg.senderId === userInfo.value.id) {
+    return null
+  }
+  return lastMsg
+}
+
+/**
+ * 思考区状态文案，智能体区分思考中与思考完成，模型只有等待回复
+ * @param chatMsg 消息
+ * @returns 状态文案
+ */
+function thinkingLabel(chatMsg) {
+  if (targetType.value !== 'agent') {
+    return '正在回复...'
+  }
+  return chatMsg.thinkingDone ? '思考完成' : '思考中...'
+}
+
+/**
+ * 新建AI回复气泡，思考内容与正式内容分两段展示
+ * @param chatMsg 服务端消息
+ * @param pending 是否为本地占位气泡，等待服务端首个响应
+ * @returns 新建的气泡
+ */
+function createReply(chatMsg, pending) {
+  const reply = {
+    spaceId: chatMsg.spaceId,
+    senderId: chatMsg.senderId,
+    receiverId: chatMsg.receiverId,
+    createdDt: chatMsg.createdDt || getCurrentDate(),
+    thinkingPending: !!pending,
+    thinkingContent: '',
+    thinkingDone: !pending,
+    thinkingCollapsed: false,
     message: '',
-    hasReply: false
+    references: null
   }
-  chatMsgs.value.push(newMsg)
+  chatMessageList.value.push(reply)
+  return reply
+}
+
+/**
+ * 处理思考状态消息，思考内容追加到当前回复气泡
+ * @param chatMsg 服务端消息
+ */
+function handleThinking(chatMsg) {
+  const reply = ongoingReply() || createReply(chatMsg)
+  // 思考消息先于正式内容到达，思考尚未结束，展开思考过程
+  reply.thinkingDone = false
+  reply.thinkingCollapsed = false
+  reply.thinkingContent += chatMsg.message || ''
+  scrollToBottom()
+}
+
+/**
+ * 折叠/展开思考内容
+ * @param chatMsg 消息
+ */
+function toggleThinking(chatMsg) {
+  if (!chatMsg.thinkingContent) {
+    return
+  }
+  chatMsg.thinkingCollapsed = !chatMsg.thinkingCollapsed
+}
+
+/**
+ * 处理回复内容，流式分片逐块累加，完整消息直接覆盖，避免同一段内容重复展示
+ * @param chatMsg 服务端消息
+ */
+function handleReply(chatMsg) {
+  const isComplete = chatMsg.id !== undefined
+  const reply = ongoingReply() || createReply(chatMsg)
+  // 收到正式内容即视为思考结束，清除占位状态并自动折叠思考过程
+  reply.thinkingDone = true
+  reply.thinkingPending = false
+  reply.thinkingCollapsed = true
+  if (isComplete) {
+    reply.id = chatMsg.id
+    // 完整消息携带全量答案，覆盖已累加的分片
+    if (chatMsg.message) {
+      reply.message = chatMsg.message
+    }
+  } else {
+    reply.message += chatMsg.message || ''
+  }
   scrollToBottom()
 }
 
@@ -392,70 +519,22 @@ function setOnmessageMessage(event) {
     console.error('解析消息失败', e)
     return
   }
-
-  let chatMsg = parse.chatMsg
-
-  // 服务端消息可能没有 createdDt，补充当前时间
-  if (!chatMsg.createdDt) {
-    chatMsg.createdDt = getCurrentDate()
-  }
-
-  if (parse.action === 6) {
-    handleThinkingMessage(chatMsg)
+  const chatMsg = parse.chatMsg
+  // 仅处理当前会话的消息
+  if (currentTargetId.value !== chatMsg.senderId) {
     return
   }
-
+  // 思考状态消息
+  if (parse.action === 6) {
+    handleThinking(chatMsg)
+    return
+  }
+  // 带id的是落库后的完整消息，说明本次回复结束
   if (chatMsg.id !== undefined) {
     const dataContent = { action: 3, chatMsg: chatMsg }
     sendWebSocketData(dataContent)
   }
-
-  if (currentTargetId.value !== chatMsg.senderId) return
-
-  if (chatMsgs.value.length > 0) {
-    let lastChatMsg = chatMsgs.value[chatMsgs.value.length - 1]
-    if (lastChatMsg.thinkingContent !== undefined && lastChatMsg.senderId === chatMsg.senderId) {
-      lastChatMsg.thinkingDone = true
-      lastChatMsg.hasReply = true
-      if (chatMsg.id !== undefined) {
-        // 完整消息到达，替换为最终内容
-        lastChatMsg.message = chatMsg.message || ''
-        lastChatMsg.id = chatMsg.id
-      } else {
-        // 流式块，追加内容
-        lastChatMsg.message = (lastChatMsg.message || '') + (chatMsg.message || '')
-      }
-      if (chatMsg.id !== undefined) {
-        const dataContent = { action: 4, chatMsg: chatMsg }
-        sendWebSocketData(dataContent)
-      }
-      scrollToBottom()
-      return
-    }
-
-    if (lastChatMsg.id === undefined && lastChatMsg.senderId !== userInfo.value.id && lastChatMsg.thinkingContent === undefined) {
-      if (chatMsg.id === undefined) {
-        lastChatMsg.message = (lastChatMsg.message || '') + (chatMsg.message || '')
-        scrollToBottom()
-        return
-      }
-      lastChatMsg.id = chatMsg.id
-      if (chatMsg.message) {
-        lastChatMsg.message = chatMsg.message
-      }
-      const dataContent = { action: 4, chatMsg: chatMsg }
-      sendWebSocketData(dataContent)
-      scrollToBottom()
-      return
-    }
-  }
-
-  chatMsgs.value.push(chatMsg)
-  if (chatMsg.id !== undefined) {
-    const dataContent = { action: 4, chatMsg: chatMsg }
-    sendWebSocketData(dataContent)
-  }
-  scrollToBottom()
+  handleReply(chatMsg)
 }
 
 function setOncloseMessage() {
@@ -464,7 +543,6 @@ function setOncloseMessage() {
     initWebsocket()
   }, 3000)
 }
-
 
 function getCurrentDate() {
   const now = new Date()
@@ -479,6 +557,21 @@ function getCurrentDate() {
 
 function goBack() {
   uni.navigateBack()
+}
+
+/**
+ * 打开聊天记录
+ */
+function openChatRecord() {
+  if (!target.value.chatSpaceId) {
+    return
+  }
+  uni.navigateTo({
+    url: '/views/chat/chatMsgRecord?spaceId=' + target.value.chatSpaceId +
+        '&targetType=' + targetType.value +
+        '&targetName=' + encodeURIComponent(target.value.name || '') +
+        '&title=' + encodeURIComponent(target.value.name || '聊天记录')
+  })
 }
 </script>
 
@@ -515,6 +608,13 @@ function goBack() {
   color: #fff;
 }
 
+/* 标题右侧的聊天记录入口 */
+.header-record {
+  display: flex;
+  align-items: center;
+  padding-left: 12px;
+}
+
 .header-tip {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.7);
@@ -522,7 +622,7 @@ function goBack() {
 
 .chat-body {
   flex: 1;
-  padding: 8px 0 180px;
+  padding: 8px 0 80px;
   min-height: 0;
 }
 
@@ -530,6 +630,17 @@ function goBack() {
   display: flex;
   justify-content: center;
   margin: 8px 0;
+}
+
+/* 未读起点分隔线：撑满消息行宽 */
+.chat-unread-divider {
+  align-self: stretch;
+}
+
+/* 向上加载历史时的提示 */
+.chat-history-loading {
+  text-align: center;
+  padding: 8px 0;
 }
 
 .chat-tip {
@@ -591,22 +702,19 @@ function goBack() {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
-.chat-bubble-thinking {
-  border-left: 3px solid #f5a623;
-}
-
 .thinking-header {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 6px;
-  padding-bottom: 6px;
-  border-bottom: 1px dashed #e9e9e9;
 }
 
 .thinking-label {
   font-size: 12px;
   color: #666;
+}
+
+.thinking-arrow-open {
+  transform: rotate(90deg);
 }
 
 .thinking-loading {
@@ -619,9 +727,13 @@ function goBack() {
 }
 
 .thinking-content {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed #e9e9e9;
   font-size: 12px;
   color: #666;
   line-height: 1.6;
+  white-space: pre-line;
 }
 
 .thinking-divider {
@@ -630,10 +742,6 @@ function goBack() {
   margin: 8px 0;
 }
 
-.chat-msg-text {
-  font-size: 14px;
-  line-height: 1.7;
-}
 .chat-footer {
   position: fixed;
   left: 0;
@@ -664,121 +772,30 @@ function goBack() {
   border: none;
 }
 
-/* Markdown 渲染样式（作用于 up-parse 内部节点） */
+/* Markdown 基线排版，标签级样式由 up-parse 的 tag-style 内联下发 */
 .markdown-body {
   font-size: 14px;
-  line-height: 1.7;
+  line-height: 1.5;
   word-break: break-word;
 }
 
-.markdown-body .h1,
-.markdown-body .h2,
-.markdown-body .h3,
-.markdown-body .h4,
-.markdown-body .h5,
-.markdown-body .h6 {
-  font-weight: 600;
-  margin: 12px 0 8px;
+/* 代码高亮：小程序端 rich-text 节点不认外部样式，仅 H5 生效 */
+:deep(.markdown-body) {
+  .hljs-keyword { color: #d73a49; }
+  .hljs-string { color: #032f62; }
+  .hljs-number { color: #005cc5; }
+  .hljs-comment { color: #6a737d; font-style: italic; }
+  .hljs-function { color: #6f42c1; }
+  .hljs-title { color: #6f42c1; }
+  .hljs-params { color: #24292e; }
+  .hljs-literal { color: #005cc5; }
+  .hljs-built_in { color: #e36209; }
+  .hljs-operator { color: #d73a49; }
+  .hljs-punctuation { color: #24292e; }
+  .hljs-property { color: #005cc5; }
+  .hljs-variable { color: #e36209; }
+  .hljs-attr { color: #6f42c1; }
+  .hljs-tag { color: #22863a; }
+  .hljs-name { color: #22863a; }
 }
-
-.markdown-body .h1 { font-size: 20px; }
-.markdown-body .h2 { font-size: 18px; }
-.markdown-body .h3 { font-size: 16px; }
-.markdown-body .h4 { font-size: 15px; }
-.markdown-body .h5,
-.markdown-body .h6 { font-size: 14px; }
-
-.markdown-body .p {
-  margin: 0 0 8px;
-}
-
-.markdown-body .ul,
-.markdown-body .ol {
-  padding-left: 20px;
-  margin: 8px 0;
-}
-
-.markdown-body .li {
-  margin: 4px 0;
-}
-
-.markdown-body .pre {
-  background-color: #f6f8fa;
-  color: #24292e;
-  padding: 12px;
-  border-radius: 6px;
-  margin: 8px 0;
-  font-family: Consolas, Monaco, "Courier New", monospace;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
-.markdown-body .code {
-  font-family: Consolas, Monaco, "Courier New", monospace;
-  background-color: rgba(255, 255, 255, 0.9);
-  color: #24292e;
-  padding: 2px 4px;
-  border-radius: 3px;
-  font-size: 13px;
-}
-
-.markdown-body .pre .code {
-  background-color: transparent;
-  padding: 0;
-  color: #24292e;
-}
-
-.markdown-body .blockquote {
-  border-left: 4px solid rgba(255, 255, 255, 0.4);
-  padding-left: 12px;
-  color: rgba(255, 255, 255, 0.9);
-  margin: 8px 0;
-}
-
-.markdown-body .a {
-  color: #e6f7ff;
-  text-decoration: underline;
-}
-
-.markdown-body .table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 8px 0;
-}
-
-.markdown-body .th,
-.markdown-body .td {
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 6px;
-  text-align: left;
-}
-
-.markdown-body .th {
-  background-color: rgba(0, 0, 0, 0.1);
-  font-weight: 600;
-}
-
-.markdown-body .hr {
-  border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.3);
-  margin: 12px 0;
-}
-
-/* 代码高亮色（作为 highlight.js 主题的后备，同时适配小程序） */
-.hljs-keyword { color: #d73a49; }
-.hljs-string { color: #032f62; }
-.hljs-number { color: #005cc5; }
-.hljs-comment { color: #6a737d; font-style: italic; }
-.hljs-function { color: #6f42c1; }
-.hljs-title { color: #6f42c1; }
-.hljs-params { color: #24292e; }
-.hljs-literal { color: #005cc5; }
-.hljs-built_in { color: #e36209; }
-.hljs-operator { color: #d73a49; }
-.hljs-punctuation { color: #24292e; }
-.hljs-property { color: #005cc5; }
-.hljs-variable { color: #e36209; }
-.hljs-attr { color: #6f42c1; }
-.hljs-tag { color: #22863a; }
-.hljs-name { color: #22863a; }
 </style>
