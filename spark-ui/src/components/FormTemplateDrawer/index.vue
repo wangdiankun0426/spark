@@ -76,17 +76,29 @@
       <el-table-column prop="updatedDt" label="修改时间" width="160" align="center"/>
       <el-table-column fixed="right" label="操作" width="200">
         <template #default="scope">
-          <el-button type="primary" text @click="handleOpenFormDesigner(scope.row)">
+          <el-button
+              type="primary"
+              text
+              @click="handleOpenFormDesigner(scope.row)"
+          >
             <el-icon><EditPen /></el-icon>
-            <span style="font-size: 12px; font-weight: 400">设计</span>
+            <span style="font-size: 12px; font-weight: 500">设计</span>
           </el-button>
-          <el-button type="success" text @click="handleOpenUpdateFormForm(scope.row)">
+          <el-button
+              type="success"
+              text
+              @click="handleOpenUpdateFormForm(scope.row)"
+          >
             <el-icon><Edit /></el-icon>
-            <span style="font-size: 12px; font-weight: 400">修改</span>
+            <span style="font-size: 12px; font-weight: 500">修改</span>
           </el-button>
-          <el-button type="danger" text @click="handleDeleteForm(scope.row.id)">
+          <el-button
+              type="danger"
+              text
+              @click="handleDeleteForm(scope.row.id)"
+          >
             <el-icon><Delete /></el-icon>
-            <span style="font-size: 12px; font-weight: 400">删除</span>
+            <span style="font-size: 12px; font-weight: 500">删除</span>
           </el-button>
         </template>
       </el-table-column>

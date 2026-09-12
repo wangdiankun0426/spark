@@ -367,12 +367,12 @@ function handleCurrentChange(pageNo) {
  */
 function cardActions(item) {
   return [
-    { key: 'document', label: '文档', onClick: () => handleOpenDocument(item) },
-    { key: 'entity', label: '实体', onClick: () => handleOpenEntity(item) },
-    { key: 'relation', label: '关系', onClick: () => handleOpenRelation(item) },
-    { key: 'graph', label: '图谱', onClick: () => handleOpenGraphDetail(item) },
-    { key: 'edit', label: '修改', onClick: () => handleOpenUpdateForm(item) },
-    { key: 'delete', label: '删除', onClick: () => handleDelete(item) }
+    { key: 'document', label: '文档',icon: 'Document', onClick: () => handleOpenDocument(item) },
+    { key: 'entity', label: '实体', icon: 'Ticket',onClick: () => handleOpenEntity(item) },
+    { key: 'relation', label: '关系', icon: 'List',onClick: () => handleOpenRelation(item) },
+    { key: 'graph', label: '图谱', icon: 'Discount',onClick: () => handleOpenGraphDetail(item) },
+    { key: 'edit', label: '修改', icon: 'Edit',onClick: () => handleOpenUpdateForm(item) },
+    { key: 'delete', label: '删除', icon: 'Delete',onClick: () => handleDelete(item) }
   ]
 }
 

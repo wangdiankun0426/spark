@@ -9,12 +9,6 @@
             mode="vertical"
             class="home-el-menu"
         >
-          <el-menu-item index="/home/contact">
-            <el-icon style="font-size: 24px;">
-              <Chat/>
-            </el-icon>
-            <template #title>通讯录</template>
-          </el-menu-item>
           <div class="home-menu-group">AI</div>
           <el-menu-item index="/home/aichat">
             <el-icon style="font-size: 24px;">
@@ -34,7 +28,7 @@
             </el-icon>
             <template #title>WorkFlow</template>
           </el-menu-item>
-          <div class="home-menu-group is-light">流程</div>
+          <div class="home-menu-group">流程</div>
           <el-menu-item index="/home/flow/application">
             <el-icon style="font-size: 24px;">
               <FlowApplication/>
@@ -64,6 +58,13 @@
               <CopyMe/>
             </el-icon>
             <template #title>抄送给我</template>
+          </el-menu-item>
+          <div class="home-menu-group">通用</div>
+          <el-menu-item index="/home/contact">
+            <el-icon style="font-size: 24px;">
+              <Chat/>
+            </el-icon>
+            <template #title>通讯录</template>
           </el-menu-item>
         </el-menu>
       </el-aside>
@@ -128,9 +129,7 @@ const defaultActive = computed(() => {
   user-select: none;
   pointer-events: none;
 }
-.home-menu-group.is-light {
-  color: var(--sidebar-menu-group-text-light);
-}
+
 .home-el-menu :deep(.el-menu-item),
 .home-el-menu :deep(.el-sub-menu__title) {
   color: var(--sidebar-text);

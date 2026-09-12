@@ -16,8 +16,8 @@
           plain
           :disabled="props.widget.config.disabled || props.widget.config.readonly || uploading"
       >
-        <el-icon><UploadFilled /></el-icon>
-        点击上传
+        <el-icon><Upload /></el-icon>
+        上传
       </el-button>
     </el-upload>
     <div v-if="uploading || canResume" class="upload-progress">
@@ -44,20 +44,29 @@
       <el-table-column prop="sizeStr" label="大小" width="90" align="center" />
       <el-table-column prop="ownerName" label="上传人" width="110" align="center"  />
       <el-table-column prop="createdDt" label="上传时间" width="140" align="center" />
-      <el-table-column label="操作" width="130" fixed="right" align="center" >
+      <el-table-column label="操作" width="150" fixed="right" align="center" >
         <template #default="{ row, $index }">
           <el-button
               v-if="props.widget.config.downloadable"
-              link
-              type="primary"
+              text
               @click="handleDownload(row)"
-          >下载</el-button>
+          >
+            <el-icon><Download /></el-icon>
+            <span style="font-size: 12px; font-weight: 500">
+               下载
+            </span>
+          </el-button>
           <el-button
               v-if="!props.widget.config.disabled && !props.widget.config.readonly"
-              link
+              text
               type="danger"
               @click="handleRemove($index)"
-          >删除</el-button>
+          >
+            <el-icon><Delete /></el-icon>
+            <span style="font-size: 12px; font-weight: 500">
+               删除
+            </span>
+          </el-button>
         </template>
       </el-table-column>
     </el-table>

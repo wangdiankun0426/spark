@@ -427,9 +427,9 @@ function handleCurrentChange(pageNo) {
  */
 function cardActions(item) {
   return [
-    { key: 'document', label: '知识库文档', onClick: () => handleOpenDocument(item) },
-    { key: 'edit', label: '修改', onClick: () => handleOpenUpdateForm(item) },
-    { key: 'delete', label: '删除', onClick: () => handleDelete(item) }
+    { key: 'document', label: '文档', icon: 'Document', onClick: () => handleOpenDocument(item) },
+    { key: 'edit', label: '修改', icon: 'Edit',onClick: () => handleOpenUpdateForm(item) },
+    { key: 'delete', label: '删除', icon: 'Delete', onClick: () => handleDelete(item) }
   ]
 }
 

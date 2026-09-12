@@ -7,26 +7,17 @@
         <el-tag v-if="revNum" size="small" type="warning">{{ revNum }}</el-tag>
         <el-button text size="small" type="primary" @click="varHelpVisible = true">
           <el-icon><QuestionFilled /></el-icon>
-          <span style="font-size:12px">变量帮助</span>
+          <span style="font-size:14px">变量帮助</span>
         </el-button>
       </div>
       <div class="toolbar-right">
-        <el-button
-            type="primary"
-            @click="saveProcess"
-        >
+        <el-button @click="saveProcess">
           <el-icon><Folder /></el-icon>保存流程
         </el-button>
-        <el-button
-            type="warning"
-            @click="notificationConfigRef.open()"
-        >
+        <el-button @click="notificationConfigRef.open()">
           <el-icon><Bell /></el-icon>流程通知
         </el-button>
-        <el-button
-            type="danger"
-            @click="showClearConfirm = true"
-        >
+        <el-button @click="showClearConfirm = true">
           <el-icon><Delete /></el-icon>清空
         </el-button>
       </div>
@@ -39,7 +30,6 @@
           :expanded="['baseNode']"
           data-key="node-type"
       />
-
       <!--中间画布-->
       <canvas-index
           :nodes="nodes"
@@ -60,8 +50,7 @@
           @drop-node="(type, x, y) => handleCanvasDrop({ nodeType: type, x, y })"
           @move-node="handleMoveNode"
       />
-
-      <!--右侧属性面板（选中节点/连线时展示，未选中时隐藏释放画布空间）-->
+      <!--右侧属性面板-->
       <property-drawer
           v-if="selectedNode || selectedSequence"
           :node="selectedNode"
@@ -80,7 +69,11 @@
     </div>
 
     <!--清空确认对话框-->
-    <el-dialog title="确认清空" v-model="showClearConfirm" width="30%" :show-close="false">
+    <el-dialog
+        title="确认清空"
+        v-model="showClearConfirm"
+        width="30%"
+    >
       <p>确定要清空整个流程图吗？此操作不可撤销。</p>
       <template #footer>
         <el-button @click="showClearConfirm = false">取消</el-button>
@@ -130,7 +123,6 @@ onMounted(() => {
   const params = useRoute().params;
   templateId.value = Number(params.id);
   revId.value = Number(params.revId);
-  // 加载模板名称与最新版本号
   queryTemplateDetailAPI({ id: templateId.value }).then(res => {
     if (res.code === 200 && res.data) {
       templateName.value = res.data.name || '';
@@ -311,7 +303,11 @@ const saveProcess = () => {
 }
 
 const confirmClear = () => {
-  nodes.value = []; sequences.value = []; selectedNode.value = null; selectedSequence.value = null; showClearConfirm.value = false
+  nodes.value = [];
+  sequences.value = [];
+  selectedNode.value = null;
+  selectedSequence.value = null;
+  showClearConfirm.value = false
   nodeTaskConfig.value = []
   ElMessage.success('流程图已清空')
 }

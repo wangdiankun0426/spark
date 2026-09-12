@@ -20,13 +20,10 @@
         <div class="tenant-switch-info">
           <div class="tenant-switch-name">
             {{ item.name }}
-            <el-tag v-if="isCurrent(item.id)" type="primary" size="small">当前租户</el-tag>
+            <el-tag v-if="isCurrent(item.id)">当前租户</el-tag>
           </div>
           <div class="tenant-switch-meta">
-            <span>截止时间：{{ item.deadline || '不限' }}</span>
-            <el-tag :type="item.status === 1 ? 'success' : 'danger'" size="small">
-              {{ item.statusName }}
-            </el-tag>
+            <span>截止时间：{{ item.deadline || '不限' }} </span>
           </div>
         </div>
         <el-button

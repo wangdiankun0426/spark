@@ -1,14 +1,15 @@
 <template>
   <div>
     <el-container>
-      <el-aside width="64px" class="flow-el-aside">
+      <el-aside width="64px" class="bus-el-aside">
         <el-menu
             :default-active="defaultActive"
             :router='true'
             :collapse="true"
             mode="vertical"
-            class="flow-el-menu"
+            class="bus-el-menu"
         >
+          <div class="bus-menu-group">流程</div>
           <el-menu-item v-if="hasMenu(MENU_CODES.BUS_FLOW)" index="/bus/flowTemplate">
             <el-icon style="font-size: 24px;">
               <flow-application/>
@@ -45,7 +46,7 @@ const defaultActive = computed(() => {
 </script>
 
 <style scoped lang="scss">
-.flow-el-aside {
+.bus-el-aside {
   padding: 0;
   height: calc(100vh - $nav-height);
   background: var(--sidebar-bg);
@@ -54,7 +55,18 @@ const defaultActive = computed(() => {
   overflow-y: auto;
   overflow-x: hidden;
 }
-.flow-el-menu {
+.bus-menu-group {
+  height: 30px;
+  line-height: 28px;
+  margin-top: $spacing-xs;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-align: center;
+  color: var(--sidebar-menu-group-text);
+  user-select: none;
+  pointer-events: none;
+}
+.bus-el-menu {
   border: 0;
   padding: 0;
   margin: 0;

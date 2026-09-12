@@ -165,7 +165,6 @@ import TaskTemplateDrawer from '@/components/TaskTemplateDrawer/index.vue';
 import InfoCard from '@/components/InfoCard/index.vue';
 import { useRoute, useRouter } from 'vue-router';
 
-const route = useRoute();
 const router = useRouter();
 
 const templateList = ref([]);
@@ -177,8 +176,6 @@ const query = ref({
   pageNo: 1,
   pageSize: 10,
 });
-
-// 主题色循环，配合 variables.scss 中的 agent 主题 token 使用
 
 // 新增/修改模板表单
 const templateFormVisible = ref(false);
@@ -285,10 +282,10 @@ function handleCurrentChange(pageNo) {
  */
 function cardActions(item) {
   return [
-    { key: 'instance', label: '流程实例', onClick: () => handleOpenInstance(item) },
-    { key: 'designer', label: '设计流程', onClick: () => handleOpenDesigner(item) },
-    { key: 'edit', label: '修改', onClick: () => handleOpenUpdateForm(item) },
-    { key: 'delete', label: '删除', onClick: () => handleDelete(item) }
+    { key: 'instance', label: '流程实例', icon: 'Files', onClick: () => handleOpenInstance(item) },
+    { key: 'designer', label: '设计流程', icon: 'SetUp',onClick: () => handleOpenDesigner(item) },
+    { key: 'edit', label: '修改', icon: 'Edit',onClick: () => handleOpenUpdateForm(item) },
+    { key: 'delete', label: '删除', icon: 'Delete',onClick: () => handleDelete(item) }
   ];
 }
 

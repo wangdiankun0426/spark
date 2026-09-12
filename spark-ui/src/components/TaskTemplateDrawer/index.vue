@@ -51,13 +51,21 @@
           <el-table-column prop="taskTypeName" label="任务类型" width="150" align="center" />
           <el-table-column fixed="right" label="操作" width="150" align="center">
             <template #default="scope">
-              <el-button type="success" text @click.stop="handleOpenUpdateTemplate(scope.row)">
+              <el-button
+                  type="success"
+                  text
+                  @click.stop="handleOpenUpdateTemplate(scope.row)"
+              >
                 <el-icon><EditPen /></el-icon>
-                <span style="font-size: 12px; font-weight: 400">修改</span>
+                <span style="font-size: 12px; font-weight: 500">修改</span>
               </el-button>
-              <el-button type="danger" text @click.stop="handleDeleteTemplate(scope.row.id)">
+              <el-button
+                  type="danger"
+                  text
+                  @click.stop="handleDeleteTemplate(scope.row.id)"
+              >
                 <el-icon><Delete /></el-icon>
-                <span style="font-size: 12px; font-weight: 400">删除</span>
+                <span style="font-size: 12px; font-weight: 500">删除</span>
               </el-button>
             </template>
           </el-table-column>
@@ -95,13 +103,21 @@
           <el-table-column prop="typeName" label="参数类型" align="center" />
           <el-table-column fixed="right" label="操作" width="150" align="center">
             <template #default="scope">
-              <el-button type="success" text @click="handleOpenUpdateParam(scope.row)">
+              <el-button
+                  type="success"
+                  text
+                  @click="handleOpenUpdateParam(scope.row)"
+              >
                 <el-icon><EditPen /></el-icon>
-                <span style="font-size: 12px; font-weight: 400">修改</span>
+                <span style="font-size: 12px; font-weight: 500">修改</span>
               </el-button>
-              <el-button type="danger" text @click="handleDeleteParam(scope.row.id)">
+              <el-button
+                  type="danger"
+                  text
+                  @click="handleDeleteParam(scope.row.id)"
+              >
                 <el-icon><Delete /></el-icon>
-                <span style="font-size: 12px; font-weight: 400">删除</span>
+                <span style="font-size: 12px; font-weight: 500">删除</span>
               </el-button>
             </template>
           </el-table-column>

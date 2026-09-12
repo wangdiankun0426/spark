@@ -6,6 +6,7 @@ import notice from '@/pages/orgMange/sys/notice'
 import message from '@/pages/orgMange/sys/message'
 import logLogin from '@/pages/orgMange/log/login'
 import logOperate from '@/pages/orgMange/log/operate'
+import config from "@/pages/orgMange/sys/config.vue";
 
 export default [
     {
@@ -71,6 +72,14 @@ export default [
                 component: logOperate,
                 meta: {
                     title: '操作日志'
+                }
+            },
+            {
+                path: '/org/sys/config',
+                name: 'config',
+                component: config,
+                meta: {
+                    title: '系统配置'
                 }
             },
         ]

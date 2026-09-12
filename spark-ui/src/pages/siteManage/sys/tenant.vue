@@ -28,11 +28,38 @@
         <el-table-column prop="statusName" label="状态" width="120" align="center"/>
         <el-table-column prop="accountCount" label="账号数量" width="90" align="center"/>
         <el-table-column prop="deadline" label="截止时间" width="170" align="center"/>
-        <el-table-column fixed="right" label="操作" width="190" align="center">
+        <el-table-column fixed="right" label="操作" width="220" align="center">
           <template #default="scope">
-            <el-button type="primary" text @click="openConfig(scope.row)">配置</el-button>
-            <el-button type="success" text @click="openUpdateForm(scope.row)">修改</el-button>
-            <el-button type="danger" text @click="deleteRow(scope.row)">删除</el-button>
+            <el-button
+                type="primary"
+                text
+                @click="openConfig(scope.row)"
+            >
+              <el-icon><SetUp /></el-icon>
+              <span style="font-size: 14px; font-weight: 500">
+                配置
+              </span>
+            </el-button>
+            <el-button
+                type="success"
+                text
+                @click="openUpdateForm(scope.row)"
+            >
+              <el-icon><Edit /></el-icon>
+              <span style="font-size: 14px; font-weight: 500">
+                修改
+              </span>
+            </el-button>
+            <el-button
+                type="danger"
+                text
+                @click="deleteRow(scope.row)"
+            >
+              <el-icon><Delete /></el-icon>
+              <span style="font-size: 14px; font-weight: 500">
+                删除
+              </span>
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -84,7 +111,9 @@
                 @click="setTenantUserAdmin(scope.row)"
             >
               <el-icon><TurnOff /></el-icon>
-              <span style="font-size: 12px; font-weight: 400">设为管理员</span>
+              <span style="font-size: 14px; font-weight: 500">
+                设为管理员
+              </span>
             </el-button>
             <el-button
                 v-else
@@ -93,15 +122,17 @@
                 @click="cancelTenantUserAdmin(scope.row)"
             >
               <el-icon><TurnOff /></el-icon>
-              <span style="font-size: 12px; font-weight: 400">取消管理员</span>
+              <span style="font-size: 14px; font-weight: 500">
+                取消管理员
+              </span>
             </el-button>
             <el-button
                 type="warning"
                 text
                 @click="removeUser(scope.row.userId)"
             >
-              <el-icon><TurnOff /></el-icon>
-              <span style="font-size: 12px; font-weight: 400">移除</span>
+              <el-icon><Delete /></el-icon>
+              <span style="font-size: 14px; font-weight: 500">移除</span>
             </el-button>
           </template>
         </el-table-column>
@@ -163,6 +194,7 @@ import SelectUser from '@/components/SelectUser/index.vue';
 import UserAvatar from '@/components/UserAvatar/index.vue';
 import {ref} from 'vue';
 import {useRouter} from 'vue-router';
+import {Delete} from "@element-plus/icons-vue";
 
 const router = useRouter();
 

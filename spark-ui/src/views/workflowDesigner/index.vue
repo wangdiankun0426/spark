@@ -12,15 +12,18 @@
             @click="varHelpVisible = true"
         >
           <el-icon><QuestionFilled /></el-icon>
-          <span style="font-size:12px">变量帮助</span>
+          <span style="font-size:14px">变量帮助</span>
         </el-button>
       </div>
       <div class="toolbar-right">
-        <el-button type="primary" @click="handleSaveVersion" :loading="saving">
-          <el-icon><Document /></el-icon>保存流程
+        <el-button
+            @click="handleSaveVersion"
+            :loading="saving"
+        ><el-icon><Document /></el-icon>保存流程
         </el-button>
-        <el-button type="danger" @click="showClearConfirm = true">
-          <el-icon><Delete /></el-icon>清空
+        <el-button
+            @click="showClearConfirm = true"
+        ><el-icon><Delete /></el-icon>清空
         </el-button>
       </div>
     </div>

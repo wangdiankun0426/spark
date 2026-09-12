@@ -16,8 +16,10 @@
             :prefix-icon="Search"
             style="width: 300px"
         />
-        <el-button type="primary" @click="handleOpenCreateForm">
-          <el-icon><Plus /></el-icon>新增Agent
+        <el-button
+            type="primary"
+            @click="handleOpenCreateForm"
+        ><el-icon><Plus /></el-icon>新增Agent
         </el-button>
       </div>
     </div>
@@ -383,8 +385,8 @@ function handleCurrentChange(pageNo) {
  */
 function cardActions(agent) {
   return [
-    { key: 'edit', label: '修改', onClick: () => handleOpenUpdateForm(agent) },
-    { key: 'delete', label: '删除', onClick: () => handleDelete(agent) }
+    { key: 'edit', label: '修改', icon: 'Edit',  onClick: () => handleOpenUpdateForm(agent) },
+    { key: 'delete', label: '删除', icon: 'Delete', onClick: () => handleDelete(agent) }
   ]
 }
 
@@ -587,7 +589,6 @@ function handleDelete(agent) {
   font-size: 13px;
   color: $color-text-secondary;
 }
-
 
 .agent-header-right {
   display: flex;

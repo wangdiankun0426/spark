@@ -1,16 +1,10 @@
 <template>
   <div class="app-container">
-    <!-- 顶部头部：与知识库文档列表头部效果一致 -->
     <div class="instance-header">
       <div class="instance-header-left">
         <el-button text @click="$router.push('/llm/workflow')">
           <el-icon><ArrowLeft /></el-icon>返回
         </el-button>
-        <el-divider direction="vertical" />
-        <div class="instance-header-title">
-          <el-icon class="instance-header-icon"><Clock /></el-icon>
-          运行记录
-        </div>
       </div>
       <div class="instance-header-right">
         <el-select
@@ -48,11 +42,14 @@
       <el-table-column label="操作" width="80" align="center" fixed="right">
         <template #default="{ row }">
           <el-button
-              type="primary"
               text
-              size="small"
               @click="handleOpenDetail(row)"
-          >详情</el-button>
+          >
+            <el-icon><View /></el-icon>
+            <span style="font-size: 12px; font-weight: 500">
+               详情
+            </span>
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -122,7 +119,7 @@ onMounted(() => { loadList(); });
   margin-bottom: $spacing-md;
   padding: $spacing-md $spacing-lg;
   background-color: $bg-card;
-  border-radius: $border-radius-lg;
+  border-radius: $border-radius-md;
   box-shadow: $shadow-card;
 }
 
@@ -130,20 +127,6 @@ onMounted(() => { loadList(); });
   display: flex;
   align-items: center;
   gap: $spacing-sm;
-}
-
-.instance-header-title {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  font-size: 18px;
-  font-weight: 700;
-  color: $color-text-primary;
-}
-
-.instance-header-icon {
-  font-size: 22px;
-  color: $color-primary;
 }
 
 .instance-header-right {

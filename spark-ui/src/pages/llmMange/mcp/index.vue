@@ -404,15 +404,16 @@ function handleCurrentChange(pageNo) {
  */
 function cardActions(item) {
   return [
-    { key: 'detail', label: '详情', onClick: () => handleOpenDetail(item) },
+    { key: 'detail', label: '详情', icon: 'View', onClick: () => handleOpenDetail(item) },
     {
       key: 'test',
       label: '测试',
+      icon: 'Tools',
       loading: !!testingMap[item.id],
       onClick: () => handleTestConnection(item)
     },
-    { key: 'edit', label: '修改', onClick: () => handleOpenUpdate(item) },
-    { key: 'delete', label: '删除', onClick: () => handleDelete(item) }
+    { key: 'edit', label: '修改', icon: 'Edit',onClick: () => handleOpenUpdate(item) },
+    { key: 'delete', label: '删除',icon: 'Delete', onClick: () => handleDelete(item) }
   ]
 }
 

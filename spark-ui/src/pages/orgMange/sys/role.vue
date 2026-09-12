@@ -28,7 +28,7 @@
                 @click="openUpdateRoleForm(scope.row)"
             >
               <el-icon><Edit /></el-icon>
-              <span style="font-size: 12px; font-weight: 400">
+              <span style="font-size: 12px; font-weight: 500">
                修改
               </span>
             </el-button>
@@ -38,7 +38,7 @@
                 text
             >
               <el-icon><Delete /></el-icon>
-              <span style="font-size: 12px; font-weight: 400">
+              <span style="font-size: 12px; font-weight: 500">
                删除
               </span>
             </el-button>
@@ -88,7 +88,7 @@
                 @click="removeUser(scope.row.userId)"
             >
               <el-icon><TurnOff /></el-icon>
-              <span style="font-size: 12px; font-weight: 400">
+              <span style="font-size: 12px; font-weight: 500">
                移除
               </span>
             </el-button>

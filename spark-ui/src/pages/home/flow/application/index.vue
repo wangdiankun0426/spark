@@ -71,7 +71,7 @@
     >
       <template #footer>
         <div class="drawer-footer">
-          <el-button type="primary" @click="handleSubmitFlow">发起流程</el-button>
+          <el-button @click="handleSubmitFlow">发起流程</el-button>
           <el-button @click="handleCloseFlowForm">关闭</el-button>
         </div>
       </template>
@@ -203,7 +203,7 @@ function handleCurrentChange(pageNo) {
  */
 function cardActions(item) {
   return [
-    { key: 'apply', label: '申请', onClick: () => handleOpenTemplate(item.id) }
+    { key: 'apply', label: '申请', icon: 'CirclePlus', onClick: () => handleOpenTemplate(item.id) }
   ];
 }
 

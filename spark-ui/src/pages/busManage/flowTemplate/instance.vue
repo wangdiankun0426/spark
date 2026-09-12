@@ -59,8 +59,25 @@
       <el-table-column prop="createdDt" label="申请时间" width="160" align="center" />
       <el-table-column label="操作" width="140" align="center" fixed="right">
         <template #default="{ row }">
-          <el-button type="primary" text size="small" @click="handleOpenDetail(row)">详情</el-button>
-          <el-button type="warning" text size="small" @click="handleOpenTaskList(row)">任务</el-button>
+          <el-button
+              text
+              @click="handleOpenDetail(row)"
+          >
+            <el-icon><View /></el-icon>
+            <span style="font-size: 12px; font-weight: 500">
+               详情
+            </span>
+          </el-button>
+          <el-button
+              type="warning"
+              text
+              @click="handleOpenTaskList(row)"
+          >
+            <el-icon><Tickets /></el-icon>
+            <span style="font-size: 12px; font-weight: 500">
+               任务
+            </span>
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -116,7 +133,15 @@
         <el-table-column prop="createdDt" label="创建时间" width="180" align="center" />
         <el-table-column fixed="right" label="操作" width="80" align="center">
           <template #default="scope">
-            <el-button type="primary" text size="small" @click="handleOpenTaskDetail(scope.row)">详情</el-button>
+            <el-button
+                text
+                @click="handleOpenTaskDetail(scope.row)"
+            >
+              <el-icon><View /></el-icon>
+              <span style="font-size: 12px; font-weight: 500">
+               详情
+            </span>
+            </el-button>
           </template>
         </el-table-column>
       </el-table>

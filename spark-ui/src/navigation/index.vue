@@ -13,7 +13,7 @@
         <span>业务管理</span>
       </el-menu-item>
       <el-menu-item index="/org" v-if="isOrgAdmin()">
-        <el-icon><Setting /></el-icon>
+        <el-icon><OfficeBuilding /></el-icon>
         <span>组织管理</span>
       </el-menu-item>
       <el-menu-item index="/site" v-if="isSysAdmin()">

@@ -43,8 +43,8 @@
               v-if="scope.row.status === 1"
           >
             <el-icon><SwitchButton /></el-icon>
-            <span style="font-size: 12px; font-weight: 400">
-               强制退出
+            <span style="font-size: 12px; font-weight: 500">
+               踢出
               </span>
           </el-button>
         </template>

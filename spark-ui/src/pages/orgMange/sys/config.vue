@@ -1,30 +1,16 @@
 <template>
   <div class="app-container">
-    <!-- 顶部头部 -->
-    <div class="config-header">
-      <div class="config-header-left">
-        <el-button text @click="goBack">
-          <el-icon><ArrowLeft /></el-icon>返回
-        </el-button>
-        <span class="config-title">{{ tenantName ? tenantName + ' 的配置' : '租户配置' }}</span>
-      </div>
-      <div class="config-header-right">
-        <el-button type="primary" @click="openCreateForm">
-          <el-icon><Plus /></el-icon>新建配置
-        </el-button>
-      </div>
-    </div>
     <el-table
         :data="list"
         v-loading="loading"
-        height="calc(100vh - 200px)"
+        height="calc(100vh - 130px)"
     >
       <el-table-column prop="name" label="配置名称" min-width="160" align="center" show-overflow-tooltip/>
       <el-table-column prop="key" label="配置key" min-width="200" align="center" show-overflow-tooltip/>
       <el-table-column prop="value" label="配置值" min-width="200" align="center" show-overflow-tooltip/>
       <el-table-column prop="createdByName" label="创建人" width="120" align="center"/>
       <el-table-column prop="createdDt" label="创建时间" width="170" align="center"/>
-      <el-table-column fixed="right" label="操作" width="150" align="center">
+      <el-table-column fixed="right" label="操作" width="130" align="center">
         <template #default="scope">
           <el-button
               type="success"
@@ -32,19 +18,9 @@
               @click="openUpdateForm(scope.row)"
           >
             <el-icon><Edit /></el-icon>
-            <span style="font-weight: 500; font-size: 14px">
-              修改
-            </span>
-          </el-button>
-          <el-button
-              type="danger"
-              text
-              @click="deleteRow(scope.row)"
-          >
-            <el-icon><Delete /></el-icon>
-            <span style="font-weight: 500; font-size: 14px">
-              删除
-            </span>
+            <span style="font-size: 12px; font-weight: 500">
+               修改
+              </span>
           </el-button>
         </template>
       </el-table-column>
@@ -61,10 +37,16 @@
     />
 
     <!-- 租户配置表单抽屉 -->
-    <el-drawer v-model="formVisible" :title="formTitle" direction="ltr" size="40%" :close-on-click-modal="false">
+    <el-drawer
+        v-model="formVisible"
+        :title="formTitle"
+        direction="ltr"
+        size="40%"
+        :close-on-click-modal="false"
+    >
       <el-form :model="form" :rules="formRules" ref="formRef" label-width="90px">
         <el-form-item label="配置名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入配置名称" maxlength="100"/>
+          <el-input v-model="form.name" placeholder="请输入配置名称" maxlength="100" :disabled="form.id != null"/>
         </el-form-item>
         <el-form-item label="配置key" prop="key">
           <el-input v-model="form.key" placeholder="请输入配置key" maxlength="100" :disabled="form.id != null"/>
@@ -83,13 +65,11 @@
 
 <script setup>
 import {pageTenantConfigListAPI, createTenantConfigAPI, updateTenantConfigAPI, deleteTenantConfigAPI} from '@/api/manage/sys/tenantConfig.js';
-import {ElMessage, ElMessageBox} from 'element-plus';
+import {ElMessage} from 'element-plus';
 import {ref} from 'vue';
-import {useRoute, useRouter} from 'vue-router';
-import {ArrowLeft, Refresh, Search} from "@element-plus/icons-vue";
+import {useRoute} from 'vue-router';
 
 const route = useRoute();
-const router = useRouter();
 
 // 当前租户，由租户列表跳转时带入
 const tenantId = ref(route.query.tenantId);
@@ -113,11 +93,6 @@ init();
  * 初始化页面，校验租户参数后加载配置列表
  */
 function init() {
-  if (!tenantId.value) {
-    ElMessage.warning('缺少租户参数，请从租户列表进入');
-    goBack();
-    return;
-  }
   getList();
 }
 
@@ -139,22 +114,6 @@ function getList() {
 function handleSearch() {
   query.value.pageNo = 1;
   getList();
-}
-
-/**
- * 返回租户列表
- */
-function goBack() {
-  router.push('/site/sys/tenant');
-}
-
-/**
- * 打开新建配置抽屉
- */
-function openCreateForm() {
-  form.value = { id: undefined, tenantId: tenantId.value, name: undefined, key: undefined, value: undefined };
-  formTitle.value = '新建配置';
-  formVisible.value = true;
 }
 
 /**
@@ -200,50 +159,7 @@ function submitForm() {
     })
   });
 }
-
-/**
- * 删除配置
- * @param row 配置行数据
- */
-function deleteRow(row) {
-  ElMessageBox.confirm('是否确定删除此配置?', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  }).then(() => {
-    deleteTenantConfigAPI({ id: row.id }).then(res => {
-      if (res.code !== 200) {
-        return;
-      }
-      ElMessage.success('删除成功');
-      getList();
-    })
-  }).catch(() => {
-  })
-}
 </script>
 
 <style scoped lang="scss">
-.config-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: $spacing-md;
-  padding: $spacing-md $spacing-lg;
-  background-color: $bg-card;
-  border-radius: $border-radius-md;
-  box-shadow: $shadow-card;
-}
-
-.config-header-left {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-}
-
-.config-header-right {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-}
 </style>

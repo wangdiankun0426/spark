@@ -91,7 +91,7 @@
           <el-icon><Plus /></el-icon>新建用户
         </el-button>
         <el-button
-            type="success"
+            type="info"
             :loading="syncLoading"
             @click="syncWeComOrganization"
         >
@@ -140,7 +140,7 @@
                 @click="openUpdateUserForm(scope.row)"
             >
               <el-icon><Edit /></el-icon>
-              <span style="font-size: 12px; font-weight: 400">
+              <span style="font-size: 12px; font-weight: 500">
                修改
               </span>
             </el-button>
@@ -150,7 +150,7 @@
                 text
             >
               <el-icon><Delete /></el-icon>
-              <span style="font-size: 12px; font-weight: 400">
+              <span style="font-size: 12px; font-weight: 500">
                移除
               </span>
             </el-button>

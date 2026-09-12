@@ -19,6 +19,12 @@
             @keyup.enter="handleSearch"
             @clear="handleSearch"
         />
+        <el-button
+            style="margin-left: 20px;"
+            type="primary"
+            @click="handleOpenCreateModel">
+          <el-icon><Plus /></el-icon>新增模型
+        </el-button>
       </div>
     </div>
 
@@ -74,7 +80,7 @@
             </div>
             <div class="provider-item-actions">
               <el-dropdown
-                  trigger="click"
+                  trigger="hover"
                   @command="command => handleProviderCommand(command, provider)"
               >
                 <span class="p-more" @click.stop>
@@ -82,8 +88,12 @@
                 </span>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item command="edit">修改</el-dropdown-item>
-                    <el-dropdown-item command="delete" divided>删除</el-dropdown-item>
+                    <el-dropdown-item command="edit">
+                      <el-icon><Edit /></el-icon>修改
+                    </el-dropdown-item>
+                    <el-dropdown-item command="delete" divided>
+                      <el-icon><Delete /></el-icon>删除
+                    </el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
@@ -108,9 +118,6 @@
               <el-radio-button :label="2">向量模型</el-radio-button>
               <el-radio-button :label="3">排序模型</el-radio-button>
             </el-radio-group>
-            <el-button type="primary" size="small" @click="handleOpenCreateModel">
-              <el-icon><Plus /></el-icon>新增模型
-            </el-button>
           </div>
         </div>
 
@@ -361,7 +368,7 @@ import {
 } from '@/api/llm/provider.js'
 import InfoCard from '@/components/InfoCard/index.vue'
 import {
-  Search, Cpu, Grid, Collection, Histogram, Box, Plus, MoreFilled
+  Search, Cpu, Grid, Collection, Histogram, Box, Plus, MoreFilled, Delete
 } from '@element-plus/icons-vue'
 
 const loading = ref(false)
@@ -380,7 +387,6 @@ const activeProviderId = ref(null)
 
 let searchTimer = null
 
-// 主题色循环，配合 variables.scss 中的 agent 主题 token 使用
 onMounted(() => {
   loadProviders()
   loadModels()
@@ -759,8 +765,8 @@ function handleDeleteModel(model) {
  */
 function cardActions(model) {
   return [
-    { key: 'edit', label: '修改', onClick: () => handleOpenUpdateModel(model) },
-    { key: 'delete', label: '删除', onClick: () => handleDeleteModel(model) }
+    { key: 'edit', label: '修改', icon: 'Edit', onClick: () => handleOpenUpdateModel(model) },
+    { key: 'delete', label: '删除', icon: 'Delete',onClick: () => handleDeleteModel(model) }
   ]
 }
 

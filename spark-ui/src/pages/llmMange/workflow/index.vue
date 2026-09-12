@@ -231,10 +231,10 @@ function handleCurrentChange(pageNo) {
  */
 function cardActions(item) {
   return [
-    { key: 'record', label: '运行记录', onClick: () => handleOpenRecord(item) },
-    { key: 'designer', label: '设计流程', onClick: () => handleOpenDesigner(item) },
-    { key: 'edit', label: '修改', onClick: () => handleOpenUpdateForm(item) },
-    { key: 'delete', label: '删除', onClick: () => handleDelete(item) }
+    { key: 'record', label: '运行记录', icon: 'Files', onClick: () => handleOpenRecord(item) },
+    { key: 'designer', label: '设计流程', icon: 'SetUp',onClick: () => handleOpenDesigner(item) },
+    { key: 'edit', label: '修改', icon: 'Edit',onClick: () => handleOpenUpdateForm(item) },
+    { key: 'delete', label: '删除', icon: 'Delete',onClick: () => handleDelete(item) }
   ];
 }
 

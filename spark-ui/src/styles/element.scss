@@ -1,4 +1,4 @@
-// 全局覆盖 (缩小字号 & 加重颜色深邃度)
+// 全局覆盖
 :root {
   /* 文字颜色加重：去除灰黄感，增强对比与精致感 */
   --el-text-color-primary: #18191c !important;   /* 极深灰（几乎纯黑），用于主要文本 */
@@ -10,7 +10,7 @@
   --el-font-size-extra-large: 16px !important;
   --el-font-size-large: 14px !important;
   --el-font-size-medium: 13px !important;
-  --el-font-size-base: 13px !important;          /* 核心基础字号，由 14px 缩为 13px */
+  --el-font-size-base: 13px !important;
   --el-font-size-small: 12px !important;
   --el-font-size-extra-small: 11px !important;
 
@@ -45,7 +45,6 @@
     padding: 0;
     margin: 10px 10px 0 10px;
     background-color: #fff;
-    //overflow-y: auto;
   }
 
   .el-card__footer {
@@ -54,7 +53,6 @@
     height: 40px;
     font-size: 14px;
     overflow: hidden;
-    //background: linear-gradient(to right, #0052cc, #0052cc) !important;
   }
 
 }
@@ -69,7 +67,6 @@
     padding-top: 10px;
     padding-bottom: 10px;
     margin-right: 0;
-    // 改回更纯粹硬朗的普通灰色
     background: var(--dialog-head-bg);
     border-bottom: 1px solid $border-color-light;
 

@@ -266,9 +266,9 @@ function handleCurrentChange(pageNo) {
  */
 function cardActions(skill) {
   return [
-    { key: 'detail', label: '详情', onClick: () => handleOpenSkill(skill) },
-    { key: 'edit', label: '修改', onClick: () => handleOpenUpdateForm(skill) },
-    { key: 'delete', label: '删除', onClick: () => handleDelete(skill) }
+    { key: 'detail', label: '详情', icon: 'View', onClick: () => handleOpenSkill(skill) },
+    { key: 'edit', label: '修改', icon: 'Edit', onClick: () => handleOpenUpdateForm(skill) },
+    { key: 'delete', label: '删除', icon: 'Delete', onClick: () => handleDelete(skill) }
   ]
 }
 

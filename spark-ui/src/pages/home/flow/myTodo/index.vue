@@ -64,30 +64,40 @@
       <template #footer>
         <div class="drawer-footer">
           <el-button
+              text
+              style="font-weight: 500; font-size: 14px"
               v-if="nodeId !== undefined && (nodePermission & 1) === 1"
               v-debounce="() => handleApprovalFlowInstance(3)"
               type="primary"
-          >通过</el-button>
+          ><el-icon><Select /></el-icon>通过</el-button>
           <el-button
+              text
+              style="font-weight: 500; font-size: 14px"
               v-if="nodeId !== undefined && (nodePermission & 2) === 2"
               v-debounce="() => handleApprovalFlowInstance(4)"
               type="danger"
-          >驳回</el-button>
+          ><el-icon><CloseBold /></el-icon>驳回</el-button>
           <el-button
+              text
+              style="font-weight: 500; font-size: 14px"
               v-if="nodeId !== undefined && (nodePermission & 16) === 16"
               v-debounce="() => openOperateDialog('transfer')"
               type="warning"
-          >转办</el-button>
+          ><el-icon><Sort /></el-icon>转办</el-button>
           <el-button
+              text
+              style="font-weight: 500; font-size: 14px"
               v-if="nodeId !== undefined && (nodePermission & 32) === 32"
               v-debounce="() => openOperateDialog('addSign')"
               type="primary"
-          >加签</el-button>
+          ><el-icon><CirclePlus /></el-icon>加签</el-button>
           <el-button
+              text
+              style="font-weight: 500; font-size: 14px"
               v-if="nodeId !== undefined && (nodePermission & 64) === 64"
               v-debounce="() => openOperateDialog('copy')"
               type="info"
-          >抄送</el-button>
+          ><el-icon><Share /></el-icon>抄送</el-button>
         </div>
       </template>
     </flow-detail-drawer>

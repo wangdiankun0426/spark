@@ -64,21 +64,27 @@
       <template #footer>
         <div class="drawer-footer">
           <el-button
+              text
               v-if="nodeId !== undefined && instanceStatus === 2 && (nodePermission & 8) === 8"
               :loading="urging"
               type="warning"
               v-debounce="handleUrge"
-          >催办</el-button>
+              style="font-weight: 500; font-size: 14px"
+          ><el-icon><BellFilled /></el-icon>催办</el-button>
           <el-button
+              text
               v-if="instanceStatus === 2 && instanceCreatedBy === currentUserId && (nodePermission & 128) === 128"
               type="danger"
               v-debounce="handleRecall"
-          >撤回</el-button>
+              style="font-weight: 500; font-size: 14px"
+          ><el-icon><RefreshLeft /></el-icon>撤回</el-button>
           <el-button
+              text
               v-if="instanceStatus === 9"
               type="primary"
               @click="handleReInitiate"
-          >重新发起</el-button>
+              style="font-weight: 500; font-size: 14px"
+          ><el-icon><Refresh /></el-icon>重新发起</el-button>
         </div>
       </template>
     </flow-detail-drawer>

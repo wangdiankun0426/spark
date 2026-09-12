@@ -1,13 +1,5 @@
 <template>
-  <!--
-    通用信息卡片（简约版）：
-    - 固定四部分：图标 + 标题 / 备注 / 底部工具栏
-    - 备注最多两行，超出省略号
-    - 工具栏按钮由 actions 驱动，一行最多 4 个，超出的折叠进「···」气泡
-    - 统一配色，不再按 theme 区分颜色
-  -->
   <div class="info-card" :class="{ 'is-disabled': disabled }">
-    <!-- 图标 + 标题 -->
     <div class="info-card-head">
       <span class="info-card-icon">
         <el-icon>
@@ -16,20 +8,32 @@
       </span>
       <span class="info-card-title" :title="title">{{ title }}</span>
     </div>
-
-    <!-- 备注：最多两行 -->
-    <div class="info-card-desc" :title="description">{{ description }}</div>
-
-    <!-- 工具栏 -->
-    <div class="info-card-bar" v-if="actions.length">
-      <template v-for="(act, i) in visibleActions" :key="act.key || i">
+    <div
+        class="info-card-desc"
+        :title="description"
+    >{{ description }}</div>
+    <div
+        class="info-card-bar"
+        v-if="actions.length"
+    >
+      <template
+          v-for="(act, i) in visibleActions"
+          :key="act.key || i"
+      >
         <span v-if="i > 0" class="info-card-bar-split">|</span>
         <span
             class="info-card-bar-btn"
             :class="{ 'is-disabled': act.disabled || act.loading }"
             @click="handleAction(act)"
         >
-          <el-icon v-if="act.loading" class="info-card-bar-loading"><Loading /></el-icon>
+          <el-icon
+              v-if="act.loading"
+              class="info-card-bar-loading">
+            <Loading />
+          </el-icon>
+          <el-icon v-else>
+            <component :is="act.icon" />
+          </el-icon>
           <span class="info-card-bar-label">{{ act.label }}</span>
         </span>
       </template>
@@ -46,15 +50,19 @@
           <template #reference>
             <span class="info-card-bar-btn info-card-bar-more">···</span>
           </template>
+
           <div class="info-card-bar-pop-list">
-            <template v-for="(act, i) in hiddenActions" :key="act.key || i">
-              <span v-if="i > 0" class="info-card-bar-split">|</span>
+            <template
+                v-for="(act, i) in hiddenActions"
+                :key="act.key || i"
+            >
               <span
                   class="info-card-bar-btn"
                   :class="{ 'is-disabled': act.disabled || act.loading }"
                   @click="handleAction(act)"
               >
                 <el-icon v-if="act.loading" class="info-card-bar-loading"><Loading /></el-icon>
+                <el-icon v-else><component :is="act.icon" /></el-icon>
                 <span class="info-card-bar-label">{{ act.label }}</span>
               </span>
             </template>
@@ -69,7 +77,7 @@
 import { computed } from 'vue'
 import { Loading } from '@element-plus/icons-vue'
 
-const MAX_BAR_ACTIONS = 4
+const MAX_BAR_ACTIONS = 3
 
 const props = defineProps({
   icon: {
@@ -226,7 +234,6 @@ function handleAction(act) {
   }
 }
 
-// 卡片宽度不足时按钮文案省略，避免撑破工具栏
 .info-card-bar-label {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -248,20 +255,38 @@ function handleAction(act) {
   }
 }
 
-// 气泡内容由本组件渲染，scoped 样式可直接命中；仅弹层外壳需要全局样式
 :global(.info-card-bar-pop) {
-  padding: 0;
+  padding: 0 !important;
   border: 1px solid $border-color;
   box-shadow: 0 4px 16px rgba(0, 79, 197, 0.10);
+  border-radius: $border-radius-sm;
 }
 
 .info-card-bar-pop-list {
   display: flex;
-  align-items: center;
-  padding: $spacing-sm $spacing-md;
+  flex-direction: column;
+  align-items: stretch;
+  padding: $spacing-xs 0;
 }
 
-// ============== 停用态 ==============
+.info-card-bar-pop-list .info-card-bar-btn {
+  padding: 6px $spacing-sm;
+  justify-content: flex-start;
+  white-space: nowrap;
+  border-radius: 4px;
+  gap: 4px;
+  &:hover:not(.is-disabled) {
+    background-color: $color-primary-light;
+    color: $color-primary;
+  }
+}
+
+:global(.info-card-bar-pop.el-popover) {
+  min-width: unset !important;
+  padding: 0 !important;
+  width: auto !important;
+}
+
 .info-card.is-disabled {
   opacity: 0.6;
   cursor: default;

@@ -36,7 +36,12 @@
                   @click.stop="searchFlag.type = !searchFlag.type" />
             </template>
             <div>
-              <el-select clearable v-model="messageQuery.type" @change="handleGetMessageList" placeholder="请选择消息类型">
+              <el-select
+                  clearable
+                  v-model="messageQuery.type"
+                  @change="handleGetMessageList"
+                  placeholder="请选择消息类型"
+              >
                 <el-option
                     v-for="item in messageTypeOption"
                     :key="item.value"
@@ -51,7 +56,12 @@
       <el-table-column prop="title" label="消息标题" align="center">
         <template #header>
           消息标题
-          <el-popover :visible="searchFlag.title" placement="bottom" :width="200" trigger="click">
+          <el-popover
+              :visible="searchFlag.title"
+              placement="bottom"
+              :width="200"
+              trigger="click"
+          >
             <template #reference>
               <el-button :type="searchFlag.title ? 'primary':'info'" link :icon="Search"
                   @click.stop="searchFlag.title = !searchFlag.title" />
@@ -84,7 +94,7 @@
               @click="handleViewMessage(scope.row)"
           >
             <el-icon><View /></el-icon>
-            <span style="font-size: 12px; font-weight: 400">
+            <span style="font-size: 12px; font-weight: 500">
                详情
             </span>
           </el-button>
@@ -94,7 +104,7 @@
               @click="handleDeleteMessage(scope.row)"
           >
             <el-icon><Delete /></el-icon>
-            <span style="font-size: 12px; font-weight: 400">
+            <span style="font-size: 12px; font-weight: 500">
                删除
             </span>
           </el-button>

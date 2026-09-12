@@ -9,33 +9,56 @@
             mode="vertical"
             class="org-el-menu"
         >
+          <div class="org-menu-group">数据</div>
           <el-menu-item index="/org/sys/user">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><User /></el-icon>
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+              <User />
+            </el-icon>
             <template #title>用户管理</template>
           </el-menu-item>
           <el-menu-item index="/org/sys/dept">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><OfficeBuilding /></el-icon>
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+              <OfficeBuilding />
+            </el-icon>
             <template #title>部门管理</template>
           </el-menu-item>
           <el-menu-item index="/org/sys/role">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><UserFilled /></el-icon>
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+              <UserFilled />
+            </el-icon>
             <template #title>角色管理</template>
           </el-menu-item>
           <el-menu-item index="/org/sys/notice">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><Bell /></el-icon>
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+              <Bell />
+            </el-icon>
             <template #title>公告管理</template>
           </el-menu-item>
           <el-menu-item index="/org/sys/message">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><ChatDotRound /></el-icon>
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+              <ChatDotRound />
+            </el-icon>
             <template #title>消息管理</template>
           </el-menu-item>
+          <div class="org-menu-group">监控</div>
           <el-menu-item index="/org/log/login">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><Key /></el-icon>
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+              <Key />
+            </el-icon>
             <template #title>登录日志</template>
           </el-menu-item>
           <el-menu-item index="/org/log/operate">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><Document /></el-icon>
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+              <Document />
+            </el-icon>
             <template #title>操作日志</template>
+          </el-menu-item>
+          <div class="org-menu-group">配置</div>
+          <el-menu-item index="/org/sys/config">
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+              <SetUp />
+            </el-icon>
+            <template #title>系统配置</template>
           </el-menu-item>
         </el-menu>
       </el-aside>
@@ -52,6 +75,7 @@
 
 import {computed} from "vue";
 import {useRoute} from "vue-router";
+import {SetUp} from "@element-plus/icons-vue";
 
 const route = useRoute();
 
@@ -104,5 +128,16 @@ const defaultActive = computed(() => {
 :deep(.el-menu-item .el-menu-tooltip__trigger) {
   padding: 0 !important;
   justify-content: center;
+}
+.org-menu-group {
+  height: 30px;
+  line-height: 28px;
+  margin-top: $spacing-xs;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-align: center;
+  color: var(--sidebar-menu-group-text);
+  user-select: none;
+  pointer-events: none;
 }
 </style>
