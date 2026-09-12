@@ -74,4 +74,9 @@ public class LoginVO extends BaseVO {
      * 微信登录code
      */
     private String wxCode;
+
+    /**
+     * 一次性加密密钥ID
+     */
+    private String keyId;
 }

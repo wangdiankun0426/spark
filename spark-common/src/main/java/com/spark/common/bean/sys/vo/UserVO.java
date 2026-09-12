@@ -83,6 +83,11 @@ public class UserVO extends BaseVO {
     private String newPassword;
 
     /**
+     * 一次性加密密钥ID
+     */
+    private String keyId;
+
+    /**
      * 微信小程序openid
      */
     private String wxOpenId;

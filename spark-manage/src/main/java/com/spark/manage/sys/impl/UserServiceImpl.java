@@ -24,6 +24,7 @@ import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.dao.sys.*;
+import com.spark.manage.auth.IEncryptKeyService;
 import com.spark.manage.sys.IDepartmentService;
 import com.spark.manage.sys.ITenantConfigService;
 import com.spark.manage.sys.ITenantUserService;
@@ -82,8 +83,8 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
     private TenantUserDao tenantUserDao;
     @Autowired
     private ITenantConfigService tenantConfigService;
-    @Value("${encrypt.privateKey}")
-    private String privateKey;
+    @Autowired
+    private IEncryptKeyService encryptKeyService;
     @Value("${user.avatar.path}")
     private String userAvatarPath;
 
@@ -307,13 +308,23 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
             result.setErrorCode(ErrorCodeEnum.USER_NOT_EXIST);
             return result;
         }
-        String oldDes = DecryptUtil.des(userVO.getOldPassword(), privateKey);
+        // 一次性消费密钥ID对应的密钥，本次改密两个字段共用
+        String desKey = encryptKeyService.consumeEncryptKey(userVO.getKeyId());
+        if (StringUtil.isBlank(desKey)) {
+            result.setErrorCode(ErrorCodeEnum.ENCRYPT_KEY_INVALID);
+            return result;
+        }
+        String oldDes = DecryptUtil.des(userVO.getOldPassword(), desKey);
+        String newDes = DecryptUtil.des(userVO.getNewPassword(), desKey);
+        if (StringUtil.isBlank(oldDes) || StringUtil.isBlank(newDes)) {
+            result.setErrorCode(ErrorCodeEnum.ENCRYPT_KEY_INVALID);
+            return result;
+        }
         String oldMd5 = EncryptUtil.md5(oldDes);
         if (!userResult.getPassword().equals(oldMd5)) {
             result.setErrorCode(ErrorCodeEnum.LONG_PASSWORD_ERROR);
             return result;
         }
-        String newDes = DecryptUtil.des(userVO.getNewPassword(), privateKey);
         String newMd5 = EncryptUtil.md5(newDes);
         User user = new User();
         user.setId(userId);

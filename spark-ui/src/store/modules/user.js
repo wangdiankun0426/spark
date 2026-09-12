@@ -62,7 +62,6 @@ const mutations = {
 const actions = {
   // 登录
   login({ commit }, { loginForm }) {
-    console.log('store user login loginForm=', loginForm)
     return new Promise((resolve, reject) => {
       loginAPI(loginForm).then(res => {
         if (res.code === 200) {

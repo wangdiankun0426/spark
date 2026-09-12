@@ -90,6 +90,7 @@ import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { useStore } from 'vuex'
 import { updatePasswordAPI } from '@/api/manage/sys/user.js'
+import { getEncryptKeyAPI } from '@/api/manage/auth/login.js'
 import { des } from '@/utils/encryptUtil.js'
 import UserAvatar from '@/components/UserAvatar'
 
@@ -190,11 +191,17 @@ function handleAvatarSuccess(res) {
  * 提交修改密码
  */
 function submitPasswordForm() {
-  proxy.$refs.passwordFormRef.validate(valid => {
+  proxy.$refs.passwordFormRef.validate(async valid => {
     if (valid) {
+      // 申请一次性加密密钥，本次改密两个字段共用
+      const keyResult = await getEncryptKeyAPI()
+      if (keyResult.code !== 200) {
+        return
+      }
       const data = {
-        oldPassword: des(passwordForm.value.oldPassword),
-        newPassword: des(passwordForm.value.newPassword)
+        oldPassword: des(passwordForm.value.oldPassword, keyResult.data.key),
+        newPassword: des(passwordForm.value.newPassword, keyResult.data.key),
+        keyId: keyResult.data.keyId
       }
       updatePasswordAPI(data).then(res => {
         if (res.code !== 200) {

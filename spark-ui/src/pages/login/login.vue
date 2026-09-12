@@ -319,7 +319,7 @@
 </template>
 
 <script setup>
-import {getValidateCodeAPI, getMessageCodeAPI, getEmailCodeAPI, getSessionAPI} from '@/api/manage/auth/login.js';
+import {getValidateCodeAPI, getMessageCodeAPI, getEmailCodeAPI, getSessionAPI, getEncryptKeyAPI} from '@/api/manage/auth/login.js';
 import { des } from '@/utils/encryptUtil.js';
 import Validate from '@/assets/icons/validate.vue';
 import { ref, getCurrentInstance } from "vue";
@@ -456,13 +456,20 @@ const store = useStore();
  * 提交登录表单
  */
 function submitLoginForm() {
-  proxy.$refs.loginRef.validate(valid => {
+  proxy.$refs.loginRef.validate(async valid => {
     if (valid) {
       loading.value = true;
       const data = {};
       if (loginForm.value.loginType === 1) {
+        // 申请一次性加密密钥
+        const keyResult = await getEncryptKeyAPI();
+        if (keyResult.code !== 200) {
+          loading.value = false;
+          return;
+        }
         data.loginName = loginForm.value.username;
-        data.password = des(loginForm.value.password);
+        data.password = des(loginForm.value.password, keyResult.data.key);
+        data.keyId = keyResult.data.keyId;
         data.validateId = loginForm.value.validateId;
         data.validateValue = loginForm.value.validateValue;
         data.loginType = loginForm.value.loginType;

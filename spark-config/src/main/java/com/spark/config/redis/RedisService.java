@@ -137,6 +137,27 @@ public class RedisService {
     }
 
     /**
+     * 获取缓存并删除
+     * @param key 键
+     * @return 值，不存在返回null
+     */
+    public String getAndDel(String key) {
+        if (StringUtil.isBlank(key)) {
+            return null;
+        }
+        try {
+            Object value = redisTemplate.opsForValue().getAndDelete(key);
+            if (value == null) {
+                return null;
+            }
+            return value.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
      * 删除缓存
      * @param key 可以传一个值 或多个
      */

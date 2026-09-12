@@ -212,7 +212,7 @@
   </div>
 </template>
 <script setup>
-import {loginAPI, getValidateCodeAPI, getMessageCodeAPI, getEmailCodeAPI} from '@/api/auth/login.js';
+import {loginAPI, getValidateCodeAPI, getMessageCodeAPI, getEmailCodeAPI, getEncryptKeyAPI} from '@/api/auth/login.js';
 import {des} from '@/utils/encryptUtil';
 import {ref} from 'vue';
 import {useStore} from 'vuex';
@@ -351,12 +351,19 @@ function getValidateImg() {
 /**
  * 提交登录表单
  */
-function submitLoginForm() {
+async function submitLoginForm() {
   loading.value = true;
   const data = {};
   if (loginForm.value.loginType === 1) {
+    // 申请一次性加密密钥
+    const keyResult = await getEncryptKeyAPI();
+    if (keyResult.code !== 200) {
+      loading.value = false;
+      return;
+    }
     data.loginName =  loginForm.value.username;
-    data.password = des(loginForm.value.password);
+    data.password = des(loginForm.value.password, keyResult.data.key);
+    data.keyId = keyResult.data.keyId;
     data.validateId = loginForm.value.validateId;
     data.validateValue = loginForm.value.validateValue;
     data.loginType = loginForm.value.loginType;

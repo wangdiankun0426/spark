@@ -50,6 +50,7 @@ public class InterceptorConfigurer implements WebMvcConfigurer {
         excludePatterns.add("/auth/messageCode");
         excludePatterns.add("/auth/emailCode");
         excludePatterns.add("/auth/register");
+        excludePatterns.add("/auth/encryptKey");
         excludePatterns.add("/weCom/**");
         registry.addInterceptor(loginInterceptor)
                 // 拦截的地址

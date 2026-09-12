@@ -31,6 +31,11 @@ public class ObjectCacheKey {
     public final static String VALIDATE_CODE_KEY = "v_c_k_";
 
     /**
+     * 一次性加密密钥前缀
+     */
+    public final static String ENCRYPT_KEY = "e_k_";
+
+    /**
      * 大模型问答缓存key
      */
     public final static String LLM_CHAT_MEMORY = "c_m_";

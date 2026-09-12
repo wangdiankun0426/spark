@@ -16,6 +16,7 @@ public enum ErrorCodeEnum {
     UNKNOWN(0, "未知异常"),
     // 系统相关状态码
     INVALID_PARAM(400,"无效参数"),
+    ENCRYPT_KEY_INVALID(402,"加密密钥已失效，请重新提交"),
     NOT_FOUND(404,"接口不存在"),
     SYSTEM_ERROR(500, "系统异常,请联系管理员"),
     MESSAGE_VALIDATE_SEND_ERROR(501, "短信验证码发送失败"),

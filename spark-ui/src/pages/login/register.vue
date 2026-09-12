@@ -95,7 +95,7 @@
 </template>
 
 <script setup>
-import { getValidateCodeAPI } from '@/api/manage/auth/login.js';
+import { getValidateCodeAPI, getEncryptKeyAPI } from '@/api/manage/auth/login.js';
 import { registerAPI } from '@/api/manage/auth/register.js';
 import { des } from '@/utils/encryptUtil.js';
 import Validate from '@/assets/icons/validate.vue';
@@ -159,12 +159,19 @@ getValidateImg();
  * 提交注册表单
  */
 function submitRegisterForm() {
-  proxy.$refs.registerRef.validate(valid => {
+  proxy.$refs.registerRef.validate(async valid => {
     if (!valid) return;
     loading.value = true;
+    // 申请一次性加密密钥
+    const keyResult = await getEncryptKeyAPI();
+    if (keyResult.code !== 200) {
+      loading.value = false;
+      return;
+    }
     const data = {
       loginName: registerForm.value.loginName,
-      password: des(registerForm.value.password),
+      password: des(registerForm.value.password, keyResult.data.key),
+      keyId: keyResult.data.keyId,
       sex: registerForm.value.sex,
       validateId: registerForm.value.validateId,
       validateValue: registerForm.value.validateValue

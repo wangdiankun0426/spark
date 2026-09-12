@@ -39,4 +39,9 @@ public class RegisterVO {
      * 性别
      */
     private Integer sex;
+
+    /**
+     * 一次性加密密钥ID
+     */
+    private String keyId;
 }

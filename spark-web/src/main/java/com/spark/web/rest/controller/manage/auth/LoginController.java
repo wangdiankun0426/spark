@@ -7,6 +7,8 @@ import com.spark.common.bean.sys.result.UserResult;
 import com.spark.common.bean.sys.vo.LoginVO;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.sys.entity.ValidateCode;
+import com.spark.common.bean.sys.entity.EncryptKey;
+import com.spark.manage.auth.IEncryptKeyService;
 import com.spark.manage.sys.IUserService;
 import com.spark.web.rest.controller.BaseController;
 import com.spark.manage.auth.ILoginValidateService;
@@ -36,6 +38,17 @@ public class LoginController extends BaseController {
     private ILoginValidateService loginValidateService;
     @Autowired
     private IUserService userService;
+    @Autowired
+    private IEncryptKeyService encryptKeyService;
+
+    /**
+     * 下发一次性加密密钥
+     * @return 一次性密钥
+     */
+    @PostMapping("encryptKey")
+    public ResultData<EncryptKey> queryEncryptKey() {
+        return encryptKeyService.generateEncryptKey();
+    }
 
     /**
      * 获取验证码

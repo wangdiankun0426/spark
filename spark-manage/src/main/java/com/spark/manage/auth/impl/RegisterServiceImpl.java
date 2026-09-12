@@ -7,6 +7,7 @@ import com.spark.common.bean.sys.vo.RegisterVO;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.sys.vo.UserVO;
 import com.spark.common.enums.*;
+import com.spark.manage.auth.IEncryptKeyService;
 import com.spark.manage.auth.ILoginValidateService;
 import com.spark.manage.auth.IRegisterService;
 import com.spark.common.utils.DecryptUtil;
@@ -16,7 +17,6 @@ import com.spark.manage.sys.IUserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
@@ -36,8 +36,8 @@ public class RegisterServiceImpl implements IRegisterService {
     private ILoginValidateService loginValidateService;
     @Autowired
     private IUserService userService;
-    @Value("${encrypt.privateKey}")
-    private String privateKey;
+    @Autowired
+    private IEncryptKeyService encryptKeyService;
 
     /**
      * 用户注册
@@ -55,13 +55,24 @@ public class RegisterServiceImpl implements IRegisterService {
         code.setLoginType(LoginTypeEnum.PASSWORD.getValue());
         result = loginValidateService.checkValidateCode(code);
         BaseAssert.assertTrue(result);
+        // 一次性消费密钥ID对应的密钥
+        String desKey = encryptKeyService.consumeEncryptKey(registerVO.getKeyId());
+        if (StringUtil.isBlank(desKey)) {
+            result.setErrorCode(ErrorCodeEnum.ENCRYPT_KEY_INVALID);
+            return result;
+        }
+        String password = DecryptUtil.des(registerVO.getPassword(), desKey);
+        if (StringUtil.isBlank(password)) {
+            result.setErrorCode(ErrorCodeEnum.ENCRYPT_KEY_INVALID);
+            return result;
+        }
         try {
             SessionHolder.setCurrentUserId(101L);
             SessionHolder.setCurrentTenantId(103L);
             UserVO userVO = new UserVO();
             userVO.setLoginName(registerVO.getLoginName());
             userVO.setName(registerVO.getLoginName());
-            userVO.setPassword(EncryptUtil.md5(DecryptUtil.des(registerVO.getPassword(), privateKey)));
+            userVO.setPassword(EncryptUtil.md5(password));
             userVO.setSex(registerVO.getSex());
             ResultData<Long> cuResult = userService.createUser(userVO);
             BaseAssert.assertTrue(cuResult);

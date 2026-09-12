@@ -30,6 +30,7 @@ import com.spark.dao.sys.*;
 import com.spark.manage.auth.ILoginService;
 import com.spark.config.redis.RedisService;
 import com.spark.manage.auth.ILoginValidateService;
+import com.spark.manage.auth.IEncryptKeyService;
 import com.spark.config.wecom.WeComUtil;
 import com.spark.config.wechat.WeChatUtil;
 import com.spark.manage.sys.ITenantConfigService;
@@ -37,7 +38,6 @@ import com.spark.manage.sys.IUserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -66,8 +66,8 @@ public class LoginServiceImpl implements ILoginService {
     private RedisService redisService;
     @Autowired
     private ILoginValidateService loginValidateService;
-    @Value("${encrypt.privateKey}")
-    private String privateKey;
+    @Autowired
+    private IEncryptKeyService encryptKeyService;
     @Autowired
     private MqProducer mqProducer;
     @Autowired
@@ -249,7 +249,7 @@ public class LoginServiceImpl implements ILoginService {
         code.setLoginType(loginType);
         ResultData<Void> validateResult = loginValidateService.checkValidateCode(code);
         BaseAssert.assertTrue(validateResult);
-        // 处理不通登录类型
+        // 处理不同登录类型
         if (LoginTypeEnum.PASSWORD.getValue().equals(loginType)) {
             UserQuery userQuery = new UserQuery();
             userQuery.setLoginName(loginVO.getLoginName());
@@ -258,8 +258,19 @@ public class LoginServiceImpl implements ILoginService {
                 result.setErrorCode(ErrorCodeEnum.LONG_NAME_NOT_EXIST);
                 return result;
             }
+            // 一次性消费密钥ID对应的密钥
+            String desKey = encryptKeyService.consumeEncryptKey(loginVO.getKeyId());
+            if (StringUtil.isBlank(desKey)) {
+                result.setErrorCode(ErrorCodeEnum.ENCRYPT_KEY_INVALID);
+                return result;
+            }
+            String password = DecryptUtil.des(loginVO.getPassword(), desKey);
+            if (StringUtil.isBlank(password)) {
+                result.setErrorCode(ErrorCodeEnum.ENCRYPT_KEY_INVALID);
+                return result;
+            }
             String pwd1 = userResult.getPassword();
-            String pwd2 = EncryptUtil.md5(DecryptUtil.des(loginVO.getPassword(), privateKey));
+            String pwd2 = EncryptUtil.md5(password);
             if (!pwd1.equals(pwd2)) {
                 result.setErrorCode(ErrorCodeEnum.LONG_PASSWORD_ERROR);
                 return result;

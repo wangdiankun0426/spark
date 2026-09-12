@@ -38,6 +38,7 @@
 </template>
 <script setup>
 import {updatePasswordAPI} from "@/api/sys/user";
+import {getEncryptKeyAPI} from "@/api/auth/login.js";
 import {des} from "@/utils/encryptUtil";
 import {ref} from 'vue';
 import {toast} from "uview-plus";
@@ -67,10 +68,16 @@ function equalToPassword(value) {
 /**
  * 提交修改密码表单
  */
-function submitPasswordForm() {
+async function submitPasswordForm() {
+  // 申请一次性加密密钥，本次改密两个字段共用
+  const keyResult = await getEncryptKeyAPI();
+  if (keyResult.code !== 200) {
+    return;
+  }
   const data = {
-    oldPassword: des(passwordForm.value.oldPassword),
-    newPassword: des(passwordForm.value.newPassword)
+    oldPassword: des(passwordForm.value.oldPassword, keyResult.data.key),
+    newPassword: des(passwordForm.value.newPassword, keyResult.data.key),
+    keyId: keyResult.data.keyId
   }
   updatePasswordAPI(data).then(res => {
     if (res.code !== 200) {

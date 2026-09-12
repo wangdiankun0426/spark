@@ -9,6 +9,17 @@ export function loginAPI(data) {
     })
 }
 
+/**
+ * 查询一次性加密密钥
+ * @returns {Promise<AxiosResponse<any>>}
+ */
+export function getEncryptKeyAPI() {
+    return request({
+        url: '/auth/encryptKey',
+        method: 'post'
+    })
+}
+
 // 登出
 export function logoutAPI() {
     return request({
