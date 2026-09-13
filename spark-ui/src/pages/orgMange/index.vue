@@ -28,15 +28,9 @@
             </el-icon>
             <template #title>角色管理</template>
           </el-menu-item>
-          <el-menu-item index="/org/sys/notice">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
-              <Bell />
-            </el-icon>
-            <template #title>公告管理</template>
-          </el-menu-item>
           <el-menu-item index="/org/sys/message">
             <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
-              <ChatDotRound />
+              <Bell />
             </el-icon>
             <template #title>消息管理</template>
           </el-menu-item>

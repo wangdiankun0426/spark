@@ -43,9 +43,9 @@ export function getValidateCodeAPI() {
  * 查询短信验证码
  * @returns {Promise<AxiosResponse<any>>}
  */
-export function getMessageCodeAPI(param) {
+export function getSmsCodeAPI(param) {
     return request({
-        url: '/auth/messageCode',
+        url: '/auth/smsCode',
         method: 'get',
         params: param
     })

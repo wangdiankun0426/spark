@@ -52,7 +52,7 @@ public class ChatUserServiceImpl extends BaseService<UserQuery, ChatUserResult> 
      * @return 分页结果
      */
     @Override
-    @DataScope
+    @DataScope(tableAlias = "su")
     public ResultData<PageResult<ChatUserResult>> pageMyChatUserList(UserQuery query) {
         ResultData<PageResult<ChatUserResult>> result = new ResultData<>();
         Long userId = SessionHolder.getCurrentUserId();

@@ -92,9 +92,6 @@ mybatis:
 user:
   avatar:
     path: /opt/spark/docs/avatar/
-notice:
-  file:
-    path: /opt/spark/docs/notice/
 form:
   file:
     path: /opt/spark/docs/form/

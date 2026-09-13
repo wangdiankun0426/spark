@@ -16,10 +16,9 @@ public enum ErrorCodeEnum {
     UNKNOWN(0, "未知异常"),
     // 系统相关状态码
     INVALID_PARAM(400,"无效参数"),
-    ENCRYPT_KEY_INVALID(402,"加密密钥已失效，请重新提交"),
     NOT_FOUND(404,"接口不存在"),
     SYSTEM_ERROR(500, "系统异常,请联系管理员"),
-    MESSAGE_VALIDATE_SEND_ERROR(501, "短信验证码发送失败"),
+    SMS_CODE_SEND_FAIL(501, "短信验证码发送失败"),
     FILE_EXIST(502, "文件已存在"),
     FILE_NOT_EXIST(503, "文件不存在"),
     FILE_CREATE_FAIL(504, "文件创建失败"),
@@ -28,6 +27,7 @@ public enum ErrorCodeEnum {
     INSERT_DATA_FAIL(508, "新增数据失败，请稍后再试"),
     UPDATE_DATA_FAIL(509, "修改数据失败，请稍后再试"),
     DELETE_DATA_FAIL(510, "删除数据失败，请稍后再试"),
+    ENCRYPT_KEY_INVALID(511,"加密密钥已失效，请重新提交"),
     // 登录相关状态码
     NOT_LOGIN(601, "用户未登录"),
     LONG_PASSWORD_ERROR(602, "密码错误"),
@@ -47,23 +47,19 @@ public enum ErrorCodeEnum {
     // 部门相关状态码
     DEPT_NOT_EXIST(801,"部门不存在"),
     DEPT_SAME_NAME_ALREADY_EXIST(802,"相同名称的部门已存在"),
-    // 租户相关状态码
-    TENANT_SAME_NAME_EXIST(811,"相同名称的租户已存在"),
-    TENANT_UNAVAILABLE(812,"租户不可用或未加入"),
-    TENANT_NOT_EXIST(813,"租户不存在"),
-    TENANT_USER_FULL(814,"租户用户已满"),
-    TENANT_CONFIG_NOT_EXIST(815,"租户配置不存在"),
-    TENANT_CONFIG_KEY_EXIST(816,"相同配置key的租户配置已存在"),
-    TENANT_USER_NOT_EXIST(817,"租户用户数据不存在"),
     // 角色相关状态码
     ROLE_SAME_NAME_EXIST(901, "相同名称的角色已存在"),
     // 菜单相关状态码
     MENU_NOT_EXIST(1001, "菜单不存在"),
     SECOND_MENU_NOT_CREATE_SUB_MENU(1002, "二级菜单禁止创建子菜单"),
-    // 公告相关状态码
-    NOTICE_NOT_EXIST(1101, "公告不存在"),
-    NOTICE_NOT_ALLOW(1102, "当前公告无操作权限"),
-    NOTICE_NOT_DELIST_ALLOW(1103, "当前公告无下架权限"),
+    // 租户相关状态码
+    TENANT_SAME_NAME_EXIST(1101,"相同名称的租户已存在"),
+    TENANT_UNAVAILABLE(1102,"租户不可用或未加入"),
+    TENANT_NOT_EXIST(1103,"租户不存在"),
+    TENANT_USER_FULL(1104,"租户用户已满"),
+    TENANT_CONFIG_NOT_EXIST(1105,"租户配置不存在"),
+    TENANT_CONFIG_KEY_EXIST(1106,"相同配置key的租户配置已存在"),
+    TENANT_USER_NOT_EXIST(1107,"租户用户数据不存在"),
     // 聊天相关状态码
     CHAT_MSG_CREATE_ERROR(1201, "聊天消息创建失败"),
     CHAT_SPACE_NOT_EXIST(1202, "聊天空间不存在"),

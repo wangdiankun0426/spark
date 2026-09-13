@@ -119,7 +119,7 @@ function loadModels() {
     if (modelList.value.length) {
       selectedModelId.value = modelList.value[0].id
     } else {
-      ElMessage.warning('暂无可用语言模型 请先配置模型')
+      return;
     }
     sessionPaneRef.value.loadFirst()
   })

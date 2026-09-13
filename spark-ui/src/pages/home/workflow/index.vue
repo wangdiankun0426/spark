@@ -105,7 +105,6 @@ function loadWorkflows() {
     }
     workflowList.value = res.data.rows || []
     if (!workflowList.value.length) {
-      ElMessage.warning('暂无可用工作流')
       return
     }
     handleSelect(workflowList.value[0])

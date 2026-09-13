@@ -22,11 +22,11 @@ public interface ILoginValidateService {
     ResultData<ValidateCode> generateValidateCode();
 
     /**
-     * 构造短息验证码
+     * 构造短信验证码
      * @param loginVO
      * @return
      */
-    ResultData<ValidateCode> generateMessageCode(LoginVO loginVO);
+    ResultData<ValidateCode> generateSmsCode(LoginVO loginVO);
 
     /**
      * 获取邮箱验证码

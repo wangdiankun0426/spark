@@ -167,36 +167,6 @@ CREATE TABLE `sys_menu` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='菜单表';
 
-DROP TABLE IF EXISTS `sys_notice`;
-CREATE TABLE `sys_notice` (
-    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
-    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
-    `title` varchar(64) NOT NULL COMMENT '公告标题',
-    `type` int(1) NOT NULL COMMENT '公告类型',
-    `status` int(1) NOT NULL COMMENT '公告状态',
-
-    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
-    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
-    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
-    `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='公告信息表';
-
-DROP TABLE IF EXISTS `sys_notice_obj`;
-CREATE TABLE `sys_notice_obj` (
-    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
-    `notice_id` bigint(12) NOT NULL COMMENT '公告id',
-    `obj_id` bigint(12) NOT NULL COMMENT '用户/角色/部门id',
-
-    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
-    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
-    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
-    `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='公告关联对象表';
-
 DROP TABLE IF EXISTS `sys_message`;
 CREATE TABLE `sys_message` (
    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',

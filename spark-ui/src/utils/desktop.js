@@ -11,7 +11,7 @@ export const isDesktop = typeof window !== 'undefined' && window.__TAURI_INTERNA
 
 /**
  * 将任意内部地址规范化为 hash 路由（桌面端使用 Hash 路由）
- * '/notice/view/1'           -> '#/notice/view/1'
+ * '/document/list'           -> '#/document/list'
  * '#/document/preview?id=1'  -> 原样返回
  * '/index.html#/xxx'         -> '#/xxx'
  */

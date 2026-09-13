@@ -2,7 +2,6 @@ import org from '@/pages/orgMange/index.vue'
 import user from '@/pages/orgMange/sys/user'
 import dept from '@/pages/orgMange/sys/dept'
 import role from '@/pages/orgMange/sys/role'
-import notice from '@/pages/orgMange/sys/notice'
 import message from '@/pages/orgMange/sys/message'
 import logLogin from '@/pages/orgMange/log/login'
 import logOperate from '@/pages/orgMange/log/operate'
@@ -40,14 +39,6 @@ export default [
                 component: role,
                 meta: {
                     title: '角色管理'
-                }
-            },
-            {
-                path: '/org/sys/notice',
-                name: 'notice',
-                component: notice,
-                meta: {
-                    title: '公告管理'
                 }
             },
             {

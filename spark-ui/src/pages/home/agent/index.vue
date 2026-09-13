@@ -110,7 +110,7 @@ function loadAgents() {
     if (agentList.value.length) {
       selectedAgentId.value = agentList.value[0].id
     } else {
-      ElMessage.warning('暂无可用智能体 请先配置智能体')
+      return;
     }
     sessionPaneRef.value.loadFirst()
   })

@@ -328,7 +328,7 @@ function handleCloseFlowForm() {
 }
 
 .empty-grid {
-  height: calc(100vh - #{$nav-height} - 190px);
+  height: calc(100vh - #{$nav-height} - 178px);
 }
 
 .drawer-footer {

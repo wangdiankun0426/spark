@@ -80,7 +80,7 @@ public class LoginValidateServiceImpl implements ILoginValidateService {
      * @return 构造结果
      */
     @Override
-    public ResultData<ValidateCode> generateMessageCode(LoginVO loginVO) {
+    public ResultData<ValidateCode> generateSmsCode(LoginVO loginVO) {
         ResultData<ValidateCode> result = new ResultData<>();
         if (loginVO == null || StringUtil.isBlank(loginVO.getPhone())) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
@@ -91,7 +91,7 @@ public class LoginValidateServiceImpl implements ILoginValidateService {
         String verifyCode = String.valueOf(new Random().nextInt(9000) + 1000);
         boolean bo = alibabaShortMsgService.sendLoginValidate(loginVO.getPhone(), verifyCode);
         if (!bo) {
-            result.setErrorCode(ErrorCodeEnum.MESSAGE_VALIDATE_SEND_ERROR);
+            result.setErrorCode(ErrorCodeEnum.SMS_CODE_SEND_FAIL);
             return result;
         }
         redisService.setStr(verifyKey, verifyCode, 2*60);
@@ -119,7 +119,7 @@ public class LoginValidateServiceImpl implements ILoginValidateService {
         String verifyCode = String.valueOf(new Random().nextInt(9000) + 1000);
         boolean bo = emailService.sendLoginValidate(loginVO.getEmail(), verifyCode);
         if (!bo) {
-            result.setErrorCode(ErrorCodeEnum.MESSAGE_VALIDATE_SEND_ERROR);
+            result.setErrorCode(ErrorCodeEnum.SMS_CODE_SEND_FAIL);
             return result;
         }
         redisService.setStr(verifyKey, verifyCode, 2*60);

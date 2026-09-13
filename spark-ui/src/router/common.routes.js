@@ -2,8 +2,6 @@ import login from '@/pages/login/login.vue'
 import oauthLogin from '@/pages/login/oauthLogin.vue'
 import register from '@/pages/login/register.vue'
 import formDesigner from '@/views/formDesigner/index.vue'
-import noticeEdit from '@/views/notice/edit.vue'
-import noticeView from '@/views/notice/view.vue'
 import flowDesigner from '@/views/flowDesigner/index.vue'
 import workflowIndex from "@/views/workflowDesigner/index.vue";
 
@@ -51,22 +49,6 @@ export default [
         component: workflowIndex,
         meta: {
             title: '工作流设计器',
-        }
-    },
-    {
-        path: '/manage/sys/notice/edit/:id',
-        name: 'noticeEdit',
-        component: noticeEdit,
-        meta: {
-            title: '编辑公告内容'
-        }
-    },
-    {
-        path: '/notice/view/:id',
-        name: 'noticeView',
-        component: noticeView,
-        meta: {
-            title: '公告内容'
         }
     },
     {

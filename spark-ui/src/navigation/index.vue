@@ -67,59 +67,36 @@
               <el-icon style="font-size: 20px"><Bell /></el-icon>
             </div>
           </template>
-          <el-tabs v-model="navMessageTab" class="nav-message-tabs">
-            <el-tab-pane label="消息" name="message">
-              <div class="nav-message-body" @scroll="handleMessageScroll">
-                <el-timeline v-if="messageList.length">
-                  <el-timeline-item
-                      v-for="(item, i) in messageList"
-                      :key="i"
-                      :timestamp="item.createdDt"
-                      placement="top"
-                  >
-                    <div
-                        class="nav-message-item"
-                        :class="{ 'is-link': isClickableMessage(item.refId) }"
-                        @click="handleMessageClick(item)"
-                    >
-                      <el-tag type="info" size="small">
-                        {{ item.title }}
-                      </el-tag>
-                      <p class="nav-message-content">{{ item.content }}</p>
-                      <div v-if="isClickableMessage(item.refId)" class="nav-message-detail">
-                        <span>详情</span>
-                        <el-icon><Right /></el-icon>
-                      </div>
-                    </div>
-                  </el-timeline-item>
-                </el-timeline>
-                <el-empty v-else description="暂无消息" :image-size="60"/>
-                <!-- 分页加载提示 -->
-                <div v-if="messageList.length && messageTipText" class="nav-message-tip">
-                  {{ messageTipText }}
-                </div>
-              </div>
-            </el-tab-pane>
-            <el-tab-pane label="公告" name="notice">
-              <div class="nav-message-body">
-                <div v-if="noticeList.length">
-                  <div
-                      v-for="(item, i) in noticeList"
-                      :key="i"
-                      class="nav-notice-item"
-                      @click="handleViewNotice(item)"
-                  >
-                    <div class="nav-notice-title">{{ item.title }}</div>
-                    <div class="nav-notice-meta">
-                      <el-tag size="small" type="info">{{ item.typeName }}</el-tag>
-                      <span class="nav-notice-time">{{ item.createdDt }}</span>
-                    </div>
+          <div class="nav-message-body" @scroll="handleMessageScroll">
+            <el-timeline v-if="messageList.length">
+              <el-timeline-item
+                  v-for="(item, i) in messageList"
+                  :key="i"
+                  :timestamp="item.createdDt"
+                  placement="top"
+              >
+                <div
+                    class="nav-message-item"
+                    :class="{ 'is-link': isClickableMessage(item.refId) }"
+                    @click="handleMessageClick(item)"
+                >
+                  <el-tag type="info" size="small">
+                    {{ item.title }}
+                  </el-tag>
+                  <p class="nav-message-content">{{ item.content }}</p>
+                  <div v-if="isClickableMessage(item.refId)" class="nav-message-detail">
+                    <span>详情</span>
+                    <el-icon><Right /></el-icon>
                   </div>
                 </div>
-                <el-empty v-else description="暂无公告" :image-size="60"/>
-              </div>
-            </el-tab-pane>
-          </el-tabs>
+              </el-timeline-item>
+            </el-timeline>
+            <el-empty v-else description="暂无消息" :image-size="60"/>
+            <!-- 分页加载提示 -->
+            <div v-if="messageList.length && messageTipText" class="nav-message-tip">
+              {{ messageTipText }}
+            </div>
+          </div>
         </el-popover>
       </div>
 
@@ -167,7 +144,6 @@
 <script setup>
 import {logoutAPI} from "@/api/manage/auth/login.js";
 import {pageMyMessageListAPI} from "@/api/manage/sys/message.js";
-import {noticeListAPI} from "@/api/manage/sys/notice.js";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {ref, computed, onMounted, onUnmounted} from "vue";
 import {ArrowDown, Setting, Moon, Sunny, Right, FullScreen, Aim, User, OfficeBuilding, SwitchButton} from "@element-plus/icons-vue";
@@ -290,8 +266,6 @@ const defaultActive = computed(() => {
 
 // 消息弹窗相关
 const messageList = ref([]);
-const noticeList = ref([]);
-const navMessageTab = ref('message');
 
 // 我的消息分页参数与状态
 const messageQuery = ref({ pageNo: 1, pageSize: 10 });
@@ -356,23 +330,10 @@ function handleMessageScroll(e) {
 }
 
 /**
- * 加载公告列表
- */
-function loadNoticeList() {
-  noticeListAPI({}).then(res => {
-    if (res.code !== 200) {
-      return;
-    }
-    noticeList.value = res.data || [];
-  });
-}
-
-/**
- * 弹窗展开时加载消息与公告
+ * 弹窗展开时加载消息
  */
 function loadNavMessageData() {
   loadMessageList();
-  loadNoticeList();
 }
 
 /**
@@ -412,14 +373,6 @@ function handleMessageClick(item) {
       router.push({ path: '/home/flow/myApplication', query: { id: refId } }).catch(() => {});
     }
   }
-}
-
-/**
- * 打开公告预览
- * @param row
- */
-function handleViewNotice(row) {
-  window.open("/notice/view/" + row.id);
 }
 
 </script>
@@ -579,16 +532,8 @@ function handleViewNotice(row) {
 }
 
 .nav-message-popover {
-  .nav-message-tabs {
-    .el-tabs__header {
-      margin-bottom: 8px;
-    }
-    .el-tabs__nav-wrap::after {
-      height: 1px;
-    }
-  }
   .nav-message-body {
-    max-height: 320px;
+    height: 400px;
     overflow-y: auto;
   }
   .nav-message-tip {
@@ -636,37 +581,6 @@ function handleViewNotice(row) {
       float: none;
       padding: 0;
     }
-  }
-  .nav-notice-item {
-    padding: 8px 4px;
-    border-bottom: 1px solid $border-color-light;
-    cursor: pointer;
-    transition: $transition-fast;
-    &:last-child {
-      border-bottom: 0;
-    }
-    &:hover {
-      background-color: $color-primary-soft;
-      border-radius: $border-radius-sm;
-    }
-  }
-  .nav-notice-title {
-    font-size: 13px;
-    font-weight: 400;
-    color: $color-text-primary;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .nav-notice-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 4px;
-  }
-  .nav-notice-time {
-    font-size: 12px;
-    color: $color-text-secondary;
   }
 }
 </style>

@@ -33,6 +33,11 @@ public class UserVO extends BaseVO {
     private String loginName;
 
     /**
+     * 归属租户
+     */
+    private Long tenantId;
+
+    /**
      * 所属部门
      */
     private Long deptId;

@@ -121,7 +121,7 @@
                   clearable
               >
                 <template #suffix>
-                  <up-button class="sms-code-btn" plain size="mini" type="primary" @click="getMessageCode" :disabled="count != 0">
+                  <up-button class="sms-code-btn" plain size="mini" type="primary" @click="getSmsCode" :disabled="count != 0">
                     <text v-if="count == 0">获取验证码</text>
                     <text v-else>等待({{count}}秒)</text>
                   </up-button>
@@ -212,7 +212,7 @@
   </div>
 </template>
 <script setup>
-import {loginAPI, getValidateCodeAPI, getMessageCodeAPI, getEmailCodeAPI, getEncryptKeyAPI} from '@/api/auth/login.js';
+import {getValidateCodeAPI, getSmsCodeAPI, getEmailCodeAPI, getEncryptKeyAPI} from '@/api/auth/login.js';
 import {des} from '@/utils/encryptUtil';
 import {ref} from 'vue';
 import {useStore} from 'vuex';
@@ -302,11 +302,11 @@ function getEmailCode() {
 /**
  * 获取短信验证码
  */
-function getMessageCode() {
+function getSmsCode() {
   const param = {
     phone: loginForm.value.phone
   }
-  getMessageCodeAPI(param).then(res => {
+  getSmsCodeAPI(param).then(res => {
     if (res.code !== 200) {
       return ;
     }

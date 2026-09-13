@@ -42,7 +42,7 @@ public class LoginController extends BaseController {
     private IEncryptKeyService encryptKeyService;
 
     /**
-     * 下发一次性加密密钥
+     * 加密密钥
      * @return 一次性密钥
      */
     @PostMapping("encryptKey")
@@ -63,9 +63,9 @@ public class LoginController extends BaseController {
      * 获取短信验证码
      * @return 验证码
      */
-    @GetMapping("messageCode")
-    public ResultData<ValidateCode> queryMessageCode(LoginVO loginVO) {
-        return loginValidateService.generateMessageCode(loginVO);
+    @GetMapping("smsCode")
+    public ResultData<ValidateCode> querySmsCode(LoginVO loginVO) {
+        return loginValidateService.generateSmsCode(loginVO);
     }
 
     /**

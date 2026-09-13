@@ -15,6 +15,8 @@ import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.DecryptUtil;
 import com.spark.common.utils.EncryptUtil;
 import com.spark.common.utils.StringUtil;
+import com.spark.config.aspectj.annotation.DataScope;
+import com.spark.config.aspectj.annotation.LogIgnore;
 import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.common.bean.sys.entity.User;
@@ -99,6 +101,9 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         ResultData<Long> result = this.validateCreateUserParam(userVO);
         BaseAssert.assertTrue(result);
         Long tenantId = SessionHolder.getCurrentTenantId();
+        if (SessionHolder.isSysAdmin()) {
+            tenantId = userVO.getTenantId();
+        }
         result = tenantUserService.checkTenantUserCount(tenantId);
         BaseAssert.assertTrue(result);
         // 插入主表数据
@@ -144,7 +149,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         }
         // 加入租户
         TenantUserVO tenantUserVO = new TenantUserVO();
-        tenantUserVO.setTenantId(SessionHolder.getCurrentTenantId());
+        tenantUserVO.setTenantId(tenantId);
         tenantUserVO.setDeptId(userVO.getDeptId());
         tenantUserVO.setUserIds(List.of(userId));
         result = tenantUserService.addUser(tenantUserVO);
@@ -164,6 +169,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
      * @return 结果
      */
     @Override
+    @DataScope(tableAlias = "su")
     public ResultData<PageResult<UserResult>> pageUserList(UserQuery query) {
         ResultData<PageResult<UserResult>> result = new ResultData<>();
         if (query == null) {
@@ -344,6 +350,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
      * @param userVO 查询参数
      * @return 头像路径
      */
+    @LogIgnore
     @Override
     public ResultData<String> queryUserAvatarPath(UserVO userVO) {
         ResultData<String> result = new ResultData<>();
@@ -499,8 +506,11 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
     private ResultData<Long> validateCreateUserParam(UserVO userVO) {
         ResultData<Long> result = new ResultData<>();
         Long tenantId = SessionHolder.getCurrentTenantId();
+        if (SessionHolder.isSysAdmin()) {
+            tenantId = userVO.getTenantId();
+        }
         if (tenantId == null) {
-            result.setErrorCode(ErrorCodeEnum.NOT_LOGIN);
+            result.setErrorCode(ErrorCodeEnum.TENANT_NOT_EXIST);
             return result;
         }
         if (userVO == null || StringUtil.isBlank(userVO.getLoginName()) || StringUtil.isBlank(userVO.getName())) {

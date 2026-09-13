@@ -218,7 +218,7 @@
                 </template>
               </el-input>
               <div class="login-code">
-                <el-button type="primary" @click="getMessageCode" :disabled="count !== 0" style="width: 100%; height: 44px; margin: 0; border-radius: 4px; color: white;">
+                <el-button type="primary" @click="getSmsCode" :disabled="count !== 0" style="width: 100%; height: 44px; margin: 0; border-radius: 4px; color: white;">
                   <span v-if="count === 0">获取验证码</span>
                   <span v-else>等待({{count}}秒)</span>
                 </el-button>
@@ -319,7 +319,7 @@
 </template>
 
 <script setup>
-import {getValidateCodeAPI, getMessageCodeAPI, getEmailCodeAPI, getSessionAPI, getEncryptKeyAPI} from '@/api/manage/auth/login.js';
+import {getValidateCodeAPI, getSmsCodeAPI, getEmailCodeAPI, getSessionAPI, getEncryptKeyAPI} from '@/api/manage/auth/login.js';
 import { des } from '@/utils/encryptUtil.js';
 import Validate from '@/assets/icons/validate.vue';
 import { ref, getCurrentInstance } from "vue";
@@ -409,11 +409,11 @@ function getEmailCode() {
 /**
  * 获取短信验证码
  */
-function getMessageCode() {
+function getSmsCode() {
   const param = {
     phone: loginForm.value.phone
   }
-  getMessageCodeAPI(param).then(res => {
+  getSmsCodeAPI(param).then(res => {
     if (res.code !== 200) {
       return;
     }

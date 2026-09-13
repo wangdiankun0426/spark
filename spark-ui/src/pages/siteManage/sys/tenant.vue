@@ -19,6 +19,7 @@
 
       <el-table
           :data="list"
+          ref="tenantTableRef"
           v-loading="loading"
           highlight-current-row
           height="calc(100vh - 160px)"
@@ -81,12 +82,20 @@
         <span class="user-title">{{ currentTenantName ? currentTenantName + ' 下的用户' : '请先在左侧选择租户' }}</span>
         <select-user
             v-model="selectedUserIds"
+            ref="selectUserRef"
             multiple
             :disabled="currentTenantId == null"
             placeholder="请选择要加入的用户"
             @change="submitAddUser"
             class="user-select"
         />
+        <el-button
+            type="primary"
+            :disabled="currentTenantId == null"
+            @click="openCreateUserForm"
+        >
+          <el-icon><Plus /></el-icon>新建用户
+        </el-button>
       </div>
 
       <el-table
@@ -189,22 +198,73 @@
         <el-button @click="closeForm">取消</el-button>
       </template>
     </el-drawer>
+
+    <!-- 新建用户抽屉 -->
+    <el-drawer
+        v-model="userFormVisible"
+        title="新建用户"
+        direction="ltr"
+        size="40%"
+        :close-on-click-modal="false"
+    >
+      <el-form :model="userForm" :rules="userFormRules" ref="userFormRef" label-width="90px">
+        <el-form-item label="用户名" prop="name">
+          <el-input v-model="userForm.name" placeholder="请输入用户名" maxlength="50"/>
+        </el-form-item>
+        <el-form-item label="登录名" prop="loginName">
+          <el-input v-model="userForm.loginName" placeholder="请输入登录名" maxlength="50"/>
+        </el-form-item>
+        <el-form-item label="手机号" prop="phone">
+          <el-input v-model="userForm.phone" placeholder="请输入手机号" maxlength="11"/>
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="userForm.email" placeholder="请输入邮箱" maxlength="100"/>
+        </el-form-item>
+        <el-form-item label="性别" prop="sex">
+          <el-radio-group v-model="userForm.sex">
+            <el-radio
+                v-for="item in sexOptions"
+                :key="item.value"
+                :label="item.value"
+            >
+              {{ item.label }}
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <el-switch
+              v-model="userForm.status"
+              :active-value="1"
+              :inactive-value="-1"
+              active-text="已启用"
+              inactive-text="已停用"
+              inline-prompt
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button type="primary" @click="submitUserForm">保存</el-button>
+        <el-button @click="closeUserForm">取消</el-button>
+      </template>
+    </el-drawer>
   </div>
 </template>
 
 <script setup>
 import {pageTenantListAPI, createTenantAPI, updateTenantAPI, deleteTenantAPI} from '@/api/manage/sys/tenant.js';
 import {addTenantUserAPI, pageTenantUserListAPI, removeTenantUserAPI, updateTenantUserAPI} from '@/api/manage/sys/tenantUser.js';
+import {createUserAPI} from '@/api/manage/sys/user.js';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import SelectUser from '@/components/SelectUser/index.vue';
 import UserAvatar from '@/components/UserAvatar/index.vue';
-import {ref} from 'vue';
+import {nextTick, ref} from 'vue';
 import {useRouter} from 'vue-router';
 import {Delete} from "@element-plus/icons-vue";
 
 const router = useRouter();
 
 const list = ref([]);
+const tenantTableRef = ref();
 const total = ref(0);
 const loading = ref(false);
 const query = ref({ pageNo: 1, pageSize: 10, name: undefined });
@@ -213,11 +273,18 @@ const currentTenantId = ref(null);
 const currentTenantName = ref('');
 // 已选待加入用户 ID 数组
 const selectedUserIds = ref([]);
+// 用户下拉组件引用，用于新建用户后刷新可选项
+const selectUserRef = ref();
+// 性别选项
+const sexOptions = [
+  { value: 1, label: '男' },
+  { value: 2, label: '女' }
+];
 // 右侧租户用户数据
 const tenantUserList = ref([]);
 const tenantUserTotal = ref(0);
 const userLoading = ref(false);
-const tenantUserQuery = ref({ pageNo: 1, pageSize: 10 });
+const tenantUserQuery = ref({ pageNo: 1, pageSize: 15 });
 const formVisible = ref(false);
 const formTitle = ref(undefined);
 const formRef = ref();
@@ -225,6 +292,14 @@ const form = ref({ id: undefined, name: undefined, status: 1, accountCount: 10, 
 const formRules = {
   name: [{ required: true, trigger: 'blur', message: '请输入租户名称' }],
   accountCount: [{ required: true, trigger: 'blur', message: '请输入账号数量' }],
+};
+// 新建用户表单
+const userFormVisible = ref(false);
+const userFormRef = ref();
+const userForm = ref({ name: undefined, loginName: undefined, phone: undefined, email: undefined, sex: 1, status: 1 });
+const userFormRules = {
+  name: [{ required: true, trigger: 'blur', message: '请输入用户名' }],
+  loginName: [{ required: true, trigger: 'blur', message: '请输入登录名' }],
 };
 
 getTenantList();
@@ -238,11 +313,30 @@ function getTenantList() {
     list.value = res.data.rows;
     total.value = res.data.total;
     loading.value = false;
+    // 列表刷新后恢复原选中租户的选中状态
+    restoreTenantSelection();
   })
 }
 
 /**
- * 搜索租户，重置到第一页
+ * 恢复左侧租户表格的选中行，并同步右侧标题的租户名称
+ */
+function restoreTenantSelection() {
+  if (currentTenantId.value == null) {
+    return;
+  }
+  nextTick(() => {
+    const row = list.value.find(item => item.id === currentTenantId.value);
+    if (!row) {
+      return;
+    }
+    tenantTableRef.value.setCurrentRow(row);
+    currentTenantName.value = row.name;
+  });
+}
+
+/**
+ * 搜索租户
  */
 function handleSearch() {
   query.value.pageNo = 1;
@@ -250,15 +344,11 @@ function handleSearch() {
 }
 
 /**
- * 选中租户，加载该租户下的用户
+ * 选中租户
  * @param row 租户行数据
  */
 function selectTenantRow(row) {
-  if (!row) {
-    currentTenantId.value = null;
-    currentTenantName.value = '';
-    tenantUserList.value = [];
-    tenantUserTotal.value = 0;
+  if (!row || row.id === currentTenantId.value) {
     return;
   }
   currentTenantId.value = row.id;
@@ -299,7 +389,6 @@ function submitAddUser(userIds) {
       return;
     }
     ElMessage.success('添加成功');
-    // 清空下拉选择，避免下次重复提交
     selectedUserIds.value = [];
     getTenantUserList();
   })
@@ -390,6 +479,51 @@ function isOrgAdminRole(roleType) {
     return false;
   }
   return (roleType & 2) === 2;
+}
+
+/**
+ * 打开新建用户抽屉
+ */
+function openCreateUserForm() {
+  if (currentTenantId.value == null) {
+    return;
+  }
+  userForm.value = { name: undefined, loginName: undefined, phone: undefined, email: undefined, sex: 1, status: 1 };
+  userFormVisible.value = true;
+}
+
+/**
+ * 关闭新建用户抽屉
+ */
+function closeUserForm() {
+  userFormVisible.value = false;
+}
+
+/**
+ * 提交新建用户表单，用户直接归属当前选中租户
+ */
+function submitUserForm() {
+  userFormRef.value.validate(valid => {
+    if (!valid) {
+      return;
+    }
+    const data = {
+      ...userForm.value,
+      tenantId: currentTenantId.value,
+    };
+    createUserAPI(data).then(res => {
+      if (res.code !== 200) {
+        return;
+      }
+      ElMessage.success('用户创建成功');
+      closeUserForm();
+      getTenantUserList();
+      // 账号数量变化，刷新左侧租户列表
+      getTenantList();
+      // 刷新下拉可选用户
+      selectUserRef.value.reload();
+    })
+  });
 }
 
 /**

@@ -47,7 +47,7 @@ public class InterceptorConfigurer implements WebMvcConfigurer {
         excludePatterns.add("/error");
         excludePatterns.add("/sys/user/avatar");
         excludePatterns.add("/auth/validateCode");
-        excludePatterns.add("/auth/messageCode");
+        excludePatterns.add("/auth/smsCode");
         excludePatterns.add("/auth/emailCode");
         excludePatterns.add("/auth/register");
         excludePatterns.add("/auth/encryptKey");
