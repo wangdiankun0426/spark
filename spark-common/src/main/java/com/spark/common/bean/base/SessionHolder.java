@@ -63,12 +63,25 @@ public class SessionHolder {
      */
     private static final ThreadLocal<Integer> accountType = new ThreadLocal<>();
 
+    /**
+     * 登录平台
+     */
+    private static final ThreadLocal<Integer> currentLoginPlatform = new ThreadLocal<>();
+
     public static void setAccountType(Integer accountType_) {
         accountType.set(accountType_);
     }
 
     public static Integer getAccountType() {
         return accountType.get();
+    }
+
+    public static void setCurrentLoginPlatform(Integer loginPlatform) {
+        currentLoginPlatform.set(loginPlatform);
+    }
+
+    public static Integer getCurrentLoginPlatform() {
+        return currentLoginPlatform.get();
     }
 
     public static void setCurrentTenantId(Long tenantId) {
@@ -157,6 +170,7 @@ public class SessionHolder {
         setCurrentRoleType(session.getRoleType());
         setCurrentTenantId(session.getTenantId());
         setAccountType(session.getAccountType());
+        setCurrentLoginPlatform(session.getLoginPlatform());
     }
 
     /**
@@ -172,6 +186,7 @@ public class SessionHolder {
         context.remove();
         currentTenantId.remove();
         accountType.remove();
+        currentLoginPlatform.remove();
     }
 
     /**

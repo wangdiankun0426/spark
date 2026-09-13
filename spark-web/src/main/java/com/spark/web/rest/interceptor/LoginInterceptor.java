@@ -5,6 +5,7 @@ import com.spark.common.bean.sys.entity.Session;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.enums.LoginPlatformEnum;
 import com.spark.config.redis.RedisService;
 import com.spark.common.utils.JsonUtil;
 import com.spark.common.utils.StringUtil;
@@ -85,8 +86,9 @@ public class LoginInterceptor implements HandlerInterceptor {
         }
         Session session = JsonUtil.toObject(loginUserJson, Session.class);
         SessionHolder.initLocalSession(session);
-        // 记录全链路用户id
         TraceLogUtil.cacheTrackUserId(session.getUserId());
+        TraceLogUtil.cacheTenantId(session.getTenantId());
+        TraceLogUtil.cacheLoginPlatform(LoginPlatformEnum.indexOf(session.getLoginPlatform()).getDesc());
         // 延迟缓存时间
         redisService.expire(sessionIdKey, 60*60);
         return true;
@@ -119,5 +121,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         // 一次请求处理完之后就清除 防止积累太多导致内存溢出
         SessionHolder.clearLocalSession();
         TraceLogUtil.removeUserId();
+        TraceLogUtil.removeTenantId();
+        TraceLogUtil.removeLoginPlatform();
     }
 }

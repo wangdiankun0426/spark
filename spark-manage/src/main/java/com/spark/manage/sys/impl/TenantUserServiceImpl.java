@@ -352,6 +352,7 @@ public class TenantUserServiceImpl extends BaseService<TenantUserQuery, TenantUs
         Long deptId = tenantUser.getDeptId();
         session.setDeptId(deptId);
         session.setAccountType(SessionHolder.getAccountType());
+        session.setLoginPlatform(SessionHolder.getCurrentLoginPlatform());
         session.setRoleType(tenantUser.getRoleType());
         int dataScope = roleDao.queryUserMaxDataScope(tenantId, userId);
         session.setDataScope(dataScope);

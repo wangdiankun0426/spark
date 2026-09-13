@@ -16,6 +16,8 @@ import java.util.UUID;
 public class TraceLogUtil {
     public static final String TRACK_ID_KEY = "TrackId";
     public static final String USER_ID_KEY = "UserId";
+    public static final String TENANT_ID_KEY = "TenantId";
+    public static final String LOGIN_PLATFORM_KEY = "LoginPlatform";
 
     /**
      * 构造trackId
@@ -51,5 +53,43 @@ public class TraceLogUtil {
 
     public static void removeUserId() {
         MDC.remove(USER_ID_KEY);
+    }
+
+    /**
+     * 缓存当前租户id
+     * @param tenantId 租户id
+     */
+    public static void cacheTenantId(Long tenantId) {
+        if(tenantId == null) {
+            return;
+        }
+        MDC.put(TENANT_ID_KEY, String.valueOf(tenantId));
+    }
+
+    public static String getTenantId() {
+        return MDC.get(TENANT_ID_KEY);
+    }
+
+    public static void removeTenantId() {
+        MDC.remove(TENANT_ID_KEY);
+    }
+
+    /**
+     * 缓存登录平台名称，直接存枚举desc中文，便于日志检索
+     * @param loginPlatformDesc 登录平台名称
+     */
+    public static void cacheLoginPlatform(String loginPlatformDesc) {
+        if(StringUtil.isBlank(loginPlatformDesc)) {
+            return;
+        }
+        MDC.put(LOGIN_PLATFORM_KEY, loginPlatformDesc);
+    }
+
+    public static String getLoginPlatform() {
+        return MDC.get(LOGIN_PLATFORM_KEY);
+    }
+
+    public static void removeLoginPlatform() {
+        MDC.remove(LOGIN_PLATFORM_KEY);
     }
 }

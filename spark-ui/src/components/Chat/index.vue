@@ -140,8 +140,8 @@
           type="textarea"
           :maxlength="maxLength"
           show-word-limit
-          :placeholder="replyLocked ? '正在回复中 请稍候' : placeholder"
-          :disabled="!target || !target.id || replyLocked"
+          :placeholder="inputPlaceholder"
+          :disabled="inputDisabled"
           @keydown.enter="handleEnter"
       />
     </div>
@@ -194,6 +194,8 @@ const store = useStore()
 const userInfo = computed(() => store.getters['user/getUserInfo'])
 
 const websocket = ref(null)
+// websocket 是否已连接，断开与重连期间为false，用于锁定输入框
+const connected = ref(false)
 const message = ref('')
 const scrollbarRef = ref(null)
 const recordDrawer = ref(false)
@@ -329,9 +331,13 @@ function loadChatMessageList() {
 
 /**
  * 判断消息是否属于当前会话
+ * 自己账号发出的消息按接收人判断（多端登录时服务端会回推），对方消息按发送人判断
  */
 function isCurrentSpaceMsg(chatMsg) {
   if (!aiChat.value) {
+    if (chatMsg.senderId === userInfo.value.id) {
+      return currentTargetId.value === chatMsg.receiverId
+    }
     return currentTargetId.value === chatMsg.senderId
   }
   if (!chatMsg.spaceId) {
@@ -469,6 +475,8 @@ function initWebsocket() {
  */
 function setErrorMessage() {
   console.log('webSocket 连接发生错误 状态码：' + websocket.value.readyState)
+  // 连接不可用，锁定输入框等待重连
+  connected.value = false
 }
 
 /**
@@ -476,6 +484,8 @@ function setErrorMessage() {
  */
 function setOnopenMessage() {
   console.log('webSocket 连接成功 状态码：' + websocket.value.readyState)
+  // 连接可用，解锁输入框
+  connected.value = true
   const chatMsg = { senderId: userInfo.value.id }
   const dataContent = { action: 1, chatMsg: chatMsg }
   websocket.value.send(JSON.stringify(dataContent))
@@ -497,12 +507,22 @@ function ongoingReply() {
   return lastMsg
 }
 
-// 是否正在回复中：存在未落定的AI气泡即为回复中，不需要额外的计时器
-// 会话切换、消息列表重载都会自动重置，服务端异常不回复时重新进入会话即可解锁
+// 是否正在回复中
 const streaming = computed(() => !!ongoingReply())
 
 // 回复期间锁定输入框，禁用并切换占位文案
 const replyLocked = computed(() => props.lockWhileStreaming && streaming.value)
+
+// 未选择聊天对象、连接不可用或回复中，均禁止输入
+const inputDisabled = computed(() => !(props.target && props.target.id) || !connected.value || replyLocked.value)
+
+// 连接不可用时优先提示重连，其次提示回复中
+const inputPlaceholder = computed(() => {
+  if (!connected.value) {
+    return '连接服务器中...'
+  }
+  return replyLocked.value ? '正在回复中 请稍候' : props.placeholder
+})
 
 /**
  * 思考区状态文案，智能体区分思考中与思考完成，模型只有等待回复
@@ -591,13 +611,55 @@ function handleReply(chatMsg, references) {
 }
 
 /**
+ * 处理自己账号发出的消息：本端乐观插入后服务端回推的、或其他终端发出后广播过来的
+ * 本端乐观插入的那条没有服务端id，按发送人+接收人+内容从列表尾部找最近一条未落库的回填id，找不到则直接追加
+ * @param chatMsg 服务端消息
+ */
+function adoptSelfMsg(chatMsg) {
+  // 自己发的消息一定是落库后的完整消息
+  if (chatMsg.id === undefined) {
+    return
+  }
+  // 同一条消息重复到达时按id去重
+  if (chatMessageList.value.some(item => item.id === chatMsg.id)) {
+    return
+  }
+  for (let i = chatMessageList.value.length - 1; i >= 0; i--) {
+    const item = chatMessageList.value[i]
+    // 只认尚未落库的本地乐观消息
+    if (item.id !== undefined || item.senderId !== chatMsg.senderId
+        || item.receiverId !== chatMsg.receiverId || item.message !== chatMsg.message) {
+      continue
+    }
+    // 回填服务端id，后续按id去重与历史合并都依赖它；createdDt保留本地时间
+    item.id = chatMsg.id
+    return
+  }
+  // 本地没有乐观副本，说明是其他终端发出的，追加展示
+  chatMessageList.value.push(chatMsg)
+  scrollToBottom()
+}
+
+/**
  * 收到消息时回调
  */
 function setOnmessageMessage(event) {
   const parse = JSON.parse(event.data)
   const chatMsg = parse.chatMsg
+  // 自己账号发出的消息由其他端广播而来，不需要签收与已读
+  const selfMsg = chatMsg.senderId === userInfo.value.id
+  // 带id的是落库后的完整消息，推送到当前端即表示已送达，用户是否正在看这个会话不影响签收
+  if (!selfMsg && chatMsg.id !== undefined) {
+    const dataContent = { action: 3, chatMsg: chatMsg }
+    websocket.value.send(JSON.stringify(dataContent))
+  }
   // 仅处理当前会话的消息
   if (!isCurrentSpaceMsg(chatMsg)) {
+    return
+  }
+  // 自己账号发出的消息：多端同步回推，只做去重或追加，不走签收、已读与AI回复拼接
+  if (selfMsg) {
+    adoptSelfMsg(chatMsg)
     return
   }
   // 思考状态消息
@@ -605,10 +667,9 @@ function setOnmessageMessage(event) {
     handleThinking(chatMsg)
     return
   }
-  // 带id的是落库后的完整消息，说明本次回复结束
+  // 带id的完整消息已展示在当前会话，用户看到了内容，回发已读
   if (chatMsg.id !== undefined) {
-    const dataContent = { action: 3, chatMsg: chatMsg }
-    websocket.value.send(JSON.stringify(dataContent))
+    websocket.value.send(JSON.stringify({ action: 4, chatMsg: { id: chatMsg.id } }))
     // 通知父组件：收到对方消息，父组件用于刷新会话列表
     emit('message-received', chatMsg)
   }
@@ -631,6 +692,8 @@ function finalizePendingReply() {
  */
 function setOncloseMessage() {
   console.log('webSocket 连接关闭 状态码：' + websocket.value.readyState)
+  // 连接不可用，锁定输入框等待重连
+  connected.value = false
   if (destroyed) {
     return
   }
@@ -681,6 +744,7 @@ function setOncloseMessage() {
 .chat-body {
   flex: 1;
   min-height: 0;
+  background-color: $bg-page;
   border: 1px solid $color-primary;
   border-radius: $border-radius-md;
   margin-bottom: $spacing-md;
@@ -692,7 +756,6 @@ function setOncloseMessage() {
   color: $color-text-placeholder;
 }
 
-/* 向上加载历史时的提示 */
 .chat-history-loading {
   padding: $spacing-sm;
   text-align: center;
@@ -763,7 +826,6 @@ function setOncloseMessage() {
   position: relative;
 }
 
-/* 只有用户气泡限制宽度，AI气泡保持原有阅读宽度 */
 .chat-item-self .chat-bubble-wrap {
   max-width: 80%;
 }
@@ -815,8 +877,9 @@ function setOncloseMessage() {
 }
 
 .chat-bubble-agent {
-  background-color: $color-primary-light;
+  background-color: $bg-card;
   color: $color-text-primary;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
 .thinking-header {
@@ -825,7 +888,6 @@ function setOncloseMessage() {
   gap: $spacing-xs;
 }
 
-/* 有思考内容时才可点击折叠 */
 .thinking-toggle {
   cursor: pointer;
 }

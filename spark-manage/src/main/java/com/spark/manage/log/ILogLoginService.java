@@ -31,10 +31,4 @@ public interface ILogLoginService {
      */
     ResultData<PageResult<LogLoginResult>> pageLogLoginList(LogLoginQuery query);
 
-    /**
-     * 分页查询我的登录记录
-     * @param query 查询参数
-     * @return 列表
-     */
-    ResultData<PageResult<LogLoginResult>> pageMyLogLoginList(LogLoginQuery query);
 }

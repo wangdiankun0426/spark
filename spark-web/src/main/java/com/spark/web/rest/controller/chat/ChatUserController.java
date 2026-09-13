@@ -26,7 +26,7 @@ public class ChatUserController {
     private IChatUserService chatUserService;
 
     /**
-     * 分页查询我的聊天用户列表，带会话空间id与未读数
+     * 分页查询我的聊天用户列表
      *
      * @param query 查询参数
      * @return 分页结果

@@ -259,6 +259,7 @@ function handleSpaceCreated({ targetId, spaceId }) {
   border-radius: $border-radius-md;
   cursor: pointer;
   transition: $transition-fast;
+  margin-right: 10px;
 
   &:hover {
     background-color: $color-primary-soft;

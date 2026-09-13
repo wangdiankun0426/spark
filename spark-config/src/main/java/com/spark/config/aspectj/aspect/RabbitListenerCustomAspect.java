@@ -40,8 +40,13 @@ public class RabbitListenerCustomAspect {
             Map<String, Object> headers = messageProperties.getHeaders();
             String trackId = (String)headers.get(TraceLogUtil.TRACK_ID_KEY);
             String userId = (String)headers.get(TraceLogUtil.USER_ID_KEY);
+            String tenantId = (String)headers.get(TraceLogUtil.TENANT_ID_KEY);
+            String loginPlatform = (String)headers.get(TraceLogUtil.LOGIN_PLATFORM_KEY);
             TraceLogUtil.generateTrackId(trackId);
             TraceLogUtil.cacheTrackUserId(userId != null ? Long.valueOf(userId) : null);
+            TraceLogUtil.cacheTenantId(tenantId != null ? Long.valueOf(tenantId) : null);
+            TraceLogUtil.removeLoginPlatform();
+            TraceLogUtil.cacheLoginPlatform(loginPlatform);
         }
     }
 }

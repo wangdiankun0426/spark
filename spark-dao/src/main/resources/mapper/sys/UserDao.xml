@@ -16,6 +16,9 @@
             </foreach>
             )
         </if>
+        <if test="excludeId != null">
+            and su.id != #{excludeId}
+        </if>
         <if test="loginName != null">
             and su.login_name = #{loginName}
         </if>

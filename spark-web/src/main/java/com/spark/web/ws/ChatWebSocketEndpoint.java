@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * +++/\_/\
@@ -34,6 +35,11 @@ import java.io.IOException;
 @ServerEndpoint(value = "/ws/chat")
 public class ChatWebSocketEndpoint {
     private final static Logger logger = LoggerFactory.getLogger(ChatWebSocketEndpoint.class);
+
+    /**
+     * 连接上绑定的用户id属性名
+     */
+    private final static String USER_ID_PROP = "userId";
 
     /**
      * 连接建立成功调用的方法
@@ -74,7 +80,7 @@ public class ChatWebSocketEndpoint {
                 return;
             }
             Long senderId = dataContent.getChatMsg().getSenderId();
-            UserChannelRel.put(senderId, session);
+            this.connectChannel(senderId, session);
         } else if (MsgActionEnum.CHAT_MSG.getValue().equals(action)) {
             handleChatMsg(dataContent, session);
         } else if (MsgActionEnum.SIGN_MSG.getValue().equals(action)) {
@@ -100,6 +106,21 @@ public class ChatWebSocketEndpoint {
             logger.error("close session error", e);
         }
         UserChannelRel.removeBySession(session);
+    }
+
+    /**
+     * 绑定连接到用户，同一账号多终端登录时保留该用户的全部连接
+     * @param senderId 用户id
+     * @param session websocket会话
+     */
+    private void connectChannel(Long senderId, Session session) {
+        // 同一连接重复注册时先解绑旧用户，避免异常客户端先后注册多个账号后收到多份广播
+        Object bindUserId = session.getUserProperties().get(USER_ID_PROP);
+        if (bindUserId != null && !bindUserId.equals(senderId)) {
+            UserChannelRel.removeBySession(session);
+        }
+        session.getUserProperties().put(USER_ID_PROP, senderId);
+        UserChannelRel.put(senderId, session);
     }
 
     /**
@@ -133,36 +154,36 @@ public class ChatWebSocketEndpoint {
             // 发送人和接收人一致 则不需要发送
             return;
         }
+        // 回推给发送者的其他终端，排除当前连接（当前端已本地插入，回推会重复）
+        // 必须放在分支之前，保证AI场景下其他终端先看到提问再看到流式回答
+        UserChannelRel.sendMessage(UserChannelRel.get(senderId), dataContent, session);
         ObjectTypeEnum objEnum = this.getObjEnum(receiverId);
         if (objEnum == ObjectTypeEnum.USER) {
-            // 普通用户消息
-            Session receiverSession = UserChannelRel.get(receiverId);
-            if (receiverSession == null || !receiverSession.isOpen()) {
+            // 普通用户消息，推送给接收者的全部在线连接
+            List<Session> receiverSessions = UserChannelRel.get(receiverId);
+            if (receiverSessions.isEmpty()) {
                 // 离线 接收用户的ws未连接
                 logger.info("ws receiver no online, send msg fail");
                 return;
             }
-            // 在线 接收用户的ws已连接
-            try {
-                receiverSession.getBasicRemote().sendText(JsonUtil.toString(dataContent));
-                logger.info("ws send msg success");
-            } catch (IOException e) {
-                logger.error("send message error", e);
-            }
+            UserChannelRel.sendMessage(receiverSessions, dataContent, null);
+            logger.info("ws send msg success, receiver session size={}", receiverSessions.size());
         } else if (objEnum == ObjectTypeEnum.AGENT) {
-            Session senderSession = UserChannelRel.get(senderId);
-            if (senderSession == null || !senderSession.isOpen()) {
+            // AI回复推送给提问账号的全部在线连接，包含发起提问的当前连接
+            List<Session> senderSessions = UserChannelRel.get(senderId);
+            if (senderSessions.isEmpty()) {
                 logger.error("agent ws sender session is invalid");
                 return;
             }
-            chatMsgService.createAgentChatMsg(chatMsgVO, senderSession);
+            chatMsgService.createAgentChatMsg(chatMsgVO, senderSessions);
         } else if (objEnum == ObjectTypeEnum.MODEL) {
-            Session senderSession = UserChannelRel.get(senderId);
-            if (senderSession == null || !senderSession.isOpen()) {
+            // AI回复推送给提问账号的全部在线连接，包含发起提问的当前连接
+            List<Session> senderSessions = UserChannelRel.get(senderId);
+            if (senderSessions.isEmpty()) {
                 logger.error("model ws sender session is invalid");
                 return;
             }
-            chatMsgService.createModelChatMsg(chatMsgVO, senderSession);
+            chatMsgService.createModelChatMsg(chatMsgVO, senderSessions);
         }
     }
 

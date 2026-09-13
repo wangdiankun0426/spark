@@ -53,4 +53,9 @@ public class Session {
      * 账号类型
      */
     private Integer accountType;
+
+    /**
+     * 登录平台
+     */
+    private Integer loginPlatform;
 }

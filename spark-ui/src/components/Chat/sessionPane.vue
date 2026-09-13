@@ -125,10 +125,10 @@ const sessionIcon = computed(() => props.spaceType === CHAT_SPACE_TYPE_AGENT ? M
 let initialized = false
 
 /**
- * 加载第一页，首次加载后自动进入第一个会话（没有会话则开启新对话）
+ * 加载第一页，首次加载后自动进入第一个会话
  * @returns {Promise<void>}
  */
-function loadFirstSessions() {
+function loadFirstSessionList() {
   return loadFirst().then(() => {
     emit('loaded', sessions.value)
     if (initialized) {
@@ -147,7 +147,7 @@ function loadFirstSessions() {
  * 重新加载已加载的全部会话，用于同步标题与最近消息
  * @returns {Promise<void>}
  */
-function refreshSessions() {
+function refreshSessionList() {
   return refresh().then(() => {
     emit('loaded', sessions.value)
   })
@@ -231,7 +231,7 @@ function handleDeleteSession(session) {
   }).catch(() => {})
 }
 
-defineExpose({ loadFirst: loadFirstSessions, refresh: refreshSessions })
+defineExpose({ loadFirst: loadFirstSessionList, refresh: refreshSessionList })
 </script>
 
 <style scoped lang="scss">
@@ -294,6 +294,7 @@ defineExpose({ loadFirst: loadFirstSessions, refresh: refreshSessions })
   border-radius: $border-radius-md;
   cursor: pointer;
   transition: $transition-fast;
+  margin-right: 10px;
 
   &:hover {
     background-color: $color-primary-soft;

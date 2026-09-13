@@ -30,17 +30,19 @@ public interface IChatMsgService {
 
     /**
      * 创建agent消息
-     * @param chatMsgVO
+     * @param chatMsgVO 聊天消息
+     * @param sessions 提问账号的全部在线连接，流式回复广播到所有连接
      * @return
      */
-    void createAgentChatMsg(ChatMsgVO chatMsgVO, Session findSession);
+    void createAgentChatMsg(ChatMsgVO chatMsgVO, List<Session> sessions);
 
     /**
      * 创建model消息
-     * @param chatMsgVO
+     * @param chatMsgVO 聊天消息
+     * @param sessions 提问账号的全部在线连接，流式回复广播到所有连接
      * @return
      */
-    void createModelChatMsg(ChatMsgVO chatMsgVO, Session findSession);
+    void createModelChatMsg(ChatMsgVO chatMsgVO, List<Session> sessions);
 
     /**
      * 签收聊天消息

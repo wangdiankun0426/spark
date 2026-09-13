@@ -35,14 +35,4 @@ public class LogLoginController {
         return logLoginService.pageLogLoginList(query);
     }
 
-    /**
-     * 查询登录日志
-     *
-     * @param  query 查询参数
-     * @return 列表
-     */
-    @GetMapping("pageMyList")
-    public ResultData<PageResult<LogLoginResult>> queryMyLoginLog(LogLoginQuery query) {
-        return logLoginService.pageMyLogLoginList(query);
-    }
 }

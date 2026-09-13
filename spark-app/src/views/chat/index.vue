@@ -122,12 +122,14 @@
 
     <!-- 输入区-->
     <view class="chat-footer">
-      <view class="input-wrapper">
+      <view
+          class="input-wrapper"
+          :class="{ 'input-wrapper-disabled': inputDisabled }">
         <input
             v-model="message"
             :maxlength="200"
-            :disabled="!target || !target.id"
-            placeholder="请输入聊天内容"
+            :disabled="inputDisabled"
+            :placeholder="inputPlaceholder"
             confirm-type="send"
             :confirm-hold="true"
             class="chat-input"
@@ -153,10 +155,24 @@ const store = useStore()
 const message = ref("")
 
 const websocket = ref(null)
+// 连接是否可用，断开与重连期间为false，用于锁定输入框
+const connected = ref(false)
 const userInfo = computed(() => store.getters["user/getUserInfo"] || {})
 const target = ref({})
 const targetType = ref('agent')
 const currentTargetId = computed(() => target.value && target.value.id)
+
+// 重连间隔，连接断开后按此间隔持续尝试重连
+const RECONNECT_DELAY = 3000
+// 重连定时器
+let reconnectTimer = null
+// 页面是否已卸载，卸载后不再重连
+let destroyed = false
+
+// 未选择聊天对象或连接不可用时禁止输入
+const inputDisabled = computed(() => !currentTargetId.value || !connected.value)
+// 断开与重连期间给出提示文案
+const inputPlaceholder = computed(() => (connected.value ? '请输入聊天内容' : '连接服务器中...'))
 
 // 消息列表与历史分页加载
 const spaceIdRef = computed(() => target.value && target.value.chatSpaceId)
@@ -177,8 +193,8 @@ const eventChannelInited = ref(false)
 const chatIniting = ref(false)
 
 onShow(() => {
-  // 页面从后台返回时，仅检查 WebSocket 是否需要重连
-  if (!websocket.value) {
+  // 页面从后台返回时，检查 WebSocket 是否需要重连
+  if (!websocket.value || websocket.value.readyState === 3) {
     initWebsocket()
   }
 })
@@ -373,19 +389,54 @@ function createPlatformSocket() {
   // #endif
 }
 
+/**
+ * 初始化 websocket，已有未关闭的连接时不重复创建
+ */
 function initWebsocket() {
-  if (websocket.value) {
+  clearReconnectTimer()
+  if (destroyed) return
+  // 已有连接且未关闭（含正在建立中）直接复用
+  if (websocket.value && websocket.value.readyState !== 3) {
     return
   }
   websocket.value = createPlatformSocket()
-  if (!websocket.value) return
+  if (!websocket.value) {
+    scheduleReconnect()
+    return
+  }
   websocket.value.onerror = setErrorMessage
   websocket.value.onopen = setOnopenMessage
   websocket.value.onmessage = setOnmessageMessage
   websocket.value.onclose = setOncloseMessage
 }
 
+/**
+ * 清理重连定时器
+ */
+function clearReconnectTimer() {
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer)
+    reconnectTimer = null
+  }
+}
+
+/**
+ * 安排一次重连，已有待执行的定时器时不重复安排
+ */
+function scheduleReconnect() {
+  if (destroyed || reconnectTimer) {
+    return
+  }
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null
+    initWebsocket()
+  }, RECONNECT_DELAY)
+}
+
 function closeWebsocket() {
+  destroyed = true
+  clearReconnectTimer()
+  connected.value = false
   if (!websocket.value) return
   websocket.value.onclose = null
   websocket.value.onerror = null
@@ -397,10 +448,17 @@ function closeWebsocket() {
 
 function setErrorMessage() {
   console.log('webSocket 连接发生错误')
+  connected.value = false
+  // 当前连接已不可用（部分端报错后不触发 onclose，readyState 不再是 3），置空引用保证重连时能重新创建
+  websocket.value = null
+  scheduleReconnect()
 }
 
 function setOnopenMessage() {
   console.log('webSocket 连接成功')
+  // 连接可用，解锁输入框
+  connected.value = true
+  clearReconnectTimer()
   if (!userInfo.value.id) return
   const chatMsg = { senderId: userInfo.value.id }
   const dataContent = { action: 1, chatMsg: chatMsg }
@@ -511,6 +569,48 @@ function handleReply(chatMsg) {
   scrollToBottom()
 }
 
+/**
+ * 是否为当前会话的消息
+ * 自己账号发出的消息按接收人判断（多端登录时服务端会回推），对方消息按发送人判断
+ * @param chatMsg 服务端消息
+ */
+function isCurrentChatMsg(chatMsg) {
+  if (chatMsg.senderId === userInfo.value.id) {
+    return currentTargetId.value === chatMsg.receiverId
+  }
+  return currentTargetId.value === chatMsg.senderId
+}
+
+/**
+ * 处理自己账号发出的消息：本端乐观插入后服务端回推的、或其他终端发出后广播过来的
+ * 本端乐观插入的那条没有服务端id，按发送人+接收人+内容从列表尾部找最近一条未落库的回填id，找不到则直接追加
+ * @param chatMsg 服务端消息
+ */
+function adoptSelfMsg(chatMsg) {
+  // 自己发的消息一定是落库后的完整消息
+  if (chatMsg.id === undefined) {
+    return
+  }
+  // 同一条消息重复到达时按id去重
+  if (chatMessageList.value.some(item => item.id === chatMsg.id)) {
+    return
+  }
+  for (let i = chatMessageList.value.length - 1; i >= 0; i--) {
+    const item = chatMessageList.value[i]
+    // 只认尚未落库的本地乐观消息
+    if (item.id !== undefined || item.senderId !== chatMsg.senderId
+        || item.receiverId !== chatMsg.receiverId || item.message !== chatMsg.message) {
+      continue
+    }
+    // 回填服务端id，后续按id去重与历史合并都依赖它；createdDt保留本地时间
+    item.id = chatMsg.id
+    return
+  }
+  // 本地没有乐观副本，说明是其他终端发出的，追加展示
+  chatMessageList.value.push(chatMsg)
+  scrollToBottom()
+}
+
 function setOnmessageMessage(event) {
   let parse = null
   try {
@@ -520,8 +620,20 @@ function setOnmessageMessage(event) {
     return
   }
   const chatMsg = parse.chatMsg
+  // 自己账号发出的消息由其他端广播而来，不需要签收与已读
+  const selfMsg = chatMsg.senderId === userInfo.value.id
+  // 带id的是落库后的完整消息，推送到当前端即表示已送达，用户是否正在看这个会话不影响签收
+  if (!selfMsg && chatMsg.id !== undefined) {
+    const dataContent = { action: 3, chatMsg: chatMsg }
+    sendWebSocketData(dataContent)
+  }
   // 仅处理当前会话的消息
-  if (currentTargetId.value !== chatMsg.senderId) {
+  if (!isCurrentChatMsg(chatMsg)) {
+    return
+  }
+  // 自己账号发出的消息：多端同步回推，只做去重或追加，不走签收、已读与AI回复拼接
+  if (selfMsg) {
+    adoptSelfMsg(chatMsg)
     return
   }
   // 思考状态消息
@@ -529,19 +641,39 @@ function setOnmessageMessage(event) {
     handleThinking(chatMsg)
     return
   }
-  // 带id的是落库后的完整消息，说明本次回复结束
+  // 带id的完整消息已展示在当前会话，用户看到了内容，回发已读
   if (chatMsg.id !== undefined) {
-    const dataContent = { action: 3, chatMsg: chatMsg }
-    sendWebSocketData(dataContent)
+    sendWebSocketData({ action: 4, chatMsg: { id: chatMsg.id } })
   }
   handleReply(chatMsg)
 }
 
+/**
+ * 收尾进行中的AI回复气泡，避免一直停在思考中
+ */
+function finalizePendingReply() {
+  const reply = ongoingReply()
+  if (reply) {
+    reply.thinkingDone = true
+    reply.thinkingPending = false
+  }
+}
+
+/**
+ * 连接关闭时回调，页面未卸载时持续尝试重连
+ */
 function setOncloseMessage() {
+  // 已存在新连接时，忽略旧连接的关闭事件
+  if (websocket.value && websocket.value.readyState !== 3) {
+    return
+  }
   console.log('webSocket 连接关闭')
-  setTimeout(() => {
-    initWebsocket()
-  }, 3000)
+  // 连接已断开，置空引用，重连时才能重新创建
+  websocket.value = null
+  connected.value = false
+  // 连接断开后本次回复不会再送达，收尾进行中的气泡
+  finalizePendingReply()
+  scheduleReconnect()
 }
 
 function getCurrentDate() {
@@ -608,7 +740,6 @@ function openChatRecord() {
   color: #fff;
 }
 
-/* 标题右侧的聊天记录入口 */
 .header-record {
   display: flex;
   align-items: center;
@@ -632,12 +763,10 @@ function openChatRecord() {
   margin: 8px 0;
 }
 
-/* 未读起点分隔线：撑满消息行宽 */
 .chat-unread-divider {
   align-self: stretch;
 }
 
-/* 向上加载历史时的提示 */
 .chat-history-loading {
   text-align: center;
   padding: 8px 0;
@@ -679,7 +808,12 @@ function openChatRecord() {
 }
 
 .chat-msg-content {
+  align-self: flex-start;
   max-width: 75%;
+}
+
+.chat-item-self .chat-msg-content {
+  align-self: flex-end;
 }
 
 .chat-bubble {
@@ -754,7 +888,6 @@ function openChatRecord() {
   box-sizing: border-box;
 }
 
-/* 单行输入框容器：发送按钮去掉后由输入框占满整行 */
 .input-wrapper {
   display: flex;
   align-items: center;
@@ -762,6 +895,10 @@ function openChatRecord() {
   padding: 0 16px;
   background-color: #f5f7fa;
   border-radius: 10px;
+}
+
+.input-wrapper-disabled {
+  background-color: #eef0f3;
 }
 
 .chat-input {

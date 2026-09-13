@@ -136,6 +136,11 @@
                 <artifactId>layout</artifactId>
                 <version>${itextpdf.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.itextpdf</groupId>
+                <artifactId>font-asian</artifactId>
+                <version>${itextpdf.version}</version>
+            </dependency>
             <!-- hutool 工具-->
             <dependency>
                 <groupId>cn.hutool</groupId>

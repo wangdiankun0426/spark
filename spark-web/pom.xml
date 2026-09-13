@@ -87,7 +87,7 @@
                 <package.env>local</package.env>
                 <!--日志存储路径-->
                 <log.path>D:\\opt\\spark\\logs</log.path>
-                <log.pattern>%d{HH:mm:ss.SSS} [%thread] [%X{UserId}] [%X{TrackId}] %-5level %logger{36} - %msg%n</log.pattern>
+                <log.pattern>%d{HH:mm:ss.SSS} [%thread] [租户: %X{TenantId}] [用户: %X{UserId}] [终端: %X{LoginPlatform}] [链路: %X{TrackId}] %-5level %logger{36} - %msg%n</log.pattern>
                 <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符-->
                 <!--<log.pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</log.pattern>-->
             </properties>
@@ -100,7 +100,7 @@
                 <!--日志存储路径-->
                 <log.path>/opt/spark/logs</log.path>
                 <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符-->
-                <log.pattern>%d{HH:mm:ss.SSS} [%thread] [%X{UserId}] [%X{TrackId}] %-5level %logger{36} - %msg%n</log.pattern>
+                <log.pattern>%d{HH:mm:ss.SSS} [%thread] [租户: %X{TenantId}] [用户: %X{UserId}] [终端: %X{LoginPlatform}] [链路: %X{TrackId}] %-5level %logger{36} - %msg%n</log.pattern>
                 <!--<log.pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</log.pattern>-->
             </properties>
         </profile>

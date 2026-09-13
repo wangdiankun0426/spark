@@ -50,4 +50,9 @@ public class UserQuery extends BaseQuery {
      * 部门id列表
      */
     private List<Long> deptIds;
+
+    /**
+     * 排除id
+     */
+    private Long excludeId;
 }

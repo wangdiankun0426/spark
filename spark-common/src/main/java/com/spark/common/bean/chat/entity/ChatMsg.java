@@ -38,12 +38,12 @@ public class ChatMsg extends BaseEntity {
     /**
      * 签收状态 -1 未签收 1 已签收
      */
-    private Integer signStatus = -1;
+    private Integer signStatus;
 
     /**
      * 阅读状态 -1 未读 1 已读
      */
-    private Integer readStatus = -1;
+    private Integer readStatus;
 
     /**
      * 模型id

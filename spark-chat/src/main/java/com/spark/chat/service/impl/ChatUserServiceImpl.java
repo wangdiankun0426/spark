@@ -48,7 +48,6 @@ public class ChatUserServiceImpl extends BaseService<UserQuery, ChatUserResult> 
 
     /**
      * 分页查询我的聊天用户列表
-     * 先按租户与数据权限分页查用户，再补充会话空间id与未读数
      * @param query 查询条件
      * @return 分页结果
      */
@@ -64,6 +63,7 @@ public class ChatUserServiceImpl extends BaseService<UserQuery, ChatUserResult> 
         if (query == null) {
             query = new UserQuery();
         }
+        query.setExcludeId(SessionHolder.getCurrentUserId());
         query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<ChatUserResult> list = super.pageList(query);
         result.setData(list);

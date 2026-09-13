@@ -50,7 +50,7 @@ public class ChatSpaceController {
     }
 
     /**
-     * 分页查询我的会话列表，支持按接收人与标题检索
+     * 分页查询我的会话列表
      * @param query 查询参数
      * @return 分页结果
      */

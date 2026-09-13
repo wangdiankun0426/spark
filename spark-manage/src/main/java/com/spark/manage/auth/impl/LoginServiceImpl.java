@@ -121,7 +121,7 @@ public class LoginServiceImpl implements ILoginService {
         }
         // 缓存用户登录信息
         Session session = new Session();
-        boolean bo = this.cacheUserLoginInfo(userResult, session);
+        boolean bo = this.cacheUserLoginInfo(userResult, session, loginVO.getLoginPlatform());
         if (!bo) {
             return result;
         }
@@ -130,6 +130,8 @@ public class LoginServiceImpl implements ILoginService {
         loginVO.setTenantId(userResult.getCurrentTenantId());
         try {
             TraceLogUtil.cacheTrackUserId(loginVO.getUserId());
+            TraceLogUtil.cacheTenantId(loginVO.getTenantId());
+            TraceLogUtil.cacheLoginPlatform(LoginPlatformEnum.indexOf(loginVO.getLoginPlatform()).getDesc());
             TraceLogUtil.generateTrackId(UUID.randomUUID().toString().replaceAll("-",""));
             // 记录登录日志
             this.recordLoginLog(loginVO);
@@ -138,6 +140,8 @@ public class LoginServiceImpl implements ILoginService {
         } finally {
             TraceLogUtil.removeTrackId();
             TraceLogUtil.removeUserId();
+            TraceLogUtil.removeTenantId();
+            TraceLogUtil.removeLoginPlatform();
         }
         result.setData(session);
         result.setCode(ResultData.OK);
@@ -195,7 +199,7 @@ public class LoginServiceImpl implements ILoginService {
      */
     private ResultData<Void> checkLoginTypeParam(LoginVO loginVO) {
         ResultData<Void> result = new ResultData<>();
-        if (loginVO == null || loginVO.getLoginType() == null) {
+        if (loginVO == null || loginVO.getLoginType() == null || loginVO.getLoginPlatform() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
@@ -393,9 +397,11 @@ public class LoginServiceImpl implements ILoginService {
     /**
      * 缓存用户登录信息
      * @param userResult 用户信息
+     * @param session 登录会话
+     * @param loginPlatform 登录平台
      * @return  缓存结果
      */
-    private boolean cacheUserLoginInfo(UserResult userResult, Session session) {
+    private boolean cacheUserLoginInfo(UserResult userResult, Session session, Integer loginPlatform) {
         String sessionId = UUID.randomUUID().toString().replaceAll("-","");
         session.setSessionId(sessionId);
         Long tenantId = userResult.getCurrentTenantId();
@@ -403,6 +409,7 @@ public class LoginServiceImpl implements ILoginService {
         session.setUserId(userResult.getId());
         session.setDeptId(userResult.getDeptId());
         session.setAccountType(userResult.getAccountType());
+        session.setLoginPlatform(loginPlatform);
         session.setRoleType(userResult.getRoleType());
         int dataScope = roleDao.queryUserMaxDataScope(tenantId, userResult.getId());
         session.setDataScope(dataScope);

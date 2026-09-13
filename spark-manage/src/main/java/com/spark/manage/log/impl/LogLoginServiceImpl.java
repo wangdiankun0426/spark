@@ -77,29 +77,6 @@ public class LogLoginServiceImpl extends BaseService<LogLoginQuery,LogLoginResul
     }
 
     /**
-     * 分页查询 我的登录记录
-     * @param query 查询参数
-     * @return 列表
-     */
-    @Override
-    public ResultData<PageResult<LogLoginResult>> pageMyLogLoginList(LogLoginQuery query) {
-        ResultData<PageResult<LogLoginResult>> result = new ResultData<>();
-        Long userId = SessionHolder.getCurrentUserId();
-        if (userId == null) {
-            result.setErrorCode(ErrorCodeEnum.NOT_LOGIN);
-            return result;
-        }
-        if (query == null) {
-            query = new LogLoginQuery();
-        }
-        query.setCreatedBy(userId);
-        PageResult<LogLoginResult> list = super.pageList(query);
-        result.setData(list);
-        result.setCode(ResultData.OK);
-        return result;
-    }
-
-    /**
      * 查询条数
      * @param query 查询参数
      * @return 条数

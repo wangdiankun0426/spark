@@ -75,6 +75,10 @@
             <artifactId>layout</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>font-asian</artifactId>
+        </dependency>
+        <dependency>
             <groupId>javax.xml.ws</groupId>
             <artifactId>jaxws-api</artifactId>
         </dependency>

@@ -18,6 +18,7 @@ import com.spark.common.bean.llm.query.ModelQuery;
 import com.spark.common.bean.llm.result.AgentResult;
 import com.spark.common.bean.llm.result.ModelResult;
 import com.spark.common.enums.*;
+import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.dao.llm.ModelDao;
 import com.spark.llm.IAgent;
 import com.spark.llm.agent.AgentFactory;
@@ -30,8 +31,8 @@ import com.spark.llm.model.ModelFactory;
 import com.spark.manage.BaseService;
 import com.spark.chat.service.IChatMsgService;
 import com.spark.chat.service.IChatSpaceService;
+import com.spark.chat.service.UserChannelRel;
 import com.spark.common.utils.CollectionUtil;
-import com.spark.common.utils.JsonUtil;
 import com.spark.common.utils.StringUtil;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
@@ -111,8 +112,12 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         chatMsg.setUpdatedBy(chatMsgVO.getSenderId());
         ObjectTypeEnum objEnum = super.getObjEnum(chatMsgVO.getReceiverId());
         if (chatMsgVO.getSenderId().equals(chatMsgVO.getReceiverId()) || ObjectTypeEnum.AGENT.equals(objEnum)) {
+            // 自己给自己发或发给智能体，无需签收与已读
             chatMsg.setSignStatus(ChatMsgStatusEnum.OK.getValue());
             chatMsg.setReadStatus(ChatMsgStatusEnum.OK.getValue());
+        } else {
+            chatMsg.setSignStatus(ChatMsgStatusEnum.NO.getValue());
+            chatMsg.setReadStatus(ChatMsgStatusEnum.NO.getValue());
         }
         int count = chatMsgDao.insertDB(chatMsg);
         if (count < 1) {
@@ -128,10 +133,10 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
      * 创建agent消息
      * 通过TokenStream实现流式对话，支持thinking/工具调用/结果/回答的分阶段推送
      * @param chatMsgVO 聊天消息
-     * @param findSession WebSocket会话
+     * @param sessions 提问账号的全部在线连接，流式回复广播到所有连接
      */
     @Override
-    public void createAgentChatMsg(ChatMsgVO chatMsgVO, Session findSession) {
+    public void createAgentChatMsg(ChatMsgVO chatMsgVO, List<Session> sessions) {
         if (chatMsgVO == null || chatMsgVO.getSpaceId() == null || chatMsgVO.getSenderId() == null
                 || chatMsgVO.getReceiverId() == null || StringUtil.isBlank(chatMsgVO.getMessage())) {
             logger.error("chatHandler create fail, params no full");
@@ -163,17 +168,24 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
             .beforeToolExecution(beforeTool -> {
                 // 工具调用前：通知前端正在调用哪个工具
                 String toolName = beforeTool.request().name();
-                this.sendThinking(findSession, chatMsg, "正在调用 " + AgentToolEnum.indexOf(toolName).getDesc() + " 工具...\n");
+                String response = "正在调用 " + AgentToolEnum.indexOf(toolName).getDesc() + " 工具...\n";
+                chatMsg.setMessage(response);
+                DataContentVO dataContent = new DataContentVO();
+                dataContent.setAction(MsgActionEnum.THINKING.getValue());
+                dataContent.setChatMsg(chatMsg);
+                UserChannelRel.sendMessage(sessions, dataContent, null);
             })
             .onToolExecuted(toolExecution -> {
                 // 工具调用完成：通知前端工具返回结果
                 String toolName = toolExecution.request().name();
                 String toolResult = toolExecution.result();
-                // 截取工具结果前200字符，避免过长
-                String briefResult = toolResult != null && toolResult.length() > 200
-                        ? toolResult.substring(0, 200) + "..."
-                        : toolResult;
-                this.sendThinking(findSession, chatMsg, "工具 " + AgentToolEnum.indexOf(toolName).getDesc() + " 返回结果：" + briefResult+"\n");
+                String briefResult = (toolResult != null && toolResult.length() > 200) ? toolResult.substring(0, 200) + "..." : toolResult;
+                String response = "工具 " + AgentToolEnum.indexOf(toolName).getDesc() + " 返回结果：" + briefResult+"\n";
+                chatMsg.setMessage(response);
+                DataContentVO dataContent = new DataContentVO();
+                dataContent.setAction(MsgActionEnum.THINKING.getValue());
+                dataContent.setChatMsg(chatMsg);
+                UserChannelRel.sendMessage(sessions, dataContent, null);
             })
             .onPartialResponse(response -> {
                 // 响应中 - 逐块发送并累积
@@ -181,7 +193,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
                 chatMsg.setMessage(response);
                 DataContentVO dataContent = new DataContentVO();
                 dataContent.setChatMsg(chatMsg);
-                this.sendToSession(findSession, dataContent);
+                UserChannelRel.sendMessage(sessions, dataContent, null);
             })
             .onCompleteResponse(completeResponse -> {
                 // 响应完成 - 保存完整消息到数据库
@@ -200,7 +212,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
                     if (CollectionUtil.isNotEmpty(attList)) {
                         dataContent.setReferences(attList);
                     }
-                    this.sendToSession(findSession, dataContent);
+                    UserChannelRel.sendMessage(sessions, dataContent, null);
                 }
                 searchKnowledge.clearReferences(chatMsgVO.getSpaceId());
                 logger.info("llm chat completed for spaceId: {}", chatMsgVO.getSpaceId());
@@ -213,7 +225,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
                 if (count > 0) {
                     DataContentVO dataContent = new DataContentVO();
                     dataContent.setChatMsg(chatMsg);
-                    this.sendToSession(findSession, dataContent);
+                    UserChannelRel.sendMessage(sessions, dataContent, null);
                 }
                 searchKnowledge.clearReferences(chatMsgVO.getSpaceId());
                 logger.error("llm chat error", throwable);
@@ -224,10 +236,10 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
     /**
      * 创建model消息
      * @param chatMsgVO 聊天消息
-     * @param findSession WebSocket会话
+     * @param sessions 提问账号的全部在线连接，流式回复广播到所有连接
      */
     @Override
-    public void createModelChatMsg(ChatMsgVO chatMsgVO, Session findSession) {
+    public void createModelChatMsg(ChatMsgVO chatMsgVO, List<Session> sessions) {
         if (chatMsgVO == null || chatMsgVO.getSpaceId() == null || chatMsgVO.getSenderId() == null
                 || chatMsgVO.getReceiverId() == null || StringUtil.isBlank(chatMsgVO.getMessage())) {
             logger.error("chatHandler create fail, params no full");
@@ -279,7 +291,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
             chatMsg.setMessage(response);
             DataContentVO dataContent = new DataContentVO();
             dataContent.setChatMsg(chatMsg);
-            this.sendToSession(findSession, dataContent);
+            UserChannelRel.sendMessage(sessions, dataContent, null);
         }).doOnComplete(() -> {
             // 响应完成 - 保存完整消息到数据库
             String answer = fullAnswer.toString();
@@ -290,7 +302,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
                 chatMsg.setMessage(answer);
                 DataContentVO dataContent = new DataContentVO();
                 dataContent.setChatMsg(chatMsg);
-                this.sendToSession(findSession, dataContent);
+                UserChannelRel.sendMessage(sessions, dataContent, null);
             }
             logger.info("model chat completed for spaceId: {}", chatMsgVO.getSpaceId());
         }).doOnError(throwable -> {
@@ -301,7 +313,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
             if (count > 0) {
                 DataContentVO dataContent = new DataContentVO();
                 dataContent.setChatMsg(chatMsg);
-                this.sendToSession(findSession, dataContent);
+                UserChannelRel.sendMessage(sessions, dataContent, null);
             }
             logger.error("llm chat error", throwable);
         }).subscribe();
@@ -312,6 +324,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
      * @param chatMsgVO 聊天消息
      * @return 结果
      */
+    @LogPrint
     @Override
     public ResultData<Void> signChatMsg(ChatMsgVO chatMsgVO) {
         ResultData<Void> result = new ResultData<>();
@@ -336,6 +349,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
      * @param chatMsgVO 聊天消息
      * @return 结果
      */
+    @LogPrint
     @Override
     public ResultData<Void> readChatMsg(ChatMsgVO chatMsgVO) {
         ResultData<Void> result = new ResultData<>();
@@ -481,41 +495,6 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
             result.remove(result.size() - 1);
         }
         return result;
-    }
-
-    /**
-     * 通过WebSocket同步发送消息到客户端
-     * @param session WebSocket会话
-     * @param dataContent 消息内容
-     */
-    private void sendToSession(Session session, DataContentVO dataContent) {
-        if (session == null || !session.isOpen()) {
-            return;
-        }
-        synchronized (session) {
-            try {
-                session.getBasicRemote().sendText(JsonUtil.toString(dataContent));
-            } catch (Exception e) {
-                logger.error("send message error", e);
-            }
-        }
-    }
-
-    /**
-     * 发送thinking状态消息到客户端
-     * @param session WebSocket会话
-     * @param chatMsg 聊天消息
-     * @param thinkingText 思考状态文本
-     */
-    private void sendThinking(Session session, ChatMsg chatMsg, String thinkingText) {
-        if (session == null || !session.isOpen()) {
-            return;
-        }
-        chatMsg.setMessage(thinkingText);
-        DataContentVO dataContent = new DataContentVO();
-        dataContent.setAction(MsgActionEnum.THINKING.getValue());
-        dataContent.setChatMsg(chatMsg);
-        this.sendToSession(session, dataContent);
     }
 
     /**
