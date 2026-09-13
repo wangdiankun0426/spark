@@ -263,9 +263,8 @@ function handleNew() {
   padding-top: 60px;
 }
 
-/* 分页加载提示 */
 .picker-more {
-  padding: 12px 0 4px;
+  padding: 12px 0;
   text-align: center;
   font-size: 12px;
   color: #999999;

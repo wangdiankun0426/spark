@@ -5,6 +5,7 @@
     direction="ltr"
     size="30%"
     :before-close="handleClose"
+    :close-on-click-modal="false"
   >
     <el-form :model="form" label-width="auto">
       <el-form-item label="选择文件">

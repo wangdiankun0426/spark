@@ -24,7 +24,7 @@
           </el-menu-item>
           <el-menu-item index="/org/sys/role">
             <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
-              <UserFilled />
+              <Role />
             </el-icon>
             <template #title>角色管理</template>
           </el-menu-item>
@@ -76,6 +76,7 @@
 import {computed} from "vue";
 import {useRoute} from "vue-router";
 import {SetUp} from "@element-plus/icons-vue";
+import Role from "@/assets/icons/role.vue";
 
 const route = useRoute();
 

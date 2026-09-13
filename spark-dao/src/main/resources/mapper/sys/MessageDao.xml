@@ -82,4 +82,39 @@
         <include refid="condition"/>
         limit 1
     </select>
+
+    <sql id="myMessageCondition">
+        and mu.user_id = #{userId}
+        <if test="type != null">
+            and m.type = #{type}
+        </if>
+        <if test="title != null and title != ''">
+            and m.title like concat('%', #{title}, '%')
+        </if>
+        <if test="tenantId != null">
+            and m.tenant_id = #{tenantId}
+        </if>
+        and m.delete_flag = 1
+        and mu.delete_flag = 1
+    </sql>
+
+    <select id="queryMyMessageCount" resultType="java.lang.Integer">
+        select count(1)
+        from sys_message_user mu
+        inner join sys_message m on mu.msg_id = m.id
+        where 1 = 1
+        <include refid="myMessageCondition"/>
+    </select>
+
+    <select id="queryMyMessageList" resultType="com.spark.common.bean.sys.result.MessageResult">
+        select m.id , m.tenant_id, m.type , m.title , m.content , m.ref_id, m.delete_flag , m.created_by , m.created_dt , m.updated_by , m.updated_dt
+        from sys_message_user mu
+        inner join sys_message m on mu.msg_id = m.id
+        where 1 = 1
+        <include refid="myMessageCondition"/>
+        order by m.created_dt desc , m.id desc
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
 </mapper>

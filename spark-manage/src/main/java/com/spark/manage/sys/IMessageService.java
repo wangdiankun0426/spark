@@ -6,8 +6,6 @@ import com.spark.common.bean.sys.vo.MessageVO;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 
-import java.util.List;
-
 /**
  * +++/\_/\
  * + ( °w° )=
@@ -27,10 +25,11 @@ public interface IMessageService {
     ResultData<Void> createMessage(MessageVO messageVO);
 
     /**
-     * 分页我的消息列表
-     * @return 列表
+     * 分页查询我的消息列表
+     * @param query 查询参数
+     * @return 分页结果
      */
-    ResultData<List<MessageResult>> queryMyMessageList();
+    ResultData<PageResult<MessageResult>> pageMyMessageList(MessageQuery query);
 
     /**
      * 分页查询消息列表

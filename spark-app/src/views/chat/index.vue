@@ -719,9 +719,8 @@ function openChatRecord() {
 .chat-header {
   display: flex;
   align-items: center;
-  height: 48px;
   background-color: #0052cc;
-  padding: 0 16px;
+  padding: 16px 16px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
 }

@@ -112,6 +112,7 @@
         :title="taskListTitle"
         direction="ltr"
         size="40%"
+        :close-on-click-modal="false"
     >
       <el-table
           :data="taskList"

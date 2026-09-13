@@ -133,6 +133,7 @@
       direction="ltr"
       size="30%"
       :before-close="handleCloseMessageForm"
+      :close-on-click-modal="false"
   >
     <el-form :model="messageForm" label-width="auto" :rules="messageFormRules" ref="messageFormRef">
       <el-row :gutter="24">
@@ -196,6 +197,7 @@
       title="消息详情"
       direction="ltr"
       size="40%"
+      :close-on-click-modal="false"
   >
     <el-descriptions :column="1" border>
       <el-descriptions-item label="编号">{{ messageDetail.id }}</el-descriptions-item>

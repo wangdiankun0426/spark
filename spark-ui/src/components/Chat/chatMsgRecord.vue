@@ -3,9 +3,10 @@
       v-model="visible"
       :title="title"
       direction="ltr"
-      size="60%"
+      size="80%"
       append-to-body
       class="chat-record-drawer"
+      :close-on-click-modal="false"
   >
     <!-- 检索区 -->
     <div class="record-search">

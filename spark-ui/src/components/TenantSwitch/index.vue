@@ -94,7 +94,6 @@ function handleSwitch(item) {
     }
     drawerVisible.value = false;
     ElMessage.success('已切换至「' + item.name + '」');
-    // 切换后整页刷新，使新默认租户在整个应用中生效
     setTimeout(() => {
       window.location.reload();
     }, 300);

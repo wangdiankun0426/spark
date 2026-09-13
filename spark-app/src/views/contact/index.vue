@@ -169,15 +169,13 @@ function goBack() {
 
 .contact-header {
   flex-shrink: 0;
-  padding: 10px 16px;
+  padding: 16px 16px;
   background-color: #0052cc;
-
   .header-left {
     display: flex;
     align-items: center;
     gap: 12px;
   }
-
   .header-title {
     font-size: 20px;
     font-weight: 600;
@@ -185,7 +183,6 @@ function goBack() {
   }
 }
 
-/* 姓名检索 */
 .contact-search {
   flex-shrink: 0;
   width: 94%;
@@ -209,7 +206,7 @@ function goBack() {
 }
 
 .list-tip {
-  padding: 12px 0 24px;
+  padding: 12px 0 30px;
   text-align: center;
   font-size: 12px;
   color: #999;

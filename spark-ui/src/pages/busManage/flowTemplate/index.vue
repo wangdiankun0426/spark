@@ -39,7 +39,7 @@
       <info-card
           v-for="item in templateList"
           :key="item.id"
-          :icon="Share"
+          :icon="FlowApplication"
           :title="item.name"
           :description="item.remark || '暂无备注'"
           :disabled="item.status !== 1"
@@ -73,6 +73,7 @@
         direction="ltr"
         size="30%"
         :before-close="handleCloseTemplateForm"
+        :close-on-click-modal="false"
     >
       <el-form
           :model="templateForm"
@@ -159,11 +160,12 @@ import {
 } from '@/api/flow/template.js';
 import { queryFormListAPI } from '@/api/form/form.js';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Search, Share, Plus } from '@element-plus/icons-vue';
+import { Search, Plus } from '@element-plus/icons-vue';
 import FormTemplateDrawer from '@/components/FormTemplateDrawer/index.vue';
 import TaskTemplateDrawer from '@/components/TaskTemplateDrawer/index.vue';
 import InfoCard from '@/components/InfoCard/index.vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
+import FlowApplication from "@/assets/icons/flowApplication.vue";
 
 const router = useRouter();
 

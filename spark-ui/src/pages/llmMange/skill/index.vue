@@ -6,7 +6,7 @@
         <div class="skill-header-title">
           技能库
         </div>
-        <div class="skill-header-subtitle">浏览平台沉淀的技能，智能体命中技能时将按其指令执行</div>
+        <div class="skill-header-subtitle">管理沉淀的技能，智能体命中技能时将按其指令执行</div>
       </div>
       <div class="skill-header-right">
         <el-input
@@ -58,27 +58,6 @@
         @current-change="handleCurrentChange"
     />
 
-    <!-- 技能详情抽屉 -->
-    <el-drawer
-        v-model="drawerVisible"
-        :title="currentSkill?.name || ''"
-        direction="ltr"
-        size="50%"
-    >
-      <div v-loading="loading">
-        <template v-if="currentSkill">
-          <el-descriptions :column="2" size="small" border>
-            <el-descriptions-item label="编号">{{ currentSkill.id }}</el-descriptions-item>
-            <el-descriptions-item label="状态">{{ currentSkill.statusName }}</el-descriptions-item>
-            <el-descriptions-item label="描述" :span="2">{{ currentSkill.description }}</el-descriptions-item>
-          </el-descriptions>
-          <el-divider content-position="left">技能内容</el-divider>
-          <v-md-preview v-if="currentSkill.content" :text="currentSkill.content"/>
-          <el-empty v-else description="该技能暂无内容" :image-size="80"/>
-        </template>
-      </div>
-    </el-drawer>
-
     <!-- 新增 / 修改 技能表单抽屉 -->
     <el-drawer
         v-model="formVisible"
@@ -86,6 +65,7 @@
         direction="ltr"
         size="60%"
         :before-close="handleCloseForm"
+        :close-on-click-modal="false"
     >
       <el-form
           :model="form"
@@ -168,17 +148,13 @@ import InfoCard from '@/components/InfoCard/index.vue'
 
 const skills = ref([])
 const total = ref(0)
-const pageSizes = [10, 30, 50]
+const pageSizes = [15, 30, 50]
 const keyword = ref('')
 // 分页查询条件
 const query = ref({
   pageNo: 1,
-  pageSize: 10,
+  pageSize: 15,
 })
-
-const drawerVisible = ref(false)
-const loading = ref(false)
-const currentSkill = ref(null)
 
 // 新增 / 修改 表单
 const formVisible = ref(false)
@@ -266,27 +242,9 @@ function handleCurrentChange(pageNo) {
  */
 function cardActions(skill) {
   return [
-    { key: 'detail', label: '详情', icon: 'View', onClick: () => handleOpenSkill(skill) },
     { key: 'edit', label: '修改', icon: 'Edit', onClick: () => handleOpenUpdateForm(skill) },
     { key: 'delete', label: '删除', icon: 'Delete', onClick: () => handleDelete(skill) }
   ]
-}
-
-/**
- * 打开技能详情抽屉，拉取技能指令全文
- * @param skill
- */
-function handleOpenSkill(skill) {
-  drawerVisible.value = true
-  loading.value = true
-  currentSkill.value = skill
-  querySkillDetailAPI({ id: skill.id }).then(res => {
-    if (res.data) {
-      currentSkill.value = res.data
-    }
-  }).finally(() => {
-    loading.value = false
-  })
 }
 
 /**

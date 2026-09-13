@@ -44,7 +44,7 @@
             </view>
             <up-icon v-if="selectedIds.includes(user.id)" name="checkmark" size="16" color="#0052cc"/>
           </view>
-          <up-loadmore :status="loadStatus"/>
+          <up-loadmore :status="loadStatus" class="picker-loadmore"/>
         </template>
       </scroll-view>
 
@@ -213,9 +213,12 @@ function handleClose() {
 }
 </script>
 <style scoped lang="scss">
-/* uview-plus 弹窗组件根节点自带 flex:1，防止在纵向 flex 布局页面中抢占高度 */
 .user-picker {
   flex: none;
+}
+
+.picker-loadmore {
+  padding-bottom: 12px;
 }
 
 .picker-body {

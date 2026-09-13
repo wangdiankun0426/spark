@@ -32,7 +32,7 @@
       <info-card
           v-for="item in knowledgeList"
           :key="item.id"
-          :icon="Collection"
+          :icon="Knowledge"
           :title="item.name"
           :description="item.description || '暂无描述'"
           :disabled="item.status === 0"
@@ -240,6 +240,25 @@
           />
         </el-form-item>
       </el-form>
+      <el-alert
+          type="info"
+          :closable="false"
+          show-icon
+      >
+        <template #title>
+          <div class="form-tip">
+            <div>名称为必填项，用于在知识库列表中标识与检索；</div>
+            <div>分块策略决定文档切片方式，中文长文本建议按段落或句子分割；</div>
+            <div>子块用于精确检索命中，父块用于命中后回溯更完整的上下文，因此子块大小应小于父块大小；</div>
+            <div>重叠大小表示相邻块之间重复的字符数，用于避免语义被切断，通常取块大小的 10%~20%；</div>
+            <div>向量模型用于文档与问题的向量化，只能选择向量类型模型，更换后已有文档需重新向量化才能被正常检索；</div>
+            <div>排序模型用于对召回结果重排以提升相关性，可不选；</div>
+            <div>向量召回 TopK 表示一次召回候选片段的数量，值越大召回越全但耗时越长；</div>
+            <div>最小相似度低于该值的片段会被丢弃，值越高结果越精准但可能漏召；</div>
+            <div>开启生成 QA 后会在文档处理时额外生成问答对，提升问答命中率，但会增加处理耗时与模型调用量。</div>
+          </div>
+        </template>
+      </el-alert>
       <template #footer>
         <div class="drawer-footer">
           <el-button
@@ -264,21 +283,20 @@ import {
   deleteKnowledgeAPI
 } from '@/api/kb/knowledge.js'
 import { pageModelListAPI } from '@/api/llm/model.js'
-import {
-  Collection, Search, Plus
-} from '@element-plus/icons-vue'
+import {Search, Plus} from '@element-plus/icons-vue'
 import InfoCard from '@/components/InfoCard/index.vue'
+import Knowledge from "@/assets/icons/knowledge.vue";
 
 const router = useRouter()
 
 const knowledgeList = ref([])
 const total = ref(0)
-const pageSizes = [10, 30, 50]
+const pageSizes = [15, 30, 50]
 const keyword = ref('')
 // 分页查询条件
 const query = ref({
   pageNo: 1,
-  pageSize: 10,
+  pageSize: 15,
 })
 
 let searchTimer = null
@@ -570,5 +588,14 @@ function handleDelete(item) {
 
 .drawer-footer {
   padding: 0 $spacing-md;
+}
+
+/* 抽屉底部表单填写说明 */
+.form-tip {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  font-size: 12px;
+  line-height: 1.6;
 }
 </style>

@@ -131,6 +131,10 @@ function handleAction(act) {
 .info-card {
   display: flex;
   flex-direction: column;
+  height: 175px;
+  min-height: 175px;
+  flex-shrink: 0;
+  box-sizing: border-box;
   background-color: $bg-card;
   border: 1px solid $border-color;
   border-radius: $border-radius-md;
@@ -149,11 +153,12 @@ function handleAction(act) {
   align-items: center;
   gap: $spacing-sm;
   padding: $spacing-md $spacing-md 0;
+  flex-shrink: 0;
 }
 
 .info-card-icon {
-  width: 28px;
-  height: 28px;
+  width: 42px;
+  height: 42px;
   flex-shrink: 0;
   border-radius: $border-radius-sm;
   display: flex;
@@ -161,16 +166,15 @@ function handleAction(act) {
   justify-content: center;
   background-color: $color-primary-light;
   color: $color-primary;
-
   .el-icon {
-    font-size: 16px;
+    font-size: 30px;
   }
 }
 
 .info-card-title {
   flex: 1;
   min-width: 0;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: $color-text-primary;
   overflow: hidden;
@@ -199,6 +203,7 @@ function handleAction(act) {
   padding: $spacing-md $spacing-md;
   background-color: #f4f5f7;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .info-card-bar-split {

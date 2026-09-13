@@ -4,9 +4,6 @@
     <div class="graph-header">
       <div class="graph-header-left">
         <div class="graph-header-title">
-          <el-icon class="graph-header-icon">
-            <Connection />
-          </el-icon>
           知识图谱
         </div>
         <div class="graph-header-subtitle">浏览知识图谱的实体与关系 Schema，支撑图谱检索与问答</div>
@@ -24,6 +21,7 @@
         </el-button>
       </div>
     </div>
+
     <!-- 知识图谱卡片网格 -->
     <div
         class="graph-grid"
@@ -31,7 +29,7 @@
       <info-card
           v-for="item in graphList"
           :key="item.id"
-          :icon="Connection"
+          :icon="Graph"
           :title="item.name"
           :description="item.description || '暂无描述'"
           :disabled="item.status === 0"
@@ -45,6 +43,7 @@
         :description="keyword ? '未找到匹配的知识图谱' : '暂无知识图谱'"
         :image-size="120"
     />
+
     <!-- 分页 -->
     <el-pagination
         :current-page="query.pageNo"
@@ -200,6 +199,22 @@
           </el-button>
         </div>
       </el-form>
+      <el-alert
+          type="info"
+          :closable="false"
+          show-icon
+      >
+        <template #title>
+          <div class="form-tip">
+            <div>名称为必填项，用于在知识图谱列表中标识与检索；</div>
+            <div>抽取模型用于从文档中识别实体与它们之间的关系，建议选择语言类型模型；</div>
+            <div>块大小决定每次送入模型抽取的文本长度，过大会超出模型上下文、过小会割裂语义；</div>
+            <div>块重叠用于避免实体或关系正好落在块的边界被切断，通常取块大小的 10%~20%；</div>
+            <div>实体类型与关系类型用于限定抽取结果中允许出现的类别，建议只保留业务真正关注的类型；</div>
+            <div>停用的知识图谱不会参与新文档的抽取。</div>
+          </div>
+        </template>
+      </el-alert>
       <template #footer>
         <div class="drawer-footer">
           <el-button type="primary" @click="handleSubmitForm">保存</el-button>
@@ -221,19 +236,20 @@ import {
   deleteGraphAPI
 } from '@/api/kg/graph.js'
 import { pageModelListAPI } from '@/api/llm/model.js'
-import { Connection, Search, Plus, Delete } from '@element-plus/icons-vue'
+import { Search, Plus, Delete } from '@element-plus/icons-vue'
 import InfoCard from '@/components/InfoCard/index.vue'
+import Graph from "@/assets/icons/graph.vue";
 
 const router = useRouter()
 
 const graphList = ref([])
 const total = ref(0)
-const pageSizes = [10, 30, 50]
+const pageSizes = [15, 30, 50]
 const keyword = ref('')
 // 分页查询条件
 const query = ref({
   pageNo: 1,
-  pageSize: 10,
+  pageSize: 15,
 })
 
 let searchTimer = null
@@ -571,11 +587,6 @@ function handleDelete(item) {
   color: $color-text-primary;
 }
 
-.graph-header-icon {
-  font-size: 24px;
-  color: $color-primary;
-}
-
 .graph-header-subtitle {
   font-size: 13px;
   color: $color-text-secondary;
@@ -601,6 +612,15 @@ function handleDelete(item) {
 
 .drawer-footer {
   padding: 0 $spacing-md;
+}
+
+/* 抽屉底部表单填写说明 */
+.form-tip {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .schema-edit-wrapper {

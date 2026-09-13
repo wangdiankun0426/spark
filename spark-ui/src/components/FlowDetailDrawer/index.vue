@@ -5,6 +5,7 @@
       direction="ltr"
       size="100%"
       :before-close="handleClose"
+      :close-on-click-modal="false"
   >
     <el-tabs v-model="tabActive">
       <el-tab-pane label="表单详情" name="form">

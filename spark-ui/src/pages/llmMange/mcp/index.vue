@@ -30,7 +30,7 @@
       <info-card
           v-for="item in mcpList"
           :key="item.id"
-          :icon="Connection"
+          :icon="Mcp"
           :title="item.name"
           :description="item.description || '暂无描述'"
           :disabled="item.status !== 1"
@@ -56,32 +56,6 @@
         @current-change="handleCurrentChange"
     />
 
-    <!-- MCP 详情抽屉 -->
-    <el-drawer
-        v-model="detailVisible"
-        :title="current?.name || 'MCP 服务详情'"
-        direction="ltr"
-        size="40%"
-    >
-      <template v-if="current">
-        <el-descriptions :column="1" size="small" border>
-          <el-descriptions-item label="编号">{{ current.id }}</el-descriptions-item>
-          <el-descriptions-item label="状态">
-            {{ current.statusName }}
-          </el-descriptions-item>
-          <el-descriptions-item label="厂商">{{ current.providerName }}</el-descriptions-item>
-          <el-descriptions-item label="传输类型">{{ current.transportName || current.transport }}</el-descriptions-item>
-          <el-descriptions-item label="连接信息">
-            <span v-if="current.transport === 1">{{ current.command || '-' }}</span>
-            <span v-else-if="current.transport === 2">{{ current.url || '-' }}</span>
-            <span v-else>-</span>
-          </el-descriptions-item>
-          <el-descriptions-item label="超时(秒)">{{ current.timeout }}</el-descriptions-item>
-          <el-descriptions-item label="描述">{{ current.description || '暂无描述' }}</el-descriptions-item>
-        </el-descriptions>
-      </template>
-    </el-drawer>
-
     <!-- 新增 / 修改 MCP 服务表单抽屉 -->
     <el-drawer
         v-model="formVisible"
@@ -89,6 +63,7 @@
         direction="ltr"
         size="40%"
         :before-close="handleCloseForm"
+        :close-on-click-modal="false"
     >
       <el-form
           ref="formRef"
@@ -253,22 +228,19 @@ import {
   testConnectionMcpAPI
 } from '@/api/llm/mcp.js'
 import { pageProviderListAPI } from '@/api/llm/provider.js'
-import { Connection, Search, Plus, Delete } from '@element-plus/icons-vue'
+import { Search, Plus, Delete } from '@element-plus/icons-vue'
 import InfoCard from '@/components/InfoCard/index.vue'
+import Mcp from "@/assets/icons/mcp.vue";
 
 const mcpList = ref([])
 const total = ref(0)
-const pageSizes = [10, 30, 50]
+const pageSizes = [15, 30, 50]
 const keyword = ref('')
 // 分页查询条件
 const query = ref({
   pageNo: 1,
-  pageSize: 10,
+  pageSize: 15,
 })
-
-// 详情抽屉
-const detailVisible = ref(false)
-const current = ref(null)
 
 // 表单
 const formVisible = ref(false)
@@ -350,10 +322,10 @@ function validateProviderId(rule, value, callback) {
 }
 
 /**
- * 加载厂商选项列表（一次性拉取全量）
+ * 加载厂商选项列表
  */
 function loadProviderOptions() {
-  pageProviderListAPI({ pageNo: 1, pageSize: 1000 }).then(res => {
+  pageProviderListAPI({ page: false }).then(res => {
     if (res.code === 200 && res.data) {
       providerOptions.value = res.data.rows || []
     }
@@ -404,7 +376,6 @@ function handleCurrentChange(pageNo) {
  */
 function cardActions(item) {
   return [
-    { key: 'detail', label: '详情', icon: 'View', onClick: () => handleOpenDetail(item) },
     {
       key: 'test',
       label: '测试',
@@ -415,15 +386,6 @@ function cardActions(item) {
     { key: 'edit', label: '修改', icon: 'Edit',onClick: () => handleOpenUpdate(item) },
     { key: 'delete', label: '删除',icon: 'Delete', onClick: () => handleDelete(item) }
   ]
-}
-
-/**
- * 打开详情抽屉
- * @param item
- */
-function handleOpenDetail(item) {
-  current.value = item
-  detailVisible.value = true
 }
 
 /**

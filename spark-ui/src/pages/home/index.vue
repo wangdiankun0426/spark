@@ -12,7 +12,7 @@
           <div class="home-menu-group">AI</div>
           <el-menu-item index="/home/aichat">
             <el-icon style="font-size: 24px;">
-              <Aichat/>
+              <AiChat/>
             </el-icon>
             <template #title>AIChat</template>
           </el-menu-item>
@@ -87,8 +87,7 @@ import MyTodo from "@/assets/icons/myTodo.vue";
 import MyDone from "@/assets/icons/myDone.vue";
 import CopyMe from "@/assets/icons/copyMe.vue";
 import Chat from "@/assets/icons/chat.vue";
-import Flow from "@/assets/icons/flow.vue";
-import Aichat from "@/assets/icons/aichat.vue";
+import AiChat from "@/assets/icons/aichat.vue";
 import Workflow from "@/assets/icons/workflow.vue";
 const route = useRoute();
 

@@ -3,22 +3,28 @@
     <!-- 顶部欢迎卡片 -->
     <view class="welcome-card">
       <view class="welcome-top">
-        <user-avatar type="user" :userId="userInfo.id" :name="userInfo.name" :size="100"/>
+        <user-avatar
+            type="user"
+            :userId="userInfo.id"
+            :name="userInfo.name"
+            :size="100"
+        />
         <view class="welcome-info">
           <text class="welcome-greeting">Hello {{ userInfo.name }}，{{ greeting }}</text>
-          <text class="welcome-slogan">欢迎使用星火云应用平台，聚微光成智，燃无限可能</text>
+          <text class="welcome-slogan">欢迎使用星火云应用平台，聚微光成智，燃无限可能！</text>
         </view>
       </view>
     </view>
 
     <!-- 滚动内容区 -->
     <view class="home-scroll-body">
-      <view class="section-box" v-for="section in sections" :key="section.key">
+      <view
+          class="section-box"
+          v-for="section in sections"
+          :key="section.key"
+      >
         <view class="section-head" @click="handleSectionMore(section.key)">
           <view class="section-head-left">
-            <view class="section-icon">
-              <up-icon :name="section.icon" size="16" color="#ffffff"></up-icon>
-            </view>
             <text class="section-title">{{ section.title }}</text>
           </view>
           <up-icon name="arrow-right" size="18" color="#b3b3b3"></up-icon>
@@ -220,7 +226,7 @@ function loadChatModelList() {
         .map(row => ({
           id: row.id,
           name: row.name,
-          meta: row.providerName || '未知厂商',
+          meta: row.providerName ? '厂商：' + row.providerName : '未知厂商',
           iconStyle: pickIconStyle(row.id),
           raw: row
         }))
@@ -242,7 +248,7 @@ function loadAgentList() {
     const items = (res.data.rows || []).map(row => ({
       id: row.id,
       name: row.name,
-      meta: row.statusName || '',
+      meta: row.description || '暂无备注',
       iconStyle: pickIconStyle(row.id),
       raw: row
     }))
@@ -265,6 +271,7 @@ function loadWorkflowList() {
       id: row.id,
       name: row.templateName || row.name || '未命名工作流',
       meta: row.statusName || '',
+      meta2: row.createdDt || '',
       iconStyle: pickIconStyle(row.id),
       raw: row
     }))
@@ -349,18 +356,23 @@ function handleOnTabChange(index) {
   flex: 1;
   min-width: 0;
   margin-left: 10px;
+  line-height: 1.5;
+  letter-spacing: 1.0px;
 }
 .welcome-greeting {
   font-size: 16px;
-  font-weight: 600;
-  display: block;
+  font-weight: 700;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
   margin-bottom: 4px;
-  line-height: 1.4;
 }
 .welcome-slogan {
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.75);
-  line-height: 1.5;
 }
 
 /* 滚动内容区 */
@@ -398,18 +410,6 @@ function handleOnTabChange(index) {
 .section-head-left {
   display: flex;
   align-items: center;
-}
-
-.section-icon {
-  width: 24px;
-  height: 24px;
-  margin-right: 8px;
-  border-radius: 7px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-image: linear-gradient(135deg, #0052cc, #1890ff);
-  box-shadow: 0 2px 6px rgba(0, 82, 204, 0.16);
 }
 
 .section-title {

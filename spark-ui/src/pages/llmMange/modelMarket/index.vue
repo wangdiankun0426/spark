@@ -113,9 +113,24 @@
           <div class="model-toolbar-actions">
             <el-radio-group v-model="modelTypeFilter" size="small">
               <el-radio-button :label="0">全部</el-radio-button>
-              <el-radio-button :label="1">语言模型</el-radio-button>
-              <el-radio-button :label="2">向量模型</el-radio-button>
-              <el-radio-button :label="3">排序模型</el-radio-button>
+              <el-radio-button :label="1">
+                <el-icon class="model-type-icon">
+                  <ModelLanguage/>
+                </el-icon>
+                语言模型
+              </el-radio-button>
+              <el-radio-button :label="2">
+                <el-icon class="model-type-icon">
+                  <ModelVector/>
+                </el-icon>
+                向量模型
+              </el-radio-button>
+              <el-radio-button :label="3">
+                <el-icon class="model-type-icon">
+                  <ModelRank/>
+                </el-icon>
+                排序模型
+              </el-radio-button>
             </el-radio-group>
           </div>
         </div>
@@ -161,6 +176,7 @@
         direction="ltr"
         size="30%"
         :before-close="handleCloseProviderForm"
+        :close-on-click-modal="false"
     >
       <el-form
           :model="providerForm"
@@ -229,6 +245,21 @@
           />
         </el-form-item>
       </el-form>
+      <el-alert
+          type="info"
+          :closable="false"
+          show-icon
+      >
+        <template #title>
+          <div class="form-tip">
+            <div>厂商名称建议与官方名称保持一致，会展示在模型选择列表中；</div>
+            <div>厂商图标填图标 URL 或图标标识，用于列表中的品牌展示；</div>
+            <div>API 地址为该厂商的接口基址，需带协议头，如 https://api.openai.com；</div>
+            <div>密钥为调用该厂商模型所用的 API Key，请确保其具备模型调用权限，保存后以密文回显；</div>
+            <div>排序用于控制厂商在列表中的展示顺序。</div>
+          </div>
+        </template>
+      </el-alert>
       <template #footer>
         <div class="drawer-footer">
           <el-button type="primary" @click="handleSubmitProviderForm">保存</el-button>
@@ -244,6 +275,7 @@
         direction="ltr"
         size="30%"
         :before-close="handleCloseModelForm"
+        :close-on-click-modal="false"
     >
       <el-form
           :model="modelForm"
@@ -338,6 +370,21 @@
           />
         </el-form-item>
       </el-form>
+      <el-alert
+          type="info"
+          :closable="false"
+          show-icon
+      >
+        <template #title>
+          <div class="form-tip">
+            <div>供应商决定调用该模型时使用的 API 地址与密钥，需先在「模型厂商」中完成配置；</div>
+            <div>模型名称必须与厂商接口中的模型标识完全一致（如 gpt-4、deepseek-chat），否则调用会失败；</div>
+            <div>模型类型决定用途：语言模型用于对话与信息抽取，向量模型用于知识库向量化，排序模型用于召回结果重排；</div>
+            <div>思考模式与温度参数仅对语言模型生效，温度值越大回答越发散、越小越稳定；</div>
+            <div>停用的模型不会出现在知识库、智能体等功能的模型可选列表中。</div>
+          </div>
+        </template>
+      </el-alert>
       <template #footer>
         <div class="drawer-footer">
           <el-button type="primary" @click="handleSubmitModelForm">保存</el-button>
@@ -366,9 +413,10 @@ import {
   queryProviderDetailAPI
 } from '@/api/llm/provider.js'
 import InfoCard from '@/components/InfoCard/index.vue'
-import {
-  Search, Cpu, Grid, Collection, Histogram, Box, Plus, MoreFilled, Delete
-} from '@element-plus/icons-vue'
+import {Search, Grid, Collection, Plus, MoreFilled, Delete} from '@element-plus/icons-vue'
+import ModelLanguage from "@/assets/icons/modelLanguage.vue";
+import ModelVector from "@/assets/icons/modelVector.vue";
+import ModelRank from "@/assets/icons/ModelRank.vue";
 
 const loading = ref(false)
 const keyword = ref('')
@@ -376,11 +424,11 @@ const modelTypeFilter = ref(0)
 const providerList = ref([])
 const modelList = ref([])
 const total = ref(0)
-const pageSizes = [8, 16, 32]
+const pageSizes = [12, 24, 48]
 // 分页查询条件
 const query = ref({
   pageNo: 1,
-  pageSize: 8,
+  pageSize: 12,
 })
 const activeProviderId = ref(null)
 
@@ -411,7 +459,7 @@ watch(keyword, () => {
 })
 
 /**
- * 模型类型切换，回到第一页并立即重新检索
+ * 模型类型切换
  */
 watch(modelTypeFilter, () => {
   query.value.pageNo = 1
@@ -719,7 +767,6 @@ function handleSubmitModelForm() {
       providerId: modelForm.value.providerId,
       type: modelForm.value.type,
       name: modelForm.value.name,
-      // 思考模式仅语言模型使用
       enableThinking: modelForm.value.type === 1 ? modelForm.value.enableThinking : -1,
       temperature: modelForm.value.temperature,
       status: modelForm.value.status,
@@ -749,7 +796,6 @@ function handleDeleteModel(model) {
     deleteModelAPI({ id: model.id }).then(res => {
       if (res.code !== 200) return
       ElMessage.success('删除模型成功')
-      // 删除当前页最后一条时回退上一页，避免停留在空页
       if (modelList.value.length === 1 && query.value.pageNo > 1) {
         query.value.pageNo -= 1
       }
@@ -774,9 +820,9 @@ function cardActions(model) {
  * @param model
  */
 function getIcon(model) {
-  if (model.type === 1) return Cpu
-  if (model.type === 2) return Histogram
-  return Box
+  if (model.type === 1) return ModelLanguage
+  if (model.type === 2) return ModelVector
+  return ModelRank
 }
 
 /**
@@ -874,7 +920,6 @@ function handleProviderCommand(command, provider) {
   opacity: 1;
 }
 
-/* 「···」更多操作：点开菜单里是 修改 / 删除，避免行内堆两个按钮 */
 .p-more {
   display: flex;
   align-items: center;
@@ -897,6 +942,14 @@ function handleProviderCommand(command, provider) {
   display: flex;
   justify-content: flex-end;
   gap: $spacing-sm;
+}
+
+.form-tip {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .provider-list {
@@ -1022,5 +1075,11 @@ function handleProviderCommand(command, provider) {
   display: flex;
   align-items: center;
   gap: $spacing-sm;
+}
+
+.model-type-icon {
+  margin-right: 4px;
+  font-size: 16px;
+  vertical-align: -3px;
 }
 </style>

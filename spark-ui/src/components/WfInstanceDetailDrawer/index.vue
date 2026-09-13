@@ -5,6 +5,7 @@
       direction="ltr"
       size="50%"
       append-to-body
+      :close-on-click-modal="false"
   >
     <template v-if="detail">
       <div

@@ -6,7 +6,7 @@
         <div class="agent-header-title">
           AGENT
         </div>
-        <div class="agent-header-subtitle">管理自定义agent</div>
+        <div class="agent-header-subtitle">管理自定义的智能体，根据不同业务产生面向不同用户的智能体</div>
       </div>
       <div class="agent-header-right">
         <el-input
@@ -32,7 +32,7 @@
       <info-card
           v-for="agent in agents"
           :key="agent.id"
-          :icon="MagicStick"
+          :icon="Agent"
           :title="agent.name"
           :description="agent.description || '暂无描述'"
           :disabled="agent.status !== 1"
@@ -65,6 +65,7 @@
         direction="ltr"
         size="40%"
         :before-close="handleCloseForm"
+        :close-on-click-modal="false"
     >
       <el-form
           :model="form"
@@ -253,17 +254,18 @@ import { pageKnowledgeListAPI } from '@/api/kb/knowledge.js'
 import { pageGraphListAPI } from '@/api/kg/graph.js'
 import { pageMcpListAPI } from '@/api/llm/mcp.js'
 import { pageSkillListAPI } from '@/api/llm/skill.js'
-import { MagicStick, Search, Plus } from '@element-plus/icons-vue'
+import { Search, Plus } from '@element-plus/icons-vue'
 import InfoCard from '@/components/InfoCard/index.vue'
+import Agent from "@/assets/icons/agent.vue";
 
 const agents = ref([])
 const total = ref(0)
-const pageSizes = [10, 30, 50]
+const pageSizes = [15, 30, 50]
 const keyword = ref('')
 // 分页查询条件
 const query = ref({
   pageNo: 1,
-  pageSize: 10,
+  pageSize: 15,
 })
 
 // 新增 / 修改 表单
@@ -391,7 +393,7 @@ function cardActions(agent) {
 }
 
 /**
- * 加载语言模型选项列表（仅查询语言模型类型）
+ * 加载语言模型选项列表
  */
 function loadModelOptions() {
   pageModelListAPI({ page: false, type: 1 }).then(res => {
@@ -402,7 +404,7 @@ function loadModelOptions() {
 }
 
 /**
- * 加载知识库选项列表（一次性拉取全量）
+ * 加载知识库选项列表
  */
 function loadKbOptions() {
   pageKnowledgeListAPI({ page: false }).then(res => {
@@ -413,7 +415,7 @@ function loadKbOptions() {
 }
 
 /**
- * 加载知识图谱选项列表（一次性拉取全量）
+ * 加载知识图谱选项列表
  */
 function loadGraphOptions() {
   pageGraphListAPI({ page: false }).then(res => {
@@ -424,7 +426,7 @@ function loadGraphOptions() {
 }
 
 /**
- * 加载 MCP 服务选项列表（一次性拉取全量）
+ * 加载 MCP 服务选项列表
  */
 function loadMcpOptions() {
   pageMcpListAPI({ page: false }).then(res => {

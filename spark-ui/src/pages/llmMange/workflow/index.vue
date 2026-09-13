@@ -35,7 +35,7 @@
       <info-card
           v-for="item in workflowList"
           :key="item.id"
-          :icon="MagicStick"
+          :icon="Workflow"
           :title="item.name"
           :description="item.description || '暂无描述'"
           :disabled="item.status !== 1"
@@ -66,6 +66,7 @@
         direction="ltr"
         size="30%"
         :before-close="handleCloseForm"
+        :close-on-click-modal="false"
     >
       <el-form :model="form" label-width="auto" :rules="formRules" ref="formRef">
         <el-form-item label="名称" prop="name">
@@ -90,6 +91,20 @@
           />
         </el-form-item>
       </el-form>
+      <el-alert
+          type="info"
+          :closable="false"
+          show-icon
+      >
+        <template #title>
+          <div class="form-tip">
+            <div>名称为必填项，用于在工作流列表中标识与检索；</div>
+            <div>输入表单决定启动该工作流时需要用户填写的字段，请选择与该流程业务匹配的表单；</div>
+            <div>描述建议写清该工作流的业务用途与适用场景，便于他人识别；</div>
+            <div>停用的工作流不会出现在可启动列表中，已启动的实例不受影响。</div>
+          </div>
+        </template>
+      </el-alert>
       <template #footer>
         <div class="drawer-footer">
           <el-button type="primary" @click="handleSubmitForm">保存</el-button>
@@ -120,17 +135,18 @@ import {
 import { queryFormListAPI } from '@/api/form/form.js';
 import FormTemplateDrawer from '@/components/FormTemplateDrawer/index.vue';
 import InfoCard from '@/components/InfoCard/index.vue';
-import { MagicStick, Search, Plus } from '@element-plus/icons-vue';
+import { Search, Plus } from '@element-plus/icons-vue';
+import Workflow from "@/assets/icons/workflow.vue";
 
 const router = useRouter();
 const keyword = ref('');
 const workflowList = ref([]);
 const total = ref(0);
-const pageSizes = [10, 30, 50];
+const pageSizes = [15, 30, 50];
 // 分页查询条件
 const query = ref({
   pageNo: 1,
-  pageSize: 10,
+  pageSize: 15,
 });
 
 // 新增/修改表单
@@ -409,5 +425,14 @@ function handleDelete(item) {
   display: flex;
   justify-content: flex-end;
   gap: $spacing-sm;
+}
+
+/* 抽屉底部表单填写说明 */
+.form-tip {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  font-size: 12px;
+  line-height: 1.6;
 }
 </style>

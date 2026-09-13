@@ -3,7 +3,12 @@
     <!-- 顶部标题栏 -->
     <view class="detail-header">
       <view class="header-left" @click="goBack">
-        <up-icon name="arrow-left" size="20" color="#fff"></up-icon>
+        <up-icon
+            name="arrow-left"
+            size="20"
+            color="#fff">
+
+        </up-icon>
         <text class="header-title">运行详情</text>
       </view>
     </view>
@@ -276,16 +281,14 @@ function goBack() {
 }
 
 .detail-header {
-  padding: 10px 16px;
+  padding: 16px 16px;
   background-color: #0052cc;
   flex-shrink: 0;
-
   .header-left {
     display: flex;
     align-items: center;
     gap: 12px;
   }
-
   .header-title {
     font-size: 20px;
     font-weight: 600;
@@ -321,7 +324,6 @@ function goBack() {
 
 .detail-section {
   margin-bottom: 24px;
-
   &:last-child {
     margin-bottom: 0;
   }

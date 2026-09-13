@@ -1,12 +1,12 @@
 <template>
   <div class="safe-area-page">
-    <up-navbar
-        title="修改头像"
-        bgColor="#0052cc"
-        titleColor="#ffffff"
-        leftIconColor="#ffffff"
-        @leftClick="onClickLeft"
-    />
+    <!-- 顶部标题栏 -->
+    <view class="update-avatar-header">
+      <view class="header-left" @click="onClickLeft">
+        <up-icon name="arrow-left" size="20" color="#fff"></up-icon>
+        <text class="header-title">修改头像</text>
+      </view>
+    </view>
 
     <div class="update-avatar-form">
       <up-form>
@@ -84,8 +84,20 @@ function beforeRead(file) {
 }
 </script>
 <style scoped lang="scss">
-:deep(.u-navbar__content__title) {
-  color: #ffffff !important;
+.update-avatar-header {
+  flex-shrink: 0;
+  padding: 16px 16px;
+  background-color: #0052cc;
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #ffffff;
+  }
 }
 .update-avatar-form {
   padding-top: 50px;

@@ -5,6 +5,7 @@
       direction="ltr"
       size="100%"
       @close="handleClose"
+      :close-on-click-modal="false"
   >
     <div v-if="workflow">
       <form-view

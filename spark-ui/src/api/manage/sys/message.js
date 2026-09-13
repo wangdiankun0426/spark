@@ -5,9 +5,9 @@ import request from '@/api/request.js'
  * @param query 查询参数
  * @returns {Promise<AxiosResponse<any>>}
  */
-export function queryMyMessageListAPI(query) {
+export function pageMyMessageListAPI(query) {
     return request({
-        url: '/sys/message/myList',
+        url: '/sys/message/pageMyList',
         method: 'get',
         params: query
     })

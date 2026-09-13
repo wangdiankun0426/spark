@@ -1,12 +1,13 @@
 <template>
   <div class="safe-area-page">
-    <up-navbar
-        title="修改密码"
-        bgColor="#0052cc"
-        titleColor="#ffffff"
-        leftIconColor="#ffffff"
-        @leftClick="onClickLeft"
-    />
+    <!-- 顶部标题栏 -->
+    <view class="update-password-header">
+      <view class="header-left" @click="onClickLeft">
+        <up-icon name="arrow-left" size="20" color="#fff"></up-icon>
+        <text class="header-title">修改密码</text>
+      </view>
+    </view>
+
     <div class="update-password-form">
     <up-form>
       <up-form-item
@@ -17,19 +18,23 @@
       </up-form-item>
       <up-form-item
           label-width="100px"
-          label="原密码"
+          label="新密码"
       >
         <up-input v-model="passwordForm.newPassword" placeholder="请输入新密码" border="bottom"/>
       </up-form-item>
       <up-form-item
           label-width="100px"
-          label="原密码"
+          label="确认密码"
       >
         <up-input v-model="passwordForm.verifyPassword" placeholder="请填写确认密码" border="bottom"/>
       </up-form-item>
       <div>
-        <up-button type="primary" @click="submitPasswordForm">
-          保存
+        <up-button
+            class="update-password-button"
+            type="primary"
+            @click="submitPasswordForm"
+        >
+          <text class="update-password-text">保 存</text>
         </up-button>
       </div>
     </up-form>
@@ -42,6 +47,10 @@ import {getEncryptKeyAPI} from "@/api/auth/login.js";
 import {des} from "@/utils/encryptUtil";
 import {ref} from 'vue';
 import {toast} from "uview-plus";
+
+// 密码长度范围：与注册页保持一致
+const PASSWORD_MIN_LENGTH = 6
+const PASSWORD_MAX_LENGTH = 20
 
 const passwordForm = ref({
   oldPassword: undefined,
@@ -66,9 +75,45 @@ function equalToPassword(value) {
 }
 
 /**
+ * 校验改密表单参数，不通过时提示并阻断提交
+ * @returns {boolean} 是否通过校验
+ */
+function validatePasswordForm() {
+  const {oldPassword, newPassword, verifyPassword} = passwordForm.value;
+  if (!oldPassword) {
+    toast('请输入原密码');
+    return false;
+  }
+  if (!newPassword) {
+    toast('请输入新密码');
+    return false;
+  }
+  if (newPassword.length < PASSWORD_MIN_LENGTH || newPassword.length > PASSWORD_MAX_LENGTH) {
+    toast('密码长度为' + PASSWORD_MIN_LENGTH + '-' + PASSWORD_MAX_LENGTH + '个字符');
+    return false;
+  }
+  if (newPassword === oldPassword) {
+    toast('新密码不能与原密码相同');
+    return false;
+  }
+  if (!verifyPassword) {
+    toast('请再次输入密码');
+    return false;
+  }
+  if (!equalToPassword(verifyPassword)) {
+    toast('两次输入密码不一致');
+    return false;
+  }
+  return true;
+}
+
+/**
  * 提交修改密码表单
  */
 async function submitPasswordForm() {
+  if (!validatePasswordForm()) {
+    return;
+  }
   // 申请一次性加密密钥，本次改密两个字段共用
   const keyResult = await getEncryptKeyAPI();
   if (keyResult.code !== 200) {
@@ -88,12 +133,39 @@ async function submitPasswordForm() {
 }
 </script>
 <style scoped lang="scss">
-:deep(.u-navbar__content__title) {
-  color: #ffffff !important;
+.update-password-header {
+  flex-shrink: 0;
+  padding: 16px 16px;
+  background-color: #0052cc;
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #ffffff;
+  }
 }
 .update-password-form{
-  padding-top: 50px;
+  padding-top: 20px;
   width: 90%;
   margin: auto;
+}
+.update-password-button {
+  width: 100%;
+  height: 80rpx;
+  border-radius: 12rpx;
+  background-color: #004fc5 !important;
+  background-image: linear-gradient(90deg, #004fc5 0%, #0072e0 100%);
+  box-shadow: 0 12rpx 28rpx rgba(0, 79, 197, 0.28);
+  margin-top: calc(100vh - 360px);
+}
+.update-password-text {
+  font-size: 32rpx;
+  font-weight: 700;
+  letter-spacing: 4rpx;
+  color: #ffffff;
 }
 </style>

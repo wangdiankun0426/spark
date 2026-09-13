@@ -135,6 +135,7 @@
       direction="ltr"
       size="30%"
       :before-close="handleCloseNoticeForm"
+      :close-on-click-modal="false"
   >
     <el-form :model="noticeForm" label-width="auto" :rules="noticeFormRules" ref="noticeFormRef">
       <el-row :gutter="24">

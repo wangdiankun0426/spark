@@ -4,6 +4,7 @@
       title="文件事件"
       direction="ltr"
       size="30%"
+      :close-on-click-modal="false"
   >
     <div class="drawer-tips">
       提示：图标为"成功"表示事件已完成，"警告"表示事件未完成或处理中。分块、索引与向量化事件需等待内容提取事件完成后才会触发，如长时间未完成请联系管理员。

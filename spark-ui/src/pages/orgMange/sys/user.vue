@@ -180,6 +180,7 @@
       direction="ltr"
       size="30%"
       :before-close="closeUserForm"
+      :close-on-click-modal="false"
   >
     <el-form :model="userForm" label-width="auto" :rules="userFormRules" ref="userFormRef">
       <el-form-item label="用户名" prop="name">

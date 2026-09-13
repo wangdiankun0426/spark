@@ -119,6 +119,7 @@
       direction="ltr"
       size="40%"
       :before-close="closeRoleForm"
+      :close-on-click-modal="false"
   >
     <el-form ref="roleFormRef" :model="roleForm" :rules="roleFormRules" label-width="80px">
       <el-form-item label="角色名称" prop="name">

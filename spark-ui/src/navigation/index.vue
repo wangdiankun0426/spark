@@ -32,6 +32,28 @@
             <Moon v-else />
           </el-icon>
         </div>
+        <!-- 国际化 -->
+        <el-dropdown trigger="click" @command="handleLocaleChange">
+          <div class="tool-item" title="切换语言">
+            <span class="tool-item-text">中</span>
+          </div>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="zh-CN">简体中文</el-dropdown-item>
+              <el-dropdown-item command="en-US">English</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+        <!-- 全屏 -->
+        <div class="tool-item"
+             :title="isFullscreen ? '退出全屏' : '全屏'"
+             @click="toggleFullscreen"
+        >
+          <el-icon style="font-size: 20px">
+            <Aim v-if="isFullscreen" />
+            <FullScreen v-else />
+          </el-icon>
+        </div>
         <!-- 消息 -->
         <el-popover
             trigger="click"
@@ -47,7 +69,7 @@
           </template>
           <el-tabs v-model="navMessageTab" class="nav-message-tabs">
             <el-tab-pane label="消息" name="message">
-              <div class="nav-message-body">
+              <div class="nav-message-body" @scroll="handleMessageScroll">
                 <el-timeline v-if="messageList.length">
                   <el-timeline-item
                       v-for="(item, i) in messageList"
@@ -64,7 +86,6 @@
                         {{ item.title }}
                       </el-tag>
                       <p class="nav-message-content">{{ item.content }}</p>
-                      <!-- 可跳转消息提供显式详情入口 -->
                       <div v-if="isClickableMessage(item.refId)" class="nav-message-detail">
                         <span>详情</span>
                         <el-icon><Right /></el-icon>
@@ -73,6 +94,10 @@
                   </el-timeline-item>
                 </el-timeline>
                 <el-empty v-else description="暂无消息" :image-size="60"/>
+                <!-- 分页加载提示 -->
+                <div v-if="messageList.length && messageTipText" class="nav-message-tip">
+                  {{ messageTipText }}
+                </div>
               </div>
             </el-tab-pane>
             <el-tab-pane label="公告" name="notice">
@@ -106,9 +131,25 @@
           </div>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item @click="openUserInfoForm">个人中心</el-dropdown-item>
-              <el-dropdown-item @click="openTenantSwitch">切换租户</el-dropdown-item>
-              <el-dropdown-item @click="handleLogout">退出系统</el-dropdown-item>
+              <!--当前登录用户信息-->
+              <div class="user-dropdown-header">
+                <div class="user-dropdown-name">{{ userInfo.name }}</div>
+              </div>
+              <el-dropdown-item
+                  @click="openUserInfoForm"
+              >
+                <el-icon class="user-menu-icon"><User /></el-icon>个人中心
+              </el-dropdown-item>
+              <el-dropdown-item
+                  @click="openTenantSwitch"
+              >
+                <el-icon class="user-menu-icon"><OfficeBuilding /></el-icon>切换租户
+              </el-dropdown-item>
+              <el-dropdown-item
+                  @click="handleLogout"
+              >
+                <el-icon class="user-menu-icon"><SwitchButton /></el-icon>退出系统
+              </el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -125,11 +166,11 @@
 
 <script setup>
 import {logoutAPI} from "@/api/manage/auth/login.js";
-import {queryMyMessageListAPI} from "@/api/manage/sys/message.js";
+import {pageMyMessageListAPI} from "@/api/manage/sys/message.js";
 import {noticeListAPI} from "@/api/manage/sys/notice.js";
-import {ElMessageBox} from "element-plus";
-import {ref, computed, nextTick, watch} from "vue";
-import {ArrowDown, Setting, Moon, Sunny, Right} from "@element-plus/icons-vue";
+import {ElMessage, ElMessageBox} from "element-plus";
+import {ref, computed, onMounted, onUnmounted} from "vue";
+import {ArrowDown, Setting, Moon, Sunny, Right, FullScreen, Aim, User, OfficeBuilding, SwitchButton} from "@element-plus/icons-vue";
 import { useRouter, useRoute } from 'vue-router';
 import {useStore} from "vuex";
 import {getTheme, applyTheme, setTheme} from '@/utils/themeUtil';
@@ -156,6 +197,44 @@ function toggleTheme() {
   setTheme(currentTheme.value);
 }
 
+// 是否处于全屏状态
+const isFullscreen = ref(false);
+
+/**
+ * 切换全屏与退出全屏
+ */
+function toggleFullscreen() {
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(() => {});
+    return;
+  }
+  document.documentElement.requestFullscreen().catch(() => {
+    ElMessage.warning('当前环境不支持全屏');
+  });
+}
+
+/**
+ * 全屏状态变化时同步图标，兼容 Esc、F11 等外部方式进出全屏
+ */
+function onFullscreenChange() {
+  isFullscreen.value = !!document.fullscreenElement;
+}
+
+onMounted(() => {
+  document.addEventListener('fullscreenchange', onFullscreenChange);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('fullscreenchange', onFullscreenChange);
+});
+
+/**
+ * 切换语言，语言包尚未接入
+ */
+function handleLocaleChange() {
+  ElMessage.info('功能开发中');
+}
+
 // 个人中心弹窗显隐
 const userInfoVisible = ref(false);
 
@@ -168,32 +247,6 @@ const tenantSwitchVisible = ref(false);
 function openTenantSwitch() {
   tenantSwitchVisible.value = true;
 }
-
-// 搜索快捷功能相关
-const searchVisible = ref(false);
-const searchKeyword = ref('');
-const searchInputRef = ref(null);
-
-/**
- * 选中快捷功能后跳转
- * @param item
- */
-function handleSelectShortcut(item) {
-  router.push(item.path).catch(() => {});
-  searchVisible.value = false;
-  searchKeyword.value = '';
-}
-
-/**
- * 搜索框展开时自动聚焦输入框
- */
-watch(searchVisible, (val) => {
-  if (val) {
-    nextTick(() => {
-      searchInputRef.value?.focus();
-    });
-  }
-});
 
 /**
  * 打开个人中心弹窗
@@ -240,17 +293,70 @@ const messageList = ref([]);
 const noticeList = ref([]);
 const navMessageTab = ref('message');
 
+// 我的消息分页参数与状态
+const messageQuery = ref({ pageNo: 1, pageSize: 10 });
+const messageTotal = ref(0);
+const messageLoadedCount = ref(0);
+const messageLoading = ref(false);
+const messageFinished = ref(false);
+
+// 底部加载提示
+const messageTipText = computed(() => {
+  if (messageLoading.value) {
+    return '加载中...';
+  }
+  return messageFinished.value ? '没有更多了' : '';
+});
+
 /**
- * 加载消息列表（每次弹窗时重新拉取）
+ * 重置分页并加载我的消息（每次弹窗展开时重新拉取）
  */
 function loadMessageList() {
-  queryMyMessageListAPI().then(res => {
-    messageList.value = res.data || [];
+  messageQuery.value.pageNo = 1;
+  messageList.value = [];
+  messageTotal.value = 0;
+  messageLoadedCount.value = 0;
+  messageFinished.value = false;
+  loadMoreMessages();
+}
+
+/**
+ * 加载更多我的消息
+ */
+function loadMoreMessages() {
+  if (messageLoading.value || messageFinished.value) {
+    return;
+  }
+  messageLoading.value = true;
+  pageMyMessageListAPI(messageQuery.value).then(res => {
+    if (res.code !== 200 || !res.data) {
+      messageFinished.value = true;
+      return;
+    }
+    const rows = res.data.rows || [];
+    messageList.value = messageList.value.concat(rows);
+    messageTotal.value = res.data.total || 0;
+    messageLoadedCount.value += rows.length;
+    messageFinished.value = messageLoadedCount.value >= messageTotal.value;
+    messageQuery.value.pageNo++;
+  }).finally(() => {
+    messageLoading.value = false;
   });
 }
 
 /**
- * 加载公告列表（每次弹窗时重新拉取）
+ * 消息列表滚动到底部时加载下一页
+ * @param e 滚动事件对象
+ */
+function handleMessageScroll(e) {
+  const el = e.target;
+  if (el.scrollTop + el.clientHeight >= el.scrollHeight - 20) {
+    loadMoreMessages();
+  }
+}
+
+/**
+ * 加载公告列表
  */
 function loadNoticeList() {
   noticeListAPI({}).then(res => {
@@ -270,7 +376,7 @@ function loadNavMessageData() {
 }
 
 /**
- * 消息是否可点击跳转（附件/文档/流程）
+ * 消息是否可点击跳转
  * @param refId
  * @returns {boolean}
  */
@@ -399,51 +505,12 @@ function handleViewNotice(row) {
   }
 }
 
-// 搜索面板
-.nav-search-panel {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-sm;
-  padding: $spacing-xs 0;
-}
-
-.nav-search-list {
-  max-height: 280px;
-  overflow-y: auto;
-}
-
-.nav-search-item {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  padding: $spacing-sm $spacing-sm;
-  border-radius: $border-radius-sm;
-  cursor: pointer;
-  transition: $transition-fast;
-
-  &:hover {
-    background-color: $color-primary-light;
-
-    .nav-search-icon,
-    .nav-search-name {
-      color: $color-primary;
-    }
-  }
-}
-
-.nav-search-icon {
-  font-size: 18px;
-  color: $color-text-secondary;
-  transition: $transition-fast;
-}
-
-.nav-search-name {
+.tool-item-text {
   font-size: 14px;
-  color: $color-text-primary;
-  transition: $transition-fast;
+  font-weight: 600;
+  line-height: 1;
 }
 
-// 右侧用户头像区域
 .user-box {
   position: absolute;
   right: 30px;
@@ -484,7 +551,26 @@ function handleViewNotice(row) {
   }
 }
 
-/* 去掉 element-plus dropdown 默认聚焦边框 */
+.user-dropdown-header {
+  padding: 8px 16px;
+  border-bottom: 1px solid $border-color-light;
+}
+
+.user-dropdown-name {
+  max-width: 0;
+  min-width: 100%;
+  font-size: 13px;
+  font-weight: 600;
+  color: $color-text-primary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-menu-icon {
+  margin-right: 6px;
+}
+
 :deep(.el-tooltip__trigger:focus-visible) {
   outline: none !important;
 }
@@ -492,7 +578,6 @@ function handleViewNotice(row) {
   outline: none !important;
 }
 
-// 导航栏消息悬浮框
 .nav-message-popover {
   .nav-message-tabs {
     .el-tabs__header {
@@ -505,6 +590,12 @@ function handleViewNotice(row) {
   .nav-message-body {
     max-height: 320px;
     overflow-y: auto;
+  }
+  .nav-message-tip {
+    padding: 8px 0;
+    text-align: center;
+    font-size: 12px;
+    color: $color-text-secondary;
   }
   .nav-message-content {
     margin: 6px 0 0 0;

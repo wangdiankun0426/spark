@@ -6,9 +6,13 @@
     </view>
 
     <!-- 消息列表 -->
-    <view class="message-list">
+    <scroll-view
+        class="message-list"
+        scroll-y
+        @scrolltolower="loadMoreMessages"
+    >
       <!-- 加载中 -->
-      <view v-if="loading" class="loading-box">
+      <view v-if="loading && messageList.length === 0" class="loading-box">
         <up-loading-icon text="加载中..."/>
       </view>
 
@@ -18,31 +22,32 @@
       </view>
 
       <!-- 消息卡片 -->
-      <view
-          v-else
-          class="message-card"
-          :class="{'message-card-link': isFlowMessage(item)}"
-          v-for="item in messageList"
-          :key="item.id"
-          @click="handleMsgClick(item)"
-      >
-        <view class="card-header">
-          <view class="card-title-row">
-            <text class="card-title">{{ item.title }}</text>
+      <template v-else>
+        <view
+            class="message-card"
+            :class="{'message-card-link': isFlowMessage(item)}"
+            v-for="item in messageList"
+            :key="item.id"
+            @click="handleMsgClick(item)"
+        >
+          <view class="card-header">
+            <view class="card-title-row">
+              <text class="card-title">{{ item.title }}</text>
+            </view>
+            <text class="card-time">{{ item.createdDt }}</text>
           </view>
-          <text class="card-time">{{ item.createdDt }}</text>
+          <view class="card-divider"></view>
+          <view class="card-content">
+            <text class="content-text">{{ item.content }}</text>
+          </view>
+          <view v-if="isFlowMessage(item)" class="card-link">
+            <text class="link-text">详情</text>
+            <up-icon name="arrow-right" size="12" color="#0052cc"/>
+          </view>
         </view>
-        <view class="card-divider"></view>
-        <view class="card-content">
-          <text class="content-text">{{ item.content }}</text>
-        </view>
-        <!-- 流程类消息点击跳转流程详情 -->
-        <view v-if="isFlowMessage(item)" class="card-link">
-          <text class="link-text">详情</text>
-          <up-icon name="arrow-right" size="12" color="#0052cc"/>
-        </view>
-      </view>
-    </view>
+        <up-loadmore :status="loadStatus" class="list-loadmore"/>
+      </template>
+    </scroll-view>
 
     <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#0052cc">
       <up-tabbar-item
@@ -58,7 +63,7 @@
 <script setup>
 import {ref, computed} from "vue";
 import {visibleTabs} from "@/utils/menuUtil";
-import {myMessageListAPI} from "@/api/sys/message";
+import {pageMyMessageListAPI} from "@/api/sys/message";
 
 const active = ref("message");
 
@@ -66,7 +71,17 @@ const active = ref("message");
 const tabBarItems = computed(() => visibleTabs());
 
 const messageList = ref([]);
+// 初值 true：首屏渲染「加载中」，避免闪现空状态
 const loading = ref(true);
+const query = ref({
+  pageNo: 1,
+  pageSize: 15
+});
+const total = ref(0);
+// 已加载的原始行数
+const loadedCount = ref(0);
+// 底部加载提示状态
+const loadStatus = ref('loadmore');
 
 getMyMessageList();
 
@@ -75,14 +90,41 @@ getMyMessageList();
  */
 function getMyMessageList() {
   loading.value = true;
-  myMessageListAPI().then(res => {
-    if (res.code !== 200) {
+  loadStatus.value = 'loading';
+  pageMyMessageListAPI(query.value).then(res => {
+    if (res.code !== 200 || !res.data) {
+      loadStatus.value = 'nomore';
       return;
     }
-    if (res.data === undefined || res.data === null) {
-      return;
+    const rows = res.data.rows || [];
+    messageList.value = rows;
+    total.value = res.data.total || 0;
+    loadedCount.value = rows.length;
+    loadStatus.value = loadedCount.value >= total.value ? 'nomore' : 'loadmore';
+  }).finally(() => {
+    loading.value = false;
+  });
+}
+
+/**
+ * 触底加载更多消息
+ */
+function loadMoreMessages() {
+  if (loading.value || loadStatus.value === 'nomore') {
+    return;
+  }
+  query.value.pageNo++;
+  loading.value = true;
+  loadStatus.value = 'loading';
+  pageMyMessageListAPI(query.value).then(res => {
+    if (res.code === 200 && res.data) {
+      const rows = res.data.rows || [];
+      messageList.value = messageList.value.concat(rows);
+      loadedCount.value += rows.length;
+      loadStatus.value = loadedCount.value >= total.value ? 'nomore' : 'loadmore';
+    } else {
+      loadStatus.value = 'nomore';
     }
-    messageList.value = res.data;
   }).finally(() => {
     loading.value = false;
   });
@@ -132,9 +174,8 @@ function handleOnTabChange(index) {
 }
 
 .message-header {
-  padding: 10px 16px;
+  padding: 16px 16px;
   background-color: #0052cc;
-
   .header-title {
     font-size: 20px;
     font-weight: 600;
@@ -153,6 +194,10 @@ function handleOnTabChange(index) {
   height: calc(100vh - 200px);
   /* #endif */
   overflow-y: auto;
+}
+
+.list-loadmore {
+  padding-bottom: 30px;
 }
 
 .loading-box, .empty-box {

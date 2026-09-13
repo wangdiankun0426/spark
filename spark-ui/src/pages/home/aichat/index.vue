@@ -1,6 +1,5 @@
 <template>
   <div class="app-container aichat-container">
-    <!-- 主体：左侧会话记录 + 右侧聊天区 -->
     <div class="aichat-body">
       <!-- 左侧会话记录 -->
       <session-pane
@@ -15,7 +14,7 @@
 
       <!-- 右侧聊天区 -->
       <div class="chat-pane">
-        <index
+        <chat
             :target="currentTarget"
             target-type="model"
             :lock-while-streaming="true"
@@ -25,7 +24,7 @@
             @message-received="handleMessageReceived"
         >
           <template #header-left>
-            <el-icon class="chat-panel-title-icon"><MagicStick /></el-icon>
+            <el-icon class="chat-panel-title-icon"><Aichat /></el-icon>
             <span class="chat-panel-title">{{ currentTitle }}</span>
           </template>
           <template #header-right>
@@ -46,12 +45,12 @@
           </template>
           <template #empty>
             <div class="chat-welcome">
-              <el-icon class="chat-welcome-icon"><MagicStick /></el-icon>
+              <el-icon class="chat-welcome-icon"><Aichat /></el-icon>
               <div class="chat-welcome-title">有什么可以帮你的？</div>
-              <div class="chat-welcome-subtitle">选择语言模型后输入问题，即可开始对话</div>
+              <div class="chat-welcome-subtitle">点击右上角选择模型后输入问题，即可开始对话</div>
             </div>
           </template>
-        </index>
+        </chat>
       </div>
     </div>
   </div>
@@ -60,11 +59,11 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { ElMessage } from 'element-plus'
-import { MagicStick } from '@element-plus/icons-vue'
 import { pageModelListAPI } from '@/api/llm/model.js'
 import { createAiChatSpaceAPI } from '@/api/chat/space.js'
 import SessionPane from '@/components/Chat/sessionPane.vue'
-import Index from '@/components/Chat/index.vue'
+import Chat from '@/components/Chat/index.vue'
+import Aichat from "@/assets/icons/aichat.vue";
 
 // 会话列表刷新延迟，等待服务端回填会话标题
 const SESSION_REFRESH_DELAY = 800
@@ -270,7 +269,7 @@ function handleModelChange(modelId) {
 }
 
 .chat-panel-title-icon {
-  font-size: 20px;
+  font-size: 24px;
   color: $color-primary;
   position: relative;
   top: 2px;
@@ -294,7 +293,7 @@ function handleModelChange(modelId) {
 }
 
 .chat-welcome-icon {
-  font-size: 56px;
+  font-size: 80px;
   color: $color-primary;
   opacity: 0.85;
 }

@@ -61,4 +61,18 @@ public interface MessageDao extends BaseDao<Message> {
      * @return
      */
     MessageResult queryMessage(MessageQuery query);
+
+    /**
+     * 查询我的消息数量
+     * @param query 查询参数（按 userId 关联接收人）
+     * @return 数量
+     */
+    int queryMyMessageCount(MessageQuery query);
+
+    /**
+     * 查询我的消息列表
+     * @param query 查询参数（按 userId 关联接收人）
+     * @return 列表
+     */
+    List<MessageResult> queryMyMessageList(MessageQuery query);
 }

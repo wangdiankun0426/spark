@@ -60,7 +60,7 @@
             <text class="info-value">{{ item.createdDt }}</text>
           </view>
         </view>
-        <up-loadmore :status="loadStatus"/>
+        <up-loadmore :status="loadStatus" class="list-loadmore"/>
       </template>
     </scroll-view>
 
@@ -206,7 +206,7 @@ function handleOnTabChange(index) {
 }
 
 .flow-header {
-  padding: 10px 16px;
+  padding: 16px 16px;
   background-color: #0052cc;
 
   .header-title {
@@ -224,7 +224,6 @@ function handleOnTabChange(index) {
   width: 94%;
   margin: 0 auto;
   padding-top: 12px;
-  padding-bottom: 12px;
   /* #ifdef H5 */
   height: calc(100vh - 120px);
   /* #endif */
@@ -232,6 +231,10 @@ function handleOnTabChange(index) {
   height: calc(100vh - 200px);
   /* #endif */
   overflow-y: auto;
+}
+
+.list-loadmore {
+  padding-bottom: 30px;
 }
 
 .loading-box,

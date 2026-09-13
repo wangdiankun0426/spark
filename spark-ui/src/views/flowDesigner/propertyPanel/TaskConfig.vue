@@ -1,10 +1,10 @@
 <template>
   <div class="task-config">
-    <el-form-item label="节点任务" label-width="90px">
-      <el-button type="primary" size="small" @click="addTask">
+    <el-form-item label="节点任务" label-width="auto">
+      <el-button @click="addTask">
         <el-icon><Plus /></el-icon>添加任务
       </el-button>
-      <div class="task-tip">节点开始或结束执行时，按任务模板自动创建任务，按顺序依次执行，可拖拽调整执行顺序</div>
+      <div class="task-tip">在流程到达当前节点时开始执行下方任务</div>
     </el-form-item>
     <div
         v-for="(task, index) in nodeTasks"
@@ -19,7 +19,11 @@
     >
       <div class="task-item-header">
         <span class="task-item-title"><el-icon><Rank /></el-icon>任务 {{ index + 1 }}</span>
-        <el-button type="danger" link size="small" @click="removeTask(task)">删除</el-button>
+        <el-button type="danger" text @click="removeTask(task)">
+          <el-icon>
+            <Delete/>
+          </el-icon>
+        </el-button>
       </div>
       <el-form-item label="执行时机" label-width="90px">
         <el-select v-model="task.executeType">
@@ -54,6 +58,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { pageTaskTemplateListAPI, listTaskTemplateParamAPI } from '@/api/task/template.js'
+import {Delete} from "@element-plus/icons-vue";
 
 defineOptions({ name: 'TaskConfig' })
 

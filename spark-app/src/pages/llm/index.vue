@@ -16,7 +16,12 @@
     </view>
 
     <!-- Agent列表 -->
-    <scroll-view v-if="activeTabKey === 'agent'" class="llm-list" scroll-y>
+    <scroll-view
+        v-if="activeTabKey === 'agent'"
+        class="llm-list"
+        scroll-y
+        @scrolltolower="loadMoreAgents"
+    >
       <!-- 加载中 -->
       <view v-if="agentLoading" class="loading-box">
         <up-loading-icon text="加载中..."/>
@@ -35,20 +40,25 @@
             :key="item.id"
             @click="handleAgentClick(item)"
         >
-          <!-- 卡片图标：本页签统一用同一图标，底色按条目取色区分 -->
           <view class="card-icon" :style="item.iconStyle">
             <up-icon name="grid-fill" size="20" color="#ffffff"></up-icon>
           </view>
           <view class="llm-info">
             <text class="llm-name">{{ item.name }}</text>
-            <text class="llm-model">{{ item.chatModelName || '未配置模型' }}</text>
+            <text class="llm-desc">{{ item.description || '暂无备注' }}</text>
           </view>
         </view>
+        <up-loadmore :status="agentLoadStatus" class="list-loadmore"/>
       </template>
     </scroll-view>
 
     <!-- WorkFlow 运行实例列表 -->
-    <scroll-view v-else-if="activeTabKey === 'workflow'" class="llm-list" scroll-y @scrolltolower="loadMoreInstances">
+    <scroll-view
+        v-else-if="activeTabKey === 'workflow'"
+        class="llm-list"
+        scroll-y
+        @scrolltolower="loadMoreInstances"
+    >
       <!-- 加载中 -->
       <view v-if="instanceLoading && instanceList.length === 0" class="loading-box">
         <up-loading-icon text="加载中..."/>
@@ -59,7 +69,7 @@
         <up-empty text="暂无运行记录" icon="list"/>
       </view>
 
-      <!-- 实例卡片：只展示名称与运行状态 -->
+      <!-- 实例卡片：展示名称、创建时间与运行状态 -->
       <template v-else>
         <view
             class="instance-card"
@@ -67,18 +77,26 @@
             :key="item.id"
             @click="showInstanceDetail(item)"
         >
-          <!-- 卡片图标：本页签统一用同一图标，底色按条目取色区分 -->
           <view class="card-icon" :style="item.iconStyle">
             <up-icon name="share-fill" size="20" color="#ffffff"></up-icon>
           </view>
-          <text class="instance-name">{{ item.templateName || item.name || '未命名工作流' }}</text>
+          <view class="instance-info">
+            <text class="instance-name">{{ item.templateName || item.name || '未命名工作流' }}</text>
+            <text class="instance-created">{{ item.createdDt }}</text>
+          </view>
           <text class="instance-status" :class="'status-' + item.status">{{ item.statusName }}</text>
         </view>
+        <up-loadmore :status="instanceLoadStatus" class="list-loadmore"/>
       </template>
     </scroll-view>
 
     <!-- AIChat：已启用的语言模型列表，点击进入对话 -->
-    <scroll-view v-else-if="activeTabKey === 'chat'" class="llm-list" scroll-y>
+    <scroll-view
+        v-else-if="activeTabKey === 'chat'"
+        class="llm-list"
+        scroll-y
+        @scrolltolower="loadMoreModels"
+    >
       <!-- 加载中 -->
       <view v-if="modelLoading && modelList.length === 0" class="loading-box">
         <up-loading-icon text="加载中..."/>
@@ -97,15 +115,15 @@
             :key="model.id"
             @click="handleSelectModel(model)"
         >
-          <!-- 卡片图标：本页签统一用同一图标，底色按条目取色区分 -->
           <view class="card-icon" :style="model.iconStyle">
             <up-icon name="chat-fill" size="20" color="#ffffff"></up-icon>
           </view>
           <view class="model-info">
             <text class="model-name">{{ model.name }}</text>
-            <text class="model-provider">{{ model.providerName || '未知厂商' }}</text>
+            <text class="model-provider">{{ model.providerName ? '厂商：' + model.providerName : '未知厂商' }}</text>
           </view>
         </view>
+        <up-loadmore :status="modelLoadStatus" class="list-loadmore"/>
       </template>
     </scroll-view>
 
@@ -198,25 +216,51 @@ const activeTabKey = computed(() => {
   return tab ? tab.key : ''
 })
 
+// 列表每页条数
+const PAGE_SIZE = 15
+
 // Agent 相关
 const agentList = ref([])
 const agentLoading = ref(false)
 const agentLoaded = ref(false)
+const agentQuery = ref({
+  pageNo: 1,
+  pageSize: PAGE_SIZE,
+  status: 1
+})
+const agentTotal = ref(0)
+const agentLoadedCount = ref(0)
+// 列表底部加载提示状态：loadmore 上拉加载更多 / loading 加载中 / nomore 没有更多了
+const agentLoadStatus = ref('loadmore')
 
 // WorkFlow 实例相关
 const instanceList = ref([])
 const instanceLoading = ref(false)
 const instanceLoaded = ref(false)
-const instanceQuery = ref({pageNo: 1, pageSize: 15})
+const instanceQuery = ref({
+  pageNo: 1,
+  pageSize: PAGE_SIZE
+})
 const instanceTotal = ref(0)
+// 列表底部加载提示状态
+const instanceLoadStatus = ref('loadmore')
 
 // AIChat 模型列表相关
 const modelList = ref([])
 const modelLoading = ref(false)
 const modelLoaded = ref(false)
+const modelQuery = ref({
+  pageNo: 1,
+  pageSize: PAGE_SIZE,
+  status: 1
+})
+const modelTotal = ref(0)
+const modelLoadedCount = ref(0)
+// 列表底部加载提示状态
+const modelLoadStatus = ref('loadmore')
 
 /**
- * 按页签key懒加载对应列表（已加载过则不重复请求）
+ * 按页签key懒加载对应列表
  * @param key 页签key（chat/agent/workflow）
  */
 function loadTab(key) {
@@ -230,7 +274,7 @@ function loadTab(key) {
 }
 
 /**
- * 切换页签（按需加载）
+ * 切换页签
  */
 function handleTabChange(tab) {
   const index = tab.index
@@ -262,11 +306,44 @@ onShow(async () => {
  */
 function getAgentList() {
   agentLoading.value = true
-  agentPageListAPI({page: false}).then(res => {
-    if (res.code !== 200) return
-    if (res.data === undefined || res.data === null) return
-    agentList.value = (res.data.rows || []).map(row => ({...row, iconStyle: pickIconStyle(row.id)}))
+  agentLoadStatus.value = 'loading'
+  agentPageListAPI(agentQuery.value).then(res => {
+    if (res.code !== 200) {
+      agentLoadStatus.value = 'nomore'
+      return
+    }
+    if (res.data === undefined || res.data === null) {
+      agentLoadStatus.value = 'nomore'
+      return
+    }
+    const rows = res.data.rows || []
+    agentList.value = rows.map(row => ({...row, iconStyle: pickIconStyle(row.id)}))
+    agentTotal.value = res.data.total || 0
+    agentLoadedCount.value = rows.length
     agentLoaded.value = true
+    agentLoadStatus.value = agentLoadedCount.value >= agentTotal.value ? 'nomore' : 'loadmore'
+  }).finally(() => {
+    agentLoading.value = false
+  })
+}
+
+/**
+ * 加载更多智能体
+ */
+function loadMoreAgents() {
+  if (agentLoading.value || agentLoadStatus.value === 'nomore') return
+  agentQuery.value.pageNo++
+  agentLoading.value = true
+  agentLoadStatus.value = 'loading'
+  agentPageListAPI(agentQuery.value).then(res => {
+    if (res.code === 200 && res.data) {
+      const rows = (res.data.rows || []).map(row => ({...row, iconStyle: pickIconStyle(row.id)}))
+      agentList.value = agentList.value.concat(rows)
+      agentLoadedCount.value += rows.length
+      agentLoadStatus.value = agentLoadedCount.value >= agentTotal.value ? 'nomore' : 'loadmore'
+    } else {
+      agentLoadStatus.value = 'nomore'
+    }
   }).finally(() => {
     agentLoading.value = false
   })
@@ -284,11 +361,15 @@ function handleAgentClick(item) {
  */
 function loadInstances() {
   instanceLoading.value = true
+  instanceLoadStatus.value = 'loading'
   pageInstanceListAPI(instanceQuery.value).then(res => {
     if (res.code === 200 && res.data) {
       instanceList.value = (res.data.rows || []).map(row => ({...row, iconStyle: pickIconStyle(row.id)}))
       instanceTotal.value = res.data.total || 0
       instanceLoaded.value = true
+      instanceLoadStatus.value = instanceList.value.length >= instanceTotal.value ? 'nomore' : 'loadmore'
+    } else {
+      instanceLoadStatus.value = 'nomore'
     }
   }).finally(() => {
     instanceLoading.value = false
@@ -299,13 +380,17 @@ function loadInstances() {
  * 加载更多实例
  */
 function loadMoreInstances() {
-  if (instanceList.value.length >= instanceTotal.value) return
+  if (instanceLoading.value || instanceLoadStatus.value === 'nomore') return
   instanceQuery.value.pageNo++
   instanceLoading.value = true
+  instanceLoadStatus.value = 'loading'
   pageInstanceListAPI(instanceQuery.value).then(res => {
     if (res.code === 200 && res.data) {
       const rows = (res.data.rows || []).map(row => ({...row, iconStyle: pickIconStyle(row.id)}))
       instanceList.value = instanceList.value.concat(rows)
+      instanceLoadStatus.value = instanceList.value.length >= instanceTotal.value ? 'nomore' : 'loadmore'
+    } else {
+      instanceLoadStatus.value = 'nomore'
     }
   }).finally(() => {
     instanceLoading.value = false
@@ -322,22 +407,43 @@ function showInstanceDetail(item) {
 }
 
 /**
- * 加载模型列表（只要已启用的语言模型）
+ * 加载模型列表
  */
 function loadModels() {
   modelLoading.value = true
-  const query = {
-    page: false,
-    type: 1,
-    status: 1
-  }
-  pageModelListAPI(query).then(res => {
+  modelLoadStatus.value = 'loading'
+  pageModelListAPI(modelQuery.value).then(res => {
     if (res.code === 200 && res.data) {
-      // 后端未按 type/status 过滤时，这里再兜一层，保证只出现可用作对话的语言模型
-      modelList.value = (res.data.rows || [])
-          .filter(row => row.type === 1 && row.status === 1)
-          .map(row => ({...row, iconStyle: pickIconStyle(row.id)}))
+      const rows = res.data.rows || []
+      modelList.value = rows.map(row => ({...row, iconStyle: pickIconStyle(row.id)}))
+      modelTotal.value = res.data.total || 0
+      modelLoadedCount.value = rows.length
       modelLoaded.value = true
+      modelLoadStatus.value = modelLoadedCount.value >= modelTotal.value ? 'nomore' : 'loadmore'
+    } else {
+      modelLoadStatus.value = 'nomore'
+    }
+  }).finally(() => {
+    modelLoading.value = false
+  })
+}
+
+/**
+ * 加载更多模型
+ */
+function loadMoreModels() {
+  if (modelLoading.value || modelLoadStatus.value === 'nomore') return
+  modelQuery.value.pageNo++
+  modelLoading.value = true
+  modelLoadStatus.value = 'loading'
+  pageModelListAPI(modelQuery.value).then(res => {
+    if (res.code === 200 && res.data) {
+      const rows = (res.data.rows || []).map(row => ({...row, iconStyle: pickIconStyle(row.id)}))
+      modelList.value = modelList.value.concat(rows)
+      modelLoadedCount.value += rows.length
+      modelLoadStatus.value = modelLoadedCount.value >= modelTotal.value ? 'nomore' : 'loadmore'
+    } else {
+      modelLoadStatus.value = 'nomore'
     }
   }).finally(() => {
     modelLoading.value = false
@@ -376,10 +482,9 @@ function handleOnTabChange(index) {
 }
 
 .llm-header {
-  padding: 10px 16px;
+  padding: 16px 16px;
   background-color: #0052cc;
   flex-shrink: 0;
-
   .header-title {
     font-size: 20px;
     font-weight: 600;
@@ -396,7 +501,6 @@ function handleOnTabChange(index) {
   width: 94%;
   margin: 0 auto;
   padding-top: 12px;
-  padding-bottom: 12px;
   /* #ifdef H5 */
   height: calc(100vh - 170px);
   /* #endif */
@@ -404,6 +508,10 @@ function handleOnTabChange(index) {
   height: calc(100vh - 250px);
   /* #endif */
   overflow-y: auto;
+}
+
+.list-loadmore {
+  padding-bottom: 30px;
 }
 
 .loading-box, .empty-box {
@@ -444,7 +552,7 @@ function handleOnTabChange(index) {
   white-space: nowrap;
 }
 
-.llm-model {
+.llm-desc {
   font-size: 12px;
   color: #999;
   overflow: hidden;
@@ -475,12 +583,26 @@ function handleOnTabChange(index) {
   flex-shrink: 0;
 }
 
-.instance-name {
+.instance-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.instance-name {
   font-size: 15px;
   font-weight: 600;
   color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.instance-created {
+  font-size: 12px;
+  color: #999;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

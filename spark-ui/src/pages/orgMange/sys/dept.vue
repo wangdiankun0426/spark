@@ -74,6 +74,7 @@
       direction="ltr"
       size="30%"
       :before-close="closeDeptForm"
+      :close-on-click-modal="false"
   >
     <el-form :model="deptForm" :rules="deptFormRules" ref="deptFormRef" label-width="auto">
       <el-form-item label="部门名称" prop="name">

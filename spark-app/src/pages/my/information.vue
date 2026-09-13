@@ -1,12 +1,13 @@
 <template>
   <div class="safe-area-page">
-    <up-navbar
-        title="个人信息"
-        bgColor="#0052cc"
-        titleColor="#ffffff"
-        leftIconColor="#ffffff"
-        @leftClick="onClickLeft"
-    />
+    <!-- 顶部标题栏 -->
+    <view class="info-header">
+      <view class="header-left" @click="onClickLeft">
+        <up-icon name="arrow-left" size="20" color="#fff"></up-icon>
+        <text class="header-title">个人信息</text>
+      </view>
+    </view>
+
     <div class="info-form">
       <up-form>
         <up-form-item
@@ -63,7 +64,7 @@
   </div>
 </template>
 <script setup>
-import {ref, computed} from "vue";
+import {computed} from "vue";
 import {useStore} from "vuex";
 import UserAvatar from "@/components/UserAvatar/index.vue"
 
@@ -84,11 +85,23 @@ function onClickLeft() {
  }
 </script>
 <style scoped lang="scss">
-:deep(.u-navbar__content__title) {
-  color: #ffffff !important;
+.info-header {
+  flex-shrink: 0;
+  padding: 16px 16px;
+  background-color: #0052cc;
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #ffffff;
+  }
 }
 .info-form {
-  padding-top: 50px;
+  padding-top: 20px;
   width: 90%;
   margin: auto;
 }

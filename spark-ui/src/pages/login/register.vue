@@ -162,7 +162,6 @@ function submitRegisterForm() {
   proxy.$refs.registerRef.validate(async valid => {
     if (!valid) return;
     loading.value = true;
-    // 申请一次性加密密钥
     const keyResult = await getEncryptKeyAPI();
     if (keyResult.code !== 200) {
       loading.value = false;

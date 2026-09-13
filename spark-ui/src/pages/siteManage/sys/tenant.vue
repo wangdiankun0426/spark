@@ -150,7 +150,13 @@
     </div>
 
     <!-- 租户表单抽屉 -->
-    <el-drawer v-model="formVisible" :title="formTitle" direction="ltr" size="40%" :close-on-click-modal="false">
+    <el-drawer
+        v-model="formVisible"
+        :title="formTitle"
+        direction="ltr"
+        size="40%"
+        :close-on-click-modal="false"
+    >
       <el-form :model="form" :rules="formRules" ref="formRef" label-width="90px">
         <el-form-item label="租户名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入租户名称" maxlength="200"/>

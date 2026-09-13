@@ -1,6 +1,5 @@
 <template>
   <div class="app-container contact-container">
-    <!-- 主体：左侧联系人 + 右侧聊天区 -->
     <div class="contact-body">
       <!-- 左侧联系人列表 -->
       <div class="session-pane">
@@ -50,12 +49,25 @@
 
       <!-- 右侧聊天区 -->
       <div class="chat-pane">
-        <index
+        <chat
             :target="chatUser"
             target-type="user"
             @message-received="handleMessageReceived"
             @space-created="handleSpaceCreated"
-        />
+        >
+          <template #header-left>
+            <el-icon class="chat-panel-title-icon"><ChatIcon /></el-icon>
+            <span v-if="chatUser.id" class="chat-panel-title">{{ chatUser.name }}</span>
+            <span v-else class="chat-panel-header-tip">请选择聊天对象</span>
+          </template>
+          <template #empty>
+            <div class="chat-welcome">
+              <el-icon class="chat-welcome-icon"><ChatIcon /></el-icon>
+              <div class="chat-welcome-title">选择联系人开始聊天</div>
+              <div class="chat-welcome-subtitle">从左侧联系人列表中选择联系人，即可开始对话</div>
+            </div>
+          </template>
+        </chat>
       </div>
     </div>
   </div>
@@ -66,7 +78,8 @@ import { ref, onMounted } from 'vue'
 import { pageMyChatUserListAPI } from '@/api/chat/user.js'
 import { Search } from '@element-plus/icons-vue'
 import UserAvatar from '@/components/UserAvatar/index.vue'
-import Index from '@/components/Chat/index.vue'
+import Chat from '@/components/Chat/index.vue'
+import ChatIcon from '@/assets/icons/chat.vue'
 
 // 每页加载的联系人数量
 const PAGE_SIZE = 20
@@ -83,7 +96,7 @@ const loadingUsers = ref(false)
 const hasMore = ref(true)
 // 已加载到的页码
 let pageNo = 0
-// 请求序号，用于丢弃过期响应（检索期间连续输入时）
+// 请求序号，用于丢弃过期响应
 let requestSeq = 0
 
 onMounted(() => {
@@ -242,7 +255,6 @@ function handleSpaceCreated({ targetId, spaceId }) {
   min-height: 0;
 }
 
-/* 分页加载提示 */
 .session-tip {
   padding: $spacing-sm;
   text-align: center;
@@ -320,5 +332,51 @@ function handleSpaceCreated({ targetId, spaceId }) {
   background-color: $bg-card;
   border-radius: $border-radius-md;
   box-shadow: $shadow-card;
+}
+
+.chat-panel-title-icon {
+  font-size: 24px;
+  color: $color-primary;
+  position: relative;
+  top: 2px;
+}
+
+.chat-panel-title {
+  margin-left: $spacing-xs;
+  font-size: 16px;
+  font-weight: 600;
+  color: $color-text-primary;
+}
+
+.chat-panel-header-tip {
+  font-size: 12px;
+  color: $color-text-placeholder;
+}
+
+.chat-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  min-height: 360px;
+  padding: $spacing-xl 0;
+}
+
+.chat-welcome-icon {
+  font-size: 80px;
+  color: $color-primary;
+  opacity: 0.85;
+}
+
+.chat-welcome-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: $color-text-primary;
+}
+
+.chat-welcome-subtitle {
+  font-size: 13px;
+  color: $color-text-secondary;
 }
 </style>

@@ -86,31 +86,29 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
     }
 
     /**
-     * 分页我的消息列表
-     * @return 列表
+     * 分页查询我的消息列表
+     * @param query 查询参数
+     * @return 分页结果
      */
     @Override
-    public ResultData<List<MessageResult>> queryMyMessageList() {
-        ResultData<List<MessageResult>> result = new ResultData<>();
+    public ResultData<PageResult<MessageResult>> pageMyMessageList(MessageQuery query) {
+        ResultData<PageResult<MessageResult>> result = new ResultData<>();
         Long userId = SessionHolder.getCurrentUserId();
         if (userId == null) {
             result.setErrorCode(ErrorCodeEnum.NOT_LOGIN);
             return result;
         }
-        MessageUserQuery messageUserQuery = new MessageUserQuery();
-        messageUserQuery.setUserId(userId);
-        messageUserQuery.setPage(false);
-        List<MessageUserResult> messageUserList = messageUserDao.queryMessageUserList(messageUserQuery);
-        if (CollectionUtil.isEmpty(messageUserList)) {
-            result.setCode(ResultData.OK);
-            return result;
+        if (query == null) {
+            query = new MessageQuery();
         }
-        List<Long> msgIds = messageUserList.stream().map(MessageUserResult::getMsgId).distinct().collect(Collectors.toList());
-        MessageQuery query = new MessageQuery();
-        query.setIds(msgIds);
+        query.setUserId(userId);
         query.setTenantId(SessionHolder.getCurrentTenantId());
-        List<MessageResult> messageList = messageDao.queryMessageList(query);
-        result.setData(messageList);
+        PageResult<MessageResult> list = new PageResult<>();
+        int count = messageDao.queryMyMessageCount(query);
+        List<MessageResult> msgList = messageDao.queryMyMessageList(query);
+        list.setTotal(count);
+        list.setRows(msgList);
+        result.setData(list);
         result.setCode(ResultData.OK);
         return result;
     }
@@ -127,7 +125,8 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
             query = new MessageQuery();
         }
         query.setTenantId(SessionHolder.getCurrentTenantId());
-        result.setData(super.pageList(query));
+        PageResult<MessageResult> list = super.pageList(query);
+        result.setData(list);
         result.setCode(ResultData.OK);
         return result;
     }

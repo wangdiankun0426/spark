@@ -27,7 +27,7 @@
       <info-card
           v-for="item in templateList"
           :key="item.id"
-          :icon="Share"
+          :icon="FlowApplication"
           :title="item.name"
           :description="item.remark || '暂无备注'"
           :disabled="item.status !== 1"
@@ -87,11 +87,12 @@ import {
 } from '@/api/flow/template';
 import { createFlowInstanceAPI } from '@/api/flow/instance.js';
 import { ElMessage } from 'element-plus';
-import { Search, Share } from '@element-plus/icons-vue';
+import { Search } from '@element-plus/icons-vue';
 import FlowDetailDrawer from '@/components/FlowDetailDrawer';
 import InfoCard from '@/components/InfoCard/index.vue';
 import store from "@/store/index.js";
 import { useRoute } from 'vue-router';
+import FlowApplication from "@/assets/icons/flowApplication.vue";
 
 const route = useRoute();
 

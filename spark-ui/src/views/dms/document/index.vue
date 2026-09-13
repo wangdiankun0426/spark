@@ -117,6 +117,7 @@
         direction="ltr"
         size="30%"
         :before-close="handleCloseDocumentForm"
+        :close-on-click-modal="false"
     >
       <el-form
           :model="documentForm"
@@ -171,6 +172,7 @@
         title="元数据表单列表"
         direction="ltr"
         size="24%"
+        :close-on-click-modal="false"
     >
       <div class="metadata-list">
         <div
@@ -204,6 +206,7 @@
         title="元数据表单"
         direction="ltr"
         size="40%"
+        :close-on-click-modal="false"
     >
       <form-view
           :form="formJson"

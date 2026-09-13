@@ -322,7 +322,7 @@ function handleFitView() {
 }
 
 /**
- * 重置展开（回到原始实体列表）
+ * 重置展开
  */
 async function handleResetExpand() {
   expandedNodeIds.value.clear()
@@ -330,7 +330,7 @@ async function handleResetExpand() {
 }
 
 /**
- * 按需展开节点的关联实体（增量加载）
+ * 按需展开节点的关联实体
  */
 async function handleExpandNode(entity) {
   if (!entity || !entity.id || expandedNodeIds.value.has(entity.id)) return
@@ -557,7 +557,7 @@ function handleOpenDetail(entity) {
 }
 
 .detail-body {
-  flex: 1;
+  height: calc(100vh - 150px);
   display: flex;
   margin-top: $spacing-md;
   background-color: $bg-card;
@@ -594,8 +594,7 @@ function handleOpenDetail(entity) {
 }
 
 .panel-tab-header {
-  padding: $spacing-md;
-  border-bottom: 1px solid $border-color-light;
+  padding: $spacing-sm;
 }
 
 .type-filter {

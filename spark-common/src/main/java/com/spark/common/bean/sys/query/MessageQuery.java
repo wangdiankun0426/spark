@@ -30,5 +30,9 @@ public class MessageQuery extends BaseQuery {
      */
     private String content;
 
+    /**
+     * 接收人ID：查询「我的消息」时按 sys_message_user 关联过滤
+     */
+    private Long userId;
 
 }

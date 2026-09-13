@@ -2,7 +2,12 @@
   <view class="detail-container safe-area-page">
     <!-- 顶部标题栏 -->
     <view class="detail-header">
-      <up-icon name="arrow-left" size="20" color="#ffffff" @click="handleBack"/>
+      <up-icon
+          name="arrow-left"
+          size="20"
+          color="#ffffff"
+          @click="handleBack"
+      />
       <text class="header-title">流程详情</text>
     </view>
 
@@ -370,7 +375,7 @@ const handleUserConfirm = useDebounceFn((users) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
+  padding: 16px 16px;
   background-color: #0052cc;
 
   .header-title {

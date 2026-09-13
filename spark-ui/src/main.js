@@ -1,7 +1,7 @@
 import { createApp } from 'vue';
 import App from './App.vue';
-// 桌面端环境适配，需在应用挂载前初始化（接管 window.open）
 import { setupDesktop } from '@/utils/desktop.js';
+import { initTheme } from '@/utils/themeUtil';
 import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
 import '@/styles/main.scss';
@@ -73,16 +73,15 @@ import VMdPreview from '@kangc/v-md-editor/lib/preview.js';
 import '@kangc/v-md-editor/lib/style/base-editor.css';
 import '@kangc/v-md-editor/lib/theme/style/github.css';
 import githubTheme from '@kangc/v-md-editor/lib/theme/github.js';
-// github theme 不内置 highlight.js，必须显式传入 Hljs 实例，否则渲染代码块时 hasLang 会抛
-// "Cannot read properties of undefined (reading 'getLanguage)"，详见 src/utils/highlight.js
 import hljs from '@/utils/highlight';
-
 VMdEditor.use(githubTheme, { Hljs: hljs });
 VMdPreview.use(githubTheme, { Hljs: hljs });
 
 const app = createApp(App);
-// 桌面端适配初始化（浏览器环境下为空操作）
+// 桌面端适配初始化
 setupDesktop();
+// 初始化主题：独立路由（设计器、预览等）不经过导航栏，需在挂载前应用并跟随窗口间切换
+initTheme();
 app.use(VMdEditor);
 app.use(VMdPreview);
 app.use(ElementPlus, {locale})

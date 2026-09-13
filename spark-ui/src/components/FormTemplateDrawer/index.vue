@@ -122,6 +122,7 @@
         direction="ltr"
         size="30%"
         :before-close="handleCloseFormForm"
+        :close-on-click-modal="false"
     >
       <el-form
           :model="formForm"
@@ -187,6 +188,7 @@
         title="表单版本"
         direction="ltr"
         size="20%"
+        :close-on-click-modal="false"
     >
       <div>
         <el-table

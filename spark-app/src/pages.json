@@ -68,7 +68,13 @@
       }
     },
     {
-      "path": "pages/my/infomation",
+      "path": "pages/my/setting",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/my/information",
       "style": {
         "navigationStyle": "custom"
       }

@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 /**
  * +++/\_/\
  * + ( °w° )=
@@ -30,12 +28,13 @@ public class MessageController {
     private IMessageService messageService;
 
     /**
-     * 我的查询消息
-     * @return 列表
+     * 分页查询我的消息
+     * @param query 查询参数
+     * @return 分页结果
      */
-    @GetMapping("myList")
-    public ResultData<List<MessageResult>> queryMyMessageList() {
-        return messageService.queryMyMessageList();
+    @GetMapping("pageMyList")
+    public ResultData<PageResult<MessageResult>> pageMyMessageList(MessageQuery query) {
+        return messageService.pageMyMessageList(query);
     }
 
     /**
