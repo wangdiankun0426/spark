@@ -116,3 +116,5 @@ spark:
   wechat:
     app-id: xxxxxxxxxxxxx
     app-secret: xxxxxxxxxxxxx
+  ocr:
+    url: http://172.10.0.9:8089/api/tr-run/

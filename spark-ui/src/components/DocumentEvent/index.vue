@@ -183,7 +183,6 @@ function handleReset(type) {
   margin-top: $spacing-md;
   padding: $spacing-sm $spacing-md;
   background-color: $color-primary-light;
-  border-left: 3px solid $color-primary;
   border-radius: $border-radius-sm;
   color: $color-text-secondary;
   font-size: 12px;

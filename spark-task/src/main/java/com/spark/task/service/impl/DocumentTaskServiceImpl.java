@@ -94,6 +94,8 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
     private final Lock chunkLock = new ReentrantLock();
     private final Lock vectorLock = new ReentrantLock();
     private final Lock graphLock = new ReentrantLock();
+    @Autowired
+    private FileUtil fileUtil;
 
     /**
      * 文档内容任务
@@ -132,7 +134,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                     }
                     DocumentResult documentResult = docMap.get(docId);
                     String filePath = documentResult.getPath();
-                    String txtPath = FileUtil.convertToTxt(filePath);
+                    String txtPath = fileUtil.convertToTxt(filePath);
                     DocumentEvent documentEvent = new DocumentEvent();
                     documentEvent.setId(documentEventResult.getId());
                     if (StringUtil.isBlank(txtPath)) {
@@ -213,7 +215,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                     document.put("sizeStr", documentResult.getSizeStr());
                     String content = "";
                     String filePath = documentResult.getPath();
-                    String txtPath = FileUtil.generateTxtFile(filePath);
+                    String txtPath = fileUtil.generateTxtFile(filePath);
                     ResultData<String> txtData = TextUtil.getFromText(txtPath, true);
                     if (txtData.getCode() == ResultData.OK) {
                         content = txtData.getData();
@@ -282,7 +284,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                     DocumentResult documentResult = docMap.get(docId);
                     String content = null;
                     String filePath = documentResult.getPath();
-                    String txtPath = FileUtil.generateTxtFile(filePath);
+                    String txtPath = fileUtil.generateTxtFile(filePath);
                     ResultData<String> txtData = TextUtil.getFromText(txtPath, true);
                     if (txtData.getCode() == ResultData.OK) {
                         content = txtData.getData();

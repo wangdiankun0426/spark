@@ -145,17 +145,17 @@ public class DocumentController {
      * @return 删除结果
      */
     @PostMapping("batchDelete")
-    public ResultData<Void> batchDeleteDocument(@RequestParam List<Long> ids) {
-        return documentService.batchDeleteDocument(ids);
+    public ResultData<Void> batchDelDocument(@RequestParam List<Long> ids) {
+        return documentService.batchDelDocument(ids);
     }
 
     /**
-     * 批量重新处理文档
+     * 批量重置文档事件
      * @param ids 文档ID列表
      * @return 处理结果
      */
-    @PostMapping("batchReprocess")
-    public ResultData<Void> batchReprocessDocument(@RequestParam List<Long> ids) {
-        return documentService.batchReprocessDocument(ids);
+    @PostMapping("batchResetEvent")
+    public ResultData<Void> batchResetEvent(@RequestParam List<Long> ids) {
+        return documentService.batchResetEvent(ids);
     }
 }

@@ -90,9 +90,9 @@ export function batchDeleteDocumentAPI(ids) {
  * @param {Array} ids 文档ID列表
  * @returns {Promise}
  */
-export function batchReprocessDocumentAPI(ids) {
+export function batchResetDocumentEventAPI(ids) {
     return request({
-        url: '/dms/document/batchReprocess',
+        url: '/dms/document/batchResetEvent',
         method: 'post',
         params: { ids }
     })

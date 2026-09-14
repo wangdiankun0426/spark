@@ -69,7 +69,7 @@ public interface DocumentDao extends BaseDao<Document> {
      * 查询最大id
      * @return
      */
-    @Select("select max(id) from kb_document")
+    @Select("select max(id) from dms_document")
     Long queryDocumentMaxId();
 
     /**

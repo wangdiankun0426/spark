@@ -35,6 +35,8 @@ public class LlmTaskExecutor extends BaseService implements IWfNodeExecutor {
     private ModelFactory modelFactory;
     @Autowired
     private AttachmentDao attachmentDao;
+    @Autowired
+    private FileUtil fileUtil;
 
     /**
      * 节点类型
@@ -71,7 +73,7 @@ public class LlmTaskExecutor extends BaseService implements IWfNodeExecutor {
             attachmentQuery.setId(attIds.get(0));
             AttachmentResult attachmentResult = attachmentDao.queryAttachment(attachmentQuery);
             String filePath = attachmentResult.getPath();
-            String txtPath = FileUtil.generateTxtFile(filePath);
+            String txtPath = fileUtil.generateTxtFile(filePath);
             ResultData<String> txtData = TextUtil.getFromText(txtPath, true);
             if (txtData.getCode() == ResultData.OK) {
                 defParamMap.put("content", txtData.getData());

@@ -31,9 +31,7 @@ public class DocumentTask {
      */
     @Scheduled(cron = "0 */1 * * * ?")
     public void executeContentTask() {
-        logger.info("scheduled executeContentTask start");
-        CompletableFuture<ResultData<Void>> result = documentTaskService.executeContentTask();
-        logger.info("scheduled executeContentTask end, result={}",result);
+        documentTaskService.executeContentTask();
     }
 
     /**
@@ -42,9 +40,7 @@ public class DocumentTask {
      */
     @Scheduled(cron = "0 */1 * * * ?")
     public void executeIndexTask() {
-        logger.info("scheduled executeIndexTask start");
-        CompletableFuture<ResultData<Void>>  result = documentTaskService.executeIndexTask();
-        logger.info("scheduled executeIndexTask end, result={}",result);
+        documentTaskService.executeIndexTask();
     }
 
     /**
@@ -53,9 +49,7 @@ public class DocumentTask {
      */
     @Scheduled(cron = "0 */1 * * * ?")
     public void executeChunkTask() {
-        logger.info("scheduled executeChunkTask start");
-        CompletableFuture<ResultData<Void>> result = documentTaskService.executeChunkTask();
-        logger.info("scheduled executeChunkTask end, result={}",result);
+        documentTaskService.executeChunkTask();
     }
 
     /**
@@ -64,9 +58,7 @@ public class DocumentTask {
      */
     @Scheduled(cron = "0 */1 * * * ?")
     public void executeVectorTask() {
-        logger.info("scheduled executeVectorTask start");
-        CompletableFuture<ResultData<Void>>  result = documentTaskService.executeVectorTask();
-        logger.info("scheduled executeVectorTask end, result={}",result);
+        documentTaskService.executeVectorTask();
     }
 
     /**
@@ -75,8 +67,6 @@ public class DocumentTask {
      */
     @Scheduled(cron = "0 */1 * * * ?")
     public void executeGraphTask() {
-        logger.info("scheduled executeGraphTask start");
-        CompletableFuture<ResultData<Void>> result = documentTaskService.executeGraphTask();
-        logger.info("scheduled executeGraphTask end, result={}",result);
+        documentTaskService.executeGraphTask();
     }
 }

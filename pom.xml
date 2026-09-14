@@ -45,6 +45,7 @@
         <flowable-spring-boot.version>7.2.0</flowable-spring-boot.version>
         <poi.version>5.4.0</poi.version>
         <itextpdf.version>9.4.0</itextpdf.version>
+        <pdfbox.version>3.0.3</pdfbox.version>
         <hutool.version>5.8.40</hutool.version>
         <neo4j-java-driver.version>5.27.0</neo4j-java-driver.version>
         <dysmsapi20170525.version>3.1.0</dysmsapi20170525.version>
@@ -140,6 +141,12 @@
                 <groupId>com.itextpdf</groupId>
                 <artifactId>font-asian</artifactId>
                 <version>${itextpdf.version}</version>
+            </dependency>
+            <!-- pdfbox 对pdf文件进行操作-->
+            <dependency>
+                <groupId>org.apache.pdfbox</groupId>
+                <artifactId>pdfbox</artifactId>
+                <version>${pdfbox.version}</version>
             </dependency>
             <!-- hutool 工具-->
             <dependency>

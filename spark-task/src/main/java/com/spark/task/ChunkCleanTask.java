@@ -3,6 +3,7 @@ package com.spark.task;
 import com.spark.common.utils.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,8 @@ public class ChunkCleanTask {
     private final static Logger logger = LoggerFactory.getLogger(ChunkCleanTask.class);
     @Value("${docs.file.path}")
     private String docsPath;
+    @Autowired
+    private FileUtil fileUtil;
 
     /**
      * 每天凌晨2点执行一次
@@ -42,7 +45,7 @@ public class ChunkCleanTask {
         int cleanCount = 0;
         for (File chunkDir : chunkDirs) {
             if (chunkDir.lastModified() < expireTime) {
-                FileUtil.deleteDir(chunkDir);
+                fileUtil.deleteDir(chunkDir);
                 cleanCount++;
             }
         }

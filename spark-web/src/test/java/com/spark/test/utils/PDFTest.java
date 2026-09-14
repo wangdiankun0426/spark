@@ -20,7 +20,7 @@ public class PDFTest {
     @Test
     public void testPDF() {
         String filePath = "C:\\Users\\w1561\\Desktop\\file\\test_p.pdf";
-        String content = PDFUtil.readPDFContent(filePath);
+        String content = new PDFUtil().readPDFContent(filePath);
         System.out.println("pdf读取内容为:"+content);
     }
 }

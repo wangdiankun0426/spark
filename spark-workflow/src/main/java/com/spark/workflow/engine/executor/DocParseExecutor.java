@@ -34,6 +34,8 @@ public class DocParseExecutor extends BaseService implements IWfNodeExecutor {
     private static final Logger logger = LoggerFactory.getLogger(DocParseExecutor.class);
     @Autowired
     private AttachmentDao attachmentDao;
+    @Autowired
+    private FileUtil fileUtil;
 
     /**
      * 节点类型
@@ -70,7 +72,7 @@ public class DocParseExecutor extends BaseService implements IWfNodeExecutor {
             if (attachmentResult == null) {
                 throw new IllegalArgumentException(ErrorCodeEnum.ATTACHMENT_NOT_EXIST+": " + attId);
             }
-            String txtPath = FileUtil.convertToTxt(attachmentResult.getPath());
+            String txtPath = fileUtil.convertToTxt(attachmentResult.getPath());
             ResultData<String> fromText = TextUtil.getFromText(txtPath, true);
             if (fromText.getCode() != ResultData.OK || fromText.getData() == null) {
                 throw new IllegalArgumentException("文档内容解析失败: " + attachmentResult.getName());

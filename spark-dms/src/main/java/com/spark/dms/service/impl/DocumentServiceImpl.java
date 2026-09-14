@@ -86,6 +86,8 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
     private ESRetrieve esRetrieve;
     @Value("${docs.file.path}")
     private String docsPath;
+    @Autowired
+    private FileUtil fileUtil;
 
     /**
      * 根据系统附件归档文档
@@ -111,20 +113,20 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         if (prtId == null) {
             prtId = 0L;
         }
-        String newPath = FileUtil.generateFilePath(docsPath, UUID.randomUUID() + "." + attachment.getExt());
+        String newPath = fileUtil.generateFilePath(docsPath, UUID.randomUUID() + "." + attachment.getExt());
         if (newPath == null) {
             result.setErrorCode(ErrorCodeEnum.FILE_CREATE_FAIL);
             return result;
         }
-        boolean bo = FileUtil.copyFile(attachment.getPath(), newPath);
+        boolean bo = fileUtil.copyFile(attachment.getPath(), newPath);
         if (!bo) {
             result.setErrorCode(ErrorCodeEnum.FILE_NOT_EXIST);
             return result;
         }
         // 复制实体文件 pdf格式
-        FileUtil.copyCompanionFile(attachment.getPath(), newPath, "pdf");
+        fileUtil.copyCompanionFile(attachment.getPath(), newPath, "pdf");
         // 复制实体文件 txt格式
-        FileUtil.copyCompanionFile(attachment.getPath(), newPath, "txt");
+        fileUtil.copyCompanionFile(attachment.getPath(), newPath, "txt");
         Document document = new Document();
         Long docId = super.genObjectId(ObjectTypeEnum.DOCUMENT);
         document.setId(docId);
@@ -325,7 +327,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
             result.setErrorCode(ErrorCodeEnum.DOCUMENT_NOT_EXIST);
             return result;
         }
-        String filePath = FileUtil.getFileNameWithoutExt(documentResult.getPath())+"."+query.getExt();
+        String filePath = fileUtil.getFileNameWithoutExt(documentResult.getPath())+"."+query.getExt();
         File file = new File(filePath);
         if (!file.exists()) {
             logger.error("downloadDocument file not exist, filePath={}",filePath);
@@ -345,44 +347,38 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.DOCUMENT_DELETE)
-    public ResultData<Void> batchDeleteDocument(List<Long> ids) {
+    public ResultData<Void> batchDelDocument(List<Long> ids) {
         ResultData<Void> result = new ResultData<>();
         if (CollectionUtil.isEmpty(ids)) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        int successCount = 0;
         for (Long id : ids) {
             try {
                 Document document = new Document();
                 document.setId(id);
-                int count = documentDao.deleteDBById(document);
-                if (count > 0) {
-                    successCount++;
-                }
+                documentDao.deleteDBById(document);
             } catch (Exception e) {
                 logger.error("batchDeleteDocument error, id={}", id, e);
             }
         }
-        logger.info("batchDeleteDocument success, total={}, success={}", ids.size(), successCount);
         result.setCode(ResultData.OK);
         return result;
     }
 
     /**
-     * 批量重新处理文档
+     * 批量重置文档事件
      * @param ids 文档ID列表
      * @return 处理结果
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.DOCUMENT_EVENT_UPDATE)
-    public ResultData<Void> batchReprocessDocument(List<Long> ids) {
+    public ResultData<Void> batchResetEvent(List<Long> ids) {
         ResultData<Void> result = new ResultData<>();
         if (CollectionUtil.isEmpty(ids)) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        int successCount = 0;
         for (Long id : ids) {
             try {
                 DocumentEventQuery eventQuery = new DocumentEventQuery();
@@ -391,17 +387,17 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
                 if (eventResult != null) {
                     DocumentEvent updateEvent = new DocumentEvent();
                     updateEvent.setId(eventResult.getId());
+                    updateEvent.setContentStatus(DocumentEventStatusEnum.PENDING.getValue());
+                    updateEvent.setIndexStatus(DocumentEventStatusEnum.PENDING.getValue());
                     updateEvent.setChunkStatus(DocumentEventStatusEnum.PENDING.getValue());
                     updateEvent.setVectorStatus(DocumentEventStatusEnum.PENDING.getValue());
                     updateEvent.setGraphStatus(DocumentEventStatusEnum.PENDING.getValue());
-                    documentEventDao.updateById(updateEvent);
-                    successCount++;
+                    documentEventDao.updateDBById(updateEvent);
                 }
             } catch (Exception e) {
-                logger.error("batchReprocessDocument error, id={}", id, e);
+                logger.error("batchResetEvent error, id={}", id, e);
             }
         }
-        logger.info("batchReprocessDocument success, total={}, success={}", ids.size(), successCount);
         result.setCode(ResultData.OK);
         return result;
     }

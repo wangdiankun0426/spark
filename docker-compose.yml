@@ -141,6 +141,17 @@ services:
       - /opt/spark/software/nginx/log:/usr/log/nginx
     restart: always
 
+  spark-ocr:
+    image: ocr/chineseocr_lite:0.0.1
+    container_name: spark-ocr
+    privileged: true
+    networks:
+      spark_network:
+        ipv4_address: 172.10.0.9
+    ports:
+      - "8009:8089"
+    restart: always
+
   spark-server:
     image: spark-server:0.0.1
     container_name: spark-server

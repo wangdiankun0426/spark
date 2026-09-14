@@ -76,12 +76,12 @@ public interface IDocumentService {
      * @param ids 文档ID列表
      * @return 删除结果
      */
-    ResultData<Void> batchDeleteDocument(List<Long> ids);
+    ResultData<Void> batchDelDocument(List<Long> ids);
 
     /**
-     * 批量重新处理文档
+     * 批量重置文档事件
      * @param ids 文档ID列表
      * @return 处理结果
      */
-    ResultData<Void> batchReprocessDocument(List<Long> ids);
+    ResultData<Void> batchResetEvent(List<Long> ids);
 }

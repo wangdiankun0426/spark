@@ -290,7 +290,7 @@ public class DocumentChunkServiceImpl implements IDocumentChunkService {
             updateEvent.setVectorRemark("等待重新分块完成");
             updateEvent.setGraphStatus(DocumentEventStatusEnum.PENDING.getValue());
             updateEvent.setGraphRemark("等待重新分块完成");
-            int count = documentEventDao.updateById(updateEvent);
+            int count = documentEventDao.updateDBById(updateEvent);
             if (count < 1) {
                 logger.error("rechunkDocument update event fail, docId={}", docId);
                 result.setErrorCode(ErrorCodeEnum.SYSTEM_ERROR);

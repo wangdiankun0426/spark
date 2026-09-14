@@ -2,6 +2,8 @@ package com.spark.common.utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,15 +20,20 @@ import java.time.format.DateTimeFormatter;
  * @author wangdiankun
  * @since 2024/12/7 下午8:00
  */
+@Component
 public class FileUtil {
     private static final Logger logger = LoggerFactory.getLogger(FileUtil.class);
+    @Autowired
+    private PDFUtil pdfUtil;
+    @Autowired
+    private OCRUtil ocrUtil;
 
     /**
      * 获取文件后缀
      * @param fileName
      * @return
      */
-    public static String getFileExt(String fileName) {
+    public String getFileExt(String fileName) {
         if (StringUtil.isBlank(fileName)) {
             return null;
         }
@@ -38,7 +45,7 @@ public class FileUtil {
      * @param fileName
      * @return
      */
-    public static String getFileNameWithoutExt(String fileName) {
+    public String getFileNameWithoutExt(String fileName) {
         if (StringUtil.isBlank(fileName)) {
             return null;
         }
@@ -54,7 +61,7 @@ public class FileUtil {
      * @param filePath 待提取文件路径
      * @return txt文件路径
      */
-    public static String convertToTxt(String filePath) {
+    public String convertToTxt(String filePath) {
         if (StringUtil.isBlank(filePath)) {
             return null;
         }
@@ -68,13 +75,14 @@ public class FileUtil {
             return null;
         }
         String content = switch (fileExt) {
-            case "pdf" -> PDFUtil.readPDFContent(filePath);
+            case "pdf" -> pdfUtil.readPDFContent(filePath);
             case "doc" -> WordUtil.readDocContent(filePath);
             case "docx" -> WordUtil.readDocxContent(filePath);
             case "ppt" -> PPTUtil.readPPTContent(filePath);
             case "pptx" -> PPTUtil.readPPTXContent(filePath);
             case "xls" -> ExcelUtil.readXlsContent(filePath);
             case "xlsx" -> ExcelUtil.readXlsxContent(filePath);
+            case "jpg", "jpeg", "png" -> ocrUtil.readImgContent(filePath);
             default -> "";
         };
         TextUtil.writeToText(txtPath, content);
@@ -86,7 +94,7 @@ public class FileUtil {
      * @param filePath 文件路径
      * @return txt文件路径
      */
-    public static String generateTxtFile(String filePath) {
+    public String generateTxtFile(String filePath) {
         if (StringUtil.isBlank(filePath)) {
             return null;
         }
@@ -95,14 +103,9 @@ public class FileUtil {
             return null;
         }
         if ("md".equals(fileExt)) {
-            return FileUtil.getFileNameWithoutExt(filePath)+".md";
+            return this.getFileNameWithoutExt(filePath)+".md";
         }
-        String txtPath = FileUtil.getFileNameWithoutExt(filePath)+".txt";
-        File file = new File(txtPath);
-        if (file.exists()) {
-            return txtPath;
-        }
-        return null;
+        return this.getFileNameWithoutExt(filePath)+".txt";
     }
 
     /**
@@ -111,7 +114,7 @@ public class FileUtil {
      * @param fileName 文件名
      * @return 完整文件路径，目录创建失败时返回 null
      */
-    public static String generateFilePath(String basePath, String fileName) {
+    public String generateFilePath(String basePath, String fileName) {
         if (StringUtil.isBlank(basePath) || StringUtil.isBlank(fileName)) {
             logger.error("basePath or fileName is blank");
             return null;
@@ -134,7 +137,7 @@ public class FileUtil {
      * @param path 路径
      * @return 以分隔符结尾的路径
      */
-    private static String appendSeparator(String path) {
+    private String appendSeparator(String path) {
         if (path.endsWith("/") || path.endsWith("\\")) {
             return path;
         }
@@ -147,7 +150,7 @@ public class FileUtil {
      * @param newPath 新文件路径
      * @param ext 伴随文件后缀
      */
-    public static void copyCompanionFile(String srcPath, String newPath, String ext) {
+    public void copyCompanionFile(String srcPath, String newPath, String ext) {
         String fileExt = getFileExt(srcPath);
         if (ext.equalsIgnoreCase(fileExt)) {
             return;
@@ -167,7 +170,7 @@ public class FileUtil {
      * @param destPath 目标文件路径
      * @return 是否成功
      */
-    public static boolean copyFile(String srcPath, String destPath) {
+    public boolean copyFile(String srcPath, String destPath) {
         if (StringUtil.isBlank(srcPath)) {
             logger.error("srcPath is blank");
             return false;
@@ -190,7 +193,7 @@ public class FileUtil {
      * 删除目录及其子文件
      * @param dir 目录
      */
-    public static void deleteDir(File dir) {
+    public void deleteDir(File dir) {
         if (dir == null) {
             return;
         }

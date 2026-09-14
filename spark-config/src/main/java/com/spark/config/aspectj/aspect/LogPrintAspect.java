@@ -3,6 +3,7 @@ package com.spark.config.aspectj.aspect;
 import com.spark.common.constant.AspectOrder;
 import com.spark.config.aspectj.annotation.LogIgnore;
 import com.spark.common.utils.JsonUtil;
+import jakarta.servlet.http.Part;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -12,8 +13,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 
 /**
  * +++/\_/\
@@ -65,7 +70,11 @@ public class LogPrintAspect {
         try {
             Object[] args = joinPoint.getArgs();
             if (args != null && args.length > 0) {
-                params = JsonUtil.toString(args);
+                Object[] safeArgs = new Object[args.length];
+                for (int i = 0; i < args.length; i++) {
+                    safeArgs[i] = sanitizeArg(args[i]);
+                }
+                params = JsonUtil.toString(safeArgs);
             }
         } catch (Exception e) {
             params = "[序列化失败]";
@@ -88,5 +97,40 @@ public class LogPrintAspect {
             }
             logger.info("{} {} 耗时={}ms, 出参={}", className, methodName, cost, returnVal);
         }
+    }
+
+    /**
+     * 净化参数
+     * @param arg
+     * @return
+     */
+    private Object sanitizeArg(Object arg) {
+        if (arg == null) {
+            return null;
+        }
+        // Spring MultipartFile
+        if (arg instanceof MultipartFile file) {
+            return String.format("[MultipartFile: name=%s, size=%d, contentType=%s]",
+                    file.getOriginalFilename(), file.getSize(), file.getContentType());
+        }
+        // Servlet Part
+        if (arg instanceof Part part) {
+            return String.format("[Part: name=%s, size=%d]", part.getName(), part.getSize());
+        }
+        // InputStream / File / Path 等
+        if (arg instanceof InputStream) {
+            return "[InputStream]";
+        }
+        if (arg instanceof File file) {
+            return String.format("[File: %s, size=%d]", file.getName(), file.length());
+        }
+        if (arg instanceof Path path) {
+            return String.format("[Path: %s]", path);
+        }
+        // byte[] 数组可能也很大，按需处理
+        if (arg instanceof byte[] bytes) {
+            return String.format("[byte[]: length=%d]", bytes.length);
+        }
+        return arg;
     }
 }

@@ -55,7 +55,7 @@ import java.util.UUID;
 public class AttachmentServiceImpl extends BaseService<AttachmentQuery, AttachmentResult> implements IAttachmentService {
     private final static Logger logger = LoggerFactory.getLogger(AttachmentServiceImpl.class);
     private final static long MAX_CHUNK_SIZE = 1L * 1024 * 1024;
-    /** 元数据过期时间：24小时（秒） */
+    // 元数据过期时间：24小时（秒
     private final static long META_EXPIRE_SECONDS = 24 * 60 * 60;
     @Autowired
     private AttachmentDao attachmentDao;
@@ -63,6 +63,8 @@ public class AttachmentServiceImpl extends BaseService<AttachmentQuery, Attachme
     private RedisService redisService;
     @Value("${docs.file.path}")
     private String docsPath;
+    @Autowired
+    private FileUtil fileUtil;
 
     /**
      * 上传系统附件
@@ -78,8 +80,8 @@ public class AttachmentServiceImpl extends BaseService<AttachmentQuery, Attachme
             return result;
         }
         String filename = file.getOriginalFilename();
-        String fileExt = FileUtil.getFileExt(filename);
-        String filePath = FileUtil.generateFilePath(docsPath, UUID.randomUUID() + "." + fileExt);
+        String fileExt = fileUtil.getFileExt(filename);
+        String filePath = fileUtil.generateFilePath(docsPath, UUID.randomUUID() + "." + fileExt);
         if (filePath == null) {
             result.setErrorCode(ErrorCodeEnum.FILE_CREATE_FAIL);
             return result;
@@ -293,8 +295,8 @@ public class AttachmentServiceImpl extends BaseService<AttachmentQuery, Attachme
                 return result;
             }
         }
-        String fileExt = FileUtil.getFileExt(fileName);
-        String filePath = FileUtil.generateFilePath(docsPath, UUID.randomUUID() + "." + fileExt);
+        String fileExt = fileUtil.getFileExt(fileName);
+        String filePath = fileUtil.generateFilePath(docsPath, UUID.randomUUID() + "." + fileExt);
         if (filePath == null) {
             result.setErrorCode(ErrorCodeEnum.FILE_CREATE_FAIL);
             return result;
@@ -305,7 +307,7 @@ public class AttachmentServiceImpl extends BaseService<AttachmentQuery, Attachme
             return result;
         }
         // 合并成功后删除临时分片目录
-        FileUtil.deleteDir(chunkDir);
+        fileUtil.deleteDir(chunkDir);
         // 删除 Redis 中的会话元数据
         redisService.del(ObjectCacheKey.UPLOAD_CHUNK_META + uploadId);
         return saveAttachment(fileName, fileExt, fileSize, filePath);
