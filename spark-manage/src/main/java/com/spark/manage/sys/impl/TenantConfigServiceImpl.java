@@ -6,6 +6,7 @@ import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.sys.entity.TenantConfig;
 import com.spark.common.bean.sys.query.TenantConfigQuery;
+import com.spark.common.bean.sys.result.PasswordRuleResult;
 import com.spark.common.bean.sys.result.TenantConfigResult;
 import com.spark.common.bean.sys.vo.TenantConfigVO;
 import com.spark.common.enums.ErrorCodeEnum;
@@ -233,6 +234,51 @@ public class TenantConfigServiceImpl extends BaseService<TenantConfigQuery, Tena
         result.setData(configMap);
         result.setCode(ResultData.OK);
         return result;
+    }
+
+    /**
+     * 查询密码长度规则
+     * @param tenantId 租户id，为空时使用枚举默认值
+     * @return 密码长度规则
+     */
+    @Override
+    public ResultData<PasswordRuleResult> queryPasswordRule(Long tenantId) {
+        ResultData<PasswordRuleResult> result = new ResultData<>();
+        Integer minLength = this.queryPwdLengthValue(tenantId, TenantConfigEnum.PWD_MIN_LENGTH);
+        Integer maxLength = this.queryPwdLengthValue(tenantId, TenantConfigEnum.PWD_MAX_LENGTH);
+        if (minLength > maxLength) {
+            logger.warn("queryPasswordRule invalid pwd length config, tenantId={}, minLength={}, maxLength={}", tenantId, minLength, maxLength);
+            minLength = Integer.valueOf(TenantConfigEnum.PWD_MIN_LENGTH.getValue());
+            maxLength = Integer.valueOf(TenantConfigEnum.PWD_MAX_LENGTH.getValue());
+        }
+        PasswordRuleResult passwordRuleResult = new PasswordRuleResult();
+        passwordRuleResult.setMinLength(minLength);
+        passwordRuleResult.setMaxLength(maxLength);
+        result.setData(passwordRuleResult);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 查询密码长度配置值，缺失或非法时回退枚举默认值
+     * @param tenantId 租户id，为空时直接使用枚举默认值
+     * @param tenantConfigEnum 密码长度配置枚举
+     * @return 密码长度
+     */
+    private Integer queryPwdLengthValue(Long tenantId, TenantConfigEnum tenantConfigEnum) {
+        Integer defaultValue = Integer.valueOf(tenantConfigEnum.getValue());
+        if (tenantId == null) {
+            return defaultValue;
+        }
+        ResultData<String> valueResult = this.queryTenantConfigValue(tenantId, tenantConfigEnum.getKey());
+        if (valueResult.getCode() != ResultData.OK) {
+            return defaultValue;
+        }
+        String value = valueResult.getData();
+        if (StringUtil.isBlank(value) || !StringUtil.isNumeric(value.trim())) {
+            return defaultValue;
+        }
+        return Integer.valueOf(value.trim());
     }
 
     /**

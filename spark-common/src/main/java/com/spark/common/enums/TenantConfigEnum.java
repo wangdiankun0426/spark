@@ -22,7 +22,12 @@ public enum TenantConfigEnum {
     // 企微消息token
     WECOM_MSG_TOKEN("wecom_msg_token", "企微消息Token", ""),
     // 企微消息密钥
-    WECOM_MSG_ENCODING_AES_KEY("wecom_msg_encoding_aes_key", "企微消息密钥", "")
+    WECOM_MSG_ENCODING_AES_KEY("wecom_msg_encoding_aes_key", "企微消息密钥", ""),
+    // 密码最小长度
+    PWD_MIN_LENGTH("pwd.min.length", "密码最小长度", "6"),
+    // 密码最大长度
+    PWD_MAX_LENGTH("pwd.max.length", "密码最大长度", "12"),
+
     ;
 
     private String key;

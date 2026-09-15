@@ -6,6 +6,7 @@ import com.spark.common.bean.sys.entity.ValidateCode;
 import com.spark.common.bean.sys.vo.RegisterVO;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.sys.vo.UserVO;
+import com.spark.common.bean.sys.result.PasswordRuleResult;
 import com.spark.common.enums.*;
 import com.spark.manage.auth.IEncryptKeyService;
 import com.spark.manage.auth.ILoginValidateService;
@@ -13,6 +14,7 @@ import com.spark.manage.auth.IRegisterService;
 import com.spark.common.utils.DecryptUtil;
 import com.spark.common.utils.EncryptUtil;
 import com.spark.common.utils.StringUtil;
+import com.spark.manage.sys.ITenantConfigService;
 import com.spark.manage.sys.IUserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +40,8 @@ public class RegisterServiceImpl implements IRegisterService {
     private IUserService userService;
     @Autowired
     private IEncryptKeyService encryptKeyService;
+    @Autowired
+    private ITenantConfigService tenantConfigService;
 
     /**
      * 用户注册
@@ -64,6 +68,18 @@ public class RegisterServiceImpl implements IRegisterService {
         String password = DecryptUtil.des(registerVO.getPassword(), desKey);
         if (StringUtil.isBlank(password)) {
             result.setErrorCode(ErrorCodeEnum.ENCRYPT_KEY_INVALID);
+            return result;
+        }
+        // 注册无租户会话，按枚举默认密码长度规则校验
+        ResultData<PasswordRuleResult> passwordRuleResult = tenantConfigService.queryPasswordRule(null);
+        PasswordRuleResult passwordRule = passwordRuleResult.getData();
+        if (passwordRule == null || passwordRule.getMinLength() == null || passwordRule.getMaxLength() == null) {
+            result.setErrorCode(ErrorCodeEnum.SYSTEM_ERROR);
+            return result;
+        }
+        if (password.length() < passwordRule.getMinLength() || password.length() > passwordRule.getMaxLength()) {
+            result.setCode(ErrorCodeEnum.USER_PASSWORD_LENGTH_INVALID.getValue());
+            result.setMessage("密码长度需为" + passwordRule.getMinLength() + "-" + passwordRule.getMaxLength() + "个字符");
             return result;
         }
         try {

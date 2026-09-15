@@ -42,21 +42,37 @@
 </div>
 </template>
 <script setup>
-import {updatePasswordAPI} from "@/api/sys/user";
+import {updatePasswordAPI, getPasswordRuleAPI} from "@/api/sys/user";
 import {getEncryptKeyAPI} from "@/api/auth/login.js";
 import {des} from "@/utils/encryptUtil";
 import {ref} from 'vue';
 import {toast} from "uview-plus";
 
-// 密码长度范围：与注册页保持一致
-const PASSWORD_MIN_LENGTH = 6
-const PASSWORD_MAX_LENGTH = 20
+// 租户密码长度规则，接口未返回时使用默认值
+const passwordRule = ref({
+  minLength: 6,
+  maxLength: 12
+});
 
 const passwordForm = ref({
   oldPassword: undefined,
   newPassword: undefined,
   verifyPassword: undefined,
 });
+
+/**
+ * 加载租户密码长度规则
+ */
+function loadPasswordRule() {
+  getPasswordRuleAPI().then(res => {
+    if (res.code !== 200 || !res.data) {
+      return;
+    }
+    passwordRule.value = res.data;
+  });
+}
+
+loadPasswordRule();
 
 /**
  * 返回
@@ -88,8 +104,9 @@ function validatePasswordForm() {
     toast('请输入新密码');
     return false;
   }
-  if (newPassword.length < PASSWORD_MIN_LENGTH || newPassword.length > PASSWORD_MAX_LENGTH) {
-    toast('密码长度为' + PASSWORD_MIN_LENGTH + '-' + PASSWORD_MAX_LENGTH + '个字符');
+  const {minLength, maxLength} = passwordRule.value;
+  if (newPassword.length < minLength || newPassword.length > maxLength) {
+    toast('密码长度为' + minLength + '-' + maxLength + '个字符');
     return false;
   }
   if (newPassword === oldPassword) {

@@ -6,6 +6,7 @@ import com.spark.common.bean.sys.query.RoleUserQuery;
 import com.spark.common.bean.sys.query.TenantUserQuery;
 import com.spark.common.bean.sys.query.UserQuery;
 import com.spark.common.bean.sys.result.DepartmentResult;
+import com.spark.common.bean.sys.result.PasswordRuleResult;
 import com.spark.common.bean.sys.result.RoleUserResult;
 import com.spark.common.bean.sys.result.TenantUserResult;
 import com.spark.common.bean.sys.result.UserResult;
@@ -329,6 +330,19 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         String oldMd5 = EncryptUtil.md5(oldDes);
         if (!userResult.getPassword().equals(oldMd5)) {
             result.setErrorCode(ErrorCodeEnum.LONG_PASSWORD_ERROR);
+            return result;
+        }
+        // 按租户密码长度规则校验新密码
+        Long tenantId = SessionHolder.getCurrentTenantId();
+        ResultData<PasswordRuleResult> passwordRuleResult = tenantConfigService.queryPasswordRule(tenantId);
+        PasswordRuleResult passwordRule = passwordRuleResult.getData();
+        if (passwordRule == null || passwordRule.getMinLength() == null || passwordRule.getMaxLength() == null) {
+            result.setErrorCode(ErrorCodeEnum.SYSTEM_ERROR);
+            return result;
+        }
+        if (newDes.length() < passwordRule.getMinLength() || newDes.length() > passwordRule.getMaxLength()) {
+            result.setCode(ErrorCodeEnum.USER_PASSWORD_LENGTH_INVALID.getValue());
+            result.setMessage("密码长度需为" + passwordRule.getMinLength() + "-" + passwordRule.getMaxLength() + "个字符");
             return result;
         }
         String newMd5 = EncryptUtil.md5(newDes);

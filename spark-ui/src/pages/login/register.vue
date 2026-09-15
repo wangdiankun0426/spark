@@ -125,6 +125,7 @@ const validatePassword = (rule, value, callback) => {
   }
 };
 
+// 注册无租户会话，密码长度规则与 TenantConfigEnum 默认值保持一致
 const registerFormRules = {
   loginName: [
     { required: true, trigger: "blur", message: "请输入登录名" },
@@ -132,7 +133,7 @@ const registerFormRules = {
   ],
   password: [
     { required: true, trigger: "blur", message: "请输入密码" },
-    { min: 6, max: 20, trigger: "blur", message: "密码长度为6-20个字符" }
+    { min: 6, max: 12, trigger: "blur", message: "密码长度为6-12个字符" }
   ],
   confirmPassword: [
     { required: true, trigger: "blur", validator: validatePassword }

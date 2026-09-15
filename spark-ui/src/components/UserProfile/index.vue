@@ -90,6 +90,7 @@ import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { useStore } from 'vuex'
 import { updatePasswordAPI } from '@/api/manage/sys/user.js'
+import { getPasswordRuleAPI } from '@/api/manage/sys/tenantConfig.js'
 import { getEncryptKeyAPI } from '@/api/manage/auth/login.js'
 import { des } from '@/utils/encryptUtil.js'
 import UserAvatar from '@/components/UserAvatar'
@@ -113,11 +114,20 @@ const visible = computed({
 // 修改密码表单校验规则
 const passwordFormRules = ref({
   oldPassword: [{ required: true, trigger: 'blur', message: '请输入原密码' }],
-  newPassword: [{ required: true, trigger: 'blur', message: '请输入新密码' }],
+  newPassword: [
+    { required: true, trigger: 'blur', message: '请输入新密码' },
+    { validator: validateNewPasswordLength, trigger: 'blur' }
+  ],
   verifyPassword: [
     { required: true, trigger: 'blur', message: '请输入确认密码' },
     { required: true, validator: equalToPassword, trigger: 'blur' }
   ]
+})
+
+// 租户密码长度规则
+const passwordRule = ref({
+  minLength: undefined,
+  maxLength: undefined
 })
 
 // 修改密码表单数据
@@ -149,6 +159,7 @@ const uploadHeaders = ref({
 watch(() => props.modelValue, val => {
   if (val) {
     getUserDetail()
+    getPasswordRule()
   }
 })
 
@@ -160,6 +171,41 @@ function getUserDetail() {
   const baseUrl = process.env.BASE_HTTP_API
   userAvatarUploadUrl.value = baseUrl + '/sys/user/upload/avatar'
   uploadHeaders.value.Authorization = store.getters['user/getToken']
+}
+
+/**
+ * 加载租户密码长度规则
+ */
+function getPasswordRule() {
+  getPasswordRuleAPI().then(res => {
+    if (res.code !== 200 || !res.data) {
+      return
+    }
+    passwordRule.value = res.data
+  })
+}
+
+/**
+ * 校验新密码长度是否符合租户规则
+ * @param rule
+ * @param value
+ * @param callback
+ */
+function validateNewPasswordLength(rule, value, callback) {
+  if (value === undefined || value === '') {
+    callback()
+    return
+  }
+  const { minLength, maxLength } = passwordRule.value
+  if (minLength == null || maxLength == null) {
+    callback()
+    return
+  }
+  if (value.length < minLength || value.length > maxLength) {
+    callback(new Error('密码长度为' + minLength + '-' + maxLength + '个字符'))
+    return
+  }
+  callback()
 }
 
 /**

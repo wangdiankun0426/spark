@@ -44,6 +44,7 @@ public enum ErrorCodeEnum {
     USER_SAME_LOGIN_NAME_EXIST(701,"相同登录名的用户已存在"),
     USER_NOT_EXIST(702, "用户不存在"),
     USER_NOT_JOIN_NORMAL_TENANT(703, "用户未加入可用租户"),
+    USER_PASSWORD_LENGTH_INVALID(704, "密码长度不符合要求"),
     // 部门相关状态码
     DEPT_NOT_EXIST(801,"部门不存在"),
     DEPT_SAME_NAME_ALREADY_EXIST(802,"相同名称的部门已存在"),

@@ -51,3 +51,14 @@ export function deleteTenantConfigAPI(data) {
         params: data
     })
 }
+
+/**
+ * 查询当前租户密码长度规则
+ * @returns {Promise<AxiosResponse<any>>}
+ */
+export function getPasswordRuleAPI() {
+    return request({
+        url: '/sys/tenant/config/passwordRule',
+        method: 'get'
+    })
+}

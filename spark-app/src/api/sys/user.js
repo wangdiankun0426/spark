@@ -28,6 +28,17 @@ export function updatePasswordAPI(data) {
 }
 
 /**
+ * 查询当前租户密码长度规则
+ * @returns {Promise<AxiosResponse<any>>}
+ */
+export function getPasswordRuleAPI() {
+  return request({
+    url: '/sys/tenant/config/passwordRule',
+    method: 'get'
+  })
+}
+
+/**
  * 上传头像（使用 uni.uploadFile）
  * @param filePath 文件路径
  * @returns {Promise<any>}

@@ -2,7 +2,9 @@ package com.spark.web.rest.controller.manage.sys;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.sys.query.TenantConfigQuery;
+import com.spark.common.bean.sys.result.PasswordRuleResult;
 import com.spark.common.bean.sys.result.TenantConfigResult;
 import com.spark.common.bean.sys.vo.TenantConfigVO;
 import com.spark.manage.sys.ITenantConfigService;
@@ -66,6 +68,16 @@ public class TenantConfigController {
     @PostMapping("delete")
     private ResultData<Void> deleteTenantConfig(TenantConfigVO tenantConfigVO) {
         return tenantConfigService.deleteTenantConfig(tenantConfigVO);
+    }
+
+    /**
+     * 查询当前租户密码长度规则
+     * @return 密码长度规则
+     */
+    @GetMapping("passwordRule")
+    private ResultData<PasswordRuleResult> queryPasswordRule() {
+        Long tenantId = SessionHolder.getCurrentTenantId();
+        return tenantConfigService.queryPasswordRule(tenantId);
     }
 
 }

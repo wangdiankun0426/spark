@@ -3,6 +3,7 @@ package com.spark.manage.sys;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.sys.query.TenantConfigQuery;
+import com.spark.common.bean.sys.result.PasswordRuleResult;
 import com.spark.common.bean.sys.result.TenantConfigResult;
 import com.spark.common.bean.sys.vo.TenantConfigVO;
 
@@ -69,4 +70,11 @@ public interface ITenantConfigService {
      * @return 配置key-value
      */
     ResultData<Map<String, String>> queryTenantConfigMap(Long tenantId);
+
+    /**
+     * 查询密码长度规则
+     * @param tenantId 租户id，为空时使用枚举默认值
+     * @return 密码长度规则
+     */
+    ResultData<PasswordRuleResult> queryPasswordRule(Long tenantId);
 }
