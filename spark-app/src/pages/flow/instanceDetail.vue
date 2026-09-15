@@ -43,7 +43,7 @@
         <view class="section-title">表单详情</view>
         <view class="info-row" v-for="widget in visibleWidgetList" :key="widget.config.code">
           <text class="info-label">{{ widget.config.label }}</text>
-          <text class="info-value">{{ widgetValue(widget) }}</text>
+          <form-field-value class="info-value" :widget="widget"/>
         </view>
         <view v-if="visibleWidgetList.length === 0" class="form-empty">
           <text>暂无表单数据</text>
@@ -128,6 +128,7 @@ import {
 } from "@/api/flow/instance";
 import {toast} from "uview-plus";
 import UserPicker from '@/components/UserPicker/index.vue'
+import FormFieldValue from '@/components/FormFieldValue/index.vue'
 import store from "@/store/index.js";
 import {useDebounceFn} from "@/utils/debounce";
 
@@ -215,16 +216,6 @@ const showFooter = computed(() => {
  */
 function hasPermission(bit) {
   return ((nodePermission.value || 0) & bit) === bit;
-}
-
-/**
- * 表单组件取值：优先展示名称文本
- * @param widget 表单组件
- */
-function widgetValue(widget) {
-  const value = (widget.config.showValue !== undefined && widget.config.showValue !== null && widget.config.showValue !== '')
-      ? widget.config.showValue : widget.config.value;
-  return value === undefined || value === null || value === '' ? '-' : value;
 }
 
 /**

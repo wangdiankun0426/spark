@@ -27,7 +27,7 @@
         <view class="form-data-list">
           <view class="form-data-item" v-for="(item, index) in formFields" :key="index">
             <text class="form-label">{{ item.label }}</text>
-            <text class="form-value">{{ item.value || '-' }}</text>
+            <form-field-value class="form-value" :type="item.type" :value="item.value" :showValue="item.showValue"/>
           </view>
         </view>
       </view>
@@ -148,6 +148,7 @@ import {ref} from 'vue'
 import {onLoad} from '@dcloudio/uni-app'
 import {queryInstanceDetailAPI, queryInstanceNodesAPI} from '@/api/workflow/instance'
 import {detailFormValueAPI} from '@/api/form/formValue'
+import FormFieldValue from '@/components/FormFieldValue/index.vue'
 
 const instanceId = ref(null)
 const loading = ref(false)
@@ -216,17 +217,13 @@ function loadFormData(instanceId) {
           const fields = []
           values.forEach(v => {
             const widget = widgetList.find(w => w.config && w.config.code === v.code)
-            if (widget) {
-              fields.push({
-                label: widget.config.label || v.code,
-                value: v.showValue || v.value || ''
-              })
-            } else {
-              fields.push({
-                label: v.code,
-                value: v.showValue || v.value || ''
-              })
-            }
+            fields.push({
+              // 字段类型决定展示形式（如上传附件需解析 JSON 后展示文件名称）
+              type: widget && widget.type ? widget.type : '',
+              label: widget && widget.config && widget.config.label ? widget.config.label : v.code,
+              value: v.value,
+              showValue: v.showValue
+            })
           })
           formFields.value = fields
         } catch (e) {
