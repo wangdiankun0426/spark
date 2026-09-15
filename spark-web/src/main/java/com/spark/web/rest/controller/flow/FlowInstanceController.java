@@ -104,6 +104,17 @@ public class FlowInstanceController {
     }
 
     /**
+     * 管理员干预审批流程实例
+     * @param instanceVO 审批参数
+     * @return 响应
+     */
+    @Debounce
+    @PostMapping("adminApproval")
+    public ResultData<Void> adminApprovalInstance(@RequestBody FlowInstanceVO instanceVO) {
+        return instanceService.adminApprovalInstance(instanceVO);
+    }
+
+    /**
      * 催办流程实例
      * @param instanceVO 催办参数
      * @return 响应

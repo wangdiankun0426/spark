@@ -53,6 +53,13 @@ public interface IFlowInstanceService {
     ResultData<Void> approveInstance(FlowInstanceVO instanceVO);
 
     /**
+     * 管理员干预审批流程实例
+     * @param instanceVO 审批参数
+     * @return 审批结果
+     */
+    ResultData<Void> adminApprovalInstance(FlowInstanceVO instanceVO);
+
+    /**
      * 催办流程实例
      * @param instanceVO 催办参数
      * @return 催办结果

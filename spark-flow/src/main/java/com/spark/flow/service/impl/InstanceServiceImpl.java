@@ -365,6 +365,75 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
     }
 
     /**
+     * 管理员干预审批流程实例
+     * @param instanceVO 审批参数
+     * @return 审批结果
+     */
+    @Override
+    public ResultData<Void> adminApprovalInstance(FlowInstanceVO instanceVO) {
+        ResultData<Void> result = new ResultData<>();
+        if (instanceVO == null || instanceVO.getId() == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        FlowInstanceStatusEnum statusEnum = FlowInstanceStatusEnum.indexOf(instanceVO.getStatus());
+        if (statusEnum != FlowInstanceStatusEnum.COMPLETED && statusEnum != FlowInstanceStatusEnum.REJECTED) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (!SessionHolder.isSysAdmin() && !SessionHolder.isOrgAdmin()) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
+        instanceQuery.setId(instanceVO.getId());
+        instanceQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
+        if (instanceResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        FlowInstanceNodeQuery instanceNodeQuery = new FlowInstanceNodeQuery();
+        instanceNodeQuery.setInstanceId(instanceResult.getId());
+        instanceNodeQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        FlowInstanceNodeResult instanceNodeResult = instanceNodeDao.queryInstanceNode(instanceNodeQuery);
+        if (instanceNodeResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        // 当前节点审批中的审批人全部置为本次审批状态
+        int count = this.updateCurrentNodeAssigneeStatus(instanceResult.getId(), instanceNodeResult.getId(), statusEnum.getValue());
+        if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
+            return result;
+        }
+        // 当前节点审批完成 流转到下一节点
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("status", statusEnum.getValue());
+        FormObjValueQuery formObjValueQuery = new FormObjValueQuery();
+        formObjValueQuery.setObjId(instanceResult.getId());
+        List<FormObjValueResult> formObjValueList = formObjValueDao.queryFormObjValueList(formObjValueQuery);
+        if (CollectionUtil.isNotEmpty(formObjValueList)) {
+            formObjValueList.forEach(formObjValueResult -> variables.put(formObjValueResult.getCode(), formObjValueResult.getValue()));
+        }
+        ResultData<Void> completeData = flowableService.completeTask(instanceResult.getFlowableInstanceId(), variables);
+        if (completeData.getCode() != ResultData.OK) {
+            result.setCode(completeData.getCode());
+            result.setMessage(completeData.getMessage());
+            return result;
+        }
+        // 审批意见为空时使用默认审批意见
+        String discuss = instanceVO.getDiscuss();
+        if (StringUtil.isBlank(discuss)) {
+            discuss = statusEnum == FlowInstanceStatusEnum.COMPLETED ? "管理员审批通过" : "管理员审批驳回";
+        }
+        // 记录操作
+        this.saveFlowDiscuss(instanceResult.getId(), instanceNodeResult.getId(), statusEnum.getValue(), discuss);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
      * 催办流程实例
      * @param instanceVO 催办参数
      * @return 催办结果
@@ -777,6 +846,41 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         if (count < 1) {
             logger.error("saveFlowDiscuss error, insert db fail");
         }
+    }
+
+    /**
+     * 将节点审批中的审批人全部置为指定状态
+     * @param instanceId 流程实例id
+     * @param instanceNodeId 流程实例节点id
+     * @param status 审批状态
+     * @return 更新条数
+     */
+    private int updateCurrentNodeAssigneeStatus(Long instanceId, Long instanceNodeId, Integer status) {
+        if (instanceId == null || instanceNodeId == null || status == null) {
+            logger.warn("updateCurrentNodeAssigneeStatus skip, invalid param, instanceId={}, instanceNodeId={}, status={}", instanceId, instanceNodeId, status);
+            return 0;
+        }
+        FlowInstanceAssigneeQuery instanceAssigneeQuery = new FlowInstanceAssigneeQuery();
+        instanceAssigneeQuery.setInstanceId(instanceId);
+        instanceAssigneeQuery.setInstanceNodeId(instanceNodeId);
+        instanceAssigneeQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        List<FlowInstanceAssigneeResult> instanceAssigneeList = instanceAssigneeDao.queryInstanceAssigneeList(instanceAssigneeQuery);
+        if (CollectionUtil.isEmpty(instanceAssigneeList)) {
+            return 0;
+        }
+        int count = 0;
+        for (FlowInstanceAssigneeResult instanceAssigneeResult : instanceAssigneeList) {
+            FlowInstanceAssignee instanceAssignee = new FlowInstanceAssignee();
+            instanceAssignee.setId(instanceAssigneeResult.getId());
+            instanceAssignee.setStatus(status);
+            int updateCount = instanceAssigneeDao.updateDBById(instanceAssignee);
+            if (updateCount < 1) {
+                logger.error("updateCurrentNodeAssigneeStatus error, update db fail, assigneeId={}", instanceAssigneeResult.getId());
+                continue;
+            }
+            count++;
+        }
+        return count;
     }
 
     /**

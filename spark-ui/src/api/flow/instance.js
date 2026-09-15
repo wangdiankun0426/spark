@@ -63,6 +63,15 @@ export function approvalFlowInstanceAPI(data) {
     })
 }
 
+// 管理员干预审批流程实例
+export function adminApprovalFlowInstanceAPI(data) {
+    return request({
+        url: '/flow/instance/adminApproval',
+        method: 'post',
+        data
+    })
+}
+
 // 催办流程实例
 export function urgeFlowInstanceAPI(data) {
     return request({

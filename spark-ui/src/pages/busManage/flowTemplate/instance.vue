@@ -57,7 +57,7 @@
       <el-table-column prop="createdByName" label="申请人" width="100" align="center" />
       <el-table-column prop="deptName" label="申请部门" width="120" align="center" />
       <el-table-column prop="createdDt" label="申请时间" width="160" align="center" />
-      <el-table-column label="操作" width="140" align="center" fixed="right">
+      <el-table-column label="操作" width="260" align="center" fixed="right">
         <template #default="{ row }">
           <el-button
               text
@@ -76,6 +76,28 @@
             <el-icon><Tickets /></el-icon>
             <span style="font-size: 12px; font-weight: 500">
                任务
+            </span>
+          </el-button>
+          <el-button
+              type="success"
+              text
+              v-if="isAdmin && row.status === 2"
+              v-debounce="() => handleAdminApproval(row, 3)"
+          >
+            <el-icon><Select /></el-icon>
+            <span style="font-size: 12px; font-weight: 500">
+               通过
+            </span>
+          </el-button>
+          <el-button
+              type="danger"
+              text
+              v-if="isAdmin && row.status === 2"
+              v-debounce="() => handleAdminApproval(row, 4)"
+          >
+            <el-icon><CircleClose /></el-icon>
+            <span style="font-size: 12px; font-weight: 500">
+               驳回
             </span>
           </el-button>
         </template>
@@ -165,14 +187,17 @@
 <script setup>
 import { getCurrentInstance, ref } from 'vue';
 import {useRoute, useRouter} from 'vue-router';
-import { pageInstanceListAPI, showInstanceDetailAPI } from '@/api/flow/instance.js';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { pageInstanceListAPI, showInstanceDetailAPI, adminApprovalFlowInstanceAPI } from '@/api/flow/instance.js';
 import { pageTaskInstanceListAPI } from '@/api/task/instance.js';
 import TaskInstanceDetail from '@/components/TaskInstanceDetail/index.vue';
-import {ArrowLeft, Delete, DocumentAdd, Refresh, Search} from '@element-plus/icons-vue';
+import {ArrowLeft, CircleClose, Refresh, Search, Select} from '@element-plus/icons-vue';
 import FlowDetailDrawer from '@/components/FlowDetailDrawer/index.vue';
+import {isOrgAdmin, isSysAdmin} from '@/utils/utils.js';
 
 const { proxy } = getCurrentInstance();
 const route = useRoute();
+const isAdmin = isSysAdmin() || isOrgAdmin();
 const query = ref({
   pageNo: 1,
   pageSize: 30,
@@ -352,6 +377,46 @@ function handleOpenTaskList(row) {
 function handleOpenTaskDetail(row) {
   taskDetailId.value = row.id;
   taskDetailVisible.value = true;
+}
+
+// 管理员干预审批动作配置
+const adminApprovalConfig = {
+  3: { title: '通过', successMessage: '审批通过成功' },
+  4: { title: '驳回', successMessage: '审批驳回成功' }
+};
+
+/**
+ * 管理员干预审批流程实例
+ * @param row 行数据
+ * @param status 审批状态 3通过 4驳回
+ */
+function handleAdminApproval(row, status) {
+  const config = adminApprovalConfig[status];
+  if (!isAdmin || row.status !== 2 || !config) {
+    return;
+  }
+  ElMessageBox.prompt('请输入审批意见', config.title, {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputType: 'textarea',
+    inputProps: {
+      rows: 4,
+      placeholder: '选填'
+    }
+  }).then(({ value }) => {
+    adminApprovalFlowInstanceAPI({
+      id: row.id,
+      status: status,
+      discuss: value
+    }).then(res => {
+      if (res.code === 200) {
+        ElMessage.success(config.successMessage);
+        handleGetList();
+      }
+    }).catch(() => {});
+  }).catch(() => {
+    // 用户取消操作
+  });
 }
 
 const router = useRouter();
