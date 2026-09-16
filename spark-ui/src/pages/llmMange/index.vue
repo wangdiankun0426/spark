@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-container>
-      <el-aside width="64px" class="llm-el-aside">
+      <el-aside width="50px" class="llm-el-aside">
         <el-menu
             :default-active="defaultActive"
             :router='true'
@@ -101,6 +101,9 @@ const defaultActive = computed(() => {
   padding: 0;
   margin: 0;
   background: transparent !important;
+}
+:deep(.el-menu--collapse) {
+  width: 50px;
 }
 .el-menu-item {
   color: var(--sidebar-text);

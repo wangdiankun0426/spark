@@ -82,4 +82,9 @@ public class FlowInstanceVO extends BaseVO {
      * 转办/加签目标审批人id列表
      */
     private List<Long> assigneeIds;
+
+    /**
+     * 管理员替换审批人映射列表
+     */
+    private List<FlowInstanceAssigneeReplaceVO> replacements;
 }

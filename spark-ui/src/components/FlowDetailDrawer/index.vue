@@ -313,7 +313,7 @@ function handleClose() {
     color: $color-text-secondary;
   }
 
-  // 审批结果着色：通过/自动通过绿色，驳回红色，转办/加签灰色，撤回橙色
+  // 审批结果着色：通过/自动通过绿色，驳回红色，转办/加签/替换灰色，撤回橙色
   .discuss-status--3,
   .discuss-status--5 {
     color: #67c23a;
@@ -324,7 +324,8 @@ function handleClose() {
   }
 
   .discuss-status--7,
-  .discuss-status--8 {
+  .discuss-status--8,
+  .discuss-status--10 {
     color: #909399;
   }
 

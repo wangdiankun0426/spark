@@ -91,6 +91,7 @@ public enum ErrorCodeEnum {
     FLOW_INSTANCE_NOT_EXIST(1705, "流程实例不存在"),
     FLOW_INSTANCE_NOT_ALLOW(1706, "当前流程实例无操作权限"),
     FLOW_TASK_IS_EMPTY(1707, "当前流程实例任务不存在"),
+    FLOW_INSTANCE_ASSIGNEE_CHANGED(1708, "审批人状态已变化，请刷新后重试"),
     // 任务相关状态码
     TASK_RESTART(1801, "重启任务"),
     TASK_TEMPLATE_NOT_EXIST(1802, "任务模板不存在"),

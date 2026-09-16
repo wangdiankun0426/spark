@@ -57,7 +57,7 @@
       <el-table-column prop="createdByName" label="申请人" width="100" align="center" />
       <el-table-column prop="deptName" label="申请部门" width="120" align="center" />
       <el-table-column prop="createdDt" label="申请时间" width="160" align="center" />
-      <el-table-column label="操作" width="260" align="center" fixed="right">
+      <el-table-column label="操作" width="330" align="center" fixed="right">
         <template #default="{ row }">
           <el-button
               text
@@ -98,6 +98,17 @@
             <el-icon><CircleClose /></el-icon>
             <span style="font-size: 12px; font-weight: 500">
                驳回
+            </span>
+          </el-button>
+          <el-button
+              type="primary"
+              text
+              v-if="isAdmin && row.status === 2"
+              v-debounce="() => handleOpenReplace(row)"
+          >
+            <el-icon><Switch /></el-icon>
+            <span style="font-size: 12px; font-weight: 500">
+               换人
             </span>
           </el-button>
         </template>
@@ -181,6 +192,43 @@
     </el-drawer>
     <!--任务实例详情弹窗-->
     <task-instance-detail v-model="taskDetailVisible" :task-id="taskDetailId" />
+    <!--替换审批人弹窗-->
+    <el-dialog
+        v-model="replaceVisible"
+        title="替换审批人"
+        width="560px"
+        :close-on-click-modal="false"
+    >
+      <el-radio-group v-model="replaceMode" style="margin-bottom: 16px;">
+        <el-radio label="oneToOne">一对一替换</el-radio>
+        <el-radio label="batch">批量替换</el-radio>
+      </el-radio-group>
+      <div v-loading="replaceLoading" style="min-height: 120px;">
+        <el-table
+            v-if="replaceMode === 'oneToOne'"
+            :data="replaceList"
+            border
+            max-height="320"
+        >
+          <el-table-column prop="assigneeName" label="原审批人" width="110" align="center" />
+          <el-table-column prop="statusName" label="状态" width="90" align="center" />
+          <el-table-column label="替换为" align="center">
+            <template #default="{ row }">
+              <select-user v-model="row.targetUserId" placeholder="不替换" style="width: 100%" />
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-form v-else label-width="80px">
+          <el-form-item label="新审批人">
+            <select-user v-model="batchTargetIds" multiple clearable style="width: 100%" />
+          </el-form-item>
+        </el-form>
+      </div>
+      <template #footer>
+        <el-button @click="replaceVisible = false">取消</el-button>
+        <el-button type="primary" :loading="replacing" @click="confirmReplace">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -188,11 +236,12 @@
 import { getCurrentInstance, ref } from 'vue';
 import {useRoute, useRouter} from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { pageInstanceListAPI, showInstanceDetailAPI, adminApprovalFlowInstanceAPI } from '@/api/flow/instance.js';
+import { pageInstanceListAPI, showInstanceDetailAPI, adminApprovalFlowInstanceAPI, queryInstanceAssigneeListAPI, replaceFlowInstanceAssigneeAPI } from '@/api/flow/instance.js';
 import { pageTaskInstanceListAPI } from '@/api/task/instance.js';
 import TaskInstanceDetail from '@/components/TaskInstanceDetail/index.vue';
-import {ArrowLeft, CircleClose, Refresh, Search, Select} from '@element-plus/icons-vue';
+import {ArrowLeft, CircleClose, Refresh, Search, Select, Switch} from '@element-plus/icons-vue';
 import FlowDetailDrawer from '@/components/FlowDetailDrawer/index.vue';
+import SelectUser from '@/components/SelectUser/index.vue';
 import {isOrgAdmin, isSysAdmin} from '@/utils/utils.js';
 
 const { proxy } = getCurrentInstance();
@@ -416,6 +465,84 @@ function handleAdminApproval(row, status) {
     }).catch(() => {});
   }).catch(() => {
     // 用户取消操作
+  });
+}
+
+// 替换审批人弹窗状态
+const replaceVisible = ref(false);
+const replaceMode = ref('oneToOne');
+const replaceLoading = ref(false);
+const replacing = ref(false);
+const replaceRow = ref({});
+const replaceList = ref([]);
+const batchTargetIds = ref([]);
+
+/**
+ * 打开替换审批人弹窗
+ * @param row 行数据
+ */
+function handleOpenReplace(row) {
+  if (!isAdmin || row.status !== 2) {
+    return;
+  }
+  replaceRow.value = row;
+  replaceMode.value = 'oneToOne';
+  replaceList.value = [];
+  batchTargetIds.value = [];
+  replaceVisible.value = true;
+  replaceLoading.value = true;
+  queryInstanceAssigneeListAPI({ instanceId: row.id }).then(res => {
+    if (res.code === 200) {
+      const list = res.data || [];
+      replaceList.value = list.map(item => ({ ...item, targetUserId: undefined }));
+    }
+    replaceLoading.value = false;
+  }).catch(() => {
+    replaceLoading.value = false;
+  });
+}
+
+/**
+ * 提交替换审批人
+ */
+function confirmReplace() {
+  if (replaceMode.value === 'oneToOne') {
+    const replacements = replaceList.value
+        .filter(item => item.targetUserId)
+        .map(item => ({ sourceId: item.id, targetUserId: item.targetUserId }));
+    if (replacements.length === 0) {
+      ElMessage.warning('请至少选择一位替换审批人');
+      return;
+    }
+    const targetIds = replacements.map(item => item.targetUserId);
+    if (new Set(targetIds).size !== targetIds.length) {
+      ElMessage.warning('替换审批人不能重复');
+      return;
+    }
+    handleSubmitReplace({ id: replaceRow.value.id, replacements });
+    return;
+  }
+  if (batchTargetIds.value.length === 0) {
+    ElMessage.warning('请选择新的审批人');
+    return;
+  }
+  handleSubmitReplace({ id: replaceRow.value.id, assigneeIds: batchTargetIds.value });
+}
+
+/**
+ * 调用替换审批人接口
+ * @param data 提交参数
+ */
+function handleSubmitReplace(data) {
+  replacing.value = true;
+  replaceFlowInstanceAssigneeAPI(data).then(res => {
+    if (res.code === 200) {
+      ElMessage.success('替换审批人成功');
+      replaceVisible.value = false;
+      handleGetList();
+    }
+  }).catch(() => {}).finally(() => {
+    replacing.value = false;
   });
 }
 

@@ -4,6 +4,7 @@ import com.spark.common.bean.flow.entity.FlowInstanceAssignee;
 import com.spark.common.bean.flow.query.FlowInstanceAssigneeQuery;
 import com.spark.common.bean.flow.result.FlowInstanceAssigneeResult;
 import com.spark.dao.BaseDao;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -47,4 +48,14 @@ public interface FlowInstanceAssigneeDao extends BaseDao<FlowInstanceAssignee> {
      * @return
      */
     FlowInstanceAssigneeResult queryInstanceAssignee(FlowInstanceAssigneeQuery instanceAssigneeQuery);
+
+    /**
+     * 按原审批状态更新审批状态
+     * @param id 审批人记录id
+     * @param status 新审批状态
+     * @param expectStatus 期望的原审批状态
+     * @param updatedBy 修改人id
+     * @return 更新条数
+     */
+    int updateStatusById(@Param("id") Long id, @Param("status") Integer status, @Param("expectStatus") Integer expectStatus, @Param("updatedBy") Long updatedBy);
 }

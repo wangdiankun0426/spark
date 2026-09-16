@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-container>
-      <el-aside width="64px" class="home-el-aside">
+      <el-aside width="50px" class="home-el-aside">
         <el-menu
             :default-active="defaultActive"
             :router='true'
@@ -116,7 +116,6 @@ const defaultActive = computed(() => {
   margin: 0;
   background: transparent !important;
 }
-
 .home-menu-group {
   height: 30px;
   line-height: 28px;
@@ -128,7 +127,9 @@ const defaultActive = computed(() => {
   user-select: none;
   pointer-events: none;
 }
-
+:deep(.el-menu--collapse) {
+  width: 50px;
+}
 .home-el-menu :deep(.el-menu-item),
 .home-el-menu :deep(.el-sub-menu__title) {
   color: var(--sidebar-text);
@@ -155,33 +156,5 @@ const defaultActive = computed(() => {
 .home-el-menu :deep(.el-sub-menu__title .el-menu-tooltip__trigger) {
   padding: 0 !important;
   justify-content: center;
-}
-/* 折叠态弹出层：Element Plus 会将其 teleport 到 body，scoped 选择器命中不到，
-   故按 popper-class 写成受控的全局样式，类名仅本菜单使用。
-   弹层收窄为 64px 图标条，与左侧栏一级菜单视觉一致，名称由 tooltip 呈现 */
-:global(.home-flow-popup) {
-  border: none;
-  background: var(--sidebar-bg);
-}
-:global(.home-flow-popup .el-menu--popup) {
-  min-width: 64px;
-  padding: $spacing-xs 0;
-  background: var(--sidebar-bg);
-}
-:global(.home-flow-popup .el-menu-item) {
-  height: 44px;
-  line-height: 44px;
-  padding: 0 !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--sidebar-text);
-}
-:global(.home-flow-popup .el-menu-item:hover) {
-  background-color: var(--sidebar-hover-bg);
-}
-:global(.home-flow-popup .el-menu-item.is-active) {
-  background-color: var(--sidebar-active-bg);
-  color: var(--sidebar-active-text);
 }
 </style>

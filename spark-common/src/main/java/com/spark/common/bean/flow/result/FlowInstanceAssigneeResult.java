@@ -49,4 +49,14 @@ public class FlowInstanceAssigneeResult extends BaseResult {
      * 流程实例id
      */
     private String flowableInstanceId;
+
+    /**
+     * 审批人名称
+     */
+    private String assigneeName;
+
+    /**
+     * 审批状态名称
+     */
+    private String statusName;
 }

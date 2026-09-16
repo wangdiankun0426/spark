@@ -3,6 +3,8 @@ package com.spark.common.bean.flow.query;
 import com.spark.common.bean.base.BaseQuery;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * +++/\_/\
  * + ( °w° )=
@@ -39,5 +41,10 @@ public class FlowInstanceAssigneeQuery extends BaseQuery {
      * 审批状态
      */
     private Integer status;
+
+    /**
+     * 审批状态列表
+     */
+    private List<Integer> statuses;
 
 }

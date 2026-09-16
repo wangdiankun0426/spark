@@ -21,6 +21,13 @@
         <if test="status != null">
             and status = #{status}
         </if>
+        <if test="status == null and statuses != null and statuses.size() > 0">
+            and status in(
+            <foreach collection="statuses" item="statusItem" separator=",">
+                #{statusItem}
+            </foreach>
+            )
+        </if>
         <if test="deleteFlag != null and id == null and ids == null">
             and delete_flag = #{deleteFlag}
         </if>
@@ -40,6 +47,11 @@
             ,sort = #{sort}
         </if>
         where id = #{id}
+    </update>
+
+    <update id="updateStatusById">
+        update flow_instance_assignee set status = #{status}, updated_by = #{updatedBy}, updated_dt = now()
+        where id = #{id} and status = #{expectStatus}
     </update>
 
     <select id="queryInstanceAssigneeList" resultType="com.spark.common.bean.flow.result.FlowInstanceAssigneeResult">

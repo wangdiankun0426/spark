@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-container>
-      <el-aside width="64px" class="site-el-aside">
+      <el-aside width="50px" class="site-el-aside">
         <el-menu
             :default-active="defaultActive"
             :router='true'
@@ -80,5 +80,8 @@ const defaultActive = computed(() => {
 :deep(.el-menu-item .el-menu-tooltip__trigger) {
   padding: 0 !important;
   justify-content: center;
+}
+:deep(.el-menu--collapse) {
+  width: 50px;
 }
 </style>

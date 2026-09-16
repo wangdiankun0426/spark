@@ -19,7 +19,8 @@ public enum FlowInstanceStatusEnum {
     WAITING(6, "等待审批"),
     TRANSFERRED(7, "已转办"),
     ADDED_SIGN(8, "已加签"),
-    WITHDRAWN(9, "已撤回");
+    WITHDRAWN(9, "已撤回"),
+    REPLACED(10, "已替换");
 
     private Integer value;
 

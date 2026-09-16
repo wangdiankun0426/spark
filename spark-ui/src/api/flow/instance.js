@@ -72,6 +72,24 @@ export function adminApprovalFlowInstanceAPI(data) {
     })
 }
 
+// 查询流程实例当前节点待审批人列表
+export function queryInstanceAssigneeListAPI(query) {
+    return request({
+        url: '/flow/instance/assigneeList',
+        method: 'get',
+        params: query
+    })
+}
+
+// 管理员替换流程实例审批人
+export function replaceFlowInstanceAssigneeAPI(data) {
+    return request({
+        url: '/flow/instance/replaceAssignee',
+        method: 'post',
+        data
+    })
+}
+
 // 催办流程实例
 export function urgeFlowInstanceAPI(data) {
     return request({

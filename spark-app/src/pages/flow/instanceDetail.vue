@@ -488,11 +488,12 @@ const handleUserConfirm = useDebounceFn((users) => {
   }
 }
 
-// 状态着色：审批中蓝、通过绿、驳回红、撤回橙、转办/加签灰
+// 状态着色：审批中蓝、通过绿、驳回红、撤回橙、转办/加签/替换灰
 .status-1,
 .status-6,
 .status-7,
-.status-8 {
+.status-8,
+.status-10 {
   color: #909399;
 }
 

@@ -1,10 +1,14 @@
 package com.spark.flow.service;
 
+import com.spark.common.bean.flow.query.FlowInstanceAssigneeQuery;
 import com.spark.common.bean.flow.query.FlowInstanceQuery;
+import com.spark.common.bean.flow.result.FlowInstanceAssigneeResult;
 import com.spark.common.bean.flow.result.FlowInstanceResult;
 import com.spark.common.bean.flow.vo.FlowInstanceVO;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+
+import java.util.List;
 
 /**
  * +++/\_/\
@@ -58,6 +62,20 @@ public interface IFlowInstanceService {
      * @return 审批结果
      */
     ResultData<Void> adminApprovalInstance(FlowInstanceVO instanceVO);
+
+    /**
+     * 查询流程实例当前节点待审批人列表
+     * @param query 查询参数
+     * @return 审批人列表
+     */
+    ResultData<List<FlowInstanceAssigneeResult>> queryInstanceAssigneeList(FlowInstanceAssigneeQuery query);
+
+    /**
+     * 管理员替换流程实例审批人
+     * @param instanceVO 替换参数
+     * @return 替换结果
+     */
+    ResultData<Void> replaceInstanceAssignee(FlowInstanceVO instanceVO);
 
     /**
      * 催办流程实例

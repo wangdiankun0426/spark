@@ -1,7 +1,9 @@
 package com.spark.web.rest.controller.flow;
 
+import com.spark.common.bean.flow.query.FlowInstanceAssigneeQuery;
 import com.spark.common.bean.flow.query.FlowInstanceCopyQuery;
 import com.spark.common.bean.flow.query.FlowInstanceQuery;
+import com.spark.common.bean.flow.result.FlowInstanceAssigneeResult;
 import com.spark.common.bean.flow.result.FlowInstanceCopyResult;
 import com.spark.common.bean.flow.result.FlowInstanceResult;
 import com.spark.common.bean.flow.vo.FlowInstanceCopyVO;
@@ -13,6 +15,8 @@ import com.spark.flow.service.IFlowInstanceCopyService;
 import com.spark.flow.service.IFlowInstanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * +++/\_/\
@@ -112,6 +116,27 @@ public class FlowInstanceController {
     @PostMapping("adminApproval")
     public ResultData<Void> adminApprovalInstance(@RequestBody FlowInstanceVO instanceVO) {
         return instanceService.adminApprovalInstance(instanceVO);
+    }
+
+    /**
+     * 查询流程实例当前节点待审批人列表
+     * @param query 查询参数
+     * @return 审批人列表
+     */
+    @GetMapping("assigneeList")
+    public ResultData<List<FlowInstanceAssigneeResult>> queryInstanceAssigneeList(FlowInstanceAssigneeQuery query) {
+        return instanceService.queryInstanceAssigneeList(query);
+    }
+
+    /**
+     * 管理员替换流程实例审批人
+     * @param instanceVO 替换参数
+     * @return 响应
+     */
+    @Debounce
+    @PostMapping("replaceAssignee")
+    public ResultData<Void> replaceInstanceAssignee(@RequestBody FlowInstanceVO instanceVO) {
+        return instanceService.replaceInstanceAssignee(instanceVO);
     }
 
     /**

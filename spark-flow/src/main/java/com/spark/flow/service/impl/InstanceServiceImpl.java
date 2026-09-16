@@ -10,6 +10,7 @@ import com.spark.common.bean.flow.entity.FlowInstanceDiscuss;
 import com.spark.common.bean.flow.entity.FlowTemplate;
 import com.spark.common.bean.flow.query.*;
 import com.spark.common.bean.flow.result.*;
+import com.spark.common.bean.flow.vo.FlowInstanceAssigneeReplaceVO;
 import com.spark.common.bean.flow.vo.FlowInstanceVO;
 import com.spark.common.bean.form.entity.FormObjValue;
 import com.spark.common.bean.form.query.FormObjValueQuery;
@@ -434,6 +435,158 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
     }
 
     /**
+     * 查询流程实例当前节点待审批人列表
+     * @param query 查询参数
+     * @return 审批人列表
+     */
+    @Override
+    public ResultData<List<FlowInstanceAssigneeResult>> queryInstanceAssigneeList(FlowInstanceAssigneeQuery query) {
+        ResultData<List<FlowInstanceAssigneeResult>> result = new ResultData<>();
+        if (query == null || query.getInstanceId() == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        FlowInstanceNodeResult instanceNodeResult = this.queryProcessingNode(query.getInstanceId());
+        if (instanceNodeResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        List<FlowInstanceAssigneeResult> assigneeList = this.queryWaitAssigneeList(instanceNodeResult.getId());
+        if (CollectionUtil.isEmpty(assigneeList)) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        for (FlowInstanceAssigneeResult assigneeResult : assigneeList) {
+            String assigneeName = super.getObjName(assigneeResult.getAssigneeId());
+            assigneeResult.setAssigneeName(assigneeName);
+            FlowInstanceStatusEnum statusEnum = FlowInstanceStatusEnum.indexOf(assigneeResult.getStatus());
+            assigneeResult.setStatusName(statusEnum.getDesc());
+        }
+        result.setData(assigneeList);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 管理员替换流程实例审批人
+     * @param instanceVO 替换参数
+     * @return 替换结果
+     */
+    @Override
+    public ResultData<Void> replaceInstanceAssignee(FlowInstanceVO instanceVO) {
+        ResultData<Void> result = new ResultData<>();
+        if (instanceVO == null || instanceVO.getId() == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (!SessionHolder.isSysAdmin() && !SessionHolder.isOrgAdmin()) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
+        List<FlowInstanceAssigneeReplaceVO> replacements = instanceVO.getReplacements();
+        List<Long> assigneeIds = instanceVO.getAssigneeIds();
+        boolean oneToOneReplace = CollectionUtil.isNotEmpty(replacements);
+        boolean batchReplace = CollectionUtil.isNotEmpty(assigneeIds);
+        // 一对一替换与批量替换二选一
+        if (oneToOneReplace == batchReplace) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
+        instanceQuery.setId(instanceVO.getId());
+        instanceQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
+        if (instanceResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        FlowInstanceNodeResult instanceNodeResult = this.queryProcessingNode(instanceResult.getId());
+        if (instanceNodeResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        // 当前节点待审批人
+        List<FlowInstanceAssigneeResult> waitAssigneeList = this.queryWaitAssigneeList(instanceNodeResult.getId());
+        if (CollectionUtil.isEmpty(waitAssigneeList)) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        if (StringUtil.isBlank(instanceNodeResult.getAssigneeSetId())) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
+            return result;
+        }
+        Map<Long, FlowInstanceAssigneeResult> waitAssigneeMap = new HashMap<>();
+        List<Long> waitAssigneeIds = new ArrayList<>();
+        for (FlowInstanceAssigneeResult waitAssignee : waitAssigneeList) {
+            waitAssigneeMap.put(waitAssignee.getId(), waitAssignee);
+            waitAssigneeIds.add(waitAssignee.getAssigneeId());
+        }
+        // 新增审批人
+        List<FlowInstanceAssignee> insertAssigneeList;
+        // 作废审批人
+        List<FlowInstanceAssigneeResult> replacedAssigneeList = new ArrayList<>();
+        if (oneToOneReplace) {
+            ResultData<List<FlowInstanceAssignee>> buildData = this.buildOneToOneAssignee(replacements, waitAssigneeMap, waitAssigneeIds);
+            if (buildData.getCode() != ResultData.OK) {
+                result.setCode(buildData.getCode());
+                result.setMessage(buildData.getMessage());
+                return result;
+            }
+            insertAssigneeList = buildData.getData();
+            for (FlowInstanceAssigneeReplaceVO replacement : replacements) {
+                FlowInstanceAssigneeResult sourceAssignee = waitAssigneeMap.get(replacement.getSourceId());
+                replacedAssigneeList.add(sourceAssignee);
+            }
+        } else {
+            ResultData<List<FlowInstanceAssignee>> buildData = this.buildBatchAssignee(instanceResult, instanceNodeResult, assigneeIds, waitAssigneeIds);
+            if (buildData.getCode() != ResultData.OK) {
+                result.setCode(buildData.getCode());
+                result.setMessage(buildData.getMessage());
+                return result;
+            }
+            insertAssigneeList = buildData.getData();
+            replacedAssigneeList = waitAssigneeList;
+        }
+        // 先新增审批人再作废原审批人，中途失败时节点仍有审批中的人
+        for (FlowInstanceAssignee insertAssignee : insertAssigneeList) {
+            int insertCount = instanceAssigneeDao.insertDB(insertAssignee);
+            if (insertCount < 1) {
+                logger.error("replaceInstanceAssignee error, insert db fail, assigneeId={}", insertAssignee.getAssigneeId());
+                result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
+                return result;
+            }
+        }
+        Long currentUserId = SessionHolder.getCurrentUserId();
+        Integer replacedStatus = FlowInstanceStatusEnum.REPLACED.getValue();
+        for (FlowInstanceAssigneeResult replacedAssignee : replacedAssigneeList) {
+            int updateCount = instanceAssigneeDao.updateStatusById(replacedAssignee.getId(), replacedStatus, replacedAssignee.getStatus(), currentUserId);
+            if (updateCount < 1) {
+                logger.error("replaceInstanceAssignee error, update db fail, sourceId={}", replacedAssignee.getId());
+                result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_ASSIGNEE_CHANGED);
+                return result;
+            }
+        }
+        // 兜底校验：节点必须仍有审批中的审批人
+        FlowInstanceAssigneeQuery processingQuery = new FlowInstanceAssigneeQuery();
+        processingQuery.setInstanceNodeId(instanceNodeResult.getId());
+        processingQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        List<FlowInstanceAssigneeResult> processingList = instanceAssigneeDao.queryInstanceAssigneeList(processingQuery);
+        if (CollectionUtil.isEmpty(processingList)) {
+            logger.error("replaceInstanceAssignee error, no processing assignee, instanceId={}", instanceResult.getId());
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_ASSIGNEE_CHANGED);
+            return result;
+        }
+        // 记录操作
+        String discuss = this.buildReplaceDiscuss(oneToOneReplace, replacedAssigneeList, insertAssigneeList);
+        this.saveFlowDiscuss(instanceResult.getId(), instanceNodeResult.getId(), replacedStatus, discuss);
+        // 发送待办
+        Integer msgType = MessageTypeEnum.FLOW_TODO.getType();
+        flowMessageService.sendFlowNotice(instanceResult.getFlowableInstanceId(), msgType);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
      * 催办流程实例
      * @param instanceVO 催办参数
      * @return 催办结果
@@ -646,7 +799,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
             result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
             return result;
         }
-        // 校验当前节点无人审批过（所有assignee仍为PROCESSING状态）
+        // 校验当前节点无人审批过（不存在审批通过、驳回、自动通过的记录）
         if (StringUtil.isNotBlank(instanceNodeResult.getAssigneeSetId())) {
             FlowInstanceAssigneeQuery allAssigneeQuery = new FlowInstanceAssigneeQuery();
             allAssigneeQuery.setAssigneeSetId(instanceNodeResult.getAssigneeSetId());
@@ -655,9 +808,9 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
                 result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
                 return result;
             }
-            boolean allProcessing = allAssigneeList.stream()
-                    .allMatch(a -> FlowInstanceStatusEnum.PROCESSING.getValue().equals(a.getStatus()));
-            if (!allProcessing) {
+            boolean approved = allAssigneeList.stream()
+                    .anyMatch(assigneeResult -> this.isApprovedStatus(assigneeResult.getStatus()));
+            if (approved) {
                 // 有人已审批，不允许撤回
                 result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
                 return result;
@@ -805,6 +958,187 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         result.setData(assigneeResult);
         result.setCode(ResultData.OK);
         return result;
+    }
+
+    /**
+     * 判断审批状态是否已产生审批结果
+     * @param status 审批状态
+     * @return true已审批 false未审批
+     */
+    private boolean isApprovedStatus(Integer status) {
+        if (status == null) {
+            return false;
+        }
+        return FlowInstanceStatusEnum.COMPLETED.getValue().equals(status)
+                || FlowInstanceStatusEnum.REJECTED.getValue().equals(status)
+                || FlowInstanceStatusEnum.AUTO_PASS.getValue().equals(status);
+    }
+
+    /**
+     * 查询流程实例当前审批中节点
+     * @param instanceId 流程实例id
+     * @return 节点信息
+     */
+    private FlowInstanceNodeResult queryProcessingNode(Long instanceId) {
+        if (instanceId == null) {
+            logger.warn("queryProcessingNode skip, invalid param, instanceId={}", instanceId);
+            return null;
+        }
+        FlowInstanceNodeQuery instanceNodeQuery = new FlowInstanceNodeQuery();
+        instanceNodeQuery.setInstanceId(instanceId);
+        instanceNodeQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        return instanceNodeDao.queryInstanceNode(instanceNodeQuery);
+    }
+
+    /**
+     * 查询节点待审批人列表
+     * @param instanceNodeId 流程实例节点id
+     * @return 审批人列表
+     */
+    private List<FlowInstanceAssigneeResult> queryWaitAssigneeList(Long instanceNodeId) {
+        if (instanceNodeId == null) {
+            logger.warn("queryWaitAssigneeList skip, invalid param, instanceNodeId={}", instanceNodeId);
+            return new ArrayList<>();
+        }
+        FlowInstanceAssigneeQuery assigneeQuery = new FlowInstanceAssigneeQuery();
+        assigneeQuery.setInstanceNodeId(instanceNodeId);
+        List<Integer> statuses = List.of(FlowInstanceStatusEnum.PROCESSING.getValue(), FlowInstanceStatusEnum.WAITING.getValue());
+        assigneeQuery.setStatuses(statuses);
+        return instanceAssigneeDao.queryInstanceAssigneeList(assigneeQuery);
+    }
+
+    /**
+     * 构造新增审批人
+     * @param instanceId 流程实例id
+     * @param instanceNodeId 流程实例节点id
+     * @param assigneeSetId 审批人集合id
+     * @param assigneeId 审批人id
+     * @param status 审批状态
+     * @param sort 审批顺序
+     * @return 审批人记录
+     */
+    private FlowInstanceAssignee buildInsertAssignee(Long instanceId, Long instanceNodeId, String assigneeSetId, Long assigneeId, Integer status, Integer sort) {
+        FlowInstanceAssignee instanceAssignee = new FlowInstanceAssignee();
+        instanceAssignee.setInstanceId(instanceId);
+        instanceAssignee.setInstanceNodeId(instanceNodeId);
+        instanceAssignee.setAssigneeSetId(assigneeSetId);
+        instanceAssignee.setAssigneeId(assigneeId);
+        instanceAssignee.setStatus(status);
+        instanceAssignee.setSort(sort);
+        return instanceAssignee;
+    }
+
+    /**
+     * 构造一对一替换的新增审批人
+     * @param replacements 替换映射
+     * @param waitAssigneeMap 待审批人映射
+     * @param waitAssigneeIds 替换前待审批人id列表
+     * @return 新增审批人列表
+     */
+    private ResultData<List<FlowInstanceAssignee>> buildOneToOneAssignee(List<FlowInstanceAssigneeReplaceVO> replacements, Map<Long, FlowInstanceAssigneeResult> waitAssigneeMap, List<Long> waitAssigneeIds) {
+        ResultData<List<FlowInstanceAssignee>> result = new ResultData<>();
+        List<Long> sourceIds = new ArrayList<>();
+        List<Long> targetUserIds = new ArrayList<>();
+        List<FlowInstanceAssignee> insertList = new ArrayList<>();
+        for (FlowInstanceAssigneeReplaceVO replacement : replacements) {
+            if (replacement == null || replacement.getSourceId() == null || replacement.getTargetUserId() == null) {
+                result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+                return result;
+            }
+            FlowInstanceAssigneeResult sourceAssignee = waitAssigneeMap.get(replacement.getSourceId());
+            if (sourceAssignee == null) {
+                result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+                return result;
+            }
+            if (sourceIds.contains(replacement.getSourceId())) {
+                result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+                return result;
+            }
+            if (waitAssigneeIds.contains(replacement.getTargetUserId())) {
+                result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+                return result;
+            }
+            if (targetUserIds.contains(replacement.getTargetUserId())) {
+                result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+                return result;
+            }
+            sourceIds.add(replacement.getSourceId());
+            targetUserIds.add(replacement.getTargetUserId());
+            // 新审批人继承原审批人的审批状态与顺序
+            FlowInstanceAssignee insertAssignee = this.buildInsertAssignee(sourceAssignee.getInstanceId(), sourceAssignee.getInstanceNodeId(), sourceAssignee.getAssigneeSetId(), replacement.getTargetUserId(), sourceAssignee.getStatus(), sourceAssignee.getSort());
+            insertList.add(insertAssignee);
+        }
+        result.setData(insertList);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 构造批量替换的新增审批人
+     * @param instanceResult 流程实例
+     * @param instanceNodeResult 流程实例节点
+     * @param assigneeIds 新审批人id列表
+     * @param waitAssigneeIds 替换前待审批人id列表
+     * @return 新增审批人列表
+     */
+    private ResultData<List<FlowInstanceAssignee>> buildBatchAssignee(FlowInstanceResult instanceResult, FlowInstanceNodeResult instanceNodeResult, List<Long> assigneeIds, List<Long> waitAssigneeIds) {
+        ResultData<List<FlowInstanceAssignee>> result = new ResultData<>();
+        List<Long> targetUserIds = new ArrayList<>();
+        for (Long assigneeId : assigneeIds) {
+            if (assigneeId == null) {
+                result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+                return result;
+            }
+            if (waitAssigneeIds.contains(assigneeId)) {
+                result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+                return result;
+            }
+            if (targetUserIds.contains(assigneeId)) {
+                result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+                return result;
+            }
+            targetUserIds.add(assigneeId);
+        }
+        FlowTemplateNodeQuery templateNodeQuery = new FlowTemplateNodeQuery();
+        templateNodeQuery.setNodeId(instanceNodeResult.getNodeId());
+        templateNodeQuery.setTemplateId(instanceResult.getTemplateId());
+        templateNodeQuery.setRevId(instanceResult.getTemplateRevId());
+        FlowTemplateNodeResult templateNodeResult = templateNodeDao.queryTemplateNode(templateNodeQuery);
+        Integer approveType = templateNodeResult == null ? null : templateNodeResult.getApproveType();
+        FlowApproveTypeEnum approveTypeEnum = FlowApproveTypeEnum.indexOf(approveType);
+        List<FlowInstanceAssignee> insertList = new ArrayList<>();
+        for (int i = 0; i < targetUserIds.size(); i++) {
+            Integer status = FlowInstanceStatusEnum.PROCESSING.getValue();
+            // 依次审批时仅第一位审批中
+            if (FlowApproveTypeEnum.SEQUENTIAL.equals(approveTypeEnum) && i > 0) {
+                status = FlowInstanceStatusEnum.WAITING.getValue();
+            }
+            FlowInstanceAssignee insertAssignee = this.buildInsertAssignee(instanceNodeResult.getInstanceId(), instanceNodeResult.getId(), instanceNodeResult.getAssigneeSetId(), targetUserIds.get(i), status, i + 1);
+            insertList.add(insertAssignee);
+        }
+        result.setData(insertList);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 构造替换审批人的操作说明
+     * @param oneToOneReplace 是否一对一替换
+     * @param replacedAssigneeList 作废审批人列表
+     * @param insertAssigneeList 新增审批人列表
+     * @return 操作说明
+     */
+    private String buildReplaceDiscuss(boolean oneToOneReplace, List<FlowInstanceAssigneeResult> replacedAssigneeList, List<FlowInstanceAssignee> insertAssigneeList) {
+        List<Long> targetUserIds = insertAssigneeList.stream().map(FlowInstanceAssignee::getAssigneeId).toList();
+        List<String> targetNameList = super.getObjNames(targetUserIds);
+        String targetNames = StringUtil.join(targetNameList, ",");
+        if (!oneToOneReplace) {
+            return "将当前审批人替换为 " + targetNames;
+        }
+        List<Long> sourceUserIds = replacedAssigneeList.stream().map(FlowInstanceAssigneeResult::getAssigneeId).toList();
+        List<String> sourceNameList = super.getObjNames(sourceUserIds);
+        String sourceNames = StringUtil.join(sourceNameList, ",");
+        return "将 " + sourceNames + " 替换为 " + targetNames;
     }
 
     /**
