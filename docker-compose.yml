@@ -152,6 +152,25 @@ services:
       - "8009:8089"
     restart: always
 
+  spark-onlyoffice:
+    image: onlyoffice/documentserver:9.3.0
+    container_name: spark-onlyoffice
+    privileged: true
+    networks:
+      spark_network:
+        ipv4_address: 172.10.0.10
+    environment:
+      - JWT_ENABLED=false
+      - TZ=Asia/Shanghai
+    ports:
+      - "9000:80"
+    volumes:
+      - /opt/spark/software/onlyoffice/logs:/var/log/onlyoffice
+      - /opt/spark/software/onlyoffice/data:/var/www/onlyoffice/Data
+      - /opt/spark/software/onlyoffice/cache:/var/lib/onlyoffice/documentserver/App_Data/cache/files
+      - /opt/spark/software/onlyoffice/fonts:/usr/share/fonts/truetype/custom
+    restart: always
+
   spark-server:
     image: spark-server:0.0.1
     container_name: spark-server

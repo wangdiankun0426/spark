@@ -1,9 +1,5 @@
 <template>
   <div class="document-preview-page">
-    <!--顶部信息栏-->
-    <div class="document-preview-page__header">
-      <span class="document-preview-page__title">{{ documentName }}</span>
-    </div>
     <!--预览主体-->
     <div class="document-preview-page__body">
       <!--详情加载中-->
@@ -137,7 +133,6 @@ const route = useRoute()
 const documentId = computed(() => route.query.id)
 // 按对象ID尾数区分类型：文档为9、附件为7（genObjectId 规则：n*100+typeValue）
 const isAttachment = computed(() => Number(documentId.value) % 100 === 7)
-const documentName = ref('')
 const documentExt = ref('')
 const detailLoading = ref(false)
 const detailError = ref('')
@@ -168,7 +163,6 @@ function loadDocumentDetail() {
       detailError.value = isAttachment.value ? '附件详情获取失败' : '文档详情获取失败'
       return
     }
-    documentName.value = res.data.name
     documentExt.value = res.data.ext
     loadAndPreview()
   }).finally(() => {
@@ -281,21 +275,6 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   height: 100vh;
-
-  &__header {
-    display: flex;
-    align-items: center;
-    gap: $spacing-md;
-    padding: $spacing-sm $spacing-md;
-    background-color: $bg-card;
-    border-bottom: 1px solid $border-color-light;
-  }
-
-  &__title {
-    font-size: 16px;
-    font-weight: 400;
-    color: $color-text-primary;
-  }
 
   &__body {
     flex: 1;

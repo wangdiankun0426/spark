@@ -76,6 +76,14 @@ export default [
         }
     },
     {
+        path: '/document/editor',
+        name: 'documentEditor',
+        component: () => import('@/views/dms/editor/index.vue'),
+        meta: {
+            title: '文档编辑'
+        }
+    },
+    {
         path: '/noPermission',
         name: 'noPermission',
         component: () => import('@/pages/error/noPermission.vue'),

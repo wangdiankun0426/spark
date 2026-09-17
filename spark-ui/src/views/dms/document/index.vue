@@ -64,9 +64,13 @@
             <el-tag size="small" type="info" style="margin-left: 4px">V{{ scope.row.versionNo }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="" width="240" align="center">
+        <el-table-column label="" :width="isGraph ? 300 : 240" align="center">
           <template #default="scope">
             <div class="row-actions">
+              <el-button v-if="isGraph" type="primary" text @click="handleOpenGraphDetail(scope.row.id)">
+                <el-icon><Connection /></el-icon>
+                <span style="font-size: 12px; font-weight: 400">图谱</span>
+              </el-button>
               <el-button type="success" text @click="handleDocumentEvent(scope.row.id)">
                 <el-icon><HelpFilled /></el-icon>
                 <span style="font-size: 12px; font-weight: 400">事件</span>
@@ -89,15 +93,15 @@
         <el-table-column prop="sizeStr" label="大小" align="center"/>
         <el-table-column prop="ownerName" label="所有者" align="center" />
         <el-table-column prop="createdDt" label="创建时间" width="160" align="center"/>
-        <el-table-column fixed="right" label="操作" :width="isGraph ? 300 : 240" align="center">
+        <el-table-column fixed="right" label="操作" width="300" align="center">
           <template #default="scope">
-            <el-button v-if="isGraph" type="primary" text @click="handleOpenGraphDetail(scope.row.id)">
-              <el-icon><Connection /></el-icon>
-              <span style="font-size: 12px; font-weight: 400">图谱</span>
-            </el-button>
             <el-button type="primary" text @click="handleUploadNewVersion(scope.row)">
               <el-icon><Upload /></el-icon>
               <span style="font-size: 12px; font-weight: 400">上传新版本</span>
+            </el-button>
+            <el-button v-if="isEditableDocument(scope.row)" type="warning" text @click="handleEditDocument(scope.row)">
+              <el-icon><EditPen /></el-icon>
+              <span style="font-size: 12px; font-weight: 400">编辑</span>
             </el-button>
             <el-button type="success" text @click="handleOpenUpdateDocumentForm(scope.row)">
               <el-icon><Edit /></el-icon>
@@ -259,8 +263,9 @@ import { pageFormListAPI, queryFormJsonAPI } from '@/api/form/form.js'
 import { detailFormValueAPI, saveFormValueAPI } from '@/api/form/formValue.js'
 import {
   ArrowLeft, Collection, Connection, Search, Refresh, DocumentAdd,
-  HelpFilled, Grid, Edit, Delete, Tickets, Files, Upload
+  HelpFilled, Grid, Edit, Delete, Tickets, Files, Upload, EditPen
 } from '@element-plus/icons-vue'
+import { getDocumentCategory, DOCUMENT_CATEGORY } from '@/utils/documentUtil.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -623,6 +628,23 @@ function handleOpenChunkPage(docId) {
  */
 function handlePreviewDocument(row) {
   const { href } = router.resolve({ path: '/document/preview', query: { id: row.id } })
+  window.open(href, '_blank')
+}
+
+/**
+ * 是否支持在线编辑的文档
+ */
+function isEditableDocument(row) {
+  const category = getDocumentCategory(row.ext)
+  return category === DOCUMENT_CATEGORY.MARKDOWN || category === DOCUMENT_CATEGORY.TXT
+      || category === DOCUMENT_CATEGORY.WORD || category === DOCUMENT_CATEGORY.EXCEL || category === DOCUMENT_CATEGORY.PPT
+}
+
+/**
+ * 打开文档在线编辑（新开标签页）
+ */
+function handleEditDocument(row) {
+  const { href } = router.resolve({ path: '/document/editor', query: { id: row.id } })
   window.open(href, '_blank')
 }
 

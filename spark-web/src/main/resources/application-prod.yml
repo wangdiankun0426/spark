@@ -118,3 +118,6 @@ spark:
     app-secret: xxxxxxxxxxxxx
   ocr:
     url: http://172.10.0.9:8089/api/tr-run/
+onlyoffice:
+  url: http://127.0.0.1:9000
+  callback-host: http://172.10.0.7:8000

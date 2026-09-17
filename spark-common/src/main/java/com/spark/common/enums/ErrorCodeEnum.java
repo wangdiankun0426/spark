@@ -86,6 +86,8 @@ public enum ErrorCodeEnum {
     DOCUMENT_VERSION_NOT_EXIST(1610, "文档版本不存在"),
     DOCUMENT_VERSION_CURRENT_NOT_ALLOW(1611, "当前版本不允许删除"),
     DOCUMENT_VERSION_EXT_NOT_MATCH(1612, "新版本文件格式必须与原文档一致"),
+    ONLYOFFICE_PREVIEW_NOT_SUPPORT(1613, "该文件类型暂不支持在线预览"),
+    ONLYOFFICE_TOKEN_INVALID(1614, "下载凭证无效或已过期"),
     // 流程相关状态码
     FLOW_TEMPLATE_NOT_EXIST(1701, "流程模板不存在"),
     FLOW_TEMPLATE_VERSION_NOT_EXIST(1702, "流程模板版本不存在"),
