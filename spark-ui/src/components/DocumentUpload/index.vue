@@ -1,7 +1,7 @@
 <template>
   <el-drawer
     v-model="drawerVisible"
-    title="上传文档"
+    :title="docId ? '上传新版本' : '上传文档'"
     direction="ltr"
     size="30%"
     :before-close="handleClose"
@@ -61,11 +61,12 @@ import { computed, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { UploadFilled } from '@element-plus/icons-vue'
 import { chunkUploadFile } from '@/utils/chunkUploadUtil.js'
-import { fileDocumentAPI } from '@/api/dms/document.js'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   prtId: { type: [String, Number], default: undefined },
+  docId: { type: [String, Number], default: undefined },
+  ext: { type: String, default: undefined },
   tips: {
     type: String,
     default: '提示：超过 1MB 自动分片上传。上传成功后将自动触发预览、内容提取、索引、向量化等后续事件，可在"事件"中查看处理进度。'
@@ -120,6 +121,14 @@ function defaultProgress() {
  * @returns {boolean}
  */
 function beforeUploadDocument(file) {
+  // 上传新版本时文件格式必须与原文档一致
+  if (props.docId && props.ext) {
+    const fileExt = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : ''
+    if (fileExt !== props.ext.toLowerCase()) {
+      ElMessage.warning(`新版本文件格式必须与原文档一致（.${props.ext}）`)
+      return false
+    }
+  }
   // 清除之前的续传状态
   lastUploadId.value = undefined
   lastFile.value = undefined
@@ -144,8 +153,10 @@ async function doUpload(file, uploadId) {
   uploading.value = true
   lastFile.value = file
   try {
-    const attachment = await chunkUploadFile(file, {
+    await chunkUploadFile(file, {
       uploadId,
+      prtId: props.prtId,
+      docId: props.docId,
       onUploadId: (id) => {
         lastUploadId.value = id
       },
@@ -159,18 +170,12 @@ async function doUpload(file, uploadId) {
         uploadProgress.value.speed = progress.speed
       }
     })
-    uploadProgress.value.statusText = '归档文档中'
-    const res = await fileDocumentAPI({ attId: attachment.id, prtId: props.prtId })
-    if (res.code !== 200) {
-      uploadProgress.value.status = 'exception'
-      return
-    }
     // 上传成功，清除续传状态
     lastUploadId.value = undefined
     lastFile.value = undefined
     uploadProgress.value.status = 'success'
     uploadProgress.value.percentage = 100
-    ElMessage.success('文件上传成功')
+    ElMessage.success(props.docId ? '新版本上传成功' : '文件上传成功')
     emit('success')
     setTimeout(() => {
       uploadProgress.value = defaultProgress()

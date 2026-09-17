@@ -1,4 +1,4 @@
-package com.spark.common.bean.sys.result;
+package com.spark.common.bean.dms.result;
 
 import com.spark.common.bean.base.BaseResult;
 import lombok.Data;
@@ -10,26 +10,30 @@ import lombok.Data;
  * + (__ __)//
  *
  * @author wangdiankun
- * @since 2026-08-20 14:30:00
- * 系统附件结果
+ * @since 2026-09-17 10:00:00
  */
 @Data
-public class AttachmentResult extends BaseResult {
+public class DocumentVersionResult extends BaseResult {
 
     /**
-     * 文件名称
+     * 文档id
+     **/
+    private Long docId;
+
+    /**
+     * 版本号
+     **/
+    private Integer versionNo;
+
+    /**
+     * 名称
      **/
     private String name;
 
     /**
-     * 文件大小
+     * 大小
      **/
     private Long size;
-
-    /**
-     * 文件大小字符串
-     **/
-    private String sizeStr;
 
     /**
      * 存储路径
@@ -42,24 +46,14 @@ public class AttachmentResult extends BaseResult {
     private String ext;
 
     /**
-     * 上传人ID
+     * 文件大小字符串
      **/
-    private Long ownerId;
+    private String sizeStr;
 
     /**
-     * 上传人名称
+     * 是否当前版本
      **/
-    private String ownerName;
-
-    /**
-     * 所属部门id
-     **/
-    private Long deptId;
-
-    /**
-     * 归档文档id
-     **/
-    private Long docId;
+    private Boolean currentFlag;
 
     public String getSizeStr() {
         if (size == null) {

@@ -46,6 +46,11 @@ public class DocumentResult extends BaseResult {
     private String ext;
 
     /**
+     * 当前版本号
+     **/
+    private Integer versionNo;
+
+    /**
      * 文件大小字符串
      **/
     private String sizeStr;

@@ -47,17 +47,6 @@ public class DocumentController {
     private IDocumentService documentService;
 
     /**
-     * 根据系统附件归档文档
-     * @param attId 附件ID
-     * @param prtId 父ID
-     * @return 归档结果（含文档ID）
-     */
-    @PostMapping("fileDocument")
-    public ResultData<Long> fileDocument(@RequestParam("attId") Long attId, @RequestParam("prtId") Long prtId) {
-        return documentService.fileDocument(attId, prtId);
-    }
-
-    /**
      * 修改文档
      * @param documentVO 修改的文档
      * @return 修改结果

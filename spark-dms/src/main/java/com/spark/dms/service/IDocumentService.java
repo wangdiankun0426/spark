@@ -30,6 +30,17 @@ public interface IDocumentService {
     ResultData<Long> fileDocument(Long attId, Long prtId);
 
     /**
+     * 直接创建文档
+     * @param name 名称
+     * @param ext 拓展名
+     * @param size 大小
+     * @param path 存储路径
+     * @param prtId 父ID
+     * @return 创建结果
+     */
+    ResultData<Long> createDocument(String name, String ext, Long size, String path, Long prtId);
+
+    /**
      * 修改文档
      * @param documentVO 修改的文档
      * @return 修改结果

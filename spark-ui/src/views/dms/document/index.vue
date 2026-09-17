@@ -61,28 +61,43 @@
             >
               {{ scope.row.name }}
             </el-link>
+            <el-tag size="small" type="info" style="margin-left: 4px">V{{ scope.row.versionNo }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="" width="240" align="center">
+          <template #default="scope">
+            <div class="row-actions">
+              <el-button type="success" text @click="handleDocumentEvent(scope.row.id)">
+                <el-icon><HelpFilled /></el-icon>
+                <span style="font-size: 12px; font-weight: 400">事件</span>
+              </el-button>
+              <el-button type="warning" text @click="handleDocumentVersion(scope.row.id)">
+                <el-icon><Files /></el-icon>
+                <span style="font-size: 12px; font-weight: 400">版本</span>
+              </el-button>
+              <el-button type="primary" text @click="handleOpenChunkPage(scope.row.id)">
+                <el-icon><Grid /></el-icon>
+                <span style="font-size: 12px; font-weight: 400">分块</span>
+              </el-button>
+              <el-button type="info" text @click="handleDocumentMetadata(scope.row.id)">
+                <el-icon><Tickets /></el-icon>
+                <span style="font-size: 12px; font-weight: 400">元数据</span>
+              </el-button>
+            </div>
           </template>
         </el-table-column>
         <el-table-column prop="sizeStr" label="大小" align="center"/>
         <el-table-column prop="ownerName" label="所有者" align="center" />
         <el-table-column prop="createdDt" label="创建时间" width="160" align="center"/>
-        <el-table-column fixed="right" label="操作" :width="isGraph ? 420 : 360" align="center">
+        <el-table-column fixed="right" label="操作" :width="isGraph ? 300 : 240" align="center">
           <template #default="scope">
             <el-button v-if="isGraph" type="primary" text @click="handleOpenGraphDetail(scope.row.id)">
               <el-icon><Connection /></el-icon>
               <span style="font-size: 12px; font-weight: 400">图谱</span>
             </el-button>
-            <el-button type="success" text @click="handleDocumentEvent(scope.row.id)">
-              <el-icon><HelpFilled /></el-icon>
-              <span style="font-size: 12px; font-weight: 400">事件</span>
-            </el-button>
-            <el-button type="primary" text @click="handleOpenChunkPage(scope.row.id)">
-              <el-icon><Grid /></el-icon>
-              <span style="font-size: 12px; font-weight: 400">分块</span>
-            </el-button>
-            <el-button type="info" text @click="handleDocumentMetadata(scope.row.id)">
-              <el-icon><HelpFilled /></el-icon>
-              <span style="font-size: 12px; font-weight: 400">元数据</span>
+            <el-button type="primary" text @click="handleUploadNewVersion(scope.row)">
+              <el-icon><Upload /></el-icon>
+              <span style="font-size: 12px; font-weight: 400">上传新版本</span>
             </el-button>
             <el-button type="success" text @click="handleOpenUpdateDocumentForm(scope.row)">
               <el-icon><Edit /></el-icon>
@@ -161,10 +176,13 @@
     </el-drawer>
 
     <!-- 文件上传 -->
-    <document-upload v-model="uploadDocumentFormVisible" :prt-id="prtId" @success="handleGetDocumentList" />
+    <document-upload v-model="uploadDocumentFormVisible" :prt-id="prtId" :doc-id="uploadDocId" :ext="uploadDocExt" @success="handleGetDocumentList" />
 
     <!-- 文件事件详情 -->
     <document-event v-model="documentEventVisible" :doc-id="documentEventDocId" />
+
+    <!-- 文档版本管理 -->
+    <document-version v-model="documentVersionVisible" :doc-id="documentVersionDocId" @success="handleGetDocumentList" />
 
     <!-- 元数据表单列表 -->
     <el-drawer
@@ -236,11 +254,12 @@ import FormView from '@/components/FormView/index.vue'
 import DocumentIcon from '@/components/DocumentIcon/index.vue'
 import DocumentEvent from '@/components/DocumentEvent/index.vue'
 import DocumentUpload from '@/components/DocumentUpload/index.vue'
+import DocumentVersion from '@/components/DocumentVersion/index.vue'
 import { pageFormListAPI, queryFormJsonAPI } from '@/api/form/form.js'
 import { detailFormValueAPI, saveFormValueAPI } from '@/api/form/formValue.js'
 import {
   ArrowLeft, Collection, Connection, Search, Refresh, DocumentAdd,
-  HelpFilled, Grid, Edit, Delete, Tickets
+  HelpFilled, Grid, Edit, Delete, Tickets, Files, Upload
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
@@ -289,10 +308,16 @@ const documentFormRules = {
 
 // 上传相关
 const uploadDocumentFormVisible = ref(false)
+const uploadDocId = ref(undefined)
+const uploadDocExt = ref(undefined)
 
 // 事件详情
 const documentEventVisible = ref(false)
 const documentEventDocId = ref(undefined)
+
+// 版本管理
+const documentVersionVisible = ref(false)
+const documentVersionDocId = ref(undefined)
 
 // 元数据相关
 const metadataQuery = ref({ pageNo: 1, pageSize: 30, type: 3 })
@@ -383,6 +408,17 @@ function handlePageChangeNo(pageNo) {
  * 上传文档
  */
 function handleUploadDocument() {
+  uploadDocId.value = undefined
+  uploadDocExt.value = undefined
+  uploadDocumentFormVisible.value = true
+}
+
+/**
+ * 上传新版本
+ */
+function handleUploadNewVersion(row) {
+  uploadDocId.value = row.id
+  uploadDocExt.value = row.ext
   uploadDocumentFormVisible.value = true
 }
 
@@ -474,6 +510,14 @@ function handleOpenUpdateDocumentForm(row) {
 function handleDocumentEvent(docId) {
   documentEventDocId.value = docId
   documentEventVisible.value = true
+}
+
+/**
+ * 展示文档版本
+ */
+function handleDocumentVersion(docId) {
+  documentVersionDocId.value = docId
+  documentVersionVisible.value = true
 }
 
 /**
@@ -684,6 +728,18 @@ function handleBatchEvent() {
   &:hover {
     color: $color-primary;
   }
+}
+
+// 行内快捷操作：hover 该行时才显示
+.row-actions {
+  display: flex;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity $transition-fast;
+}
+
+:deep(.el-table__row:hover) .row-actions {
+  opacity: 1;
 }
 
 .document-uploader :deep(.el-upload) {

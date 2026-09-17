@@ -113,7 +113,11 @@ public enum OperateTypeEnum {
     // 租户配置相关操作记录
     TENANT_CONFIG_INSERT(184, "新增租户配置"),
     TENANT_CONFIG_UPDATE(185, "修改租户配置"),
-    TENANT_CONFIG_DELETE(186, "删除租户配置")
+    TENANT_CONFIG_DELETE(186, "删除租户配置"),
+    // 文档版本相关的操作记录
+    DOCUMENT_VERSION_INSERT(190, "上传文档新版本"),
+    DOCUMENT_VERSION_ROLLBACK(191, "回滚文档版本"),
+    DOCUMENT_VERSION_DELETE(192, "删除文档历史版本")
 
     ;
 

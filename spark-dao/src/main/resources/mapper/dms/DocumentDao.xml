@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.dms.DocumentDao" >
     <sql id="allColumnList" >
-        id , tenant_id, prt_id , document_type , name , size , path , ext , owner_id, delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , tenant_id, prt_id , document_type , name , size , path , ext , version_no , owner_id, delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="searchCondition">
@@ -53,8 +53,8 @@
     </sql>
 
     <insert id="insert">
-        insert into dms_document ( id, tenant_id, prt_id, document_type , name , size , path , ext , owner_id, dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values ( #{id}, #{tenantId}, #{prtId}, #{documentType}, #{name} , #{size} , #{path} , #{ext} , #{ownerId}, #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into dms_document ( id, tenant_id, prt_id, document_type , name , size , path , ext , version_no , owner_id, dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values ( #{id}, #{tenantId}, #{prtId}, #{documentType}, #{name} , #{size} , #{path} , #{ext} , 1 , #{ownerId}, #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">
@@ -66,6 +66,18 @@
         update dms_document  set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
         <if test="name != null and name != ''">
             , name = #{name}
+        </if>
+        <if test="size != null">
+            , size = #{size}
+        </if>
+        <if test="path != null and path != ''">
+            , path = #{path}
+        </if>
+        <if test="ext != null and ext != ''">
+            , ext = #{ext}
+        </if>
+        <if test="versionNo != null">
+            , version_no = #{versionNo}
         </if>
         where id = #{id}
     </update>

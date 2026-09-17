@@ -7,6 +7,7 @@ import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.dms.entity.Document;
 import com.spark.common.bean.dms.entity.DocumentEvent;
+import com.spark.common.bean.dms.entity.DocumentVersion;
 import com.spark.common.bean.dms.query.DocumentEventQuery;
 import com.spark.common.bean.dms.query.DocumentQuery;
 import com.spark.common.bean.dms.query.DocumentSearchQuery;
@@ -26,6 +27,7 @@ import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.common.constant.ESIndexName;
 import com.spark.dao.dms.DocumentDao;
 import com.spark.dao.dms.DocumentEventDao;
+import com.spark.dao.dms.DocumentVersionDao;
 import com.spark.dao.kb.KnowledgeDao;
 import com.spark.dao.kg.KgGraphDao;
 import com.spark.dao.dms.AttachmentDao;
@@ -74,6 +76,8 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
     private DocumentDao documentDao;
     @Autowired
     private DocumentEventDao documentEventDao;
+    @Autowired
+    private DocumentVersionDao documentVersionDao;
     @Autowired
     private KnowledgeDao knowledgeDao;
     @Autowired
@@ -128,8 +132,6 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         // 复制实体文件 txt格式
         fileUtil.copyCompanionFile(attachment.getPath(), newPath, "txt");
         Document document = new Document();
-        Long docId = super.genObjectId(ObjectTypeEnum.DOCUMENT);
-        document.setId(docId);
         document.setPrtId(prtId);
         ObjectTypeEnum objEnum = super.getObjEnum(prtId);
         document.setDocumentType(objEnum.getValue());
@@ -138,8 +140,50 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         document.setSize(attachment.getSize());
         document.setPath(newPath);
         document.setOwnerId(attachment.getOwnerId());
-        Long userId = SessionHolder.getCurrentUserId() == null ? attachment.getOwnerId() : SessionHolder.getCurrentUserId();
-        Long deptId = SessionHolder.getCurrentDeptId() == null ? attachment.getDeptId() : SessionHolder.getCurrentDeptId();
+        document.setDeptId(attachment.getDeptId());
+        return this.doCreateDocument(document);
+    }
+
+    /**
+     * 直接创建文档
+     * @param name 名称
+     * @param ext 拓展名
+     * @param size 大小
+     * @param path 存储路径
+     * @param prtId 父ID
+     * @return 创建结果
+     */
+    @Override
+    @LogOperate(operateType = OperateTypeEnum.DOCUMENT_INSERT)
+    public ResultData<Long> createDocument(String name, String ext, Long size, String path, Long prtId) {
+        ResultData<Long> result = new ResultData<>();
+        if (StringUtil.isBlank(name) || StringUtil.isBlank(ext) || size == null || StringUtil.isBlank(path) || prtId == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        Document document = new Document();
+        document.setPrtId(prtId);
+        ObjectTypeEnum objEnum = super.getObjEnum(prtId);
+        document.setDocumentType(objEnum.getValue());
+        document.setName(name);
+        document.setExt(ext);
+        document.setSize(size);
+        document.setPath(path);
+        document.setOwnerId(SessionHolder.getCurrentUserId());
+        return this.doCreateDocument(document);
+    }
+
+    /**
+     * 创建文档及默认1版本
+     * @param document 文档
+     * @return 创建结果
+     */
+    private ResultData<Long> doCreateDocument(Document document) {
+        ResultData<Long> result = new ResultData<>();
+        Long docId = super.genObjectId(ObjectTypeEnum.DOCUMENT);
+        document.setId(docId);
+        Long userId = SessionHolder.getCurrentUserId() == null ? document.getOwnerId() : SessionHolder.getCurrentUserId();
+        Long deptId = SessionHolder.getCurrentDeptId() == null ? document.getDeptId() : SessionHolder.getCurrentDeptId();
         document.setCreatedBy(userId);
         document.setUpdatedBy(userId);
         document.setDeptId(deptId);
@@ -148,6 +192,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
+        ObjectTypeEnum objEnum = super.getObjEnum(document.getPrtId());
         DocumentEvent event = new DocumentEvent();
         event.setDocId(docId);
         event.setContentStatus(DocumentEventStatusEnum.PENDING.getValue());
@@ -164,6 +209,21 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         event.setCreatedBy(userId);
         event.setUpdatedBy(userId);
         count = documentEventDao.insertDB(event);
+        if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
+            return result;
+        }
+        // 构造默认1版本
+        DocumentVersion documentVersion = new DocumentVersion();
+        documentVersion.setDocId(docId);
+        documentVersion.setVersionNo(1);
+        documentVersion.setName(document.getName());
+        documentVersion.setSize(document.getSize());
+        documentVersion.setPath(document.getPath());
+        documentVersion.setExt(document.getExt());
+        documentVersion.setCreatedBy(userId);
+        documentVersion.setUpdatedBy(userId);
+        count = documentVersionDao.insertDB(documentVersion);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;

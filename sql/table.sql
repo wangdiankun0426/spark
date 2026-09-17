@@ -937,6 +937,7 @@ CREATE TABLE `dms_document` (
     `size` bigint(12) NOT NULL COMMENT '大小',
     `path` varchar(128) NOT NULL COMMENT '存储路径',
     `ext` varchar(64) NOT NULL COMMENT '拓展名',
+    `version_no` int(5) NOT NULL DEFAULT 1 COMMENT '当前版本号',
     `owner_id` bigint(12) NOT NULL COMMENT '所有者id',
 
     `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
@@ -947,6 +948,25 @@ CREATE TABLE `dms_document` (
     `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='知识库文档表';
+
+DROP TABLE IF EXISTS `dms_document_version`;
+CREATE TABLE `dms_document_version` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `doc_id` bigint(12) NOT NULL COMMENT '文档id',
+    `version_no` int(5) NOT NULL COMMENT '版本号',
+    `name` varchar(256) NOT NULL COMMENT '名称',
+    `size` bigint(12) NOT NULL COMMENT '大小',
+    `path` varchar(128) NOT NULL COMMENT '存储路径',
+    `ext` varchar(64) NOT NULL COMMENT '拓展名',
+
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_doc_id` (`doc_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='文档版本表';
 
 DROP TABLE IF EXISTS `dms_document_event`;
 CREATE TABLE `dms_document_event` (

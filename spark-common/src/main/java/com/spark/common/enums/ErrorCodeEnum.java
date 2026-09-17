@@ -83,6 +83,9 @@ public enum ErrorCodeEnum {
     DOCUMENT_EVENT_NOT_EXIST(1606, "文件事件不存在"),
     DOCUMENT_METADATA_NOT_EXIST(1608, "文档元数据不存在"),
     DOCUMENT_METADATA_EXIST(1609, "文档元数据已存在"),
+    DOCUMENT_VERSION_NOT_EXIST(1610, "文档版本不存在"),
+    DOCUMENT_VERSION_CURRENT_NOT_ALLOW(1611, "当前版本不允许删除"),
+    DOCUMENT_VERSION_EXT_NOT_MATCH(1612, "新版本文件格式必须与原文档一致"),
     // 流程相关状态码
     FLOW_TEMPLATE_NOT_EXIST(1701, "流程模板不存在"),
     FLOW_TEMPLATE_VERSION_NOT_EXIST(1702, "流程模板版本不存在"),

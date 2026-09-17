@@ -10,11 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -25,7 +22,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 /**
  * +++/\_/\
@@ -43,60 +39,6 @@ public class AttachmentController {
     private static final Logger logger = LoggerFactory.getLogger(AttachmentController.class);
     @Autowired
     private IAttachmentService attachmentService;
-
-    /**
-     * 上传系统附件
-     * @param file 文件
-     * @return 上传结果
-     */
-    @PostMapping("upload")
-    private ResultData<AttachmentResult> uploadAttachment(@RequestParam("file") MultipartFile file) {
-        return attachmentService.uploadAttachment(file);
-    }
-
-    /**
-     * 初始化分片上传会话
-     * @param fileName 文件名称
-     * @param fileSize 文件大小
-     * @param totalChunks 分片总数
-     * @return 上传会话id
-     */
-    @PostMapping("upload/init")
-    private ResultData<String> initUploadChunk(@RequestParam("fileName") String fileName, @RequestParam("fileSize") Long fileSize, @RequestParam("totalChunks") Integer totalChunks) {
-        return attachmentService.initUploadChunk(fileName, fileSize, totalChunks);
-    }
-
-    /**
-     * 上传单个分片
-     * @param file 分片文件
-     * @param uploadId 上传会话id
-     * @param chunkIndex 分片序号
-     * @return 上传结果
-     */
-    @PostMapping("upload/chunk")
-    private ResultData<Void> uploadChunk(@RequestParam("file") MultipartFile file, @RequestParam("uploadId") String uploadId, @RequestParam("chunkIndex") Integer chunkIndex) {
-        return attachmentService.uploadChunk(uploadId, chunkIndex, file);
-    }
-
-    /**
-     * 查询已上传的分片序号
-     * @param uploadId 上传会话id
-     * @return 分片序号列表
-     */
-    @GetMapping("upload/chunks")
-    private ResultData<List<Integer>> queryUploadChunks(@RequestParam("uploadId") String uploadId) {
-        return attachmentService.queryUploadChunks(uploadId);
-    }
-
-    /**
-     * 合并分片并保存为系统附件
-     * @param uploadId 上传会话id
-     * @return 附件结果
-     */
-    @PostMapping("upload/merge")
-    private ResultData<AttachmentResult> mergeUploadChunk(@RequestParam("uploadId") String uploadId) {
-        return attachmentService.mergeUploadChunk(uploadId);
-    }
 
     /**
      * 查询系统附件详情

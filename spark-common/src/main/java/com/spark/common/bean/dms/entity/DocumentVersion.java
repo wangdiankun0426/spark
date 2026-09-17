@@ -10,20 +10,20 @@ import lombok.Data;
  * + (__ __)//
  *
  * @author wangdiankun
- * @since 2024-12-07 19:08:01
+ * @since 2026-09-17 10:00:00
  */
 @Data
-public class Document extends BaseEntity {
+public class DocumentVersion extends BaseEntity {
 
     /**
-     * 父ID
+     * 文档id
      **/
-    private Long prtId;
+    private Long docId;
 
     /**
-     * 文档归属类型
+     * 版本号
      **/
-    private Integer documentType;
+    private Integer versionNo;
 
     /**
      * 名称
@@ -44,14 +44,4 @@ public class Document extends BaseEntity {
      * 拓展名
      **/
     private String ext;
-
-    /**
-     * 当前版本号
-     **/
-    private Integer versionNo;
-
-    /**
-     * 所有者ID
-     **/
-    private Long ownerId;
 }

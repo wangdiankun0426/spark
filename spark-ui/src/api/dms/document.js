@@ -46,19 +46,6 @@ export function searchDocumentAPI(query) {
 }
 
 /**
- * 根据系统附件归档文档
- * @param {Object} params 归档参数 { attId, prtId }
- * @returns {Promise<AxiosResponse<any>>}
- */
-export function fileDocumentAPI(params) {
-    return request({
-        url: '/dms/document/fileDocument',
-        method: 'post',
-        params
-    })
-}
-
-/**
  * 下载文档（二进制流）
  * @param {Object} query 查询条件 { id, ext }
  * @returns {Promise<Blob>}

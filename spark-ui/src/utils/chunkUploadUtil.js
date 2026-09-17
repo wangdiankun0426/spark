@@ -1,10 +1,10 @@
 import {
-    initAttachmentUploadAPI,
-    uploadAttachmentChunkAPI,
-    queryAttachmentChunksAPI,
-    mergeAttachmentUploadAPI,
-    uploadAttachmentAPI
-} from '@/api/dms/attachment.js'
+    initUploadAPI,
+    uploadChunkAPI,
+    queryUploadChunksAPI,
+    mergeUploadAPI,
+    uploadFileAPI
+} from '@/api/dms/dms.js'
 
 // 默认分片阈值：1MB，不超过直接整包上传
 const DEFAULT_THRESHOLD = 1024 * 1024
@@ -24,6 +24,8 @@ const DEFAULT_MAX_RETRY = 3
  * @param {number} options.concurrency 分片并发数，默认 3
  * @param {number} options.maxRetry 单片最大重试次数，默认 3
  * @param {string} options.uploadId 续传的上传会话id
+ * @param {number|string} options.prtId 归档目标父id，携带时上传完成自动归档为文档
+ * @param {number|string} options.docId 文档id，携带时上传完成自动生成文档新版本
  * @param {Function} options.onStatus 状态文案回调，如"开始分片：共 N 片"
  * @param {Function} options.onProgress 进度回调，参数为 { percent, uploadedBytes, totalBytes, speed, uploadedChunks, totalChunks }
  * @param {Function} options.onUploadId 获取上传会话id的回调，用于断点续传
@@ -47,7 +49,7 @@ async function directUpload(file, options) {
     const onStatus = options.onStatus || (() => {})
     const onProgress = options.onProgress || (() => {})
     onStatus('文件未超过 1MB，直接上传中')
-    const res = await uploadAttachmentAPI(file)
+    const res = await uploadFileAPI(file, { prtId: options.prtId, docId: options.docId })
     if (res.code !== 200 || !res.data) {
         throw new Error(res.message || '文件上传失败')
     }
@@ -81,7 +83,7 @@ async function chunkUpload(file, options) {
     const uploadedSet = new Set()
     let uploadId = options.uploadId
     if (uploadId) {
-        const chunksRes = await queryAttachmentChunksAPI({ uploadId })
+        const chunksRes = await queryUploadChunksAPI({ uploadId })
         if (chunksRes.code === 200 && Array.isArray(chunksRes.data)) {
             chunksRes.data.forEach(chunkIndex => uploadedSet.add(chunkIndex))
         } else {
@@ -90,7 +92,7 @@ async function chunkUpload(file, options) {
         }
     }
     if (!uploadId) {
-        const initRes = await initAttachmentUploadAPI({ fileName: file.name, fileSize: file.size, totalChunks })
+        const initRes = await initUploadAPI({ fileName: file.name, fileSize: file.size, totalChunks, prtId: options.prtId, docId: options.docId })
         if (initRes.code !== 200 || !initRes.data) {
             throw new Error(initRes.message || '初始化分片上传失败')
         }
@@ -127,7 +129,7 @@ async function chunkUpload(file, options) {
         const chunkFile = file.slice(start, end)
         for (let attempt = 0; attempt <= maxRetry; attempt++) {
             try {
-                const res = await uploadAttachmentChunkAPI({ uploadId, chunkIndex }, chunkFile)
+                const res = await uploadChunkAPI({ uploadId, chunkIndex }, chunkFile)
                 if (res.code === 200) {
                     uploadedSet.add(chunkIndex)
                     uploadedBytes += end - start
@@ -168,7 +170,7 @@ async function chunkUpload(file, options) {
     await Promise.all(workerList)
 
     onStatus('分片上传完成，服务器合并中')
-    const mergeRes = await mergeAttachmentUploadAPI({ uploadId })
+    const mergeRes = await mergeUploadAPI({ uploadId })
     if (mergeRes.code !== 200 || !mergeRes.data) {
         throw new Error(mergeRes.message || '分片合并失败')
     }
