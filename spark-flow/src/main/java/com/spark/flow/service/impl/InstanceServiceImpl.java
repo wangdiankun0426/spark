@@ -88,8 +88,15 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
     public ResultData<Void> createInstance(FlowInstanceVO instanceVO) {
         ResultData<Void> result = new ResultData<>();
         if (instanceVO == null || StringUtil.isBlank(instanceVO.getName()) || instanceVO.getTemplateId() == null || instanceVO.getTemplateRevId() == null
-                || instanceVO.getFormId() == null || instanceVO.getFormRevId() == null) {
+                || instanceVO.getFormId() == null || instanceVO.getFormRevId() == null || StringUtil.isBlank(instanceVO.getProcessId())) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        // 校验流程模板是否已部署到flowable
+        ResultData<Void> deployedData = flowableService.checkProcessDeployed(instanceVO.getProcessId());
+        if (deployedData.getCode() != ResultData.OK) {
+            result.setCode(deployedData.getCode());
+            result.setMessage(deployedData.getMessage());
             return result;
         }
         FlowInstance instance = new FlowInstance();
@@ -101,7 +108,6 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         BaseContext baseContext = new BaseContext();
         baseContext.putVal(FlowInstance.class, instance);
         SessionHolder.setContext(baseContext);
-
         List<FormObjValue> values = instanceVO.getValues();
         Map<String, Object> variables = new HashMap<>();
         if (CollectionUtil.isNotEmpty(values)) {

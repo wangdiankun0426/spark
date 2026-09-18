@@ -35,9 +35,10 @@ public class RedisConfig {
         // 设置 key 和 hashKey 的序列化方式为 StringRedisSerializer
         template.setKeySerializer(new StringRedisSerializer());
         template.setHashKeySerializer(new StringRedisSerializer());
-        // 设置 value 和 hashValue 的序列化方式为 genericToStringSerializer
+        // 设置 value 的序列化方式为 genericToStringSerializer
         template.setValueSerializer(genericToStringSerializer);
-        template.setHashValueSerializer(genericToStringSerializer);
+        // 设置 hashValue 的序列化方式为 StringRedisSerializer（Hash统一存字符串，redis-cli可直接查看）
+        template.setHashValueSerializer(new StringRedisSerializer());
         // 是否开启事务支持，默认为 false
         template.setEnableTransactionSupport(false);
         // 设置默认的序列化方式

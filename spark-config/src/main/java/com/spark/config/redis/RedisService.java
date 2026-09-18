@@ -6,7 +6,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -192,6 +194,52 @@ public class RedisService {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    /**
+     * Hash缓存批量放入并设置过期时间
+     * @param key 键
+     * @param map Hash键值对
+     * @param time 过期时间(秒)，小于等于0则无限期
+     * @return true成功 false失败
+     */
+    public boolean hSetAll(String key, Map<String, String> map, long time) {
+        if (StringUtil.isBlank(key) || map == null || map.isEmpty()) {
+            return false;
+        }
+        try {
+            redisTemplate.opsForHash().putAll(key, map);
+            if (time > 0) {
+                redisTemplate.expire(key, time, TimeUnit.SECONDS);
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * 获取Hash缓存全部键值对
+     * @param key 键
+     * @return Hash键值对，不存在返回空map
+     */
+    public Map<String, String> hGetAll(String key) {
+        if (StringUtil.isBlank(key)) {
+            return new HashMap<>();
+        }
+        try {
+            Map<Object, Object> entries = redisTemplate.opsForHash().entries(key);
+            if (entries == null || entries.isEmpty()) {
+                return new HashMap<>();
+            }
+            Map<String, String> map = new HashMap<>();
+            entries.forEach((k, v) -> map.put(String.valueOf(k), String.valueOf(v)));
+            return map;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new HashMap<>();
         }
     }
 

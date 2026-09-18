@@ -5,9 +5,9 @@ import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.dms.query.DocumentQuery;
 import com.spark.common.bean.dms.result.DocumentResult;
 import com.spark.common.enums.ErrorCodeEnum;
-import com.spark.common.enums.ObjectTypeEnum;
+import com.spark.common.constant.ObjectCacheKey;
 import com.spark.common.utils.FileUtil;
-import com.spark.common.utils.JsonUtil;
+import com.spark.common.utils.MapUtil;
 import com.spark.common.utils.StringUtil;
 import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.redis.RedisService;
@@ -45,13 +45,9 @@ import java.util.UUID;
 public class OnlyOfficeServiceImpl extends BaseService<DocumentQuery, DocumentResult> implements IOnlyOfficeService {
     private final static Logger logger = LoggerFactory.getLogger(OnlyOfficeServiceImpl.class);
     /**
-     * 下载凭证缓存key前缀
+     * 下载凭证有效期：12小时（秒），覆盖长编辑会话，校验通过时滑动续期
      */
-    private final static String DOWNLOAD_TOKEN_KEY = "onlyoffice_token_";
-    /**
-     * 下载凭证有效期：10分钟（秒）
-     */
-    private final static long DOWNLOAD_TOKEN_EXPIRE_SECONDS = 10 * 60L;
+    private final static long DOWNLOAD_TOKEN_EXPIRE_SECONDS = 12 * 60 * 60L;
     /**
      * 回调状态：文档已保存
      */
@@ -87,7 +83,9 @@ public class OnlyOfficeServiceImpl extends BaseService<DocumentQuery, DocumentRe
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        DocumentResult documentResult = this.queryDocument(id);
+        DocumentQuery documentQuery = new DocumentQuery();
+        documentQuery.setId(id);
+        DocumentResult documentResult = documentDao.queryDocument(documentQuery);
         if (documentResult == null) {
             result.setErrorCode(ErrorCodeEnum.DOCUMENT_NOT_EXIST);
             return result;
@@ -98,9 +96,9 @@ public class OnlyOfficeServiceImpl extends BaseService<DocumentQuery, DocumentRe
             result.setErrorCode(ErrorCodeEnum.ONLYOFFICE_PREVIEW_NOT_SUPPORT);
             return result;
         }
-        // 生成下载凭证，将文档信息与当前会话缓存10分钟，构造下载与回调地址
         String token = UUID.randomUUID().toString().replace("-", "");
-        redisService.setStr(DOWNLOAD_TOKEN_KEY + token, JsonUtil.toString(this.buildTokenCache(documentResult)), DOWNLOAD_TOKEN_EXPIRE_SECONDS);
+        Map<String, String> cacheData = this.generateTokenCache(documentResult);
+        redisService.hSetAll(ObjectCacheKey.ONLYOFFICE_TOKEN + token, cacheData, DOWNLOAD_TOKEN_EXPIRE_SECONDS);
         String downloadUrl = callbackHost + "/dms/onlyoffice/download?id=" + id + "&ext=" + ext + "&token=" + token;
         String callbackUrl = callbackHost + "/dms/onlyoffice/callback?id=" + id + "&ext=" + ext + "&token=" + token;
         // 文档信息
@@ -149,13 +147,12 @@ public class OnlyOfficeServiceImpl extends BaseService<DocumentQuery, DocumentRe
     @Override
     public ResultData<Map<String, Object>> downloadFile(Long id, String ext, String token) {
         ResultData<Map<String, Object>> result = new ResultData<>();
-        Map<String, Object> cacheData = this.parseTokenCache(id, ext, token);
+        Map<String, String> cacheData = this.parseTokenCache(id, ext, token);
         if (cacheData == null) {
             result.setErrorCode(ErrorCodeEnum.ONLYOFFICE_TOKEN_INVALID);
             return result;
         }
-        Map<String, Object> documentCache = this.getCacheMap(cacheData, "document");
-        String path = String.valueOf(documentCache.get("path"));
+        String path = cacheData.get("path");
         File file = new File(path);
         if (!file.exists()) {
             logger.error("downloadFile file not exist, path={}", path);
@@ -164,7 +161,7 @@ public class OnlyOfficeServiceImpl extends BaseService<DocumentQuery, DocumentRe
         }
         Map<String, Object> data = new HashMap<>();
         data.put("path", path);
-        data.put("name", String.valueOf(documentCache.get("name")));
+        data.put("name", cacheData.get("name"));
         result.setData(data);
         result.setCode(ResultData.OK);
         return result;
@@ -181,7 +178,7 @@ public class OnlyOfficeServiceImpl extends BaseService<DocumentQuery, DocumentRe
     @Override
     public Map<String, Object> handleCallback(Long id, String ext, String token, Map<String, Object> body) {
         Map<String, Object> response = new HashMap<>();
-        Map<String, Object> cacheData = this.parseTokenCache(id, ext, token);
+        Map<String, String> cacheData = this.parseTokenCache(id, ext, token);
         if (cacheData == null) {
             response.put("error", 1);
             return response;
@@ -194,9 +191,10 @@ public class OnlyOfficeServiceImpl extends BaseService<DocumentQuery, DocumentRe
         // 保存完毕或强制保存时，拉回编辑后的文件生成新版本
         if (status == CALLBACK_STATUS_SAVED || status == CALLBACK_STATUS_FORCE_SAVED) {
             String fileUrl = (String) body.get("url");
-            // 回调来自 OnlyOffice 服务器，无登录会话，从缓存还原编辑人会话供操作日志与审计字段使用
             try {
-                this.restoreSession(cacheData);
+                SessionHolder.setCurrentUserId(MapUtil.getLongVal(cacheData, "userId"));
+                SessionHolder.setCurrentDeptId(MapUtil.getLongVal(cacheData, "deptId"));
+                SessionHolder.setCurrentTenantId(MapUtil.getLongVal(cacheData, "tenantId"));
                 this.saveCallbackFile(id, ext, fileUrl);
             } finally {
                 SessionHolder.clearLocalSession();
@@ -218,7 +216,9 @@ public class OnlyOfficeServiceImpl extends BaseService<DocumentQuery, DocumentRe
             return;
         }
         try {
-            DocumentResult documentResult = this.queryDocument(id);
+            DocumentQuery documentQuery = new DocumentQuery();
+            documentQuery.setId(id);
+            DocumentResult documentResult = documentDao.queryDocument(documentQuery);
             if (documentResult == null) {
                 logger.warn("saveCallbackFile skip, document not exist, docId={}", id);
                 return;
@@ -258,23 +258,19 @@ public class OnlyOfficeServiceImpl extends BaseService<DocumentQuery, DocumentRe
     }
 
     /**
-     * 构造凭证缓存内容（文档信息 + 当前会话）
+     * 构造凭证缓存内容
      * @param documentResult 文档
      * @return 缓存map
      */
-    private Map<String, Object> buildTokenCache(DocumentResult documentResult) {
-        Map<String, Object> cacheData = new HashMap<>();
-        Map<String, Object> documentCache = new HashMap<>();
-        documentCache.put("id", documentResult.getId());
-        documentCache.put("ext", documentResult.getExt().toLowerCase());
-        documentCache.put("name", documentResult.getName());
-        documentCache.put("path", documentResult.getPath());
-        cacheData.put("document", documentCache);
-        Map<String, Object> sessionCache = new HashMap<>();
-        sessionCache.put("userId", SessionHolder.getCurrentUserId());
-        sessionCache.put("deptId", SessionHolder.getCurrentDeptId());
-        sessionCache.put("tenantId", SessionHolder.getCurrentTenantId());
-        cacheData.put("session", sessionCache);
+    private Map<String, String> generateTokenCache(DocumentResult documentResult) {
+        Map<String, String> cacheData = new HashMap<>();
+        cacheData.put("id", String.valueOf(documentResult.getId()));
+        cacheData.put("ext", documentResult.getExt().toLowerCase());
+        cacheData.put("name", documentResult.getName());
+        cacheData.put("path", documentResult.getPath());
+        cacheData.put("userId", SessionHolder.getCurrentUserId()+"");
+        cacheData.put("deptId", SessionHolder.getCurrentDeptId()+"");
+        cacheData.put("tenantId", SessionHolder.getCurrentTenantId()+"");
         return cacheData;
     }
 
@@ -283,82 +279,22 @@ public class OnlyOfficeServiceImpl extends BaseService<DocumentQuery, DocumentRe
      * @param id 文档id
      * @param ext 文件后缀
      * @param token 下载凭证
-     * @return 校验通过返回缓存map（含 document/session），否则返回 null
+     * @return 校验通过返回缓存map（含文档信息与会话），否则返回 null
      */
-    private Map<String, Object> parseTokenCache(Long id, String ext, String token) {
+    private Map<String, String> parseTokenCache(Long id, String ext, String token) {
         if (id == null || StringUtil.isBlank(ext) || StringUtil.isBlank(token)) {
             return null;
         }
-        String cacheValue = redisService.getValue(DOWNLOAD_TOKEN_KEY + token);
-        if (!JsonUtil.isValidJson(cacheValue)) {
+        Map<String, String> cacheData = redisService.hGetAll(ObjectCacheKey.ONLYOFFICE_TOKEN + token);
+        if (cacheData.isEmpty()) {
             return null;
         }
-        Map<String, Object> cacheData = JsonUtil.toObject(cacheValue, Map.class);
-        Map<String, Object> documentCache = this.getCacheMap(cacheData, "document");
-        if (documentCache == null) {
+        if (!String.valueOf(id).equals(cacheData.get("id")) || !ext.toLowerCase().equals(cacheData.get("ext"))) {
             return null;
         }
-        if (!String.valueOf(id).equals(String.valueOf(documentCache.get("id"))) || !ext.toLowerCase().equals(String.valueOf(documentCache.get("ext")))) {
-            return null;
-        }
+        // 校验通过滑动续期，保证长编辑会话中自动保存/关闭回调不因过期被拒绝
+        redisService.expire(ObjectCacheKey.ONLYOFFICE_TOKEN + token, DOWNLOAD_TOKEN_EXPIRE_SECONDS);
         return cacheData;
-    }
-
-    /**
-     * 从缓存map中取出子map
-     * @param cacheData 缓存map
-     * @param key 键
-     * @return 子map，不存在返回 null
-     */
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> getCacheMap(Map<String, Object> cacheData, String key) {
-        Object value = cacheData.get(key);
-        if (!(value instanceof Map)) {
-            return null;
-        }
-        return (Map<String, Object>) value;
-    }
-
-    /**
-     * 从缓存map中取出Long值
-     * @param cacheData 缓存map
-     * @param key 键
-     * @return Long值，不存在返回 null
-     */
-    private Long getCacheLong(Map<String, Object> cacheData, String key) {
-        Object value = cacheData.get(key);
-        if (value == null) {
-            return null;
-        }
-        return Long.valueOf(String.valueOf(value));
-    }
-
-    /**
-     * 从缓存还原编辑人会话
-     * @param cacheData 凭证缓存内容
-     */
-    private void restoreSession(Map<String, Object> cacheData) {
-        Map<String, Object> sessionCache = this.getCacheMap(cacheData, "session");
-        if (sessionCache == null) {
-            return;
-        }
-        SessionHolder.setCurrentUserId(this.getCacheLong(sessionCache, "userId"));
-        SessionHolder.setCurrentDeptId(this.getCacheLong(sessionCache, "deptId"));
-        SessionHolder.setCurrentTenantId(this.getCacheLong(sessionCache, "tenantId"));
-    }
-
-    /**
-     * 查询文档
-     * @param id 文档id
-     * @return 文档
-     */
-    private DocumentResult queryDocument(Long id) {
-        if (!ObjectTypeEnum.DOCUMENT.equals(super.getObjEnum(id))) {
-            return null;
-        }
-        DocumentQuery documentQuery = new DocumentQuery();
-        documentQuery.setId(id);
-        return documentDao.queryDocument(documentQuery);
     }
 
     /**

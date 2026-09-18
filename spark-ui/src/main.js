@@ -12,7 +12,7 @@ import router from '@/router/index';
 import store from '@/store/index';
 import locale from 'element-plus/es/locale/lang/zh-cn';
 // 自定义指令
-import { installDebounceDirectives } from '@/utils/debounce';
+import { installDebounceDirectives } from '@/directive/debounce.js';
 // 自定义组件
 import CustomInput from '@/views/formDesigner/formWidget/basicWidget/input.vue';
 import CustomTextarea from '@/views/formDesigner/formWidget/basicWidget/textarea.vue';
