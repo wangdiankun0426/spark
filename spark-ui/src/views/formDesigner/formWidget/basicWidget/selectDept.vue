@@ -3,6 +3,9 @@
       :label="props.widget.config.label"
       :required="props.widget.config.required"
       v-if="!props.widget.config.hidden"
+      @focusin="emitEvent('focus')"
+      @focusout="emitEvent('blur')"
+      @click="emitEvent('click')"
   >
     <select-dept
         v-model="deptIdArray"
@@ -17,6 +20,7 @@
 <script setup>
 import { computed } from 'vue'
 import SelectDept from '@/components/SelectDept/index.vue'
+import { useWidgetEventBridge } from '@/components/FormView/formEvent.js'
 
 defineOptions({
   name: "customSelectDept"
@@ -24,6 +28,8 @@ defineOptions({
 const props = defineProps({
   widget: Object,
 })
+const emit = defineEmits(['widget-event'])
+const { emitEvent, emitChange } = useWidgetEventBridge(props.widget, emit)
 
 // widget.config.value 约定：
 //   多选：逗号串 "1,2,3"，转成 ID 数组与 v-model 双向同步
@@ -49,13 +55,14 @@ const deptIdArray = computed({
   }
 })
 
-// 同步 showValue：多选 emit 名称数组，单选 emit 单个名称字符串
+// 同步 showValue 并抛值改变事件：多选 emit 名称数组，单选 emit 单个名称字符串
 function handleShowValueUpdate(names) {
   if (props.widget.config.multiple) {
     props.widget.config.showValue = (names || []).join(',')
   } else {
     props.widget.config.showValue = names || ''
   }
+  emitChange()
 }
 </script>
 

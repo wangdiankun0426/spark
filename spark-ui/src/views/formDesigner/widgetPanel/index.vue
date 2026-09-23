@@ -1,64 +1,43 @@
 <template>
-  <el-tabs v-model="activeName">
-    <el-tab-pane name="componentLib">
-        <template #label>
-          <span>组件库</span>
-        </template>
-        <el-collapse v-model="activeNames">
-          <el-collapse-item name="1" title="基础组件">
-            <el-row>
-              <el-col
-                  :span="12"
-                  v-for="(basicWidget) in basicWidgetList"
-              >
-                <el-button
-                    class="component-btn"
-                    draggable="true"
-                    @click="addWidget(basicWidget)"
-                    @dragstart="handleDragStart($event, basicWidget.type)"
-                >
-                  <el-icon><component :is="widgetIconMap[basicWidget.type] || 'EditPen'" /></el-icon>
-                  <span>{{ basicWidget.name }}</span>
-                </el-button>
-              </el-col>
-            </el-row>
-          </el-collapse-item>
-          <el-collapse-item name="2" title="系统组件">
-            <el-row>
-              <el-col
-                  :span="12"
-                  v-for="(basicWidget) in sysWidgetList"
-              >
-                <el-button
-                    class="component-btn"
-                    draggable="true"
-                    @click="addWidget(basicWidget)"
-                    @dragstart="handleDragStart($event, basicWidget.type)"
-                >
-                  <el-icon><component :is="widgetIconMap[basicWidget.type] || 'EditPen'" /></el-icon>
-                  <span>{{ basicWidget.name }}</span>
-                </el-button>
-              </el-col>
-            </el-row>
-          </el-collapse-item>
-        </el-collapse>
-      </el-tab-pane>
-    <el-tab-pane name="examples">
-      <template #label>
-        <span>示例</span>
-      </template>
-    </el-tab-pane>
-  </el-tabs>
+  <div class="widget-lib">
+    <div class="lib-group">
+      <div class="lib-group-title">基础组件</div>
+      <div class="component-grid">
+        <el-button
+            v-for="(basicWidget) in basicWidgetList"
+            class="component-btn"
+            draggable="true"
+            @click="addWidget(basicWidget)"
+            @dragstart="handleDragStart($event, basicWidget.type)"
+        >
+          <el-icon><component :is="widgetIconMap[basicWidget.type] || 'EditPen'" /></el-icon>
+          <span>{{ basicWidget.name }}</span>
+        </el-button>
+      </div>
+    </div>
+    <div class="lib-group">
+      <div class="lib-group-title">系统组件</div>
+      <div class="component-grid">
+        <el-button
+            v-for="(basicWidget) in sysWidgetList"
+            class="component-btn"
+            draggable="true"
+            @click="addWidget(basicWidget)"
+            @dragstart="handleDragStart($event, basicWidget.type)"
+        >
+          <el-icon><component :is="widgetIconMap[basicWidget.type] || 'EditPen'" /></el-icon>
+          <span>{{ basicWidget.name }}</span>
+        </el-button>
+      </div>
+    </div>
+  </div>
 </template>
 <script setup>
-import {ref} from 'vue';
 import {basicWidgetList, sysWidgetList} from "./widgetList.js"
 
 const props = defineProps({
   designer: Object,
 })
-const activeName = ref('componentLib');
-const activeNames = ['1', '2'];
 
 /** 组件类型 → 图标映射 */
 const widgetIconMap = {
@@ -99,34 +78,49 @@ function handleDragStart(event, type) {
 }
 </script>
 <style scoped lang="scss">
-:deep(.el-card__header) {
-  padding: 10px !important;
+.widget-lib {
+  padding: 6px 2px;
 }
-:deep(.el-collapse-item__header) {
-  margin-left: 8px;
-  font-style: italic;
+.lib-group + .lib-group {
+  margin-top: $spacing-md;
+}
+.lib-group-title {
+  margin-bottom: $spacing-sm;
+  font-size: 13px;
   font-weight: bold;
+  color: $color-text-secondary;
+}
+.component-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 120px);
+  justify-content: center;
+  row-gap: $spacing-sm;
+
+  > .el-button.component-btn {
+    margin-left: 0;
+    margin-right: 0;
+  }
 }
 .el-button.component-btn {
-  width: 106px;
-  height: 40px;
-  margin-bottom: 10px;
-  padding: 0 8px;
+  width: 100%;
+  height: 36px;
+  padding: 0 6px;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  background-color: #fafafa;
-  border: 1px dashed #c0c4cc;
+  background-color: var(--el-fill-color-light);
+  border: 1px dashed var(--el-border-color-darker);
   border-radius: 4px;
   transition: all 0.2s;
 
   &:hover,
   &:focus,
   &:active {
-    color: #409eff;
-    background-color: #ecf5ff;
-    border-color: #409eff;
+    color: var(--el-color-primary);
+    background-color: var(--el-color-primary-light-8);
+    border-color: var(--el-color-primary);
   }
 }
 .el-button {

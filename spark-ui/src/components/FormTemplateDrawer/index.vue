@@ -192,7 +192,7 @@
     >
       <div>
         <el-table
-            height="calc(100vh - 200px)"
+            height="calc(100vh - 130px)"
             ref="tableFormVersionRef"
             :data="formVersionList"
         >
@@ -353,11 +353,11 @@ function handleOpenUpdateFormForm(row) {
 }
 
 /**
- * 打开表单设计器
+ * 打开表单设计器（当前最新版本）
  * @param row
  */
 function handleOpenFormDesigner(row) {
-  window.open("/form/designer/" + row.id + "/" + row.revId);
+  window.open("/form/designer/" + row.id);
 }
 
 /**

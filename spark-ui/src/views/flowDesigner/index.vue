@@ -18,7 +18,7 @@
           <el-icon><Bell /></el-icon>流程通知
         </el-button>
         <el-button @click="showClearConfirm = true">
-          <el-icon><Delete /></el-icon>清空
+          <el-icon><Delete /></el-icon>清空流程
         </el-button>
       </div>
     </div>
@@ -65,7 +65,7 @@
     </div>
     <!--底部状态栏-->
     <div class="designer-footer">
-      <span>版本: {{ revNum || '新工作流' }} | 节点数: {{ nodes.length }} | 连线数: {{ sequences.length }}</span>
+      <span>版本: {{ revNum || '新流程模板' }} | 节点数: {{ nodes.length }} | 连线数: {{ sequences.length }}</span>
     </div>
 
     <!--清空确认对话框-->
@@ -122,27 +122,37 @@ const helpBaseVars = [
 onMounted(() => {
   const params = useRoute().params;
   templateId.value = Number(params.id);
-  revId.value = Number(params.revId);
+  // 路由带版本号时取指定版本，不带版本号时取模板当前版本
+  if (params.revId) revId.value = Number(params.revId);
   queryTemplateDetailAPI({ id: templateId.value }).then(res => {
     if (res.code === 200 && res.data) {
       templateName.value = res.data.name || '';
       if (res.data.revNum) revNum.value = res.data.revNum;
+      // 未指定版本号时回落到模板当前版本
+      if (!revId.value) revId.value = Number(res.data.revId);
     }
-  }).catch(() => {})
-  queryTemplateVersionDetailAPI({ id: revId.value }).then(res => {
-    if (res.code === 200) {
-      if (res.data.bpmJson !== undefined) {
-        const bpmJson = JSON.parse(res.data.bpmJson);
-        nodes.value = bpmJson.nodes || [];
-        sequences.value = bpmJson.sequences || [];
-        noticeConfig.value = bpmJson.notices ? bpmJson.notices : noticeConfig.value;
-        nodeTaskConfig.value = bpmJson.nodeTasks || [];
-        calcCanvasSize();
-      }
-      getFormFieldList(res.data.formId);
-    }
+    loadTemplateVersion();
   }).catch(() => {})
 })
+
+/** 加载流程模板版本内容 */
+const loadTemplateVersion = () => {
+  if (!revId.value) return;
+  queryTemplateVersionDetailAPI({ id: revId.value }).then(res => {
+    if (res.code !== 200 || !res.data) return;
+    // 版本号取版本自身，避免打开历史版本时误显模板当前版本号
+    if (res.data.revNum) revNum.value = res.data.revNum;
+    if (res.data.bpmJson !== undefined) {
+      const bpmJson = JSON.parse(res.data.bpmJson);
+      nodes.value = bpmJson.nodes || [];
+      sequences.value = bpmJson.sequences || [];
+      noticeConfig.value = bpmJson.notices ? bpmJson.notices : noticeConfig.value;
+      nodeTaskConfig.value = bpmJson.nodeTasks || [];
+      calcCanvasSize();
+    }
+    getFormFieldList(res.data.formId);
+  }).catch(() => {})
+}
 
 const getFormFieldList = (formId) => {
   queryFormFieldListAPI({ formId }).then(res => {
@@ -357,7 +367,6 @@ const confirmClear = () => {
   overflow: hidden;
 }
 
-// 底部状态栏
 .designer-footer {
   height: 28px;
   padding: 0 $spacing-md;

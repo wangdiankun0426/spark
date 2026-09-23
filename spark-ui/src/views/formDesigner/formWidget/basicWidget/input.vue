@@ -3,6 +3,9 @@
       :label="props.widget.config.label"
       :required="props.widget.config.required"
       v-if="!props.widget.config.hidden"
+      @focusin="emitEvent('focus')"
+      @focusout="emitEvent('blur')"
+      @click="emitEvent('click')"
   >
     <el-input
         v-model="props.widget.config.value"
@@ -16,18 +19,23 @@
 </template>
 
 <script setup>
+import { useWidgetEventBridge } from '@/components/FormView/formEvent.js';
+
 defineOptions({
   name: "customInput"
 });
 const props = defineProps({
   widget: Object,
 });
+const emit = defineEmits(['widget-event']);
+const { emitEvent, emitChange } = useWidgetEventBridge(props.widget, emit);
 
 /**
- * 补充showValue
+ * 补充showValue并抛值改变事件
  */
 function handleChangeShowValue() {
   props.widget.config.showValue = props.widget.config.value;
+  emitChange();
 }
 </script>
 

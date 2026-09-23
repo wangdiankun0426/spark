@@ -3,6 +3,9 @@
       :label="props.widget.config.label"
       :required="props.widget.config.required"
       v-if="!props.widget.config.hidden"
+      @focusin="emitEvent('focus')"
+      @focusout="emitEvent('blur')"
+      @click="emitEvent('click')"
   >
     <el-upload
         class="upload-file-widget"
@@ -79,6 +82,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { downloadAttachmentAPI } from '@/api/dms/attachment.js'
 import { chunkUploadFile } from '@/utils/chunkUploadUtil.js'
+import { useWidgetEventBridge } from '@/components/FormView/formEvent.js'
 
 defineOptions({
   name: "customUploadAttachment"
@@ -87,6 +91,8 @@ defineOptions({
 const props = defineProps({
   widget: Object,
 })
+const emit = defineEmits(['widget-event'])
+const { emitEvent, emitChange } = useWidgetEventBridge(props.widget, emit)
 
 const router = useRouter()
 
@@ -135,17 +141,19 @@ const initFileList = () => {
 initFileList()
 
 /**
- * 同步表单值：value 为附件id，showValue 为附件信息 JSON 数组字符串
+ * 同步表单值并抛值改变事件：value 为附件id，showValue 为附件信息 JSON 数组字符串
  */
 const syncConfigValue = () => {
   const ids = fileList.value.map(file => file.id)
   if (ids.length === 0) {
     props.widget.config.value = null
     props.widget.config.showValue = null
+    emitChange()
     return
   }
   props.widget.config.value = props.widget.config.multiple ? ids.join(',') : ids[0]
   props.widget.config.showValue = JSON.stringify(fileList.value)
+  emitChange()
 }
 
 /**

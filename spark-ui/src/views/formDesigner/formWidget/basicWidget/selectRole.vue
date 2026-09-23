@@ -3,6 +3,9 @@
       :label="props.widget.config.label"
       :required="props.widget.config.required"
       v-if="!props.widget.config.hidden"
+      @focusin="emitEvent('focus')"
+      @focusout="emitEvent('blur')"
+      @click="emitEvent('click')"
   >
     <select-role
         v-model="roleIdArray"
@@ -17,6 +20,7 @@
 <script setup>
 import { computed } from 'vue'
 import SelectRole from '@/components/SelectRole/index.vue'
+import { useWidgetEventBridge } from '@/components/FormView/formEvent.js'
 
 defineOptions({
   name: "customSelectRole"
@@ -24,6 +28,8 @@ defineOptions({
 const props = defineProps({
   widget: Object,
 })
+const emit = defineEmits(['widget-event'])
+const { emitEvent, emitChange } = useWidgetEventBridge(props.widget, emit)
 
 const roleIdArray = computed({
   get() {
@@ -46,12 +52,14 @@ const roleIdArray = computed({
   }
 })
 
+// 同步 showValue 并抛值改变事件
 function handleShowValueUpdate(names) {
   if (props.widget.config.multiple) {
     props.widget.config.showValue = (names || []).join(',')
   } else {
     props.widget.config.showValue = names || ''
   }
+  emitChange()
 }
 </script>
 

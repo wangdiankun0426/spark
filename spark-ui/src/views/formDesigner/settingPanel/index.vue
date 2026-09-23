@@ -10,6 +10,13 @@
             :key="widget.config.code"
             :config="widget.config"
         />
+        <!--事件配置对所有组件类型同构，统一挂在选择的具体设置组件之后；key 加前缀避免与上面的组件同 key-->
+        <widget-event-panel
+            v-if="selectedId !== null"
+            :key="'event-' + widget.config.code"
+            :widget="widget"
+            :widget-list="props.designer.widgetList"
+        />
       </el-tab-pane>
       <el-tab-pane name="formSetting">
         <template #label>
@@ -44,6 +51,7 @@
 </template>
 <script setup>
 import {ref, watch} from 'vue';
+import WidgetEventPanel from './widgetEventPanel.vue';
 const props = defineProps({
   designer: Object,
 })

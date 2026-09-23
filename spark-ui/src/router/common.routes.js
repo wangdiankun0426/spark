@@ -28,7 +28,8 @@ export default [
         }
     },
     {
-        path: '/form/designer/:id/:revId',
+        // 不带版本号：打开表单当前最新版本
+        path: '/form/designer/:id',
         name: 'formDesigner',
         component: formDesigner,
         meta: {
@@ -36,8 +37,27 @@ export default [
         }
     },
     {
-        path: '/flow/designer/:id/:revId',
+        // 带版本号：打开表单指定版本
+        path: '/form/designer/:id/:revId',
+        name: 'formDesignerVersion',
+        component: formDesigner,
+        meta: {
+            title: '表单设计器'
+        }
+    },
+    {
+        // 不带版本号：打开流程模板当前最新版本
+        path: '/flow/designer/:id',
         name: 'flowDesigner',
+        component: flowDesigner,
+        meta: {
+            title: '流程设计器',
+        }
+    },
+    {
+        // 带版本号：打开流程模板指定版本
+        path: '/flow/designer/:id/:revId',
+        name: 'flowDesignerVersion',
         component: flowDesigner,
         meta: {
             title: '流程设计器',

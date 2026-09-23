@@ -21,9 +21,9 @@ public class FlowTemplateVersionResult extends BaseResult {
     private Long templateId;
 
     /**
-     * 版本
+     * 版本号
      **/
-    private Integer revNum;
+    private String revNum;
 
     /**
      * 模板id

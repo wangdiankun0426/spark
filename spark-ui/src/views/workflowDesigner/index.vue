@@ -17,13 +17,13 @@
       </div>
       <div class="toolbar-right">
         <el-button
+            @click="showClearConfirm = true"
+        ><el-icon><Delete /></el-icon>清空流程
+        </el-button>
+        <el-button
             @click="handleSaveVersion"
             :loading="saving"
         ><el-icon><Document /></el-icon>保存流程
-        </el-button>
-        <el-button
-            @click="showClearConfirm = true"
-        ><el-icon><Delete /></el-icon>清空
         </el-button>
       </div>
     </div>

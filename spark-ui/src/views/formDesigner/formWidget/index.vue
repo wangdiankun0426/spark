@@ -152,7 +152,8 @@ function handleCopyWidget(index) {
   const widget_ = JSON.parse(JSON.stringify(widget));
   widget_.config.code = "field"+Date.now();
   props.designer.widgetList.push(widget_);
-  props.designer.selectedId = props.designer.widgetList.length-1;
+  // 复制后仍保持选中原组件，不跳到末尾的副本上；push 追加到末尾，原组件下标不变
+  props.designer.selectedId = index;
 }
 
 // 画布内组件拖动排序状态
@@ -217,18 +218,31 @@ function resetWidgetDrag() {
 <style scoped>
 .form-widget-box {
   padding: 0 20px;
-  height: 88vh;
+  height: 100%;
   overflow-y : auto;
   overflow-x: hidden;
+  background-image:
+    radial-gradient(circle, rgba(0, 82, 204, 0.18) 1.2px, transparent 1.8px),
+    radial-gradient(circle, rgba(0, 82, 204, 0.08) 1px, transparent 1.6px);
+  background-size: 26px 26px, 26px 26px;
+  background-position: 0 0, 13px 13px;
 }
 .form-widget-box--dragover {
   border: 2px dashed #0052cc;
-  background: rgba(0, 82, 204, 0.04);
+  background-color: rgba(0, 82, 204, 0.04);
 }
 .form-empty {
   padding-top: 40px;
   font-size: 13px;
   color: #8c939d;
+}
+:deep(.el-col) {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  margin-top: 12px;
+}
+:deep(.el-col .el-form-item) {
+  margin-bottom: 0;
 }
 .selected_component {
   border: 1px dashed #0052cc;
@@ -236,6 +250,7 @@ function resetWidgetDrag() {
   position: relative;
 }
 .no_select_component {
+  border: 1px dashed var(--el-border-color-darker);
   cursor: pointer;
 }
 .widget-dragging {

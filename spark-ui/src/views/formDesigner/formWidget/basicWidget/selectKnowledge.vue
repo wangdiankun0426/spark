@@ -3,6 +3,9 @@
       :label="props.widget.config.label"
       :required="props.widget.config.required"
       v-if="!props.widget.config.hidden"
+      @focusin="emitEvent('focus')"
+      @focusout="emitEvent('blur')"
+      @click="emitEvent('click')"
   >
     <el-select
         v-model="knowledgeId"
@@ -27,6 +30,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { pageKnowledgeListAPI } from '@/api/kb/knowledge.js'
+import { useWidgetEventBridge } from '@/components/FormView/formEvent.js'
 
 defineOptions({
   name: "customSelectKnowledge"
@@ -35,6 +39,8 @@ defineOptions({
 const props = defineProps({
   widget: Object,
 })
+const emit = defineEmits(['widget-event'])
+const { emitEvent, emitChange } = useWidgetEventBridge(props.widget, emit)
 
 // 知识库选项列表
 const knowledgeList = ref([])
@@ -76,7 +82,7 @@ const knowledgeId = computed({
 })
 
 /**
- * 选中变化时同步 showValue（选中知识库名称）
+ * 选中变化时同步 showValue（选中知识库名称）并抛值改变事件
  * @param val 选中的知识库id（多选为数组）
  */
 function handleChange(val) {
@@ -85,6 +91,7 @@ function handleChange(val) {
   } else {
     props.widget.config.showValue = val == null ? '' : findKnowledgeName(val)
   }
+  emitChange()
 }
 
 /**

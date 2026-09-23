@@ -3,6 +3,9 @@
       :label="props.widget.config.label"
       :required="props.widget.config.required"
       v-if="!props.widget.config.hidden"
+      @focusin="emitEvent('focus')"
+      @focusout="emitEvent('blur')"
+      @click="emitEvent('click')"
   >
     <el-select
         v-model="graphId"
@@ -27,6 +30,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { pageGraphListAPI } from '@/api/kg/graph.js'
+import { useWidgetEventBridge } from '@/components/FormView/formEvent.js'
 
 defineOptions({
   name: "customSelectGraph"
@@ -35,6 +39,8 @@ defineOptions({
 const props = defineProps({
   widget: Object,
 })
+const emit = defineEmits(['widget-event'])
+const { emitEvent, emitChange } = useWidgetEventBridge(props.widget, emit)
 
 // 知识图谱选项列表
 const graphList = ref([])
@@ -85,6 +91,7 @@ function handleChange(val) {
   } else {
     props.widget.config.showValue = val == null ? '' : findGraphName(val)
   }
+  emitChange()
 }
 
 /**

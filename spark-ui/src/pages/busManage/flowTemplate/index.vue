@@ -395,7 +395,7 @@ function handleOpenInstance(item) {
  * @param item
  */
 function handleOpenDesigner(item) {
-  window.open('/flow/designer/' + item.id + '/' + (item.revId === undefined ? 0 : item.revId));
+  window.open('/flow/designer/' + item.id);
 }
 
 /**

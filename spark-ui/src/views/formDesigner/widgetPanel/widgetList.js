@@ -1,5 +1,6 @@
 /**
  * 基础组件配置
+ * 各组件 config 的 events 为事件配置：events[eventName] 存动作规则列表，随 form_json 持久化
  */
 export const basicWidgetList = [
     {
@@ -16,6 +17,7 @@ export const basicWidgetList = [
             readonly: false,
             disabled: false,
             hidden: false,
+            events: {},
         },
     },
     {
@@ -32,6 +34,7 @@ export const basicWidgetList = [
             readonly: false,
             disabled: false,
             hidden: false,
+            events: {},
         },
     },
     {
@@ -50,6 +53,7 @@ export const basicWidgetList = [
                 { value: '1', label: '选项 1' },
                 { value: '2', label: '选项 2' },
             ],
+            events: {},
         },
     },
     {
@@ -69,6 +73,7 @@ export const basicWidgetList = [
                 { value: '1', label: '选项 1' },
                 { value: '2', label: '选项 2' },
             ],
+            events: {},
         },
     },
     {
@@ -86,6 +91,7 @@ export const basicWidgetList = [
             step: 1,
             disabled: false,
             hidden: false,
+            events: {},
         },
     },
     {
@@ -103,6 +109,7 @@ export const basicWidgetList = [
             readonly: false,
             disabled: false,
             hidden: false,
+            events: {},
         },
     },
 ]
@@ -122,6 +129,7 @@ export const sysWidgetList = [
             disabled: false,
             hidden: false,
             multiple: false,
+            events: {},
         },
     },
     {
@@ -138,6 +146,7 @@ export const sysWidgetList = [
             disabled: false,
             hidden: false,
             multiple: false,
+            events: {},
         },
     },
     {
@@ -154,6 +163,7 @@ export const sysWidgetList = [
             disabled: false,
             hidden: false,
             multiple: false,
+            events: {},
         },
     },
     {
@@ -170,6 +180,7 @@ export const sysWidgetList = [
             disabled: false,
             hidden: false,
             multiple: false,
+            events: {},
         },
     },
     {
@@ -186,6 +197,7 @@ export const sysWidgetList = [
             disabled: false,
             hidden: false,
             multiple: false,
+            events: {},
         },
     },
     {
@@ -202,6 +214,7 @@ export const sysWidgetList = [
             hidden: false,
             multiple: false,
             downloadable: true,
-        },
+            events: {},
+        }
     }
 ]
