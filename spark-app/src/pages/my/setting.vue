@@ -18,7 +18,8 @@
     <view class="setting-logout">
       <up-button
           type="primary"
-          class="logout-button"
+          color="linear-gradient(90deg, #004fc5 0%, #0072e0 100%)"
+          :custom-style="{ height: '88rpx', borderRadius: '12rpx', boxShadow: '0 12rpx 28rpx rgba(0, 79, 197, 0.28)' }"
           @click="modalVisible = true"
       >
         <text class="logout-text">退 出</text>
@@ -132,15 +133,6 @@ function handleLogout() {
   padding-bottom: calc(16px + constant(safe-area-inset-bottom));
   padding-bottom: calc(16px + env(safe-area-inset-bottom));
   background-color: $uni-bg-color-dashboard;
-}
-
-.logout-button {
-  width: 100%;
-  height: 88rpx;
-  border-radius: 12rpx;
-  background-color: #004fc5 !important;
-  background-image: linear-gradient(90deg, #004fc5 0%, #0072e0 100%);
-  box-shadow: 0 12rpx 28rpx rgba(0, 79, 197, 0.28);
 }
 
 .logout-text {

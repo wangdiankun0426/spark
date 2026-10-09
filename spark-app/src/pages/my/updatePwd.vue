@@ -30,8 +30,9 @@
       </up-form-item>
       <div>
         <up-button
-            class="update-password-button"
             type="primary"
+            color="linear-gradient(90deg, #004fc5 0%, #0072e0 100%)"
+            :custom-style="{ height: '80rpx', borderRadius: '12rpx', boxShadow: '0 12rpx 28rpx rgba(0, 79, 197, 0.28)', marginTop: 'calc(100vh - 360px)' }"
             @click="submitPasswordForm"
         >
           <text class="update-password-text">保 存</text>
@@ -169,15 +170,6 @@ async function submitPasswordForm() {
   padding-top: 20px;
   width: 90%;
   margin: auto;
-}
-.update-password-button {
-  width: 100%;
-  height: 80rpx;
-  border-radius: 12rpx;
-  background-color: #004fc5 !important;
-  background-image: linear-gradient(90deg, #004fc5 0%, #0072e0 100%);
-  box-shadow: 0 12rpx 28rpx rgba(0, 79, 197, 0.28);
-  margin-top: calc(100vh - 360px);
 }
 .update-password-text {
   font-size: 32rpx;

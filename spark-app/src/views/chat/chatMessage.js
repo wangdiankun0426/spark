@@ -108,12 +108,15 @@ export function useChatHistory(spaceId, filter) {
 
   /**
    * 滚动到底部
-   * 小程序 scroll-top 相同值不会再次滚动，用两个极大值交替触发
+   * 小程序 scroll-top 相同值不会再次滚动，用两个极大值交替触发；
+   * 延迟设置：scroll-view 是原生组件，nextTick 时内容高度尚未更新，立即设置会被收敛到旧的最大值导致滚不到底
    */
   function scrollToBottom() {
     scrollToggle = !scrollToggle
     nextTick(() => {
-      scrollTop.value = BOTTOM_SCROLL_TOP + (scrollToggle ? 1 : 0)
+      setTimeout(() => {
+        scrollTop.value = BOTTOM_SCROLL_TOP + (scrollToggle ? 1 : 0)
+      }, 100)
     })
   }
 

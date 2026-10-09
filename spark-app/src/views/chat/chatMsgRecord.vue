@@ -67,9 +67,14 @@
             <view class="record-time">{{ chatMsg.createdDt }}</view>
           </template>
         </view>
-        <!-- 消息内容 -->
-        <view class="record-bubble markdown-body">
+        <!-- 消息内容：统一走Markdown，贴纸消息渲染为大表情 -->
+        <view
+            class="record-bubble"
+            :class="parseSticker(chatMsg.message) ? 'record-bubble-sticker' : 'markdown-body'"
+        >
+          <text v-if="parseSticker(chatMsg.message)" class="record-sticker">{{ parseSticker(chatMsg.message) }}</text>
           <up-parse
+              v-else
               :content="renderMarkdown(chatMsg.message)"
               :tag-style="MD_TAG_STYLE"
           ></up-parse>
@@ -98,6 +103,7 @@ import { onLoad } from "@dcloudio/uni-app"
 import { useStore } from "vuex"
 import { renderMarkdown, MD_TAG_STYLE } from "@/utils/markdownUtil.js"
 import { useChatHistory } from "@/views/chat/chatMessage.js"
+import { parseSticker } from "@/views/chat/emojiData.js"
 import UserAvatar from "@/components/UserAvatar/index.vue"
 
 const store = useStore()
@@ -215,6 +221,7 @@ function loadChatRecords() {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  box-sizing: border-box;
   background-color: #f5f7fa;
 }
 
@@ -341,5 +348,17 @@ function loadChatRecords() {
 .record-item-self .record-bubble {
   background-color: #0052cc;
   color: #fff;
+}
+
+.record-bubble-sticker,
+.record-item-self .record-bubble-sticker {
+  padding: 0;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.record-sticker {
+  font-size: 96rpx;
+  line-height: 1.2;
 }
 </style>

@@ -52,6 +52,7 @@
         <chat
             :target="chatUser"
             target-type="user"
+            enable-emoji
             @message-received="handleMessageReceived"
             @space-created="handleSpaceCreated"
         >

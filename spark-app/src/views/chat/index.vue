@@ -75,16 +75,23 @@
           <!-- 自己发出的消息 -->
           <view
               v-if="chatMsg.senderId === userInfo.id"
-              class="chat-bubble chat-bubble-user markdown-body"
+              class="chat-bubble chat-bubble-user"
+              :class="parseSticker(chatMsg.message) ? 'chat-bubble-sticker' : 'markdown-body'"
           >
+            <text v-if="parseSticker(chatMsg.message)" class="chat-sticker">{{ parseSticker(chatMsg.message) }}</text>
             <up-parse
+                v-else
                 :content="renderMarkdown(chatMsg.message)"
                 :tag-style="MD_TAG_STYLE"
             ></up-parse>
           </view>
 
           <!-- 对方消息 -->
-          <view v-else class="chat-bubble chat-bubble-agent">
+          <view
+              v-else
+              class="chat-bubble chat-bubble-agent"
+              :class="{ 'chat-bubble-sticker': parseSticker(chatMsg.message) }"
+          >
             <!-- 思考内容：占位期间只有状态，服务端推送思考过程后展示在状态下方，思考结束自动折叠 -->
             <template v-if="chatMsg.thinkingContent || chatMsg.thinkingPending">
               <view class="thinking-header" @click="toggleThinking(chatMsg)">
@@ -105,10 +112,11 @@
                   class="thinking-content"
               >{{ chatMsg.thinkingContent }}</view>
             </template>
-            <!-- 正式内容：统一走Markdown -->
+            <!-- 正式内容：统一走Markdown，贴纸消息渲染为大表情 -->
             <template v-if="chatMsg.message">
               <view v-if="chatMsg.thinkingContent" class="thinking-divider"></view>
-              <view class="markdown-body">
+              <text v-if="parseSticker(chatMsg.message)" class="chat-sticker">{{ parseSticker(chatMsg.message) }}</text>
+              <view v-else class="markdown-body">
                 <up-parse
                     :content="renderMarkdown(chatMsg.message)"
                     :tag-style="MD_TAG_STYLE"
@@ -118,6 +126,8 @@
           </view>
         </view>
       </view>
+      <!-- 底部垫高：小程序 scroll-view 自身的 padding-bottom 不计入可滚动范围，须用占位 view 把最后一条消息顶出固定输入栏 -->
+      <view :style="{ height: spacerHeight + 'px' }"></view>
     </scroll-view>
 
     <!-- 输入区-->
@@ -134,21 +144,41 @@
             :confirm-hold="true"
             class="chat-input"
             @confirm="handleConfirm"
+            @focus="handleInputFocus"
         />
+        <view
+            v-if="emojiEnabled"
+            class="emoji-btn"
+            :class="{ 'emoji-btn-disabled': inputDisabled }"
+            @click="toggleEmojiPanel"
+        >
+          <view class="emoji-face">
+            <view class="emoji-eye emoji-eye-left"></view>
+            <view class="emoji-eye emoji-eye-right"></view>
+            <view class="emoji-mouth"></view>
+          </view>
+        </view>
       </view>
+      <emoji-picker
+          v-if="emojiVisible"
+          @select="insertEmoji"
+          @sticker="sendSticker"
+      />
     </view>
 
   </view>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted, getCurrentInstance } from "vue"
+import { ref, computed, watch, nextTick, onMounted, onUnmounted, getCurrentInstance } from "vue"
 import { onShow } from "@dcloudio/uni-app"
 import { useStore } from "vuex"
 import { createChatSpaceAPI, createAiChatSpaceAPI } from "@/api/chat/space.js"
 import { renderMarkdown, MD_TAG_STYLE } from "@/utils/markdownUtil.js"
 import { useChatHistory } from "@/views/chat/chatMessage.js"
+import { parseSticker, buildStickerMessage } from "@/views/chat/emojiData.js"
 import UserAvatar from "@/components/UserAvatar/index.vue"
+import EmojiPicker from "@/views/chat/emojiPicker.vue"
 
 const { proxy } = getCurrentInstance()
 const store = useStore()
@@ -173,6 +203,16 @@ let destroyed = false
 const inputDisabled = computed(() => !currentTargetId.value || !connected.value)
 // 断开与重连期间给出提示文案
 const inputPlaceholder = computed(() => (connected.value ? '请输入聊天内容' : '连接服务器中...'))
+
+const emojiVisible = ref(false)
+// 仅IM会话启用表情功能，AI会话不启用
+const emojiEnabled = computed(() => targetType.value === 'user')
+// 消息区底部垫高，按输入栏实测高度取值，兼容 iOS 安全区与表情面板展开后的高度变化
+const spacerHeight = ref(80)
+
+watch(emojiVisible, () => {
+  updateSpacerHeight()
+})
 
 // 消息列表与历史分页加载
 const spaceIdRef = computed(() => target.value && target.value.chatSpaceId)
@@ -201,6 +241,7 @@ onShow(() => {
 
 onMounted(() => {
   initEventChannel()
+  updateSpacerHeight()
   initUserInfo().then(() => {
     initWebsocket()
     if (currentTargetId.value) {
@@ -332,16 +373,27 @@ function sendMessage() {
   if (!message.value || !message.value.trim()) {
     return
   }
+  if (sendContent(message.value.trim())) {
+    message.value = ''
+  }
+}
+
+/**
+ * 发送聊天内容
+ * @param content 消息内容
+ * @returns 是否发送成功
+ */
+function sendContent(content) {
   if (!websocket.value || websocket.value.readyState !== 1) {
     uni.showToast({ title: '连接未就绪', icon: 'none' })
-    return
+    return false
   }
 
   const chatMsg = {
     spaceId: target.value.chatSpaceId,
     senderId: userInfo.value.id,
     receiverId: target.value.id,
-    message: message.value.trim(),
+    message: content,
     createdDt: getCurrentDate()
   }
   const dataContent = { action: 2, chatMsg: chatMsg }
@@ -356,8 +408,74 @@ function sendMessage() {
     }, true)
   }
 
-  message.value = ''
   scrollToBottom()
+  return true
+}
+
+/**
+ * 展开/收起表情面板，展开时收起键盘避免两者同时占位
+ */
+function toggleEmojiPanel() {
+  if (inputDisabled.value) {
+    return
+  }
+  emojiVisible.value = !emojiVisible.value
+  if (emojiVisible.value) {
+    uni.hideKeyboard()
+  }
+}
+
+/**
+ * 输入框聚焦时收起表情面板，避免与键盘同时占位
+ */
+function handleInputFocus() {
+  emojiVisible.value = false
+}
+
+/**
+ * 实测输入栏渲染高度作为消息区底部垫高，写死值盖不住 iOS 安全区下的输入栏
+ */
+function updateSpacerHeight() {
+  nextTick(() => {
+    uni.createSelectorQuery()
+      .select('.chat-footer')
+      .boundingClientRect(rect => {
+        if (rect && rect.height) {
+          spacerHeight.value = Math.ceil(rect.height) + 8
+        }
+      })
+      .exec()
+  })
+}
+
+/**
+ * 在输入框光标处插入 emoji；小程序无法操作输入框光标，追加到末尾
+ * @param emoji 表情字符
+ */
+function insertEmoji(emoji) {
+  // #ifdef H5
+  const input = document.querySelector('.input-wrapper input')
+  const start = input.selectionStart
+  const end = input.selectionEnd
+  message.value = message.value.slice(0, start) + emoji + message.value.slice(end)
+  nextTick(() => {
+    const caret = start + emoji.length
+    input.focus()
+    input.setSelectionRange(caret, caret)
+  })
+  // #endif
+  // #ifdef MP-WEIXIN
+  message.value += emoji
+  // #endif
+}
+
+/**
+ * 发送贴纸：点击即发出一条贴纸消息并关闭表情面板
+ * @param sticker 贴纸表情
+ */
+function sendSticker(sticker) {
+  emojiVisible.value = false
+  sendContent(buildStickerMessage(sticker))
 }
 
 function createPlatformSocket() {
@@ -712,6 +830,7 @@ function openChatRecord() {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  box-sizing: border-box;
   background-color: #f5f7fa;
   overflow: hidden;
 }
@@ -752,7 +871,7 @@ function openChatRecord() {
 
 .chat-body {
   flex: 1;
-  padding: 8px 0 80px;
+  padding: 8px 0 0;
   min-height: 0;
 }
 
@@ -906,6 +1025,68 @@ function openChatRecord() {
   font-size: 15px;
   background-color: transparent;
   border: none;
+}
+
+.emoji-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+}
+
+.emoji-btn-disabled {
+  opacity: 0.4;
+}
+
+.emoji-face {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #666;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.emoji-eye {
+  position: absolute;
+  top: 5px;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background-color: #666;
+}
+
+.emoji-eye-left {
+  left: 4px;
+}
+
+.emoji-eye-right {
+  right: 4px;
+}
+
+.emoji-mouth {
+  position: absolute;
+  left: 50%;
+  bottom: 3px;
+  width: 8px;
+  height: 4px;
+  margin-left: -4px;
+  border: 1px solid #666;
+  border-top: none;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  box-sizing: border-box;
+}
+
+.chat-bubble-sticker {
+  padding: 0;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.chat-sticker {
+  font-size: 96rpx;
+  line-height: 1.2;
 }
 
 /* Markdown 基线排版，标签级样式由 up-parse 的 tag-style 内联下发 */

@@ -72,15 +72,19 @@
             class="chat-bubble-wrap"
         >
           <!-- 悬浮工具条 -->
-          <div class="chat-bubble-toolbar">
+          <div v-if="!parseSticker(chatMsg.message)" class="chat-bubble-toolbar">
             <el-tooltip content="复制" placement="top">
               <span class="toolbar-btn" @click="copyMessage(chatMsg.message)">
                 <el-icon><CopyDocument /></el-icon>
               </span>
             </el-tooltip>
           </div>
-          <div class="chat-bubble chat-bubble-user">
-            <v-md-preview class="chat-msg" :text="chatMsg.message" />
+          <div
+              class="chat-bubble chat-bubble-user"
+              :class="{ 'chat-bubble-sticker': parseSticker(chatMsg.message) }"
+          >
+            <span v-if="parseSticker(chatMsg.message)" class="chat-sticker">{{ parseSticker(chatMsg.message) }}</span>
+            <v-md-preview v-else class="chat-msg" :text="chatMsg.message" />
           </div>
         </div>
         <!-- 对方消息内容 -->
@@ -89,14 +93,17 @@
             class="chat-bubble-wrap"
         >
           <!-- 悬浮工具条 -->
-          <div v-if="chatMsg.message" class="chat-bubble-toolbar">
+          <div v-if="chatMsg.message && !parseSticker(chatMsg.message)" class="chat-bubble-toolbar">
             <el-tooltip content="复制" placement="top">
               <span class="toolbar-btn" @click="copyMessage(chatMsg.message)">
                 <el-icon><CopyDocument /></el-icon>
               </span>
             </el-tooltip>
           </div>
-          <div class="chat-bubble chat-bubble-agent">
+          <div
+              class="chat-bubble chat-bubble-agent"
+              :class="{ 'chat-bubble-sticker': parseSticker(chatMsg.message) }"
+          >
             <!-- 思考内容：占位期间只有状态，服务端推送思考过程后展示在状态下方，思考结束自动折叠 -->
             <template v-if="chatMsg.thinkingContent || chatMsg.thinkingPending">
               <div
@@ -117,10 +124,11 @@
                   class="thinking-content"
               >{{ chatMsg.thinkingContent }}</div>
             </template>
-            <!-- 正式内容：统一走Markdown -->
+            <!-- 正式内容：统一走Markdown，贴纸消息渲染为大表情 -->
             <template v-if="chatMsg.message">
               <div v-if="chatMsg.thinkingContent" class="thinking-divider"></div>
-              <v-md-preview class="chat-msg" :text="chatMsg.message" />
+              <span v-if="parseSticker(chatMsg.message)" class="chat-sticker">{{ parseSticker(chatMsg.message) }}</span>
+              <v-md-preview v-else class="chat-msg" :text="chatMsg.message" />
             </template>
             <!-- 引用 -->
             <llm-references
@@ -134,16 +142,37 @@
 
     <!-- 输入区：回车发送、Shift + 回车换行 -->
     <div class="chat-footer">
-      <el-input
-          v-model="message"
-          :rows="4"
-          type="textarea"
-          :maxlength="maxLength"
-          show-word-limit
-          :placeholder="inputPlaceholder"
-          :disabled="inputDisabled"
-          @keydown.enter="handleEnter"
-      />
+      <div
+          class="chat-input-box"
+          :class="{ 'chat-input-box-emoji': enableEmoji, 'chat-input-box-disabled': inputDisabled }"
+      >
+        <el-input
+            ref="inputRef"
+            v-model="message"
+            :rows="4"
+            type="textarea"
+            :maxlength="maxLength"
+            show-word-limit
+            :placeholder="inputPlaceholder"
+            :disabled="inputDisabled"
+            @keydown.enter="handleEnter"
+        />
+        <div v-if="enableEmoji" class="chat-input-toolbar">
+          <el-popover
+              v-model:visible="emojiVisible"
+              placement="top-start"
+              trigger="click"
+              :width="352"
+          >
+            <template #reference>
+              <span class="toolbar-btn chat-emoji-btn" :class="{ 'toolbar-btn-disabled': inputDisabled }">
+                <el-icon><EmojiIcon /></el-icon>
+              </span>
+            </template>
+            <emoji-picker @select="insertEmoji" @sticker="sendSticker" />
+          </el-popover>
+        </div>
+      </div>
     </div>
 
     <!-- 聊天记录 -->
@@ -164,9 +193,12 @@ import { MagicStick, Cpu, ChatDotRound, CopyDocument, Loading, ArrowRight, Clock
 import { createChatSpaceAPI } from '@/api/chat/space.js'
 import { getCurrentDate } from '@/utils/dateUtil.js'
 import { useChatHistory } from '@/components/Chat/chatMessage.js'
+import { parseSticker, buildStickerMessage } from '@/components/Chat/emojiData.js'
 import UserAvatar from '@/components/UserAvatar/index.vue'
 import ChatMsgRecord from '@/components/Chat/chatMsgRecord.vue'
 import LlmReferences from '@/components/Chat/llmReferences.vue'
+import EmojiPicker from '@/components/Chat/emojiPicker.vue'
+import EmojiIcon from '@/assets/icons/emoji.vue'
 
 const props = defineProps({
   // 聊天对象 { id, name, chatSpaceId, sessionKey }
@@ -180,7 +212,9 @@ const props = defineProps({
   // 输入内容长度上限
   maxLength: { type: Number, default: 200 },
   // 输入框占位文案
-  placeholder: { type: String, default: '请输入聊天内容，回车发送，Shift + 回车换行' }
+  placeholder: { type: String, default: '请输入聊天内容，回车发送，Shift + 回车换行' },
+  // 是否启用表情面板（emoji + 贴纸），AI会话不启用
+  enableEmoji: { type: Boolean, default: false }
 })
 
 const emit = defineEmits([
@@ -197,6 +231,8 @@ const websocket = ref(null)
 // websocket 是否已连接，断开与重连期间为false，用于锁定输入框
 const connected = ref(false)
 const message = ref('')
+const inputRef = ref(null)
+const emojiVisible = ref(false)
 const scrollbarRef = ref(null)
 const recordDrawer = ref(false)
 const recordTitle = ref('')
@@ -364,27 +400,49 @@ function handleEnter(e) {
 }
 
 /**
- * 发送消息
+ * 发送输入框内容
  */
-async function sendMessage() {
+function sendMessage() {
   const content = message.value.trim()
   if (!content) {
     return
   }
+  doSend(content).then(sent => {
+    if (sent) {
+      message.value = ''
+    }
+  })
+}
+
+/**
+ * 发送贴纸：点击即发出一条贴纸消息并关闭表情面板
+ * @param sticker 贴纸表情
+ */
+function sendSticker(sticker) {
+  emojiVisible.value = false
+  doSend(buildStickerMessage(sticker))
+}
+
+/**
+ * 发送聊天内容
+ * @param content 消息内容
+ * @returns 是否发送成功
+ */
+async function doSend(content) {
   // 会话创建中或回复期间不允许重复发送
   if (sending.value || replyLocked.value) {
-    return
+    return false
   }
   // 懒创建：首条消息发出前先创建空间
   if (!activeSpaceId.value) {
     if (!props.spaceCreator) {
-      return
+      return false
     }
     sending.value = true
     const spaceId = await props.spaceCreator()
     sending.value = false
     if (!spaceId) {
-      return
+      return false
     }
     activeSpaceId.value = spaceId
   }
@@ -407,7 +465,23 @@ async function sendMessage() {
     }, true)
   }
   scrollToBottom()
-  message.value = ''
+  return true
+}
+
+/**
+ * 在输入框光标处插入 emoji，插入后光标移到表情之后
+ * @param emoji 表情字符
+ */
+function insertEmoji(emoji) {
+  const textarea = inputRef.value.textarea
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  message.value = message.value.slice(0, start) + emoji + message.value.slice(end)
+  nextTick(() => {
+    const caret = start + emoji.length
+    textarea.focus()
+    textarea.setSelectionRange(caret, caret)
+  })
 }
 
 /**
@@ -943,6 +1017,86 @@ function setOncloseMessage() {
 
 .chat-footer {
   flex-shrink: 0;
+}
+
+.chat-input-box {
+  position: relative;
+  border: 1px solid var(--el-border-color);
+  border-radius: $border-radius-md;
+  background-color: $bg-card;
+  transition: $transition-fast;
+
+  &:not(.chat-input-box-disabled):hover {
+    border-color: var(--el-border-color-hover);
+  }
+
+  &:focus-within {
+    border-color: var(--el-color-primary);
+  }
+
+  :deep(.el-textarea__inner) {
+    box-shadow: none;
+    resize: none;
+    background-color: transparent;
+    padding: $spacing-sm;
+  }
+
+  :deep(.el-textarea.is-disabled .el-textarea__inner) {
+    box-shadow: none;
+    background-color: transparent;
+  }
+}
+
+.chat-input-box-emoji {
+  :deep(.el-textarea__inner) {
+    padding-bottom: 30px;
+  }
+}
+
+.chat-input-box-disabled {
+  background-color: var(--el-disabled-bg-color);
+  cursor: not-allowed;
+}
+
+.chat-input-toolbar {
+  position: absolute;
+  left: $spacing-sm;
+  bottom: $spacing-xs;
+  display: flex;
+  gap: $spacing-xs;
+}
+
+.chat-emoji-btn {
+  width: auto;
+  height: auto;
+  border: none;
+  background-color: transparent;
+
+  &:hover {
+    border-color: transparent;
+  }
+
+  .el-icon {
+    font-size: 20px;
+  }
+}
+
+.toolbar-btn-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.chat-bubble-sticker {
+  padding: 0;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.chat-sticker {
+  font-size: 64px;
+  line-height: 1.2;
+  user-select: none;
 }
 
 ::v-deep(.github-markdown-body) {

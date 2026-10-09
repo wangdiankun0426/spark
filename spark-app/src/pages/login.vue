@@ -121,7 +121,7 @@
                   clearable
               >
                 <template #suffix>
-                  <up-button class="sms-code-btn" plain size="mini" type="primary" @click="getSmsCode" :disabled="count != 0">
+                  <up-button plain size="mini" type="primary" :custom-style="{ height: '38px', fontSize: '18px' }" @click="getSmsCode" :disabled="count != 0">
                     <text v-if="count == 0">获取验证码</text>
                     <text v-else>等待({{count}}秒)</text>
                   </up-button>
@@ -154,7 +154,7 @@
                   clearable
               >
                 <template #suffix>
-                  <up-button class="sms-code-btn" plain size="mini" type="primary" @click="getEmailCode" :disabled="count !== 0">
+                  <up-button plain size="mini" type="primary" :custom-style="{ height: '38px', fontSize: '18px' }" @click="getEmailCode" :disabled="count !== 0">
                     <text v-if="count == 0">获取验证码</text>
                     <text v-else>等待({{count}}秒)</text>
                   </up-button>
@@ -166,9 +166,10 @@
       </view>
       <div class="login-middle-btn">
         <up-button
-            class="login-submit-btn"
             @click="submitLoginForm"
             type="primary"
+            color="linear-gradient(90deg, #004fc5 0%, #0072e0 100%)"
+            :custom-style="{ height: '88rpx', borderRadius: '12rpx', boxShadow: '0 12rpx 28rpx rgba(0, 79, 197, 0.28)', fontSize: '32rpx', fontWeight: '700', letterSpacing: '4rpx' }"
             :loading="loading"
             loading-text="登 录 中...">
           <text class="login-text">登 录</text>
@@ -623,11 +624,6 @@ async function submitLoginForm() {
   margin-left: 8px;
 }
 
-.sms-code-btn {
-  height: 38px;
-  font-size: 18px;
-}
-
 .login-other {
   position: relative;
   z-index: 1;
@@ -663,18 +659,6 @@ async function submitLoginForm() {
 .login-middle-btn {
   margin-top: 32rpx;
   overflow: hidden;
-}
-
-.login-submit-btn {
-  height: 88rpx;
-  font-size: 32rpx;
-  font-weight: 700;
-  letter-spacing: 4rpx;
-  color: #ffffff;
-  border-radius: 12rpx;
-  background-color: $spark-color-primary;
-  background-image: linear-gradient(90deg, #004fc5 0%, #0072e0 100%);
-  box-shadow: 0 12rpx 28rpx rgba(0, 79, 197, 0.28);
 }
 
 .logout-text {

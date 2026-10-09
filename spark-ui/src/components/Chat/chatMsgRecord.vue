@@ -57,10 +57,13 @@
           <!-- 消息内容 -->
           <div
               class="chat-bubble"
-              :class="[chatMsg.senderId === userInfo.id ? 'chat-bubble-user' : 'chat-bubble-agent']"
+              :class="[chatMsg.senderId === userInfo.id ? 'chat-bubble-user' : 'chat-bubble-agent',
+                       { 'chat-bubble-sticker': parseSticker(chatMsg.message) }]"
           >
-            <!-- 消息内容统一走Markdown -->
+            <!-- 消息内容统一走Markdown，贴纸消息渲染为大表情 -->
+            <span v-if="parseSticker(chatMsg.message)" class="chat-sticker">{{ parseSticker(chatMsg.message) }}</span>
             <v-md-preview
+                v-else
                 class="chat-msg"
                 :text="chatMsg.message || ''"
             />
@@ -80,6 +83,7 @@ import { ref, computed, watch } from 'vue'
 import { useStore } from 'vuex'
 import { MagicStick, Cpu } from '@element-plus/icons-vue'
 import { useChatHistory } from '@/components/Chat/chatMessage.js'
+import { parseSticker } from '@/components/Chat/emojiData.js'
 import UserAvatar from '@/components/UserAvatar/index.vue'
 import LlmReferences from '@/components/Chat/llmReferences.vue'
 
@@ -280,6 +284,18 @@ function loadChatRecords() {
   line-height: $line-height-base;
   user-select: text;
   white-space: pre-line;
+}
+
+.chat-bubble-sticker {
+  padding: 0;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.chat-sticker {
+  font-size: 48px;
+  line-height: 1.2;
+  user-select: none;
 }
 
 ::v-deep(.github-markdown-body) {
