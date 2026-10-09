@@ -1,4 +1,4 @@
-curl -u elastic -X PUT "http://localhost:9200/spark-document-chunk" -H "Content-Type: application/json" -d'
+curl -u elastic -X PUT "http://localhost:9203/spark-document-chunk" -H "Content-Type: application/json" -d'
 {
   "settings": {
     "number_of_shards": 1,

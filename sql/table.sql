@@ -791,6 +791,7 @@ CREATE TABLE kg_relation (
      updated_dt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
      PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识图谱关系表';
+
 DROP TABLE IF EXISTS `wf_template`;
 CREATE TABLE `wf_template` (
     `id` bigint(12) NOT NULL COMMENT '主键,后两位固定17',

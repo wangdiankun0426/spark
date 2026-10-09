@@ -14,8 +14,8 @@ INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_fl
 INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (103, '密码最大长度', 'pwd.max.length', '12', 1, 101, now(), 101, now());
 
 INSERT INTO `task_template` (`id`,`tenant_id`,`name`, `task_type`, `remark`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (1, 0, '知识库文档归档任务', 2, '', 1, 101, now(), 101, now());
-INSERT INTO `task_template_param` (`id`, `tenant_id`,`template_id`, `name`, `code`, `type`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (1,0, 1, '待归档文档ID', 'attId', 2, 1, 101, now(), 101, now());
-INSERT INTO `task_template_param` (`id`, `tenant_id`,`template_id`, `name`, `code`, `type`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (2, 0,1, '所属知识库ID', 'kbId', 2, 1, 101, now(), 101, now());
+INSERT INTO `task_template_param` (`id`,`template_id`, `name`, `code`, `type`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (1, 1, '待归档文档ID', 'attId', 2, 1, 101, now(), 101, now());
+INSERT INTO `task_template_param` (`id`,`template_id`, `name`, `code`, `type`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (2,1, '所属知识库ID', 'kbId', 2, 1, 101, now(), 101, now());
 
 INSERT INTO `sys_menu` (`name`, `parent_code`, `type`, `code`, `delete_flag`, `created_by`, `created_dt`) VALUES
 ( 'AI管理模块', '', 1, 'module.llm', 1, 101, now()),

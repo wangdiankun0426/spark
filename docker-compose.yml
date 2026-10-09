@@ -25,7 +25,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
-      start_period: 10s
+      start_period: 30s
 
   spark-mysql:
     image: mysql:8.0.24
@@ -48,7 +48,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-      start_period: 20s
+      start_period: 30s
 
   spark-rabbitmq:
     image: rabbitmq:3.11
@@ -74,7 +74,7 @@ services:
     image: "elasticsearch:8.8.1"
     container_name: spark-elasticsearch
     environment:
-      - "ES_JAVA_OPTS=-Xms64m -Xmx512m"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - discovery.type=single-node
       - COMPOSE_PROJECT_NAME=elasticsearch-server
     networks:
@@ -89,21 +89,21 @@ services:
       - /opt/spark/software/elasticsearch/logs:/usr/share/elasticsearch/logs
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9203/_cluster/health || exit 1"]
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/127.0.0.1/9203' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 15
-      start_period: 30s
+      start_period: 60s
 
   spark-neo4j:
-    image: neo4j:5.20.0
+    image: neo4j:5.20.0-community
     container_name: spark-neo4j
     privileged: true
     networks:
       spark_network:
         ipv4_address: 172.10.0.8
     environment:
-      - NEO4J_AUTH=neo4j/Qaz7410
+      - NEO4J_AUTH=neo4j/Qwer7410
       - NEO4J_dbms_security_procedures_unrestricted=gds.*
       - NEO4J_server_memory_heap_initial__size=256m
       - NEO4J_server_memory_heap_max__size=512m
@@ -132,12 +132,14 @@ services:
     ports:
       - "8101:8101"
       - "8102:8102"
+      - "8103:8103"
     volumes:
       - /opt/spark/software/nginx/nginx.conf:/etc/nginx/nginx.conf
       - /opt/spark/software/nginx/cert:/etc/nginx/cert
       - /opt/spark/software/nginx/conf.d:/etc/nginx/conf.d
-      - /opt/spark/app/com.spark.ui:/opt/spark/app/com.spark.ui
-      - /opt/spark/app/com.spark.mobile:/opt/spark/app/com.spark.mobile
+      - /opt/spark/bundle:/opt/spark/bundle
+      - /opt/spark/app/spark.ui.com:/opt/spark/app/spark.ui.com
+      - /opt/spark/app/spark.h5.com:/opt/spark/app/spark.h5.com
       - /opt/spark/software/nginx/log:/usr/log/nginx
     restart: always
 

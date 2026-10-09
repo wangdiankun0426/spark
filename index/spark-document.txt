@@ -1,4 +1,4 @@
-curl -u elastic -X PUT "http://localhost:9200/spark-document" -H "Content-Type: application/json" -d'
+curl -u elastic -X PUT "http://localhost:9203/spark-document" -H "Content-Type: application/json" -d'
 {
   "settings": {
     "number_of_shards": 1, // 分片数量 ，单节点1即可，三台可以设置为3 每个节点都有一个分片
