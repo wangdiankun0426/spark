@@ -34,7 +34,7 @@ public class TaskExecutorConfig {
         executor.setThreadNamePrefix("asyncTask-");
         executor.setKeepAliveSeconds(60);
         executor.setRejectedExecutionHandler((r, executor1) -> {
-            logger.warn("Task={} rejected, executor={}", r.toString(), executor1.toString());
+            logger.warn("task={} rejected, executor={}", r.toString(), executor1.toString());
         });
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(30);
@@ -55,7 +55,7 @@ public class TaskExecutorConfig {
         executor.setThreadNamePrefix("workflow-");
         executor.setKeepAliveSeconds(60);
         executor.setRejectedExecutionHandler((r, executor1) -> {
-            logger.warn("Workflow task={} rejected", r.toString());
+            logger.warn("workflow task={} rejected", r.toString());
         });
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(30);

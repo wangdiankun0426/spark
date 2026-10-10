@@ -112,9 +112,9 @@ public class HttpRequestExecutor extends BaseService implements IWfNodeExecutor 
                     }
                 }
             }
-            logger.info("HTTP node executed, method={}, url={}, statusCode={}", method, url, statusCode);
+            logger.info("http node executed, method={}, url={}, statusCode={}", method, url, statusCode);
         } catch (Exception e) {
-            logger.error("HTTP request failed, method={}, url={}", method, url, e);
+            logger.error("http request failed, method={}, url={}", method, url, e);
             throw new RuntimeException("HTTP请求失败: " + e.getMessage(), e);
         }
         return output;

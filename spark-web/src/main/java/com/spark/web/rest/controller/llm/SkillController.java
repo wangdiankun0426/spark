@@ -9,6 +9,7 @@ import com.spark.llm.service.ISkillService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -34,7 +35,7 @@ public class SkillController {
      * @return 响应结果
      */
     @PostMapping("create")
-    public ResultData<Void> createSkill(SkillVO skillVO) {
+    public ResultData<Void> createSkill(@RequestBody SkillVO skillVO) {
         return skillService.createSkill(skillVO);
     }
 
@@ -44,7 +45,7 @@ public class SkillController {
      * @return 响应结果
      */
     @PostMapping("update")
-    public ResultData<Void> updateSkill(SkillVO skillVO) {
+    public ResultData<Void> updateSkill(@RequestBody SkillVO skillVO) {
         return skillService.updateSkill(skillVO);
     }
 

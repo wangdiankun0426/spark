@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler({RuntimeException.class})
     public ResultData<Void> handleRuntimeException(RuntimeException e) {
-        logger.error("globalExceptionHandlerAdvice handleRuntimeException is ", e);
+        logger.error("handle runtime exception error", e);
         ResultData<Void> result = new ResultData<>();
         result.setErrorCode(ErrorCodeEnum.SYSTEM_ERROR);
         return result;
@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler({BaseException.class})
     public ResultData<Void> handleBaseException(BaseException e) {
-        logger.error("globalExceptionHandlerAdvice handleBaseException is ", e);
+        logger.error("handle base exception error", e);
         ResultData<Void> result = new ResultData<>();
         result.setCode(e.getCode());
         result.setMessage(e.getMessage());

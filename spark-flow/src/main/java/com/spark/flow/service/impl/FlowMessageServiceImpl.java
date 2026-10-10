@@ -76,7 +76,7 @@ public class FlowMessageServiceImpl extends BaseFlowService implements FlowMessa
         msgQuery.setType(msgType);
         FlowTemplateMsgResult msgResult = templateMsgDao.queryFlowTemplateMsg(msgQuery);
         if (msgResult == null || msgResult.getEnabled() == null || !msgResult.getEnabled()) {
-            logger.error("msgResult is null or disable");
+            logger.error("msg result is null or disable");
             return result;
         }
         String content = msgResult.getContent();

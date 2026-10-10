@@ -78,7 +78,7 @@ public class DocParseExecutor extends BaseService implements IWfNodeExecutor {
                 throw new IllegalArgumentException("文档内容解析失败: " + attachmentResult.getName());
             }
         }
-        logger.info("docParse node executed, file count={}", attIds.size());
+        logger.info("docParse node executed, fileCount={}", attIds.size());
         output.put(nodeId+"result", "true");
         output.put(nodeId+TaskParamCode.ATT_ID, StringUtil.join(attIds, ","));
         return output;

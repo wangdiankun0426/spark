@@ -53,7 +53,7 @@ public class KnowledgeTaskHandler implements ITaskTypeHandler {
     @Override
     public ResultData<Map<String, String>> handle(TaskInstanceResult taskInstance, Map<String, String> params) {
         ResultData<Map<String, String>> result = new ResultData<>();
-        logger.info("KnowledgeTaskHandler taskInstance={},params={}", taskInstance, params);
+        logger.info("knowledgeTaskHandler taskInstance={},params={}", taskInstance, params);
         String kbIdStr = MapUtil.getStringVal(params, TaskParamCode.KNOWLEDGE_ID);
         if (StringUtil.isBlank(kbIdStr)) {
             logger.error("kbId param not exist, taskId={}", taskInstance.getId());

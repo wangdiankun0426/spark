@@ -1,9 +1,5 @@
 package com.spark.common.utils;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
-
 import java.util.*;
 
 /**
@@ -27,23 +23,23 @@ public class DagUtil {
         if (dagJson == null || dagJson.trim().isEmpty()) {
             return "DAG数据不能为空";
         }
-        JSONObject dag;
+        Map<String, Object> dag;
         try {
-            dag = JSON.parseObject(dagJson);
+            dag = JsonUtil.toMap(dagJson);
         } catch (Exception e) {
             return "DAG JSON格式非法";
         }
-        JSONArray nodes = dag.getJSONArray("nodes");
-        JSONArray sequences = dag.getJSONArray("sequences");
+        List<Map<String, Object>> nodes = JsonUtil.getMapList(dag, "nodes");
+        List<Map<String, Object>> sequences = JsonUtil.getMapList(dag, "sequences");
         if (nodes == null || nodes.isEmpty()) {
             return "DAG必须包含至少一个节点";
         }
         if (sequences == null) {
-            sequences = new JSONArray();
+            sequences = new ArrayList<>();
         }
 
         // 1. 校验有且仅有一个 start 节点
-        long startCount = nodes.stream().filter(n -> "start".equals(((JSONObject) n).getString("type"))).count();
+        long startCount = nodes.stream().filter(n -> "start".equals(MapUtil.getStringVal(n, "type"))).count();
         if (startCount == 0) {
             return "DAG缺少开始节点（start）";
         }
@@ -52,16 +48,15 @@ public class DagUtil {
         }
 
         // 2. 校验至少有一个 end 节点
-        long endCount = nodes.stream().filter(n -> "end".equals(((JSONObject) n).getString("type"))).count();
+        long endCount = nodes.stream().filter(n -> "end".equals(MapUtil.getStringVal(n, "type"))).count();
         if (endCount == 0) {
             return "DAG缺少结束节点（end）";
         }
 
         // 3. 收集所有节点ID
         Set<String> nodeIds = new HashSet<>();
-        for (int i = 0; i < nodes.size(); i++) {
-            JSONObject node = nodes.getJSONObject(i);
-            String nodeId = node.getString("id");
+        for (Map<String, Object> node : nodes) {
+            String nodeId = MapUtil.getStringVal(node, "id");
             if (nodeId == null || nodeId.trim().isEmpty()) {
                 return "存在节点缺少id";
             }
@@ -71,10 +66,9 @@ public class DagUtil {
         }
 
         // 4. 校验连线引用的节点存在
-        for (int i = 0; i < sequences.size(); i++) {
-            JSONObject edge = sequences.getJSONObject(i);
-            String source = edge.getString("source");
-            String target = edge.getString("target");
+        for (Map<String, Object> edge : sequences) {
+            String source = MapUtil.getStringVal(edge, "source");
+            String target = MapUtil.getStringVal(edge, "target");
             if (source == null || !nodeIds.contains(source)) {
                 return "连线引用了不存在的源节点：" + source;
             }
@@ -85,16 +79,14 @@ public class DagUtil {
 
         // 5. 校验无孤立节点（非start节点至少有一个入边）
         Set<String> hasIncoming = new HashSet<>();
-        for (int i = 0; i < sequences.size(); i++) {
-            JSONObject edge = sequences.getJSONObject(i);
-            hasIncoming.add(edge.getString("target"));
+        for (Map<String, Object> edge : sequences) {
+            hasIncoming.add(MapUtil.getStringVal(edge, "target"));
         }
-        for (int i = 0; i < nodes.size(); i++) {
-            JSONObject node = nodes.getJSONObject(i);
-            String nodeId = node.getString("id");
-            String nodeType = node.getString("type");
+        for (Map<String, Object> node : nodes) {
+            String nodeId = MapUtil.getStringVal(node, "id");
+            String nodeType = MapUtil.getStringVal(node, "type");
             if (!"start".equals(nodeType) && !hasIncoming.contains(nodeId)) {
-                return "节点【" + node.getString("name") + "】缺少入边（孤立节点）";
+                return "节点【" + MapUtil.getStringVal(node, "name") + "】缺少入边（孤立节点）";
             }
         }
 
@@ -105,10 +97,9 @@ public class DagUtil {
             adjacency.put(nid, new ArrayList<>());
             inDegree.put(nid, 0);
         }
-        for (int i = 0; i < sequences.size(); i++) {
-            JSONObject edge = sequences.getJSONObject(i);
-            String source = edge.getString("source");
-            String target = edge.getString("target");
+        for (Map<String, Object> edge : sequences) {
+            String source = MapUtil.getStringVal(edge, "source");
+            String target = MapUtil.getStringVal(edge, "target");
             adjacency.get(source).add(target);
             inDegree.put(target, inDegree.get(target) + 1);
         }
@@ -135,13 +126,12 @@ public class DagUtil {
         }
 
         // 7. 校验排他网关节点的出边分支覆盖
-        for (int i = 0; i < nodes.size(); i++) {
-            JSONObject node = nodes.getJSONObject(i);
-            if ("exclusiveGateway".equals(node.getString("type"))) {
-                String nodeId = node.getString("id");
-                long outEdgeCount = sequences.stream().filter(e -> nodeId.equals(((JSONObject) e).getString("source"))).count();
+        for (Map<String, Object> node : nodes) {
+            if ("exclusiveGateway".equals(MapUtil.getStringVal(node, "type"))) {
+                String nodeId = MapUtil.getStringVal(node, "id");
+                long outEdgeCount = sequences.stream().filter(e -> nodeId.equals(MapUtil.getStringVal(e, "source"))).count();
                 if (outEdgeCount < 2) {
-                    return "条件分支节点【" + node.getString("name") + "】至少需要两条出边（含else分支）";
+                    return "条件分支节点【" + MapUtil.getStringVal(node, "name") + "】至少需要两条出边（含else分支）";
                 }
             }
         }

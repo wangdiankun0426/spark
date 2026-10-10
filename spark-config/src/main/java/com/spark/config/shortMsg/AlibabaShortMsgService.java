@@ -51,7 +51,7 @@ public class AlibabaShortMsgService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        logger.info("aliyun sendLoginValidate result is {}", sendResp.body);
+        logger.info("aliyun sendLoginValidate result, body={}", sendResp.body);
         return "OK".equals(sendResp.body.message);
     }
 

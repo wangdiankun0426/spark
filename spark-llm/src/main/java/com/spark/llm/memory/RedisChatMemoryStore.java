@@ -57,7 +57,7 @@ public class RedisChatMemoryStore implements ChatMemoryStore {
             }
             return ChatMessageDeserializer.messagesFromJson(json);
         } catch (Exception e) {
-            logger.error("从Redis获取会话记忆失败, memoryId: {}", memoryId, e);
+            logger.error("get chat memory from redis fail, memoryId={}", memoryId, e);
             return new ArrayList<>();
         }
     }
@@ -76,7 +76,7 @@ public class RedisChatMemoryStore implements ChatMemoryStore {
             String json = ChatMessageSerializer.messagesToJson(messages);
             stringRedisTemplate.opsForValue().set(buildKey(memoryId), json);
         } catch (Exception e) {
-            logger.error("保存会话记忆到Redis失败, memoryId: {}", memoryId, e);
+            logger.error("save chat memory to redis fail, memoryId={}", memoryId, e);
         }
     }
 
@@ -92,7 +92,7 @@ public class RedisChatMemoryStore implements ChatMemoryStore {
         try {
             stringRedisTemplate.delete(buildKey(memoryId));
         } catch (Exception e) {
-            logger.error("从Redis删除会话记忆失败, memoryId: {}", memoryId, e);
+            logger.error("delete chat memory from redis fail, memoryId={}", memoryId, e);
         }
     }
 }

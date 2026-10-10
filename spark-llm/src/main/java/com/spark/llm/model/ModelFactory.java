@@ -91,7 +91,7 @@ public class ModelFactory {
         query.setEnableThinking(StatusEnum.ABNORMAL.getValue());
         List<ModelResult> modelList = modelDao.queryModelList(query);
         if (CollectionUtil.isEmpty(modelList)) {
-            logger.warn("No thinking-enabled language model found, fallback to default chat model");
+            logger.warn("no thinking-enabled language model found, fallback to default chat model");
             return getDefaultChatModel();
         }
         Long modelId = modelList.get(0).getId();
@@ -109,7 +109,7 @@ public class ModelFactory {
         query.setEnableThinking(StatusEnum.NORMAL.getValue());
         List<ModelResult> modelList = modelDao.queryModelList(query);
         if (CollectionUtil.isEmpty(modelList)) {
-            logger.warn("No thinking-enabled language model found, fallback to default streaming chat model");
+            logger.warn("no thinking-enabled language model found, fallback to default streaming chat model");
             return getDefaultStreamingChatModel();
         }
         Long modelId = modelList.get(0).getId();
@@ -285,7 +285,7 @@ public class ModelFactory {
         ModelTypeEnum typeEnum = ModelTypeEnum.indexOf(model.getType());
         if (Objects.requireNonNull(typeEnum) == ModelTypeEnum.RERANK) {
             Provider provider = loadProvider(model.getProviderId());
-            logger.info("Creating RerankModel for model: {}, provider: {}", model.getName(), provider.getName());
+            logger.info("create rerankModel, model={}, provider={}", model.getName(), provider.getName());
             return new RerankModel(provider.getApiUrl(), provider.getSecretKey(), model.getName());
         }
         throw new UnsupportedOperationException("Unsupported model type: " + typeEnum.getDesc());
@@ -296,7 +296,7 @@ public class ModelFactory {
      */
     private ChatModel createOpenAiChatModel(Model model) {
         Provider provider = loadProvider(model.getProviderId());
-        logger.info("Creating ChatModel for model: {}, provider: {}, enableThinking: {}, temperature: {}", model.getName(), provider.getName(), model.getEnableThinking(), model.getTemperature());
+        logger.info("create chatModel, model={}, provider={}, enableThinking={}, temperature={}", model.getName(), provider.getName(), model.getEnableThinking(), model.getTemperature());
         OpenAiChatModel.OpenAiChatModelBuilder builder = OpenAiChatModel.builder()
                 .baseUrl(provider.getApiUrl())
                 .apiKey(provider.getSecretKey())
@@ -316,7 +316,7 @@ public class ModelFactory {
      */
     private StreamingChatModel createOpenAiStreamingChatModel(Model model) {
         Provider provider = loadProvider(model.getProviderId());
-        logger.info("Creating StreamingChatModel for model: {}, provider: {}, enableThinking: {}, temperature: {}", model.getName(), provider.getName(), model.getEnableThinking(), model.getTemperature());
+        logger.info("create streamingChatModel, model={}, provider={}, enableThinking={}, temperature={}", model.getName(), provider.getName(), model.getEnableThinking(), model.getTemperature());
         OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder builder = OpenAiStreamingChatModel.builder()
                 .baseUrl(provider.getApiUrl())
                 .apiKey(provider.getSecretKey())
@@ -336,7 +336,7 @@ public class ModelFactory {
      */
     private EmbeddingModel createOpenAiEmbeddingModel(Model model) {
         Provider provider = loadProvider(model.getProviderId());
-        logger.info("Creating EmbeddingModel for model: {}, provider: {}", model.getName(), provider.getName());
+        logger.info("create embeddingModel, model={}, provider={}", model.getName(), provider.getName());
         return OpenAiEmbeddingModel.builder()
                 .baseUrl(provider.getApiUrl())
                 .apiKey(provider.getSecretKey())

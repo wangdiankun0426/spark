@@ -76,10 +76,10 @@ public class TimeoutStrategy {
             return future.get(effectiveTimeout, TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
             future.cancel(true);
-            logger.warn("Execution timeout after {}ms", effectiveTimeout);
+            logger.warn("execution timeout, timeoutMs={}", effectiveTimeout);
             throw new TimeoutException("执行超时，超过" + effectiveTimeout + "ms");
         } catch (ExecutionException e) {
-            logger.error("Execution failed", e.getCause());
+            logger.error("execution failed", e.getCause());
             throw e;
         } catch (InterruptedException e) {
             future.cancel(true);

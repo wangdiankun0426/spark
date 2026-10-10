@@ -72,7 +72,7 @@ public class VariableOpExecutor extends BaseService implements IWfNodeExecutor {
             default:
                 throw new IllegalArgumentException("不支持的操作类型: " + operation);
         }
-        logger.info("VariableOp node executed, operation={}", operation);
+        logger.info("variableOp node executed, operation={}", operation);
         return output;
     }
 

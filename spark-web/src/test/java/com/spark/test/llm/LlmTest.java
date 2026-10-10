@@ -1,9 +1,6 @@
 package com.spark.test.llm;
 
 import cn.hutool.http.HttpRequest;
-import cn.hutool.json.JSONArray;
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import com.spark.llm.model.ModelFactory;
@@ -55,10 +52,10 @@ public class LlmTest {
                     .body(JsonUtil.toString(paramMap))
                     .execute()
                     .body();
-            JSONObject jsonObject = JSONUtil.parseObj(body);
-            JSONArray data = jsonObject.getJSONArray("data");
-            JSONObject result = data.get(0, JSONObject.class, Boolean.TRUE);
-            embedding = result.getBeanList("embedding", Float.class);
+            Map<String, Object> jsonObject = JsonUtil.toMap(body);
+            List<Map<String, Object>> data = JsonUtil.getMapList(jsonObject, "data");
+            Map<String, Object> result = data.get(0);
+            embedding = JsonUtil.toList(JsonUtil.toString(result.get("embedding")), Float.class);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -94,10 +91,10 @@ public class LlmTest {
                     .body(JsonUtil.toString(paramMap))
                     .execute()
                     .body();
-            JSONObject jsonObject = JSONUtil.parseObj(body);
-            JSONArray data = jsonObject.getJSONArray("data");
-            JSONObject result = data.get(0, JSONObject.class, Boolean.TRUE);
-            embedding = result.getBeanList("embedding", Float.class);
+            Map<String, Object> jsonObject = JsonUtil.toMap(body);
+            List<Map<String, Object>> data = JsonUtil.getMapList(jsonObject, "data");
+            Map<String, Object> result = data.get(0);
+            embedding = JsonUtil.toList(JsonUtil.toString(result.get("embedding")), Float.class);
         } catch (Exception e) {
             e.printStackTrace();
         }

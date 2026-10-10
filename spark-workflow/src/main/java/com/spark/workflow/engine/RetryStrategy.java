@@ -50,10 +50,10 @@ public class RetryStrategy {
                 throw new RuntimeException("执行被中断", e);
             } catch (Exception e) {
                 if (attempt >= config.getMaxRetries()) {
-                    logger.error("Max retries ({}) reached, giving up", config.getMaxRetries(), e);
+                    logger.error("max retries reached, giving up, maxRetries={}", config.getMaxRetries(), e);
                     throw new RuntimeException("执行失败，已尝试" + attempt + "次: " + e.getMessage(), e);
                 }
-                logger.warn("Retry attempt {}/{}, wait {}ms, error={}", attempt, config.getMaxRetries(), interval, e.getMessage());
+                logger.warn("retry attempt, attempt={}, maxRetries={}, waitMs={}, errMsg={}", attempt, config.getMaxRetries(), interval, e.getMessage());
                 try {
                     Thread.sleep(interval);
                 } catch (InterruptedException ie) {

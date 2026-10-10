@@ -414,7 +414,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         try {
             file.transferTo(new File(path));
         } catch (IOException e) {
-            logger.error("uploadAvatar error is ", e);
+            logger.error("uploadAvatar error", e);
             return result;
         }
         User user = new User();

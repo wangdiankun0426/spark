@@ -1,7 +1,5 @@
 package com.spark.form.service.impl;
 
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
@@ -25,6 +23,8 @@ import com.spark.common.enums.ObjectTypeEnum;
 import com.spark.form.service.IFormService;
 import com.spark.manage.BaseService;
 import com.spark.common.utils.CollectionUtil;
+import com.spark.common.utils.JsonUtil;
+import com.spark.common.utils.MapUtil;
 import com.spark.common.utils.StringUtil;
 import com.spark.common.utils.TextUtil;
 import org.slf4j.Logger;
@@ -36,6 +36,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -287,7 +288,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         if (CollectionUtil.isNotEmpty(fieldList)) {
             count = formFieldDao.batchInsert(formId, revId, userId, fieldList);
             if (count < 1) {
-                logger.error("saveFormJson error, insert from field db fail");
+                logger.error("saveFormJson error, insert form field db fail");
                 return result;
             }
         }
@@ -335,14 +336,13 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         if (StringUtil.isBlank(formJson)) {
             return list;
         }
-        JSONObject jsonObject = JSONObject.parseObject(formJson);
-        JSONArray widgetList = jsonObject.getJSONArray("widgetList");
-        for (Object widget : widgetList) {
-            JSONObject widgetJson = JSONObject.parseObject(widget.toString());
-            String type = widgetJson.getString("type");
-            JSONObject config = widgetJson.getJSONObject("config");
-            String code = config.getString("code");
-            String label = config.getString("label");
+        Map<String, Object> jsonObject = JsonUtil.toMap(formJson);
+        List<Map<String, Object>> widgetList = JsonUtil.getMapList(jsonObject, "widgetList");
+        for (Map<String, Object> widgetJson : widgetList) {
+            String type = MapUtil.getStringVal(widgetJson, "type");
+            Map<String, Object> config = JsonUtil.getMap(widgetJson, "config");
+            String code = MapUtil.getStringVal(config, "code");
+            String label = MapUtil.getStringVal(config, "label");
             FormFieldVO formFieldVO = new FormFieldVO();
             formFieldVO.setCode(code);
             formFieldVO.setLabel(label);

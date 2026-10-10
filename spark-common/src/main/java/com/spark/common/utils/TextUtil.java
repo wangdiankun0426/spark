@@ -67,7 +67,7 @@ public class TextUtil {
     public static ResultData<Void> writeToText(String filePath, String content) {
         ResultData<Void> result = new ResultData<>();
         if ( StringUtil.isBlank(filePath) ||  StringUtil.isBlank(content)) {
-            logger.error("writeToText error, params no compete !");
+            logger.error("writeToText error, params not complete");
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
@@ -85,14 +85,14 @@ public class TextUtil {
             writer = new FileWriter(file);
             writer.write(content);
         } catch (IOException e) {
-            logger.error("writeToText error, create new file fail , file path is {}", filePath, e);
+            logger.error("writeToText error, create new file fail, filePath={}", filePath, e);
         } finally {
             try {
                 if (writer != null) {
                     writer.close();
                 }
             } catch (IOException e) {
-                logger.error("writeToText error, close writer fail" , e);
+                logger.error("writeToText error, close writer fail", e);
             }
         }
         result.setCode(ResultData.OK);

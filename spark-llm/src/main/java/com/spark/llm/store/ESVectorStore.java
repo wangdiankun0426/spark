@@ -4,9 +4,6 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import com.spark.common.bean.dms.result.DocumentResult;
 import com.spark.common.bean.kb.query.KnowledgeQuery;
 import com.spark.common.bean.kb.result.KnowledgeResult;
@@ -22,6 +19,7 @@ import com.spark.common.utils.TextChunkUtil;
 import com.spark.prompt.PromptTemplateLoader;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.JsonUtil;
+import com.spark.common.utils.MapUtil;
 import com.spark.common.utils.StringUtil;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.model.chat.ChatModel;
@@ -296,15 +294,14 @@ public class ESVectorStore {
             Prompt prompt = PromptTemplateLoader.create("prompts/qa-prompt.txt", variables);
             ChatModel chatModel = getChatModel();
             String chat = chatModel.chat(prompt.text());
-            JSONArray objects = JSON.parseArray(chat);
+            List<Map<String, Object>> objects = JsonUtil.toMapList(chat);
             if (CollectionUtil.isEmpty(objects)) {
                 return;
             }
             EmbeddingModel embeddingModel = getEmbeddingModel(vectorModelId);
-            for (Object object : objects) {
-                JSONObject jsonObject = (JSONObject) object;
-                String question = jsonObject.getString("question");
-                String answer = jsonObject.getString("answer");
+            for (Map<String, Object> jsonObject : objects) {
+                String question = MapUtil.getStringVal(jsonObject, "question");
+                String answer = MapUtil.getStringVal(jsonObject, "answer");
                 if (StringUtil.isBlank(question) || StringUtil.isBlank(answer)) {
                     continue;
                 }
@@ -327,7 +324,7 @@ public class ESVectorStore {
                 elasticsearchOperations.index(qaQuery, IndexCoordinates.of(ESIndexName.DOCUMENT_QA_VECTOR_INDEX_NAME));
             }
         } catch (Exception e) {
-            logger.error("indexQA error, chunkId={}", chunkId, e);
+            logger.error("indexQa error, chunkId={}", chunkId, e);
         }
     }
 

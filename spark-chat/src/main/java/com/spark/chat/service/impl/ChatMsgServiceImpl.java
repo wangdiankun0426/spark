@@ -139,14 +139,14 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
     public void createAgentChatMsg(ChatMsgVO chatMsgVO, List<Session> sessions) {
         if (chatMsgVO == null || chatMsgVO.getSpaceId() == null || chatMsgVO.getSenderId() == null
                 || chatMsgVO.getReceiverId() == null || StringUtil.isBlank(chatMsgVO.getMessage())) {
-            logger.error("chatHandler create fail, params no full");
+            logger.error("chatHandler create fail, params incomplete");
             return;
         }
         AgentQuery agentQuery = new AgentQuery();
         agentQuery.setId(chatMsgVO.getReceiverId());
         AgentResult agentResult = agentDao.queryAgent(agentQuery);
         if (agentResult == null) {
-            logger.error("chatHandler create fail, agentResult no exist");
+            logger.error("chatHandler create fail, agentResult not exist");
             return;
         }
         ChatMsg chatMsg = new ChatMsg();
@@ -215,7 +215,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
                     UserChannelRel.sendMessage(sessions, dataContent, null);
                 }
                 searchKnowledge.clearReferences(chatMsgVO.getSpaceId());
-                logger.info("llm chat completed for spaceId: {}", chatMsgVO.getSpaceId());
+                logger.info("llm chat completed, spaceId={}", chatMsgVO.getSpaceId());
             })
             .onError(throwable -> {
                 // 异常处理
@@ -242,14 +242,14 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
     public void createModelChatMsg(ChatMsgVO chatMsgVO, List<Session> sessions) {
         if (chatMsgVO == null || chatMsgVO.getSpaceId() == null || chatMsgVO.getSenderId() == null
                 || chatMsgVO.getReceiverId() == null || StringUtil.isBlank(chatMsgVO.getMessage())) {
-            logger.error("chatHandler create fail, params no full");
+            logger.error("chatHandler create fail, params incomplete");
             return;
         }
         ModelQuery modelQuery = new ModelQuery();
         modelQuery.setId(chatMsgVO.getReceiverId());
         ModelResult modelResult = modelDao.queryModel(modelQuery);
         if (modelResult == null) {
-            logger.error("chatHandler create fail, modelResult no exist");
+            logger.error("chatHandler create fail, modelResult not exist");
             return;
         }
         ChatMsg chatMsg = new ChatMsg();
@@ -304,7 +304,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
                 dataContent.setChatMsg(chatMsg);
                 UserChannelRel.sendMessage(sessions, dataContent, null);
             }
-            logger.info("model chat completed for spaceId: {}", chatMsgVO.getSpaceId());
+            logger.info("model chat completed, spaceId={}", chatMsgVO.getSpaceId());
         }).doOnError(throwable -> {
             // 异常处理
             String answer = "抱歉，当前模型对话异常！";

@@ -3,6 +3,8 @@ package com.spark.common.bean.llm.result;
 import com.spark.common.bean.base.BaseResult;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * +++/\_/\
  * + ( °w° )=
@@ -27,7 +29,7 @@ public class SkillResult extends BaseResult {
     private String description;
 
     /**
-     * 指令正文（Markdown）
+     * 技能主文件（Markdown）
      **/
     private String content;
 
@@ -40,5 +42,10 @@ public class SkillResult extends BaseResult {
      * 状态名称
      **/
     private String statusName;
+
+    /**
+     * 技能文件列表
+     **/
+    private List<SkillFileResult> files;
 
 }

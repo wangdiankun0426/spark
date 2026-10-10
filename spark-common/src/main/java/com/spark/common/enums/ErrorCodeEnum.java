@@ -131,6 +131,8 @@ public enum ErrorCodeEnum {
     // 技能相关状态码
     SKILL_NOT_EXIST(2501, "技能不存在"),
     SKILL_NAME_EXIST(2502, "同名技能已存在"),
+    SKILL_FILE_PATH_DUPLICATE(2503, "技能文件路径重复"),
+    SKILL_FILE_OVER_LIMIT(2504, "技能文件数量超限"),
 
     ;
 

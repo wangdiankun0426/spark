@@ -115,6 +115,43 @@ public class MapUtil {
         return MapUtils.getLong(map, k, 0L);
     }
 
+    /**
+     * 获取Long类型，值为空时返回默认值
+     *
+     * @param map
+     * @param k
+     * @param defaultValue 默认值
+     * @return
+     */
+    public static Long getLongVal(Map map, Object k, Long defaultValue) {
+        Long value = MapUtils.getLong(map, k, null);
+        return value == null ? defaultValue : value;
+    }
+
+    /**
+     * 获取double类型
+     *
+     * @param map
+     * @param k
+     * @return
+     */
+    public static Double getDoubleVal(Map map, Object k) {
+        return MapUtils.getDouble(map, k, 0.0d);
+    }
+
+    /**
+     * 获取double类型，值为空时返回默认值
+     *
+     * @param map
+     * @param k
+     * @param defaultValue 默认值
+     * @return
+     */
+    public static Double getDoubleVal(Map map, Object k, Double defaultValue) {
+        Double value = MapUtils.getDouble(map, k, null);
+        return value == null ? defaultValue : value;
+    }
+
 
     /**
      * 判断map是否为空

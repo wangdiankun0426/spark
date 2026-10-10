@@ -63,7 +63,7 @@ public class ExcelUtil {
                 }
             }
         } catch (IOException e) {
-            logger.error("readXlsContent error, file path is {}", filePath, e);
+            logger.error("readXlsContent error, filePath={}", filePath, e);
         }
         return content.toString();
     }
@@ -107,7 +107,7 @@ public class ExcelUtil {
                 }
             }
         } catch (IOException e) {
-            logger.error("readXlsxContent error, file path is {}", filePath, e);
+            logger.error("readXlsxContent error, filePath={}", filePath, e);
         }
         return content.toString();
     }

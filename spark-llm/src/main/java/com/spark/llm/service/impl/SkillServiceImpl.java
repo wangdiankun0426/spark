@@ -4,12 +4,15 @@ import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.llm.entity.Skill;
+import com.spark.common.bean.llm.entity.SkillFile;
 import com.spark.common.bean.llm.query.SkillQuery;
+import com.spark.common.bean.llm.result.SkillFileResult;
 import com.spark.common.bean.llm.result.SkillResult;
 import com.spark.common.bean.llm.vo.SkillVO;
 import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.llm.SkillDao;
+import com.spark.dao.llm.SkillFileDao;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.StatusEnum;
@@ -17,6 +20,7 @@ import com.spark.llm.agent.AgentFactory;
 import com.spark.llm.service.ISkillService;
 import com.spark.common.utils.BeanUtil;
 import com.spark.common.utils.CollectionUtil;
+import com.spark.common.utils.JsonUtil;
 import com.spark.common.utils.StringUtil;
 import com.spark.manage.BaseService;
 import org.slf4j.Logger;
@@ -24,7 +28,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * +++/\_/\
@@ -38,8 +45,12 @@ import java.util.List;
 @Service
 public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> implements ISkillService {
     private final static Logger logger = LoggerFactory.getLogger(SkillServiceImpl.class);
+    // 技能文件数量上限
+    private final static int MAX_FILE_COUNT = 20;
     @Autowired
     private SkillDao skillDao;
+    @Autowired
+    private SkillFileDao skillFileDao;
     @Autowired
     private AgentFactory agentFactory;
 
@@ -57,6 +68,11 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        // 解析并校验技能文件
+        List<SkillFile> fileList = this.parseSkillFiles(skillVO.getFiles(), result);
+        if (fileList == null) {
+            return result;
+        }
         if (skillDao.querySkillByName(skillVO.getName().trim()) != null) {
             result.setErrorCode(ErrorCodeEnum.SKILL_NAME_EXIST);
             return result;
@@ -71,6 +87,8 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
+        // 保存技能文件
+        this.saveSkillFiles(skill.getId(), fileList);
         result.setCode(ResultData.OK);
         return result;
     }
@@ -95,6 +113,11 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
             result.setErrorCode(ErrorCodeEnum.SKILL_NOT_EXIST);
             return result;
         }
+        // 解析并校验技能文件
+        List<SkillFile> fileList = this.parseSkillFiles(skillVO.getFiles(), result);
+        if (fileList == null) {
+            return result;
+        }
         if (StringUtil.isNotBlank(skillVO.getName())) {
             SkillResult nameResult = skillDao.querySkillByName(skillVO.getName().trim());
             if (nameResult != null && !nameResult.getId().equals(skillVO.getId())) {
@@ -109,6 +132,10 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
+        // 全量替换技能文件
+        Long currentUserId = SessionHolder.getCurrentUserId();
+        skillFileDao.deleteBySkillId(skillVO.getId(), currentUserId);
+        this.saveSkillFiles(skillVO.getId(), fileList);
         // 目录是装配期快照，技能变更后需重建绑定该技能的Agent缓存
         agentFactory.clearAgentsBySkill(skillVO.getId());
         result.setCode(ResultData.OK);
@@ -142,6 +169,9 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
             result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
+        // 级联删除技能文件
+        Long currentUserId = SessionHolder.getCurrentUserId();
+        skillFileDao.deleteBySkillId(skillVO.getId(), currentUserId);
         // 目录是装配期快照，技能变更后需重建绑定该技能的Agent缓存
         agentFactory.clearAgentsBySkill(skillVO.getId());
         result.setCode(ResultData.OK);
@@ -186,6 +216,8 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
             return result;
         }
         skillResult.setStatusName(StatusEnum.indexOf(skillResult.getStatus()).getDesc());
+        List<SkillFileResult> fileList = skillFileDao.queryFileListBySkillId(skillResult.getId());
+        skillResult.setFiles(fileList);
         result.setData(skillResult);
         result.setObjId(skillResult.getId());
         result.setCode(ResultData.OK);
@@ -204,6 +236,73 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
         super.supplyCreatedByName(list);
         super.supplyUpdatedByName(list);
         list.forEach(skillResult -> skillResult.setStatusName(StatusEnum.indexOf(skillResult.getStatus()).getDesc()));
+    }
+
+    /**
+     * 解析并校验技能文件
+     * @param filesJson 技能文件JSON字符串
+     * @param result 返回结果
+     * @return 技能文件列表，校验失败返回null
+     */
+    private List<SkillFile> parseSkillFiles(String filesJson, ResultData<Void> result) {
+        List<SkillFile> fileList = new ArrayList<>();
+        if (StringUtil.isBlank(filesJson)) {
+            return fileList;
+        }
+        List<SkillFile> parsedList;
+        try {
+            parsedList = JsonUtil.toList(filesJson, SkillFile.class);
+        } catch (Exception e) {
+            logger.warn("parse skill files error, msg={}", e.getMessage());
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return null;
+        }
+        if (CollectionUtil.isEmpty(parsedList)) {
+            return fileList;
+        }
+        if (parsedList.size() > MAX_FILE_COUNT) {
+            result.setErrorCode(ErrorCodeEnum.SKILL_FILE_OVER_LIMIT);
+            return null;
+        }
+        Set<String> pathSet = new HashSet<>();
+        for (SkillFile file : parsedList) {
+            if (StringUtil.isBlank(file.getFilePath()) || StringUtil.isBlank(file.getDescription())
+                    || StringUtil.isBlank(file.getContent())) {
+                result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+                return null;
+            }
+            String filePath = file.getFilePath().trim();
+            if (filePath.length() > 255 || file.getDescription().length() > 255) {
+                result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+                return null;
+            }
+            if (!pathSet.add(filePath)) {
+                result.setErrorCode(ErrorCodeEnum.SKILL_FILE_PATH_DUPLICATE);
+                return null;
+            }
+            file.setId(null);
+            file.setFilePath(filePath);
+            if (file.getSort() == null) {
+                file.setSort(0);
+            }
+            fileList.add(file);
+        }
+        return fileList;
+    }
+
+    /**
+     * 保存技能文件
+     * @param skillId 技能id
+     * @param fileList 技能文件列表
+     */
+    private void saveSkillFiles(Long skillId, List<SkillFile> fileList) {
+        if (CollectionUtil.isEmpty(fileList)) {
+            return;
+        }
+        for (SkillFile file : fileList) {
+            file.setSkillId(skillId);
+            skillFileDao.insertDB(file);
+        }
     }
 
     /**

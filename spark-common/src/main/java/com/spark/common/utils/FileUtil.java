@@ -183,7 +183,7 @@ public class FileUtil {
         try {
             Files.copy(srcFile.toPath(), new File(destPath).toPath());
         } catch (IOException e) {
-            logger.error("srcPath={}, destPath={}", srcPath, destPath, e);
+            logger.error("copyFile error, srcPath={}, destPath={}", srcPath, destPath, e);
             return false;
         }
         return true;

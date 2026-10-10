@@ -32,8 +32,8 @@ import com.spark.manage.BaseService;
 import com.spark.prompt.PromptTemplateLoader;
 import com.spark.common.utils.BeanUtil;
 import com.spark.common.utils.CollectionUtil;
+import com.spark.common.utils.JsonUtil;
 import com.spark.common.utils.StringUtil;
-import com.alibaba.fastjson2.JSONObject;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.input.Prompt;
 import org.slf4j.Logger;
@@ -417,9 +417,9 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
     /**
      * 解析 LLM 返回的 JSON 对象，兼容代码块包裹
      * @param response LLM 响应文本
-     * @return JSON对象
+     * @return 动态map
      */
-    private JSONObject parseJsonObject(String response) {
+    private Map<String, Object> parseJsonObject(String response) {
         if (response == null || response.isBlank()) {
             return null;
         }
@@ -432,7 +432,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
             }
         }
         try {
-            return JSONObject.parseObject(trimmed);
+            return JsonUtil.toMap(trimmed);
         } catch (Exception e) {
             logger.error("parseJsonObject fail, response={}", response, e);
             return null;

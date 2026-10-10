@@ -35,9 +35,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Agent工厂类
+ * +++/\_/\
+ * + ( °w° )=
+ * +++)   (  //
+ * + (__ __)//
  * 基于Agent ID构建和缓存Agent实例
- * 
  * @author wangdiankun
  * @since 2026/05/14
  */
@@ -79,7 +81,7 @@ public class AgentFactory {
         // 检查缓存
         IAgent cachedAgent = agentCache.get(agentId);
         if (cachedAgent != null) {
-            logger.info("从缓存获取Agent, agentId: {}", agentId);
+            logger.info("get agent from cache, agentId={}", agentId);
             return cachedAgent;
         }
         // 从数据库加载Agent配置
@@ -117,7 +119,7 @@ public class AgentFactory {
                     List<Long> graphIds = parseGraphIds(agent.getGraphIds());
                     toolObjects.add(searchKnowledgeGraph.forAgent(graphIds));
                 } else {
-                    logger.warn("未知的工具：{}", tool);
+                    logger.warn("unknown tools={}", tool);
                 }
             }
         }
@@ -149,7 +151,7 @@ public class AgentFactory {
         IAgent newAgent = builder.build();
         // 存入缓存
         agentCache.put(agentId, newAgent);
-        logger.info("Agent构建完成并缓存, agentId: {}, 名称：{}, 描述：{}", agentId, agent.getName(), agent.getDescription());
+        logger.info("agent built and cached, agentId={}, name={}, desc={}", agentId, agent.getName(), agent.getDescription());
         return newAgent;
     }
     
@@ -189,7 +191,7 @@ public class AgentFactory {
             return;
         }
         agentCache.remove(agentId);
-        logger.info("Agent缓存已清除, agentId: {}", agentId);
+        logger.info("agent cache cleared, agentId={}", agentId);
     }
 
     /**
@@ -209,7 +211,7 @@ public class AgentFactory {
         for (Long agentId : agentIds) {
             this.clearAgentCache(agentId);
         }
-        logger.info("Agent caches cleared by skill change, skillId: {}", skillId);
+        logger.info("agent caches cleared by skill change, skillId={}", skillId);
     }
     
     /**
@@ -247,7 +249,7 @@ public class AgentFactory {
                 try {
                     kbIds.add(Long.parseLong(trimmed));
                 } catch (NumberFormatException e) {
-                    logger.warn("无效的知识库ID：{}", trimmed);
+                    logger.warn("invalid knowledge base id, id={}", trimmed);
                 }
             }
         }
@@ -271,7 +273,7 @@ public class AgentFactory {
                 try {
                     graphIds.add(Long.parseLong(trimmed));
                 } catch (NumberFormatException e) {
-                    logger.warn("无效的知识图谱ID：{}", trimmed);
+                    logger.warn("invalid knowledge graph id, id={}", trimmed);
                 }
             }
         }
@@ -295,7 +297,7 @@ public class AgentFactory {
                 try {
                     McpIds.add(Long.parseLong(trimmed));
                 } catch (NumberFormatException e) {
-                    logger.warn("无效的MCP服务器ID：{}", trimmed);
+                    logger.warn("invalid mcp server id, id={}", trimmed);
                 }
             }
         }
@@ -319,7 +321,7 @@ public class AgentFactory {
                 try {
                     skillIds.add(Long.parseLong(trimmed));
                 } catch (NumberFormatException e) {
-                    logger.warn("Invalid skill ID: {}", trimmed);
+                    logger.warn("invalid skill id, id={}", trimmed);
                 }
             }
         }
@@ -335,6 +337,7 @@ public class AgentFactory {
         StringBuilder sb = new StringBuilder();
         sb.append("【已装配技能目录】\n");
         sb.append("当用户请求与下列某项技能能力相匹配时，你必须先调用read_skill工具并传入对应技能名称，读取该技能全文，再严格按其指令执行；若没有任何技能与当前问题匹配，不要调用read_skill。\n");
+        sb.append("部分技能附带资源文件，读取技能全文后会列出资源文件清单，可按需调用read_skill_file读取对应文件。\n");
         for (SkillResult skill : skills) {
             sb.append("- 技能名称：").append(skill.getName()).append("；用途描述：").append(skill.getDescription()).append("\n");
         }

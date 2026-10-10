@@ -35,7 +35,7 @@ public class Neo4jConfig {
      */
     @Bean(destroyMethod = "close")
     public Driver neo4jDriver() {
-        logger.info("init Neo4j Driver, uri={}", uri);
+        logger.info("init neo4j driver, uri={}", uri);
         return GraphDatabase.driver(uri, AuthTokens.basic(username, password));
     }
 

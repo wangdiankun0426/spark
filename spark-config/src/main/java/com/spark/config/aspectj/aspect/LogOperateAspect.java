@@ -88,14 +88,14 @@ public class LogOperateAspect {
             return obj;
         } catch (BaseException e) {
             // 业务异常:记录业务错误码后继续抛出,交由全局异常处理器返回给前端
-            logger.warn("OperateLogAspect business exception: {}", e.getMessage());
+            logger.warn("operateLogAspect business exception, errMsg={}", e.getMessage());
             logOperate.setCode(e.getCode() == null ? ErrorCodeEnum.SYSTEM_ERROR.getValue() : e.getCode());
             logOperate.setRemark(e.getMessage());
             logOperate.setObjId(0L);
             throw e;
         } catch (Throwable e) {
             // 方法抛出未知异常之后:记录系统错误码后继续抛出,交由全局异常处理器返回给前端
-            logger.error("OperateLogAspect error", e);
+            logger.error("operateLogAspect error", e);
             logOperate.setCode(ErrorCodeEnum.SYSTEM_ERROR.getValue());
             logOperate.setRemark(e.getMessage());
             logOperate.setObjId(0L);
@@ -109,7 +109,7 @@ public class LogOperateAspect {
                 mqProducer.sendOperateLogMq(JsonUtil.toString(logOperate));
             } catch (Exception e) {
                 // 日志发送失败不能影响业务结果
-                logger.error("OperateLogAspect send operate log mq fail", e);
+                logger.error("operateLogAspect send operate log mq fail", e);
             }
         }
     }

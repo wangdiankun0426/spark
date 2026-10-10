@@ -74,9 +74,9 @@ public class CodeExecuteExecutor extends BaseService implements IWfNodeExecutor 
                 default -> throw new IllegalArgumentException("不支持的代码类型: " + codeType);
             };
             output.put(nodeId + "result", result);
-            logger.info("CodeExecute node executed, codeType={}, result length={}", codeType, result.length());
+            logger.info("codeExecute node executed, codeType={}, resultLength={}", codeType, result.length());
         } catch (Exception e) {
-            logger.error("CodeExecute execution failed, codeType={}", codeType, e);
+            logger.error("codeExecute execution failed, codeType={}", codeType, e);
             throw new RuntimeException("代码执行失败: " + e.getMessage(), e);
         }
         return output;

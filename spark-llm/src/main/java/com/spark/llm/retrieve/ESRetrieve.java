@@ -101,7 +101,7 @@ public class ESRetrieve {
         }
         RetrieveResult qaResult = this.retrieveQA(query, kbIds, knowledge);
         if (CollectionUtil.isNotEmpty(qaResult.getContents())) {
-            logger.info("retrieve QA hit, size={}", qaResult.getContents().size());
+            logger.info("retrieve qa hit, size={}", qaResult.getContents().size());
             return qaResult;
         }
         RetrieveResult vectorResult = retrieveByVector(query, kbIds, knowledge);
@@ -118,7 +118,7 @@ public class ESRetrieve {
      */
     public List<Long> retrieveDocumentIds(String keyWord, Integer documentType, Long prtId) {
         if (StringUtil.isBlank(keyWord)) {
-            logger.error("keyWord is blank");
+            logger.error("keyword is blank");
             return new ArrayList<>();
         }
         try {
@@ -191,7 +191,7 @@ public class ESRetrieve {
         List<String> contents = result.getContents();
         int topN = knowledge.getRetrieveTopK() == null ? topK : knowledge.getRetrieveTopK();
         if (contents.size() <= 1) {
-            logger.info("contents size is {}", contents.size());
+            logger.info("contents size={}", contents.size());
             return result;
         }
         try {
@@ -231,7 +231,7 @@ public class ESRetrieve {
      * @return 检索结果（contents为answer列表，references含docId）
      */
     private RetrieveResult retrieveQA(String query, List<Long> kbIds, KnowledgeResult knowledge) {
-        logger.info("retrieveQA query={}, kbIds={}", query, kbIds);
+        logger.info("retrieveQa query={}, kbIds={}", query, kbIds);
         RetrieveResult result = new RetrieveResult();
         result.setContents(new ArrayList<>());
         result.setReferences(new ArrayList<>());
@@ -272,7 +272,7 @@ public class ESRetrieve {
             result.setContents(contents);
             result.setReferences(new ArrayList<>(docIds));
         } catch (Exception e) {
-            logger.error("retrieveQA error", e);
+            logger.error("retrieveQa error", e);
         }
         return result;
     }

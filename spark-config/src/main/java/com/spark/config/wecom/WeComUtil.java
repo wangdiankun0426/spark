@@ -54,7 +54,7 @@ public class WeComUtil {
         WeComTokenRes response = restTemplate.getForObject(url, WeComTokenRes.class, corpId, corpSecret);
         if (response == null || response.getErrcode() != null && response.getErrcode() != 0) {
             String errMsg = response != null ? response.getErrmsg() : "response is null";
-            logger.error("getAccessToken error, errcode={}, errmsg={}", response != null ? response.getErrcode() : null, errMsg);
+            logger.error("getAccessToken error, errCode={}, errMsg={}", response != null ? response.getErrcode() : null, errMsg);
             throw new RuntimeException("获取企业微信AccessToken失败: " + errMsg);
         }
         cachedAccessToken = response.getAccessToken();

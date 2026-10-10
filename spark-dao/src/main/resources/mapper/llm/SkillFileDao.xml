@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.llm.SkillFileDao" >
+    <sql id="allColumnList" >
+        id , tenant_id, skill_id , file_path , description , content , sort , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into llm_skill_file (tenant_id, skill_id , file_path , description , content , sort , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{tenantId}, #{skillId} , #{filePath} , #{description} , #{content} , #{sort} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="deleteById">
+        update llm_skill_file set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <update id="updateById">
+        update llm_skill_file set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        <if test="filePath != null and filePath != ''">
+            , file_path = #{filePath}
+        </if>
+        <if test="description != null and description != ''">
+            , description = #{description}
+        </if>
+        <if test="content != null and content != ''">
+            , content = #{content}
+        </if>
+        <if test="sort != null">
+            , sort = #{sort}
+        </if>
+        where id = #{id}
+    </update>
+
+    <update id="deleteBySkillId">
+        update llm_skill_file set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = now()
+        where skill_id = #{skillId} and delete_flag = 1
+    </update>
+
+    <select id="queryFileCatalogBySkillId" resultType="com.spark.common.bean.llm.result.SkillFileResult">
+        select id , skill_id , file_path , description , sort
+        from llm_skill_file
+        where delete_flag = 1 and skill_id = #{skillId}
+        order by sort asc , id asc
+    </select>
+
+    <select id="queryFileListBySkillId" resultType="com.spark.common.bean.llm.result.SkillFileResult">
+        select <include refid="allColumnList"/>
+        from llm_skill_file
+        where delete_flag = 1 and skill_id = #{skillId}
+        order by sort asc , id asc
+    </select>
+
+    <select id="queryFileByPath" resultType="com.spark.common.bean.llm.result.SkillFileResult">
+        select id , skill_id , file_path , description , content
+        from llm_skill_file
+        where delete_flag = 1 and skill_id = #{skillId} and file_path = #{filePath}
+        limit 1
+    </select>
+</mapper>

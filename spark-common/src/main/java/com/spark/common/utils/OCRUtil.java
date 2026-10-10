@@ -43,7 +43,7 @@ public class OCRUtil {
         if (StringUtil.isBlank(filePath)) {
             return "";
         }
-        logger.info("readImgContent file path={}", filePath);
+        logger.info("readImgContent filePath={}", filePath);
         try {
             BufferedImage image = ImageIO.read(new File(filePath));
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -68,7 +68,7 @@ public class OCRUtil {
             }
             return "";
         } catch (Exception e) {
-            logger.error("getContent error, file path={}", filePath, e);
+            logger.error("getContent error, filePath={}", filePath, e);
             return "";
         }
     }

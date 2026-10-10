@@ -62,7 +62,7 @@ public class FlowUrgeTaskHandler implements ITaskTypeHandler {
     @Override
     public ResultData<Map<String, String>> handle(TaskInstanceResult taskInstance, Map<String, String> params) {
         ResultData<Map<String, String>> result = new ResultData<>();
-        logger.info("FlowUrgeTaskHandler taskInstance={},params={}", taskInstance, params);
+        logger.info("flow urge task handle, taskInstance={}, params={}", taskInstance, params);
         String instanceNodeIdStr = MapUtil.getStringVal(params, TaskParamCode.FLOW_INSTANCE_NODE_ID);
         if (!StringUtil.isNumeric(instanceNodeIdStr)) {
             logger.error("instanceNodeId param not exist, taskId={}", taskInstance.getId());
@@ -87,7 +87,7 @@ public class FlowUrgeTaskHandler implements ITaskTypeHandler {
         }
         // 发送催办通知
         ResultData<Void> sendResult = flowMessageService.sendFlowNotice(instanceResult.getFlowableInstanceId(), MessageTypeEnum.FLOW_URGE.getType());
-        logger.info("task success ,taskId={}, instanceId={}", taskInstance.getId(), taskInstance.getObjId());
+        logger.info("task success, taskId={}, instanceId={}", taskInstance.getId(), taskInstance.getObjId());
         result.setCode(ErrorCodeEnum.TASK_RESTART.getValue());
         return result;
     }

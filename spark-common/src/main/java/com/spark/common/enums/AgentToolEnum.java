@@ -14,6 +14,7 @@ public enum AgentToolEnum {
     SEARCH_KB("search_kb", "检索知识库"),
     SEARCH_KG("search_kg", "检索知识图谱"),
     READ_SKILL("read_skill", "读取技能"),
+    READ_SKILL_FILE("read_skill_file", "读取技能文件"),
     ;
 
     private String type;

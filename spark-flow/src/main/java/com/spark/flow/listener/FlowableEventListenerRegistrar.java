@@ -37,9 +37,9 @@ public class FlowableEventListenerRegistrar {
             FlowableEventDispatcher eventDispatcher = config.getEventDispatcher();
             // 添加监听器
             eventDispatcher.addEventListener(globalFlowableEventListener);
-            logger.info("Flowable EventListener by EventDispatcher!");
+            logger.info("flowable eventListener by eventDispatcher!");
         } catch (Exception e) {
-            logger.error("Flowable EventListener error", e);
+            logger.error("flowable eventListener error", e);
         }
     }
 }

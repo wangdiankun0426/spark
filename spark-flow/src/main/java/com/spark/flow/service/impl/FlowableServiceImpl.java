@@ -1,7 +1,5 @@
 package com.spark.flow.service.impl;
 
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
@@ -9,6 +7,8 @@ import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.FlowTemplateTypeEnum;
 import com.spark.flow.service.FlowableService;
 import com.spark.common.utils.CollectionUtil;
+import com.spark.common.utils.JsonUtil;
+import com.spark.common.utils.MapUtil;
 import com.spark.common.utils.StringUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.flowable.bpmn.model.*;
@@ -257,13 +257,12 @@ public class FlowableServiceImpl implements FlowableService {
         Process process = new Process();
         process.setId(processId);
         bpmnModel.addProcess(process);
-        JSONObject bpmObject = JSONObject.parseObject(bpmJson);
-        JSONArray nodes = bpmObject.getJSONArray("nodes");
-        for (Object node : nodes) {
-            JSONObject el = (JSONObject) node;
-            String id = el.getString("id");
-            String type = el.getString("type");
-            String name = el.getString("name");
+        Map<String, Object> bpmObject = JsonUtil.toMap(bpmJson);
+        List<Map<String, Object>> nodes = JsonUtil.getMapList(bpmObject, "nodes");
+        for (Map<String, Object> el : nodes) {
+            String id = MapUtil.getStringVal(el, "id");
+            String type = MapUtil.getStringVal(el, "type");
+            String name = MapUtil.getStringVal(el, "name");
             FlowElement flowElement = null;
             FlowTemplateTypeEnum templateType = FlowTemplateTypeEnum.findByValue(type);
             if (templateType == null) {
@@ -280,13 +279,12 @@ public class FlowableServiceImpl implements FlowableService {
             flowElement.setName(name);
             process.addFlowElement(flowElement);
         }
-        JSONArray sequences = bpmObject.getJSONArray("sequences");
-        for (Object sequence : sequences) {
-            JSONObject seq = (JSONObject) sequence;
-            String id = seq.getString("id");
-            String sourceRef = seq.getString("sourceRef");
-            String targetRef = seq.getString("targetRef");
-            String condition = seq.getString("conditionExpression");
+        List<Map<String, Object>> sequences = JsonUtil.getMapList(bpmObject, "sequences");
+        for (Map<String, Object> seq : sequences) {
+            String id = MapUtil.getStringVal(seq, "id");
+            String sourceRef = MapUtil.getStringVal(seq, "sourceRef");
+            String targetRef = MapUtil.getStringVal(seq, "targetRef");
+            String condition = MapUtil.getStringVal(seq, "conditionExpression");
             SequenceFlow sequenceFlow = new SequenceFlow();
             sequenceFlow.setId(id);
             sequenceFlow.setSourceRef(sourceRef);

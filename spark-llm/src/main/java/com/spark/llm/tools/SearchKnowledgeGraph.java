@@ -75,7 +75,7 @@ public class SearchKnowledgeGraph {
                     + String.join("\n", triplets)
                     + "\n\n【检索结束。请基于以上关系回答，不要再次调用本工具】";
         } catch (Exception e) {
-            logger.error("searchKnowledgeGraph err", e);
+            logger.error("searchKnowledgeGraph error", e);
             return "抱歉，知识图谱检索过程中出现异常";
         }
     }

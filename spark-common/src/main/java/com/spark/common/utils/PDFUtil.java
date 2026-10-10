@@ -65,7 +65,7 @@ public class PDFUtil {
             }
             return fullText.toString();
         } catch (IOException e) {
-            logger.error("readPDFContent error, file path is {}", filePath, e);
+            logger.error("readPdfContent error, filePath={}", filePath, e);
             return "";
         }
     }

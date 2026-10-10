@@ -1,10 +1,10 @@
 package com.spark.test.flowable;
 
 
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import com.spark.common.bean.base.BaseException;
 import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.utils.JsonUtil;
+import com.spark.common.utils.MapUtil;
 import com.spark.common.utils.StringUtil;
 import org.flowable.bpmn.model.*;
 import org.flowable.engine.RepositoryService;
@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * +++/\_/\
@@ -150,13 +151,12 @@ public class RepositoryServiceTest {
         org.flowable.bpmn.model.Process process = new org.flowable.bpmn.model.Process();
         process.setId(processId);
         bpmnModel.addProcess(process);
-        JSONObject bpmObject = JSONObject.parseObject(bpmJson);
-        JSONArray elements = bpmObject.getJSONArray("elements");
-        for (Object element : elements) {
-            JSONObject el = (JSONObject) element;
-            String id = el.getString("id");
-            String type = el.getString("type");
-            String name = el.getString("name");
+        Map<String, Object> bpmObject = JsonUtil.toMap(bpmJson);
+        List<Map<String, Object>> elements = JsonUtil.getMapList(bpmObject, "elements");
+        for (Map<String, Object> el : elements) {
+            String id = MapUtil.getStringVal(el, "id");
+            String type = MapUtil.getStringVal(el, "type");
+            String name = MapUtil.getStringVal(el, "name");
             FlowElement flowElement = null;
             switch (type) {
                 case "startEvent":
@@ -164,12 +164,12 @@ public class RepositoryServiceTest {
                     break;
                 case "userTask":
                     UserTask userTask = new UserTask();
-                    userTask.setAssignee(el.getString("assignee"));
+                    userTask.setAssignee(MapUtil.getStringVal(el, "assignee"));
                     flowElement = userTask;
                     break;
                 case "exclusiveGateway":
                     ExclusiveGateway gateway = new ExclusiveGateway();
-                    gateway.setName(el.getString("gatewayName"));
+                    gateway.setName(MapUtil.getStringVal(el, "gatewayName"));
                     flowElement = gateway;
                     break;
                 case "endEvent":
@@ -182,13 +182,12 @@ public class RepositoryServiceTest {
             flowElement.setName(name);
             process.addFlowElement(flowElement);
         }
-        JSONArray sequences = bpmObject.getJSONArray("sequences");
-        for (Object sequence : sequences) {
-            JSONObject seq = (JSONObject) sequence;
-            String id = seq.getString("id");
-            String sourceRef = seq.getString("sourceRef");
-            String targetRef = seq.getString("targetRef");
-            String condition = seq.getString("conditionExpression");
+        List<Map<String, Object>> sequences = JsonUtil.getMapList(bpmObject, "sequences");
+        for (Map<String, Object> seq : sequences) {
+            String id = MapUtil.getStringVal(seq, "id");
+            String sourceRef = MapUtil.getStringVal(seq, "sourceRef");
+            String targetRef = MapUtil.getStringVal(seq, "targetRef");
+            String condition = MapUtil.getStringVal(seq, "conditionExpression");
             SequenceFlow sequenceFlow = new SequenceFlow();
             sequenceFlow.setId(id);
             sequenceFlow.setSourceRef(sourceRef);

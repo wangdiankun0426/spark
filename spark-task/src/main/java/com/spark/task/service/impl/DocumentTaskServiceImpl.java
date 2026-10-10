@@ -1,8 +1,5 @@
 package com.spark.task.service.impl;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.dms.entity.DocumentEvent;
 import com.spark.common.bean.dms.query.DocumentEventQuery;
@@ -156,7 +153,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                 result.setCode(ResultData.OK);
                 logger.info("executeContentTask success");
             } catch (Exception e) {
-                logger.error("executeContentTask error, e is ", e);
+                logger.error("executeContentTask error", e);
             } finally {
                 contentLock.unlock();
             }
@@ -236,7 +233,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                 result.setCode(ResultData.OK);
                 logger.info("executeIndexTask success");
             } catch (Exception e) {
-                logger.error("executeIndexTask error, e is ", e);
+                logger.error("executeIndexTask error", e);
             } finally {
                 indexLock.unlock();
             }
@@ -309,7 +306,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                 result.setCode(ResultData.OK);
                 logger.info("executeChunkTask success");
             } catch (Exception e) {
-                logger.error("executeChunkTask error, e is ", e);
+                logger.error("executeChunkTask error", e);
             } finally {
                 chunkLock.unlock();
             }
@@ -366,7 +363,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                 result.setCode(ResultData.OK);
                 logger.info("executeVectorTask success");
             } catch (Exception e) {
-                logger.error("executeVectorTask error, e is ", e);
+                logger.error("executeVectorTask error", e);
             } finally {
                 vectorLock.unlock();
             }
@@ -412,7 +409,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                 result.setCode(ResultData.OK);
                 logger.info("executeGraphTask success");
             } catch (Exception e) {
-                logger.error("executeGraphTask error, e is ", e);
+                logger.error("executeGraphTask error", e);
             } finally {
                 graphLock.unlock();
             }
@@ -460,7 +457,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                     }
                 } catch (Exception e) {
                     entityFailCount++;
-                    logger.error("extractEntities chunk error, docId={}, chunkIndex={}/{}", docId, i, chunks.size(), e);
+                    logger.error("extractEntities chunk error, docId={}, chunkIndex={}/total={}", docId, i, chunks.size(), e);
                 }
             }
             if (entityMap.isEmpty() && entityFailCount == chunks.size()) {
@@ -484,7 +481,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                         relationMap.putIfAbsent(key, relation);
                     }
                 } catch (Exception e) {
-                    logger.error("extractRelations chunk error, docId={}, chunkIndex={}/{}", docId, i, chunks.size(), e);
+                    logger.error("extractRelations chunk error, docId={}, chunkIndex={}/total={}", docId, i, chunks.size(), e);
                 }
             }
             // 统一持久化关系
@@ -573,23 +570,22 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
      */
     private List<KgEntity> parseEntities(String response) {
         List<KgEntity> list = new ArrayList<>();
-        JSONArray array = this.parseJsonArray(response);
+        List<Map<String, Object>> array = this.parseJsonArray(response);
         if (array == null) {
             return list;
         }
-        for (int i = 0; i < array.size(); i++) {
-            JSONObject obj = array.getJSONObject(i);
+        for (Map<String, Object> obj : array) {
             if (obj == null) {
                 continue;
             }
-            String name = obj.getString("name");
+            String name = MapUtil.getStringVal(obj, "name");
             if (name == null || name.isBlank()) {
                 continue;
             }
             KgEntity entity = new KgEntity();
             entity.setName(name);
-            entity.setType(obj.getString("type"));
-            entity.setDescription(obj.getString("description"));
+            entity.setType(MapUtil.getStringVal(obj, "type"));
+            entity.setDescription(MapUtil.getStringVal(obj, "description"));
             entity.setStatus(StatusEnum.NORMAL.getValue());
             list.add(entity);
         }
@@ -604,18 +600,17 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
      */
     private List<KgRelation> parseRelations(String response, Map<String, KgEntity> entityMap) {
         List<KgRelation> list = new ArrayList<>();
-        JSONArray array = this.parseJsonArray(response);
+        List<Map<String, Object>> array = this.parseJsonArray(response);
         if (array == null) {
             return list;
         }
-        for (int i = 0; i < array.size(); i++) {
-            JSONObject obj = array.getJSONObject(i);
+        for (Map<String, Object> obj : array) {
             if (obj == null) {
                 continue;
             }
-            String head = obj.getString("head");
-            String tail = obj.getString("tail");
-            String relationType = obj.getString("relationType");
+            String head = MapUtil.getStringVal(obj, "head");
+            String tail = MapUtil.getStringVal(obj, "tail");
+            String relationType = MapUtil.getStringVal(obj, "relationType");
             if (head == null || tail == null || relationType == null) {
                 continue;
             }
@@ -628,9 +623,9 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
             relation.setHeadEntityId(headEntity.getId());
             relation.setTailEntityId(tailEntity.getId());
             relation.setRelationType(relationType);
-            Double weight = obj.getDouble("weight");
+            Double weight = MapUtil.getDoubleVal(obj, "weight", null);
             relation.setWeight(weight == null ? 1.0 : weight);
-            relation.setConfidence(obj.getDouble("confidence"));
+            relation.setConfidence(MapUtil.getDoubleVal(obj, "confidence", null));
             relation.setSourceType(KgSourceTypeEnum.LLM.getValue());
             relation.setStatus(StatusEnum.NORMAL.getValue());
             list.add(relation);
@@ -641,9 +636,9 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
     /**
      * 解析 JSON 数组，兼容模型可能返回的代码块包裹
      * @param response LLM 响应文本
-     * @return JSONArray，解析失败返回 null
+     * @return 对象map列表，解析失败返回 null
      */
-    private JSONArray parseJsonArray(String response) {
+    private List<Map<String, Object>> parseJsonArray(String response) {
         if (response == null || response.isBlank()) {
             return null;
         }
@@ -657,7 +652,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
             }
         }
         try {
-            return JSON.parseArray(trimmed);
+            return JsonUtil.toMapList(trimmed);
         } catch (Exception e) {
             logger.error("parseJsonArray fail, response={}", response, e);
             return null;
@@ -769,7 +764,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
     private void createOrUpdateDocument(String id, Map<String, Object> document) {
         IndexOperations indexOps = elasticsearchOperations.indexOps(IndexCoordinates.of(ESIndexName.DOCUMENT_INDEX_NAME));
         if (!indexOps.exists()) {
-            logger.error("");
+            logger.error("createOrUpdateDocument error, es index not exist");
             return;
         }
         // 使用 IndexQuery 设置 ID 和文档内容
@@ -778,7 +773,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                 .withSource(JsonUtil.toString(document))
                 .build();
         String index = elasticsearchOperations.index(indexQuery, IndexCoordinates.of(ESIndexName.DOCUMENT_INDEX_NAME));
-        logger.info("createOrUpdateDocument success, index is {}, doc id is {}", index, id);
+        logger.info("createOrUpdateDocument success, index={}, docId={}", index, id);
     }
 
     /**

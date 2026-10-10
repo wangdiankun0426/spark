@@ -59,7 +59,7 @@ public class WeChatUtil {
         if (response == null || response.getErrcode() != null && response.getErrcode() != 0) {
             Integer errcode = response != null ? response.getErrcode() : null;
             String errmsg = response != null ? response.getErrmsg() : "response is null";
-            logger.error("code2Session error, errcode={}, errmsg={}", errcode, errmsg);
+            logger.error("code2Session error, errCode={}, errMsg={}", errcode, errmsg);
             return null;
         }
         return response;

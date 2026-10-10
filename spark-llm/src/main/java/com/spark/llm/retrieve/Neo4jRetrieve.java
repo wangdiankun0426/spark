@@ -1,6 +1,5 @@
 package com.spark.llm.retrieve;
 
-import com.alibaba.fastjson2.JSON;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.kg.entity.KgEntity;
 import com.spark.common.bean.kg.entity.RelationEdge;
@@ -12,6 +11,7 @@ import com.spark.llm.store.Neo4jGraphStore;
 import com.spark.prompt.PromptTemplateLoader;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.EncryptUtil;
+import com.spark.common.utils.JsonUtil;
 import com.spark.common.utils.StringUtil;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.input.Prompt;
@@ -109,7 +109,7 @@ public class Neo4jRetrieve {
             List<String> entityNames = this.extractEntitiesByLlm(question);
             if (CollectionUtil.isEmpty(entityNames)) {
                 // LLM 抽取失败时回退：用整句做 CONTAINS
-                logger.warn("LLM 抽取实体为空,回退整句匹配, question={}", question);
+                logger.warn("llm extract entities empty, fallback to whole question match, question={}", question);
                 entityNames = Collections.singletonList(question.trim());
             }
             for (Long graphId : graphIds) {
@@ -193,7 +193,7 @@ public class Neo4jRetrieve {
         try {
             String cached = redisService.getValue(buildCacheKey(question, graphIds));
             if (StringUtil.isNotBlank(cached)) {
-                return JSON.parseArray(cached, String.class);
+                return JsonUtil.toList(cached, String.class);
             }
         } catch (Exception e) {
             logger.warn("getCachedResult fail, question={}", question, e);
@@ -209,7 +209,7 @@ public class Neo4jRetrieve {
      */
     private void cacheResult(String question, List<Long> graphIds, List<String> triplets) {
         try {
-            redisService.setStr(buildCacheKey(question, graphIds), JSON.toJSONString(triplets), CACHE_TTL_SECONDS);
+            redisService.setStr(buildCacheKey(question, graphIds), JsonUtil.toString(triplets), CACHE_TTL_SECONDS);
         } catch (Exception e) {
             logger.warn("cacheResult fail, question={}", question, e);
         }
@@ -263,7 +263,7 @@ public class Neo4jRetrieve {
             }
         }
         try {
-            return JSON.parseArray(trimmed, String.class);
+            return JsonUtil.toList(trimmed, String.class);
         } catch (Exception e) {
             logger.error("parseStringArray fail, response={}", response, e);
             return new ArrayList<>();

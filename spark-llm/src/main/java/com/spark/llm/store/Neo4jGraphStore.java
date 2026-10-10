@@ -53,31 +53,31 @@ public class Neo4jGraphStore {
             // 1. 创建实体ID唯一约束
             session.run("CREATE CONSTRAINT entity_id_unique IF NOT EXISTS " +
                 "FOR (e:Entity) REQUIRE e.id IS UNIQUE");
-            logger.info("Neo4j constraint entity_id_unique initialized");
+            logger.info("neo4j constraint entity_id_unique initialized");
 
             // 2. 创建图谱ID索引
             session.run("CREATE INDEX entity_graphId_idx IF NOT EXISTS " +
                 "FOR (e:Entity) ON (e.graphId)");
-            logger.info("Neo4j index entity_graphId_idx initialized");
+            logger.info("neo4j index entity_graphId_idx initialized");
 
             // 3. 创建实体类型索引
             session.run("CREATE INDEX entity_type_idx IF NOT EXISTS " +
                 "FOR (e:Entity) ON (e.type)");
-            logger.info("Neo4j index entity_type_idx initialized");
+            logger.info("neo4j index entity_type_idx initialized");
 
             // 4. 创建实体名称索引
             session.run("CREATE INDEX entity_name_idx IF NOT EXISTS " +
                 "FOR (e:Entity) ON (e.name)");
-            logger.info("Neo4j index entity_name_idx initialized");
+            logger.info("neo4j index entity_name_idx initialized");
 
             // 5. 创建全文索引（支持名称和描述的全文搜索）
             session.run("CREATE FULLTEXT INDEX entity_fulltext IF NOT EXISTS " +
                 "FOR (e:Entity) ON EACH [e.name, e.description]");
-            logger.info("Neo4j fulltext index entity_fulltext initialized");
+            logger.info("neo4j fulltext index entity_fulltext initialized");
 
-            logger.info("Neo4j indexes initialized successfully");
+            logger.info("neo4j indexes initialized successfully");
         } catch (Exception e) {
-            logger.error("Failed to initialize Neo4j indexes", e);
+            logger.error("failed to initialize neo4j indexes", e);
         }
     }
 
@@ -98,7 +98,7 @@ public class Neo4jGraphStore {
             Result result = session.run(cypher, params);
             return 1;
         } catch (Exception e) {
-            logger.error("写入实体节点失败, id={}, name={}", node.getId(), node.getName(), e);
+            logger.error("upsert entity node fail, id={}, name={}", node.getId(), node.getName(), e);
             return 0;
         }
     }
@@ -143,7 +143,7 @@ public class Neo4jGraphStore {
             session.run(cypher, params);
             return 1;
         } catch (Exception e) {
-            logger.error("写入关系边失败, id={}, type={}", edge.getId(), edge.getRelationType(), e);
+            logger.error("upsert relation edge fail, id={}, type={}", edge.getId(), edge.getRelationType(), e);
             return 0;
         }
     }
@@ -179,7 +179,7 @@ public class Neo4jGraphStore {
             Result result = session.run(cypher, Map.of("graphId", graphId));
             return result.consume().counters().nodesDeleted();
         } catch (Exception e) {
-            logger.error("按图谱删除图数据失败, graphId={}", graphId, e);
+            logger.error("delete graph data by graph fail, graphId={}", graphId, e);
             return 0;
         }
     }
@@ -199,7 +199,7 @@ public class Neo4jGraphStore {
             Result result = session.run(cypher, Map.of("entityId", entityId));
             return result.consume().counters().nodesDeleted();
         } catch (Exception e) {
-            logger.error("按实体删除图数据失败, entityId={}", entityId, e);
+            logger.error("delete graph data by entity fail, entityId={}", entityId, e);
             return 0;
         }
     }
@@ -278,7 +278,7 @@ public class Neo4jGraphStore {
             Result result = session.run(cypher, Map.of("relationId", relationId));
             return result.consume().counters().relationshipsDeleted();
         } catch (Exception e) {
-            logger.error("按关系删除图数据失败, relationId={}", relationId, e);
+            logger.error("delete graph data by relation fail, relationId={}", relationId, e);
             return 0;
         }
     }
@@ -346,7 +346,7 @@ public class Neo4jGraphStore {
                 }
             }
         } catch (Exception e) {
-            logger.error("查询子图失败, entityId={}, hopCount={}", entityId, hopCount, e);
+            logger.error("query subgraph fail, entityId={}, hopCount={}", entityId, hopCount, e);
         }
         return subgraph;
     }
@@ -384,7 +384,7 @@ public class Neo4jGraphStore {
                 list.add(node);
             }
         } catch (Exception e) {
-            logger.warn("全文索引查询失败，回退到CONTAINS查询, graphId={}, name={}", graphId, name, e);
+            logger.warn("fulltext index query fail, fallback to contains query, graphId={}, name={}", graphId, name, e);
             // 回退到 CONTAINS 查询
             list = queryEntityByNameContains(graphId, name);
         }
@@ -417,7 +417,7 @@ public class Neo4jGraphStore {
                 list.add(node);
             }
         } catch (Exception e) {
-            logger.error("按名称查询实体失败, graphId={}, name={}", graphId, name, e);
+            logger.error("query entity by name fail, graphId={}, name={}", graphId, name, e);
         }
         return list;
     }
@@ -487,7 +487,7 @@ public class Neo4jGraphStore {
             Result result = session.run("RETURN 1 AS num");
             return result.hasNext() && result.next().get("num").asInt() == 1;
         } catch (Exception e) {
-            logger.error("Neo4j 连接校验失败", e);
+            logger.error("neo4j connection verify fail", e);
             return false;
         }
     }

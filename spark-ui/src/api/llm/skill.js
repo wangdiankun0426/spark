@@ -1,11 +1,15 @@
 import request from '@/api/request'
 
-// 创建技能
+/**
+ * 创建技能
+ * @param data 技能表单数据
+ * @returns {Promise<AxiosResponse<any>>}
+ */
 export function createSkillAPI(data) {
     return request({
         url: '/llm/skill/create',
         method: 'post',
-        params: data
+        data
     })
 }
 
@@ -18,12 +22,16 @@ export function pageSkillListAPI(query) {
     })
 }
 
-// 修改技能
+/**
+ * 修改技能
+ * @param data 技能表单数据
+ * @returns {Promise<AxiosResponse<any>>}
+ */
 export function updateSkillAPI(data) {
     return request({
         url: '/llm/skill/update',
         method: 'post',
-        params: data
+        data
     })
 }
 

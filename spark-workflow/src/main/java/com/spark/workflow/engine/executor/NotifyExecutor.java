@@ -91,7 +91,7 @@ public class NotifyExecutor extends BaseService implements IWfNodeExecutor {
                 throw new IllegalArgumentException("发送通知失败: " + messageResult.getMessage());
             }
         }
-        logger.info("notify node executed, refIds={}, user count={}", refIds, userIds.size());
+        logger.info("notify node executed, refIds={}, userCount={}", refIds, userIds.size());
         return output;
     }
 }

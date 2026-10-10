@@ -1,9 +1,9 @@
 package com.spark.workflow.engine.executor;
 
-import com.alibaba.fastjson2.JSON;
 import com.spark.common.bean.llm.result.RetrieveResult;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.WorkflowTemplateTypeEnum;
+import com.spark.common.utils.JsonUtil;
 import com.spark.llm.retrieve.ESRetrieve;
 import com.spark.manage.BaseService;
 import com.spark.common.utils.CollectionUtil;
@@ -86,10 +86,10 @@ public class KbSearchExecutor extends BaseService implements IWfNodeExecutor {
             if (CollectionUtil.isNotEmpty(references)) {
                 output.put(nodeId + "references", StringUtil.join(references, ","));
             }
-            output.put(nodeId + "json", JSON.toJSONString(result));
-            logger.info("RAG node executed, query={}, kbIds={}, resultCount={}", query, kbIds, contents.size());
+            output.put(nodeId + "json", JsonUtil.toString(result));
+            logger.info("rag node executed, query={}, kbIds={}, resultCount={}", query, kbIds, contents.size());
         } catch (Exception e) {
-            logger.error("RAG execution failed, query={}", query, e);
+            logger.error("rag execution failed, query={}", query, e);
             throw new RuntimeException("知识库检索失败: " + e.getMessage(), e);
         }
         return output;

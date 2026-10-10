@@ -143,7 +143,7 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
         }
         // 清除模型缓存
         modelFactory.clearModelCache(modelVO.getId());
-        logger.info("Model deleted with id={}, cache cleared", modelVO.getId());
+        logger.info("model deleted with id={}, cache cleared", modelVO.getId());
         result.setObjId(modelVO.getId());
         result.setCode(ResultData.OK);
         return result;

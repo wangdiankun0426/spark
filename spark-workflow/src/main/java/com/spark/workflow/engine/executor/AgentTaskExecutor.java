@@ -97,9 +97,9 @@ public class AgentTaskExecutor extends BaseService implements IWfNodeExecutor {
                     }
                 }
             }
-            logger.info("Agent node executed, agentId={}, task length={}", agentId, task.length());
+            logger.info("agent node executed, agentId={}, taskLength={}", agentId, task.length());
         } catch (Exception e) {
-            logger.error("Agent execution failed, agentId={}", agentId, e);
+            logger.error("agent execution failed, agentId={}", agentId, e);
             throw new RuntimeException("Agent执行失败: " + e.getMessage(), e);
         }
         return output;

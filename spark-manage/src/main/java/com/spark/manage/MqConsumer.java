@@ -60,7 +60,7 @@ public class MqConsumer {
     ))
     public void handleSystemMessage(Message message, Channel channel, String msg) {
         try {
-            logger.info("rabbitmq [systemMessage] 队列监听到了消息， msg={}", msg);
+            logger.info("rabbitmq [systemMessage] message received, msg={}", msg);
             MessageVO messageVO = JsonUtil.toObject(msg, MessageVO.class);
             ResultData<Void> createMsgResult = messageService.createMessage(messageVO);
             logger.info("handle sys message createMsgResult={}", createMsgResult);
@@ -68,11 +68,11 @@ public class MqConsumer {
             channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
         } catch (Exception e) {
             // 如果不处理异常，消息会重新入队，这里直接对异常进行处理
-            logger.info("handle sys message error, exception", e);
+            logger.info("handle sys message error", e);
             try {
                 channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
             } catch (IOException ex) {
-                logger.error("handle sys message nack error, exception", ex);
+                logger.error("handle sys message nack error", ex);
             }
         }
     }
@@ -89,7 +89,7 @@ public class MqConsumer {
     ))
     public void handleLoginLog(Message message, Channel channel, String msg) {
         try {
-            logger.info("rabbitmq [loginLog] 队列监听到了消息， msg={}", msg);
+            logger.info("rabbitmq [loginLog] message received, msg={}", msg);
             LogLogin logLogin = JsonUtil.toObject(msg, LogLogin.class);
             ResultData<Void> createLogLoginResult = logLoginService.createLogLogin(logLogin);
             logger.info("handle login log createLogLoginResult={}", createLogLoginResult);
@@ -97,11 +97,11 @@ public class MqConsumer {
             channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
         } catch (Exception e) {
             // 如果不处理异常，消息会重新入队，这里直接对异常进行处理
-            logger.info("handle login log error, exception", e);
+            logger.info("handle login log error", e);
             try {
                 channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
             } catch (IOException ex) {
-                logger.error("handle login log nack error, exception", ex);
+                logger.error("handle login log nack error", ex);
             }
         }
     }
@@ -118,7 +118,7 @@ public class MqConsumer {
     ))
     public void handleOperateLog(Message message, Channel channel, String msg) {
         try {
-            logger.info("rabbitmq [operateLog] 队列监听到了消息， msg={}", msg);
+            logger.info("rabbitmq [operateLog] message received, msg={}", msg);
             LogOperate logOperate = JsonUtil.toObject(msg, LogOperate.class);
             ResultData<Void> createLogOperateResult = logOperateService.createLogOperate(logOperate);
             logger.info("handle operate log createLogOperateResult={}", createLogOperateResult);
@@ -126,11 +126,11 @@ public class MqConsumer {
             channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
         } catch (Exception e) {
             // 发生异常 这里直接对异常进行处理 可以先存到数据库在进行补偿
-            logger.error("handle operate log error, exception", e);
+            logger.error("handle operate log error", e);
             try {
                 channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
             } catch (IOException ex) {
-                logger.error("handle operate log nack error, exception", ex);
+                logger.error("handle operate log nack error", ex);
             }
         }
     }

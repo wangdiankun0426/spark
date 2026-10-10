@@ -79,7 +79,7 @@ public class LogPrintAspect {
         } catch (Exception e) {
             params = "[序列化失败]";
         }
-        logger.info("{} {} 入参={}", className, methodName, params);
+        logger.info("className={} methodName={} params={}", className, methodName, params);
         long start = System.currentTimeMillis();
         Object result = null;
         try {
@@ -95,7 +95,7 @@ public class LogPrintAspect {
             } catch (Exception e) {
                 returnVal = "[序列化失败]";
             }
-            logger.info("{} {} 耗时={}ms, 出参={}", className, methodName, cost, returnVal);
+            logger.info("className={} methodName={} cost={}ms, result={}", className, methodName, cost, returnVal);
         }
     }
 

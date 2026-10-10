@@ -40,7 +40,7 @@ public class WordUtil {
                 content.append("\n");
             }
         } catch (IOException e) {
-            logger.error("readDocx error, file path is {}", filePath);
+            logger.error("readDocx error, filePath={}", filePath);
         }
         return content.toString();
     }
@@ -63,7 +63,7 @@ public class WordUtil {
                 content.append("\n");
             }
         } catch (IOException e) {
-            logger.error("readDoc error, file path is {}", filePath);
+            logger.error("readDoc error, filePath={}", filePath);
         }
         return content.toString();
     }

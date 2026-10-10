@@ -278,7 +278,7 @@ public class TenantUserServiceImpl extends BaseService<TenantUserQuery, TenantUs
         }
         boolean bo = this.resetCacheUserLoginInfo(tenantUserResult);
         if (!bo) {
-            logger.error("reset cache user info fail!");
+            logger.error("reset cache user info fail");
             return result;
         }
         result.setObjId(tenantId);

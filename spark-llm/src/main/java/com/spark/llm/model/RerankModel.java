@@ -1,8 +1,7 @@
 package com.spark.llm.model;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
+import com.spark.common.utils.JsonUtil;
+import com.spark.common.utils.MapUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +61,7 @@ public class RerankModel {
                     .uri(URI.create(apiUrl + "/rerank"))
                     .header("Content-Type", "application/json")
                     .header("Authorization", "Bearer " + secretKey)
-                    .POST(HttpRequest.BodyPublishers.ofString(JSON.toJSONString(body), StandardCharsets.UTF_8))
+                    .POST(HttpRequest.BodyPublishers.ofString(JsonUtil.toString(body), StandardCharsets.UTF_8))
                     .timeout(Duration.ofSeconds(60))
                     .build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
@@ -70,16 +69,15 @@ public class RerankModel {
                 logger.error("rerank http fail, status={}, body={}", response.statusCode(), response.body());
                 return null;
             }
-            JSONObject resp = JSON.parseObject(response.body());
-            JSONArray results = resp.getJSONArray("results");
+            Map<String, Object> resp = JsonUtil.toMap(response.body());
+            List<Map<String, Object>> results = JsonUtil.getMapList(resp, "results");
             if (results == null || results.isEmpty()) {
                 return null;
             }
             List<RerankResult> list = new ArrayList<>();
-            for (Object obj : results) {
-                JSONObject item = (JSONObject) obj;
-                Integer index = item.getInteger("index");
-                Double score = item.getDouble("relevance_score");
+            for (Map<String, Object> item : results) {
+                Integer index = MapUtil.getIntegerVal(item, "index", null);
+                Double score = MapUtil.getDoubleVal(item, "relevance_score", null);
                 if (index == null || score == null) {
                     continue;
                 }

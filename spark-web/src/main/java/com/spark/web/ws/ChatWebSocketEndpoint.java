@@ -47,7 +47,7 @@ public class ChatWebSocketEndpoint {
     @OnOpen
     public void onOpen(Session session) {
         //todo 鉴权
-        logger.info("ws connection opened={}", session.getId());
+        logger.info("ws connection opened, sessionId={}", session.getId());
     }
 
     /**
@@ -55,7 +55,7 @@ public class ChatWebSocketEndpoint {
      */
     @OnClose
     public void onClose(Session session) {
-        logger.info("ws connection closed={}", session.getId());
+        logger.info("ws connection closed, sessionId={}", session.getId());
         UserChannelRel.removeBySession(session);
     }
 
@@ -64,11 +64,11 @@ public class ChatWebSocketEndpoint {
      */
     @OnMessage
     public void onMessage(String message, Session session) {
-        logger.info("ws get message{}", message);
+        logger.info("ws get message, message={}", message);
         // 获取客户端发来的消息
         DataContentVO dataContent = JsonUtil.toObject(message, DataContentVO.class);
         if (dataContent == null || dataContent.getAction() == null) {
-            logger.error("ws params no full");
+            logger.error("ws params incomplete");
             return;
         }
         Integer action = dataContent.getAction();
@@ -76,7 +76,7 @@ public class ChatWebSocketEndpoint {
         if (MsgActionEnum.CONNECT.getValue().equals(action)) {
             // 当webSocket第一次open/重连的时候 初始化session把用的session和userId进行关联
             if (dataContent.getChatMsg() == null || dataContent.getChatMsg().getSenderId() == null) {
-                logger.error("ws connect params no full");
+                logger.error("ws connect params incomplete");
                 return;
             }
             Long senderId = dataContent.getChatMsg().getSenderId();
@@ -97,7 +97,7 @@ public class ChatWebSocketEndpoint {
      */
     @OnError
     public void onError(Session session, Throwable error) {
-        logger.error("ws error: {}", session.getId(), error);
+        logger.error("ws error, sessionId={}", session.getId(), error);
         try {
             if (session.isOpen()) {
                 session.close();
@@ -130,7 +130,7 @@ public class ChatWebSocketEndpoint {
         ChatMsg chatMsg = dataContent.getChatMsg();
         if (chatMsg == null || StringUtil.isBlank(chatMsg.getMessage()) || chatMsg.getSenderId() == null
                 || chatMsg.getReceiverId() == null || chatMsg.getSpaceId() == null) {
-            logger.error("ws create fail, params no full");
+            logger.error("ws create fail, params incomplete");
             return;
         }
         Long senderId = chatMsg.getSenderId();
@@ -163,11 +163,11 @@ public class ChatWebSocketEndpoint {
             List<Session> receiverSessions = UserChannelRel.get(receiverId);
             if (receiverSessions.isEmpty()) {
                 // 离线 接收用户的ws未连接
-                logger.info("ws receiver no online, send msg fail");
+                logger.info("ws receiver not online, send msg fail");
                 return;
             }
             UserChannelRel.sendMessage(receiverSessions, dataContent, null);
-            logger.info("ws send msg success, receiver session size={}", receiverSessions.size());
+            logger.info("ws send msg success, size={}", receiverSessions.size());
         } else if (objEnum == ObjectTypeEnum.AGENT) {
             // AI回复推送给提问账号的全部在线连接，包含发起提问的当前连接
             List<Session> senderSessions = UserChannelRel.get(senderId);
@@ -208,7 +208,7 @@ public class ChatWebSocketEndpoint {
     private void handleSignMsg(DataContentVO dataContent) {
         ChatMsg chatMsg = dataContent.getChatMsg();
         if (chatMsg == null || chatMsg.getId() == null) {
-            logger.error("ws msg sign fail, param no full");
+            logger.error("ws msg sign fail, params incomplete");
             return;
         }
         ChatMsgVO chatMsgVO = new ChatMsgVO();
@@ -226,7 +226,7 @@ public class ChatWebSocketEndpoint {
     private void handleReadMsg(DataContentVO dataContent) {
         ChatMsg chatMsg = dataContent.getChatMsg();
         if (chatMsg == null || chatMsg.getId() == null) {
-            logger.error("ws msg read fail, param no full");
+            logger.error("ws msg read fail, params incomplete");
             return;
         }
         ChatMsgVO chatMsgVO = new ChatMsgVO();

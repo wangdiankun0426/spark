@@ -1,7 +1,5 @@
 package com.spark.flow.service.impl;
 
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.flow.entity.FlowTemplate;
 import com.spark.common.bean.flow.entity.FlowTemplateMsg;
@@ -27,6 +25,8 @@ import com.spark.flow.service.FlowableService;
 import com.spark.flow.service.IFlowTemplateVersionService;
 import com.spark.manage.BaseService;
 import com.spark.common.utils.CollectionUtil;
+import com.spark.common.utils.JsonUtil;
+import com.spark.common.utils.MapUtil;
 import com.spark.common.utils.StringUtil;
 import com.spark.common.utils.TextUtil;
 import org.slf4j.Logger;
@@ -38,6 +38,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -164,19 +165,18 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
      * @param templateNodeTasks 节点任务
      */
     private void convertBpmJson(String bpmJson, List<FlowTemplateNode> templateNodes, List<FlowTemplateSequence> templateSequences, List<FlowTemplateMsg> templateMsgs, List<FlowTemplateNodeTask> templateNodeTasks) {
-        JSONObject bpmObject = JSONObject.parseObject(bpmJson);
-        JSONArray nodes = bpmObject.getJSONArray("nodes");
-        for (Object node : nodes) {
-            JSONObject el = (JSONObject) node;
-            String id = el.getString("id");
-            String type = el.getString("type");
-            String name = el.getString("name");
-            Integer assigneeType = el.getInteger("assigneeType");
-            String assignee = el.getString("assignee");
-            Integer permission = el.getInteger("permission");
-            Integer approveType = el.getInteger("approveType");
-            Boolean urgeEnabled = el.getBoolean("urgeEnabled");
-            Integer urgeInterval = el.getInteger("urgeInterval");
+        Map<String, Object> bpmObject = JsonUtil.toMap(bpmJson);
+        List<Map<String, Object>> nodes = JsonUtil.getMapList(bpmObject, "nodes");
+        for (Map<String, Object> el : nodes) {
+            String id = MapUtil.getStringVal(el, "id");
+            String type = MapUtil.getStringVal(el, "type");
+            String name = MapUtil.getStringVal(el, "name");
+            Integer assigneeType = MapUtil.getIntegerVal(el, "assigneeType", null);
+            String assignee = MapUtil.getStringVal(el, "assignee");
+            Integer permission = MapUtil.getIntegerVal(el, "permission", null);
+            Integer approveType = MapUtil.getIntegerVal(el, "approveType", null);
+            Boolean urgeEnabled = MapUtil.getBooleanVal(el, "urgeEnabled", null);
+            Integer urgeInterval = MapUtil.getIntegerVal(el, "urgeInterval", null);
             FlowTemplateNode templateNode = new FlowTemplateNode();
             templateNode.setNodeId(id);
             templateNode.setType(type);
@@ -189,13 +189,12 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
             templateNode.setUrgeInterval(urgeInterval);
             templateNodes.add(templateNode);
         }
-        JSONArray sequences = bpmObject.getJSONArray("sequences");
-        for (Object sequence : sequences) {
-            JSONObject seq = (JSONObject) sequence;
-            String id = seq.getString("id");
-            String sourceRef = seq.getString("sourceRef");
-            String targetRef = seq.getString("targetRef");
-            String condition = seq.getString("conditionExpression");
+        List<Map<String, Object>> sequences = JsonUtil.getMapList(bpmObject, "sequences");
+        for (Map<String, Object> seq : sequences) {
+            String id = MapUtil.getStringVal(seq, "id");
+            String sourceRef = MapUtil.getStringVal(seq, "sourceRef");
+            String targetRef = MapUtil.getStringVal(seq, "targetRef");
+            String condition = MapUtil.getStringVal(seq, "conditionExpression");
             FlowTemplateSequence templateSequence = new FlowTemplateSequence();
             templateSequence.setSequenceId(id);
             templateSequence.setSourceRef(sourceRef);
@@ -203,48 +202,45 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
             templateSequence.setCondition(condition);
             templateSequences.add(templateSequence);
         }
-        JSONArray notices = bpmObject.getJSONArray("notices");
-        for (Object notice : notices) {
-            JSONObject not = (JSONObject) notice;
-            Integer type = not.getInteger("type");
+        List<Map<String, Object>> notices = JsonUtil.getMapList(bpmObject, "notices");
+        for (Map<String, Object> not : notices) {
+            Integer type = MapUtil.getIntegerVal(not, "type", null);
             if (type == null) {
                 continue;
             }
             FlowTemplateMsg templateMsg = new FlowTemplateMsg();
             templateMsg.setType(type);
-            templateMsg.setEnabled(not.getBoolean("enabled"));
-            templateMsg.setContent(not.getString("content"));
-            templateMsg.setRecipient(not.getString("recipient"));
+            templateMsg.setEnabled(MapUtil.getBooleanVal(not, "enabled", null));
+            templateMsg.setContent(MapUtil.getStringVal(not, "content"));
+            templateMsg.setRecipient(MapUtil.getStringVal(not, "recipient"));
             templateMsgs.add(templateMsg);
         }
-        JSONArray nodeTasks = bpmObject.getJSONArray("nodeTasks");
+        List<Map<String, Object>> nodeTasks = JsonUtil.getMapList(bpmObject, "nodeTasks");
         if (nodeTasks == null) {
             return;
         }
-        for (Object nodeTask : nodeTasks) {
-            JSONObject task = (JSONObject) nodeTask;
-            Long taskTemplateId = task.getLong("taskTemplateId");
+        for (Map<String, Object> task : nodeTasks) {
+            Long taskTemplateId = MapUtil.getLongVal(task, "taskTemplateId", null);
             if (taskTemplateId == null) {
                 continue;
             }
             FlowTemplateNodeTask templateNodeTask = new FlowTemplateNodeTask();
-            templateNodeTask.setNodeId(task.getString("nodeId"));
+            templateNodeTask.setNodeId(MapUtil.getStringVal(task, "nodeId"));
             templateNodeTask.setTaskTemplateId(taskTemplateId);
-            templateNodeTask.setExecuteType(task.getInteger("executeType"));
-            templateNodeTask.setSort(task.getInteger("sort"));
+            templateNodeTask.setExecuteType(MapUtil.getIntegerVal(task, "executeType", null));
+            templateNodeTask.setSort(MapUtil.getIntegerVal(task, "sort", null));
             List<FlowTemplateNodeTaskParam> taskParams = new ArrayList<>();
-            JSONArray params = task.getJSONArray("params");
+            List<Map<String, Object>> params = JsonUtil.getMapList(task, "params");
             if (params != null) {
-                for (Object param : params) {
-                    JSONObject el = (JSONObject) param;
-                    if (el.getString("code") == null) {
+                for (Map<String, Object> el : params) {
+                    if (MapUtil.getStringVal(el, "code") == null) {
                         continue;
                     }
                     FlowTemplateNodeTaskParam taskParam = new FlowTemplateNodeTaskParam();
-                    taskParam.setName(el.getString("name"));
-                    taskParam.setCode(el.getString("code"));
-                    taskParam.setType(el.getInteger("type"));
-                    taskParam.setValue(el.getString("value"));
+                    taskParam.setName(MapUtil.getStringVal(el, "name"));
+                    taskParam.setCode(MapUtil.getStringVal(el, "code"));
+                    taskParam.setType(MapUtil.getIntegerVal(el, "type", null));
+                    taskParam.setValue(MapUtil.getStringVal(el, "value"));
                     taskParams.add(taskParam);
                 }
             }

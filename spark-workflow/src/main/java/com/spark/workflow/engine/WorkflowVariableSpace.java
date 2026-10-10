@@ -243,7 +243,7 @@ public class WorkflowVariableSpace {
             return formValue;
         }
 
-        logger.debug("Variable not found: {}", varPath);
+        logger.debug("variable not found, varPath={}", varPath);
         return null;
     }
 

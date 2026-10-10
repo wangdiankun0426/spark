@@ -1,6 +1,5 @@
 package com.spark.config.wechat.response;
 
-import com.alibaba.fastjson2.annotation.JSONField;
 import lombok.Data;
 
 /**
@@ -29,7 +28,6 @@ public class WeChatSessionRes {
     /**
      * 会话密钥
      */
-    @JSONField(name = "session_key")
     private String sessionKey;
 
     /**

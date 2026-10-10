@@ -108,7 +108,7 @@ public class SearchKnowledge {
                     + String.join("\n\n", relevantDocs)
                     + "\n\n【检索结束。请基于以上内容回答，不要再次调用本工具】";
         } catch (Exception e) {
-            logger.error("searchKnowledge err", e);
+            logger.error("searchKnowledge error", e);
             return "抱歉，知识库检索过程中出现异常";
         }
     }

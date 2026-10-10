@@ -54,7 +54,7 @@ public class PPTUtil {
                 }
             }
         } catch (IOException e) {
-            logger.error("readPPTContent error, file path is {}", filePath, e);
+            logger.error("readPptContent error, filePath={}", filePath, e);
         }
         return content.toString();
     }
@@ -86,7 +86,7 @@ public class PPTUtil {
                 }
             }
         } catch (IOException e) {
-            logger.error("readPPTXContent error, file path is {}", filePath, e);
+            logger.error("readPptxContent error, filePath={}", filePath, e);
         }
         return content.toString();
     }

@@ -343,6 +343,26 @@ CREATE TABLE `llm_skill` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='技能库表';
 
+DROP TABLE IF EXISTS `llm_skill_file`;
+CREATE TABLE `llm_skill_file` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
+    `skill_id` bigint(12) NOT NULL COMMENT '技能id',
+    `file_path` varchar(255) NOT NULL COMMENT '文件虚拟路径',
+    `description` varchar(255) NOT NULL COMMENT '文件用途描述',
+    `content` mediumtext NOT NULL COMMENT '文件内容',
+    `sort` int(4) NOT NULL DEFAULT 0 COMMENT '排序',
+
+    `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_skill_id` (`skill_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='技能文件表';
+
 DROP TABLE IF EXISTS `chat_space`;
 CREATE TABLE `chat_space` (
   `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',

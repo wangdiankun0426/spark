@@ -98,7 +98,7 @@ public class TextChunkUtil {
             });
             return chunks;
         } catch (Exception e) {
-            logger.error("handleChunk error ", e);
+            logger.error("handleChunk error", e);
             return new ArrayList<>();
         }
     }

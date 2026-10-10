@@ -64,7 +64,7 @@ public class LoginValidateServiceImpl implements ILoginValidateService {
         try {
             ImageIO.write(image, "jpg", os);
         } catch (Exception e) {
-            logger.error("generateValidateCode error, e is", e);
+            logger.error("generateValidateCode error", e);
         }
         ValidateCode validateCode = new ValidateCode();
         validateCode.setUuid(uuid);

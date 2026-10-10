@@ -97,9 +97,9 @@ public class LlmTaskExecutor extends BaseService implements IWfNodeExecutor {
                     output.put(nodeId+key, String.valueOf(value));
                 }
             }
-            logger.info("LLM node executed");
+            logger.info("llm node executed");
         } catch (Exception e) {
-            logger.error("LLM execution failed", e);
+            logger.error("llm execution failed", e);
             output.put(nodeId+"text", "");
         }
         return output;

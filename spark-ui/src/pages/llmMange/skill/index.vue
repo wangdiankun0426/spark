@@ -63,7 +63,7 @@
         v-model="formVisible"
         :title="formTitle"
         direction="ltr"
-        size="60%"
+        size="70%"
         :before-close="handleCloseForm"
         :close-on-click-modal="false"
     >
@@ -91,11 +91,46 @@
               show-word-limit
           />
         </el-form-item>
-        <el-form-item label="技能内容" prop="content">
-          <v-md-editor
-              v-model="form.content"
-              height="480px"
-          />
+        <el-form-item label="技能文件" prop="content">
+          <div class="skill-file-layout">
+            <div class="skill-file-panel">
+              <div
+                  class="skill-file-item"
+                  :class="{ active: activeFile === MAIN_FILE }"
+                  @click="handleSwitchFile(MAIN_FILE)"
+              >
+                <span class="skill-file-name">SKILL.md</span>
+                <span class="skill-file-tag">主文件</span>
+              </div>
+              <div
+                  v-for="file in form.files"
+                  :key="file.filePath"
+                  class="skill-file-item"
+                  :class="{ active: activeFile === file.filePath }"
+                  @click="handleSwitchFile(file.filePath)"
+              >
+                <span
+                    class="skill-file-name"
+                    :title="file.description"
+                >{{ file.filePath }}</span>
+                <el-icon
+                    class="skill-file-delete"
+                    @click.stop="handleRemoveFile(file.filePath)"
+                ><Close /></el-icon>
+              </div>
+              <div
+                  class="skill-file-add"
+                  @click="handleOpenFileDialog"
+              >
+                <el-icon><Plus /></el-icon>添加文件
+              </div>
+            </div>
+            <v-md-editor
+                v-model="editorContent"
+                class="skill-file-editor"
+                height="480px"
+            />
+          </div>
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-switch
@@ -117,7 +152,9 @@
           <div class="form-tip">
             <div>名称为必填项且全局唯一，是模型调用读取技能时的定位依据；</div>
             <div>描述建议写清该技能的适用场景与触发条件，将注入智能体装配目录用于命中判断；</div>
-            <div>技能内容为 Markdown 指令正文，智能体命中该技能时会读取全文并严格按其执行；</div>
+            <div>SKILL.md 为主文件，只写精简的执行骨架与何时读取哪个子文件的指引，细节内容拆到子文件中；</div>
+            <div>子文件可放 references/ 参考文档、scripts/ 脚本等，其用途描述会注入资源清单，模型按需读取全文；</div>
+            <div>脚本类文件仅作为模型的参考资源，不会在服务端真正执行；</div>
             <div>停用的技能不会被智能体装配目录收录。</div>
           </div>
         </template>
@@ -129,11 +166,49 @@
         </div>
       </template>
     </el-drawer>
+
+    <!-- 添加技能文件弹窗 -->
+    <el-dialog
+        v-model="fileDialogVisible"
+        title="添加技能文件"
+        width="480px"
+        append-to-body
+        :close-on-click-modal="false"
+    >
+      <el-form
+          :model="fileForm"
+          label-width="auto"
+          :rules="fileFormRules"
+          ref="fileFormRef"
+      >
+        <el-form-item label="文件路径" prop="filePath">
+          <el-input
+              v-model="fileForm.filePath"
+              placeholder="如 references/api.md、scripts/query.sql"
+              maxlength="255"
+          />
+        </el-form-item>
+        <el-form-item label="用途描述" prop="description">
+          <el-input
+              v-model="fileForm.description"
+              placeholder="说明该文件的用途，供模型判断何时读取"
+              type="textarea"
+              :rows="2"
+              maxlength="255"
+              show-word-limit
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button type="primary" @click="handleConfirmAddFile">确定</el-button>
+        <el-button @click="fileDialogVisible = false">取消</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   pageSkillListAPI,
@@ -142,7 +217,7 @@ import {
   updateSkillAPI,
   deleteSkillAPI
 } from '@/api/llm/skill.js'
-import { Search, Plus } from '@element-plus/icons-vue'
+import { Search, Plus, Close } from '@element-plus/icons-vue'
 import Skill from "@/assets/icons/skill.vue";
 import InfoCard from '@/components/InfoCard/index.vue'
 
@@ -166,11 +241,48 @@ const form = ref({
   description: undefined,
   content: undefined,
   status: 1,
+  files: [],
 })
 const formRules = {
   name: [{ required: true, trigger: 'blur', message: '请输入技能名称' }],
   description: [{ required: true, trigger: 'blur', message: '请输入技能描述' }],
-  content: [{ required: true, trigger: 'blur', message: '请输入技能内容' }],
+  content: [{ required: true, trigger: 'blur', message: '请输入主文件内容' }],
+}
+
+// 主文件在文件列表面板中的固定标识
+const MAIN_FILE = 'SKILL.md'
+const activeFile = ref(MAIN_FILE)
+// 编辑器内容需随当前选中文件读写，v-model 无法直接绑到动态目标
+const editorContent = computed({
+  get() {
+    if (activeFile.value === MAIN_FILE) {
+      return form.value.content
+    }
+    const file = form.value.files.find(f => f.filePath === activeFile.value)
+    return file ? file.content : ''
+  },
+  set(val) {
+    if (activeFile.value === MAIN_FILE) {
+      form.value.content = val
+      return
+    }
+    const file = form.value.files.find(f => f.filePath === activeFile.value)
+    if (file) {
+      file.content = val
+    }
+  }
+})
+
+// 添加技能文件弹窗
+const fileDialogVisible = ref(false)
+const fileFormRef = ref(null)
+const fileForm = ref({
+  filePath: undefined,
+  description: undefined,
+})
+const fileFormRules = {
+  filePath: [{ required: true, trigger: 'blur', message: '请输入文件路径' }],
+  description: [{ required: true, trigger: 'blur', message: '请输入用途描述' }],
 }
 
 let searchTimer = null
@@ -256,6 +368,8 @@ function resetForm() {
   form.value.description = undefined
   form.value.content = undefined
   form.value.status = 1
+  form.value.files = []
+  activeFile.value = MAIN_FILE
 }
 
 /**
@@ -279,6 +393,13 @@ function handleOpenUpdateForm(skill) {
     form.value.description = res.data.description
     form.value.content = res.data.content
     form.value.status = res.data.status
+    form.value.files = (res.data.files || []).map(file => ({
+      filePath: file.filePath,
+      description: file.description,
+      content: file.content,
+      sort: file.sort,
+    }))
+    activeFile.value = MAIN_FILE
     formTitle.value = '修改技能'
     formVisible.value = true
   })
@@ -294,17 +415,84 @@ function handleCloseForm() {
 }
 
 /**
- * 提交表单（新增 / 修改）
+ * 切换当前编辑的文件
+ * @param filePath 文件标识
+ */
+function handleSwitchFile(filePath) {
+  activeFile.value = filePath
+}
+
+/**
+ * 打开添加文件弹窗
+ */
+function handleOpenFileDialog() {
+  fileForm.value.filePath = undefined
+  fileForm.value.description = undefined
+  fileDialogVisible.value = true
+}
+
+/**
+ * 确认添加技能文件，加入文件列表并切换为当前编辑文件
+ */
+function handleConfirmAddFile() {
+  fileFormRef.value.validate(valid => {
+    if (!valid) return
+    const filePath = fileForm.value.filePath.trim()
+    if (filePath === MAIN_FILE) {
+      ElMessage.warning('SKILL.md 为主文件，请直接在文件列表中编辑')
+      return
+    }
+    if (form.value.files.some(f => f.filePath === filePath)) {
+      ElMessage.warning('文件路径已存在')
+      return
+    }
+    form.value.files.push({
+      filePath,
+      description: fileForm.value.description.trim(),
+      content: '',
+      sort: form.value.files.length + 1,
+    })
+    activeFile.value = filePath
+    fileDialogVisible.value = false
+  })
+}
+
+/**
+ * 删除技能文件
+ * @param filePath 文件路径
+ */
+function handleRemoveFile(filePath) {
+  ElMessageBox.confirm('是否确定删除该文件?', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(() => {
+    form.value.files = form.value.files.filter(f => f.filePath !== filePath)
+    if (activeFile.value === filePath) {
+      activeFile.value = MAIN_FILE
+    }
+  }).catch(() => {})
+}
+
+/**
+ * 提交表单（新增 / 修改），技能文件序列化为JSON随表单提交
  */
 function handleSubmitForm() {
   formRef.value.validate(valid => {
     if (!valid) return
+    const emptyFile = form.value.files.find(f => !f.content || !f.content.trim())
+    if (emptyFile) {
+      ElMessage.warning(`文件 ${emptyFile.filePath} 内容为空`)
+      activeFile.value = emptyFile.filePath
+      return
+    }
     const data = {
       id: form.value.id,
       name: form.value.name,
       description: form.value.description,
       content: form.value.content,
       status: form.value.status,
+      files: form.value.files.length ? JSON.stringify(form.value.files) : undefined,
     }
     if (!data.id) {
       createSkillAPI(data).then(res => {
@@ -408,5 +596,95 @@ function handleDelete(skill) {
   gap: $spacing-xs;
   font-size: 12px;
   line-height: 1.6;
+}
+
+.skill-file-layout {
+  display: flex;
+  gap: $spacing-md;
+  width: 100%;
+}
+
+.skill-file-panel {
+  width: 200px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  height: 480px;
+  overflow-y: auto;
+  padding: $spacing-sm;
+  background-color: $bg-card;
+  border: 1px solid $border-color-light;
+  border-radius: $border-radius-md;
+  box-shadow: $shadow-card;
+}
+
+.skill-file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $border-radius-sm;
+  font-size: 13px;
+  color: $color-text-primary;
+  cursor: pointer;
+  transition: $transition-normal;
+
+  &:hover {
+    background-color: $color-primary-light;
+  }
+
+  &.active {
+    background-color: $color-primary-light;
+    color: $color-primary;
+    font-weight: 600;
+  }
+}
+
+.skill-file-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skill-file-tag {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: $color-text-placeholder;
+}
+
+.skill-file-delete {
+  flex-shrink: 0;
+  color: $color-text-placeholder;
+
+  &:hover {
+    color: $color-primary;
+  }
+}
+
+.skill-file-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  border: 1px dashed var(--el-border-color-darker);
+  border-radius: $border-radius-sm;
+  font-size: 13px;
+  color: $color-text-secondary;
+  cursor: pointer;
+  transition: $transition-normal;
+
+  &:hover {
+    color: $color-primary;
+    border-color: $color-primary;
+  }
+}
+
+.skill-file-editor {
+  flex: 1;
+  min-width: 0;
 }
 </style>

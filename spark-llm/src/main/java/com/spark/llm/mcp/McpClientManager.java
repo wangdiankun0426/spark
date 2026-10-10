@@ -56,7 +56,7 @@ public class McpClientManager {
             return null;
         }
         if (!StatusEnum.NORMAL.getValue().equals(mcp.getStatus())) {
-            logger.warn("connectToServer: mcp status is ={}", mcp.getStatus());
+            logger.warn("connectToServer mcp status not normal, status={}", mcp.getStatus());
             return null;
         }
         Long serverId = mcp.getId();
@@ -65,30 +65,30 @@ public class McpClientManager {
             return clientCache.get(serverId);
         }
         try {
-            logger.info("connectToServer: serverId is ={}", serverId);
+            logger.info("connectToServer serverId={}", serverId);
             McpClient client;
             if (McpTransportTypeEnum.STDIO.getValue().equals(mcp.getTransport())) {
                 client = createStdioClient(mcp);
             } else if (McpTransportTypeEnum.SSE.getValue().equals(mcp.getTransport())) {
                 if (mcp.getProviderId() == null) {
-                    logger.error("connectToServer: mcp provider id is null");
+                    logger.error("connectToServer mcp provider id is null");
                     return null;
                 }
                 Provider provider = loadProvider(mcp.getProviderId());
                 if (provider == null || StringUtil.isBlank(provider.getSecretKey())) {
-                    logger.error("connectToServer: provider secret key is null");
+                    logger.error("connectToServer provider secret key is null");
                     return null;
                 }
                 client = createSseClient(mcp, provider);
             } else {
-                logger.error("connectToServer: mcp transport type is ={}", mcp.getTransport());
+                logger.error("connectToServer mcp transport type unsupported, transport={}", mcp.getTransport());
                 return null;
             }
             clientCache.put(serverId, client);
-            logger.info("connectToServer: serverId is ={}", serverId);
+            logger.info("connectToServer serverId={}", serverId);
             return client;
         } catch (Exception e) {
-            logger.error("connectToServer: ", e);
+            logger.error("connectToServer error", e);
             throw new RuntimeException("连接MCP服务器失败: " + mcp.getName(), e);
         }
     }
@@ -110,10 +110,10 @@ public class McpClientManager {
                     clients.add(client);
                 }
             } catch (Exception e) {
-                logger.error("connect MCP server fail，next={}", mcp.getName(), e);
+                logger.error("connect mcp server fail, next={}", mcp.getName(), e);
             }
         }
-        logger.info("connect success {} size MCP server", clients.size());
+        logger.info("connect mcp server success, size={}", clients.size());
         return clients;
     }
 
@@ -129,9 +129,9 @@ public class McpClientManager {
         if (client != null) {
             try {
                 client.close();
-                logger.info("disconnect MCP server, serverId={}", serverId);
+                logger.info("disconnect mcp server, serverId={}", serverId);
             } catch (Exception e) {
-                logger.warn("disconnect MCP server error, serverId={}", serverId, e);
+                logger.warn("disconnect mcp server error, serverId={}", serverId, e);
             }
         }
     }
@@ -145,11 +145,11 @@ public class McpClientManager {
             try {
                 entry.getValue().close();
             } catch (Exception e) {
-                logger.warn("disconnect MCP server error, serverId={}", entry.getKey(), e);
+                logger.warn("disconnect mcp server error, serverId={}", entry.getKey(), e);
             }
         }
         clientCache.clear();
-        logger.info("all MCP server disconnect");
+        logger.info("all mcp server disconnected");
     }
 
     /**

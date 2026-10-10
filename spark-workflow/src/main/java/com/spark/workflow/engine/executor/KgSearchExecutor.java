@@ -1,9 +1,9 @@
 package com.spark.workflow.engine.executor;
 
-import com.alibaba.fastjson2.JSON;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.WorkflowTemplateTypeEnum;
+import com.spark.common.utils.JsonUtil;
 import com.spark.llm.retrieve.Neo4jRetrieve;
 import com.spark.manage.BaseService;
 import com.spark.common.utils.MapUtil;
@@ -76,10 +76,10 @@ public class KgSearchExecutor extends BaseService implements IWfNodeExecutor {
             output.put(nodeId + "result", mergedContent);
             output.put(nodeId + "content", mergedContent);
             output.put(nodeId + "count", String.valueOf(triplets.size()));
-            output.put(nodeId + "json", JSON.toJSONString(triplets));
-            logger.info("KnowledgeGraph node executed, query={}, graphIds={}, tripletCount={}", query, graphIds, triplets.size());
+            output.put(nodeId + "json", JsonUtil.toString(triplets));
+            logger.info("knowledgeGraph node executed, query={}, graphIds={}, tripletCount={}", query, graphIds, triplets.size());
         } catch (Exception e) {
-            logger.error("KnowledgeGraph execution failed, query={}", query, e);
+            logger.error("knowledgeGraph execution failed, query={}", query, e);
             throw new RuntimeException("知识图谱检索失败: " + e.getMessage(), e);
         }
         return output;

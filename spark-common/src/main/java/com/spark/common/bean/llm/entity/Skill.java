@@ -27,7 +27,7 @@ public class Skill extends BaseEntity {
     private String description;
 
     /**
-     * 指令正文（Markdown）
+     * 技能主文件（Markdown）
      **/
     private String content;
 

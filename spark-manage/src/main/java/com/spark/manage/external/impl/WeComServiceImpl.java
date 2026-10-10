@@ -85,7 +85,7 @@ public class WeComServiceImpl implements IWeComService {
             result.setData(returnMsgStr);
             result.setCode(ResultData.OK);
         } catch (Exception e) {
-            logger.error("XmlUtil.xmlToBean error", e);
+            logger.error("xmlUtil.xmlToBean error", e);
         }
         return result;
     }
@@ -122,14 +122,14 @@ public class WeComServiceImpl implements IWeComService {
         ResultData<Void> result = new ResultData<>();
         try {
             WeComDeptListRes deptResponse = weComUtil.getDepartmentList(null, corpId, corpSecret);
-            logger.info("syncDepartmentList deptResponse={}", deptResponse);
+            logger.info("syncDepartment deptResponse={}", deptResponse);
             if (deptResponse == null || CollectionUtil.isEmpty(deptResponse.getDepartment())) {
-                logger.warn("syncDepartment WeCom department list is empty");
+                logger.warn("syncDepartment wecom department list is empty");
                 result.setCode(ResultData.OK);
                 return result;
             }
             List<WeComDeptListRes.WeComDept> weComDeptList = deptResponse.getDepartment();
-            logger.info("syncDepartment fetched {} departments", weComDeptList.size());
+            logger.info("syncDepartment fetched departments, count={}", weComDeptList.size());
             // 按parentid排序，确保父部门先处理
             weComDeptList.sort((a, b) -> {
                 int cmp = a.getParentid().compareTo(b.getParentid());
@@ -173,7 +173,7 @@ public class WeComServiceImpl implements IWeComService {
                     }
                 }
             }
-            logger.info("syncDepartment created {} departments, updated {} departments", createCount, updateCount);
+            logger.info("syncDepartment departments done, created={}, updated={}", createCount, updateCount);
             result.setCode(ResultData.OK);
         } catch (Exception e) {
             logger.error("syncDepartment error", e);
@@ -201,7 +201,7 @@ public class WeComServiceImpl implements IWeComService {
             // 过滤出有wecomId的部门
             List<DepartmentResult> syncedDeptList = deptList.stream().filter(d -> d.getWecomId() != null).toList();
             if (syncedDeptList.isEmpty()) {
-                logger.warn("syncUser no synced WeCom departments found");
+                logger.warn("syncUser no synced wecom departments found");
                 result.setCode(ResultData.OK);
                 return result;
             }
@@ -239,7 +239,7 @@ public class WeComServiceImpl implements IWeComService {
                     }
                 }
             }
-            logger.info("syncUser created ={} users, updated ={} users", createCount, updateCount);
+            logger.info("syncUser users done, created={}, updated={}", createCount, updateCount);
             result.setCode(ResultData.OK);
         } catch (Exception e) {
             logger.error("syncUser error", e);

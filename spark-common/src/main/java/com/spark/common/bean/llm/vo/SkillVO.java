@@ -27,7 +27,7 @@ public class SkillVO extends BaseVO {
     private String description;
 
     /**
-     * 指令正文（Markdown）
+     * 技能主文件（Markdown）
      **/
     private String content;
 
@@ -35,5 +35,10 @@ public class SkillVO extends BaseVO {
      * 状态：1:启用，-1:禁用
      **/
     private Integer status;
+
+    /**
+     * 技能文件列表（JSON字符串）
+     **/
+    private String files;
 
 }

@@ -53,7 +53,7 @@ public class DecryptUtil {
     private static byte[] decodeHex(char[] data) {
         int len = data.length;
         if ((len & 1) != 0) {
-            logger.error("Hexadecimal string is of odd length.");
+            logger.error("hexadecimal string is of odd length.");
             return null;
         } else {
             byte[] out = new byte[len >> 1];
@@ -79,7 +79,7 @@ public class DecryptUtil {
     private static int toDigit(char ch, int index) {
         int digit = Character.digit(ch, 16);
         if (digit == -1) {
-            logger.error("Illegal hexadecimal character " + ch + " at index " + index);
+            logger.error("illegal hexadecimal character " + ch + " at index " + index);
             return -1;
         } else {
             return digit;
