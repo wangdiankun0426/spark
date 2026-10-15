@@ -77,12 +77,12 @@ public interface DepartmentDao extends BaseDao<Department> {
     Long queryDeptMaxId();
 
     /**
-     * 根据企业微信部门ID查询部门
-     * @param wecomId 企业微信部门ID
-     * @return 部门信息
+     * 查询租户下已同步企微的部门列表
+     * @param tenantId 租户id
+     * @return 部门列表
      */
     @Select("select d.*, dp.wecom_id wecom_id from sys_department d " +
-            "inner join sys_department_profile dp on dp.id = d.id and dp.delete_flag = 1 and dp.wecom_id = #{wecomId} " +
-            "where d.delete_flag = 1 limit 1")
-    DepartmentResult queryByWecomId(@Param("wecomId") Long wecomId);
+            "inner join sys_department_profile dp on dp.id = d.id and dp.delete_flag = 1 and dp.wecom_id is not null " +
+            "where d.delete_flag = 1 and d.tenant_id = #{tenantId} order by d.prt_id, d.order_num, d.id")
+    List<DepartmentResult> queryWecomDeptList(@Param("tenantId") Long tenantId);
 }

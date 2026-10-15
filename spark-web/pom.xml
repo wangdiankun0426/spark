@@ -66,6 +66,11 @@
             <artifactId>spark-dms</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
+        <!-- MCP官方Java SDK（服务端） -->
+        <dependency>
+            <groupId>io.modelcontextprotocol.sdk</groupId>
+            <artifactId>mcp</artifactId>
+        </dependency>
         <!-- hutool工具包 -->
         <dependency>
             <groupId>cn.hutool</groupId>
@@ -87,7 +92,7 @@
                 <package.env>local</package.env>
                 <!--日志存储路径-->
                 <log.path>D:\\opt\\spark\\logs</log.path>
-                <log.pattern>%d{HH:mm:ss.SSS} [%thread] [租户: %X{TenantId}] [用户: %X{UserId}] [终端: %X{LoginPlatform}] [链路: %X{TrackId}] %-5level %logger{36} - %msg%n</log.pattern>
+                <log.pattern>%d{HH:mm:ss.SSS} [%thread] [tenant: %X{TenantId}] [user: %X{UserId}] [platform: %X{LoginPlatform}] [trace: %X{TrackId}] %-5level %logger{36} - %msg%n</log.pattern>
                 <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符-->
                 <!--<log.pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</log.pattern>-->
             </properties>
@@ -100,7 +105,7 @@
                 <!--日志存储路径-->
                 <log.path>/opt/spark/logs</log.path>
                 <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符-->
-                <log.pattern>%d{HH:mm:ss.SSS} [%thread] [租户: %X{TenantId}] [用户: %X{UserId}] [终端: %X{LoginPlatform}] [链路: %X{TrackId}] %-5level %logger{36} - %msg%n</log.pattern>
+                <log.pattern>%d{HH:mm:ss.SSS} [%thread] [tenant: %X{TenantId}] [user: %X{UserId}] [platform: %X{LoginPlatform}] [trace: %X{TrackId}] %-5level %logger{36} - %msg%n</log.pattern>
                 <!--<log.pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</log.pattern>-->
             </properties>
         </profile>
@@ -124,6 +129,85 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- PropertiesLauncher布局，支持启动时通过loader.path外挂依赖目录 -->
+                    <layout>ZIP</layout>
+                    <!-- jar只打入自有模块，第三方依赖外挂到lib目录 -->
+                    <includes>
+                        <include>
+                            <groupId>com.spark</groupId>
+                            <artifactId>spark-manage</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.spark</groupId>
+                            <artifactId>spark-common</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.spark</groupId>
+                            <artifactId>spark-config</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.spark</groupId>
+                            <artifactId>spark-dao</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.spark</groupId>
+                            <artifactId>spark-kb</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.spark</groupId>
+                            <artifactId>spark-kg</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.spark</groupId>
+                            <artifactId>spark-llm</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.spark</groupId>
+                            <artifactId>spark-flow</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.spark</groupId>
+                            <artifactId>spark-chat</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.spark</groupId>
+                            <artifactId>spark-form</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.spark</groupId>
+                            <artifactId>spark-task</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.spark</groupId>
+                            <artifactId>spark-workflow</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.spark</groupId>
+                            <artifactId>spark-dms</artifactId>
+                        </include>
+                    </includes>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <!-- 第三方依赖输出到target/lib，部署时整体上传一次 -->
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <excludeGroupIds>com.spark</excludeGroupIds>
+                            <includeScope>runtime</includeScope>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
 

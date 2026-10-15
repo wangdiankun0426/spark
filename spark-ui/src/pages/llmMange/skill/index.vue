@@ -128,7 +128,7 @@
             <v-md-editor
                 v-model="editorContent"
                 class="skill-file-editor"
-                height="480px"
+                height="500px"
             />
           </div>
         </el-form-item>
@@ -610,7 +610,6 @@ function handleDelete(skill) {
   display: flex;
   flex-direction: column;
   gap: $spacing-xs;
-  height: 480px;
   overflow-y: auto;
   padding: $spacing-sm;
   background-color: $bg-card;

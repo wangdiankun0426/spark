@@ -1,17 +1,35 @@
 insert into `sys_user`(id, login_name, password, name, status, account_type, delete_flag, created_by, created_dt, updated_by, updated_dt)
 values (101, 'sysadmin', 'e10adc3949ba59abbe56e057f20f883e', '系统管理员', 1, 2, 1, 101, now(), 101, now());
 
+insert into `sys_user_profile`(id, delete_flag, created_by, created_dt, updated_by, updated_dt)
+values (101, 1, 101, now(), 101, now());
+
 INSERT INTO `sys_tenant` (`id`, `name`, `status`, `deadline`, `account_count`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`)
 VALUES (103, '演示租户环境', 1, null, 10, 1, 101, now(), 101, now());
 
-INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (103, '默认密码', 'default_password', '123456', 1, 101, now(), 101, now());
-INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (103, '企微企业ID', 'wecom_corp_id', '', 1, 101, now(), 101, now());
-INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (103, '企微应用ID', 'wecom_agent_id', '', 1, 101, now(), 101, now());
-INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (103, '企微应用密钥', 'wecom_corp_secret', '', 1, 101, now(), 101, now());
-INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (103, '企微消息Token', 'wecom_msg_token', '', 1, 101, now(), 101, now());
-INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (103, '企微消息密钥', 'wecom_msg_encoding_aes_key', '', 1, 101, now(), 101, now());
-INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (103, '密码最小长度', 'pwd.min.length', '6', 1, 101, now(), 101, now());
-INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (103, '密码最大长度', 'pwd.max.length', '12', 1, 101, now(), 101, now());
+INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`)
+VALUES (103, '默认密码', 'default_password', '123456', 1, 101, now(), 101, now());
+INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`)
+VALUES (103, '企微企业ID', 'wecom_corp_id', '', 1, 101, now(), 101, now());
+INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`)
+VALUES (103, '企微应用ID', 'wecom_agent_id', '', 1, 101, now(), 101, now());
+INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`)
+VALUES (103, '企微应用密钥', 'wecom_corp_secret', '', 1, 101, now(), 101, now());
+INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`)
+VALUES (103, '企微消息Token', 'wecom_msg_token', '', 1, 101, now(), 101, now());
+INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`)
+VALUES (103, '企微消息密钥', 'wecom_msg_encoding_aes_key', '', 1, 101, now(), 101, now());
+INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`)
+VALUES (103, '密码最小长度', 'pwd.min.length', '6', 1, 101, now(), 101, now());
+INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`)
+VALUES (103, '密码最大长度', 'pwd.max.length', '14', 1, 101, now(), 101, now());
+
+INSERT INTO `sys_user` (`id`, `login_name`, `password`, `name`, `status`, `account_type`, `current_tenant_id`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`)
+VALUES (201, 'orgadmin', 'e10adc3949ba59abbe56e057f20f883e', '组织管理员', 1, 1, 103, 1, 101, now(), 101, now());
+INSERT INTO `sys_user_profile` (`id`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`)
+VALUES (201, 1, 101, now(), 101, now());
+INSERT INTO `sys_tenant_user` (`tenant_id`, `user_id`, `role_type`, `dept_id`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`)
+VALUES (103, 201, 2, 0, 1, 101, now(), 101, now());
 
 INSERT INTO `task_template` (`id`,`tenant_id`,`name`, `task_type`, `remark`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (1, 0, '知识库文档归档任务', 2, '', 1, 101, now(), 101, now());
 INSERT INTO `task_template_param` (`id`,`template_id`, `name`, `code`, `type`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (1, 1, '待归档文档ID', 'attId', 2, 1, 101, now(), 101, now());

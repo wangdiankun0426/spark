@@ -62,6 +62,8 @@ public enum OperateTypeEnum {
     MCP_DELETE(92, "删除MCP服务器"),
     MCP_DETAIL(93, "MCP服务器详情"),
     MCP_TEST(94, "MCP服务器测试"),
+    MCP_KEY_INSERT(95, "申请MCP密钥"),
+    MCP_KEY_DELETE(97, "删除MCP密钥"),
     // 知识图谱相关的操作记录
     KG_GRAPH_INSERT(100, "新增知识图谱"),
     KG_GRAPH_UPDATE(101, "修改知识图谱"),

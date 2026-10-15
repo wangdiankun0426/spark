@@ -13,7 +13,7 @@
           @current-change="selectRoleRow"
           highlight-current-row
           height="calc(100vh - 165px)">
-        <el-table-column prop="name" label="角色名称" align="center"/>
+        <el-table-column prop="name" label="角色名称" width="200" align="center"/>
         <el-table-column prop="dataScopeName" label="数据权限" width="300" align="center"/>
         <el-table-column prop="statusName" label="状态" align="center"/>
         <el-table-column prop="createdByName" label="创建人" width="120" align="center"/>

@@ -297,6 +297,29 @@ CREATE TABLE `llm_mcp` (
       PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='MCP服务表';
 
+DROP TABLE IF EXISTS `llm_mcp_key`;
+CREATE TABLE `llm_mcp_key` (
+      `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+      `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
+      `key_value` varchar(64) NOT NULL COMMENT 'API密钥',
+      `name` varchar(64) NOT NULL COMMENT '密钥名称',
+      `user_id` bigint(12) NOT NULL COMMENT '绑定用户id',
+      `expire_dt` timestamp NULL COMMENT '过期时间，空表示永不过期',
+      `last_used_dt` timestamp NULL COMMENT '最近使用时间',
+      `use_count` bigint(12) NOT NULL DEFAULT 0 COMMENT '使用次数',
+      `status` int(1) NOT NULL DEFAULT 1 COMMENT '状态：1:启用，-1:禁用',
+      `description` varchar(255) NULL COMMENT '描述',
+
+      `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
+      `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+      `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+      `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+      `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+      `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+      PRIMARY KEY (`id`),
+      UNIQUE KEY `uk_key_value` (`key_value`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='MCP密钥表';
+
 DROP TABLE IF EXISTS `llm_agent`;
 CREATE TABLE `llm_agent` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
@@ -363,12 +386,12 @@ CREATE TABLE `llm_skill_file` (
 DROP TABLE IF EXISTS `chat_space`;
 CREATE TABLE `chat_space` (
   `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `tenant_id` bigint(12) DEFAULT NULL COMMENT '租户id',
   `space_id` bigint(12) NOT NULL COMMENT '空间主键，后两位固定05',
   `sender_id` bigint(12) NOT NULL COMMENT '发送人id',
   `receiver_id` bigint(12) NOT NULL COMMENT '接收人id',
   `space_type` int(1) NOT NULL DEFAULT 1 COMMENT '会话类型',
   `title` varchar(100) NULL COMMENT '会话标题',
-  `tenant_id` bigint(12) DEFAULT NULL COMMENT '租户id',
 
   `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
   `created_by` bigint(12) NOT NULL COMMENT '创建人id',
@@ -653,6 +676,7 @@ CREATE TABLE `flow_instance_assignee` (
 DROP TABLE IF EXISTS `flow_instance_copy`;
 CREATE TABLE `flow_instance_copy` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `tenant_id` bigint(12) NOT NULL DEFAULT 0 COMMENT '租户id',
     `instance_id` bigint(12) NOT NULL COMMENT '流程实例id',
     `user_id` bigint(12) NOT NULL COMMENT '被抄送人id',
     `node_id` varchar(36) NULL COMMENT '抄送来源节点id',
@@ -662,7 +686,9 @@ CREATE TABLE `flow_instance_copy` (
     `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
     `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    INDEX `idx_instance_id` (`instance_id`),
+    INDEX `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='流程实例抄送表';
 
 DROP TABLE IF EXISTS `form`;
@@ -757,6 +783,8 @@ CREATE TABLE kg_graph (
       entity_types TEXT DEFAULT NULL COMMENT '实体类型 schema（JSON 数组）',
       relation_types TEXT DEFAULT NULL COMMENT '关系类型 schema（JSON 数组）',
       extract_model_id BIGINT(20) DEFAULT NULL COMMENT '抽取模型 id',
+      chunk_size INT(8) DEFAULT NULL COMMENT '块大小',
+      overlap INT(8) DEFAULT NULL COMMENT '块重叠',
       status TINYINT(1) DEFAULT 1 COMMENT '状态',
 
       dept_id BIGINT(20) DEFAULT NULL COMMENT '部门 id',

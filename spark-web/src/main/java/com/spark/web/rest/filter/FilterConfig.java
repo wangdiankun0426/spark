@@ -37,7 +37,7 @@ import org.springframework.context.annotation.Configuration;
  * Response to Client
  */
 @Configuration
-public class FilterConfigurer {
+public class FilterConfig {
 
     /**
      * 添加traceId过滤器

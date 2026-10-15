@@ -345,7 +345,10 @@ const loginForm = ref({
 const loginFormRules = {
   username: [{ required: true, trigger: "blur", message: "请输入您的账号" }],
   password: [{ required: true, trigger: "blur", message: "请输入您的密码" }],
-  validateValue: [{ required: true, trigger: "blur", message: "请输入验证码" }],
+  validateValue: [
+    { required: true, trigger: "blur", message: "请输入验证码" },
+    { min: 4, max: 4, trigger: "blur", message: "验证码为4位字符" }
+  ],
 };
 const loading = ref(false);
 const validateImg = ref(undefined);

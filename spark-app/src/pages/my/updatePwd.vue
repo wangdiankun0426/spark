@@ -52,7 +52,7 @@ import {toast} from "uview-plus";
 // 租户密码长度规则，接口未返回时使用默认值
 const passwordRule = ref({
   minLength: 6,
-  maxLength: 12
+  maxLength: 14
 });
 
 const passwordForm = ref({

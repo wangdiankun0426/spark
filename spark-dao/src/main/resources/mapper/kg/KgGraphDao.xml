@@ -88,6 +88,7 @@
     <select id="queryKgGraphCount" resultType="int">
         select count(1) from kg_graph where 1=1
         <include refid="searchCondition"/>
+        ${dataScopeSQL}
     </select>
 
     <select id="queryKgGraphList" resultType="com.spark.common.bean.kg.result.KgGraphResult">
@@ -95,6 +96,7 @@
         from kg_graph
         where 1=1
         <include refid="searchCondition"/>
+        ${dataScopeSQL}
         order by
         <include refid="sortCondition"/>
         <if test="page == true">

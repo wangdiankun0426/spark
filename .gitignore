@@ -1,8 +1,6 @@
 .idea
 target
-application-local.yml
-.claude
-CLAUDE.md
-sql/alert.sql
 docs
 spark.iml
+application-local.yml
+sql/alert.sql

@@ -5,6 +5,8 @@ import com.spark.dao.BaseDao;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.List;
+
 /**
  * +++/\_/\
  * + ( °w° )=
@@ -40,6 +42,16 @@ public interface UserProfileDao extends BaseDao<UserProfile> {
      */
     @Select("select * from sys_user_profile where wecom_id = #{wecomId} and delete_flag = 1 limit 1")
     UserProfile queryByWecomId(@Param("wecomId") String wecomId);
+
+    /**
+     * 查询租户下已绑定企微的用户扩展信息
+     * @param tenantId 租户id
+     * @return 用户扩展信息列表
+     */
+    @Select("select p.* from sys_user_profile p " +
+            "inner join sys_tenant_user tu on tu.user_id = p.id and tu.delete_flag = 1 and tu.tenant_id = #{tenantId} " +
+            "where p.wecom_id is not null and p.delete_flag = 1")
+    List<UserProfile> queryWecomProfileList(@Param("tenantId") Long tenantId);
 
     /**
      * 根据微信openid查询

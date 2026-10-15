@@ -51,7 +51,7 @@ public class InterceptorConfigurer implements WebMvcConfigurer {
         excludePatterns.add("/auth/emailCode");
         excludePatterns.add("/auth/register");
         excludePatterns.add("/auth/encryptKey");
-        excludePatterns.add("/weCom/**");
+        excludePatterns.add("/weCom/receiveMsg");
         excludePatterns.add("/dms/onlyoffice/download");
         excludePatterns.add("/dms/onlyoffice/callback");
         registry.addInterceptor(loginInterceptor)

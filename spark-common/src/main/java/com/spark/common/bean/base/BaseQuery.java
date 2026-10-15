@@ -59,7 +59,7 @@ public class BaseQuery implements Serializable {
     /**
      * 数据权限sql
      */
-    private String dataScopeSQL;
+    private String dataScopeSQL = "";
 
     /**
      * 创建时间 起始

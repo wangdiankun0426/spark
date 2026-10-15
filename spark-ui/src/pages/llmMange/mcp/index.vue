@@ -345,7 +345,7 @@ function handleTest(item) {
   testMcpAPI({ id: item.id }).then(res => {
     if (res.code === 200) {
       ElMessage.success('连接成功')
-    } else if (res.code === 2203) {
+    } else if (res.code === 2202) {
       ElMessage.error('连接失败')
     }
   }).finally(() => {

@@ -2,11 +2,11 @@
 <configuration>
     <!-- INFO级别的日志 -->
     <appender name="INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>@log.path@/sys-info.log</file>
+        <file>@log.path@/spark-info.log</file>
         <!-- 循环政策：基于时间创建日志文件 -->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- 日志文件名格式 -->
-            <fileNamePattern>@log.path@/sys-info.%d{yyyy-MM-dd}.zip</fileNamePattern>
+            <fileNamePattern>@log.path@/spark-info.%d{yyyy-MM-dd}.zip</fileNamePattern>
             <!-- 日志最大的历史 60天 -->
             <maxHistory>60</maxHistory>
         </rollingPolicy>
@@ -25,11 +25,11 @@
 
     <!-- ERROR级别的日志-->
     <appender name="ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>@log.path@/sys-error.log</file>
+        <file>@log.path@/spark-error.log</file>
         <!-- 循环政策：基于时间创建日志文件 -->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- 日志文件名格式 -->
-            <fileNamePattern>@log.path@/sys-error.%d{yyyy-MM-dd}.zip</fileNamePattern>
+            <fileNamePattern>@log.path@/spark-error.%d{yyyy-MM-dd}.zip</fileNamePattern>
             <!-- 日志最大的历史 60天 -->
             <maxHistory>60</maxHistory>
         </rollingPolicy>

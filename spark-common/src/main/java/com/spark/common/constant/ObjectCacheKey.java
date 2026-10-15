@@ -59,4 +59,9 @@ public class ObjectCacheKey {
      * OnlyOffice下载凭证缓存key前缀
      */
     public final static String ONLYOFFICE_TOKEN = "o_o_t_";
+
+    /**
+     * MCP密钥缓存key前缀
+     */
+    public final static String MCP_API_KEY = "m_a_k_";
 }

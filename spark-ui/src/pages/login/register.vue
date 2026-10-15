@@ -133,7 +133,7 @@ const registerFormRules = {
   ],
   password: [
     { required: true, trigger: "blur", message: "请输入密码" },
-    { min: 6, max: 12, trigger: "blur", message: "密码长度为6-12个字符" }
+    { min: 6, max: 14, trigger: "blur", message: "密码长度为6-14个字符" }
   ],
   confirmPassword: [
     { required: true, trigger: "blur", validator: validatePassword }

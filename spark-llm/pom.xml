@@ -45,6 +45,11 @@
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-mcp</artifactId>
         </dependency>
+        <!-- MCP官方Java SDK（服务端） -->
+        <dependency>
+            <groupId>io.modelcontextprotocol.sdk</groupId>
+            <artifactId>mcp</artifactId>
+        </dependency>
         <!-- Neo4j Java Driver -->
         <dependency>
             <groupId>org.neo4j.driver</groupId>

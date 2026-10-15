@@ -111,6 +111,8 @@ public enum ErrorCodeEnum {
     // MCP相关状态码
     MCP_NOT_EXIST(2201, "MCP服务不存在"),
     MCP_CONNECT_FAIL(2202, "MCP服务连接失败"),
+    MCP_KEY_NOT_EXIST(2203, "MCP密钥不存在"),
+    MCP_KEY_INVALID(2204, "MCP密钥无效或已过期"),
     // 知识图谱相关状态码
     KG_GRAPH_NOT_EXIST(2301, "知识图谱不存在"),
     KG_ENTITY_NOT_EXIST(2302, "图谱实体不存在"),

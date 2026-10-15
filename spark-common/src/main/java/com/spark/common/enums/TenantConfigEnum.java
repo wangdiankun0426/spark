@@ -26,7 +26,7 @@ public enum TenantConfigEnum {
     // 密码最小长度
     PWD_MIN_LENGTH("pwd.min.length", "密码最小长度", "6"),
     // 密码最大长度
-    PWD_MAX_LENGTH("pwd.max.length", "密码最大长度", "12"),
+    PWD_MAX_LENGTH("pwd.max.length", "密码最大长度", "14"),
 
     ;
 

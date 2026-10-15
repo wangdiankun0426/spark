@@ -36,6 +36,7 @@
         <jaxws-api.version>2.3.1</jaxws-api.version>
         <langchain4j.version>1.4.0</langchain4j.version>
         <langchain4j.plugin.version>1.4.0-beta10</langchain4j.plugin.version>
+        <mcp-sdk.version>0.14.1</mcp-sdk.version>
         <mybatis-spring-boot-starter.version>3.0.4</mybatis-spring-boot-starter.version>
         <druid-spring-boot-starter.version>1.2.20</druid-spring-boot-starter.version>
         <fastjson2.version>2.0.46</fastjson2.version>
@@ -183,6 +184,12 @@
                 <groupId>dev.langchain4j</groupId>
                 <artifactId>langchain4j-mcp</artifactId>
                 <version>${langchain4j.plugin.version}</version>
+            </dependency>
+            <!-- MCP官方Java SDK（服务端） -->
+            <dependency>
+                <groupId>io.modelcontextprotocol.sdk</groupId>
+                <artifactId>mcp</artifactId>
+                <version>${mcp-sdk.version}</version>
             </dependency>
             <!-- flowable依赖-->
             <dependency>

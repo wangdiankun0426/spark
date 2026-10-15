@@ -2,7 +2,7 @@
   <div>
     <el-menu :default-active="defaultActive" router mode="horizontal">
       <div class="logo-box">
-        <img src="../assets/images/logo.png" width="46" height="40" @click="$router.push('/home')"/>
+        <img src="../assets/images/logo.png" width="42" height="40" @click="$router.push('/home')"/>
       </div>
       <el-menu-item v-if="hasMenu(MODULE_CODES.LLM)" index="/llm">
         <el-icon><HelpFilled /></el-icon>
@@ -123,6 +123,11 @@
                 <el-icon class="user-menu-icon"><OfficeBuilding /></el-icon>切换租户
               </el-dropdown-item>
               <el-dropdown-item
+                  @click="openMcpToken"
+              >
+                <el-icon class="user-menu-icon"><Key /></el-icon>MCP Token
+              </el-dropdown-item>
+              <el-dropdown-item
                   @click="handleLogout"
               >
                 <el-icon class="user-menu-icon"><SwitchButton /></el-icon>退出系统
@@ -138,6 +143,9 @@
 
     <!--切换租户抽屉-->
     <tenant-switch v-model="tenantSwitchVisible" :current-tenant-id="userInfo.currentTenantId" />
+
+    <!--MCP token 维护弹窗-->
+    <mcp-token v-model="mcpTokenVisible" />
   </div>
 </template>
 
@@ -146,7 +154,7 @@ import {logoutAPI} from "@/api/manage/auth/login.js";
 import {pageMyMessageListAPI} from "@/api/manage/sys/message.js";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {ref, computed, onMounted, onUnmounted} from "vue";
-import {ArrowDown, Setting, Moon, Sunny, Right, FullScreen, Aim, User, OfficeBuilding, SwitchButton} from "@element-plus/icons-vue";
+import {ArrowDown, Setting, Moon, Sunny, Right, FullScreen, Aim, User, OfficeBuilding, SwitchButton, Key} from "@element-plus/icons-vue";
 import { useRouter, useRoute } from 'vue-router';
 import {useStore} from "vuex";
 import {getTheme, applyTheme, setTheme} from '@/utils/themeUtil';
@@ -154,6 +162,7 @@ import {hasMenu, MODULE_CODES} from '@/utils/menuUtil.js';
 import UserAvatar from '@/components/UserAvatar';
 import UserProfile from '@/components/UserProfile';
 import TenantSwitch from '@/components/TenantSwitch';
+import McpToken from '@/components/McpToken';
 import Bell from "@/assets/icons/bell.vue";
 import {isOrgAdmin, isSysAdmin} from "@/utils/utils.js";
 const router = useRouter();
@@ -216,6 +225,16 @@ const userInfoVisible = ref(false);
 
 // 切换租户抽屉显隐
 const tenantSwitchVisible = ref(false);
+
+// MCP token 弹窗显隐
+const mcpTokenVisible = ref(false);
+
+/**
+ * 打开 MCP token 维护弹窗
+ */
+function openMcpToken() {
+  mcpTokenVisible.value = true;
+}
 
 /**
  * 打开切换租户抽屉
