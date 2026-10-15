@@ -68,7 +68,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        if (!this.validateTransport(mcpVO.getTransport(), mcpVO.getCommand(), mcpVO.getUrl(), mcpVO.getProviderId())) {
+        if (!this.validateTransport(mcpVO.getTransport(), mcpVO.getUrl(), mcpVO.getProviderId())) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
@@ -107,7 +107,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
             result.setErrorCode(ErrorCodeEnum.MCP_NOT_EXIST);
             return result;
         }
-        if (mcpVO.getTransport() != null && !this.validateTransport(mcpVO.getTransport(), mcpVO.getCommand(), mcpVO.getUrl(), mcpVO.getProviderId())) {
+        if (mcpVO.getTransport() != null && !this.validateTransport(mcpVO.getTransport(), mcpVO.getUrl(), mcpVO.getProviderId())) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
@@ -210,7 +210,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.MCP_TEST)
-    public ResultData<Void> testConnection(McpVO mcpVO) {
+    public ResultData<Void> test(McpVO mcpVO) {
         ResultData<Void> result = new ResultData<>();
         if (mcpVO == null || mcpVO.getId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
@@ -250,16 +250,12 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
     /**
      * 校验传输类型与配套参数
      * @param transport 传输类型
-     * @param command STDIO命令
-     * @param url SSE地址
-     * @param providerId 厂商id（SSE模式必填）
+     * @param url HTTP地址
+     * @param providerId 厂商id
      * @return 校验结果
      */
-    private boolean validateTransport(Integer transport, String command, String url, Long providerId) {
-        if (McpTransportTypeEnum.STDIO.getValue().equals(transport)) {
-            return StringUtil.isNotBlank(command);
-        }
-        if (McpTransportTypeEnum.SSE.getValue().equals(transport)) {
+    private boolean validateTransport(Integer transport, String url, Long providerId) {
+        if (McpTransportTypeEnum.HTTP.getValue().equals(transport)) {
             return StringUtil.isNotBlank(url) && providerId != null;
         }
         return false;

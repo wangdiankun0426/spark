@@ -12,8 +12,7 @@ package com.spark.common.enums;
  */
 public enum McpTransportTypeEnum {
     UNKNOWN(0, "未知"),
-    STDIO(1, "STDIO"),
-    SSE(2, "SSE"),
+    HTTP(2, "HTTP"),
     ;
     private Integer value;
     private String desc;

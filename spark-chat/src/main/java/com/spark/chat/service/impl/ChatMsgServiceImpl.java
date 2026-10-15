@@ -168,7 +168,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
             .beforeToolExecution(beforeTool -> {
                 // 工具调用前：通知前端正在调用哪个工具
                 String toolName = beforeTool.request().name();
-                String response = "正在调用 " + AgentToolEnum.indexOf(toolName).getDesc() + " 工具...\n";
+                String response = "正在调用 " + AgentToolEnum.descOf(toolName) + " 工具...\n";
                 chatMsg.setMessage(response);
                 DataContentVO dataContent = new DataContentVO();
                 dataContent.setAction(MsgActionEnum.THINKING.getValue());
@@ -180,7 +180,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
                 String toolName = toolExecution.request().name();
                 String toolResult = toolExecution.result();
                 String briefResult = (toolResult != null && toolResult.length() > 200) ? toolResult.substring(0, 200) + "..." : toolResult;
-                String response = "工具 " + AgentToolEnum.indexOf(toolName).getDesc() + " 返回结果：" + briefResult+"\n";
+                String response = "工具 " + AgentToolEnum.descOf(toolName) + " 返回结果：" + briefResult+"\n";
                 chatMsg.setMessage(response);
                 DataContentVO dataContent = new DataContentVO();
                 dataContent.setAction(MsgActionEnum.THINKING.getValue());

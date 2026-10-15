@@ -104,7 +104,7 @@
               class="chat-bubble chat-bubble-agent"
               :class="{ 'chat-bubble-sticker': parseSticker(chatMsg.message) }"
           >
-            <!-- 思考内容：占位期间只有状态，服务端推送思考过程后展示在状态下方，思考结束自动折叠 -->
+            <!-- 思考内容：占位期间只有状态，服务端推送思考过程后展示在状态下方，回复结束自动折叠 -->
             <template v-if="chatMsg.thinkingContent || chatMsg.thinkingPending">
               <div
                   class="thinking-header"
@@ -590,6 +590,13 @@ const replyLocked = computed(() => props.lockWhileStreaming && streaming.value)
 // 未选择聊天对象、连接不可用或回复中，均禁止输入
 const inputDisabled = computed(() => !(props.target && props.target.id) || !connected.value || replyLocked.value)
 
+// 回复结束解锁后自动聚焦，可直接继续提问
+watch(inputDisabled, disabled => {
+  if (!disabled) {
+    nextTick(() => inputRef.value && inputRef.value.focus())
+  }
+})
+
 // 连接不可用时优先提示重连，其次提示回复中
 const inputPlaceholder = computed(() => {
   if (!connected.value) {
@@ -665,11 +672,11 @@ function toggleThinking(chatMsg) {
 function handleReply(chatMsg, references) {
   const isComplete = chatMsg.id !== undefined
   const reply = ongoingReply() || createReply(chatMsg)
-  // 收到正式内容即视为思考结束，清除占位状态并自动折叠思考过程
+  // 收到正式内容即视为思考结束，思考区保持展开，完整消息到达后再折叠
   reply.thinkingDone = true
   reply.thinkingPending = false
-  reply.thinkingCollapsed = true
   if (isComplete) {
+    reply.thinkingCollapsed = true
     reply.id = chatMsg.id
     // 完整消息携带全量答案，覆盖已累加的分片
     if (chatMsg.message) {
@@ -758,6 +765,7 @@ function finalizePendingReply() {
   if (reply) {
     reply.thinkingDone = true
     reply.thinkingPending = false
+    reply.thinkingCollapsed = true
   }
 }
 

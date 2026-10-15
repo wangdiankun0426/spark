@@ -79,7 +79,7 @@
               show-word-limit
           />
         </el-form-item>
-        <el-form-item label="厂商" prop="providerId" v-if="mcpForm.transport === 2">
+        <el-form-item label="厂商" prop="providerId">
           <el-select
               v-model="mcpForm.providerId"
               placeholder="请选择厂商"
@@ -94,77 +94,13 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="传输类型" prop="transport">
-          <el-radio-group v-model="mcpForm.transport" @change="handleTransportChange">
-            <el-radio :label="1">STDIO</el-radio>
-            <el-radio :label="2">SSE</el-radio>
-          </el-radio-group>
+        <el-form-item label="URL" prop="url">
+          <el-input
+              v-model="mcpForm.url"
+              placeholder="如：http://127.0.0.1:8080/mcp"
+              maxlength="200"
+          />
         </el-form-item>
-        <template v-if="mcpForm.transport === 1">
-          <el-form-item label="命令" prop="command">
-            <el-input
-                v-model="mcpForm.command"
-                placeholder="如：npx"
-                maxlength="100"
-            />
-          </el-form-item>
-          <el-form-item label="参数">
-            <div class="mcp-dynamic-list">
-              <div
-                  v-for="(arg, idx) in mcpForm.args"
-                  :key="'arg-' + idx"
-                  class="mcp-dynamic-item"
-              >
-                <el-input
-                    v-model="mcpForm.args[idx]"
-                    placeholder="请输入参数"
-                    maxlength="100"
-                />
-                <el-button type="danger" text @click="handleRemoveArg(idx)">
-                  <el-icon><Delete /></el-icon>
-                </el-button>
-              </div>
-              <el-button type="primary" text @click="handleAddArg">
-                <el-icon><Plus /></el-icon>添加参数
-              </el-button>
-            </div>
-          </el-form-item>
-          <el-form-item label="环境变量">
-            <div class="mcp-dynamic-list">
-              <div
-                  v-for="(envItem, idx) in mcpForm.env"
-                  :key="'env-' + idx"
-                  class="mcp-dynamic-item mcp-env-item"
-              >
-                <el-input
-                    v-model="envItem.key"
-                    placeholder="变量名"
-                    maxlength="50"
-                />
-                <el-input
-                    v-model="envItem.value"
-                    placeholder="变量值"
-                    maxlength="200"
-                />
-                <el-button type="danger" text @click="handleRemoveEnv(idx)">
-                  <el-icon><Delete /></el-icon>
-                </el-button>
-              </div>
-              <el-button type="primary" text @click="handleAddEnv">
-                <el-icon><Plus /></el-icon>添加变量
-              </el-button>
-            </div>
-          </el-form-item>
-        </template>
-        <template v-else-if="mcpForm.transport === 2">
-          <el-form-item label="URL" prop="url">
-            <el-input
-                v-model="mcpForm.url"
-                placeholder="如：http://127.0.0.1:8080/sse"
-                maxlength="200"
-            />
-          </el-form-item>
-        </template>
         <el-form-item label="超时(秒)" prop="timeout">
           <el-input-number
               v-model="mcpForm.timeout"
@@ -198,9 +134,7 @@
         <template #title>
           <div class="form-tip">
             <div>名称为必填项，建议使用能体现服务用途的标识，便于后续识别；</div>
-            <div>传输类型选择 SSE 时需选择所属厂商并填写 URL，厂商请先在厂商管理中维护；</div>
-            <div>传输类型选择 STDIO 时需填写命令与参数、环境变量，无需选择厂商；</div>
-            <div>参数与环境变量支持动态增删，提交前会自动序列化为 JSON 字符串保存；</div>
+            <div>需选择所属厂商并填写服务 URL，厂商请先在厂商管理中维护；</div>
             <div>超时时间取值范围 1-600 秒，建议根据目标服务响应速度合理设置；</div>
             <div>状态默认启用，禁用后该 MCP 服务器不会被业务调用。</div>
           </div>
@@ -225,10 +159,10 @@ import {
   createMcpAPI,
   updateMcpAPI,
   deleteMcpAPI,
-  testConnectionMcpAPI
+  testMcpAPI
 } from '@/api/llm/mcp.js'
 import { pageProviderListAPI } from '@/api/llm/provider.js'
-import { Search, Plus, Delete } from '@element-plus/icons-vue'
+import { Search, Plus } from '@element-plus/icons-vue'
 import InfoCard from '@/components/InfoCard/index.vue'
 import Mcp from "@/assets/icons/mcp.vue";
 
@@ -249,9 +183,7 @@ const formRef = ref(null)
 const mcpForm = ref(createEmptyForm())
 const formRules = {
   name: [{ required: true, message: '请输入名称', trigger: 'blur' }],
-  providerId: [{ required: true, validator: validateProviderId, trigger: 'change' }],
-  transport: [{ required: true, message: '请选择传输类型', trigger: 'change' }],
-  command: [{ required: true, message: '请输入命令', trigger: 'blur' }],
+  providerId: [{ required: true, message: '请选择厂商', trigger: 'change' }],
   url: [{ required: true, message: '请输入 URL', trigger: 'blur' }],
   timeout: [{ required: true, message: '请输入超时时间', trigger: 'blur' }]
 }
@@ -297,27 +229,10 @@ function createEmptyForm() {
     name: '',
     providerId: undefined,
     transport: 2,
-    command: '',
-    args: [],
-    env: [],
     url: '',
     timeout: 30,
     description: '',
     status: 1
-  }
-}
-
-/**
- * 厂商校验：仅 SSE 传输类型下必填
- * @param rule
- * @param value
- * @param callback
- */
-function validateProviderId(rule, value, callback) {
-  if (mcpForm.value.transport === 2 && !value) {
-    callback(new Error('请选择厂商'))
-  } else {
-    callback()
   }
 }
 
@@ -381,7 +296,7 @@ function cardActions(item) {
       label: '测试',
       icon: 'Tools',
       loading: !!testingMap[item.id],
-      onClick: () => handleTestConnection(item)
+      onClick: () => handleTest(item)
     },
     { key: 'edit', label: '修改', icon: 'Edit',onClick: () => handleOpenUpdate(item) },
     { key: 'delete', label: '删除',icon: 'Delete', onClick: () => handleDelete(item) }
@@ -410,9 +325,6 @@ function handleOpenUpdate(item) {
       name: data.name,
       providerId: data.providerId,
       transport: data.transport,
-      command: data.command || '',
-      args: parseArgs(data.args),
-      env: parseEnv(data.env),
       url: data.url || '',
       timeout: data.timeout,
       description: data.description || '',
@@ -427,10 +339,10 @@ function handleOpenUpdate(item) {
  * 测试连通性
  * @param item
  */
-function handleTestConnection(item) {
+function handleTest(item) {
   if (testingMap[item.id]) return
   testingMap[item.id] = true
-  testConnectionMcpAPI({ id: item.id }).then(res => {
+  testMcpAPI({ id: item.id }).then(res => {
     if (res.code === 200) {
       ElMessage.success('连接成功')
     } else if (res.code === 2203) {
@@ -496,13 +408,15 @@ function handleSubmit() {
 }
 
 /**
- * 组装提交数据，args/env 序列化为 JSON 字符串
+ * 组装提交数据
  */
 function buildSubmitData() {
   const form = mcpForm.value
   const data = {
     name: form.name,
     transport: form.transport,
+    providerId: form.providerId,
+    url: form.url,
     timeout: form.timeout,
     description: form.description,
     status: form.status
@@ -510,102 +424,7 @@ function buildSubmitData() {
   if (form.id) {
     data.id = form.id
   }
-  if (form.transport === 2) {
-    data.providerId = form.providerId
-    data.url = form.url
-  } else if (form.transport === 1) {
-    data.command = form.command
-    // 过滤空串后序列化为 JSON 数组字符串
-    data.args = JSON.stringify(
-        form.args.filter(a => a !== null && a !== undefined && a !== '')
-    )
-    // 将键值对数组还原为对象后序列化为 JSON 对象字符串
-    const envObj = form.env
-        .filter(envItem => envItem.key)
-        .reduce((obj, envItem) => {
-          obj[envItem.key] = envItem.value
-          return obj
-        }, {})
-    data.env = JSON.stringify(envObj)
-  }
   return data
-}
-
-/**
- * 切换传输类型时清空对端字段，避免脏数据
- */
-function handleTransportChange() {
-  if (mcpForm.value.transport === 1) {
-    mcpForm.value.url = ''
-    mcpForm.value.providerId = undefined
-  } else {
-    mcpForm.value.command = ''
-    mcpForm.value.args = []
-    mcpForm.value.env = []
-  }
-  // 切换传输类型后重新校验厂商字段
-  if (formRef.value) {
-    formRef.value.validateField('providerId')
-  }
-}
-
-/**
- * 新增参数项
- */
-function handleAddArg() {
-  mcpForm.value.args.push('')
-}
-
-/**
- * 移除参数项
- * @param idx
- */
-function handleRemoveArg(idx) {
-  mcpForm.value.args.splice(idx, 1)
-}
-
-/**
- * 新增环境变量项
- */
-function handleAddEnv() {
-  mcpForm.value.env.push({ key: '', value: '' })
-}
-
-/**
- * 移除环境变量项
- * @param idx
- */
-function handleRemoveEnv(idx) {
-  mcpForm.value.env.splice(idx, 1)
-}
-
-/**
- * 解析 args JSON 字符串为数组
- * @param argsStr
- */
-function parseArgs(argsStr) {
-  try {
-    const arr = JSON.parse(argsStr || '[]')
-    return Array.isArray(arr) ? arr.map(v => String(v)) : []
-  } catch (e) {
-    return []
-  }
-}
-
-/**
- * 解析 env JSON 字符串为键值对数组
- * @param envStr
- */
-function parseEnv(envStr) {
-  try {
-    const obj = JSON.parse(envStr || '{}')
-    if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
-      return Object.keys(obj).map(key => ({ key, value: obj[key] }))
-    }
-    return []
-  } catch (e) {
-    return []
-  }
 }
 </script>
 
@@ -665,26 +484,6 @@ function parseEnv(envStr) {
   display: flex;
   justify-content: flex-end;
   gap: $spacing-sm;
-}
-
-.mcp-dynamic-list {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-sm;
-}
-
-.mcp-dynamic-item {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  width: 100%;
-}
-
-.mcp-env-item {
-  :deep(.el-input) {
-    flex: 1;
-  }
 }
 
 .form-tip {

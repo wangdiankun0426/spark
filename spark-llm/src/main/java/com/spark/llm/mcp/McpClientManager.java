@@ -7,20 +7,18 @@ import com.spark.common.bean.llm.result.ProviderResult;
 import com.spark.dao.llm.ProviderDao;
 import com.spark.common.enums.McpTransportTypeEnum;
 import com.spark.common.enums.StatusEnum;
-import com.spark.common.utils.CollectionUtil;
-import com.spark.common.utils.JsonUtil;
-import com.spark.common.utils.MapUtil;
 import com.spark.common.utils.StringUtil;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.client.transport.http.StreamableHttpMcpTransport;
-import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -67,9 +65,7 @@ public class McpClientManager {
         try {
             logger.info("connectToServer serverId={}", serverId);
             McpClient client;
-            if (McpTransportTypeEnum.STDIO.getValue().equals(mcp.getTransport())) {
-                client = createStdioClient(mcp);
-            } else if (McpTransportTypeEnum.SSE.getValue().equals(mcp.getTransport())) {
+            if (McpTransportTypeEnum.HTTP.getValue().equals(mcp.getTransport())) {
                 if (mcp.getProviderId() == null) {
                     logger.error("connectToServer mcp provider id is null");
                     return null;
@@ -79,7 +75,7 @@ public class McpClientManager {
                     logger.error("connectToServer provider secret key is null");
                     return null;
                 }
-                client = createSseClient(mcp, provider);
+                client = createHttpClient(mcp, provider);
             } else {
                 logger.error("connectToServer mcp transport type unsupported, transport={}", mcp.getTransport());
                 return null;
@@ -153,40 +149,33 @@ public class McpClientManager {
     }
 
     /**
-     * 创建STDIO传输的MCP客户端
-     */
-    private McpClient createStdioClient(Mcp mcp) {
-        List<String> commandList = new ArrayList<>();
-        commandList.add(mcp.getCommand());
-        List<String> args = JsonUtil.parseList(mcp.getArgs());
-        if (CollectionUtil.isNotEmpty(args)) {
-            commandList.addAll(args);
-        }
-        StdioMcpTransport.Builder transportBuilder = new StdioMcpTransport.Builder()
-                .command(commandList)
-                .logEvents(true);
-        Map<String, String> envMap = JsonUtil.parseMap(mcp.getEnv());
-        if (MapUtil.isNotEmpty(envMap)) {
-            transportBuilder.environment(envMap);
-        }
-        StdioMcpTransport transport = transportBuilder.build();
-        return new DefaultMcpClient.Builder().transport(transport).build();
-    }
-
-    /**
-     * 创建SSE传输的MCP客户端
+     * 创建HTTP传输的MCP客户端
      * @param mcp MCP服务器配置
      * @param provider 厂商信息（提供密钥用于鉴权）
      * @return MCP客户端
      */
-    private McpClient createSseClient(Mcp mcp, Provider provider) {
+    private McpClient createHttpClient(Mcp mcp, Provider provider) {
         StreamableHttpMcpTransport transport = new StreamableHttpMcpTransport.Builder()
                 .url(mcp.getUrl())
                 .customHeaders(Map.of("Authorization", "Bearer " + provider.getSecretKey()))
                 .logRequests(true)
                 .logResponses(true)
                 .build();
-        return new DefaultMcpClient.Builder().transport(transport).build();
+        return clientBuilder(mcp, transport).build();
+    }
+
+    /**
+     * 构造MCP客户端构建器，应用连接与工具执行超时配置
+     * @param mcp MCP服务器配置
+     * @param transport 传输层
+     * @return 客户端构建器
+     */
+    private DefaultMcpClient.Builder clientBuilder(Mcp mcp, McpTransport transport) {
+        long timeoutSeconds = mcp.getTimeout() != null ? mcp.getTimeout() : 30L;
+        return new DefaultMcpClient.Builder()
+                .transport(transport)
+                .initializationTimeout(Duration.ofSeconds(timeoutSeconds))
+                .toolExecutionTimeout(Duration.ofSeconds(timeoutSeconds));
     }
 
     /**

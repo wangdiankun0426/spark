@@ -369,10 +369,8 @@ public class AgentFactory {
             mcp.setName(mcpResult.getName());
             mcp.setTransport(mcpResult.getTransport());
             mcp.setProviderId(mcpResult.getProviderId());
-            mcp.setCommand(mcpResult.getCommand());
-            mcp.setArgs(mcpResult.getArgs());
             mcp.setUrl(mcpResult.getUrl());
-            mcp.setEnv(mcpResult.getEnv());
+            mcp.setTimeout(mcpResult.getTimeout());
             mcp.setStatus(mcpResult.getStatus());
             mcpList.add(mcp);
         }

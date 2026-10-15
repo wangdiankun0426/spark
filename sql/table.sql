@@ -283,11 +283,8 @@ CREATE TABLE `llm_mcp` (
       `name` varchar(64) NOT NULL COMMENT '服务器名称',
       `transport` tinyint(3) NOT NULL COMMENT '传输类型',
       `provider_id` bigint(12) NULL COMMENT '厂商id',
-      `command` varchar(255) NULL COMMENT 'STDIO命令',
-      `args` varchar(512) NULL COMMENT 'STDIO命令参数',
-      `url` varchar(255) NULL COMMENT 'SSE模式URL',
-      `env` varchar(512) NULL COMMENT '环境变量',
-      `timeout` bigint(12) NULL COMMENT '连接超时毫秒',
+      `url` varchar(255) NULL COMMENT '服务URL',
+      `timeout` bigint(12) NULL COMMENT '连接超时秒',
       `status` int(1) NOT NULL DEFAULT 1 COMMENT '状态',
       `description` varchar(255) NULL COMMENT '描述',
 

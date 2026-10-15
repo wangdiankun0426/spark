@@ -83,9 +83,9 @@ public class McpController {
      * @param mcpVO 测试参数
      * @return 响应结果
      */
-    @PostMapping("testConnection")
-    public ResultData<Void> testConnection(McpVO mcpVO) {
-        return mcpService.testConnection(mcpVO);
+    @PostMapping("test")
+    public ResultData<Void> test(McpVO mcpVO) {
+        return mcpService.test(mcpVO);
     }
 
 }

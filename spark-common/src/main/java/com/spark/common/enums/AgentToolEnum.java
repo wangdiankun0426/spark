@@ -42,4 +42,14 @@ public enum AgentToolEnum {
         }
         return UNKNOWN;
     }
+
+    /**
+     * 获取工具描述，未注册的工具（如MCP动态工具）返回工具名本身
+     * @param type 工具类型
+     * @return 工具描述
+     */
+    public static String descOf(String type) {
+        AgentToolEnum item = indexOf(type);
+        return UNKNOWN == item ? type : item.getDesc();
+    }
 }

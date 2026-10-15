@@ -21,37 +21,22 @@ public class McpVO extends BaseVO {
     private String name;
 
     /**
-     * 传输类型：1:STDIO，2:SSE
+     * 传输类型：2:HTTP
      **/
     private Integer transport;
 
     /**
-     * 厂商id（SSE模式必填）
+     * 厂商id
      **/
     private Long providerId;
 
     /**
-     * STDIO命令
-     **/
-    private String command;
-
-    /**
-     * STDIO命令参数，JSON数组
-     **/
-    private String args;
-
-    /**
-     * SSE模式URL
+     * 服务URL
      **/
     private String url;
 
     /**
-     * 环境变量，JSON对象
-     **/
-    private String env;
-
-    /**
-     * 连接超时毫秒
+     * 连接超时秒
      **/
     private Long timeout;
 

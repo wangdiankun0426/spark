@@ -57,6 +57,6 @@ public interface IMcpService {
      * @param mcpVO MCP服务器数据
      * @return 测试结果
      */
-    ResultData<Void> testConnection(McpVO mcpVO);
+    ResultData<Void> test(McpVO mcpVO);
 
 }

@@ -46,9 +46,9 @@ export function detailMcpAPI(query) {
 }
 
 // 测试 MCP 服务器连通性
-export function testConnectionMcpAPI(data) {
+export function testMcpAPI(data) {
     return request({
-        url: '/llm/mcp/testConnection',
+        url: '/llm/mcp/test',
         method: 'post',
         params: data
     })
