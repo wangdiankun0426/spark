@@ -1,7 +1,7 @@
 <template>
   <view class="home-container safe-area-page">
     <!-- 顶部欢迎卡片 -->
-    <view class="welcome-card">
+    <view class="welcome-card" :style="welcomeCardStyle">
       <view class="welcome-top">
         <user-avatar
             type="user"
@@ -37,8 +37,8 @@
                 :key="section.key + '-' + item.id"
                 @click="handleItemClick(section.key, item)"
             >
-              <view class="item-icon" :style="item.iconStyle">
-                <up-icon :name="section.icon" size="18" color="#ffffff"></up-icon>
+              <view class="item-icon">
+                <up-icon :name="section.icon" size="34" color="#2f7bff"></up-icon>
               </view>
               <view class="item-text">
                 <text class="item-name">{{ item.name }}</text>
@@ -57,7 +57,7 @@
     </view>
 
     <!-- 底部导航栏 -->
-    <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#1890ff">
+    <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#004fc5">
       <up-tabbar-item
           v-for="tab in tabBarItems"
           :key="tab.name"
@@ -88,6 +88,7 @@ import AiSessionPicker from "@/components/AiSessionPicker/index.vue"
 import {useAiSessionPicker} from "@/components/AiSessionPicker/aiSessionUtil"
 import {getSessionAPI} from "@/api/auth/login";
 import {visibleTabs} from "@/utils/menuUtil";
+import {navBarInfo} from "@/utils/navBarUtil";
 import {pageMyTodoListAPI} from "@/api/flow/instance"
 import {agentPageListAPI} from "@/api/llm/agent"
 import {pageModelListAPI} from "@/api/llm/model"
@@ -118,34 +119,22 @@ const userInfo = computed(() => store.getters["user/getUserInfo"] || {
 // 每个板块最多展示的卡片数
 const SECTION_LIMIT = 6
 
-// 卡片图标底色池
-const ICON_THEMES = [
-  ['#0052cc', '#1890ff'],
-  ['#13c2c2', '#36cfc9'],
-  ['#722ed1', '#b37feb'],
-  ['#52c41a', '#95de64'],
-  ['#fa8c16', '#ffc069'],
-  ['#eb2f96', '#ff85c0']
-]
-
-/**
- * 按条目 id 取一个分散的图标底色
- * 用 id 取模而非 Math.random：既能拉开颜色，又不会每次刷新整屏换色闪烁
- * @param id 条目 id
- */
-function pickIconStyle(id) {
-  const num = Number(id)
-  const index = Number.isFinite(num) ? Math.abs(num) % ICON_THEMES.length : 0
-  const theme = ICON_THEMES[index]
-  return {backgroundImage: 'linear-gradient(135deg, ' + theme[0] + ', ' + theme[1] + ')'}
-}
-
 const sections = reactive([
   {key: 'todo', title: '我的待办', icon: 'clock-fill', emptyText: '暂无待办', loading: true, items: []},
   {key: 'chat', title: 'AIChat', icon: 'chat-fill', emptyText: '暂无可用模型', loading: true, items: []},
   {key: 'agent', title: 'Agent', icon: 'grid-fill', emptyText: '暂无智能体', loading: true, items: []},
   {key: 'workflow', title: 'Workflow', icon: 'share-fill', emptyText: '暂无运行记录', loading: true, items: []}
 ])
+
+// 小程序端欢迎卡片延伸到状态栏底部，H5 走样式默认内边距
+const welcomeCardStyle = computed(() => {
+  // #ifdef MP-WEIXIN
+  return {paddingTop: navBarInfo.statusBarHeight + 22 + 'px'}
+  // #endif
+  // #ifdef H5
+  return {}
+  // #endif
+})
 
 // 根据时间段显示问候语
 const greeting = computed(() => {
@@ -203,7 +192,6 @@ function loadTodoList() {
       meta: [row.typeName, row.createdByName].filter(Boolean).join(' · '),
       // 第二行副信息： 申请时间
       meta2: [row.createdDt].filter(Boolean).join(' · '),
-      iconStyle: pickIconStyle(row.instanceId || row.id),
       raw: row
     }))
     setSectionItems('todo', items)
@@ -227,7 +215,6 @@ function loadChatModelList() {
           id: row.id,
           name: row.name,
           meta: row.providerName ? '厂商：' + row.providerName : '未知厂商',
-          iconStyle: pickIconStyle(row.id),
           raw: row
         }))
     setSectionItems('chat', items)
@@ -249,7 +236,6 @@ function loadAgentList() {
       id: row.id,
       name: row.name,
       meta: row.description || '暂无备注',
-      iconStyle: pickIconStyle(row.id),
       raw: row
     }))
     setSectionItems('agent', items)
@@ -272,7 +258,6 @@ function loadWorkflowList() {
       name: row.templateName || row.name || '未命名工作流',
       meta: row.statusName || '',
       meta2: row.createdDt || '',
-      iconStyle: pickIconStyle(row.id),
       raw: row
     }))
     setSectionItems('workflow', items)
@@ -334,18 +319,26 @@ function handleOnTabChange(index) {
 .home-container {
   height: 100vh;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   background-color: $uni-bg-color-dashboard;
 }
+
+.home-container :deep(.u-tabbar) {
+  flex: none;
+}
+
 .welcome-card {
-  height: 180px;
+  flex-shrink: 0;
   box-sizing: border-box;
-  padding: 40px 16px 10px;
-  color: #fff;
+  padding: 52px 16px 32px;
+  color: $spark-color-text;
   background-image: linear-gradient(180deg,
-      #0067ff 0%,
-      #3f8fff 60px,
-      #7db3ff 120px,
-      #ffffff 190px);
+      #5b94f5 0%,
+      #7babff 44px,
+      #b6d2ff 92px,
+      #eaf2ff 140px);
+  background-color: #eaf2ff;
 }
 .welcome-top {
   display: flex;
@@ -361,7 +354,7 @@ function handleOnTabChange(index) {
 }
 .welcome-greeting {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 800;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -372,18 +365,14 @@ function handleOnTabChange(index) {
 }
 .welcome-slogan {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.75);
+  font-weight: 500;
+  color: rgba(23, 43, 77, 0.7);
 }
 
 /* 滚动内容区 */
 .home-scroll-body {
-  /* 欢迎区由 166px 定高到 180px，减去的高度同步加 10px，保证底部导航仍在视口内 */
-  /* #ifdef H5 */
-  height: calc(100vh - 240px);
-  /* #endif */
-  /* #ifdef MP-WEIXIN */
-  height: calc(100vh - 320px);
-  /* #endif */
+  flex: 1;
+  min-height: 0;
   box-sizing: border-box;
   padding: 20px 12px;
   overflow-y: auto;
@@ -413,9 +402,19 @@ function handleOnTabChange(index) {
 }
 
 .section-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #303133;
+  font-size: 17px;
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: 1px;
+  /* #ifdef MP-WEIXIN */
+  color: #2f7bff;
+  /* #endif */
+  /* #ifdef H5 */
+  background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* #endif */
 }
 
 .section-body {
@@ -439,7 +438,7 @@ function handleOnTabChange(index) {
 
 .item-card {
   width: calc(50% - 4px);
-  height: 68px;
+  height: 72px;
   box-sizing: border-box;
   padding: 8px 10px;
   display: flex;
@@ -452,13 +451,15 @@ function handleOnTabChange(index) {
 }
 
 .item-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  background-color: rgba(47, 123, 255, 0.1);
+  border: 1rpx solid rgba(47, 123, 255, 0.18);
 }
 
 .item-text {

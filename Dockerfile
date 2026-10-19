@@ -8,6 +8,11 @@ MAINTAINER wangdiankun
 RUN /bin/cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone
 
+# 安装字体
+RUN microdnf install -y fontconfig dejavu-sans-fonts && \
+    fc-cache -f && \
+    microdnf clean all
+
 # 创建目录
 RUN mkdir -p /opt/spark/app/spark.server.com
 

@@ -1,7 +1,12 @@
 <template>
 </template>
 <script setup>
-import {onPageNotFound} from '@dcloudio/uni-app';
+import {onLaunch, onPageNotFound} from '@dcloudio/uni-app';
+import {initNavBarInfo} from '@/utils/navBarUtil';
+
+onLaunch(() => {
+  initNavBarInfo();
+});
 
 // 打开不存在的页面时 兜底跳转 404
 onPageNotFound(() => {
@@ -32,13 +37,6 @@ html {
     'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial,
     sans-serif;
 }
-
-/* 全局页面安全区域留白，适配刘海屏/灵动岛/底部手势条 */
-/* #ifndef H5 */
-.safe-area-page {
-  padding-top: 50px !important;
-}
-/* #endif */
 
 /* 隐藏全局滚动条，禁止页面主体滚动（各页面自行管理内部滚动） */
 page,
@@ -71,8 +69,9 @@ uni-app::-webkit-scrollbar {
   align-items: center;
   height: 44px;
   padding: 0 16px;
-  background-color: #0052cc;
-  color: #fff;
+  background-color: $spark-color-header-bg;
+  border-bottom: 1rpx solid $spark-color-header-border;
+  color: #2f7bff;
   flex-shrink: 0;
 
   .page-header-back {
@@ -83,8 +82,18 @@ uni-app::-webkit-scrollbar {
   .page-header-title {
     flex: 1;
     font-size: 17px;
-    font-weight: 600;
-    color: #fff;
+    font-style: italic;
+    font-weight: 700;
+    letter-spacing: 1px;
+    /* #ifdef MP-WEIXIN */
+    color: #2f7bff;
+    /* #endif */
+    /* #ifdef H5 */
+    background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    /* #endif */
     text-align: center;
   }
 

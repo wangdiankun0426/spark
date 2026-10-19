@@ -1,7 +1,7 @@
 <template>
   <view class="llm-container safe-area-page">
     <!-- 顶部标题栏 -->
-    <view class="llm-header">
+    <view class="llm-header" :style="navHeaderStyle()">
       <text class="header-title">AI应用</text>
     </view>
 
@@ -10,7 +10,9 @@
       <up-tabs
           :list="tabList"
           :current="tabIndex"
-          lineColor="#0052cc"
+          lineColor="#2f7bff"
+          :lineWidth="tabLineWidth"
+          :activeStyle="{color: '#2f7bff', fontWeight: 700}"
           :scrollable="false"
           @change="handleTabChange"/>
     </view>
@@ -40,8 +42,8 @@
             :key="item.id"
             @click="handleAgentClick(item)"
         >
-          <view class="card-icon" :style="item.iconStyle">
-            <up-icon name="grid-fill" size="20" color="#ffffff"></up-icon>
+          <view class="card-icon">
+            <up-icon name="grid-fill" size="34" color="#2f7bff"></up-icon>
           </view>
           <view class="llm-info">
             <text class="llm-name">{{ item.name }}</text>
@@ -77,8 +79,8 @@
             :key="item.id"
             @click="showInstanceDetail(item)"
         >
-          <view class="card-icon" :style="item.iconStyle">
-            <up-icon name="share-fill" size="20" color="#ffffff"></up-icon>
+          <view class="card-icon">
+            <up-icon name="share-fill" size="34" color="#2f7bff"></up-icon>
           </view>
           <view class="instance-info">
             <text class="instance-name">{{ item.templateName || item.name || '未命名工作流' }}</text>
@@ -115,8 +117,8 @@
             :key="model.id"
             @click="handleSelectModel(model)"
         >
-          <view class="card-icon" :style="model.iconStyle">
-            <up-icon name="chat-fill" size="20" color="#ffffff"></up-icon>
+          <view class="card-icon">
+            <up-icon name="chat-fill" size="34" color="#2f7bff"></up-icon>
           </view>
           <view class="model-info">
             <text class="model-name">{{ model.name }}</text>
@@ -142,7 +144,7 @@
         @new="handleSessionNew"
     />
 
-    <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#0052cc">
+    <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#004fc5">
       <up-tabbar-item
           v-for="tab in tabBarItems"
           :key="tab.name"
@@ -158,6 +160,7 @@
 import {ref, computed} from "vue"
 import {onLoad, onShow} from "@dcloudio/uni-app"
 import {visibleTabs} from "@/utils/menuUtil";
+import {navHeaderStyle} from "@/utils/navBarUtil";
 import {agentPageListAPI} from "@/api/llm/agent"
 import {pageInstanceListAPI} from "@/api/workflow/instance"
 import {pageModelListAPI} from "@/api/llm/model"
@@ -187,28 +190,9 @@ const allowedTabs = [
   {key: 'workflow', name: 'WorkFlow'}
 ]
 
-// 卡片图标底色池：同一页签图标一致、底色按条目分散取色，避免整屏一个颜色
-const ICON_THEMES = [
-  ['#0052cc', '#1890ff'],
-  ['#13c2c2', '#36cfc9'],
-  ['#722ed1', '#b37feb'],
-  ['#52c41a', '#95de64'],
-  ['#fa8c16', '#ffc069'],
-  ['#eb2f96', '#ff85c0']
-]
-
-/**
- * 按条目 id 取一个分散的图标底色
- * 用 id 取模而非 Math.random：既能拉开颜色，又不会每次刷新整屏换色闪烁
- * @param id 条目 id
- */
-function pickIconStyle(id) {
-  const num = Number(id)
-  const index = Number.isFinite(num) ? Math.abs(num) % ICON_THEMES.length : 0
-  const theme = ICON_THEMES[index]
-  return {backgroundImage: 'linear-gradient(135deg, ' + theme[0] + ', ' + theme[1] + ')'}
-}
 const tabList = computed(() => allowedTabs.map(tab => ({name: tab.name})))
+// 下划线宽度取页签的六成并自动居中：不可滚动时页签平分屏宽
+const tabLineWidth = Math.floor(uni.getSystemInfoSync().windowWidth / allowedTabs.length * 0.6)
 const tabIndex = ref(0)
 // 当前激活页签 key
 const activeTabKey = computed(() => {
@@ -252,7 +236,9 @@ const modelLoaded = ref(false)
 const modelQuery = ref({
   pageNo: 1,
   pageSize: PAGE_SIZE,
-  status: 1
+  status: 1,
+  // 只展示语言模型
+  type: 1
 })
 const modelTotal = ref(0)
 const modelLoadedCount = ref(0)
@@ -317,7 +303,7 @@ function getAgentList() {
       return
     }
     const rows = res.data.rows || []
-    agentList.value = rows.map(row => ({...row, iconStyle: pickIconStyle(row.id)}))
+    agentList.value = rows.map(row => ({...row}))
     agentTotal.value = res.data.total || 0
     agentLoadedCount.value = rows.length
     agentLoaded.value = true
@@ -337,7 +323,7 @@ function loadMoreAgents() {
   agentLoadStatus.value = 'loading'
   agentPageListAPI(agentQuery.value).then(res => {
     if (res.code === 200 && res.data) {
-      const rows = (res.data.rows || []).map(row => ({...row, iconStyle: pickIconStyle(row.id)}))
+      const rows = (res.data.rows || []).map(row => ({...row}))
       agentList.value = agentList.value.concat(rows)
       agentLoadedCount.value += rows.length
       agentLoadStatus.value = agentLoadedCount.value >= agentTotal.value ? 'nomore' : 'loadmore'
@@ -364,7 +350,7 @@ function loadInstances() {
   instanceLoadStatus.value = 'loading'
   pageInstanceListAPI(instanceQuery.value).then(res => {
     if (res.code === 200 && res.data) {
-      instanceList.value = (res.data.rows || []).map(row => ({...row, iconStyle: pickIconStyle(row.id)}))
+      instanceList.value = (res.data.rows || []).map(row => ({...row}))
       instanceTotal.value = res.data.total || 0
       instanceLoaded.value = true
       instanceLoadStatus.value = instanceList.value.length >= instanceTotal.value ? 'nomore' : 'loadmore'
@@ -386,7 +372,7 @@ function loadMoreInstances() {
   instanceLoadStatus.value = 'loading'
   pageInstanceListAPI(instanceQuery.value).then(res => {
     if (res.code === 200 && res.data) {
-      const rows = (res.data.rows || []).map(row => ({...row, iconStyle: pickIconStyle(row.id)}))
+      const rows = (res.data.rows || []).map(row => ({...row}))
       instanceList.value = instanceList.value.concat(rows)
       instanceLoadStatus.value = instanceList.value.length >= instanceTotal.value ? 'nomore' : 'loadmore'
     } else {
@@ -415,7 +401,7 @@ function loadModels() {
   pageModelListAPI(modelQuery.value).then(res => {
     if (res.code === 200 && res.data) {
       const rows = res.data.rows || []
-      modelList.value = rows.map(row => ({...row, iconStyle: pickIconStyle(row.id)}))
+      modelList.value = rows.map(row => ({...row}))
       modelTotal.value = res.data.total || 0
       modelLoadedCount.value = rows.length
       modelLoaded.value = true
@@ -438,7 +424,7 @@ function loadMoreModels() {
   modelLoadStatus.value = 'loading'
   pageModelListAPI(modelQuery.value).then(res => {
     if (res.code === 200 && res.data) {
-      const rows = (res.data.rows || []).map(row => ({...row, iconStyle: pickIconStyle(row.id)}))
+      const rows = (res.data.rows || []).map(row => ({...row}))
       modelList.value = modelList.value.concat(rows)
       modelLoadedCount.value += rows.length
       modelLoadStatus.value = modelLoadedCount.value >= modelTotal.value ? 'nomore' : 'loadmore'
@@ -483,12 +469,23 @@ function handleOnTabChange(index) {
 
 .llm-header {
   padding: 16px 16px;
-  background-color: #0052cc;
+  background-color: $spark-color-header-bg;
+  border-bottom: 1rpx solid $spark-color-header-border;
   flex-shrink: 0;
   .header-title {
     font-size: 20px;
-    font-weight: 600;
-    color: #ffffff;
+    font-style: italic;
+    font-weight: 700;
+    letter-spacing: 1px;
+    /* #ifdef MP-WEIXIN */
+    color: #2f7bff;
+    /* #endif */
+    /* #ifdef H5 */
+    background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    /* #endif */
   }
 }
 
@@ -572,15 +569,16 @@ function handleOnTabChange(index) {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-/* 卡片图标：同一页签图标一致，底色由 pickIconStyle 按条目生成 */
 .card-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  background-color: rgba(47, 123, 255, 0.1);
+  border: 1rpx solid rgba(47, 123, 255, 0.18);
 }
 
 .instance-info {

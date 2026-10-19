@@ -1,11 +1,11 @@
 <template>
   <view class="detail-container safe-area-page">
     <!-- 顶部标题栏 -->
-    <view class="detail-header">
+    <view class="detail-header" :style="navHeaderStyle()">
       <up-icon
           name="arrow-left"
           size="20"
-          color="#ffffff"
+          color="#2f7bff"
           @click="handleBack"
       />
       <text class="header-title">流程详情</text>
@@ -117,6 +117,7 @@
 <script setup>
 import {computed, ref} from "vue";
 import {onLoad} from "@dcloudio/uni-app";
+import {navHeaderStyle} from "@/utils/navBarUtil";
 import {
   showInstanceDetailAPI,
   approvalFlowInstanceAPI,
@@ -367,12 +368,23 @@ const handleUserConfirm = useDebounceFn((users) => {
   align-items: center;
   gap: 8px;
   padding: 16px 16px;
-  background-color: #0052cc;
+  background-color: $spark-color-header-bg;
+  border-bottom: 1rpx solid $spark-color-header-border;
 
   .header-title {
-    font-size: 20px;
-    font-weight: 600;
-    color: #ffffff;
+    font-size: 17px;
+    font-style: italic;
+    font-weight: 700;
+    letter-spacing: 1px;
+    /* #ifdef MP-WEIXIN */
+    color: #2f7bff;
+    /* #endif */
+    /* #ifdef H5 */
+    background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    /* #endif */
   }
 }
 

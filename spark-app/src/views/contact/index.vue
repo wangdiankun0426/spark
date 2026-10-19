@@ -1,9 +1,9 @@
 <template>
   <view class="contact-container safe-area-page">
     <!-- 顶部标题栏 -->
-    <view class="contact-header">
+    <view class="contact-header" :style="navHeaderStyle()">
       <view class="header-left" @click="goBack">
-        <up-icon name="arrow-left" size="20" color="#fff"></up-icon>
+        <up-icon name="arrow-left" size="20" color="#2f7bff"></up-icon>
         <text class="header-title">通讯录</text>
       </view>
     </view>
@@ -61,8 +61,10 @@
 </template>
 <script setup>
 import {ref, watch} from "vue";
+import {onShow} from "@dcloudio/uni-app";
 import {pageUserMyListAPI} from "@/api/chat/user";
 import {useDebounceFn} from "@/utils/debounce";
+import {navHeaderStyle} from "@/utils/navBarUtil";
 import UserAvatar from '@/components/UserAvatar/index.vue'
 
 // 每页加载的联系人数量
@@ -89,7 +91,10 @@ watch(keyword, () => {
   searchUsers();
 });
 
-loadUserList();
+// 首次进入及从聊天页返回时刷新：进入会话后未读数已清零，返回需重新拉取
+onShow(() => {
+  loadUserList(true);
+});
 
 /**
  * 加载联系人，检索条件变化时从头加载
@@ -170,16 +175,27 @@ function goBack() {
 .contact-header {
   flex-shrink: 0;
   padding: 16px 16px;
-  background-color: #0052cc;
+  background-color: $spark-color-header-bg;
+  border-bottom: 1rpx solid $spark-color-header-border;
   .header-left {
     display: flex;
     align-items: center;
     gap: 12px;
   }
   .header-title {
-    font-size: 20px;
-    font-weight: 600;
-    color: #ffffff;
+    font-size: 17px;
+    font-style: italic;
+    font-weight: 700;
+    letter-spacing: 1px;
+    /* #ifdef MP-WEIXIN */
+    color: #2f7bff;
+    /* #endif */
+    /* #ifdef H5 */
+    background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    /* #endif */
   }
 }
 

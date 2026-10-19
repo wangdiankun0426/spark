@@ -1,7 +1,7 @@
 <template>
   <view class="message-container safe-area-page">
     <!-- 顶部标题栏 -->
-    <view class="message-header">
+    <view class="message-header" :style="navHeaderStyle()">
       <text class="header-title">消息</text>
     </view>
 
@@ -49,7 +49,7 @@
       </template>
     </scroll-view>
 
-    <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#0052cc">
+    <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#004fc5">
       <up-tabbar-item
           v-for="tab in tabBarItems"
           :key="tab.name"
@@ -63,6 +63,7 @@
 <script setup>
 import {ref, computed} from "vue";
 import {visibleTabs} from "@/utils/menuUtil";
+import {navHeaderStyle} from "@/utils/navBarUtil";
 import {pageMyMessageListAPI} from "@/api/sys/message";
 
 const active = ref("message");
@@ -175,11 +176,22 @@ function handleOnTabChange(index) {
 
 .message-header {
   padding: 16px 16px;
-  background-color: #0052cc;
+  background-color: $spark-color-header-bg;
+  border-bottom: 1rpx solid $spark-color-header-border;
   .header-title {
     font-size: 20px;
-    font-weight: 600;
-    color: #ffffff;
+    font-style: italic;
+    font-weight: 700;
+    letter-spacing: 1px;
+    /* #ifdef MP-WEIXIN */
+    color: #2f7bff;
+    /* #endif */
+    /* #ifdef H5 */
+    background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    /* #endif */
   }
 }
 

@@ -1,8 +1,8 @@
 <template>
   <div class="my-box safe-area-page">
-    <div class="my-header">
-      <view class="my-setting-entry" @click="goSetting">
-        <up-icon name="setting" size="22" color="#ffffff"/>
+    <div class="my-header" :style="headerStyle">
+      <view class="my-setting-entry" :style="settingEntryStyle" @click="goSetting">
+        <up-icon name="setting" size="22" color="#172b4d"/>
       </view>
 
       <div class="my-avatar-row">
@@ -41,7 +41,7 @@
       </view>
     </div>
 
-    <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#0052cc">
+    <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#004fc5">
       <up-tabbar-item
           v-for="tab in tabBarItems"
           :key="tab.name"
@@ -56,10 +56,31 @@
 import {ref, computed} from "vue";
 import {useStore} from "vuex";
 import {visibleTabs} from "@/utils/menuUtil";
+import {navBarInfo} from "@/utils/navBarUtil";
 import UserAvatar from "@/components/UserAvatar/index.vue"
 
 const store = useStore();
 const active = ref("my");
+
+// 小程序端渐变头延伸到状态栏，H5 保持原间距
+const headerStyle = computed(() => {
+  // #ifdef MP-WEIXIN
+  return {paddingTop: navBarInfo.statusBarHeight + 20 + 'px'}
+  // #endif
+  // #ifdef H5
+  return {paddingTop: '42px'}
+  // #endif
+})
+
+// 小程序端设置入口下移到微信胶囊按钮下方
+const settingEntryStyle = computed(() => {
+  // #ifdef MP-WEIXIN
+  return {top: navBarInfo.menuBottom + 10 + 'px'}
+  // #endif
+  // #ifdef H5
+  return {top: '22px'}
+  // #endif
+})
 
 // 按菜单权限过滤后的底部导航项
 const tabBarItems = computed(() => visibleTabs());
@@ -122,22 +143,20 @@ function handleOnTabChange(index) {
 }
 
 .my-header {
-  padding-top: 30px;
-  height: 190px;
+  height: 170px;
   width: 100%;
   position: relative;
   background-image: linear-gradient(180deg,
-          #0067ff 0%,
-          #3f8fff 60px,
-          #7db3ff 120px,
-          #ffffff 190px);
+          #5b94f5 0%,
+          #83b3ff 50px,
+          #b6d2ff 110px,
+          #ffffff 170px);
 }
 
 /* 右上角设置入口 */
 .my-setting-entry {
   position: absolute;
   right: 12px;
-  top: 22px;
   z-index: 2;
   padding: 6px;
 }
@@ -149,7 +168,7 @@ function handleOnTabChange(index) {
   margin: auto;
   overflow: hidden;
   position: relative;
-  top: 10px;
+  top: 16px;
 }
 
 .my-avatar-left {
@@ -174,8 +193,8 @@ function handleOnTabChange(index) {
   font-size: 20px;
   line-height: 1.4;
   letter-spacing: 1.2px;
-  color: #ffffff;
-  font-weight: bolder;
+  color: $spark-color-text;
+  font-weight: 800;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -188,7 +207,8 @@ function handleOnTabChange(index) {
   font-size: 16px;
   line-height: 1.4;
   letter-spacipcng: 1.2px;
-  color: #ebebeb;
+  font-weight: 500;
+  color: rgba(23, 43, 77, 0.7);
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -204,7 +224,7 @@ function handleOnTabChange(index) {
 
 .func-card {
   width: 90%;
-  margin: 20px auto 0;
+  margin: 6px auto 0;
   background-color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.85);
   border-radius: 10px;

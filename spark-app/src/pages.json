@@ -10,7 +10,8 @@
     {
       "path": "pages/login",
       "style": {
-        "navigationStyle": "custom"
+        "navigationStyle": "custom",
+        "navigationBarTextStyle": "white"
       }
     },
     {
@@ -22,7 +23,8 @@
     {
       "path": "pages/home/index",
       "style": {
-        "navigationStyle": "custom"
+        "navigationStyle": "custom",
+        "navigationBarTextStyle": "white"
       }
     },
     {
@@ -50,6 +52,12 @@
       }
     },
     {
+      "path": "views/chat/chatDetail",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/flow/index",
       "style": {
         "navigationStyle": "custom"
@@ -64,7 +72,8 @@
     {
       "path": "pages/my/index",
       "style": {
-        "navigationStyle": "custom"
+        "navigationStyle": "custom",
+        "navigationBarTextStyle": "white"
       }
     },
     {
@@ -117,7 +126,7 @@
     }
   ],
   "globalStyle": {
-    "navigationBarTextStyle": "white",
+    "navigationBarTextStyle": "black",
     "navigationBarTitleText": "星火云应用平台",
     "navigationBarBackgroundColor": "#63a2c3"
   }

@@ -21,10 +21,6 @@
 
     <!-- 登录表单区 -->
     <view class="login-card">
-      <view class="login-card-head">
-        <view class="login-card-bar"></view>
-        <text class="login-card-title">{{ loginForm.loginType === 1 ? '密码登录' : (loginForm.loginType === 2 ? '手机号登录' : '邮箱登录') }}</text>
-      </view>
       <!-- 表单区固定高度：密码登录 3 行、手机号/邮箱登录 2 行，
            固定高度可避免切换登录方式时下方按钮与整页布局跳动 -->
       <view class="login-form-body">
@@ -406,6 +402,8 @@ async function submitLoginForm() {
   padding: 0 48rpx;
   height: 100vh;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   background-image: linear-gradient(160deg, $spark-color-bg-start 0%, $spark-color-bg-mid 55%, $spark-color-bg-end 100%);
 }
 
@@ -584,28 +582,8 @@ async function submitLoginForm() {
   z-index: 1;
 }
 
-.login-card-head {
-  display: flex;
-  align-items: center;
-  margin-bottom: 24rpx;
-}
-
 .login-form-body {
   min-height: 200px;
-}
-
-.login-card-bar {
-  width: 8rpx;
-  height: 32rpx;
-  margin-right: 14rpx;
-  border-radius: 8rpx;
-  background-image: linear-gradient(180deg, #004fc5, #00b8d9);
-}
-
-.login-card-title {
-  font-size: 34rpx;
-  font-weight: 600;
-  color: $spark-color-text;
 }
 
 .code-input-wrap {
@@ -670,8 +648,10 @@ async function submitLoginForm() {
 .login-copyright {
   position: relative;
   z-index: 1;
-  margin-top: 40rpx;
-  padding-bottom: 40rpx;
+  margin-top: auto;
+  padding-top: 40rpx;
+  padding-bottom: calc(40rpx + constant(safe-area-inset-bottom));
+  padding-bottom: calc(40rpx + env(safe-area-inset-bottom));
   text-align: center;
 }
 

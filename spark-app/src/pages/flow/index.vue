@@ -1,7 +1,7 @@
 <template>
   <view class="flow-container safe-area-page">
     <!-- 顶部标题栏 -->
-    <view class="flow-header">
+    <view class="flow-header" :style="navHeaderStyle()">
       <text class="header-title">流程</text>
     </view>
 
@@ -10,7 +10,9 @@
       <up-tabs
           :list="tabList"
           :current="tabIndex"
-          lineColor="#0052cc"
+          lineColor="#2f7bff"
+          :lineWidth="tabLineWidth"
+          :activeStyle="{color: '#2f7bff', fontWeight: 700}"
           :scrollable="false"
           @change="handleTabChange"/>
     </view>
@@ -64,7 +66,7 @@
       </template>
     </scroll-view>
 
-    <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#0052cc">
+    <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#004fc5">
       <up-tabbar-item
           v-for="tab in tabBarItems"
           :key="tab.name"
@@ -79,6 +81,7 @@
 import {ref, computed} from "vue";
 import {onLoad} from "@dcloudio/uni-app";
 import {visibleTabs} from "@/utils/menuUtil";
+import {navHeaderStyle} from "@/utils/navBarUtil";
 import {
   pageMyApplicationListAPI,
   pageMyTodoListAPI,
@@ -98,6 +101,8 @@ const visibleTabList = [
   {name: '抄送给我', api: pageCopyMyListAPI, type: 5}
 ];
 const tabList = computed(() => visibleTabList.map(cfg => ({name: cfg.name})));
+// 下划线宽度取页签的六成并自动居中：不可滚动时页签平分屏宽
+const tabLineWidth = Math.floor(uni.getSystemInfoSync().windowWidth / visibleTabList.length * 0.6);
 const tabIndex = ref(0);
 // 当前激活页签配置
 const activeTab = computed(() => visibleTabList[tabIndex.value]);
@@ -207,12 +212,23 @@ function handleOnTabChange(index) {
 
 .flow-header {
   padding: 16px 16px;
-  background-color: #0052cc;
+  background-color: $spark-color-header-bg;
+  border-bottom: 1rpx solid $spark-color-header-border;
 
   .header-title {
     font-size: 20px;
-    font-weight: 600;
-    color: #ffffff;
+    font-style: italic;
+    font-weight: 700;
+    letter-spacing: 1px;
+    /* #ifdef MP-WEIXIN */
+    color: #2f7bff;
+    /* #endif */
+    /* #ifdef H5 */
+    background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    /* #endif */
   }
 }
 

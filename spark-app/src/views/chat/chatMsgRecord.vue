@@ -1,9 +1,9 @@
 <template>
   <view class="record-container safe-area-page">
     <!-- 标题栏 -->
-    <view class="record-header">
+    <view class="record-header" :style="navHeaderStyle()">
       <view class="header-back" @click="goBack">
-        <up-icon name="arrow-left" size="20" color="#fff"></up-icon>
+        <up-icon name="arrow-left" size="20" color="#2f7bff"></up-icon>
       </view>
       <view class="header-title">
         <text>{{ title }}</text>
@@ -100,6 +100,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue"
 import { onLoad } from "@dcloudio/uni-app"
+import { navHeaderStyle } from "@/utils/navBarUtil"
 import { useStore } from "vuex"
 import { renderMarkdown, MD_TAG_STYLE } from "@/utils/markdownUtil.js"
 import { useChatHistory } from "@/views/chat/chatMessage.js"
@@ -229,9 +230,9 @@ function loadChatRecords() {
   display: flex;
   align-items: center;
   height: 48px;
-  background-color: #0052cc;
+  background-color: $spark-color-header-bg;
+  border-bottom: 1rpx solid $spark-color-header-border;
   padding: 0 16px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
 }
 
@@ -243,9 +244,19 @@ function loadChatRecords() {
 .header-title {
   flex: 1;
   text-align: center;
-  font-size: 20px;
-  font-weight: 600;
-  color: #fff;
+  font-size: 17px;
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: 1px;
+  /* #ifdef MP-WEIXIN */
+  color: #2f7bff;
+  /* #endif */
+  /* #ifdef H5 */
+  background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* #endif */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

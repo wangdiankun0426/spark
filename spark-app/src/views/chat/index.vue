@@ -1,21 +1,21 @@
 <template>
   <view class="chat-container safe-area-page">
     <!-- 标题栏 -->
-    <view class="chat-header">
+    <view class="chat-header" :style="navHeaderBelowStyle()">
       <view class="header-back" @click="goBack">
-        <up-icon name="arrow-left" size="20" color="#fff"></up-icon>
+        <up-icon name="arrow-left" size="20" color="#2f7bff"></up-icon>
       </view>
       <view class="header-title">
         <text v-if="target && target.id">{{ target.name }}</text>
         <text v-else class="header-tip">请选择聊天对象</text>
       </view>
-      <!-- 聊天记录 -->
+      <!-- 更多操作 -->
       <view
           v-if="target && target.chatSpaceId"
           class="header-record"
-          @click="openChatRecord"
+          @click="openChatDetail"
       >
-        <up-icon name="clock" size="20" color="#fff"></up-icon>
+        <up-icon name="more-dot-fill" size="22" color="#2f7bff"></up-icon>
       </view>
     </view>
 
@@ -172,6 +172,7 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onUnmounted, getCurrentInstance } from "vue"
 import { onShow } from "@dcloudio/uni-app"
+import { navHeaderBelowStyle } from "@/utils/navBarUtil"
 import { useStore } from "vuex"
 import { createChatSpaceAPI, createAiChatSpaceAPI } from "@/api/chat/space.js"
 import { renderMarkdown, MD_TAG_STYLE } from "@/utils/markdownUtil.js"
@@ -810,14 +811,14 @@ function goBack() {
 }
 
 /**
- * 打开聊天记录
+ * 打开聊天详情
  */
-function openChatRecord() {
+function openChatDetail() {
   if (!target.value.chatSpaceId) {
     return
   }
   uni.navigateTo({
-    url: '/views/chat/chatMsgRecord?spaceId=' + target.value.chatSpaceId +
+    url: '/views/chat/chatDetail?spaceId=' + target.value.chatSpaceId +
         '&targetType=' + targetType.value +
         '&targetName=' + encodeURIComponent(target.value.name || '') +
         '&title=' + encodeURIComponent(target.value.name || '聊天记录')
@@ -838,9 +839,9 @@ function openChatRecord() {
 .chat-header {
   display: flex;
   align-items: center;
-  background-color: #0052cc;
+  background-color: $spark-color-header-bg;
+  border-bottom: 1rpx solid $spark-color-header-border;
   padding: 16px 16px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
 }
 
@@ -853,9 +854,19 @@ function openChatRecord() {
 .header-title {
   flex: 1;
   text-align: center;
-  font-size: 20px;
-  font-weight: 600;
-  color: #fff;
+  font-size: 17px;
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: 1px;
+  /* #ifdef MP-WEIXIN */
+  color: #2f7bff;
+  /* #endif */
+  /* #ifdef H5 */
+  background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* #endif */
 }
 
 .header-record {
@@ -866,7 +877,7 @@ function openChatRecord() {
 
 .header-tip {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(47, 123, 255, 0.7);
 }
 
 .chat-body {
