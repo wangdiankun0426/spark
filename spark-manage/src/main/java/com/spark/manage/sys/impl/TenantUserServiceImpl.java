@@ -79,7 +79,15 @@ public class TenantUserServiceImpl extends BaseService<TenantUserQuery, TenantUs
     @LogOperate(operateType = OperateTypeEnum.TENANT_ADD_USER)
     public ResultData<Long> addUser(TenantUserVO tenantUserVO) {
         ResultData<Long> result = new ResultData<>();
-        if (tenantUserVO == null || tenantUserVO.getTenantId() == null || CollectionUtil.isEmpty(tenantUserVO.getUserIds())) {
+        if (tenantUserVO == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (!this.checkTenantManage(tenantUserVO)) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
+        if (tenantUserVO.getTenantId() == null || CollectionUtil.isEmpty(tenantUserVO.getUserIds())) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
@@ -126,8 +134,9 @@ public class TenantUserServiceImpl extends BaseService<TenantUserQuery, TenantUs
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        if (tenantUserVO.getTenantId() == null) {
-            tenantUserVO.setTenantId(SessionHolder.getCurrentTenantId());
+        if (!this.checkTenantManage(tenantUserVO)) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
         }
         TenantUserQuery tenantUserQuery = new TenantUserQuery();
         tenantUserQuery.setTenantId(tenantUserVO.getTenantId());
@@ -158,8 +167,12 @@ public class TenantUserServiceImpl extends BaseService<TenantUserQuery, TenantUs
     @LogOperate(operateType = OperateTypeEnum.TENANT_USER_UPDATE)
     public ResultData<Void> updateTenantUser(TenantUserVO tenantUserVO) {
         ResultData<Void> result = new ResultData<>();
-        if (tenantUserVO == null || tenantUserVO.getTenantId() == null || tenantUserVO.getUserId() == null) {
+        if (tenantUserVO == null || tenantUserVO.getUserId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (!this.checkTenantManage(tenantUserVO)) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
         TenantUserQuery tenantUserQuery = new TenantUserQuery();
@@ -173,7 +186,10 @@ public class TenantUserServiceImpl extends BaseService<TenantUserQuery, TenantUs
         TenantUser tenantUser = new TenantUser();
         tenantUser.setId(tenantUserResult.getId());
         tenantUser.setDeptId(tenantUserVO.getDeptId());
-        tenantUser.setRoleType(tenantUserVO.getRoleType());
+        // 租户管理员身份仅站点管理员可变更，组织管理员只能调整部门
+        if (SessionHolder.isSysAdmin()) {
+            tenantUser.setRoleType(tenantUserVO.getRoleType());
+        }
         int count = tenantUserDao.updateDBById(tenantUser);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
@@ -368,5 +384,22 @@ public class TenantUserServiceImpl extends BaseService<TenantUserQuery, TenantUs
         }
         String sessionIdKey = ObjectCacheKey.LOGIN_SESSION + sessionId;
         return redisService.setStr(sessionIdKey, JsonUtil.toString(session), 60*60);
+    }
+
+    /**
+     * 校验租户成员管理权限
+     * 站点管理员可跨租户管理，保留入参租户；组织管理员限定当前租户
+     * @param tenantUserVO 租户用户参数
+     * @return true 有权限，false 无权限
+     */
+    private boolean checkTenantManage(TenantUserVO tenantUserVO) {
+        if (SessionHolder.isSysAdmin()) {
+            return true;
+        }
+        if (!SessionHolder.isOrgAdmin()) {
+            return false;
+        }
+        tenantUserVO.setTenantId(SessionHolder.getCurrentTenantId());
+        return true;
     }
 }

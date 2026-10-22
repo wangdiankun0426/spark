@@ -2,18 +2,22 @@ package com.spark.manage.sys.impl;
 
 import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.LogOperate;
+import com.spark.common.bean.sys.query.RoleQuery;
 import com.spark.common.bean.sys.query.RoleUserQuery;
 import com.spark.common.bean.sys.query.UserQuery;
+import com.spark.common.bean.sys.result.RoleResult;
 import com.spark.common.bean.sys.result.RoleUserResult;
 import com.spark.common.bean.sys.result.UserResult;
 import com.spark.common.bean.sys.vo.RoleUserVO;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
+import com.spark.dao.sys.RoleDao;
 import com.spark.dao.sys.RoleUserDao;
 import com.spark.dao.sys.UserDao;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.enums.StatusEnum;
 import com.spark.manage.sys.IRoleUserService;
 import com.spark.manage.BaseService;
 import com.spark.common.utils.CollectionUtil;
@@ -39,6 +43,8 @@ public class RoleUserServiceImpl extends BaseService<RoleUserQuery, RoleUserResu
     @Autowired
     private RoleUserDao roleUserDao;
     @Autowired
+    private RoleDao roleDao;
+    @Autowired
     private UserDao userDao;
 
     /**
@@ -52,6 +58,10 @@ public class RoleUserServiceImpl extends BaseService<RoleUserQuery, RoleUserResu
         ResultData<Void> result = new ResultData<>();
         if (roleUserVO == null || roleUserVO.getRoleId() == null || CollectionUtil.isEmpty(roleUserVO.getUserIds())) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (!this.validateRoleManage(roleUserVO.getRoleId())) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
         List<Long> userIds = roleUserVO.getUserIds();
@@ -91,6 +101,10 @@ public class RoleUserServiceImpl extends BaseService<RoleUserQuery, RoleUserResu
         ResultData<Void> result = new ResultData<>();
         if (roleUserVO == null || roleUserVO.getRoleId() == null || roleUserVO.getUserId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (!this.validateRoleManage(roleUserVO.getRoleId())) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
         int count = roleUserDao.deleteRoleUser(List.of(roleUserVO.getRoleId()), roleUserVO.getUserId(), SessionHolder.getCurrentUserId());
@@ -168,5 +182,22 @@ public class RoleUserServiceImpl extends BaseService<RoleUserQuery, RoleUserResu
     @Override
     protected List<RoleUserResult> queryList(RoleUserQuery query) {
         return roleUserDao.queryRoleUserList(query);
+    }
+
+    /**
+     * 校验角色管理权限与角色归属，仅能操作本租户启用中的角色
+     * @param roleId 角色id
+     * @return true 有权限，false 无权限或角色不可用
+     */
+    private boolean validateRoleManage(Long roleId) {
+        if (!SessionHolder.isOrgAdmin()) {
+            return false;
+        }
+        RoleQuery roleQuery = new RoleQuery();
+        roleQuery.setId(roleId);
+        roleQuery.setTenantId(SessionHolder.getCurrentTenantId());
+        roleQuery.setStatus(StatusEnum.NORMAL.getValue());
+        RoleResult roleResult = roleDao.queryRole(roleQuery);
+        return roleResult != null;
     }
 }

@@ -83,8 +83,10 @@ public class RegisterServiceImpl implements IRegisterService {
             return result;
         }
         try {
-            SessionHolder.setCurrentUserId(101L);
+            // 系统代注册，以默认租户组织管理员身份执行
+            SessionHolder.setCurrentUserId(201L);
             SessionHolder.setCurrentTenantId(103L);
+            SessionHolder.setCurrentRoleType(RoleTypeEnum.ORG_ADMIN.getValue());
             UserVO userVO = new UserVO();
             userVO.setLoginName(registerVO.getLoginName());
             userVO.setName(registerVO.getLoginName());

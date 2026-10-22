@@ -477,8 +477,10 @@ public class LoginServiceImpl implements ILoginService {
             return userDao.queryUser(userQuery);
         }
         try {
-            SessionHolder.setCurrentUserId(101L);
+            // 系统代建首登账号，以默认租户组织管理员身份执行
+            SessionHolder.setCurrentUserId(201L);
             SessionHolder.setCurrentTenantId(103L);
+            SessionHolder.setCurrentRoleType(RoleTypeEnum.ORG_ADMIN.getValue());
             UserVO userVO = new UserVO();
             userVO.setLoginName("wx_" + openid);
             String tail = openid.length() > 4 ? openid.substring(openid.length() - 4) : openid;

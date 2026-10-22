@@ -79,6 +79,7 @@ public class EntityServiceImpl extends BaseService<EntityQuery, EntityResult> im
 - 返回 `ResultData<T>`；成功 `result.setCode(ResultData.OK)`，可带 `result.setObjId(...)`
 - 参数校验抽成私有 `validateXxx(EntityVO vo)` 方法返回 `ResultData`
 - 列表补充数据抽成 `supplyXxxList(List<XxxResult> list)` 私有方法（用 `super.supplyCreatedByName(list)` / `supplyUpdatedByName(list)` 补创建人/修改人名）
+- 方法顺序按 `public → protected → private`，所有 private 方法集中放在类尾部全部 public 方法之后，禁止插在两个 public 方法之间
 - `@Transactional` 仅在真正需要时（多表写操作）添加，默认不加
 - 上面模板中的 `@LogOperate` 与 `entity.setId(super.genObjectId(ObjectTypeEnum.XXX))` 均为**条件代码**：生成前必须先询问用户是否需要，得到肯定回答后再生成，默认不生成（见 SKILL.md 核心原则第 8 条）
 - **守护式校验必须在方法体第一行开始**：先校验入参，再写业务逻辑；校验不通过立即 `return`，禁止"先执行后判断"或依赖 try-catch 拦截非法参数（详则见 `guard-clauses.md`）

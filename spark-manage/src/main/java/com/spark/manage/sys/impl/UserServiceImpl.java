@@ -104,6 +104,8 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         Long tenantId = SessionHolder.getCurrentTenantId();
         if (SessionHolder.isSysAdmin()) {
             tenantId = userVO.getTenantId();
+            // 站点管理员不直接分配角色，具体角色由该租户组织管理员分配
+            userVO.setRoleIds(null);
         }
         result = tenantUserService.checkTenantUserCount(tenantId);
         BaseAssert.assertTrue(result);
@@ -157,7 +159,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         BaseAssert.assertTrue(result);
         userVO.setId(userId);
         // 添加角色
-        result = this.addUserRole(userVO);
+        result = this.addUserRole(userVO, tenantId);
         BaseAssert.assertTrue(result);
         result.setObjId(userId);
         result.setData(userId);
@@ -170,7 +172,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
      * @return 结果
      */
     @Override
-    @DataScope(tableAlias = "su")
+    @DataScope(tableAlias = "stu")
     public ResultData<PageResult<UserResult>> pageUserList(UserQuery query) {
         ResultData<PageResult<UserResult>> result = new ResultData<>();
         if (query == null) {
@@ -227,7 +229,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         result = tenantUserService.updateTenantUser(tenantUserVO);
         BaseAssert.assertTrue(result);
         // 添加角色
-        result = this.addUserRole(userVO);
+        result = this.addUserRole(userVO, SessionHolder.getCurrentTenantId());
         BaseAssert.assertTrue(result);
         result.setObjId(userId);
         result.setCode(ResultData.OK);
@@ -585,9 +587,10 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
     /**
      * 添加用户角色
      * @param userVO 创建用户参数
+     * @param tenantId 角色归属租户
      * @return 验证结果
      */
-    private ResultData addUserRole(UserVO userVO) {
+    private ResultData addUserRole(UserVO userVO, Long tenantId) {
         ResultData result = new ResultData<>();
         if (userVO.getId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
@@ -596,7 +599,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         List<Long> addRoleIds = new ArrayList<>();
         List<Long> delRoleIds = new ArrayList<>();
         RoleUserQuery roleUserQuery = new RoleUserQuery();
-        roleUserQuery.setTenantId(SessionHolder.getCurrentTenantId());
+        roleUserQuery.setTenantId(tenantId);
         roleUserQuery.setUserId(userVO.getId());
         roleUserQuery.setPage(false);
         List<RoleUserResult> existList = roleUserDao.queryRoleUserList(roleUserQuery);
@@ -614,7 +617,6 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         }
         Long userId = userVO.getId();
         Long createdBy = SessionHolder.getCurrentUserId();
-        Long tenantId = SessionHolder.getCurrentTenantId();
         if (CollectionUtil.isNotEmpty(addRoleIds)) {
             int count = roleUserDao.batchInsertByUserId(tenantId, userId, addRoleIds, createdBy);
             if (count < 1) {

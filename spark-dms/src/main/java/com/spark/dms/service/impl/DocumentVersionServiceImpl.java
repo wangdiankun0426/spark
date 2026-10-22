@@ -2,6 +2,7 @@ package com.spark.dms.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.dms.entity.Document;
 import com.spark.common.bean.dms.entity.DocumentEvent;
 import com.spark.common.bean.dms.entity.DocumentVersion;
@@ -260,6 +261,15 @@ public class DocumentVersionServiceImpl extends BaseService<DocumentVersionQuery
         }
         DocumentVersionResult versionResult = documentVersionDao.queryDocumentVersion(query);
         if (versionResult == null) {
+            result.setErrorCode(ErrorCodeEnum.DOCUMENT_VERSION_NOT_EXIST);
+            return result;
+        }
+        // 版本表无租户列，通过父文档归属防止跨租户下载
+        DocumentQuery documentQuery = new DocumentQuery();
+        documentQuery.setId(versionResult.getDocId());
+        documentQuery.setTenantId(SessionHolder.getCurrentTenantId());
+        DocumentResult documentResult = documentDao.queryDocument(documentQuery);
+        if (documentResult == null) {
             result.setErrorCode(ErrorCodeEnum.DOCUMENT_VERSION_NOT_EXIST);
             return result;
         }

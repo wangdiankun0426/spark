@@ -30,7 +30,7 @@ public class UserTest {
     @Test
     public void testCreateUser() {
         try {
-            SessionHolder.setCurrentUserId(101L);
+            SessionHolder.setCurrentUserId(201L);
             SessionHolder.setCurrentTenantId(103L);
             UserVO userVO = new UserVO();
             userVO.setLoginName("wangxiaoer");

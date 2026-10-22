@@ -131,6 +131,8 @@ public class AttachmentServiceImpl extends BaseService<AttachmentQuery, Attachme
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        // 限定本租户，防止跨租户下载
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         AttachmentResult attachmentResult = attachmentDao.queryAttachment(query);
         if (attachmentResult == null) {
             result.setErrorCode(ErrorCodeEnum.ATTACHMENT_NOT_EXIST);

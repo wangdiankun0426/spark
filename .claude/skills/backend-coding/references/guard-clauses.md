@@ -37,7 +37,38 @@ public ResultData<Void> feedback(RetrieveLogVO retrieveLogVO) {
 - 一个方法多处校验时，逐个 `if (...) { return; }` 拆开，禁止把多个校验塞进一个 if 里用 `&&` 叠加
 - 校验代码之间不夹业务逻辑
 
-## 3. 无返回值（void）方法
+## 3. 抽取的私有校验/权限方法
+
+权限断言、归属校验等复用度高的守卫抽成 private 方法时，**返回值必须携带明确结果（boolean），禁止返回 ResultData 并以 `null` 表示通过**。null 哨兵语义隐晦，调用方还需判空；错误码一律由调用方在自己的 ResultData 上设置。
+
+```java
+// 禁止：返回 ResultData，通过时 return null
+private ResultData<Void> checkManage(XxxVO vo) {
+    if (!SessionHolder.isOrgAdmin()) {
+        ResultData<Void> r = new ResultData<>();
+        r.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+        return r;
+    }
+    return null;
+}
+
+// 正确：返回 boolean，true 通过 / false 拒绝
+private boolean checkManage(XxxVO vo) {
+    if (!SessionHolder.isOrgAdmin()) {
+        return false;
+    }
+    vo.setTenantId(SessionHolder.getCurrentTenantId());
+    return true;
+}
+
+// 调用方
+if (!this.checkManage(vo)) {
+    result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+    return result;
+}
+```
+
+## 4. 无返回值（void）方法
 
 校验不通过记录 warn 日志后 return，不进入业务逻辑：
 
@@ -52,7 +83,7 @@ public void saveRetrieveLog(Long knowledgeId, String query, RetrieveDetailResult
 }
 ```
 
-## 4. 与 try-catch 的关系
+## 5. 与 try-catch 的关系
 
 - **业务异常不靠 try-catch**：Controller 方法抛出的异常由 `spark-web` 的 `GlobalExceptionHandler` 统一转 `SYSTEM_ERROR`，Service 层不写 try-catch 拦截
 - **尽力而为的辅助逻辑可吞异常**：如保存日志这类失败不影响主流程的 void 操作，内部可用 try-catch 包裹吞掉异常（`logger.error(...)`），避免污染主流程——但这是唯一允许 try-catch 的场景

@@ -256,6 +256,9 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         }
         Document document = new Document();
         BeanUtil.copyProperties(documentVO, document);
+        // 存储路径与文件大小由版本上传链路维护，禁止外部修改
+        document.setPath(null);
+        document.setSize(null);
         int count = documentDao.updateDBById(document);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
@@ -382,6 +385,8 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        // 限定本租户，防止跨租户下载
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         DocumentResult documentResult = documentDao.queryDocument(query);
         if (documentResult == null) {
             result.setErrorCode(ErrorCodeEnum.DOCUMENT_NOT_EXIST);

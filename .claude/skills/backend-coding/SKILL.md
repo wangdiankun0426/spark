@@ -98,6 +98,7 @@ logger.info("readSkill name={}, skillIds={}", name, skillIds);
 
 ## 7. 代码风格
 
+- **方法顺序（强制）**：类内方法按 `public → protected → private` 排列；private 方法必须放在全部 public 方法之后、集中置于类尾部，禁止插在两个 public 方法之间
 - K&R 大括号；关键字后空格；左括号前无空格
 - 注释独立成行（代码上方），禁止行尾注释
 - **注释核心明了**：注释只说明做什么，禁止在注释中用括号补充细致说明
@@ -155,6 +156,7 @@ taskInstanceResult.setDataList(dataList);
 - 手写 ID、手工赋值审计字段（created_by/updated_by/timestamp/dept_id）
 - 注释或用户消息用英文、logger 消息用中文/非首字母小写驼峰/未用 `key={}` 占位
 - 修改无关代码、引入无关依赖、通配符导入
+- private 方法插在 public 方法之间（private 必须集中在类尾部，全部 public 方法之后）
 - 业务类直接 import 第三方 JSON 库（fastjson2 / jackson / hutool-json），绕过 JsonUtil
 - 在代码中输出敏感信息（token/密码/密钥）到日志
 - 未经用户同意添加 `@Transactional` 或抽象层

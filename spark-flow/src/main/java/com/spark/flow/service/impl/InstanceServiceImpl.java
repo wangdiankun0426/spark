@@ -753,6 +753,8 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         if (query == null) {
             query = new FlowInstanceQuery();
         }
+        // 强制限定本租户
+        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<FlowInstanceResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);

@@ -31,9 +31,8 @@
     <div class="el-login-sidebar">
       <div class="sidebar-content">
         <h1 class="sidebar-title">星火云应用平台</h1>
-        <p style="font-size: 16px;">欢迎使用 — 星火云应用平台</p>
         <p style="font-size: 14px;">
-          星火云应用平台，我们的目标不仅是一个企业AI协作工具系统，更是以帮助企业实现高效运营、创新驱动和可持续发展的核心支撑为长远目标。
+          欢迎使用星火云应用平台，我们的目标不仅是一个企业AI协作工具系统，更是以帮助企业实现高效运营、创新驱动和可持续发展的核心支撑为长远目标。
         </p>
         <div class="sidebar-features">
           <div class="feature-item">
