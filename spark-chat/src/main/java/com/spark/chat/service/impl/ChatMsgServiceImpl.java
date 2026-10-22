@@ -103,6 +103,10 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        if (!this.checkSpaceParticipant(chatMsgVO)) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
         ChatMsg chatMsg = new ChatMsg();
         chatMsg.setSpaceId(chatMsgVO.getSpaceId());
         chatMsg.setSenderId(chatMsgVO.getSenderId());
@@ -140,6 +144,10 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         if (chatMsgVO == null || chatMsgVO.getSpaceId() == null || chatMsgVO.getSenderId() == null
                 || chatMsgVO.getReceiverId() == null || StringUtil.isBlank(chatMsgVO.getMessage())) {
             logger.error("chatHandler create fail, params incomplete");
+            return;
+        }
+        if (!this.checkSpaceParticipant(chatMsgVO)) {
+            logger.warn("agent chat no permission, spaceId={}, userId={}", chatMsgVO.getSpaceId(), chatMsgVO.getSenderId());
             return;
         }
         AgentQuery agentQuery = new AgentQuery();
@@ -245,6 +253,10 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
             logger.error("chatHandler create fail, params incomplete");
             return;
         }
+        if (!this.checkSpaceParticipant(chatMsgVO)) {
+            logger.warn("model chat no permission, spaceId={}, userId={}", chatMsgVO.getSpaceId(), chatMsgVO.getSenderId());
+            return;
+        }
         ModelQuery modelQuery = new ModelQuery();
         modelQuery.setId(chatMsgVO.getReceiverId());
         ModelResult modelResult = modelDao.queryModel(modelQuery);
@@ -332,6 +344,10 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        if (!this.checkMsgReceiver(chatMsgVO)) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
         ChatMsg chatMsg = new ChatMsg();
         chatMsg.setId(chatMsgVO.getId());
         chatMsg.setSignStatus(ChatMsgStatusEnum.OK.getValue());
@@ -355,6 +371,10 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         ResultData<Void> result = new ResultData<>();
         if (chatMsgVO == null || chatMsgVO.getId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (!this.checkMsgReceiver(chatMsgVO)) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
         ChatMsg chatMsg = new ChatMsg();
@@ -605,5 +625,33 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
     @Override
     protected List<ChatMsgResult> queryList(ChatMsgQuery query) {
         return chatMsgDao.queryChatMsgList(query);
+    }
+
+    /**
+     * 校验发送方是会话参与人且接收方与会话对方一致
+     * @param chatMsgVO 消息参数
+     * @return 校验通过返回true
+     */
+    private boolean checkSpaceParticipant(ChatMsgVO chatMsgVO) {
+        if (chatMsgVO.getSenderId().equals(chatMsgVO.getReceiverId())) {
+            return true;
+        }
+        ChatSpaceResult participantSpace = chatSpaceService.queryParticipantSpace(chatMsgVO.getSpaceId(), chatMsgVO.getSenderId());
+        return participantSpace != null && chatMsgVO.getReceiverId().equals(participantSpace.getReceiverId());
+    }
+
+    /**
+     * 校验操作者是消息接收方
+     * @param chatMsgVO 消息参数，receiverId为当前操作者
+     * @return 校验通过返回true
+     */
+    private boolean checkMsgReceiver(ChatMsgVO chatMsgVO) {
+        if (chatMsgVO.getReceiverId() == null) {
+            return false;
+        }
+        ChatMsgQuery existQuery = new ChatMsgQuery();
+        existQuery.setId(chatMsgVO.getId());
+        ChatMsgResult existMsg = chatMsgDao.queryChatMsg(existQuery);
+        return existMsg != null && chatMsgVO.getReceiverId().equals(existMsg.getReceiverId());
     }
 }

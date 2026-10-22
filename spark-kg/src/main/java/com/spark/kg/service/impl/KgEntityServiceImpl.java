@@ -235,7 +235,6 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
         if (query == null) {
             query = new KgEntityQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<KgEntityResult> pageResult = super.pageList(query);
         result.setData(pageResult);
         result.setCode(ResultData.OK);

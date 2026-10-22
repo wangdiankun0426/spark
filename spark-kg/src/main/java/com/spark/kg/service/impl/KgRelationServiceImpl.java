@@ -241,7 +241,6 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
         if (query == null) {
             query = new KgRelationQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<KgRelationResult> pageResult = super.pageList(query);
         result.setData(pageResult);
         result.setCode(ResultData.OK);

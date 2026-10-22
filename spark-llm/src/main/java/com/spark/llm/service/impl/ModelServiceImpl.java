@@ -2,7 +2,6 @@ package com.spark.llm.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
-import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.llm.entity.Model;
 import com.spark.common.bean.llm.query.ProviderQuery;
 import com.spark.common.bean.llm.query.ModelQuery;
@@ -161,7 +160,6 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
         if (query == null) {
             query = new ModelQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<ModelResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);

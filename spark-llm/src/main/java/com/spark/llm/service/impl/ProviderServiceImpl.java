@@ -2,7 +2,6 @@ package com.spark.llm.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
-import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.llm.entity.Provider;
 import com.spark.common.bean.llm.query.ProviderQuery;
 import com.spark.common.bean.llm.result.ProviderResult;
@@ -146,7 +145,6 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
         if (query == null) {
             query = new ProviderQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<ProviderResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);

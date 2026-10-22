@@ -99,6 +99,7 @@ logger.info("readSkill name={}, skillIds={}", name, skillIds);
 ## 7. 代码风格
 
 - **方法顺序（强制）**：类内方法按 `public → protected → private` 排列；private 方法必须放在全部 public 方法之后、集中置于类尾部，禁止插在两个 public 方法之间
+- **分页租户收口（强制）**：走 `super.pageList` 的分页方法内禁止再写 `setTenantId(SessionHolder.getCurrentTenantId())`，租户由 `BaseService.pageList` 对非系统管理员统一强制；非分页查询（直查 DAO、详情、下载、写操作）不享受兜底，仍需自行设置
 - K&R 大括号；关键字后空格；左括号前无空格
 - 注释独立成行（代码上方），禁止行尾注释
 - **注释核心明了**：注释只说明做什么，禁止在注释中用括号补充细致说明

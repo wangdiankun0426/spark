@@ -169,7 +169,6 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         if (query == null) {
             query = new FormQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<FormResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);

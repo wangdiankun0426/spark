@@ -5,7 +5,6 @@ import com.spark.common.bean.log.query.LogOperateQuery;
 import com.spark.common.bean.log.result.LogOperateResult;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
-import com.spark.common.bean.base.SessionHolder;
 import com.spark.dao.log.LogOperateDao;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.ErrorCodeEnum;
@@ -64,7 +63,6 @@ public class LogOperateServiceImpl extends BaseService<LogOperateQuery, LogOpera
         if (query == null) {
             query = new LogOperateQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<LogOperateResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);

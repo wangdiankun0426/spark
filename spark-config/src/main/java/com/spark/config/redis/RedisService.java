@@ -1,5 +1,8 @@
 package com.spark.config.redis;
 
+import com.spark.common.bean.sys.entity.Session;
+import com.spark.common.constant.ObjectCacheKey;
+import com.spark.common.utils.JsonUtil;
 import com.spark.common.utils.StringUtil;
 import jakarta.annotation.Resource;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -9,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -176,6 +180,35 @@ public class RedisService {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    /**
+     * 删除指定用户的全部登录会话，强制其重新登录
+     * 角色、部门、租户成员变更或禁用用户后调用
+     * @param userId 用户id
+     */
+    public void deleteLoginSessionByUserId(Long userId) {
+        if (userId == null) {
+            return;
+        }
+        try {
+            Set<Object> sessionKeys = redisTemplate.keys(ObjectCacheKey.LOGIN_SESSION + "*");
+            if (sessionKeys == null || sessionKeys.isEmpty()) {
+                return;
+            }
+            for (Object key : sessionKeys) {
+                Object value = redisTemplate.opsForValue().get(key);
+                if (value == null) {
+                    continue;
+                }
+                Session session = JsonUtil.toObject(value.toString(), Session.class);
+                if (session != null && userId.equals(session.getUserId())) {
+                    redisTemplate.delete(key);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

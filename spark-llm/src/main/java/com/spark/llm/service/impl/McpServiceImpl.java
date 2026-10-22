@@ -2,7 +2,6 @@ package com.spark.llm.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
-import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.llm.entity.Mcp;
 import com.spark.common.bean.llm.query.McpQuery;
 import com.spark.common.bean.llm.query.ProviderQuery;
@@ -171,7 +170,6 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
         if (query == null) {
             query = new McpQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<McpResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);

@@ -56,11 +56,13 @@ public interface RoleUserDao {
 
     /**
      * 删除关联
+     * @param tenantId 租户id
      * @param roleIds
      * @param userId
      * @param updatedBy
      * @return
      */
-    int deleteRoleUser(@Param("roleIds")List<Long> roleIds, @Param("userId") Long userId, @Param("updatedBy") Long updatedBy);
+    int deleteRoleUser(@Param("tenantId") Long tenantId, @Param("roleIds")List<Long> roleIds,
+                       @Param("userId") Long userId, @Param("updatedBy") Long updatedBy);
 
 }

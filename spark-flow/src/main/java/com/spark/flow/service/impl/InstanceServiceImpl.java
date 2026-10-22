@@ -219,7 +219,6 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
             query = new FlowInstanceQuery();
         }
         query.setCreatedBy(SessionHolder.getCurrentUserId());
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<FlowInstanceResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);
@@ -237,7 +236,6 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         if (query == null) {
             query = new FlowInstanceQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         Long userId = SessionHolder.getCurrentUserId();
         FlowInstanceAssigneeQuery instanceAssigneeQuery = new FlowInstanceAssigneeQuery();
         instanceAssigneeQuery.setAssigneeId(userId);
@@ -724,7 +722,6 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         if (query == null) {
             query = new FlowInstanceQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         Long userId = SessionHolder.getCurrentUserId();
         FlowInstanceDiscussQuery instanceAssigneeQuery = new FlowInstanceDiscussQuery();
         instanceAssigneeQuery.setAssigneeId(userId);
@@ -753,8 +750,6 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         if (query == null) {
             query = new FlowInstanceQuery();
         }
-        // 强制限定本租户
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<FlowInstanceResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);

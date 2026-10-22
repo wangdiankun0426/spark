@@ -5,7 +5,6 @@ import com.spark.common.bean.log.query.LogLoginQuery;
 import com.spark.common.bean.log.result.LogLoginResult;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
-import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.constant.ObjectCacheKey;
 import com.spark.dao.log.LogLoginDao;
 import com.spark.common.enums.LoginPlatformEnum;
@@ -69,7 +68,6 @@ public class LogLoginServiceImpl extends BaseService<LogLoginQuery,LogLoginResul
         if (query == null) {
             query = new LogLoginQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<LogLoginResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);

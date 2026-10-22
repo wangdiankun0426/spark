@@ -190,7 +190,6 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
         if (query == null) {
             query = new SkillQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<SkillResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);

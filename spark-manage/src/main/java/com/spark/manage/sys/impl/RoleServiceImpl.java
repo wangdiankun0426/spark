@@ -1,6 +1,5 @@
 package com.spark.manage.sys.impl;
 
-import com.spark.common.bean.base.SessionHolder;
 import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.common.bean.sys.entity.Role;
@@ -87,7 +86,6 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
         if (query == null) {
             query = new RoleQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<RoleResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);

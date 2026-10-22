@@ -124,7 +124,6 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
         if (query == null) {
             query = new MessageQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<MessageResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);

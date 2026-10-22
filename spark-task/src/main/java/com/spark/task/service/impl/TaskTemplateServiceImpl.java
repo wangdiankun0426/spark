@@ -167,7 +167,6 @@ public class TaskTemplateServiceImpl extends BaseService<TaskTemplateQuery, Task
         if (query == null) {
             query = new TaskTemplateQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         result.setData(super.pageList(query));
         result.setCode(ResultData.OK);
         return result;

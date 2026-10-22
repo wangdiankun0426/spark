@@ -465,23 +465,25 @@ public class ESRetrieve {
     }
 
     /**
-     * 构造文档过滤条件（documentType + prtId 组合）
+     * 构造文档过滤条件，恒含租户过滤，documentType与prtId可选
      * @param documentType 文档归属类型
      * @param prtId 父ID
-     * @return 过滤Query，两个参数都为空时返回 null
+     * @return 过滤Query
      */
     private Query documentFilter(Integer documentType, Long prtId) {
-        if (documentType == null && prtId == null) {
-            return null;
+        Long tenantId = SessionHolder.getCurrentTenantId();
+        if (tenantId == null) {
+            // 无租户上下文时安全失败，用不存在的租户值禁止全量召回
+            return Query.of(q -> q.term(t -> t.field("tenantId").value(-1L)));
         }
         return Query.of(q -> q.bool(b -> {
+            b.must(m -> m.term(t -> t.field("tenantId").value(tenantId)));
             if (documentType != null) {
                 b.must(m -> m.term(t -> t.field("documentType").value(documentType.longValue())));
             }
             if (prtId != null) {
                 b.must(m -> m.term(t -> t.field("prtId").value(prtId)));
             }
-            b.must(m -> m.term(t -> t.field("tenantId").value(SessionHolder.getCurrentTenantId())));
             return b;
         }));
     }

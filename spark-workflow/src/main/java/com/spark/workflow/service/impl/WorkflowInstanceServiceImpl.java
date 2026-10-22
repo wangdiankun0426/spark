@@ -17,6 +17,7 @@ import com.spark.common.bean.workflow.result.WfTemplateVersionResult;
 import com.spark.common.bean.workflow.vo.WfRunVO;
 import com.spark.common.bean.form.entity.FormObjValue;
 import com.spark.common.bean.form.vo.FormObjValueVO;
+import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.dao.workflow.WfInstanceDao;
 import com.spark.dao.workflow.WfInstanceNodeDao;
@@ -76,12 +77,13 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
      * @return 分页结果
      */
     @Override
+    // join了wf_template，别名固定ri防止created_by/dept_id列名歧义
+    @DataScope(tableAlias = "ri")
     public ResultData<PageResult<WfInstanceResult>> pageInstanceHistory(WfInstanceQuery query) {
         ResultData<PageResult<WfInstanceResult>> result = new ResultData<>();
         if (query == null) {
             query = new WfInstanceQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<WfInstanceResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);

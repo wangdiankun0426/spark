@@ -7,6 +7,8 @@ import com.spark.common.bean.chat.entity.ChatSpace;
 import com.spark.common.bean.chat.query.ChatSpaceQuery;
 import com.spark.common.bean.chat.result.ChatSpaceResult;
 import com.spark.common.bean.chat.vo.ChatSpaceVO;
+import com.spark.common.bean.sys.query.TenantUserQuery;
+import com.spark.common.bean.sys.result.TenantUserResult;
 import com.spark.common.bean.llm.query.AgentQuery;
 import com.spark.common.bean.llm.query.ModelQuery;
 import com.spark.common.bean.llm.result.AgentResult;
@@ -22,6 +24,7 @@ import com.spark.dao.chat.ChatMsgDao;
 import com.spark.dao.chat.ChatSpaceDao;
 import com.spark.dao.llm.AgentDao;
 import com.spark.dao.llm.ModelDao;
+import com.spark.dao.sys.TenantUserDao;
 import com.spark.manage.BaseService;
 import com.spark.chat.service.IChatSpaceService;
 import org.slf4j.Logger;
@@ -55,6 +58,8 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
     private ModelDao modelDao;
     @Autowired
     private AgentDao agentDao;
+    @Autowired
+    private TenantUserDao tenantUserDao;
 
     /**
      * 创建聊天空间
@@ -64,14 +69,29 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
     @Override
     public ResultData<ChatSpace> createChatSpace(ChatSpaceVO chatSpaceVO) {
         ResultData<ChatSpace> result = new ResultData<>();
-        if (chatSpaceVO == null || chatSpaceVO.getSenderId() == null || chatSpaceVO.getReceiverId() == null) {
+        if (chatSpaceVO == null || chatSpaceVO.getReceiverId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        Long senderId = SessionHolder.getCurrentUserId();
+        if (senderId == null) {
+            result.setErrorCode(ErrorCodeEnum.NOT_LOGIN);
+            return result;
+        }
+        Long receiverId = chatSpaceVO.getReceiverId();
+        // 接收方必须是当前租户用户
+        TenantUserQuery tenantUserQuery = new TenantUserQuery();
+        tenantUserQuery.setTenantId(SessionHolder.getCurrentTenantId());
+        tenantUserQuery.setUserId(receiverId);
+        TenantUserResult receiverRelation = tenantUserDao.queryTenantUser(tenantUserQuery);
+        if (receiverRelation == null) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
         ChatSpace chatSpace = new ChatSpace();
         ChatSpaceQuery chatSpaceQuery = new ChatSpaceQuery();
-        chatSpaceQuery.setSenderId(chatSpaceVO.getSenderId());
-        chatSpaceQuery.setReceiverId(chatSpaceVO.getReceiverId());
+        chatSpaceQuery.setSenderId(senderId);
+        chatSpaceQuery.setReceiverId(receiverId);
         ChatSpaceResult chatSpaceResult = chatSpaceDao.queryChatSpace(chatSpaceQuery);
         if (chatSpaceResult != null) {
             chatSpace.setSpaceId(chatSpaceResult.getSpaceId());
@@ -81,16 +101,16 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
         }
         Long chatSpaceId = super.genObjectId(ObjectTypeEnum.CHAT_SPACE);
         chatSpace.setSpaceId(chatSpaceId);
-        chatSpace.setSenderId(chatSpaceVO.getSenderId());
-        chatSpace.setReceiverId(chatSpaceVO.getReceiverId());
+        chatSpace.setSenderId(senderId);
+        chatSpace.setReceiverId(receiverId);
         chatSpace.setSpaceType(ChatSpaceTypeEnum.USER.getValue());
         int count = chatSpaceDao.insertDB(chatSpace);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
-        chatSpace.setSenderId(chatSpaceVO.getReceiverId());
-        chatSpace.setReceiverId(chatSpaceVO.getSenderId());
+        chatSpace.setSenderId(receiverId);
+        chatSpace.setReceiverId(senderId);
         count = chatSpaceDao.insertDB(chatSpace);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
@@ -162,7 +182,6 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
             query = new ChatSpaceQuery();
         }
         query.setSenderId(userId);
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<ChatSpaceResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);
@@ -277,6 +296,23 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
         } catch (Exception e) {
             logger.error("fillTitleIfBlank error, spaceId={}", spaceId, e);
         }
+    }
+
+    /**
+     * 查询用户参与的会话，非参与人返回null
+     * @param spaceId 空间id
+     * @param userId 用户id
+     * @return 会话结果
+     */
+    @Override
+    public ChatSpaceResult queryParticipantSpace(Long spaceId, Long userId) {
+        if (spaceId == null || userId == null) {
+            return null;
+        }
+        ChatSpaceQuery chatSpaceQuery = new ChatSpaceQuery();
+        chatSpaceQuery.setSpaceId(spaceId);
+        chatSpaceQuery.setSenderId(userId);
+        return chatSpaceDao.queryChatSpace(chatSpaceQuery);
     }
 
     /**

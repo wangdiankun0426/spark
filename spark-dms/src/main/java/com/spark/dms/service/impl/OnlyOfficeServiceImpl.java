@@ -85,6 +85,7 @@ public class OnlyOfficeServiceImpl extends BaseService<DocumentQuery, DocumentRe
         }
         DocumentQuery documentQuery = new DocumentQuery();
         documentQuery.setId(id);
+        documentQuery.setTenantId(SessionHolder.getCurrentTenantId());
         DocumentResult documentResult = documentDao.queryDocument(documentQuery);
         if (documentResult == null) {
             result.setErrorCode(ErrorCodeEnum.DOCUMENT_NOT_EXIST);

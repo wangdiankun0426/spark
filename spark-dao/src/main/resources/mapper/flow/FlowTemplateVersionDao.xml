@@ -72,7 +72,6 @@
         from flow_template_version
         where 1 = 1
         <include refid="searchCondition"/>
-        ${dataScopeSQL}
     </select>
 
     <select id="queryTemplateVersionList" resultType="com.spark.common.bean.flow.result.FlowTemplateVersionResult">
@@ -80,7 +79,6 @@
         from flow_template_version
         where 1 = 1
         <include refid="searchCondition"/>
-        ${dataScopeSQL}
         order by
         <include refid="sortCondition"/>
         <if test="page == true">

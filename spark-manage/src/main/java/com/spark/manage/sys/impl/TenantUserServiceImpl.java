@@ -19,19 +19,15 @@ import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.sys.query.TenantUserQuery;
-import com.spark.common.bean.sys.query.UserQuery;
 import com.spark.common.bean.sys.result.TenantUserResult;
-import com.spark.common.bean.sys.result.UserResult;
 import com.spark.common.bean.sys.vo.TenantUserVO;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.OperateTypeEnum;
-import com.spark.common.enums.RoleTypeEnum;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.config.redis.RedisService;
 import com.spark.dao.sys.*;
 import com.spark.manage.BaseService;
 import com.spark.manage.sys.ITenantUserService;
-import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,8 +35,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -153,6 +147,7 @@ public class TenantUserServiceImpl extends BaseService<TenantUserQuery, TenantUs
             result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
+        redisService.deleteLoginSessionByUserId(tenantUserVO.getUserId());
         result.setObjId(tenantUserVO.getTenantId());
         result.setCode(ResultData.OK);
         return result;
@@ -195,6 +190,7 @@ public class TenantUserServiceImpl extends BaseService<TenantUserQuery, TenantUs
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
+        redisService.deleteLoginSessionByUserId(tenantUserVO.getUserId());
         result.setObjId(tenantUserVO.getTenantId());
         result.setCode(ResultData.OK);
         return result;

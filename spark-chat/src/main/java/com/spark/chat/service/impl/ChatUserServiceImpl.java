@@ -64,7 +64,6 @@ public class ChatUserServiceImpl extends BaseService<UserQuery, ChatUserResult> 
             query = new UserQuery();
         }
         query.setExcludeId(SessionHolder.getCurrentUserId());
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<ChatUserResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);

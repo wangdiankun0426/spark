@@ -2,7 +2,6 @@ package com.spark.workflow.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
-import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.workflow.entity.WfTemplate;
 import com.spark.common.bean.workflow.entity.WfTemplateVersion;
 import com.spark.common.bean.workflow.query.WfTemplateQuery;
@@ -196,7 +195,6 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
         if (query == null) {
             query = new WfTemplateQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         result.setData(super.pageList(query));
         result.setCode(ResultData.OK);
         return result;

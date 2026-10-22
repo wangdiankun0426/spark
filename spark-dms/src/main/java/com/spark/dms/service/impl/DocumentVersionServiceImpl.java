@@ -19,7 +19,6 @@ import com.spark.common.enums.ObjectTypeEnum;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.utils.FileUtil;
 import com.spark.common.utils.StringUtil;
-import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.dao.dms.DocumentDao;
@@ -226,7 +225,6 @@ public class DocumentVersionServiceImpl extends BaseService<DocumentVersionQuery
      * @return 版本列表
      */
     @Override
-    @DataScope
     public ResultData<PageResult<DocumentVersionResult>> pageVersionList(DocumentVersionQuery query) {
         ResultData<PageResult<DocumentVersionResult>> result = new ResultData<>();
         if (query == null || query.getDocId() == null) {

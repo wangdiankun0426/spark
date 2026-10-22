@@ -188,6 +188,7 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useStore } from 'vuex'
+import router from '@/router/index.js'
 import { ElMessage } from 'element-plus'
 import { MagicStick, Cpu, ChatDotRound, CopyDocument, Loading, ArrowRight, Clock } from '@element-plus/icons-vue'
 import { createChatSpaceAPI } from '@/api/chat/space.js'
@@ -537,7 +538,12 @@ function initWebsocket() {
     websocket.value.close()
     websocket.value = null
   }
-  websocket.value = new WebSocket(process.env.BASE_HTTP_API + '/ws/chat')
+  const token = store.getters['user/getToken']
+  if (!token) {
+    return
+  }
+  const wsBaseUrl = process.env.BASE_HTTP_API.replace(/^http:/, 'ws:').replace(/^https:/, 'wss:')
+  websocket.value = new WebSocket(`${wsBaseUrl}/ws/chat?sessionId=${token}`)
   websocket.value.onerror = setErrorMessage
   websocket.value.onopen = setOnopenMessage
   websocket.value.onmessage = setOnmessageMessage
@@ -772,8 +778,16 @@ function finalizePendingReply() {
 /**
  * 连接关闭时回调，组件未销毁时自动重连
  */
-function setOncloseMessage() {
+function setOncloseMessage(event) {
   console.log('webSocket 连接关闭 状态码：' + websocket.value.readyState)
+  // 未授权关闭码表示登录失效，停止重连并跳转登录
+  if (event && event.code === 4401) {
+    destroyed = true
+    connected.value = false
+    ElMessage.warning('登录已失效，请重新登录')
+    router.push('/login')
+    return
+  }
   // 连接不可用，锁定输入框等待重连
   connected.value = false
   if (destroyed) {

@@ -313,7 +313,6 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         if (query == null) {
             query = new DocumentQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<DocumentResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);
@@ -385,7 +384,6 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        // 限定本租户，防止跨租户下载
         query.setTenantId(SessionHolder.getCurrentTenantId());
         DocumentResult documentResult = documentDao.queryDocument(query);
         if (documentResult == null) {
@@ -596,7 +594,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         documentQuery.setIds(docIds);
         documentQuery.setDocumentType(query.getDocumentType());
         documentQuery.setPrtId(query.getPrtId());
-//        documentQuery.setOwnerId(SessionHolder.getCurrentUserId());
+        documentQuery.setTenantId(SessionHolder.getCurrentTenantId());
         List<DocumentResult> documents = documentDao.queryDocumentList(documentQuery);
         // 按召回顺序（相关性降序）组装结果
         Map<Long, DocumentResult> docMap = documents.stream()

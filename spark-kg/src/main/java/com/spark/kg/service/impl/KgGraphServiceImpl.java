@@ -196,7 +196,6 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
         if (query == null) {
             query = new KgGraphQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<KgGraphResult> pageResult = super.pageList(query);
         result.setData(pageResult);
         result.setCode(ResultData.OK);

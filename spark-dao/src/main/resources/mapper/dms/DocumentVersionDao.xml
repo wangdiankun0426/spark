@@ -63,7 +63,6 @@
         from dms_document_version
         where 1 = 1
         <include refid="searchCondition"/>
-        ${dataScopeSQL}
     </select>
 
     <select id="queryDocumentVersionList" resultType="com.spark.common.bean.dms.result.DocumentVersionResult">
@@ -71,7 +70,6 @@
         from dms_document_version
         where 1 = 1
         <include refid="searchCondition"/>
-        ${dataScopeSQL}
         order by
         <include refid="sortCondition"/>
         <if test="page == true">

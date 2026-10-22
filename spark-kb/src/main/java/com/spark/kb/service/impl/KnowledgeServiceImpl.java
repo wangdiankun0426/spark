@@ -2,7 +2,6 @@ package com.spark.kb.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
-import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.kb.entity.Knowledge;
 import com.spark.common.bean.kb.query.KnowledgeQuery;
 import com.spark.common.bean.kb.result.KnowledgeResult;
@@ -192,7 +191,6 @@ public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeR
         if (query == null) {
             query = new KnowledgeQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<KnowledgeResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);

@@ -59,4 +59,12 @@ public interface IChatSpaceService {
      * @param updatedBy 修改人id
      */
     void fillTitleIfBlank(Long spaceId, String content, Long updatedBy);
+
+    /**
+     * 查询用户参与的会话，非参与人返回null
+     * @param spaceId 空间id
+     * @param userId 用户id
+     * @return 会话结果
+     */
+    ChatSpaceResult queryParticipantSpace(Long spaceId, Long userId);
 }

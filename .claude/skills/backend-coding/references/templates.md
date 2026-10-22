@@ -112,6 +112,7 @@ protected Long queryMaxId() { return entityDao.queryEntityMaxId(); }
 
 - 分页方法加 `@DataScope`（数据权限）
 - 实现 `queryCount()` / `queryList()`，调用 `super.pageList(query)`
+- 租户隔离由 `BaseService.pageList` 统一强制：非系统管理员一律按当前会话租户覆盖 query.tenantId。**分页方法内禁止再写 `query.setTenantId(SessionHolder.getCurrentTenantId())`**（冗余，BaseService 已收口）；系统管理员不覆盖，平台管理类跨租户查询（如租户列表）不传租户即可。非分页查询（不走 `super.pageList`，如直查 DAO 的列表/树、详情、下载、写操作）不享受此兜底，仍需按需自行 setTenantId
 - `queryMaxId()` 仅为实体对象级别的 ID 生成（`genObjectId`）服务，与分页无关；按核心原则判断是否需要实现
 - 可在 `queryList` 中先 `supplyXxxList` 再返回
 
@@ -136,6 +137,7 @@ public interface EntityDao extends BaseDao<Entity> {
 - 查询条件统一放 `<sql id="condition">`（或 `searchCondition`），用 `<if>` 判断；`deleteFlag` 只在 `id`/`ids` 为空时生效
 - 分页列表：`order by ...` 后加 `<if test="page == true">limit #{startRow}, #{pageSize}</if>`
 - 数据权限：查询语句末尾追加 `${dataScopeSQL}`（配合 `@DataScope`）
+- **版本/事件/明细等从属于主对象的子表（强制）**：不建 tenant_id/dept_id 列、Service 分页不挂 `@DataScope`、XML 不写 `${dataScopeSQL}`；权限与租户隔离统一在**主对象表**（如 dms_document、表单模板、流程模板）上处理，子表查询必须带父对象 id 条件（如 docId），父对象可见性即子表可见性。典型：dms_document_version、flow_template_version、dms_document_event
 - 多参数 DAO 方法（如 `deleteByXxxId`）用 `@Param` 绑定，批量逻辑删除用 `updated_dt = now()`
 - `resultType` 用 `com.spark.bean.{module}.result.XxxResult` 全限定名
 

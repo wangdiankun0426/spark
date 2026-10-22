@@ -480,14 +480,15 @@ function sendSticker(sticker) {
 }
 
 function createPlatformSocket() {
-  let wsUrl = process.env.BASE_HTTP_API + '/ws/chat';
+  const token = store.getters['user/getToken']
+  let wsUrl = process.env.BASE_HTTP_API + '/ws/chat?sessionId=' + token;
   wsUrl = wsUrl.replace(/^http:/, 'ws:').replace(/^https:/, 'wss:')
   console.log('连接WebSocket:', wsUrl)
   // #ifdef H5
   return new WebSocket(wsUrl)
   // #endif
   // #ifdef MP-WEIXIN
-  const task = wx.connectSocket({ url: wsUrl, header: { 'content-type': 'application/json' } })
+  const task = wx.connectSocket({ url: wsUrl, header: { 'content-type': 'application/json', 'Authorization': token } })
   if (!task) {
     console.error('wx.connectSocket 返回为空，WebSocket 连接失败')
     return null
@@ -497,7 +498,7 @@ function createPlatformSocket() {
   task.onOpen(() => { wrapper.readyState = 1; wrapper._onopen && wrapper._onopen() })
   task.onMessage((res) => { wrapper._onmessage && wrapper._onmessage({ data: res.data }) })
   task.onError((err) => { wrapper._onerror && wrapper._onerror(err) })
-  task.onClose(() => { wrapper.readyState = 3; wrapper._onclose && wrapper._onclose() })
+  task.onClose((res) => { wrapper.readyState = 3; wrapper._onclose && wrapper._onclose({ code: res && res.code }) })
   Object.defineProperty(wrapper, 'onopen', { set: (fn) => { wrapper._onopen = fn } })
   Object.defineProperty(wrapper, 'onmessage', { set: (fn) => { wrapper._onmessage = fn } })
   Object.defineProperty(wrapper, 'onerror', { set: (fn) => { wrapper._onerror = fn } })
@@ -781,7 +782,15 @@ function finalizePendingReply() {
 /**
  * 连接关闭时回调，页面未卸载时持续尝试重连
  */
-function setOncloseMessage() {
+function setOncloseMessage(event) {
+  // 未授权关闭码表示登录失效，停止重连并跳转登录
+  if (event && event.code === 4401) {
+    destroyed = true
+    clearReconnectTimer()
+    connected.value = false
+    uni.reLaunch({ url: '/pages/login' })
+    return
+  }
   // 已存在新连接时，忽略旧连接的关闭事件
   if (websocket.value && websocket.value.readyState !== 3) {
     return

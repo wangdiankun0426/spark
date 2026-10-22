@@ -12,6 +12,7 @@ import com.spark.common.bean.sys.result.UserResult;
 import com.spark.common.bean.base.BaseQuery;
 import com.spark.common.bean.base.BaseResult;
 import com.spark.common.bean.base.PageResult;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.config.redis.RedisService;
 import com.spark.common.constant.ObjectCacheKey;
 import com.spark.dao.llm.AgentDao;
@@ -55,11 +56,14 @@ public abstract class BaseService<Q extends BaseQuery, R extends BaseResult> {
     private RedisService redisService;
 
     /**
-     * 分页查询
+     * 分页查询，非系统管理员统一按当前会话租户过滤
      * @param query 查询参数
      * @return 分页结果
      */
     protected PageResult<R> pageList(Q query) {
+        if (!SessionHolder.isSysAdmin()) {
+            query.setTenantId(SessionHolder.getCurrentTenantId());
+        }
         PageResult<R> pageResult = new PageResult<>();
         int count = this.queryCount(query);
         List<R> list = this.queryList(query);

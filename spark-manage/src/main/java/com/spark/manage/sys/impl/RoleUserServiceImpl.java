@@ -18,6 +18,7 @@ import com.spark.dao.sys.UserDao;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.StatusEnum;
+import com.spark.config.redis.RedisService;
 import com.spark.manage.sys.IRoleUserService;
 import com.spark.manage.BaseService;
 import com.spark.common.utils.CollectionUtil;
@@ -46,6 +47,8 @@ public class RoleUserServiceImpl extends BaseService<RoleUserQuery, RoleUserResu
     private RoleDao roleDao;
     @Autowired
     private UserDao userDao;
+    @Autowired
+    private RedisService redisService;
 
     /**
      * 添加用户
@@ -85,6 +88,7 @@ public class RoleUserServiceImpl extends BaseService<RoleUserQuery, RoleUserResu
         if (count < 1) {
             return result;
         }
+        userIds.forEach(redisService::deleteLoginSessionByUserId);
         result.setObjId(roleId);
         result.setCode(ResultData.OK);
         return result;
@@ -107,11 +111,13 @@ public class RoleUserServiceImpl extends BaseService<RoleUserQuery, RoleUserResu
             result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
-        int count = roleUserDao.deleteRoleUser(List.of(roleUserVO.getRoleId()), roleUserVO.getUserId(), SessionHolder.getCurrentUserId());
+        int count = roleUserDao.deleteRoleUser(SessionHolder.getCurrentTenantId(),
+                List.of(roleUserVO.getRoleId()), roleUserVO.getUserId(), SessionHolder.getCurrentUserId());
         if (count < 0) {
             result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
+        redisService.deleteLoginSessionByUserId(roleUserVO.getUserId());
         result.setObjId(roleUserVO.getRoleId());
         result.setCode(ResultData.OK);
         return result;

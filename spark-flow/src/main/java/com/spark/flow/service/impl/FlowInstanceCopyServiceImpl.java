@@ -127,7 +127,6 @@ public class FlowInstanceCopyServiceImpl extends BaseService<FlowInstanceCopyQue
         if (query == null) {
             query = new FlowInstanceCopyQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         query.setUserId(SessionHolder.getCurrentUserId());
         PageResult<FlowInstanceCopyResult> list = super.pageList(query);
         result.setData(list);

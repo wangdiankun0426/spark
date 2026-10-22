@@ -1,6 +1,5 @@
 package com.spark.llm.service.impl;
 
-import com.spark.common.bean.base.SessionHolder;
 import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.common.bean.base.PageResult;
@@ -183,7 +182,6 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
         if (query == null) {
             query = new AgentQuery();
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
         PageResult<AgentResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);

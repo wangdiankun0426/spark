@@ -178,9 +178,6 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         if (query == null) {
             query = new UserQuery();
         }
-        if (!SessionHolder.isSysAdmin()) {
-            query.setTenantId(SessionHolder.getCurrentTenantId());
-        }
         PageResult<UserResult> pageResult = super.pageList(query);
         result.setData(pageResult);
         result.setCode(ResultData.OK);
@@ -625,7 +622,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
             }
         }
         if (CollectionUtil.isNotEmpty(delRoleIds)) {
-            int count = roleUserDao.deleteRoleUser(delRoleIds, userId, createdBy);
+            int count = roleUserDao.deleteRoleUser(tenantId, delRoleIds, userId, createdBy);
             if (count < 1) {
                 result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
                 return result;
