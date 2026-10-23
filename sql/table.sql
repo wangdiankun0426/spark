@@ -1055,3 +1055,114 @@ CREATE TABLE `dms_attachment` (
     `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统附件表';
+
+DROP TABLE IF EXISTS `monitor_host_snapshot`;
+CREATE TABLE `monitor_host_snapshot` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `node_key` varchar(100) NOT NULL COMMENT '节点标识（hostname:port）',
+    `snapshot_dt` datetime NOT NULL COMMENT '快照时间',
+    `cpu_usage` decimal(5,2) NOT NULL DEFAULT 0 COMMENT 'CPU使用率（%）',
+    `mem_total` bigint(20) NOT NULL DEFAULT 0 COMMENT '物理内存总量（字节）',
+    `mem_used` bigint(20) NOT NULL DEFAULT 0 COMMENT '物理内存已用（字节）',
+    `mem_usage` decimal(5,2) NOT NULL DEFAULT 0 COMMENT '物理内存使用率（%）',
+    `swap_total` bigint(20) NOT NULL DEFAULT 0 COMMENT 'Swap总量（字节）',
+    `swap_used` bigint(20) NOT NULL DEFAULT 0 COMMENT 'Swap已用（字节）',
+    `swap_usage` decimal(5,2) NOT NULL DEFAULT 0 COMMENT 'Swap使用率（%）',
+    `net_rx_rate` bigint(20) NOT NULL DEFAULT 0 COMMENT '网卡下行速率（字节/秒）',
+    `net_tx_rate` bigint(20) NOT NULL DEFAULT 0 COMMENT '网卡上行速率（字节/秒）',
+    `heap_used` bigint(20) NOT NULL DEFAULT 0 COMMENT 'JVM堆已用（字节）',
+    `heap_max` bigint(20) NOT NULL DEFAULT 0 COMMENT 'JVM堆最大（字节）',
+    `heap_usage` decimal(5,2) NOT NULL DEFAULT 0 COMMENT 'JVM堆使用率（%）',
+    `nonheap_used` bigint(20) NOT NULL DEFAULT 0 COMMENT 'JVM非堆已用（字节）',
+    `young_gc_count` bigint(20) NOT NULL DEFAULT 0 COMMENT 'YoungGC累计次数',
+    `young_gc_cost` bigint(20) NOT NULL DEFAULT 0 COMMENT 'YoungGC累计耗时（毫秒）',
+    `old_gc_count` bigint(20) NOT NULL DEFAULT 0 COMMENT 'OldGC累计次数',
+    `old_gc_cost` bigint(20) NOT NULL DEFAULT 0 COMMENT 'OldGC累计耗时（毫秒）',
+    `thread_count` int(8) NOT NULL DEFAULT 0 COMMENT 'JVM线程总数',
+    `blocked_count` int(8) NOT NULL DEFAULT 0 COMMENT '阻塞线程数',
+    `deadlocked_count` int(8) NOT NULL DEFAULT 0 COMMENT '死锁线程数',
+    `loaded_class_count` int(8) NOT NULL DEFAULT 0 COMMENT '已加载类数',
+    `disk_json` text NULL COMMENT '磁盘分区明细JSON',
+    `host_info_json` text NULL COMMENT '主机与JVM静态信息JSON',
+    `created_by` bigint(12) DEFAULT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_node_snapshot` (`node_key`, `snapshot_dt`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='主机与JVM监控快照';
+
+DROP TABLE IF EXISTS `monitor_api_snapshot`;
+CREATE TABLE `monitor_api_snapshot` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `node_key` varchar(100) NOT NULL COMMENT '节点标识（hostname:port）',
+    `snapshot_dt` datetime NOT NULL COMMENT '快照时间',
+    `uri` varchar(255) NOT NULL COMMENT '请求URI模板',
+    `method` varchar(10) NOT NULL COMMENT '请求方法',
+    `total_count` int(11) NOT NULL DEFAULT 0 COMMENT '请求总数',
+    `count_2xx` int(11) NOT NULL DEFAULT 0 COMMENT '2xx请求数',
+    `count_3xx` int(11) NOT NULL DEFAULT 0 COMMENT '3xx请求数',
+    `count_4xx` int(11) NOT NULL DEFAULT 0 COMMENT '4xx请求数',
+    `count_5xx` int(11) NOT NULL DEFAULT 0 COMMENT '5xx请求数',
+    `total_cost` bigint(20) NOT NULL DEFAULT 0 COMMENT '总耗时（毫秒）',
+    `max_cost` int(11) NOT NULL DEFAULT 0 COMMENT '最大耗时（毫秒）',
+    `created_by` bigint(12) DEFAULT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_snapshot_node` (`snapshot_dt`, `node_key`),
+    KEY `idx_uri` (`uri`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='接口请求监控快照';
+
+DROP TABLE IF EXISTS `monitor_redis_snapshot`;
+CREATE TABLE `monitor_redis_snapshot` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `node_key` varchar(100) NOT NULL COMMENT '实际采集节点标识',
+    `snapshot_dt` datetime NOT NULL COMMENT '快照时间',
+    `version` varchar(30) DEFAULT NULL COMMENT 'Redis版本',
+    `uptime_days` int(11) NOT NULL DEFAULT 0 COMMENT '运行天数',
+    `connected_clients` int(11) NOT NULL DEFAULT 0 COMMENT '连接客户端数',
+    `blocked_clients` int(11) NOT NULL DEFAULT 0 COMMENT '阻塞客户端数',
+    `ops_per_sec` int(11) NOT NULL DEFAULT 0 COMMENT '每秒操作数',
+    `hit_rate` decimal(5,2) NOT NULL DEFAULT 0 COMMENT '命中率（%）',
+    `used_memory` bigint(20) NOT NULL DEFAULT 0 COMMENT '已用内存（字节）',
+    `used_memory_rss` bigint(20) NOT NULL DEFAULT 0 COMMENT '常驻内存（字节）',
+    `used_memory_peak` bigint(20) NOT NULL DEFAULT 0 COMMENT '内存峰值（字节）',
+    `maxmemory` bigint(20) NOT NULL DEFAULT 0 COMMENT '最大内存限制（字节）',
+    `fragmentation_ratio` decimal(6,2) NOT NULL DEFAULT 0 COMMENT '内存碎片率',
+    `evicted_keys` bigint(20) NOT NULL DEFAULT 0 COMMENT '累计驱逐键数',
+    `expired_keys` bigint(20) NOT NULL DEFAULT 0 COMMENT '累计过期键数',
+    `db_size` bigint(20) NOT NULL DEFAULT 0 COMMENT '当前库键总数',
+    `rdb_status` varchar(20) DEFAULT NULL COMMENT '最近RDB保存状态',
+    `aof_enabled` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否开启AOF',
+    `keyspace_json` text NULL COMMENT '各db键空间明细JSON',
+    `command_json` text NULL COMMENT '命令统计Top10 JSON',
+    `created_by` bigint(12) DEFAULT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_snapshot` (`snapshot_dt`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Redis监控快照';
+
+DROP TABLE IF EXISTS `monitor_mq_snapshot`;
+CREATE TABLE `monitor_mq_snapshot` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `node_key` varchar(100) NOT NULL COMMENT '实际采集节点标识',
+    `snapshot_dt` datetime NOT NULL COMMENT '快照时间',
+    `queue_name` varchar(50) NOT NULL COMMENT '队列名',
+    `queue_label` varchar(50) DEFAULT NULL COMMENT '队列中文名',
+    `message_count` bigint(20) NOT NULL DEFAULT 0 COMMENT '队列消息总数',
+    `consumer_count` int(11) NOT NULL DEFAULT 0 COMMENT '消费者数',
+    `created_by` bigint(12) DEFAULT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_queue_snapshot` (`queue_name`, `snapshot_dt`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息队列监控快照';
+
+DROP TABLE IF EXISTS `monitor_druid_snapshot`;
+CREATE TABLE `monitor_druid_snapshot` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `node_key` varchar(100) NOT NULL COMMENT '节点标识（hostname:port）',
+    `snapshot_dt` datetime NOT NULL COMMENT '快照时间',
+    `sql_json` text NULL COMMENT '两数据源慢SQL TopN JSON',
+    `created_by` bigint(12) DEFAULT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_node_snapshot` (`node_key`, `snapshot_dt`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Druid慢SQL监控快照';

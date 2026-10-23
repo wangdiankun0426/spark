@@ -9,9 +9,27 @@
             mode="vertical"
             class="site-el-menu"
         >
+          <div class="site-menu-group">数据</div>
           <el-menu-item index="/site/sys/tenant">
             <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><User /></el-icon>
             <template #title>租户管理</template>
+          </el-menu-item>
+          <div class="site-menu-group">监控</div>
+          <el-menu-item index="/site/monitor/server">
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><Monitor /></el-icon>
+            <template #title>服务器监控</template>
+          </el-menu-item>
+          <el-menu-item index="/site/monitor/cache">
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><Coin /></el-icon>
+            <template #title>缓存监控</template>
+          </el-menu-item>
+          <el-menu-item index="/site/monitor/mq">
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><Connection /></el-icon>
+            <template #title>消息队列</template>
+          </el-menu-item>
+          <el-menu-item index="/site/monitor/api">
+            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;"><DataLine /></el-icon>
+            <template #title>接口请求</template>
           </el-menu-item>
         </el-menu>
       </el-aside>
@@ -55,6 +73,17 @@ const defaultActive = computed(() => {
   padding: 0;
   margin: 0;
   background: transparent !important;
+}
+.site-menu-group {
+  height: 30px;
+  line-height: 28px;
+  margin-top: $spacing-xs;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-align: center;
+  color: var(--sidebar-menu-group-text);
+  user-select: none;
+  pointer-events: none;
 }
 .el-menu-item {
   color: var(--sidebar-text);

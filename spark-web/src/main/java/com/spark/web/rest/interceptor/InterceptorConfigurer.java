@@ -27,6 +27,8 @@ public class InterceptorConfigurer implements WebMvcConfigurer {
     private LoginInterceptor loginInterceptor;
     @Autowired
     private CorsInterceptor corsInterceptor;
+    @Autowired
+    private ApiMetricsInterceptor apiMetricsInterceptor;
 
     /**
      * 添加拦截器
@@ -59,5 +61,9 @@ public class InterceptorConfigurer implements WebMvcConfigurer {
                 .addPathPatterns("/**")
                 // 不拦截的地址
                 .excludePathPatterns(excludePatterns);
+        // 接口请求指标采集，只统计命中Controller的请求
+        registry.addInterceptor(apiMetricsInterceptor)
+                .addPathPatterns("/**")
+                .excludePathPatterns("/error");
     }
 }

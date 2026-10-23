@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.monitor.MonitorHostSnapshotDao">
+    <sql id="allColumnList">
+        id , node_key , snapshot_dt , cpu_usage , mem_total , mem_used , mem_usage ,
+        swap_total , swap_used , swap_usage , net_rx_rate , net_tx_rate ,
+        heap_used , heap_max , heap_usage , nonheap_used ,
+        young_gc_count , young_gc_cost , old_gc_count , old_gc_cost ,
+        thread_count , blocked_count , deadlocked_count , loaded_class_count ,
+        disk_json , host_info_json , created_by , created_dt
+    </sql>
+
+    <sql id="seriesCondition">
+        <if test="nodeKey != null and nodeKey != ''">
+            and node_key = #{nodeKey}
+        </if>
+        <if test="startTime != null">
+            and snapshot_dt &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+            and snapshot_dt &lt;= #{endTime}
+        </if>
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into monitor_host_snapshot
+        (node_key , snapshot_dt , cpu_usage , mem_total , mem_used , mem_usage ,
+         swap_total , swap_used , swap_usage , net_rx_rate , net_tx_rate ,
+         heap_used , heap_max , heap_usage , nonheap_used ,
+         young_gc_count , young_gc_cost , old_gc_count , old_gc_cost ,
+         thread_count , blocked_count , deadlocked_count , loaded_class_count ,
+         disk_json , host_info_json , created_by , created_dt)
+        values
+        (#{nodeKey} , #{snapshotDt} , #{cpuUsage} , #{memTotal} , #{memUsed} , #{memUsage} ,
+         #{swapTotal} , #{swapUsed} , #{swapUsage} , #{netRxRate} , #{netTxRate} ,
+         #{heapUsed} , #{heapMax} , #{heapUsage} , #{nonheapUsed} ,
+         #{youngGcCount} , #{youngGcCost} , #{oldGcCount} , #{oldGcCost} ,
+         #{threadCount} , #{blockedCount} , #{deadlockedCount} , #{loadedClassCount} ,
+         #{diskJson} , #{hostInfoJson} , #{createdBy} , now())
+    </insert>
+
+    <update id="updateById">
+        update monitor_host_snapshot set id = id where id = #{id}
+    </update>
+
+    <update id="deleteById">
+        update monitor_host_snapshot set id = id where id = #{id}
+    </update>
+
+    <select id="queryNodeList" resultType="com.spark.common.bean.monitor.result.MonitorNodeResult">
+        select node_key as nodeKey, max(snapshot_dt) as lastSnapshotDt
+        from monitor_host_snapshot
+        group by node_key
+    </select>
+
+    <select id="queryLatestHost" resultType="com.spark.common.bean.monitor.entity.MonitorHostSnapshot">
+        select <include refid="allColumnList" />
+        from monitor_host_snapshot
+        where node_key = #{nodeKey}
+        order by snapshot_dt desc
+        limit 1
+    </select>
+
+    <select id="queryHostSeries" resultType="com.spark.common.bean.monitor.entity.MonitorHostSnapshot">
+        select <include refid="allColumnList" />
+        from monitor_host_snapshot
+        where 1 = 1
+        <include refid="seriesCondition" />
+        order by snapshot_dt asc
+    </select>
+
+    <delete id="deleteHostExpired">
+        delete from monitor_host_snapshot where snapshot_dt &lt; #{expireTime}
+    </delete>
+</mapper>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.monitor.MonitorMqSnapshotDao">
+    <sql id="allColumnList">
+        id , node_key , snapshot_dt , queue_name , queue_label , message_count , consumer_count ,
+        created_by , created_dt
+    </sql>
+
+    <sql id="seriesCondition">
+        <if test="queueName != null and queueName != ''">
+            and queue_name = #{queueName}
+        </if>
+        <if test="startTime != null">
+            and snapshot_dt &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+            and snapshot_dt &lt;= #{endTime}
+        </if>
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into monitor_mq_snapshot
+        (node_key , snapshot_dt , queue_name , queue_label , message_count , consumer_count ,
+         created_by , created_dt)
+        values
+        (#{nodeKey} , #{snapshotDt} , #{queueName} , #{queueLabel} , #{messageCount} , #{consumerCount} ,
+         #{createdBy} , now())
+    </insert>
+
+    <update id="updateById">
+        update monitor_mq_snapshot set id = id where id = #{id}
+    </update>
+
+    <update id="deleteById">
+        update monitor_mq_snapshot set id = id where id = #{id}
+    </update>
+
+    <select id="queryLatestMqList" resultType="com.spark.common.bean.monitor.entity.MonitorMqSnapshot">
+        select t.id , t.node_key , t.snapshot_dt , t.queue_name , t.queue_label ,
+               t.message_count , t.consumer_count , t.created_by , t.created_dt
+        from monitor_mq_snapshot t
+        inner join (
+            select queue_name, max(snapshot_dt) as max_dt
+            from monitor_mq_snapshot
+            group by queue_name
+        ) x on t.queue_name = x.queue_name and t.snapshot_dt = x.max_dt
+        order by t.queue_name
+    </select>
+
+    <select id="queryMqSeries" resultType="com.spark.common.bean.monitor.entity.MonitorMqSnapshot">
+        select <include refid="allColumnList" />
+        from monitor_mq_snapshot
+        where 1 = 1
+        <include refid="seriesCondition" />
+        order by snapshot_dt asc, queue_name
+    </select>
+
+    <delete id="deleteMqExpired">
+        delete from monitor_mq_snapshot where snapshot_dt &lt; #{expireTime}
+    </delete>
+</mapper>

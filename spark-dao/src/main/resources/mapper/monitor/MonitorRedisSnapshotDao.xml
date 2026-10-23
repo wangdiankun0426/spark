@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.monitor.MonitorRedisSnapshotDao">
+    <sql id="allColumnList">
+        id , node_key , snapshot_dt , version , uptime_days , connected_clients , blocked_clients ,
+        ops_per_sec , hit_rate , used_memory , used_memory_rss , used_memory_peak , maxmemory ,
+        fragmentation_ratio , evicted_keys , expired_keys , db_size , rdb_status , aof_enabled ,
+        keyspace_json , command_json , created_by , created_dt
+    </sql>
+
+    <sql id="seriesCondition">
+        <if test="startTime != null">
+            and snapshot_dt &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+            and snapshot_dt &lt;= #{endTime}
+        </if>
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into monitor_redis_snapshot
+        (node_key , snapshot_dt , version , uptime_days , connected_clients , blocked_clients ,
+         ops_per_sec , hit_rate , used_memory , used_memory_rss , used_memory_peak , maxmemory ,
+         fragmentation_ratio , evicted_keys , expired_keys , db_size , rdb_status , aof_enabled ,
+         keyspace_json , command_json , created_by , created_dt)
+        values
+        (#{nodeKey} , #{snapshotDt} , #{version} , #{uptimeDays} , #{connectedClients} , #{blockedClients} ,
+         #{opsPerSec} , #{hitRate} , #{usedMemory} , #{usedMemoryRss} , #{usedMemoryPeak} , #{maxmemory} ,
+         #{fragmentationRatio} , #{evictedKeys} , #{expiredKeys} , #{dbSize} , #{rdbStatus} , #{aofEnabled} ,
+         #{keyspaceJson} , #{commandJson} , #{createdBy} , now())
+    </insert>
+
+    <update id="updateById">
+        update monitor_redis_snapshot set id = id where id = #{id}
+    </update>
+
+    <update id="deleteById">
+        update monitor_redis_snapshot set id = id where id = #{id}
+    </update>
+
+    <select id="queryLatestRedis" resultType="com.spark.common.bean.monitor.entity.MonitorRedisSnapshot">
+        select <include refid="allColumnList" />
+        from monitor_redis_snapshot
+        order by snapshot_dt desc
+        limit 1
+    </select>
+
+    <select id="queryRedisSeries" resultType="com.spark.common.bean.monitor.entity.MonitorRedisSnapshot">
+        select <include refid="allColumnList" />
+        from monitor_redis_snapshot
+        where 1 = 1
+        <include refid="seriesCondition" />
+        order by snapshot_dt asc
+    </select>
+
+    <delete id="deleteRedisExpired">
+        delete from monitor_redis_snapshot where snapshot_dt &lt; #{expireTime}
+    </delete>
+</mapper>

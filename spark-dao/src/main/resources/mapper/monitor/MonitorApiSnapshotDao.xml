@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.monitor.MonitorApiSnapshotDao">
+    <sql id="allColumnList">
+        id , node_key , snapshot_dt , uri , method , total_count ,
+        count_2xx , count_3xx , count_4xx , count_5xx , total_cost , max_cost ,
+        created_by , created_dt
+    </sql>
+
+    <sql id="condition">
+        <if test="nodeKey != null and nodeKey != ''">
+            and node_key = #{nodeKey}
+        </if>
+        <if test="uri != null and uri != ''">
+            and uri = #{uri}
+        </if>
+        <if test="method != null and method != ''">
+            and method = #{method}
+        </if>
+        <if test="startTime != null">
+            and snapshot_dt &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+            and snapshot_dt &lt;= #{endTime}
+        </if>
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into monitor_api_snapshot
+        (node_key , snapshot_dt , uri , method , total_count ,
+         count_2xx , count_3xx , count_4xx , count_5xx , total_cost , max_cost ,
+         created_by , created_dt)
+        values
+        (#{nodeKey} , #{snapshotDt} , #{uri} , #{method} , #{totalCount} ,
+         #{count2xx} , #{count3xx} , #{count4xx} , #{count5xx} , #{totalCost} , #{maxCost} ,
+         #{createdBy} , now())
+    </insert>
+
+    <update id="updateById">
+        update monitor_api_snapshot set id = id where id = #{id}
+    </update>
+
+    <update id="deleteById">
+        update monitor_api_snapshot set id = id where id = #{id}
+    </update>
+
+    <select id="queryApiTrend" resultType="com.spark.common.bean.monitor.result.MonitorApiTrendResult">
+        select snapshot_dt as snapshotDt,
+               sum(total_count) as totalCount,
+               sum(count_2xx) as count2xx,
+               sum(count_3xx) as count3xx,
+               sum(count_4xx) as count4xx,
+               sum(count_5xx) as count5xx,
+               sum(total_cost) as totalCost,
+               max(max_cost) as maxCost,
+               round(sum(total_cost) / nullif(sum(total_count), 0), 0) as avgCost
+        from monitor_api_snapshot
+        where 1 = 1
+        <include refid="condition" />
+        group by snapshot_dt
+        order by snapshot_dt asc
+    </select>
+
+    <select id="queryApiSummary" resultType="com.spark.common.bean.monitor.result.MonitorApiTrendResult">
+        select sum(total_count) as totalCount,
+               sum(count_2xx) as count2xx,
+               sum(count_3xx) as count3xx,
+               sum(count_4xx) as count4xx,
+               sum(count_5xx) as count5xx,
+               sum(total_cost) as totalCost,
+               max(max_cost) as maxCost,
+               round(sum(total_cost) / nullif(sum(total_count), 0), 0) as avgCost
+        from monitor_api_snapshot
+        where 1 = 1
+        <include refid="condition" />
+    </select>
+
+    <select id="queryUriStats" resultType="com.spark.common.bean.monitor.result.MonitorUriStatResult">
+        select uri,
+               method,
+               sum(total_count) as totalCount,
+               sum(count_2xx) as count2xx,
+               sum(count_3xx) as count3xx,
+               sum(count_4xx) as count4xx,
+               sum(count_5xx) as count5xx,
+               sum(total_cost) as totalCost,
+               max(max_cost) as maxCost,
+               round(sum(total_cost) / nullif(sum(total_count), 0), 0) as avgCost,
+               (sum(count_4xx) + sum(count_5xx)) as errorCount,
+               round((sum(count_4xx) + sum(count_5xx)) / nullif(sum(total_count), 0) * 100, 2) as errorRate
+        from monitor_api_snapshot
+        where 1 = 1
+        <include refid="condition" />
+        group by uri, method
+        order by totalCount desc
+    </select>
+
+    <delete id="deleteApiExpired">
+        delete from monitor_api_snapshot where snapshot_dt &lt; #{expireTime}
+    </delete>
+</mapper>

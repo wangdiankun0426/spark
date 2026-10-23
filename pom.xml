@@ -25,6 +25,7 @@
         <module>spark-task</module>
         <module>spark-workflow</module>
         <module>spark-dms</module>
+        <module>spark-monitor</module>
     </modules>
 
     <properties>
@@ -48,6 +49,7 @@
         <itextpdf.version>9.4.0</itextpdf.version>
         <pdfbox.version>3.0.3</pdfbox.version>
         <hutool.version>5.8.40</hutool.version>
+        <oshi.version>6.6.5</oshi.version>
         <neo4j-java-driver.version>5.27.0</neo4j-java-driver.version>
         <dysmsapi20170525.version>3.1.0</dysmsapi20170525.version>
         <tea-openapi.version>0.3.6</tea-openapi.version>
@@ -154,6 +156,12 @@
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-all</artifactId>
                 <version>${hutool.version}</version>
+            </dependency>
+            <!-- oshi 主机硬件采集 -->
+            <dependency>
+                <groupId>com.github.oshi</groupId>
+                <artifactId>oshi-core</artifactId>
+                <version>${oshi.version}</version>
             </dependency>
             <!-- Neo4j Java Driver -->
             <dependency>
