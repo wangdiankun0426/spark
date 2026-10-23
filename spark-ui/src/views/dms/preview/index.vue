@@ -101,6 +101,7 @@ import '@vue-office/excel/lib/index.css'
 import * as pdfjsLib from 'pdfjs-dist'
 import PdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker'
 import { queryDocumentDetailAPI, downloadDocumentAPI } from '@/api/dms/document.js'
+import { downloadDocumentVersionAPI } from '@/api/dms/documentVersion.js'
 import { queryAttachmentDetailAPI, downloadAttachmentAPI } from '@/api/dms/attachment.js'
 import { getDocumentCategory, DOCUMENT_CATEGORY } from '@/utils/documentUtil.js'
 
@@ -131,6 +132,8 @@ const CATEGORY_PREVIEW_MAP = {
 
 const route = useRoute()
 const documentId = computed(() => route.query.id)
+// 版本预览时携带，取流走版本下载接口
+const versionId = computed(() => route.query.versionId)
 // 按对象ID尾数区分类型：文档为9、附件为7（genObjectId 规则：n*100+typeValue）
 const isAttachment = computed(() => Number(documentId.value) % 100 === 7)
 const documentExt = ref('')
@@ -229,12 +232,14 @@ async function loadAndPreview() {
 
   fileLoading.value = true
   try {
-    const blob = isAttachment.value
-        ? await downloadAttachmentAPI({ id: documentId.value })
-        : await downloadDocumentAPI({
-          id: documentId.value,
-          ext: resolveDownloadExt()
-        })
+    let blob
+    if (isAttachment.value) {
+      blob = await downloadAttachmentAPI({ id: documentId.value })
+    } else if (versionId.value) {
+      blob = await downloadDocumentVersionAPI({ id: versionId.value, ext: resolveDownloadExt() })
+    } else {
+      blob = await downloadDocumentAPI({ id: documentId.value, ext: resolveDownloadExt() })
+    }
     if (previewType.value === TYPE_WORD || previewType.value === TYPE_EXCEL || previewType.value === TYPE_PPT) {
       fileData.value = await blob.arrayBuffer()
     } else if (previewType.value === TYPE_PDF) {

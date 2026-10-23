@@ -19,7 +19,13 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="name" label="名称" min-width="180" align="left" show-overflow-tooltip />
+      <el-table-column prop="name" label="名称" min-width="180" align="left" show-overflow-tooltip>
+        <template #default="scope">
+          <el-link type="primary" :underline="false" @click="handlePreview(scope.row)">
+            {{ scope.row.name }}
+          </el-link>
+        </template>
+      </el-table-column>
       <el-table-column prop="sizeStr" label="大小" width="90" align="center" />
       <el-table-column prop="createdByName" label="上传人" width="100" align="center" />
       <el-table-column prop="createdDt" label="时间" width="160" align="center" />
@@ -47,6 +53,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { downloadDocumentAPI } from '@/api/dms/document.js'
 import {
@@ -60,6 +67,8 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue', 'success'])
+
+const router = useRouter()
 
 const drawerVisible = computed({
   get: () => props.modelValue,
@@ -94,6 +103,18 @@ function handleGetVersionList() {
 function handlePageChangeNo(pageNo) {
   versionQuery.value.pageNo = pageNo
   handleGetVersionList()
+}
+
+/**
+ * 打开版本预览（新开标签页）
+ * @param row 版本行
+ */
+function handlePreview(row) {
+  const { href } = router.resolve({
+    path: '/document/preview',
+    query: { id: props.docId, versionId: row.id }
+  })
+  window.open(href, '_blank')
 }
 
 /**
