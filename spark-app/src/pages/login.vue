@@ -171,6 +171,18 @@
           <text class="login-text">登 录</text>
         </up-button>
       </div>
+      <view class="login-agreement" @click="toggleAgree">
+        <up-icon
+            class="agree-icon"
+            :name="agreed ? 'checkmark-circle-fill' : 'checkmark-circle'"
+            size="18"
+            :color="agreed ? '#004fc5' : '#909399'"
+        ></up-icon>
+        <text class="agreement-text">我已阅读并同意</text>
+        <text class="agreement-link" @click.stop="openAgreement('service')">《用户服务协议》</text>
+        <text class="agreement-text">和</text>
+        <text class="agreement-link" @click.stop="openAgreement('privacy')">《隐私政策》</text>
+      </view>
     </view>
 
     <!-- 其他方式登录 -->
@@ -230,11 +242,48 @@ const validateImg = ref(undefined);
 const count = ref(0);
 const timer = ref(null);
 
+// 协议版本升级后需重新征得用户同意
+const AGREEMENT_KEY = 'sparkAgreementAgree';
+const AGREEMENT_VERSION = '1.0.0';
+
+/**
+ * 读取本地协议同意凭证，版本不一致视为未同意
+ */
+function getStoredAgreed() {
+  const record = uni.getStorageSync(AGREEMENT_KEY);
+  return !!(record && record.version === AGREEMENT_VERSION);
+}
+
+const agreed = ref(getStoredAgreed());
+
+/**
+ * 切换协议勾选状态并持久化
+ */
+function toggleAgree() {
+  agreed.value = !agreed.value;
+  if (agreed.value) {
+    uni.setStorageSync(AGREEMENT_KEY, {version: AGREEMENT_VERSION, time: Date.now()});
+  } else {
+    uni.removeStorageSync(AGREEMENT_KEY);
+  }
+}
+
+/**
+ * 打开协议文本页
+ */
+function openAgreement(type) {
+  uni.navigateTo({url: `/pages/agreement/index?type=${type}`});
+}
+
 // #ifdef MP-WEIXIN
 /**
  * 微信静默免密登录
  */
 function wxQuickLogin() {
+  if (!agreed.value) {
+    uni.showToast({title: '请先阅读并同意用户服务协议和隐私政策', icon: 'none'});
+    return;
+  }
   if (loading.value) {
     return;
   }
@@ -265,8 +314,8 @@ function wxQuickLogin() {
   });
 }
 
-// 进入登录页时未手动登出则自动静默登录
-if (!store.state.user.wxSkipAutoLogin) {
+// 进入登录页时未手动登出且已同意协议才自动静默登录，避免同意前收集 openid
+if (!store.state.user.wxSkipAutoLogin && agreed.value) {
   wxQuickLogin();
 }
 // #endif
@@ -349,6 +398,10 @@ function getValidateImg() {
  * 提交登录表单
  */
 async function submitLoginForm() {
+  if (!agreed.value) {
+    uni.showToast({title: '请先阅读并同意用户服务协议和隐私政策', icon: 'none'});
+    return;
+  }
   loading.value = true;
   const data = {};
   if (loginForm.value.loginType === 1) {
@@ -637,6 +690,31 @@ async function submitLoginForm() {
 .login-middle-btn {
   margin-top: 32rpx;
   overflow: hidden;
+}
+
+.login-agreement {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  margin-top: 28rpx;
+  padding: 0 24rpx;
+
+  .agree-icon {
+    margin-right: 8rpx;
+  }
+
+  .agreement-text {
+    font-size: 24rpx;
+    color: $spark-color-text-secondary;
+  }
+
+  .agreement-link {
+    font-size: 24rpx;
+    color: #2f7bff;
+  }
 }
 
 .logout-text {

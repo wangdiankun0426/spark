@@ -12,6 +12,12 @@
       <up-cell-group>
         <up-cell title="切换租户" isLink @click="openTenantPopup"/>
       </up-cell-group>
+      <view class="agreement-group">
+        <up-cell-group>
+          <up-cell title="用户服务协议" isLink @click="openAgreement('service')"/>
+          <up-cell title="隐私政策" isLink @click="openAgreement('privacy')"/>
+        </up-cell-group>
+      </view>
     </view>
 
     <!-- 登出按钮 -->
@@ -77,6 +83,13 @@ function openTenantPopup() {
 }
 
 /**
+ * 打开协议文本页
+ */
+function openAgreement(type) {
+  uni.navigateTo({url: `/pages/agreement/index?type=${type}`});
+}
+
+/**
  * 登出系统
  */
 function handleLogout() {
@@ -133,6 +146,10 @@ function handleLogout() {
   overflow-y: auto;
   padding-top: 8px;
   padding-bottom: 90px;
+}
+
+.agreement-group {
+  margin-top: 12px;
 }
 
 .setting-logout {

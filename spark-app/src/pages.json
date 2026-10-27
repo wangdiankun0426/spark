@@ -113,6 +113,12 @@
       }
     },
     {
+      "path": "pages/agreement/index",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/error/notFound",
       "style": {
         "navigationStyle": "custom"
