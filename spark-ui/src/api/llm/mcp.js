@@ -53,3 +53,12 @@ export function testMcpAPI(data) {
         params: data
     })
 }
+
+// 查询 MCP 服务器可用工具列表
+export function listMcpToolsAPI(query) {
+    return request({
+        url: '/llm/mcp/listTools',
+        method: 'get',
+        params: query
+    })
+}

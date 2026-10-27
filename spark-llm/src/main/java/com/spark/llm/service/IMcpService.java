@@ -4,7 +4,10 @@ import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.llm.query.McpQuery;
 import com.spark.common.bean.llm.result.McpResult;
+import com.spark.common.bean.llm.result.McpToolResult;
 import com.spark.common.bean.llm.vo.McpVO;
+
+import java.util.List;
 
 /**
  * +++/\_/\
@@ -58,5 +61,12 @@ public interface IMcpService {
      * @return 测试结果
      */
     ResultData<Void> test(McpVO mcpVO);
+
+    /**
+     * 查询MCP服务器可用工具列表
+     * @param query 查询条件
+     * @return 工具列表
+     */
+    ResultData<List<McpToolResult>> listMcpTools(McpQuery query);
 
 }

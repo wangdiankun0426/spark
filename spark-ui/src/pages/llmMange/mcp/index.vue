@@ -147,6 +147,40 @@
         </div>
       </template>
     </el-drawer>
+
+    <!-- 可用工具弹窗 -->
+    <el-dialog
+        v-model="toolsDialogVisible"
+        :title="'可用工具 - ' + currentToolsName"
+        width="1000px"
+        append-to-body
+    >
+      <el-table
+          :data="toolList"
+          v-loading="toolsLoading"
+          size="small"
+          max-height="420"
+      >
+        <el-table-column
+            label="工具方法名"
+            width="200"
+        >
+          <template #default="scope">
+            <span class="tool-name">{{ scope.row.name }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+            label="描述"
+            min-width="240"
+            show-overflow-tooltip
+        >
+          <template #default="scope">
+            {{ scope.row.description || '暂无描述' }}
+          </template>
+        </el-table-column>
+        <template #empty>暂无可用工具</template>
+      </el-table>
+    </el-dialog>
   </div>
 </template>
 
@@ -159,7 +193,8 @@ import {
   createMcpAPI,
   updateMcpAPI,
   deleteMcpAPI,
-  testMcpAPI
+  testMcpAPI,
+  listMcpToolsAPI
 } from '@/api/llm/mcp.js'
 import { pageProviderListAPI } from '@/api/llm/provider.js'
 import { Search, Plus } from '@element-plus/icons-vue'
@@ -193,6 +228,14 @@ const providerOptions = ref([])
 
 // 测试中状态映射，按 id 维度控制 loading
 const testingMap = reactive({})
+
+// 可用工具弹窗
+const toolsDialogVisible = ref(false)
+const toolsLoading = ref(false)
+const toolList = ref([])
+const currentToolsName = ref('')
+// 工具拉取中状态映射，按 id 维度控制 loading
+const toolsLoadingMap = reactive({})
 
 let searchTimer = null
 
@@ -292,6 +335,13 @@ function handleCurrentChange(pageNo) {
 function cardActions(item) {
   return [
     {
+      key: 'tools',
+      label: '工具',
+      icon: 'Menu',
+      loading: !!toolsLoadingMap[item.id],
+      onClick: () => handleViewTools(item)
+    },
+    {
       key: 'test',
       label: '测试',
       icon: 'Tools',
@@ -350,6 +400,29 @@ function handleTest(item) {
     }
   }).finally(() => {
     testingMap[item.id] = false
+  })
+}
+
+/**
+ * 实时拉取 MCP 服务可用工具并弹窗展示
+ * @param item
+ */
+function handleViewTools(item) {
+  if (toolsLoadingMap[item.id]) return
+  toolsLoadingMap[item.id] = true
+  currentToolsName.value = item.name
+  toolList.value = []
+  toolsDialogVisible.value = true
+  toolsLoading.value = true
+  listMcpToolsAPI({ id: item.id }).then(res => {
+    if (res.code === 200) {
+      toolList.value = res.data || []
+    } else {
+      toolsDialogVisible.value = false
+    }
+  }).finally(() => {
+    toolsLoading.value = false
+    toolsLoadingMap[item.id] = false
   })
 }
 
@@ -492,5 +565,12 @@ function buildSubmitData() {
   gap: $spacing-xs;
   font-size: 12px;
   line-height: 1.6;
+}
+
+.tool-name {
+  font-family: 'Courier New', Consolas, monospace;
+  font-size: 12px;
+  color: $color-primary;
+  word-break: break-all;
 }
 </style>

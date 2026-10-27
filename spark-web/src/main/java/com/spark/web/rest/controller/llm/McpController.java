@@ -4,6 +4,7 @@ import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.llm.query.McpQuery;
 import com.spark.common.bean.llm.result.McpResult;
+import com.spark.common.bean.llm.result.McpToolResult;
 import com.spark.common.bean.llm.vo.McpVO;
 import com.spark.llm.service.IMcpService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 /**
  * +++/\_/\
@@ -86,6 +89,16 @@ public class McpController {
     @PostMapping("test")
     public ResultData<Void> test(McpVO mcpVO) {
         return mcpService.test(mcpVO);
+    }
+
+    /**
+     * 查询MCP服务器可用工具列表
+     * @param query 查询参数
+     * @return 响应结果
+     */
+    @GetMapping("listTools")
+    public ResultData<List<McpToolResult>> listMcpTools(McpQuery query) {
+        return mcpService.listMcpTools(query);
     }
 
 }

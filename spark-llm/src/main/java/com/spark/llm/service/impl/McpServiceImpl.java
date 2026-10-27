@@ -6,6 +6,7 @@ import com.spark.common.bean.llm.entity.Mcp;
 import com.spark.common.bean.llm.query.McpQuery;
 import com.spark.common.bean.llm.query.ProviderQuery;
 import com.spark.common.bean.llm.result.McpResult;
+import com.spark.common.bean.llm.result.McpToolResult;
 import com.spark.common.bean.llm.result.ProviderResult;
 import com.spark.common.bean.llm.vo.McpVO;
 import com.spark.config.aspectj.annotation.DataScope;
@@ -22,6 +23,7 @@ import com.spark.llm.service.IMcpService;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.StringUtil;
 import com.spark.manage.BaseService;
+import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.mcp.client.McpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -240,6 +242,51 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
             return result;
         } catch (Exception e) {
             logger.error("mcp connect fail, name={}", mcpVO.getName(), e);
+            result.setErrorCode(ErrorCodeEnum.MCP_CONNECT_FAIL);
+            return result;
+        }
+    }
+
+    /**
+     * 查询MCP服务器可用工具列表
+     * @param query 查询条件
+     * @return 工具列表
+     */
+    @Override
+    public ResultData<List<McpToolResult>> listMcpTools(McpQuery query) {
+        ResultData<List<McpToolResult>> result = new ResultData<>();
+        if (query == null || query.getId() == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        McpResult mcpResult = mcpDao.queryMcp(query);
+        if (mcpResult == null) {
+            result.setErrorCode(ErrorCodeEnum.MCP_NOT_EXIST);
+            return result;
+        }
+        Mcp mcp = new Mcp();
+        BeanUtil.copyProperties(mcpResult, mcp);
+        // 停用状态也允许查看工具，与测试连通逻辑一致
+        mcp.setStatus(StatusEnum.NORMAL.getValue());
+        try {
+            McpClient client = mcpClientManager.connectToServer(mcp);
+            if (client == null) {
+                result.setErrorCode(ErrorCodeEnum.MCP_CONNECT_FAIL);
+                return result;
+            }
+            List<ToolSpecification> tools = client.listTools();
+            List<McpToolResult> toolList = tools.stream().map(tool -> {
+                McpToolResult toolResult = new McpToolResult();
+                toolResult.setName(tool.name());
+                toolResult.setDescription(tool.description());
+                return toolResult;
+            }).collect(Collectors.toList());
+            logger.info("listMcpTools success, id={}, size={}", query.getId(), toolList.size());
+            result.setData(toolList);
+            result.setCode(ResultData.OK);
+            return result;
+        } catch (Exception e) {
+            logger.error("listMcpTools fail, name={}", mcpResult.getName(), e);
             result.setErrorCode(ErrorCodeEnum.MCP_CONNECT_FAIL);
             return result;
         }
