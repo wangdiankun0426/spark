@@ -276,6 +276,32 @@ CREATE TABLE `llm_model` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='模型表';
 
+DROP TABLE IF EXISTS `llm_model_usage`;
+CREATE TABLE `llm_model_usage` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `tenant_id` bigint(12) NOT NULL COMMENT '租户id（无主系统调用为0）',
+    `user_id` bigint(12) NOT NULL COMMENT '使用人id（无主系统调用为101）',
+    `model_id` bigint(12) NOT NULL COMMENT '模型id',
+    `model_name` varchar(100) NOT NULL COMMENT '模型名称（冗余）',
+    `provider_id` bigint(12) DEFAULT NULL COMMENT '厂商id',
+    `type` tinyint(3) NOT NULL COMMENT '模型类型：1语言，2向量，3排序',
+    `scene` varchar(30) NOT NULL COMMENT '调用场景编码',
+    `input_tokens` int(11) DEFAULT NULL COMMENT '输入token数',
+    `output_tokens` int(11) DEFAULT NULL COMMENT '输出token数',
+    `total_tokens` int(11) DEFAULT NULL COMMENT '总token数',
+
+    `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_model_dt` (`model_id`, `created_dt`),
+    KEY `idx_tenant_dt` (`tenant_id`, `created_dt`),
+    KEY `idx_created_dt` (`created_dt`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='模型token用量明细';
+
 DROP TABLE IF EXISTS `llm_mcp`;
 CREATE TABLE `llm_mcp` (
       `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',

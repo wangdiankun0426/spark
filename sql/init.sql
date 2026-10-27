@@ -40,6 +40,7 @@ INSERT INTO `sys_menu` (`name`, `parent_code`, `type`, `code`, `delete_flag`, `c
 ('业务管理模块', '', 1, 'module.bus', 1, 101, now()),
 ( 'Agent菜单', 'module.llm', 2, 'menu.llm.agent', 1, 101, now()),
 ( 'WorkFlow菜单', 'module.llm', 2, 'menu.llm.workflow', 1, 101, now()),
+( '模型用量菜单', 'module.llm', 2, 'menu.llm.modelUsage', 1, 101, now()),
 ( '模型市场菜单', 'module.llm', 2, 'menu.llm.modelMarket', 1, 101, now()),
 ('技能库菜单', 'module.llm', 2, 'menu.llm.skill', 1, 101, now()),
 ('MCP服务菜单', 'module.llm', 2, 'menu.llm.mcp', 1, 101, now()),

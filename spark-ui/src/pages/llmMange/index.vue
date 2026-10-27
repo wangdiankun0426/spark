@@ -9,17 +9,15 @@
             mode="vertical"
             class="llm-el-menu"
         >
-          <el-menu-item v-if="hasMenu(MENU_CODES.LLM_AGENT)" index="/llm/agent">
+          <div
+              v-if="hasMenu(MENU_CODES.LLM_MODEL_USAGE) || hasMenu(MENU_CODES.LLM_MODEL_MARKET) || hasMenu(MENU_CODES.LLM_SKILL) || hasMenu(MENU_CODES.LLM_MCP)"
+              class="llm-menu-group"
+          >基础</div>
+          <el-menu-item v-if="hasMenu(MENU_CODES.LLM_MODEL_USAGE)" index="/llm/modelUsage">
             <el-icon style="font-size: 24px;">
-              <Agent/>
+              <ModelUsage/>
             </el-icon>
-            <template #title>Agent</template>
-          </el-menu-item>
-          <el-menu-item v-if="hasMenu(MENU_CODES.LLM_WORKFLOW)" index="/llm/workflow">
-            <el-icon style="font-size: 24px;">
-              <Workflow/>
-            </el-icon>
-            <template #title>WorkFlow</template>
+            <template #title>模型用量</template>
           </el-menu-item>
           <el-menu-item v-if="hasMenu(MENU_CODES.LLM_MODEL_MARKET)" index="/llm/modelMarket">
             <el-icon style="font-size: 24px;">
@@ -39,6 +37,28 @@
             </el-icon>
             <template #title>MCP服务</template>
           </el-menu-item>
+
+          <div
+              v-if="hasMenu(MENU_CODES.LLM_AGENT) || hasMenu(MENU_CODES.LLM_WORKFLOW)"
+              class="llm-menu-group"
+          >应用</div>
+          <el-menu-item v-if="hasMenu(MENU_CODES.LLM_AGENT)" index="/llm/agent">
+            <el-icon style="font-size: 24px;">
+              <Agent/>
+            </el-icon>
+            <template #title>Agent</template>
+          </el-menu-item>
+          <el-menu-item v-if="hasMenu(MENU_CODES.LLM_WORKFLOW)" index="/llm/workflow">
+            <el-icon style="font-size: 24px;">
+              <Workflow/>
+            </el-icon>
+            <template #title>WorkFlow</template>
+          </el-menu-item>
+
+          <div
+              v-if="hasMenu(MENU_CODES.LLM_KNOWLEDGE) || hasMenu(MENU_CODES.LLM_GRAPH)"
+              class="llm-menu-group"
+          >增强</div>
           <el-menu-item v-if="hasMenu(MENU_CODES.LLM_KNOWLEDGE)" index="/llm/knowledge">
             <el-icon style="font-size: 24px;">
               <Knowledge/>
@@ -67,6 +87,7 @@
 import {computed} from "vue";
 import {useRoute} from "vue-router";
 import Agent from "@/assets/icons/agent.vue";
+import ModelUsage from "@/assets/icons/modelUsage.vue";
 import ModelMarket from "@/assets/icons/modelMarket.vue";
 import Workflow from "@/assets/icons/workflow.vue";
 import Skill from "@/assets/icons/skill.vue";
@@ -104,6 +125,17 @@ const defaultActive = computed(() => {
 }
 :deep(.el-menu--collapse) {
   width: 50px;
+}
+.llm-menu-group {
+  height: 30px;
+  line-height: 28px;
+  margin-top: $spacing-xs;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-align: center;
+  color: var(--sidebar-menu-group-text);
+  user-select: none;
+  pointer-events: none;
 }
 .el-menu-item {
   color: var(--sidebar-text);

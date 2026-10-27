@@ -1,5 +1,6 @@
 package com.spark.web.ws;
 
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.utils.SpringUtil;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.chat.entity.ChatMsg;
@@ -13,6 +14,7 @@ import com.spark.common.enums.MsgActionEnum;
 import com.spark.common.utils.JsonUtil;
 import com.spark.common.utils.StringUtil;
 import com.spark.config.redis.RedisService;
+import com.spark.web.ws.config.WsAuthConfig;
 import jakarta.websocket.*;
 import jakarta.websocket.server.ServerEndpoint;
 import org.slf4j.Logger;
@@ -30,10 +32,10 @@ import java.util.List;
  *
  * @author wangdiankun
  * @since 2024/4/14 17:50
- * WebSocket端点，握手经WsAuthConfigurator校验登录会话，连接身份以服务端会话为准
+ * WebSocket端点，握手经WsAuthConfig校验登录会话，连接身份以服务端会话为准
  */
 @Component
-@ServerEndpoint(value = "/ws/chat", configurator = WsAuthConfigurator.class)
+@ServerEndpoint(value = "/ws/chat", configurator = WsAuthConfig.class)
 public class ChatWebSocketEndpoint {
     private final static Logger logger = LoggerFactory.getLogger(ChatWebSocketEndpoint.class);
 
@@ -118,21 +120,27 @@ public class ChatWebSocketEndpoint {
         }
         Integer action = dataContent.getAction();
         Long authUserId = this.loginSession.getUserId();
-        // 判断消息类型
-        if (MsgActionEnum.CONNECT.getValue().equals(action)) {
-            if (dataContent.getChatMsg() != null && dataContent.getChatMsg().getSenderId() != null
-                    && !authUserId.equals(dataContent.getChatMsg().getSenderId())) {
-                logger.warn("ws connect senderId mismatch, expect={}, actual={}", authUserId, dataContent.getChatMsg().getSenderId());
+        // WS不经登录拦截器，每帧处理前在容器线程恢复登录会话，流式回调线程另由模型包装器传播
+        try {
+            SessionHolder.initLocalSession(this.loginSession);
+            // 判断消息类型
+            if (MsgActionEnum.CONNECT.getValue().equals(action)) {
+                if (dataContent.getChatMsg() != null && dataContent.getChatMsg().getSenderId() != null
+                        && !authUserId.equals(dataContent.getChatMsg().getSenderId())) {
+                    logger.warn("ws connect senderId mismatch, expect={}, actual={}", authUserId, dataContent.getChatMsg().getSenderId());
+                }
+                this.connectChannel(authUserId, session);
+            } else if (MsgActionEnum.CHAT_MSG.getValue().equals(action)) {
+                handleChatMsg(dataContent, session, authUserId);
+            } else if (MsgActionEnum.SIGN_MSG.getValue().equals(action)) {
+                handleSignMsg(dataContent, authUserId);
+            } else if (MsgActionEnum.READ_MSG.getValue().equals(action)) {
+                handleReadMsg(dataContent, authUserId);
+            } else if (MsgActionEnum.PONG.getValue().equals(action)) {
+                // 心跳类型的消息
             }
-            this.connectChannel(authUserId, session);
-        } else if (MsgActionEnum.CHAT_MSG.getValue().equals(action)) {
-            handleChatMsg(dataContent, session, authUserId);
-        } else if (MsgActionEnum.SIGN_MSG.getValue().equals(action)) {
-            handleSignMsg(dataContent, authUserId);
-        } else if (MsgActionEnum.READ_MSG.getValue().equals(action)) {
-            handleReadMsg(dataContent, authUserId);
-        } else if (MsgActionEnum.PONG.getValue().equals(action)) {
-            // 心跳类型的消息
+        } finally {
+            SessionHolder.clearLocalSession();
         }
     }
 

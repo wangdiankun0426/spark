@@ -12,7 +12,9 @@ import com.spark.common.bean.llm.result.RetrieveResult;
 import com.spark.common.constant.ESIndexName;
 import com.spark.llm.model.ModelFactory;
 import com.spark.llm.model.RerankModel;
+import com.spark.common.enums.ModelUsageSceneEnum;
 import com.spark.common.utils.CollectionUtil;
+import com.spark.common.utils.ModelUsageSceneHolder;
 import com.spark.common.utils.StringUtil;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -122,6 +124,7 @@ public class ESRetrieve {
             return new ArrayList<>();
         }
         try {
+            ModelUsageSceneHolder.push(ModelUsageSceneEnum.RETRIEVE_VECTOR);
             EmbeddingModel embeddingModel = getEmbeddingModel();
             Response<Embedding> response = embeddingModel.embed(keyWord);
             Embedding embedding = response.content();
@@ -167,6 +170,8 @@ public class ESRetrieve {
         } catch (Exception e) {
             logger.error("retrieveDocumentIds error", e);
             throw new RuntimeException(e);
+        } finally {
+            ModelUsageSceneHolder.pop();
         }
     }
 
@@ -195,6 +200,7 @@ public class ESRetrieve {
             return result;
         }
         try {
+            ModelUsageSceneHolder.push(ModelUsageSceneEnum.RETRIEVE_RERANK);
             RerankModel rerankModel = modelFactory.getRerankModel(rerankModelId);
             if (rerankModel == null) {
                 logger.warn("rerankModel is null, rerankModelId={}", rerankModelId);
@@ -219,6 +225,8 @@ public class ESRetrieve {
             logger.info("rerank success, originalSize={}, rerankedSize={}", contents.size(), reranked.size());
         } catch (Exception e) {
             logger.error("rerank error, fallback to original order, rerankModelId={}", rerankModelId, e);
+        } finally {
+            ModelUsageSceneHolder.pop();
         }
         return result;
     }
@@ -236,6 +244,7 @@ public class ESRetrieve {
         result.setContents(new ArrayList<>());
         result.setReferences(new ArrayList<>());
         try {
+            ModelUsageSceneHolder.push(ModelUsageSceneEnum.RETRIEVE_VECTOR);
             int retrieveTopK = knowledge.getRetrieveTopK() == null ? topK : knowledge.getRetrieveTopK();
             float minSimilarity = knowledge.getMinSimilarity() == null ? similarity : knowledge.getMinSimilarity().floatValue();
             EmbeddingModel embeddingModel = getEmbeddingModel(knowledge.getVectorModelId());
@@ -273,6 +282,8 @@ public class ESRetrieve {
             result.setReferences(new ArrayList<>(docIds));
         } catch (Exception e) {
             logger.error("retrieveQa error", e);
+        } finally {
+            ModelUsageSceneHolder.pop();
         }
         return result;
     }
@@ -289,6 +300,7 @@ public class ESRetrieve {
         result.setContents(new ArrayList<>());
         result.setReferences(new ArrayList<>());
         try {
+            ModelUsageSceneHolder.push(ModelUsageSceneEnum.RETRIEVE_VECTOR);
             EmbeddingModel embeddingModel = getEmbeddingModel(knowledge.getVectorModelId());
             Response<Embedding> embedResp = embeddingModel.embed(query);
             Embedding embedding = embedResp.content();
@@ -365,6 +377,8 @@ public class ESRetrieve {
         } catch (Exception e) {
             logger.error("retrieveByVector error", e);
             return result;
+        } finally {
+            ModelUsageSceneHolder.pop();
         }
     }
 
@@ -454,11 +468,16 @@ public class ESRetrieve {
      * @return 过滤Query
      */
     private Query kbIdFilter(List<Long> kbIds) {
+        Long tenantId = SessionHolder.getCurrentTenantId();
+        if (tenantId == null) {
+            // 无租户上下文时安全失败，用不存在的租户值禁止跨租户召回
+            return Query.of(q -> q.term(t -> t.field("tenantId").value(-1L)));
+        }
         List<FieldValue> values = kbIds.stream()
                 .map(id -> FieldValue.of(id.longValue()))
                 .collect(Collectors.toList());
         return Query.of(q -> {
-            q.term(x -> x.field("tenantId").value(SessionHolder.getCurrentTenantId()));
+            q.term(x -> x.field("tenantId").value(tenantId));
             q.terms(t -> t.field("prtId").terms(tv -> tv.value(values)));
             return q;
         });

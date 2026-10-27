@@ -1,4 +1,4 @@
-package com.spark.web.ws;
+package com.spark.web.ws.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -20,6 +20,7 @@ import com.spark.dao.kg.KgGraphDao;
 import com.spark.dao.llm.ModelDao;
 import com.spark.common.enums.DataScopeEnum;
 import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.enums.ModelUsageSceneEnum;
 import com.spark.common.enums.ObjectTypeEnum;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.StatusEnum;
@@ -33,6 +34,7 @@ import com.spark.prompt.PromptTemplateLoader;
 import com.spark.common.utils.BeanUtil;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.JsonUtil;
+import com.spark.common.utils.ModelUsageSceneHolder;
 import com.spark.common.utils.StringUtil;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.input.Prompt;
@@ -315,6 +317,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
         for (int i = 0; i < retrieval.getData().size(); i++) {
             context.append(i + 1).append(". ").append(retrieval.getData().get(i)).append("\n");
         }
+        ModelUsageSceneHolder.push(ModelUsageSceneEnum.KG_REASON);
         try {
             // 3. 加载推理模板并调用 LLM
             Map<String, Object> variables = new HashMap<>();
@@ -329,6 +332,8 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
             logger.error("reason error, question={}", question, e);
             result.setErrorCode(ErrorCodeEnum.SYSTEM_ERROR);
             return result;
+        } finally {
+            ModelUsageSceneHolder.pop();
         }
         result.setCode(ResultData.OK);
         return result;

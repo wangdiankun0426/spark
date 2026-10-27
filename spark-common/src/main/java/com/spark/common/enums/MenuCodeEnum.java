@@ -37,6 +37,11 @@ public enum MenuCodeEnum {
     MENU_LLM_WORKFLOW(MenuTypeEnum.MENU, "menu.llm.workflow", "WorkFlow菜单"),
 
     /**
+     * 模型用量菜单
+     */
+    MENU_LLM_MODEL_USAGE(MenuTypeEnum.MENU, "menu.llm.modelUsage", "模型用量菜单"),
+
+    /**
      * 模型市场菜单
      */
     MENU_LLM_MODEL_MARKET(MenuTypeEnum.MENU, "menu.llm.modelMarket", "模型市场菜单"),

@@ -38,7 +38,7 @@ public class TaskExecutorConfig {
         });
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(30);
-        executor.setTaskDecorator(new TraceIdTaskDecorator());
+        executor.setTaskDecorator(new SessionTaskDecorator());
         executor.initialize();
         return executor;
     }
@@ -59,6 +59,7 @@ public class TaskExecutorConfig {
         });
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(30);
+        executor.setTaskDecorator(new SessionTaskDecorator());
         executor.initialize();
         return executor;
     }

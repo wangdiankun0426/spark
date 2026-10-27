@@ -3,8 +3,6 @@ package com.spark.workflow.service.impl;
 import com.spark.common.bean.base.BaseContext;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
-import com.spark.common.bean.base.SessionHolder;
-import com.spark.common.bean.sys.entity.Session;
 import com.spark.common.bean.workflow.entity.WfInstance;
 import com.spark.common.bean.workflow.query.WfInstanceNodeQuery;
 import com.spark.common.bean.workflow.query.WfInstanceQuery;
@@ -206,13 +204,11 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
-        Session session = new Session();
-        session.setUserId(SessionHolder.getCurrentUserId());
         BaseContext context = new BaseContext();
         context.putVal(WfInstance.class, instance);
         context.put("valueMap", vlaueMap);
         context.put("showValueMap", showVlaueMap);
-        dagExecutor.executeAsync(session, context, versionResult.getDagJson());
+        dagExecutor.executeAsync(context, versionResult.getDagJson());
         result.setData(instance);
         result.setCode(ResultData.OK);
         return result;

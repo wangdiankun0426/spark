@@ -1,5 +1,6 @@
 package com.spark.workflow.engine;
 
+import com.spark.common.utils.SessionContextUtil;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +72,8 @@ public class TimeoutStrategy {
             throws TimeoutException, ExecutionException, InterruptedException {
         long effectiveTimeout = (timeoutMs == null || timeoutMs <= 0) ? DEFAULT_TIMEOUT_MS : timeoutMs;
 
-        Future<T> future = executor.submit(action);
+        // 提交点捕获workflow线程的登录会话，节点线程恢复，队列满回退调用线程时不污染原会话
+        Future<T> future = executor.submit(SessionContextUtil.wrap(action));
         try {
             return future.get(effectiveTimeout, TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {

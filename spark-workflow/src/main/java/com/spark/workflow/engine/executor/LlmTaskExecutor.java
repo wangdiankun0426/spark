@@ -6,6 +6,7 @@ import com.spark.common.bean.sys.result.AttachmentResult;
 import com.spark.common.utils.*;
 import com.spark.dao.dms.AttachmentDao;
 import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.enums.ModelUsageSceneEnum;
 import com.spark.common.enums.WorkflowTemplateTypeEnum;
 import com.spark.llm.model.ModelFactory;
 import com.spark.manage.BaseService;
@@ -84,6 +85,7 @@ public class LlmTaskExecutor extends BaseService implements IWfNodeExecutor {
         if (StringUtil.isBlank(prompt)) {
             throw new IllegalArgumentException("LLM节点系统提示词参数解析失败");
         }
+        ModelUsageSceneHolder.push(ModelUsageSceneEnum.WORKFLOW_LLM);
         try {
             ChatModel model = modelFactory.getChatModel(modelId);
             String response = model.chat(prompt);
@@ -101,6 +103,8 @@ public class LlmTaskExecutor extends BaseService implements IWfNodeExecutor {
         } catch (Exception e) {
             logger.error("llm execution failed", e);
             output.put(nodeId+"text", "");
+        } finally {
+            ModelUsageSceneHolder.pop();
         }
         return output;
     }

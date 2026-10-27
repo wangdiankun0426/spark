@@ -1,8 +1,6 @@
 package com.spark.workflow.engine;
 
 import com.spark.common.bean.base.BaseContext;
-import com.spark.common.bean.base.SessionHolder;
-import com.spark.common.bean.sys.entity.Session;
 import com.spark.common.bean.workflow.config.RetryConfig;
 import com.spark.common.bean.workflow.entity.WfInstance;
 import com.spark.common.bean.workflow.entity.WfInstanceNode;
@@ -58,21 +56,17 @@ public class DagExecutor {
     private final SpelExpressionParser parser = new SpelExpressionParser();
 
     /**
-     * 异步执行DAG
+     * 异步执行DAG，登录会话由workflowExecutor线程池装饰器传播
      *
-     * @param session
      * @param context
      * @param dagJson
      */
     @Async("workflowExecutor")
-    public void executeAsync(Session session, BaseContext context, String dagJson) {
+    public void executeAsync(BaseContext context, String dagJson) {
         try {
-            SessionHolder.setCurrentUserId(session.getUserId());
             execute(context, dagJson);
         } catch (Exception e) {
             logger.error("executeAsync error", e);
-        } finally {
-            SessionHolder.clearLocalSession();
         }
     }
 

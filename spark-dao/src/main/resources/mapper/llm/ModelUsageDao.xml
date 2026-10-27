@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.llm.ModelUsageDao">
+
+    <sql id="allColumnList">
+        id , tenant_id , user_id , model_id , model_name , provider_id , type , scene ,
+        input_tokens , output_tokens , total_tokens ,
+        dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="deleteFlag != null">
+            and delete_flag = #{deleteFlag}
+        </if>
+        <if test="tenantId != null">
+            and tenant_id = #{tenantId}
+        </if>
+        <if test="userId != null">
+            and user_id = #{userId}
+        </if>
+        <if test="modelId != null">
+            and model_id = #{modelId}
+        </if>
+        <if test="providerId != null">
+            and provider_id = #{providerId}
+        </if>
+        <if test="type != null">
+            and type = #{type}
+        </if>
+        <if test="scene != null and scene != ''">
+            and scene = #{scene}
+        </if>
+        <if test="startTime != null and startTime != ''">
+            and created_dt &gt;= #{startTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and created_dt &lt;= #{endTime}
+        </if>
+    </sql>
+
+    <!-- 明细表只追加写，单条入口禁用，批量写走 insertBatch；insert 语句故意缺省 -->
+
+    <update id="updateById">
+        update llm_model_usage set id = id where id = #{id}
+    </update>
+
+    <update id="deleteById">
+        update llm_model_usage
+        set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = now()
+        where id = #{id}
+    </update>
+
+    <insert id="insertBatch">
+        insert into llm_model_usage
+        (tenant_id , user_id , model_id , model_name , provider_id , type , scene ,
+         input_tokens , output_tokens , total_tokens ,
+         dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.tenantId} , #{item.userId} , #{item.modelId} , #{item.modelName} , #{item.providerId} ,
+             #{item.type} , #{item.scene} , #{item.inputTokens} , #{item.outputTokens} , #{item.totalTokens} ,
+             #{item.deptId} , 1 , #{item.createdBy} , now() , #{item.updatedBy} , now())
+        </foreach>
+    </insert>
+
+    <select id="queryUsageCount" resultType="java.lang.Integer">
+        select count(1)
+        from llm_model_usage
+        where 1 = 1
+        <include refid="searchCondition"/>
+    </select>
+
+    <select id="queryUsageList" resultType="com.spark.common.bean.llm.result.ModelUsageResult">
+        select <include refid="allColumnList"/>
+        from llm_model_usage
+        where 1 = 1
+        <include refid="searchCondition"/>
+        order by id desc
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="queryUsageSummary" resultType="com.spark.common.bean.llm.result.ModelUsageSummaryResult">
+        select type ,
+               sum(input_tokens) as inputTokens ,
+               sum(output_tokens) as outputTokens ,
+               sum(total_tokens) as totalTokens ,
+               count(1) as callCount
+        from llm_model_usage
+        where 1 = 1
+        <include refid="searchCondition"/>
+        group by type
+    </select>
+
+    <select id="queryUsageTrend" resultType="com.spark.common.bean.llm.result.ModelUsageTrendResult">
+        select date_format(created_dt, '%Y-%m-%d') as dt ,
+               type ,
+               sum(total_tokens) as totalTokens ,
+               count(1) as callCount
+        from llm_model_usage
+        where 1 = 1
+        <include refid="searchCondition"/>
+        group by date_format(created_dt, '%Y-%m-%d') , type
+        order by dt asc
+    </select>
+</mapper>

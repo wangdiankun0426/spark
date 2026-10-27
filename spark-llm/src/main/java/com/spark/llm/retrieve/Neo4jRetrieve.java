@@ -9,9 +9,11 @@ import com.spark.llm.model.ModelFactory;
 import com.spark.llm.store.KgEntityVectorService;
 import com.spark.llm.store.Neo4jGraphStore;
 import com.spark.prompt.PromptTemplateLoader;
+import com.spark.common.enums.ModelUsageSceneEnum;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.EncryptUtil;
 import com.spark.common.utils.JsonUtil;
+import com.spark.common.utils.ModelUsageSceneHolder;
 import com.spark.common.utils.StringUtil;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.input.Prompt;
@@ -222,6 +224,7 @@ public class Neo4jRetrieve {
      */
     private List<String> extractEntitiesByLlm(String question) {
         try {
+            ModelUsageSceneHolder.push(ModelUsageSceneEnum.KG_ENTITY_EXTRACT);
             ChatModel chatModel = modelFactory.getDefaultNoThinkChatModel();
             Map<String, Object> variables = new HashMap<>();
             variables.put("question", question);
@@ -241,6 +244,8 @@ public class Neo4jRetrieve {
         } catch (Exception e) {
             logger.error("extractEntitiesByLlm error, question={}", question, e);
             return new ArrayList<>();
+        } finally {
+            ModelUsageSceneHolder.pop();
         }
     }
 

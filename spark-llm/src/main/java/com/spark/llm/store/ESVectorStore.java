@@ -12,9 +12,11 @@ import com.spark.common.bean.kg.result.KgGraphResult;
 import com.spark.common.constant.ESIndexName;
 import com.spark.dao.kb.KnowledgeDao;
 import com.spark.dao.kg.KgGraphDao;
+import com.spark.common.enums.ModelUsageSceneEnum;
 import com.spark.common.enums.ObjectTypeEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.llm.model.ModelFactory;
+import com.spark.common.utils.ModelUsageSceneHolder;
 import com.spark.common.utils.TextChunkUtil;
 import com.spark.prompt.PromptTemplateLoader;
 import com.spark.common.utils.CollectionUtil;
@@ -183,63 +185,68 @@ public class ESVectorStore {
      * @param document 文档
      */
     public void addVector(DocumentResult document) {
-        if (document == null || document.getId() == null || document.getPrtId() == null) {
-            logger.warn("addVector skip, docId or prtId null");
-            return;
-        }
-        Long prtId = document.getPrtId();
-        Long docId = document.getId();
-        Integer documentType = document.getDocumentType();
-        KnowledgeQuery kbQuery = new KnowledgeQuery();
-        kbQuery.setId(prtId);
-        KnowledgeResult knowledgeResult = knowledgeDao.queryKnowledge(kbQuery);
-        if (knowledgeResult == null) {
-            logger.error("addVector knowledge result is null, docId={}, prtId={}", docId, prtId);
-            return;
-        }
-        List<Map<String, Object>> parentChunks = this.queryParentChunks(docId);
-        if (CollectionUtil.isEmpty(parentChunks)) {
-            logger.warn("addVector skip, parent chunks empty, docId={}, prtId={}", docId, prtId);
-            return;
-        }
-        EmbeddingModel embeddingModel = getEmbeddingModel(knowledgeResult.getVectorModelId());
-        // 把历史的向量、QA删掉
-        this.deleteVectorByDocId(docId);
-        for (Map<String, Object> parentChunk : parentChunks) {
-            Long chunkId = ((Number) parentChunk.get("id")).longValue();
-            String parentContent = (String) parentChunk.get("content");
-            if (StringUtil.isBlank(parentContent)) {
-                continue;
+        ModelUsageSceneHolder.push(ModelUsageSceneEnum.DOCUMENT_VECTOR);
+        try {
+            if (document == null || document.getId() == null || document.getPrtId() == null) {
+                logger.warn("addVector skip, docId or prtId null");
+                return;
             }
-            List<String> childChunks = TextChunkUtil.handleChunk(parentContent, knowledgeResult.getChildChunkSize(), knowledgeResult.getChildOverlap());
-            if (CollectionUtil.isEmpty(childChunks)) {
-                continue;
+            Long prtId = document.getPrtId();
+            Long docId = document.getId();
+            Integer documentType = document.getDocumentType();
+            KnowledgeQuery kbQuery = new KnowledgeQuery();
+            kbQuery.setId(prtId);
+            KnowledgeResult knowledgeResult = knowledgeDao.queryKnowledge(kbQuery);
+            if (knowledgeResult == null) {
+                logger.error("addVector knowledge result is null, docId={}, prtId={}", docId, prtId);
+                return;
             }
-            for (int childIndex = 0; childIndex < childChunks.size(); childIndex++) {
-                String childContent = childChunks.get(childIndex);
-                Long childId = System.currentTimeMillis();
-                Response<Embedding> embedResp = embeddingModel.embed(childContent);
-                Map<String, Object> childData = new HashMap<>();
-                childData.put("id", childId);
-                childData.put("tenantId", document.getTenantId());
-                childData.put("chunkId", chunkId);
-                childData.put("prtId", prtId);
-                childData.put("documentType", documentType);
-                childData.put("docId", docId);
-                childData.put("chunkIndex", childIndex + 1);
-                childData.put("content", childContent);
-                childData.put("embedding", embedResp.content().vectorAsList());
-                IndexQuery childQuery = new IndexQueryBuilder()
-                        .withId(childId.toString())
-                        .withSource(JsonUtil.toString(childData))
-                        .build();
-                elasticsearchOperations.index(childQuery, IndexCoordinates.of(ESIndexName.DOCUMENT_VECTOR_INDEX_NAME));
+            List<Map<String, Object>> parentChunks = this.queryParentChunks(docId);
+            if (CollectionUtil.isEmpty(parentChunks)) {
+                logger.warn("addVector skip, parent chunks empty, docId={}, prtId={}", docId, prtId);
+                return;
             }
-            if (StatusEnum.NORMAL.getValue().equals(knowledgeResult.getEnableQa())) {
-                addQA(document, chunkId, parentContent, knowledgeResult.getVectorModelId());
+            EmbeddingModel embeddingModel = getEmbeddingModel(knowledgeResult.getVectorModelId());
+            // 把历史的向量、QA删掉
+            this.deleteVectorByDocId(docId);
+            for (Map<String, Object> parentChunk : parentChunks) {
+                Long chunkId = ((Number) parentChunk.get("id")).longValue();
+                String parentContent = (String) parentChunk.get("content");
+                if (StringUtil.isBlank(parentContent)) {
+                    continue;
+                }
+                List<String> childChunks = TextChunkUtil.handleChunk(parentContent, knowledgeResult.getChildChunkSize(), knowledgeResult.getChildOverlap());
+                if (CollectionUtil.isEmpty(childChunks)) {
+                    continue;
+                }
+                for (int childIndex = 0; childIndex < childChunks.size(); childIndex++) {
+                    String childContent = childChunks.get(childIndex);
+                    Long childId = System.currentTimeMillis();
+                    Response<Embedding> embedResp = embeddingModel.embed(childContent);
+                    Map<String, Object> childData = new HashMap<>();
+                    childData.put("id", childId);
+                    childData.put("tenantId", document.getTenantId());
+                    childData.put("chunkId", chunkId);
+                    childData.put("prtId", prtId);
+                    childData.put("documentType", documentType);
+                    childData.put("docId", docId);
+                    childData.put("chunkIndex", childIndex + 1);
+                    childData.put("content", childContent);
+                    childData.put("embedding", embedResp.content().vectorAsList());
+                    IndexQuery childQuery = new IndexQueryBuilder()
+                            .withId(childId.toString())
+                            .withSource(JsonUtil.toString(childData))
+                            .build();
+                    elasticsearchOperations.index(childQuery, IndexCoordinates.of(ESIndexName.DOCUMENT_VECTOR_INDEX_NAME));
+                }
+                if (StatusEnum.NORMAL.getValue().equals(knowledgeResult.getEnableQa())) {
+                    addQA(document, chunkId, parentContent, knowledgeResult.getVectorModelId());
+                }
             }
+            logger.info("addVector success, prtId={}, docId={}, parentChunkSize={}", prtId, docId, parentChunks.size());
+        } finally {
+            ModelUsageSceneHolder.pop();
         }
-        logger.info("addVector success, prtId={}, docId={}, parentChunkSize={}", prtId, docId, parentChunks.size());
     }
 
     /**
@@ -290,6 +297,7 @@ public class ESVectorStore {
      */
     private void addQA(DocumentResult document, Long chunkId, String parentContent, Long vectorModelId) {
         try {
+            ModelUsageSceneHolder.push(ModelUsageSceneEnum.QA_GENERATE);
             Map<String, Object> variables = Map.of("document", parentContent);
             Prompt prompt = PromptTemplateLoader.create("prompts/qa-prompt.txt", variables);
             ChatModel chatModel = getChatModel();
@@ -325,6 +333,8 @@ public class ESVectorStore {
             }
         } catch (Exception e) {
             logger.error("indexQa error, chunkId={}", chunkId, e);
+        } finally {
+            ModelUsageSceneHolder.pop();
         }
     }
 

@@ -141,6 +141,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         document.setPath(newPath);
         document.setOwnerId(attachment.getOwnerId());
         document.setDeptId(attachment.getDeptId());
+        document.setTenantId(attachment.getTenantId());
         return this.doCreateDocument(document);
     }
 
@@ -184,9 +185,11 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         document.setId(docId);
         Long userId = SessionHolder.getCurrentUserId() == null ? document.getOwnerId() : SessionHolder.getCurrentUserId();
         Long deptId = SessionHolder.getCurrentDeptId() == null ? document.getDeptId() : SessionHolder.getCurrentDeptId();
+        Long tenantId = SessionHolder.getCurrentTenantId() == null ? document.getTenantId() : SessionHolder.getCurrentTenantId();
         document.setCreatedBy(userId);
         document.setUpdatedBy(userId);
         document.setDeptId(deptId);
+        document.setTenantId(tenantId);
         int count = documentDao.insertDB(document);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);

@@ -1,6 +1,7 @@
 package com.spark.task.service.impl;
 
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionSnapshot;
 import com.spark.common.bean.dms.entity.DocumentEvent;
 import com.spark.common.bean.dms.query.DocumentEventQuery;
 import com.spark.common.bean.dms.query.DocumentQuery;
@@ -20,6 +21,7 @@ import com.spark.dao.kg.KgGraphDao;
 import com.spark.dao.kg.KgRelationDao;
 import com.spark.common.enums.DocumentEventStatusEnum;
 import com.spark.common.enums.KgSourceTypeEnum;
+import com.spark.common.enums.ModelUsageSceneEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.llm.model.ModelFactory;
 import com.spark.llm.store.ESVectorStore;
@@ -352,7 +354,8 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                         continue;
                     }
                     DocumentResult documentResult = docMap.get(docId);
-                    vectorStore.addVector(documentResult);
+                    SessionSnapshot snapshot = this.buildDocumentSnapshot(documentResult);
+                    SessionContextUtil.runWith(snapshot, () -> vectorStore.addVector(documentResult));
                     DocumentEvent documentEvent = new DocumentEvent();
                     documentEvent.setId(documentEventResult.getId());
                     documentEvent.setVectorStatus(DocumentEventStatusEnum.SUCCESS.getValue());
@@ -404,7 +407,9 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                         continue;
                     }
                     DocumentResult documentResult = docMap.get(docId);
-                    this.processDocumentEvent(documentEventResult.getId(), documentResult);
+                    SessionSnapshot snapshot = this.buildDocumentSnapshot(documentResult);
+                    SessionContextUtil.runWith(snapshot,
+                            () -> this.processDocumentEvent(documentEventResult.getId(), documentResult));
                 }
                 result.setCode(ResultData.OK);
                 logger.info("executeGraphTask success");
@@ -514,7 +519,13 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
         variables.put("document", text);
         Prompt prompt = com.spark.prompt.PromptTemplateLoader.create("prompts/kg-entity-extract.txt", variables);
         ChatModel chatModel = this.getChatModel(extractModelId);
-        String response = chatModel.chat(prompt.text());
+        ModelUsageSceneHolder.push(ModelUsageSceneEnum.KG_EXTRACT);
+        String response;
+        try {
+            response = chatModel.chat(prompt.text());
+        } finally {
+            ModelUsageSceneHolder.pop();
+        }
         List<KgEntity> entities = this.parseEntities(response);
         logger.info("extractEntities success, count={}", entities.size());
         return entities;
@@ -543,7 +554,13 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
         variables.put("document", text);
         Prompt prompt = com.spark.prompt.PromptTemplateLoader.create("prompts/kg-relation-extract.txt", variables);
         ChatModel chatModel = this.getChatModel(extractModelId);
-        String response = chatModel.chat(prompt.text());
+        ModelUsageSceneHolder.push(ModelUsageSceneEnum.KG_EXTRACT);
+        String response;
+        try {
+            response = chatModel.chat(prompt.text());
+        } finally {
+            ModelUsageSceneHolder.pop();
+        }
         Map<String, KgEntity> entityMap = entities.stream()
                 .collect(Collectors.toMap(KgEntity::getName, e -> e, (a, b) -> a));
         List<KgRelation> relations = this.parseRelations(response, entityMap);
@@ -794,6 +811,20 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
             return null;
         }
         return documentResults.stream().collect(Collectors.toMap(DocumentResult::getId, v -> v));
+    }
+
+    /**
+     * 按文档归属人构造会话快照，身份缺失时回落系统快照保证模型用量与入库租户非空
+     * @param document 文档信息
+     * @return 会话快照
+     */
+    private SessionSnapshot buildDocumentSnapshot(DocumentResult document) {
+        Long userId = document.getOwnerId() != null ? document.getOwnerId() : document.getCreatedBy();
+        if (document.getTenantId() == null || userId == null) {
+            logger.warn("document owner missing, fallback to system snapshot, docId={}", document.getId());
+            return SessionContextUtil.system();
+        }
+        return SessionContextUtil.basic(document.getTenantId(), userId, document.getDeptId());
     }
 
 }

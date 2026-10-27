@@ -16,6 +16,7 @@ export const MENU_CODES = {
   // AI管理
   LLM_AGENT: 'menu.llm.agent',                // Agent
   LLM_WORKFLOW: 'menu.llm.workflow',          // WorkFlow
+  LLM_MODEL_USAGE: 'menu.llm.modelUsage',     // 模型用量
   LLM_MODEL_MARKET: 'menu.llm.modelMarket',   // 模型市场
   LLM_SKILL: 'menu.llm.skill',                // 技能库
   LLM_MCP: 'menu.llm.mcp',                    // MCP服务

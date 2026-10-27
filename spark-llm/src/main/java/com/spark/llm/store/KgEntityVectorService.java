@@ -2,9 +2,11 @@ package com.spark.llm.store;
 
 import com.spark.common.bean.kg.entity.KgEntity;
 import com.spark.common.constant.ESIndexName;
+import com.spark.common.enums.ModelUsageSceneEnum;
 import com.spark.llm.model.ModelFactory;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.JsonUtil;
+import com.spark.common.utils.ModelUsageSceneHolder;
 import com.spark.common.utils.StringUtil;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
@@ -69,6 +71,7 @@ public class KgEntityVectorService {
             return;
         }
         try {
+            ModelUsageSceneHolder.push(ModelUsageSceneEnum.KG_ENTITY_VECTOR);
             String text = buildEmbeddingText(entity.getName(), entity.getDescription());
             if (StringUtil.isBlank(text)) {
                 return;
@@ -91,6 +94,8 @@ public class KgEntityVectorService {
             elasticsearchOperations.index(query, IndexCoordinates.of(ESIndexName.KG_ENTITY_VECTOR_INDEX_NAME));
         } catch (Exception e) {
             logger.error("vectorizeEntity error, entityId={}", entity.getId(), e);
+        } finally {
+            ModelUsageSceneHolder.pop();
         }
     }
 
@@ -163,6 +168,7 @@ public class KgEntityVectorService {
             return list;
         }
         try {
+            ModelUsageSceneHolder.push(ModelUsageSceneEnum.RETRIEVE_VECTOR);
             EmbeddingModel embeddingModel = modelFactory.getDefaultEmbeddingModel();
             Response<Embedding> embedResp = embeddingModel.embed(question);
             Embedding embedding = embedResp.content();
@@ -194,6 +200,8 @@ public class KgEntityVectorService {
             logger.info("semanticSearch success, question={}, hit={}", question, list.size());
         } catch (Exception e) {
             logger.error("semanticSearch error, question={}", question, e);
+        } finally {
+            ModelUsageSceneHolder.pop();
         }
         return list;
     }

@@ -1,4 +1,4 @@
-package com.spark.web.ws;
+package com.spark.web.ws.config;
 
 import com.spark.common.bean.sys.entity.Session;
 import com.spark.common.constant.ObjectCacheKey;
@@ -6,6 +6,7 @@ import com.spark.common.utils.JsonUtil;
 import com.spark.common.utils.SpringUtil;
 import com.spark.common.utils.StringUtil;
 import com.spark.config.redis.RedisService;
+import com.spark.web.ws.ChatWebSocketEndpoint;
 import jakarta.websocket.HandshakeResponse;
 import jakarta.websocket.server.HandshakeRequest;
 import jakarta.websocket.server.ServerEndpointConfig;
@@ -25,8 +26,8 @@ import java.util.Map;
  * @since 2026-10-22 10:00:00
  * WebSocket握手鉴权器，校验登录会话并把身份透传给连接
  */
-public class WsAuthConfigurator extends ServerEndpointConfig.Configurator {
-    private static final Logger logger = LoggerFactory.getLogger(WsAuthConfigurator.class);
+public class WsAuthConfig extends ServerEndpointConfig.Configurator {
+    private static final Logger logger = LoggerFactory.getLogger(WsAuthConfig.class);
 
     /**
      * 握手时校验登录会话，通过则把业务会话放入连接属性

@@ -85,12 +85,22 @@ public class LoginInterceptor implements HandlerInterceptor {
             return false;
         }
         Session session = JsonUtil.toObject(loginUserJson, Session.class);
-        SessionHolder.initLocalSession(session);
-        TraceLogUtil.cacheTrackUserId(session.getUserId());
-        TraceLogUtil.cacheTenantId(session.getTenantId());
-        TraceLogUtil.cacheLoginPlatform(LoginPlatformEnum.indexOf(session.getLoginPlatform()).getDesc());
-        // 延迟缓存时间
-        redisService.expire(sessionIdKey, 60*60);
+        try {
+            SessionHolder.initLocalSession(session);
+            TraceLogUtil.cacheTrackUserId(session.getUserId());
+            TraceLogUtil.cacheTenantId(session.getTenantId());
+            TraceLogUtil.cacheLoginPlatform(LoginPlatformEnum.indexOf(session.getLoginPlatform()).getDesc());
+            // 延迟缓存时间
+            redisService.expire(sessionIdKey, 60*60);
+        } catch (Exception e) {
+            // 初始化后续步骤异常时必须清理，容器线程复用会把上个身份残留给后续请求或WS帧
+            SessionHolder.clearLocalSession();
+            TraceLogUtil.removeUserId();
+            TraceLogUtil.removeTenantId();
+            TraceLogUtil.removeLoginPlatform();
+            logger.error("init login session error, sessionId={}", sessionId, e);
+            return false;
+        }
         return true;
     }
 

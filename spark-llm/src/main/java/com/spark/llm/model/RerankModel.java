@@ -1,7 +1,13 @@
 package com.spark.llm.model;
 
+import com.spark.common.bean.base.SessionHolder;
+import com.spark.common.bean.llm.dto.ModelInfo;
 import com.spark.common.utils.JsonUtil;
 import com.spark.common.utils.MapUtil;
+import com.spark.common.utils.ModelUsageSceneHolder;
+import com.spark.llm.usage.ModelUsageRecorder;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,13 +36,15 @@ public class RerankModel {
     private final static Logger logger = LoggerFactory.getLogger(RerankModel.class);
     private final String apiUrl;
     private final String secretKey;
-    private final String modelName;
+    private final ModelInfo modelInfo;
+    private final ModelUsageRecorder recorder;
     private final HttpClient httpClient;
 
-    public RerankModel(String apiUrl, String secretKey, String modelName) {
+    public RerankModel(String apiUrl, String secretKey, ModelInfo modelInfo, ModelUsageRecorder recorder) {
         this.apiUrl = apiUrl;
         this.secretKey = secretKey;
-        this.modelName = modelName;
+        this.modelInfo = modelInfo;
+        this.recorder = recorder;
         this.httpClient = HttpClient.newBuilder().build();
     }
 
@@ -53,7 +61,7 @@ public class RerankModel {
         }
         try {
             Map<String, Object> body = new HashMap<>();
-            body.put("model", modelName);
+            body.put("model", modelInfo.getModelName());
             body.put("query", query);
             body.put("documents", documents);
             body.put("top_n", topN);
@@ -83,6 +91,7 @@ public class RerankModel {
                 }
                 list.add(new RerankResult(index, score));
             }
+            this.reportUsage(resp);
             return list;
         } catch (Exception e) {
             logger.error("rerank error, query={}, docsSize={}", query, documents.size(), e);
@@ -91,23 +100,70 @@ public class RerankModel {
     }
 
     /**
+     * 上报重排调用用量，兼容SiliconFlow/Jina的usage结构与Cohere的meta结构
+     * @param resp 重排响应
+     */
+    private void reportUsage(Map<String, Object> resp) {
+        try {
+            Integer inputTokens = parseInputTokens(resp);
+            Integer outputTokens = inputTokens == null ? null : 0;
+            recorder.record(modelInfo,
+                    SessionHolder.getCurrentTenantId(),
+                    SessionHolder.getCurrentUserId(),
+                    SessionHolder.getCurrentDeptId(),
+                    ModelUsageSceneHolder.current().getCode(),
+                    inputTokens, outputTokens, null);
+        } catch (Exception e) {
+            logger.warn("rerank usage report error, modelId={}", modelInfo.getModelId(), e);
+        }
+    }
+
+    /**
+     * 兼容解析各厂商重排响应中的输入token数
+     * @param resp 重排响应
+     * @return 输入token数，厂商未返回时为null
+     */
+    private Integer parseInputTokens(Map<String, Object> resp) {
+        Object usageObj = resp.get("usage");
+        if (usageObj instanceof Map) {
+            Map<?, ?> usage = (Map<?, ?>) usageObj;
+            Integer total = MapUtil.getIntegerVal(usage, "total_tokens", null);
+            if (total != null) {
+                return total;
+            }
+            Integer prompt = MapUtil.getIntegerVal(usage, "prompt_tokens", null);
+            if (prompt != null) {
+                return prompt;
+            }
+        }
+        Object metaObj = resp.get("meta");
+        if (metaObj instanceof Map) {
+            Map<?, ?> meta = (Map<?, ?>) metaObj;
+            Object billedObj = meta.get("billed_units");
+            if (billedObj instanceof Map) {
+                Integer search = MapUtil.getIntegerVal((Map<?, ?>) billedObj, "search_tokens", null);
+                if (search != null) {
+                    return search;
+                }
+            }
+            Object tokensObj = meta.get("tokens");
+            if (tokensObj instanceof Map) {
+                Integer input = MapUtil.getIntegerVal((Map<?, ?>) tokensObj, "input_tokens", null);
+                if (input != null) {
+                    return input;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * 重排结果
      */
+    @Data
+    @AllArgsConstructor
     public static class RerankResult {
         private final int index;
         private final double score;
-
-        public RerankResult(int index, double score) {
-            this.index = index;
-            this.score = score;
-        }
-
-        public int getIndex() {
-            return index;
-        }
-
-        public double getScore() {
-            return score;
-        }
     }
 }

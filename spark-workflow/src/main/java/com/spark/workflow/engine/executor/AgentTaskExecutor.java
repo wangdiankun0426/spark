@@ -1,12 +1,14 @@
 package com.spark.workflow.engine.executor;
 
 import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.enums.ModelUsageSceneEnum;
 import com.spark.common.enums.WorkflowTemplateTypeEnum;
 import com.spark.llm.IAgent;
 import com.spark.llm.agent.AgentFactory;
 import com.spark.manage.BaseService;
 import com.spark.common.utils.JsonUtil;
 import com.spark.common.utils.MapUtil;
+import com.spark.common.utils.ModelUsageSceneHolder;
 import com.spark.common.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,6 +72,7 @@ public class AgentTaskExecutor extends BaseService implements IWfNodeExecutor {
         if (StringUtil.isNotBlank(memoryIdCode)) {
             memoryId = super.generateFlowValue(memoryIdCode, null, valueMap, showValueMap, input);
         }
+        ModelUsageSceneHolder.push(ModelUsageSceneEnum.WORKFLOW_AGENT);
         try {
             IAgent agent = agentFactory.build(agentId);
             if (agent == null) {
@@ -101,6 +104,8 @@ public class AgentTaskExecutor extends BaseService implements IWfNodeExecutor {
         } catch (Exception e) {
             logger.error("agent execution failed, agentId={}", agentId, e);
             throw new RuntimeException("Agent执行失败: " + e.getMessage(), e);
+        } finally {
+            ModelUsageSceneHolder.pop();
         }
         return output;
     }

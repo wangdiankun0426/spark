@@ -1,5 +1,6 @@
 package com.spark.llm.agent;
 
+import com.spark.common.bean.base.SessionSnapshot;
 import com.spark.common.bean.llm.query.AgentQuery;
 import com.spark.common.bean.llm.result.AgentResult;
 import com.spark.common.bean.llm.result.McpResult;
@@ -14,12 +15,15 @@ import com.spark.dao.llm.McpDao;
 import com.spark.dao.llm.SkillDao;
 import com.spark.llm.mcp.McpClientManager;
 import com.spark.llm.memory.RedisChatMemoryStore;
+import com.spark.llm.model.ContextStreamingChatModel;
 import com.spark.llm.model.ModelFactory;
 import com.spark.llm.tools.SearchKnowledge;
 import com.spark.llm.tools.SearchKnowledgeGraph;
 import com.spark.llm.tools.SkillTool;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.StringUtil;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.mcp.client.McpClient;
@@ -93,68 +97,43 @@ public class AgentFactory {
         if (chatModelId == null) {
             throw new IllegalStateException("Agent未配置语言模型, agentId: " + agentId);
         }
-        int maxMessages = agent.getMaxMessages() != null ? agent.getMaxMessages() : 10;
-        // 构建Agent，记忆通过RedisChatMemoryStore持久化，按memoryId（spaceId）隔离
-        AiServices<IAgent> builder = AiServices.builder(IAgent.class)
-                .streamingChatModel(modelFactory.getStreamingChatModel(chatModelId))
-                .chatMemoryProvider(memoryId -> MessageWindowChatMemory.builder()
-                        .id(memoryId)
-                        .maxMessages(maxMessages)
-                        .chatMemoryStore(redisChatMemoryStore)
-                        .build());
-        // 组装系统提示词，Agent自定义提示词优先，否则使用默认的工具优先提示词
-        String prompt = "你是一个智能助手。当用户提出问题时，请优先使用可用的工具来获取准确信息。如果工具可以提供相关信息，必须先调用工具，不要仅凭自己的知识直接回答。";
-        if (StringUtil.isNotBlank(agent.getSysPrompt())) {
-            prompt = agent.getSysPrompt();
-        }
-        // 添加工具
-        List<Object> toolObjects = new ArrayList<>();
-        List<String> toolList = this.parseTools(agent.getTools());
-        if (CollectionUtil.isNotEmpty(toolList)) {
-            for (String tool : toolList) {
-                if (AgentToolEnum.SEARCH_KB.getType().equals(tool)) {
-                    List<Long> kbIds = parseKbIds(agent.getKbIds());
-                    toolObjects.add(searchKnowledge.forAgent(kbIds));
-                } else if (AgentToolEnum.SEARCH_KG.getType().equals(tool)) {
-                    List<Long> graphIds = parseGraphIds(agent.getGraphIds());
-                    toolObjects.add(searchKnowledgeGraph.forAgent(graphIds));
-                } else {
-                    logger.warn("unknown tools={}", tool);
-                }
-            }
-        }
-        // 装配技能：目录注入系统提示词，并提供技能读取工具供命中时拉取全文
-        List<Long> skillIds = this.parseSkillIds(agent.getSkills());
-        if (CollectionUtil.isNotEmpty(skillIds)) {
-            List<SkillResult> enabledSkills = skillDao.queryEnabledSkillList(skillIds);
-            if (CollectionUtil.isNotEmpty(enabledSkills)) {
-                String catalog = this.buildSkillCatalogText(enabledSkills);
-                prompt = prompt + "\n\n" + catalog;
-                List<Long> enabledSkillIds = enabledSkills.stream().map(SkillResult::getId).toList();
-                toolObjects.add(skillTool.forAgent(enabledSkillIds));
-            }
-        }
-        String finalPrompt = prompt;
-        builder.systemMessageProvider(sm -> finalPrompt);
-        if (CollectionUtil.isNotEmpty(toolObjects)) {
-            builder.tools(toolObjects);
-        }
-        // 注入MCP工具
-        List<McpClient> mcpClients = this.loadMcpClients(agent.getMcpIds());
-        if (CollectionUtil.isNotEmpty(mcpClients)) {
-            McpToolProvider mcpToolProvider = McpToolProvider.builder()
-                    .mcpClients(mcpClients)
-                    .failIfOneServerFails(false)
-                    .build();
-            builder.toolProvider(mcpToolProvider);
-        }
-        IAgent newAgent = builder.build();
+        IAgent newAgent = this.assembleAgent(agent,
+                modelFactory.getStreamingChatModel(chatModelId),
+                modelFactory.getChatModel(chatModelId));
         // 存入缓存
         agentCache.put(agentId, newAgent);
         logger.info("agent built and cached, agentId={}, name={}, desc={}", agentId, agent.getName(), agent.getDescription());
         return newAgent;
     }
-    
+
+    /**
+     * 按请求构建Agent实例（不缓存），流式模型包装请求级登录会话快照，供WS流式对话使用
+     * @param agentId Agent的ID
+     * @param snapshot 本次请求的登录会话快照
+     * @return IAgent实例
+     */
+    public IAgent buildForRequest(Long agentId, SessionSnapshot snapshot) {
+        if (agentId == null) {
+            throw new IllegalStateException("agentId must not be null");
+        }
+        if (snapshot == null) {
+            throw new IllegalStateException("snapshot must not be null");
+        }
+        Agent agent = this.loadAgentFromDb(agentId);
+        if (agent == null) {
+            throw new IllegalStateException("Agent not found with id: " + agentId);
+        }
+        Long chatModelId = agent.getChatModelId();
+        if (chatModelId == null) {
+            throw new IllegalStateException("Agent未配置语言模型, agentId: " + agentId);
+        }
+        StreamingChatModel streamingModel = new ContextStreamingChatModel(
+                modelFactory.getStreamingChatModel(chatModelId), snapshot);
+        IAgent newAgent = this.assembleAgent(agent, streamingModel, modelFactory.getChatModel(chatModelId));
+        logger.info("agent built for request, agentId={}", agentId);
+        return newAgent;
+    }
+
     /**
      * 从数据库加载Agent配置
      */
@@ -213,7 +192,74 @@ public class AgentFactory {
         }
         logger.info("agent caches cleared by skill change, skillId={}", skillId);
     }
-    
+
+    /**
+     * 组装Agent实例，同步与流式模型、记忆、工具、技能、MCP全部在此挂载
+     * @param agent Agent配置
+     * @param streamingModel 流式模型
+     * @param chatModel 同步模型
+     * @return IAgent实例
+     */
+    private IAgent assembleAgent(Agent agent, StreamingChatModel streamingModel, ChatModel chatModel) {
+        int maxMessages = agent.getMaxMessages() != null ? agent.getMaxMessages() : 10;
+        // 构建Agent，记忆通过RedisChatMemoryStore持久化，按memoryId（spaceId）隔离
+        AiServices<IAgent> builder = AiServices.builder(IAgent.class)
+                .chatModel(chatModel)
+                .streamingChatModel(streamingModel)
+                .chatMemoryProvider(memoryId -> MessageWindowChatMemory.builder()
+                        .id(memoryId)
+                        .maxMessages(maxMessages)
+                        .chatMemoryStore(redisChatMemoryStore)
+                        .build());
+        // 组装系统提示词，Agent自定义提示词优先，否则使用默认的工具优先提示词
+        String prompt = "你是一个智能助手。当用户提出问题时，请优先使用可用的工具来获取准确信息。如果工具可以提供相关信息，必须先调用工具，不要仅凭自己的知识直接回答。";
+        if (StringUtil.isNotBlank(agent.getSysPrompt())) {
+            prompt = agent.getSysPrompt();
+        }
+        // 添加工具
+        List<Object> toolObjects = new ArrayList<>();
+        List<String> toolList = this.parseTools(agent.getTools());
+        if (CollectionUtil.isNotEmpty(toolList)) {
+            for (String tool : toolList) {
+                if (AgentToolEnum.SEARCH_KB.getType().equals(tool)) {
+                    List<Long> kbIds = parseKbIds(agent.getKbIds());
+                    toolObjects.add(searchKnowledge.forAgent(kbIds));
+                } else if (AgentToolEnum.SEARCH_KG.getType().equals(tool)) {
+                    List<Long> graphIds = parseGraphIds(agent.getGraphIds());
+                    toolObjects.add(searchKnowledgeGraph.forAgent(graphIds));
+                } else {
+                    logger.warn("unknown tools={}", tool);
+                }
+            }
+        }
+        // 装配技能：目录注入系统提示词，并提供技能读取工具供命中时拉取全文
+        List<Long> skillIds = this.parseSkillIds(agent.getSkills());
+        if (CollectionUtil.isNotEmpty(skillIds)) {
+            List<SkillResult> enabledSkills = skillDao.queryEnabledSkillList(skillIds);
+            if (CollectionUtil.isNotEmpty(enabledSkills)) {
+                String catalog = this.buildSkillCatalogText(enabledSkills);
+                prompt = prompt + "\n\n" + catalog;
+                List<Long> enabledSkillIds = enabledSkills.stream().map(SkillResult::getId).toList();
+                toolObjects.add(skillTool.forAgent(enabledSkillIds));
+            }
+        }
+        String finalPrompt = prompt;
+        builder.systemMessageProvider(sm -> finalPrompt);
+        if (CollectionUtil.isNotEmpty(toolObjects)) {
+            builder.tools(toolObjects);
+        }
+        // 注入MCP工具
+        List<McpClient> mcpClients = this.loadMcpClients(agent.getMcpIds());
+        if (CollectionUtil.isNotEmpty(mcpClients)) {
+            McpToolProvider mcpToolProvider = McpToolProvider.builder()
+                    .mcpClients(mcpClients)
+                    .failIfOneServerFails(false)
+                    .build();
+            builder.toolProvider(mcpToolProvider);
+        }
+        return builder.build();
+    }
+
     /**
      * 解析工具字符串为列表
      */

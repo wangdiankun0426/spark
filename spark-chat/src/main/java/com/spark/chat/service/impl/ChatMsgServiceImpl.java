@@ -3,6 +3,7 @@ package com.spark.chat.service.impl;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
+import com.spark.common.bean.base.SessionSnapshot;
 import com.spark.common.bean.chat.entity.ChatMsg;
 import com.spark.common.bean.chat.entity.ChatMsgAtt;
 import com.spark.common.bean.chat.query.ChatMsgAttQuery;
@@ -27,12 +28,15 @@ import com.spark.dao.chat.ChatMsgAttDao;
 import com.spark.dao.chat.ChatMsgDao;
 import com.spark.dao.chat.ChatSpaceDao;
 import com.spark.dao.llm.AgentDao;
+import com.spark.llm.model.ContextStreamingChatModel;
 import com.spark.llm.model.ModelFactory;
 import com.spark.manage.BaseService;
 import com.spark.chat.service.IChatMsgService;
 import com.spark.chat.service.IChatSpaceService;
 import com.spark.chat.service.UserChannelRel;
 import com.spark.common.utils.CollectionUtil;
+import com.spark.common.utils.ModelUsageSceneHolder;
+import com.spark.common.utils.SessionContextUtil;
 import com.spark.common.utils.StringUtil;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
@@ -169,76 +173,83 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         chatMsg.setCreatedDt(new Timestamp(System.currentTimeMillis()));
         chatMsg.setUpdatedDt(new Timestamp(System.currentTimeMillis()));
         StringBuilder fullAnswer = new StringBuilder();
-        IAgent agent = agentFactory.build(chatMsgVO.getReceiverId());
+        SessionSnapshot snapshot = SessionContextUtil.capture(ModelUsageSceneEnum.AGENT_CHAT);
+        IAgent agent = agentFactory.buildForRequest(chatMsgVO.getReceiverId(), snapshot);
         String question = chatMsgVO.getMessage();
         chatSpaceService.fillTitleIfBlank(chatMsgVO.getSpaceId(), question, chatMsgVO.getSenderId());
-        agent.streamChat(chatMsgVO.getSpaceId(), question)
-            .beforeToolExecution(beforeTool -> {
-                // 工具调用前：通知前端正在调用哪个工具
-                String toolName = beforeTool.request().name();
-                String response = "正在调用 " + AgentToolEnum.descOf(toolName) + " 工具...\n";
-                chatMsg.setMessage(response);
-                DataContentVO dataContent = new DataContentVO();
-                dataContent.setAction(MsgActionEnum.THINKING.getValue());
-                dataContent.setChatMsg(chatMsg);
-                UserChannelRel.sendMessage(sessions, dataContent, null);
-            })
-            .onToolExecuted(toolExecution -> {
-                // 工具调用完成：通知前端工具返回结果
-                String toolName = toolExecution.request().name();
-                String toolResult = toolExecution.result();
-                String briefResult = (toolResult != null && toolResult.length() > 200) ? toolResult.substring(0, 200) + "..." : toolResult;
-                String response = "工具 " + AgentToolEnum.descOf(toolName) + " 返回结果：" + briefResult+"\n";
-                chatMsg.setMessage(response);
-                DataContentVO dataContent = new DataContentVO();
-                dataContent.setAction(MsgActionEnum.THINKING.getValue());
-                dataContent.setChatMsg(chatMsg);
-                UserChannelRel.sendMessage(sessions, dataContent, null);
-            })
-            .onPartialResponse(response -> {
-                // 响应中 - 逐块发送并累积
-                fullAnswer.append(response);
-                chatMsg.setMessage(response);
-                DataContentVO dataContent = new DataContentVO();
-                dataContent.setChatMsg(chatMsg);
-                UserChannelRel.sendMessage(sessions, dataContent, null);
-            })
-            .onCompleteResponse(completeResponse -> {
-                // 响应完成 - 保存完整消息到数据库
-                String answer = fullAnswer.toString();
-                chatMsg.setMessage(answer);
-                int count = chatMsgDao.insertDB(chatMsg);
-                if (count > 0) {
-                    // 保存RAG参考文档
-                    List<ChatMsgAttResult> attList = searchKnowledge.getReferences(chatMsgVO.getSpaceId());
-                    if (CollectionUtil.isNotEmpty(attList)) {
-                        this.saveChatMsgAttList(chatMsg.getId(), attList, chatMsgVO.getSenderId());
-                    }
+        // 第一轮onRequest在当前WS线程同步触发，场景须在此入栈；回调线程的第二轮与工具调用由快照承载
+        ModelUsageSceneHolder.push(ModelUsageSceneEnum.AGENT_CHAT);
+        try {
+            agent.streamChat(chatMsgVO.getSpaceId(), question)
+                .beforeToolExecution(beforeTool -> {
+                    // 工具调用前：通知前端正在调用哪个工具
+                    String toolName = beforeTool.request().name();
+                    String response = "正在调用 " + AgentToolEnum.descOf(toolName) + " 工具...\n";
+                    chatMsg.setMessage(response);
+                    DataContentVO dataContent = new DataContentVO();
+                    dataContent.setAction(MsgActionEnum.THINKING.getValue());
+                    dataContent.setChatMsg(chatMsg);
+                    UserChannelRel.sendMessage(sessions, dataContent, null);
+                })
+                .onToolExecuted(toolExecution -> {
+                    // 工具调用完成：通知前端工具返回结果
+                    String toolName = toolExecution.request().name();
+                    String toolResult = toolExecution.result();
+                    String briefResult = (toolResult != null && toolResult.length() > 200) ? toolResult.substring(0, 200) + "..." : toolResult;
+                    String response = "工具 " + AgentToolEnum.descOf(toolName) + " 返回结果：" + briefResult+"\n";
+                    chatMsg.setMessage(response);
+                    DataContentVO dataContent = new DataContentVO();
+                    dataContent.setAction(MsgActionEnum.THINKING.getValue());
+                    dataContent.setChatMsg(chatMsg);
+                    UserChannelRel.sendMessage(sessions, dataContent, null);
+                })
+                .onPartialResponse(response -> {
+                    // 响应中 - 逐块发送并累积
+                    fullAnswer.append(response);
+                    chatMsg.setMessage(response);
+                    DataContentVO dataContent = new DataContentVO();
+                    dataContent.setChatMsg(chatMsg);
+                    UserChannelRel.sendMessage(sessions, dataContent, null);
+                })
+                .onCompleteResponse(completeResponse -> {
+                    // 响应完成 - 保存完整消息到数据库
+                    String answer = fullAnswer.toString();
                     chatMsg.setMessage(answer);
-                    DataContentVO dataContent = new DataContentVO();
-                    dataContent.setChatMsg(chatMsg);
-                    if (CollectionUtil.isNotEmpty(attList)) {
-                        dataContent.setReferences(attList);
+                    int count = chatMsgDao.insertDB(chatMsg);
+                    if (count > 0) {
+                        // 保存RAG参考文档
+                        List<ChatMsgAttResult> attList = searchKnowledge.getReferences(chatMsgVO.getSpaceId());
+                        if (CollectionUtil.isNotEmpty(attList)) {
+                            this.saveChatMsgAttList(chatMsg.getId(), attList, chatMsgVO.getSenderId());
+                        }
+                        chatMsg.setMessage(answer);
+                        DataContentVO dataContent = new DataContentVO();
+                        dataContent.setChatMsg(chatMsg);
+                        if (CollectionUtil.isNotEmpty(attList)) {
+                            dataContent.setReferences(attList);
+                        }
+                        UserChannelRel.sendMessage(sessions, dataContent, null);
                     }
-                    UserChannelRel.sendMessage(sessions, dataContent, null);
-                }
-                searchKnowledge.clearReferences(chatMsgVO.getSpaceId());
-                logger.info("llm chat completed, spaceId={}", chatMsgVO.getSpaceId());
-            })
-            .onError(throwable -> {
-                // 异常处理
-                String answer = "抱歉，当前Agent对话异常！";
-                chatMsg.setMessage(answer);
-                int count = chatMsgDao.insertDB(chatMsg);
-                if (count > 0) {
-                    DataContentVO dataContent = new DataContentVO();
-                    dataContent.setChatMsg(chatMsg);
-                    UserChannelRel.sendMessage(sessions, dataContent, null);
-                }
-                searchKnowledge.clearReferences(chatMsgVO.getSpaceId());
-                logger.error("llm chat error", throwable);
-            })
-            .start();
+                    searchKnowledge.clearReferences(chatMsgVO.getSpaceId());
+                    logger.info("llm chat completed, spaceId={}", chatMsgVO.getSpaceId());
+                })
+                .onError(throwable -> {
+                    // 异常处理
+                    String answer = "抱歉，当前Agent对话异常！";
+                    chatMsg.setMessage(answer);
+                    int count = chatMsgDao.insertDB(chatMsg);
+                    if (count > 0) {
+                        DataContentVO dataContent = new DataContentVO();
+                        dataContent.setChatMsg(chatMsg);
+                        UserChannelRel.sendMessage(sessions, dataContent, null);
+                    }
+                    searchKnowledge.clearReferences(chatMsgVO.getSpaceId());
+                    logger.error("llm chat error", throwable);
+                })
+                .start();
+        } finally {
+            ModelUsageSceneHolder.pop();
+        }
     }
 
     /**
@@ -276,9 +287,14 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         String question = chatMsgVO.getMessage();
         chatSpaceService.fillTitleIfBlank(chatMsgVO.getSpaceId(), question, chatMsgVO.getSenderId());
         StringBuilder fullAnswer = new StringBuilder();
-        StreamingChatModel streamingChatModel = modelFactory.getStreamingChatModel(modelResult.getId());
+        // 会话快照随流式回调传播，禁止在此链路添加publishOn/subscribeOn，否则回调线程丢失登录身份
+        SessionSnapshot snapshot = SessionContextUtil.capture(ModelUsageSceneEnum.CHAT);
+        StreamingChatModel streamingChatModel = new ContextStreamingChatModel(
+                modelFactory.getStreamingChatModel(modelResult.getId()), snapshot);
         List<ChatMessage> messages = this.buildModelContextMessages(chatMsgVO);
         Flux.<String> create(sink -> {
+            // subscribe在当前WS线程同步执行，第一轮onRequest在此触发，场景须就地入栈并在发起后出栈
+            ModelUsageSceneHolder.push(ModelUsageSceneEnum.CHAT);
             try {
                 streamingChatModel.chat(messages, new StreamingChatResponseHandler() {
                     @Override
@@ -296,6 +312,8 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
                 });
             } catch (Exception e) {
                 sink.error(e);
+            } finally {
+                ModelUsageSceneHolder.pop();
             }
         }).doOnNext(response -> {
             // 响应中 - 逐块发送并累积
@@ -473,9 +491,6 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         historyQuery.setPage(false);
         List<ChatMsgResult> historyList = chatMsgDao.queryChatMsgList(historyQuery);
         List<ChatMsgResult> validList = this.excludeCurrentQuestion(historyList, chatMsgVO);
-        if (CollectionUtil.isEmpty(validList)) {
-            return messages;
-        }
         int fromIndex = Math.max(0, validList.size() - MODEL_HISTORY_WINDOW);
         List<ChatMsgResult> windowList = validList.subList(fromIndex, validList.size());
         for (ChatMsgResult item : windowList) {
@@ -489,6 +504,8 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
                 messages.add(AiMessage.from(item.getMessage()));
             }
         }
+        // 历史只提供上下文，本次提问必须作为最后一条消息，新会话首轮也不为空
+        messages.add(UserMessage.from(chatMsgVO.getMessage()));
         return messages;
     }
 

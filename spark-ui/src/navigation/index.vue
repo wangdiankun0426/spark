@@ -5,15 +5,15 @@
         <img src="../assets/images/logo.png" width="42" height="40" @click="$router.push('/home')"/>
       </div>
       <el-menu-item v-if="hasMenu(MODULE_CODES.LLM)" index="/llm">
-        <el-icon><HelpFilled /></el-icon>
+        <el-icon><component :is="defaultActive === '/llm' ? HelpFilled : Help"/></el-icon>
         <span>AI管理</span>
       </el-menu-item>
       <el-menu-item v-if="hasMenu(MODULE_CODES.BUS)" index="/bus">
-        <el-icon><Menu /></el-icon>
+        <el-icon><component :is="defaultActive === '/bus' ? Suitcase : SuitcaseLine"/></el-icon>
         <span>业务管理</span>
       </el-menu-item>
       <el-menu-item index="/org" v-if="isOrgAdmin()">
-        <el-icon><UserFilled /></el-icon>
+        <el-icon><component :is="defaultActive === '/org' ? UserFilled : User"/></el-icon>
         <span>组织管理</span>
       </el-menu-item>
       <el-menu-item index="/site" v-if="isSysAdmin()">
@@ -154,7 +154,7 @@ import {logoutAPI} from "@/api/manage/auth/login.js";
 import {pageMyMessageListAPI} from "@/api/manage/sys/message.js";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {ref, computed, onMounted, onUnmounted} from "vue";
-import {ArrowDown, Setting, Moon, Sunny, Right, FullScreen, Aim, User, OfficeBuilding, SwitchButton, Key} from "@element-plus/icons-vue";
+import {ArrowDown, Setting, Moon, Sunny, Right, FullScreen, Aim, User, UserFilled, Help, HelpFilled, Suitcase, SuitcaseLine, OfficeBuilding, SwitchButton, Key} from "@element-plus/icons-vue";
 import { useRouter, useRoute } from 'vue-router';
 import {useStore} from "vuex";
 import {getTheme, applyTheme, setTheme} from '@/utils/themeUtil';

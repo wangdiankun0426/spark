@@ -1,6 +1,7 @@
 
 import llm from '@/pages/llmMange/index.vue'
 import agent from '@/pages/llmMange/agent/index.vue'
+import modelUsage from '@/pages/llmMange/modelUsage/index.vue'
 import modelMarket from '@/pages/llmMange/modelMarket/index.vue'
 import skill from '@/pages/llmMange/skill/index.vue'
 import mcp from '@/pages/llmMange/mcp/index.vue'
@@ -13,13 +14,25 @@ import graphDetail from "@/pages/llmMange/graph/graphDetail/index.vue";
 import graphDocument from "@/views/dms/document/index.vue";
 import kgEntity from "@/pages/llmMange/graph/entity/index.vue";
 import kgRelation from "@/pages/llmMange/graph/relation/index.vue";
-import {MENU_CODES} from "@/utils/menuUtil.js";
+import {hasMenu, MENU_CODES} from "@/utils/menuUtil.js";
 
 export default [
     {
         path: '/llm',
         name: 'llm',
-        redirect: '/llm/agent',
+        redirect: () => {
+            const firstMenu = [
+                [MENU_CODES.LLM_MODEL_USAGE, '/llm/modelUsage'],
+                [MENU_CODES.LLM_MODEL_MARKET, '/llm/modelMarket'],
+                [MENU_CODES.LLM_SKILL, '/llm/skill'],
+                [MENU_CODES.LLM_MCP, '/llm/mcp'],
+                [MENU_CODES.LLM_AGENT, '/llm/agent'],
+                [MENU_CODES.LLM_WORKFLOW, '/llm/workflow'],
+                [MENU_CODES.LLM_KNOWLEDGE, '/llm/knowledge'],
+                [MENU_CODES.LLM_GRAPH, '/llm/graph']
+            ].find(item => hasMenu(item[0]));
+            return firstMenu ? firstMenu[1] : '/noPermission';
+        },
         component: llm,
         meta: {
             title: 'AI管理'
@@ -41,6 +54,15 @@ export default [
                 meta: {
                     title: 'WorkFlow',
                     menuCode: MENU_CODES.LLM_WORKFLOW
+                }
+            },
+            {
+                path: '/llm/modelUsage',
+                name: 'modelUsage',
+                component: modelUsage,
+                meta: {
+                    title: '模型用量',
+                    menuCode: MENU_CODES.LLM_MODEL_USAGE
                 }
             },
             {

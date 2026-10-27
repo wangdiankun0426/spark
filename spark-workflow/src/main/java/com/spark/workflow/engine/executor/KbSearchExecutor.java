@@ -1,9 +1,12 @@
 package com.spark.workflow.engine.executor;
 
+import com.spark.common.bean.kb.query.KnowledgeQuery;
+import com.spark.common.bean.kb.result.KnowledgeResult;
 import com.spark.common.bean.llm.result.RetrieveResult;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.WorkflowTemplateTypeEnum;
 import com.spark.common.utils.JsonUtil;
+import com.spark.dao.kb.KnowledgeDao;
 import com.spark.llm.retrieve.ESRetrieve;
 import com.spark.manage.BaseService;
 import com.spark.common.utils.CollectionUtil;
@@ -32,6 +35,8 @@ public class KbSearchExecutor extends BaseService implements IWfNodeExecutor {
 
     @Autowired
     private ESRetrieve esRetrieve;
+    @Autowired
+    private KnowledgeDao knowledgeDao;
 
     /**
      * 节点类型
@@ -68,9 +73,19 @@ public class KbSearchExecutor extends BaseService implements IWfNodeExecutor {
             throw new IllegalArgumentException("RAG节点知识库ID解析失败");
         }
         List<Long> kbIds = Arrays.stream(kbIdsStr.split(",")).filter(StringUtil::isNumeric).map(Long::parseLong).toList();
+        if (CollectionUtil.isEmpty(kbIds)) {
+            throw new IllegalArgumentException("RAG节点知识库ID解析失败");
+        }
+        // 多知识库时取首个库的检索配置（向量/重排模型、召回数），ES过滤仍按全部kbIds
+        KnowledgeQuery knowledgeQuery = new KnowledgeQuery();
+        knowledgeQuery.setId(kbIds.get(0));
+        KnowledgeResult knowledge = knowledgeDao.queryKnowledge(knowledgeQuery);
+        if (knowledge == null) {
+            throw new IllegalArgumentException("知识库不存在: " + kbIds.get(0));
+        }
         Integer topK = MapUtil.getIntegerVal(config, "topK", 5);
         try {
-            RetrieveResult result = esRetrieve.retrieve(query, kbIds, null);
+            RetrieveResult result = esRetrieve.retrieve(query, kbIds, knowledge);
             List<String> contents = result.getContents();
             if (CollectionUtil.isEmpty(contents)) {
                 contents = new ArrayList<>();

@@ -10,9 +10,14 @@ import com.spark.dao.llm.ModelDao;
 import com.spark.dao.llm.ProviderDao;
 import com.spark.common.enums.ModelTypeEnum;
 import com.spark.common.enums.StatusEnum;
+import com.spark.common.bean.llm.dto.ModelInfo;
 import com.spark.common.utils.CollectionUtil;
+import com.spark.llm.usage.EmbeddingUsageWrapper;
+import com.spark.llm.usage.ModelUsageChatListener;
+import com.spark.llm.usage.ModelUsageRecorder;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiChatRequestParameters;
@@ -41,6 +46,8 @@ public class ModelFactory {
     private ModelDao modelDao;
     @Autowired
     private ProviderDao providerDao;
+    @Autowired
+    private ModelUsageRecorder modelUsageRecorder;
     /**
      * 模型实例缓存，避免重复创建
      */
@@ -286,7 +293,7 @@ public class ModelFactory {
         if (Objects.requireNonNull(typeEnum) == ModelTypeEnum.RERANK) {
             Provider provider = loadProvider(model.getProviderId());
             logger.info("create rerankModel, model={}, provider={}", model.getName(), provider.getName());
-            return new RerankModel(provider.getApiUrl(), provider.getSecretKey(), model.getName());
+            return new RerankModel(provider.getApiUrl(), provider.getSecretKey(), this.buildModelInfo(model), modelUsageRecorder);
         }
         throw new UnsupportedOperationException("Unsupported model type: " + typeEnum.getDesc());
     }
@@ -308,6 +315,9 @@ public class ModelFactory {
                     .customParameters(Map.of("enable_thinking", true))
                     .build());
         }
+        ChatModelListener usageListener = new ModelUsageChatListener(modelUsageRecorder, this.buildModelInfo(model));
+        List<ChatModelListener> listeners = List.of(usageListener);
+        builder.listeners(listeners);
         return builder.build();
     }
 
@@ -328,6 +338,9 @@ public class ModelFactory {
                     .customParameters(Map.of("enable_thinking", true))
                     .build());
         }
+        ChatModelListener usageListener = new ModelUsageChatListener(modelUsageRecorder, this.buildModelInfo(model));
+        List<ChatModelListener> listeners = List.of(usageListener);
+        builder.listeners(listeners);
         return builder.build();
     }
 
@@ -337,13 +350,23 @@ public class ModelFactory {
     private EmbeddingModel createOpenAiEmbeddingModel(Model model) {
         Provider provider = loadProvider(model.getProviderId());
         logger.info("create embeddingModel, model={}, provider={}", model.getName(), provider.getName());
-        return OpenAiEmbeddingModel.builder()
+        EmbeddingModel embeddingModel = OpenAiEmbeddingModel.builder()
                 .baseUrl(provider.getApiUrl())
                 .apiKey(provider.getSecretKey())
                 .modelName(model.getName())
                 .dimensions(1024)
                 .encodingFormat("float")
                 .build();
+        return new EmbeddingUsageWrapper(embeddingModel, modelUsageRecorder, this.buildModelInfo(model));
+    }
+
+    /**
+     * 构造用量采集用模型元数据
+     * @param model 模型配置
+     * @return 模型元数据
+     */
+    private ModelInfo buildModelInfo(Model model) {
+        return new ModelInfo(model.getId(), model.getName(), model.getProviderId(), model.getType());
     }
 
     /**
