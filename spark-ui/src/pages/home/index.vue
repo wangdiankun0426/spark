@@ -9,24 +9,30 @@
             mode="vertical"
             class="home-el-menu"
         >
+          <el-menu-item index="/home/dashboard">
+            <el-icon style="font-size: 24px;">
+              <Dashboard/>
+            </el-icon>
+            <template #title>工作台</template>
+          </el-menu-item>
           <div class="home-menu-group">AI</div>
           <el-menu-item index="/home/aichat">
             <el-icon style="font-size: 24px;">
               <AiChat/>
             </el-icon>
-            <template #title>AIChat</template>
+            <template #title>AI对话</template>
           </el-menu-item>
           <el-menu-item index="/home/agent">
             <el-icon style="font-size: 24px;">
               <Agent/>
             </el-icon>
-            <template #title>Agent</template>
+            <template #title>智能体</template>
           </el-menu-item>
           <el-menu-item index="/home/workflow">
             <el-icon style="font-size: 24px;">
               <Workflow/>
             </el-icon>
-            <template #title>WorkFlow</template>
+            <template #title>工作流</template>
           </el-menu-item>
           <div class="home-menu-group">流程</div>
           <el-menu-item index="/home/flow/application">
@@ -81,6 +87,7 @@
 import {computed} from "vue";
 import {useRoute} from "vue-router";
 import Agent from "@/assets/icons/agent.vue";
+import Dashboard from "@/assets/icons/dashboard.vue";
 import FlowApplication from "@/assets/icons/flowApplication.vue";
 import MyApplication from "@/assets/icons/myApplication.vue";
 import MyTodo from "@/assets/icons/myTodo.vue";

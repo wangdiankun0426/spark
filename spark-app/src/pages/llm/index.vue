@@ -7,14 +7,15 @@
 
     <!-- 分类页签 -->
     <view class="llm-tabs">
-      <up-tabs
-          :list="tabList"
-          :current="tabIndex"
-          lineColor="#2f7bff"
-          :lineWidth="tabLineWidth"
-          :activeStyle="{color: '#2f7bff', fontWeight: 700}"
-          :scrollable="false"
-          @change="handleTabChange"/>
+      <view
+          v-for="(tab, index) in tabList"
+          :key="index"
+          class="seg-tab"
+          :class="{ 'is-active': index === tabIndex }"
+          @click="handleTabChange(index)"
+      >
+        <text class="seg-tab__text">{{ tab.name }}</text>
+      </view>
     </view>
 
     <!-- Agent列表 -->
@@ -43,7 +44,7 @@
             @click="handleAgentClick(item)"
         >
           <view class="card-icon">
-            <up-icon name="grid-fill" size="34" color="#2f7bff"></up-icon>
+            <AgentIcon :size="34"/>
           </view>
           <view class="llm-info">
             <text class="llm-name">{{ item.name }}</text>
@@ -80,7 +81,7 @@
             @click="showInstanceDetail(item)"
         >
           <view class="card-icon">
-            <up-icon name="share-fill" size="34" color="#2f7bff"></up-icon>
+            <WorkflowIcon :size="34"/>
           </view>
           <view class="instance-info">
             <text class="instance-name">{{ item.templateName || item.name || '未命名工作流' }}</text>
@@ -118,7 +119,7 @@
             @click="handleSelectModel(model)"
         >
           <view class="card-icon">
-            <up-icon name="chat-fill" size="34" color="#2f7bff"></up-icon>
+            <ModelIcon :size="34"/>
           </view>
           <view class="model-info">
             <text class="model-name">{{ model.name }}</text>
@@ -166,6 +167,9 @@ import {pageInstanceListAPI} from "@/api/workflow/instance"
 import {pageModelListAPI} from "@/api/llm/model"
 import AiSessionPicker from "@/components/AiSessionPicker/index.vue"
 import {useAiSessionPicker} from "@/components/AiSessionPicker/aiSessionUtil"
+import AgentIcon from "@/components/icons/AgentIcon.vue"
+import WorkflowIcon from "@/components/icons/WorkflowIcon.vue"
+import ModelIcon from "@/components/icons/ModelIcon.vue"
 
 const active = ref("llm")
 
@@ -185,14 +189,12 @@ const tabBarItems = computed(() => visibleTabs())
 
 // AI应用页签配置
 const allowedTabs = [
-  {key: 'chat', name: 'AIChat'},
-  {key: 'agent', name: 'Agent'},
-  {key: 'workflow', name: 'WorkFlow'}
+  {key: 'chat', name: 'AI对话'},
+  {key: 'agent', name: '智能体'},
+  {key: 'workflow', name: '工作流'}
 ]
 
 const tabList = computed(() => allowedTabs.map(tab => ({name: tab.name})))
-// 下划线宽度取页签的六成并自动居中：不可滚动时页签平分屏宽
-const tabLineWidth = Math.floor(uni.getSystemInfoSync().windowWidth / allowedTabs.length * 0.6)
 const tabIndex = ref(0)
 // 当前激活页签 key
 const activeTabKey = computed(() => {
@@ -261,9 +263,12 @@ function loadTab(key) {
 
 /**
  * 切换页签
+ * @param index 页签下标
  */
-function handleTabChange(tab) {
-  const index = tab.index
+function handleTabChange(index) {
+  if (index === tabIndex.value) {
+    return
+  }
   tabIndex.value = index
   const tabDef = allowedTabs[index]
   if (tabDef) {
@@ -490,8 +495,38 @@ function handleOnTabChange(index) {
 }
 
 .llm-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
   background-color: #fff;
   flex-shrink: 0;
+}
+
+.seg-tab {
+  flex: 1;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.seg-tab__text {
+  font-size: 14px;
+  color: #86909c;
+  transition: color 0.25s ease;
+}
+
+.seg-tab.is-active {
+  background-image: linear-gradient(135deg, #2f7bff 0%, #5b94f5 100%);
+  box-shadow: 0 2px 8px rgba(47, 123, 255, 0.35);
+}
+
+.seg-tab.is-active .seg-tab__text {
+  color: #ffffff;
+  font-weight: 600;
 }
 
 .llm-list {
@@ -572,13 +607,10 @@ function handleOnTabChange(index) {
 .card-icon {
   width: 46px;
   height: 46px;
-  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background-color: rgba(47, 123, 255, 0.1);
-  border: 1rpx solid rgba(47, 123, 255, 0.18);
 }
 
 .instance-info {

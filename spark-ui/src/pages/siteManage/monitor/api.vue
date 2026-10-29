@@ -88,8 +88,8 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import StatCard from './components/StatCard.vue'
-import MonitorToolbar from './components/MonitorToolbar.vue'
+import StatCard from '@/components/Dashboard/StatCard.vue'
+import MonitorToolbar from '@/components/MonitorToolbar/index.vue'
 import { useChart } from '@/utils/useChart.js'
 import { RANGE_OPTIONS, buildTimeRange, formatMs, parseJson } from '@/utils/monitorUtil.js'
 import {

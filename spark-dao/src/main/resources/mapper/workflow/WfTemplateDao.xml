@@ -23,6 +23,9 @@
         <if test="status != null">
             and status = #{status}
         </if>
+        <if test="createdBy != null">
+            and created_by = #{createdBy}
+        </if>
         <if test="deleteFlag != null and id == null and ids == null">
             and delete_flag = #{deleteFlag}
         </if>

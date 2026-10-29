@@ -128,7 +128,7 @@ import {
   queryModelUsageSummaryAPI,
   queryModelUsageTrendAPI
 } from '@/api/llm/modelUsage.js'
-import StatCard from '@/pages/siteManage/monitor/components/StatCard.vue'
+import StatCard from '@/components/Dashboard/StatCard.vue'
 import { useChart } from '@/utils/useChart'
 import { TrendCharts, Coin, Download, Upload } from '@element-plus/icons-vue'
 

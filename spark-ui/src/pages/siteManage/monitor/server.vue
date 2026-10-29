@@ -155,8 +155,8 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import StatCard from './components/StatCard.vue'
-import MonitorToolbar from './components/MonitorToolbar.vue'
+import StatCard from '@/components/Dashboard/StatCard.vue'
+import MonitorToolbar from '@/components/MonitorToolbar/index.vue'
 import { useChart } from '@/utils/useChart.js'
 import { formatBytes, formatMs, buildTimeRange, parseJson } from '@/utils/monitorUtil.js'
 import { queryNodeListAPI, queryLatestHostAPI, queryHostSeriesAPI } from '@/api/monitor/monitor.js'

@@ -2,6 +2,7 @@ package com.spark.workflow.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.workflow.entity.WfTemplate;
 import com.spark.common.bean.workflow.entity.WfTemplateVersion;
 import com.spark.common.bean.workflow.query.WfTemplateQuery;
@@ -221,6 +222,27 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
         fillFormJson(templateResult);
         result.setData(templateResult);
         result.setObjId(templateResult.getId());
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 统计可用工作流数量，与工作流列表同口径
+     * @param query 查询参数
+     * @return 数量结果
+     */
+    @Override
+    @DataScope
+    public ResultData<Integer> countMyWorkflows(WfTemplateQuery query) {
+        ResultData<Integer> result = new ResultData<>();
+        if (query == null) {
+            query = new WfTemplateQuery();
+        }
+        if (!SessionHolder.isSysAdmin()) {
+            query.setTenantId(SessionHolder.getCurrentTenantId());
+        }
+        int count = templateDao.queryTemplateCount(query);
+        result.setData(count);
         result.setCode(ResultData.OK);
         return result;
     }

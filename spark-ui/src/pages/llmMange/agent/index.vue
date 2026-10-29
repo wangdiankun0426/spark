@@ -4,7 +4,7 @@
     <div class="agent-header">
       <div class="agent-header-left">
         <div class="agent-header-title">
-          AGENT
+          智能体
         </div>
         <div class="agent-header-subtitle">管理自定义的智能体，根据不同业务产生面向不同用户的智能体</div>
       </div>

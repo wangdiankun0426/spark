@@ -1,9 +1,11 @@
 package com.spark.dao.workflow;
 
+import com.spark.common.bean.home.result.DashboardHotResult;
 import com.spark.common.bean.workflow.entity.WfInstance;
 import com.spark.common.bean.workflow.query.WfInstanceQuery;
 import com.spark.common.bean.workflow.result.WfInstanceResult;
 import com.spark.dao.BaseDao;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -71,4 +73,17 @@ public interface WfInstanceDao extends BaseDao<WfInstance> {
      */
     @Select("select max(id) from wf_instance")
     Long queryInstanceMaxId();
+
+    /**
+     * 统计我触发的热门工作流
+     * @param userId 用户id
+     * @param tenantId 租户id
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @param limit 条数
+     * @return 热门工作流列表
+     */
+    List<DashboardHotResult> queryMyHotWorkflows(@Param("userId") Long userId, @Param("tenantId") Long tenantId,
+                                                @Param("startTime") String startTime, @Param("endTime") String endTime,
+                                                @Param("limit") int limit);
 }

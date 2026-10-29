@@ -26,6 +26,9 @@
         <if test="name != null">
             and name like concat('%', #{name}, '%')
         </if>
+        <if test="createdBy != null">
+            and created_by = #{createdBy}
+        </if>
         <if test="deleteFlag != null and id == null and ids == null">
             and delete_flag = #{deleteFlag}
         </if>

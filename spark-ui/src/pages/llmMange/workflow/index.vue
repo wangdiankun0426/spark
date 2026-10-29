@@ -4,7 +4,7 @@
     <div class="wf-header">
       <div class="wf-header-left">
         <div class="wf-header-title">
-          WORKFLOW
+          工作流
         </div>
         <div class="wf-header-subtitle">浏览AI工作流，快速运行或在线编辑</div>
       </div>

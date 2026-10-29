@@ -52,4 +52,11 @@ public interface IAgentService {
      */
     ResultData<AgentResult> queryAgentDetail(AgentQuery query);
 
+    /**
+     * 统计可用智能体数量，与智能体列表同口径
+     * @param query 查询参数
+     * @return 数量结果
+     */
+    ResultData<Integer> countMyAgents(AgentQuery query);
+
 }

@@ -24,17 +24,17 @@ public enum MenuCodeEnum {
     MODULE_KB(MenuTypeEnum.MODULE, "module.bus", "业务管理模块"),
 
 
-    // ============================== AI应用菜单 ==============================
+    // AI应用菜单
 
     /**
      * Agent菜单
      */
-    MENU_LLM_AGENT(MenuTypeEnum.MENU, "menu.llm.agent", "Agent菜单"),
+    MENU_LLM_AGENT(MenuTypeEnum.MENU, "menu.llm.agent", "智能体菜单"),
 
     /**
      * WorkFlow菜单
      */
-    MENU_LLM_WORKFLOW(MenuTypeEnum.MENU, "menu.llm.workflow", "WorkFlow菜单"),
+    MENU_LLM_WORKFLOW(MenuTypeEnum.MENU, "menu.llm.workflow", "工作流菜单"),
 
     /**
      * 模型用量菜单

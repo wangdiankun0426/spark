@@ -4,6 +4,7 @@ import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.kb.query.KnowledgeQuery;
 import com.spark.common.bean.kb.result.KnowledgeResult;
 import com.spark.common.bean.kg.query.KgGraphQuery;
@@ -208,6 +209,27 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
         }
         result.setData(agentResult);
         result.setObjId(agentResult.getId());
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 统计可用智能体数量，与智能体列表同口径
+     * @param query 查询参数
+     * @return 数量结果
+     */
+    @Override
+    @DataScope
+    public ResultData<Integer> countMyAgents(AgentQuery query) {
+        ResultData<Integer> result = new ResultData<>();
+        if (query == null) {
+            query = new AgentQuery();
+        }
+        if (!SessionHolder.isSysAdmin()) {
+            query.setTenantId(SessionHolder.getCurrentTenantId());
+        }
+        int count = agentDao.queryAgentCount(query);
+        result.setData(count);
         result.setCode(ResultData.OK);
         return result;
     }

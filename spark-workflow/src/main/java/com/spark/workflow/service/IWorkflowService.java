@@ -53,4 +53,11 @@ public interface IWorkflowService {
      */
     ResultData<WfTemplateResult> queryWorkflowDetail(WfTemplateQuery query);
 
+    /**
+     * 统计可用工作流数量，与工作流列表同口径
+     * @param query 查询参数
+     * @return 数量结果
+     */
+    ResultData<Integer> countMyWorkflows(WfTemplateQuery query);
+
 }

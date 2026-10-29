@@ -1,5 +1,7 @@
 package com.spark.dao.llm;
 
+import com.spark.common.bean.home.result.DashboardHotResult;
+import com.spark.common.bean.home.result.DashboardUsageSummaryResult;
 import com.spark.common.bean.llm.entity.ModelUsage;
 import com.spark.common.bean.llm.query.ModelUsageQuery;
 import com.spark.common.bean.llm.result.ModelUsageResult;
@@ -56,4 +58,18 @@ public interface ModelUsageDao extends BaseDao<ModelUsage> {
      * @return 趋势列表
      */
     List<ModelUsageTrendResult> queryUsageTrend(ModelUsageQuery query);
+
+    /**
+     * 不区分类型的用量总计
+     * @param query 查询参数
+     * @return 用量总计
+     */
+    DashboardUsageSummaryResult queryUsageTotal(ModelUsageQuery query);
+
+    /**
+     * 按模型聚合调用次数
+     * @param query 查询参数
+     * @return 热门模型列表
+     */
+    List<DashboardHotResult> queryHotModels(ModelUsageQuery query);
 }

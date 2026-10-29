@@ -10,14 +10,72 @@
             :size="100"
         />
         <view class="welcome-info">
-          <text class="welcome-greeting">Hello {{ userInfo.name }}，{{ greeting }}</text>
+          <text class="welcome-greeting">{{ greeting }}，{{ userInfo.name }}</text>
           <text class="welcome-slogan">欢迎使用星火云应用平台，聚微光成智，燃无限可能！</text>
+          <text class="welcome-date">{{ todayText }}</text>
         </view>
       </view>
     </view>
 
     <!-- 滚动内容区 -->
     <view class="home-scroll-body">
+      <!-- 顶部统计卡片 -->
+      <view class="kpi-row">
+        <view class="kpi-card" @click="goKpi(0)">
+          <ModelIcon :size="32"/>
+          <view class="kpi-text">
+            <text class="kpi-label">模型</text>
+            <text class="kpi-count">{{ asset.modelCount || 0 }}</text>
+          </view>
+        </view>
+        <view class="kpi-card" @click="goKpi(1)">
+          <AgentIcon :size="32"/>
+          <view class="kpi-text">
+            <text class="kpi-label">智能体</text>
+            <text class="kpi-count">{{ asset.agentCount || 0 }}</text>
+          </view>
+        </view>
+        <view class="kpi-card" @click="goKpi(2)">
+          <WorkflowIcon :size="32"/>
+          <view class="kpi-text">
+            <text class="kpi-label">工作流</text>
+            <text class="kpi-count">{{ asset.workflowCount || 0 }}</text>
+          </view>
+        </view>
+        <view class="kpi-card" @click="goKpi(3)">
+          <TodoIcon :size="32"/>
+          <view class="kpi-text">
+            <text class="kpi-label">待办</text>
+            <text class="kpi-count">{{ todoTotal }}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 智能推荐 -->
+      <view class="recommend-box">
+        <view class="section-head">
+          <view class="section-head-left">
+            <text class="section-title">智能推荐</text>
+          </view>
+        </view>
+        <view class="recommend-list" v-if="recommendList.length > 0">
+          <view
+              class="recommend-item"
+              v-for="(item, index) in recommendList"
+              :key="item.hotType + '-' + item.id"
+              @click="handleRecommendClick(item)"
+          >
+            <text class="recommend-rank" :class="rankClass(index)">{{ index + 1 }}</text>
+            <text class="recommend-name">{{ item.name }}</text>
+            <text class="recommend-tag">{{ typeText(item.hotType) }}</text>
+            <text class="recommend-count">{{ item.count }}次</text>
+          </view>
+        </view>
+        <view class="recommend-empty" v-else>
+          <text class="empty-text">暂无推荐</text>
+        </view>
+      </view>
+
       <view
           class="section-box"
           v-for="section in sections"
@@ -38,7 +96,10 @@
                 @click="handleItemClick(section.key, item)"
             >
               <view class="item-icon">
-                <up-icon :name="section.icon" size="34" color="#2f7bff"></up-icon>
+                <TodoIcon v-if="section.key === 'todo'" :size="34"/>
+                <AiChatIcon v-else-if="section.key === 'chat'" :size="34"/>
+                <AgentIcon v-else-if="section.key === 'agent'" :size="34"/>
+                <WorkflowIcon v-else-if="section.key === 'workflow'" :size="34"/>
               </view>
               <view class="item-text">
                 <text class="item-name">{{ item.name }}</text>
@@ -93,9 +154,18 @@ import {pageMyTodoListAPI} from "@/api/flow/instance"
 import {agentPageListAPI} from "@/api/llm/agent"
 import {pageModelListAPI} from "@/api/llm/model"
 import {pageInstanceListAPI} from "@/api/workflow/instance"
+import {queryAssetAPI, queryTodoTotalAPI, queryRecommendAPI} from "@/api/home/home"
+import ModelIcon from "@/components/icons/ModelIcon.vue"
+import AgentIcon from "@/components/icons/AgentIcon.vue"
+import WorkflowIcon from "@/components/icons/WorkflowIcon.vue"
+import TodoIcon from "@/components/icons/TodoIcon.vue"
+import AiChatIcon from "@/components/icons/AiChatIcon.vue"
 
 const store = useStore()
 const active = ref("home")
+const asset = ref({})
+const todoTotal = ref(0)
+const recommendList = ref([])
 
 // 会话选择弹层：点击智能体/模型后先选会话再进入对话
 const {
@@ -116,14 +186,17 @@ const userInfo = computed(() => store.getters["user/getUserInfo"] || {
   name: undefined,
 })
 
+// 顶部统计卡片跳转地址，依次为 模型、智能体、工作流、待办
+const kpiUrls = ['/pages/llm/index?tab=0', '/pages/llm/index?tab=1', '/pages/llm/index?tab=2', '/pages/flow/index?tab=1']
+
 // 每个板块最多展示的卡片数
 const SECTION_LIMIT = 6
 
 const sections = reactive([
-  {key: 'todo', title: '我的待办', icon: 'clock-fill', emptyText: '暂无待办', loading: true, items: []},
-  {key: 'chat', title: 'AIChat', icon: 'chat-fill', emptyText: '暂无可用模型', loading: true, items: []},
-  {key: 'agent', title: 'Agent', icon: 'grid-fill', emptyText: '暂无智能体', loading: true, items: []},
-  {key: 'workflow', title: 'Workflow', icon: 'share-fill', emptyText: '暂无运行记录', loading: true, items: []}
+  {key: 'todo', title: '我的待办', emptyText: '暂无待办', loading: true, items: []},
+  {key: 'chat', title: 'AI对话', emptyText: '暂无可用模型', loading: true, items: []},
+  {key: 'agent', title: '智能体', emptyText: '暂无智能体', loading: true, items: []},
+  {key: 'workflow', title: '工作流', emptyText: '暂无运行记录', loading: true, items: []}
 ])
 
 // 小程序端欢迎卡片延伸到状态栏底部，H5 走样式默认内边距
@@ -146,8 +219,17 @@ const greeting = computed(() => {
   return '晚上好'
 })
 
+// 今天的日期文案
+const todayText = computed(() => {
+  const week = ['日', '一', '二', '三', '四', '五', '六']
+  const now = new Date()
+  return `${now.getMonth() + 1}月${now.getDate()}日 星期${week[now.getDay()]}`
+})
+
 onShow(() => {
   loadUserInfo()
+  loadKpi()
+  loadRecommend()
   loadTodoList()
   loadChatModelList()
   loadAgentList()
@@ -188,10 +270,10 @@ function loadTodoList() {
     const items = (res.data.rows || []).map(row => ({
       id: row.instanceId || row.id,
       name: row.instanceName || row.name || '未命名流程',
-      // 第一行副信息： 流程类型 · 申请人
-      meta: [row.typeName, row.createdByName].filter(Boolean).join(' · '),
-      // 第二行副信息： 申请时间
-      meta2: [row.createdDt].filter(Boolean).join(' · '),
+      // 副信息第一行：流程类型 · 紧急程度
+      meta: [row.typeName, row.levelName].filter(Boolean).join(' · '),
+      // 副信息第二行：申请人 · 申请时间
+      meta2: [row.createdByName, row.createdDt].filter(Boolean).join(' · '),
       raw: row
     }))
     setSectionItems('todo', items)
@@ -267,6 +349,80 @@ function loadWorkflowList() {
 }
 
 /**
+ * 加载顶部统计卡片
+ */
+function loadKpi() {
+  queryAssetAPI().then(res => {
+    if (res.code === 200 && res.data) {
+      asset.value = res.data
+    }
+  }).catch(() => {})
+  queryTodoTotalAPI().then(res => {
+    if (res.code === 200) {
+      todoTotal.value = res.data || 0
+    }
+  }).catch(() => {})
+}
+
+/**
+ * 加载智能推荐
+ */
+function loadRecommend() {
+  queryRecommendAPI({rangeDays: 30}).then(res => {
+    if (res.code === 200 && res.data) {
+      recommendList.value = res.data
+    }
+  }).catch(() => {})
+}
+
+/**
+ * 点击统计卡片
+ * @param index 卡片序号
+ */
+function goKpi(index) {
+  uni.reLaunch({url: kpiUrls[index]})
+}
+
+/**
+ * 推荐类型文案
+ * @param type 热度类型
+ */
+function typeText(type) {
+  const map = {model: '模型', agent: '智能体', workflow: '工作流'}
+  return map[type] || ''
+}
+
+/**
+ * 点击推荐项
+ * @param item 推荐数据
+ */
+function handleRecommendClick(item) {
+  const tabMap = {model: 0, agent: 1, workflow: 2}
+  const tab = tabMap[item.hotType]
+  if (tab === undefined) {
+    return
+  }
+  uni.reLaunch({url: '/pages/llm/index?tab=' + tab})
+}
+
+/**
+ * 排名样式
+ * @param index 名次索引
+ */
+function rankClass(index) {
+  if (index === 0) {
+    return 'is-first'
+  }
+  if (index === 1) {
+    return 'is-second'
+  }
+  if (index === 2) {
+    return 'is-third'
+  }
+  return ''
+}
+
+/**
  * 查看更多
  * @param key
  */
@@ -331,7 +487,7 @@ function handleOnTabChange(index) {
 .welcome-card {
   flex-shrink: 0;
   box-sizing: border-box;
-  padding: 52px 16px 32px;
+  padding: 52px 16px 6px;
   color: $spark-color-text;
   background-image: linear-gradient(180deg,
       #5b94f5 0%,
@@ -343,30 +499,38 @@ function handleOnTabChange(index) {
 .welcome-top {
   display: flex;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 .welcome-info {
   flex: 1;
   min-width: 0;
   margin-left: 10px;
   line-height: 1.5;
-  letter-spacing: 1.0px;
 }
 .welcome-greeting {
-  font-size: 16px;
-  font-weight: 800;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.4;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
   text-overflow: ellipsis;
   word-break: break-all;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 .welcome-slogan {
   font-size: 13px;
-  font-weight: 500;
-  color: rgba(23, 43, 77, 0.7);
+  font-weight: 400;
+  line-height: 1.5;
+  color: rgba(23, 43, 77, 0.6);
+}
+.welcome-date {
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: rgba(23, 43, 77, 0.5);
 }
 
 /* 滚动内容区 */
@@ -453,13 +617,10 @@ function handleOnTabChange(index) {
 .item-icon {
   width: 46px;
   height: 46px;
-  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background-color: rgba(47, 123, 255, 0.1);
-  border: 1rpx solid rgba(47, 123, 255, 0.18);
 }
 
 .item-text {
@@ -500,5 +661,134 @@ function handleOnTabChange(index) {
 .empty-text {
   font-size: 12px;
   color: #b3b3b3;
+}
+
+.kpi-row {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 24px;
+}
+
+.kpi-card {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  height: 72px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background-image: linear-gradient(135deg, #ffffff 0%, #f7faff 100%);
+  border: 1px solid rgba(0, 79, 197, 0.06);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(23, 43, 77, 0.08);
+}
+
+.kpi-text {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
+.kpi-count {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 22px;
+  color: #172b4d;
+}
+
+.kpi-label {
+  font-size: 12px;
+  line-height: 16px;
+  color: #86909c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recommend-box {
+  margin-bottom: 24px;
+}
+
+.recommend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+}
+
+.recommend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 12px;
+  background-image: linear-gradient(135deg, #ffffff 0%, #f7faff 100%);
+  border: 1px solid rgba(0, 79, 197, 0.06);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(23, 43, 77, 0.08);
+}
+
+.recommend-rank {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  background-color: #eef2f8;
+}
+
+.recommend-rank.is-first {
+  color: #fff;
+  background-color: #f5b544;
+}
+
+.recommend-rank.is-second {
+  color: #fff;
+  background-color: #ff9500;
+}
+
+.recommend-rank.is-third {
+  color: #fff;
+  background-color: #004fc5;
+}
+
+.recommend-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  color: #172b4d;
+}
+
+.recommend-tag {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #2f7bff;
+  background-color: rgba(47, 123, 255, 0.1);
+}
+
+.recommend-count {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #004fc5;
+}
+
+.recommend-empty {
+  padding: 24px 0;
+  text-align: center;
 }
 </style>

@@ -85,6 +85,25 @@
         where id = #{id}
     </update>
 
+    <select id="queryMyHotAgents" resultType="com.spark.common.bean.home.result.DashboardHotResult">
+        select receiver_id as id ,
+               count(1) as count
+        from chat_space
+        where delete_flag = 1
+          and space_type = 3
+          and sender_id = #{userId}
+          and tenant_id = #{tenantId}
+          <if test="startTime != null and startTime != ''">
+              and created_dt &gt;= #{startTime}
+          </if>
+          <if test="endTime != null and endTime != ''">
+              and created_dt &lt;= #{endTime}
+          </if>
+        group by receiver_id
+        order by count desc
+        limit #{limit}
+    </select>
+
     <update id="updateTitleBySpaceId">
         update chat_space
         set title = #{title}, updated_by = #{updatedBy}, updated_dt = now()

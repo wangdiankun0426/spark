@@ -2,6 +2,7 @@ package com.spark.llm.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.llm.entity.Model;
 import com.spark.common.bean.llm.query.ProviderQuery;
 import com.spark.common.bean.llm.query.ModelQuery;
@@ -186,6 +187,27 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
         }
         result.setData(modelResult);
         result.setObjId(modelResult.getId());
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 统计可用模型数量，与模型列表同口径
+     * @param query 查询参数
+     * @return 数量结果
+     */
+    @Override
+    @DataScope
+    public ResultData<Integer> countMyModels(ModelQuery query) {
+        ResultData<Integer> result = new ResultData<>();
+        if (query == null) {
+            query = new ModelQuery();
+        }
+        if (!SessionHolder.isSysAdmin()) {
+            query.setTenantId(SessionHolder.getCurrentTenantId());
+        }
+        int count = modelDao.queryModelCount(query);
+        result.setData(count);
         result.setCode(ResultData.OK);
         return result;
     }

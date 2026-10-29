@@ -25,7 +25,7 @@ public class EntityController {
      * @return 创建结果
      */
     @PostMapping("create")
-    private ResultData<Void> createEntity(EntityVO entityVO) {
+    public ResultData<Void> createEntity(EntityVO entityVO) {
         return entityService.createEntity(entityVO);
     }
 }
@@ -33,7 +33,7 @@ public class EntityController {
 
 - 路径小写：`create` / `update` / `delete` / `pageList` / `detail` / `tree`
 - 写操作用 `@PostMapping`，查询用 `@GetMapping`
-- **方法修饰符用 `private`**（项目实际约定，见 `DepartmentController` 等现有代码）
+- **方法修饰符用 `public`**（Controller 方法须声明为 public）
 - Controller 不含业务逻辑，直接委托：`return xxxService.xxx(vo);`
 - Controller 不抛异常
 - 大文本入参（技能全文、表单 JSON 等）加 `@RequestBody`，前端对应改 `data` 传参，避免 params 拼 URL 超 8KB 触发 431（先例 `FormController#saveFormJson`、`SkillController`）

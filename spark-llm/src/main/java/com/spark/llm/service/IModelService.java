@@ -52,4 +52,11 @@ public interface IModelService {
      */
     ResultData<ModelResult> queryModelDetail(ModelQuery query);
 
+    /**
+     * 统计可用模型数量，与模型列表同口径
+     * @param query 查询参数
+     * @return 数量结果
+     */
+    ResultData<Integer> countMyModels(ModelQuery query);
+
 }

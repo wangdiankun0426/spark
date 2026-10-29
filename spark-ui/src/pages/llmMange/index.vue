@@ -46,13 +46,13 @@
             <el-icon style="font-size: 24px;">
               <Agent/>
             </el-icon>
-            <template #title>Agent</template>
+            <template #title>智能体</template>
           </el-menu-item>
           <el-menu-item v-if="hasMenu(MENU_CODES.LLM_WORKFLOW)" index="/llm/workflow">
             <el-icon style="font-size: 24px;">
               <Workflow/>
             </el-icon>
-            <template #title>WorkFlow</template>
+            <template #title>工作流</template>
           </el-menu-item>
 
           <div

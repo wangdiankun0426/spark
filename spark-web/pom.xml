@@ -71,6 +71,11 @@
             <artifactId>spark-monitor</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.spark</groupId>
+            <artifactId>spark-home</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
         <!-- MCP官方Java SDK（服务端） -->
         <dependency>
             <groupId>io.modelcontextprotocol.sdk</groupId>
@@ -194,6 +199,10 @@
                         <include>
                             <groupId>com.spark</groupId>
                             <artifactId>spark-monitor</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.spark</groupId>
+                            <artifactId>spark-home</artifactId>
                         </include>
                     </includes>
                 </configuration>

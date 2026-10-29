@@ -7,6 +7,7 @@ import com.spark.common.bean.chat.entity.ChatSpace;
 import com.spark.common.bean.chat.query.ChatSpaceQuery;
 import com.spark.common.bean.chat.result.ChatSpaceResult;
 import com.spark.common.bean.chat.vo.ChatSpaceVO;
+import com.spark.common.bean.home.result.DashboardHotResult;
 import com.spark.common.bean.sys.query.TenantUserQuery;
 import com.spark.common.bean.sys.result.TenantUserResult;
 import com.spark.common.bean.llm.query.AgentQuery;
@@ -15,9 +16,7 @@ import com.spark.common.bean.llm.result.AgentResult;
 import com.spark.common.bean.llm.result.ModelResult;
 import com.spark.common.enums.ChatSpaceTypeEnum;
 import com.spark.common.enums.ErrorCodeEnum;
-import com.spark.common.enums.ModelTypeEnum;
 import com.spark.common.enums.ObjectTypeEnum;
-import com.spark.common.enums.StatusEnum;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.StringUtil;
 import com.spark.dao.chat.ChatMsgDao;
@@ -36,6 +35,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * +++/\_/\
@@ -377,6 +377,35 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
             agentList.forEach(agent -> nameMap.put(agent.getId(), agent.getName()));
         }
         return nameMap;
+    }
+
+    /**
+     * 查询我常用的智能体
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @param limit 条数
+     * @return 热门智能体列表
+     */
+    @Override
+    public List<DashboardHotResult> queryMyHotAgents(String startTime, String endTime, int limit) {
+        Long userId = SessionHolder.getCurrentUserId();
+        Long tenantId = SessionHolder.getCurrentTenantId();
+        List<DashboardHotResult> list = chatSpaceDao.queryMyHotAgents(userId, tenantId, startTime, endTime, limit);
+        if (CollectionUtil.isEmpty(list)) {
+            return list;
+        }
+        List<Long> agentIds = list.stream().map(DashboardHotResult::getId).collect(Collectors.toList());
+        AgentQuery agentQuery = new AgentQuery();
+        agentQuery.setIds(agentIds);
+        agentQuery.setPage(false);
+        List<AgentResult> agentList = agentDao.queryAgentList(agentQuery);
+        Map<Long, String> nameMap = agentList.stream()
+                .collect(Collectors.toMap(AgentResult::getId, AgentResult::getName));
+        for (DashboardHotResult item : list) {
+            item.setName(nameMap.get(item.getId()));
+            item.setHotType("agent");
+        }
+        return list;
     }
 
     /**

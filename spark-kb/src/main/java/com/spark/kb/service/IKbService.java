@@ -51,4 +51,5 @@ public interface IKbService {
      * @return 详情
      */
     ResultData<KnowledgeResult> queryKnowledgeDetail(KnowledgeQuery query);
+
 }

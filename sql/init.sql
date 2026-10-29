@@ -38,8 +38,8 @@ INSERT INTO `task_template_param` (`id`,`template_id`, `name`, `code`, `type`, `
 INSERT INTO `sys_menu` (`name`, `parent_code`, `type`, `code`, `delete_flag`, `created_by`, `created_dt`) VALUES
 ( 'AI管理模块', '', 1, 'module.llm', 1, 101, now()),
 ('业务管理模块', '', 1, 'module.bus', 1, 101, now()),
-( 'Agent菜单', 'module.llm', 2, 'menu.llm.agent', 1, 101, now()),
-( 'WorkFlow菜单', 'module.llm', 2, 'menu.llm.workflow', 1, 101, now()),
+( '智能体菜单', 'module.llm', 2, 'menu.llm.agent', 1, 101, now()),
+( '工作流菜单', 'module.llm', 2, 'menu.llm.workflow', 1, 101, now()),
 ( '模型用量菜单', 'module.llm', 2, 'menu.llm.modelUsage', 1, 101, now()),
 ( '模型市场菜单', 'module.llm', 2, 'menu.llm.modelMarket', 1, 101, now()),
 ('技能库菜单', 'module.llm', 2, 'menu.llm.skill', 1, 101, now()),

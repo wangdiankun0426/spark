@@ -3,6 +3,8 @@ package com.spark.workflow.service.impl;
 import com.spark.common.bean.base.BaseContext;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
+import com.spark.common.bean.home.result.DashboardHotResult;
 import com.spark.common.bean.workflow.entity.WfInstance;
 import com.spark.common.bean.workflow.query.WfInstanceNodeQuery;
 import com.spark.common.bean.workflow.query.WfInstanceQuery;
@@ -212,6 +214,24 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
         result.setData(instance);
         result.setCode(ResultData.OK);
         return result;
+    }
+
+    /**
+     * 查询我常用的工作流
+     *
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @param limit 条数
+     * @return 热门工作流列表
+     */
+    @Override
+    public List<DashboardHotResult> queryMyHotWorkflows(String startTime, String endTime, int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        Long userId = SessionHolder.getCurrentUserId();
+        Long tenantId = SessionHolder.getCurrentTenantId();
+        return instanceDao.queryMyHotWorkflows(userId, tenantId, startTime, endTime, limit);
     }
 
     /**

@@ -7,14 +7,15 @@
 
     <!-- 分类页签 -->
     <view class="flow-tabs">
-      <up-tabs
-          :list="tabList"
-          :current="tabIndex"
-          lineColor="#2f7bff"
-          :lineWidth="tabLineWidth"
-          :activeStyle="{color: '#2f7bff', fontWeight: 700}"
-          :scrollable="false"
-          @change="handleTabChange"/>
+      <view
+          v-for="(tab, index) in tabList"
+          :key="index"
+          class="seg-tab"
+          :class="{ 'is-active': index === tabIndex }"
+          @click="handleTabChange(index)"
+      >
+        <text class="seg-tab__text">{{ tab.name }}</text>
+      </view>
     </view>
 
     <!-- 流程实例列表 -->
@@ -101,8 +102,6 @@ const visibleTabList = [
   {name: '抄送给我', api: pageCopyMyListAPI, type: 5}
 ];
 const tabList = computed(() => visibleTabList.map(cfg => ({name: cfg.name})));
-// 下划线宽度取页签的六成并自动居中：不可滚动时页签平分屏宽
-const tabLineWidth = Math.floor(uni.getSystemInfoSync().windowWidth / visibleTabList.length * 0.6);
 const tabIndex = ref(0);
 // 当前激活页签配置
 const activeTab = computed(() => visibleTabList[tabIndex.value]);
@@ -155,10 +154,12 @@ function handleGetInstanceList() {
 
 /**
  * 切换页签
- * @param tab uview-plus tabs change 事件参数（{...页签项, index}，index 为下标）
+ * @param index 页签下标
  */
-function handleTabChange(tab) {
-  const index = tab.index;
+function handleTabChange(index) {
+  if (index === tabIndex.value) {
+    return;
+  }
   tabIndex.value = index;
   query.value.pageNo = 1;
   instanceList.value = [];
@@ -233,7 +234,37 @@ function handleOnTabChange(index) {
 }
 
 .flow-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
   background-color: #ffffff;
+}
+
+.seg-tab {
+  flex: 1;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.seg-tab__text {
+  font-size: 14px;
+  color: #86909c;
+  transition: color 0.25s ease;
+}
+
+.seg-tab.is-active {
+  background-image: linear-gradient(135deg, #2f7bff 0%, #5b94f5 100%);
+  box-shadow: 0 2px 8px rgba(47, 123, 255, 0.35);
+}
+
+.seg-tab.is-active .seg-tab__text {
+  color: #ffffff;
+  font-weight: 600;
 }
 
 .flow-list {

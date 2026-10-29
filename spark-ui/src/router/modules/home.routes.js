@@ -1,4 +1,5 @@
 import home from '@/pages/home/index.vue'
+import dashboard from '@/pages/home/dashboard/index.vue'
 import flowApplication from '@/pages/home/flow/application/index.vue'
 import flowMyApplication from '@/pages/home/flow/myApplication/index.vue'
 import flowMyTodo from '@/pages/home/flow/myTodo/index.vue'
@@ -13,12 +14,20 @@ export default [
     {
         path: '/home',
         name: 'home',
-        redirect: '/home/aichat',
+        redirect: '/home/dashboard',
         component: home,
         meta: {
             title: '工作台'
         },
         children: [
+            {
+                path: '/home/dashboard',
+                name: 'homeDashboard',
+                component: dashboard,
+                meta: {
+                    title: '工作台',
+                }
+            },
             {
                 path: '/home/contact',
                 name: 'contact',
@@ -32,7 +41,7 @@ export default [
                 name: 'aichat',
                 component: aichat,
                 meta: {
-                    title: 'AiChat',
+                    title: 'AI对话',
                 }
             },
             {
@@ -40,7 +49,7 @@ export default [
                 name: 'homeAgent',
                 component: homeAgent,
                 meta: {
-                    title: 'Agent',
+                    title: '智能体',
                 }
             },
             {
@@ -48,7 +57,7 @@ export default [
                 name: 'homeWorkflow',
                 component: homeWorkflow,
                 meta: {
-                    title: 'WorkFlow',
+                    title: '工作流',
                 }
             },
 

@@ -6,6 +6,9 @@ import com.spark.common.bean.chat.entity.ChatSpace;
 import com.spark.common.bean.chat.query.ChatSpaceQuery;
 import com.spark.common.bean.chat.result.ChatSpaceResult;
 import com.spark.common.bean.chat.vo.ChatSpaceVO;
+import com.spark.common.bean.home.result.DashboardHotResult;
+
+import java.util.List;
 
 /**
  * +++/\_/\
@@ -67,4 +70,13 @@ public interface IChatSpaceService {
      * @return 会话结果
      */
     ChatSpaceResult queryParticipantSpace(Long spaceId, Long userId);
+
+    /**
+     * 查询我常用的智能体
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @param limit 条数
+     * @return 热门智能体列表
+     */
+    List<DashboardHotResult> queryMyHotAgents(String startTime, String endTime, int limit);
 }

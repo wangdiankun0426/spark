@@ -26,6 +26,7 @@
         <module>spark-workflow</module>
         <module>spark-dms</module>
         <module>spark-monitor</module>
+        <module>spark-home</module>
     </modules>
 
     <properties>

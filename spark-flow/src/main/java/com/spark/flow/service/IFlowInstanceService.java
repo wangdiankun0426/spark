@@ -50,6 +50,30 @@ public interface IFlowInstanceService {
     ResultData<PageResult<FlowInstanceResult>> pageMyTodoList(FlowInstanceQuery query);
 
     /**
+     * 统计我的待办数量
+     * @return 待办数量
+     */
+    int countMyTodo();
+
+    /**
+     * 统计我的已办数量
+     * @return 已办数量
+     */
+    int countMyDone();
+
+    /**
+     * 统计我的申请数量
+     * @return 申请数量
+     */
+    int countMyApplication();
+
+    /**
+     * 统计抄送给我的数量
+     * @return 抄送数量
+     */
+    int countMyCopy();
+
+    /**
      * 审批流程实例
      * @param instanceVO 审批参数
      * @return 审批结果

@@ -17,18 +17,18 @@
 
         <div class="my-info-right">
           <text class="my-name-text">{{userInfo.name}}</text>
-          <text class="my-dept-text">{{userInfo.deptPath}}</text>
+          <text class="my-dept-text">部门：{{userInfo.deptPath}}</text>
         </div>
       </div>
     </div>
 
     <div class="my-content">
-      <view class="func-card">
-        <text class="func-card-title">常用功能</text>
+      <view class="func-card" v-for="section in funcSections" :key="section.title">
+        <text class="func-card-title">{{ section.title }}</text>
         <view class="func-grid">
           <view
               class="func-item"
-              v-for="item in funcList"
+              v-for="item in section.list"
               :key="item.url"
               @click="goFunc(item.url)"
           >
@@ -91,12 +91,22 @@ const userInfo = computed(() => store.getters["user/getUserInfo"] || {
   deptPath: undefined
 });
 
-// 常用功能入口
-const funcList = [
-  {label: '通讯录', icon: 'man-add-fill', color: '#1890ff', bgColor: '#e6f7ff', url: '/views/contact/index'},
-  {label: '个人信息', icon: 'account-fill', color: '#13c2c2', bgColor: '#e6fffb', url: '/pages/my/information'},
-  {label: '修改密码', icon: 'lock-fill', color: '#52c41a', bgColor: '#f6ffed', url: '/pages/my/updatePwd'},
-  {label: '修改头像', icon: 'photo-fill', color: '#fa8c16', bgColor: '#fff7e6', url: '/pages/my/updateAvatar'}
+// 功能入口，按热门与基础分组
+const funcSections = [
+  {
+    title: '热门功能',
+    list: [
+      {label: '通讯录', icon: 'man-add-fill', color: '#1890ff', bgColor: '#e6f7ff', url: '/views/contact/index'}
+    ]
+  },
+  {
+    title: '基础功能',
+    list: [
+      {label: '个人信息', icon: 'account-fill', color: '#13c2c2', bgColor: '#e6fffb', url: '/pages/my/information'},
+      {label: '修改密码', icon: 'lock-fill', color: '#52c41a', bgColor: '#f6ffed', url: '/pages/my/updatePwd'},
+      {label: '修改头像', icon: 'photo-fill', color: '#fa8c16', bgColor: '#fff7e6', url: '/pages/my/updateAvatar'}
+    ]
+  }
 ];
 
 /**
@@ -148,9 +158,9 @@ function handleOnTabChange(index) {
   position: relative;
   background-image: linear-gradient(180deg,
           #5b94f5 0%,
-          #83b3ff 50px,
-          #b6d2ff 110px,
-          #ffffff 170px);
+          #83b3ff 70px,
+          #b6d2ff 138px,
+          #ffffff 176px);
 }
 
 /* 右上角设置入口 */
@@ -192,9 +202,9 @@ function handleOnTabChange(index) {
 .my-name-text {
   font-size: 20px;
   line-height: 1.4;
-  letter-spacing: 1.2px;
+  letter-spacing: 0.5px;
   color: $spark-color-text;
-  font-weight: 800;
+  font-weight: 700;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -204,11 +214,11 @@ function handleOnTabChange(index) {
 }
 
 .my-dept-text {
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1.4;
-  letter-spacipcng: 1.2px;
-  font-weight: 500;
-  color: rgba(23, 43, 77, 0.7);
+  letter-spacing: 0.5px;
+  font-weight: 400;
+  color: rgba(23, 43, 77, 0.6);
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -220,16 +230,23 @@ function handleOnTabChange(index) {
 .my-content {
   flex: 1;
   overflow-y: auto;
+  margin-top: -12px;
+  position: relative;
+  z-index: 1;
 }
 
 .func-card {
   width: 90%;
-  margin: 6px auto 0;
+  margin: 4px auto 0;
   background-color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 52, 120, 0.04);
   border-radius: 10px;
   padding: 16px 8px;
-  box-shadow: 0 6px 20px rgba(0, 52, 120, 0.12);
+  box-shadow: 0 3px 10px rgba(0, 52, 120, 0.06);
+}
+
+.func-card + .func-card {
+  margin-top: 16px;
 }
 
 .func-card-title {

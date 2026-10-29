@@ -2,6 +2,7 @@ package com.spark.workflow.service;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.home.result.DashboardHotResult;
 import com.spark.common.bean.workflow.entity.WfInstance;
 import com.spark.common.bean.workflow.query.WfInstanceQuery;
 import com.spark.common.bean.workflow.query.WfInstanceNodeQuery;
@@ -54,4 +55,14 @@ public interface IWorkflowInstanceService {
      * @return 运行实例
      */
     ResultData<WfInstance> runWorkflow(WfRunVO runVO);
+
+    /**
+     * 查询我常用的工作流
+     *
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @param limit 条数
+     * @return 热门工作流列表
+     */
+    List<DashboardHotResult> queryMyHotWorkflows(String startTime, String endTime, int limit);
 }

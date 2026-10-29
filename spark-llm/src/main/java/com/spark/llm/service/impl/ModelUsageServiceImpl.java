@@ -3,6 +3,8 @@ package com.spark.llm.service.impl;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
+import com.spark.common.bean.home.result.DashboardHotResult;
+import com.spark.common.bean.home.result.DashboardUsageSummaryResult;
 import com.spark.common.bean.llm.query.ModelUsageQuery;
 import com.spark.common.bean.llm.result.ModelUsageResult;
 import com.spark.common.bean.llm.result.ModelUsageSummaryResult;
@@ -98,6 +100,67 @@ public class ModelUsageServiceImpl extends BaseService<ModelUsageQuery, ModelUsa
         result.setData(list);
         result.setCode(ResultData.OK);
         return result;
+    }
+
+    /**
+     * 查询我的用量总计
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 用量总计
+     */
+    @Override
+    public DashboardUsageSummaryResult queryMyUsageSummary(String startTime, String endTime) {
+        ModelUsageQuery query = this.buildMyQuery(startTime, endTime);
+        DashboardUsageSummaryResult summary = modelUsageDao.queryUsageTotal(query);
+        if (summary == null) {
+            summary = new DashboardUsageSummaryResult();
+            summary.setCallCount(0);
+            summary.setInputTokens(0L);
+            summary.setOutputTokens(0L);
+            summary.setTotalTokens(0L);
+        }
+        return summary;
+    }
+
+    /**
+     * 查询我的用量趋势
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 趋势列表
+     */
+    @Override
+    public List<ModelUsageTrendResult> queryMyUsageTrend(String startTime, String endTime) {
+        ModelUsageQuery query = this.buildMyQuery(startTime, endTime);
+        return modelUsageDao.queryUsageTrend(query);
+    }
+
+    /**
+     * 查询我的热门模型
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @param limit 条数
+     * @return 热门模型列表
+     */
+    @Override
+    public List<DashboardHotResult> queryMyHotModels(String startTime, String endTime, int limit) {
+        ModelUsageQuery query = this.buildMyQuery(startTime, endTime);
+        query.setPageSize(limit);
+        return modelUsageDao.queryHotModels(query);
+    }
+
+    /**
+     * 构造我的用量查询，强制当前用户与租户
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 查询参数
+     */
+    private ModelUsageQuery buildMyQuery(String startTime, String endTime) {
+        ModelUsageQuery query = new ModelUsageQuery();
+        query.setUserId(SessionHolder.getCurrentUserId());
+        query.setTenantId(SessionHolder.getCurrentTenantId());
+        query.setStartTime(startTime);
+        query.setEndTime(endTime);
+        return query;
     }
 
     /**

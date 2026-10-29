@@ -2,6 +2,8 @@ package com.spark.llm.service;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.home.result.DashboardHotResult;
+import com.spark.common.bean.home.result.DashboardUsageSummaryResult;
 import com.spark.common.bean.llm.query.ModelUsageQuery;
 import com.spark.common.bean.llm.result.ModelUsageResult;
 import com.spark.common.bean.llm.result.ModelUsageSummaryResult;
@@ -40,5 +42,30 @@ public interface IModelUsageService {
      * @return 趋势列表
      */
     ResultData<List<ModelUsageTrendResult>> queryUsageTrend(ModelUsageQuery query);
+
+    /**
+     * 查询我的用量总计
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 用量总计
+     */
+    DashboardUsageSummaryResult queryMyUsageSummary(String startTime, String endTime);
+
+    /**
+     * 查询我的用量趋势
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 趋势列表
+     */
+    List<ModelUsageTrendResult> queryMyUsageTrend(String startTime, String endTime);
+
+    /**
+     * 查询我的热门模型
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @param limit 条数
+     * @return 热门模型列表
+     */
+    List<DashboardHotResult> queryMyHotModels(String startTime, String endTime, int limit);
 
 }

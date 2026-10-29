@@ -73,6 +73,8 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
     @Autowired
     private FlowInstanceAssigneeDao instanceAssigneeDao;
     @Autowired
+    private FlowInstanceCopyDao instanceCopyDao;
+    @Autowired
     private FlowTemplateNodeDao templateNodeDao;
     @Autowired
     private FlowMessageService flowMessageService;
@@ -236,27 +238,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         if (query == null) {
             query = new FlowInstanceQuery();
         }
-        Long userId = SessionHolder.getCurrentUserId();
-        FlowInstanceAssigneeQuery instanceAssigneeQuery = new FlowInstanceAssigneeQuery();
-        instanceAssigneeQuery.setAssigneeId(userId);
-        instanceAssigneeQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
-        List<FlowInstanceAssigneeResult> instanceAssigneeList = instanceAssigneeDao.queryInstanceAssigneeList(instanceAssigneeQuery);
-        if (CollectionUtil.isEmpty(instanceAssigneeList)) {
-            result.setCode(ResultData.OK);
-            return result;
-        }
-        List<String> assigneeSetIds = instanceAssigneeList.stream().map(FlowInstanceAssigneeResult::getAssigneeSetId).filter(StringUtil::isNotBlank).toList();
-        if (CollectionUtil.isEmpty(assigneeSetIds)) {
-            result.setCode(ResultData.OK);
-            return result;
-        }
-        ResultData<List<String>> pendingInstanceIdsData = flowableService.queryPendingInstanceIds(assigneeSetIds);
-        if (pendingInstanceIdsData.getCode() != ResultData.OK) {
-            result.setCode(pendingInstanceIdsData.getCode());
-            result.setMessage(pendingInstanceIdsData.getMessage());
-            return result;
-        }
-        List<String> flowableInstanceIds = pendingInstanceIdsData.getData();
+        List<String> flowableInstanceIds = this.queryMyPendingInstanceIds();
         if (CollectionUtil.isEmpty(flowableInstanceIds)) {
             result.setCode(ResultData.OK);
             return result;
@@ -266,6 +248,77 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         result.setData(list);
         result.setCode(ResultData.OK);
         return result;
+    }
+
+    /**
+     * 统计我的待办数量
+     * @return 待办数量
+     */
+    @Override
+    public int countMyTodo() {
+        return this.queryMyPendingInstanceIds().size();
+    }
+
+    /**
+     * 统计我的已办数量
+     * @return 已办数量
+     */
+    @Override
+    public int countMyDone() {
+        Long userId = SessionHolder.getCurrentUserId();
+        FlowInstanceDiscussQuery discussQuery = new FlowInstanceDiscussQuery();
+        discussQuery.setAssigneeId(userId);
+        List<FlowInstanceDiscussResult> discussList = instanceDiscussDao.queryInstanceDiscussList(discussQuery);
+        if (CollectionUtil.isEmpty(discussList)) {
+            return 0;
+        }
+        return (int) discussList.stream().map(FlowInstanceDiscussResult::getInstanceId).distinct().count();
+    }
+
+    /**
+     * 统计我的申请数量
+     * @return 申请数量
+     */
+    @Override
+    public int countMyApplication() {
+        FlowInstanceQuery query = new FlowInstanceQuery();
+        query.setCreatedBy(SessionHolder.getCurrentUserId());
+        return instanceDao.queryInstanceCount(query);
+    }
+
+    /**
+     * 统计抄送给我的数量
+     * @return 抄送数量
+     */
+    @Override
+    public int countMyCopy() {
+        FlowInstanceCopyQuery query = new FlowInstanceCopyQuery();
+        query.setUserId(SessionHolder.getCurrentUserId());
+        return instanceCopyDao.queryCopyCount(query);
+    }
+
+    /**
+     * 查询我的待办对应的激活流程实例id
+     * @return flowable实例id列表，无待办返回空列表
+     */
+    private List<String> queryMyPendingInstanceIds() {
+        Long userId = SessionHolder.getCurrentUserId();
+        FlowInstanceAssigneeQuery instanceAssigneeQuery = new FlowInstanceAssigneeQuery();
+        instanceAssigneeQuery.setAssigneeId(userId);
+        instanceAssigneeQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        List<FlowInstanceAssigneeResult> instanceAssigneeList = instanceAssigneeDao.queryInstanceAssigneeList(instanceAssigneeQuery);
+        if (CollectionUtil.isEmpty(instanceAssigneeList)) {
+            return new ArrayList<>();
+        }
+        List<String> assigneeSetIds = instanceAssigneeList.stream().map(FlowInstanceAssigneeResult::getAssigneeSetId).filter(StringUtil::isNotBlank).toList();
+        if (CollectionUtil.isEmpty(assigneeSetIds)) {
+            return new ArrayList<>();
+        }
+        ResultData<List<String>> pendingInstanceIdsData = flowableService.queryPendingInstanceIds(assigneeSetIds);
+        if (pendingInstanceIdsData.getCode() != ResultData.OK || CollectionUtil.isEmpty(pendingInstanceIdsData.getData())) {
+            return new ArrayList<>();
+        }
+        return pendingInstanceIdsData.getData();
     }
 
     /**

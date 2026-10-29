@@ -104,4 +104,26 @@
         group by date_format(created_dt, '%Y-%m-%d') , type
         order by dt asc
     </select>
+
+    <select id="queryUsageTotal" resultType="com.spark.common.bean.home.result.DashboardUsageSummaryResult">
+        select count(1) as callCount ,
+               ifnull(sum(input_tokens), 0) as inputTokens ,
+               ifnull(sum(output_tokens), 0) as outputTokens ,
+               ifnull(sum(total_tokens), 0) as totalTokens
+        from llm_model_usage
+        where 1 = 1
+        <include refid="searchCondition"/>
+    </select>
+
+    <select id="queryHotModels" resultType="com.spark.common.bean.home.result.DashboardHotResult">
+        select model_id as id ,
+               max(model_name) as name ,
+               count(1) as count
+        from llm_model_usage
+        where 1 = 1
+        <include refid="searchCondition"/>
+        group by model_id
+        order by count desc
+        limit #{pageSize}
+    </select>
 </mapper>

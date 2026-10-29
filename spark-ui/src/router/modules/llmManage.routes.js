@@ -43,7 +43,7 @@ export default [
                 name: 'agent',
                 component: agent,
                 meta: {
-                    title: 'Agent',
+                    title: '智能体',
                     menuCode: MENU_CODES.LLM_AGENT
                 }
             },
@@ -52,7 +52,7 @@ export default [
                 name: 'llmWorkflow',
                 component: workflowHub,
                 meta: {
-                    title: 'WorkFlow',
+                    title: '工作流',
                     menuCode: MENU_CODES.LLM_WORKFLOW
                 }
             },
