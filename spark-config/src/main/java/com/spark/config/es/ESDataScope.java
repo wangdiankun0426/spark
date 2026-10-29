@@ -19,9 +19,9 @@ import java.util.List;
  * @since 2026-10-29 10:00:00
  * ES 数据权限过滤条件构造，语义与 DataScopeAspect 保持一致
  */
-public final class ESDataScopeUtil {
+public final class ESDataScope {
 
-    private ESDataScopeUtil() {
+    private ESDataScope() {
     }
 
     /**

@@ -14,7 +14,7 @@ import com.spark.dao.llm.AgentDao;
 import com.spark.dao.llm.McpDao;
 import com.spark.dao.llm.SkillDao;
 import com.spark.llm.mcp.McpClientManager;
-import com.spark.llm.memory.RedisChatMemoryStore;
+import com.spark.llm.memory.RedisChatMemory;
 import com.spark.llm.model.ContextStreamingChatModel;
 import com.spark.llm.model.ModelFactory;
 import com.spark.llm.tools.SearchKnowledge;
@@ -63,7 +63,7 @@ public class AgentFactory {
     @Autowired
     private SkillDao skillDao;
     @Autowired
-    private RedisChatMemoryStore redisChatMemoryStore;
+    private RedisChatMemory redisChatMemory;
     @Autowired
     private McpClientManager mcpClientManager;
     @Autowired
@@ -202,14 +202,14 @@ public class AgentFactory {
      */
     private IAgent assembleAgent(Agent agent, StreamingChatModel streamingModel, ChatModel chatModel) {
         int maxMessages = agent.getMaxMessages() != null ? agent.getMaxMessages() : 10;
-        // 构建Agent，记忆通过RedisChatMemoryStore持久化，按memoryId（spaceId）隔离
+        // 构建Agent，记忆通过redisChatMemory持久化，按memoryId（spaceId）隔离
         AiServices<IAgent> builder = AiServices.builder(IAgent.class)
                 .chatModel(chatModel)
                 .streamingChatModel(streamingModel)
                 .chatMemoryProvider(memoryId -> MessageWindowChatMemory.builder()
                         .id(memoryId)
                         .maxMessages(maxMessages)
-                        .chatMemoryStore(redisChatMemoryStore)
+                        .chatMemoryStore(redisChatMemory)
                         .build());
         // 组装系统提示词，Agent自定义提示词优先，否则使用默认的工具优先提示词
         String prompt = "你是一个智能助手。当用户提出问题时，请优先使用可用的工具来获取准确信息。如果工具可以提供相关信息，必须先调用工具，不要仅凭自己的知识直接回答。";

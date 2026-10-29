@@ -10,16 +10,17 @@ import com.spark.common.bean.kb.result.KnowledgeResult;
 import com.spark.common.bean.llm.result.RetrieveResult;
 import com.spark.common.constant.ESIndexName;
 import com.spark.common.kb.IKbRetriever;
-import com.spark.config.es.ESDataScopeUtil;
-import com.spark.llm.model.ModelFactory;
-import com.spark.llm.model.RerankModel;
+import com.spark.config.es.ESDataScope;
 import com.spark.common.enums.ModelUsageSceneEnum;
 import com.spark.common.utils.CollectionUtil;
-import com.spark.common.utils.ModelUsageSceneHolder;
+import com.spark.common.llm.ModelUsageSceneHolder;
 import com.spark.common.utils.StringUtil;
+import com.spark.llm.model.ModelFactory;
 import dev.langchain4j.data.embedding.Embedding;
+import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.scoring.ScoringModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -138,25 +139,28 @@ public class KbRetrieve implements IKbRetriever {
         }
         try {
             ModelUsageSceneHolder.push(ModelUsageSceneEnum.RETRIEVE_RERANK);
-            RerankModel rerankModel = modelFactory.getRerankModel(rerankModelId);
-            if (rerankModel == null) {
+            ScoringModel scoringModel = modelFactory.getRerankModel(rerankModelId);
+            if (scoringModel == null) {
                 logger.warn("rerankModel is null, rerankModelId={}", rerankModelId);
                 return result;
             }
-            List<RerankModel.RerankResult> rerankResults = rerankModel.rerank(query, contents, Math.min(topN, contents.size()));
-            if (CollectionUtil.isEmpty(rerankResults)) {
-                logger.warn("rerank returns empty, fallback to original order, rerankModelId={}", rerankModelId);
+            List<TextSegment> segments = contents.stream().map(TextSegment::from).collect(Collectors.toList());
+            Response<List<Double>> scoreResponse = scoringModel.scoreAll(segments, query);
+            List<Double> scores = scoreResponse.content();
+            if (CollectionUtil.isEmpty(scores) || scores.size() != contents.size()) {
+                logger.warn("rerank returns invalid scores, fallback to original order, rerankModelId={}", rerankModelId);
                 return result;
             }
+            // 按下标配对分数，按分数降序后取前topN
+            List<Integer> order = new ArrayList<>();
+            for (int i = 0; i < contents.size(); i++) {
+                order.add(i);
+            }
+            order.sort((a, b) -> Double.compare(scores.get(b), scores.get(a)));
+            int limit = Math.min(topN, contents.size());
             List<String> reranked = new ArrayList<>();
-            for (RerankModel.RerankResult rr : rerankResults) {
-                int idx = rr.getIndex();
-                if (idx >= 0 && idx < contents.size()) {
-                    reranked.add(contents.get(idx));
-                }
-            }
-            if (reranked.isEmpty()) {
-                return result;
+            for (int i = 0; i < limit; i++) {
+                reranked.add(contents.get(order.get(i)));
             }
             result.setContents(reranked);
             logger.info("rerank success, originalSize={}, rerankedSize={}", contents.size(), reranked.size());
@@ -329,7 +333,7 @@ public class KbRetrieve implements IKbRetriever {
             List<FieldValue> values = parentIds.stream()
                     .map(id -> FieldValue.of(id.longValue()))
                     .collect(Collectors.toList());
-            Query scopeQuery = ESDataScopeUtil.scopeQuery();
+            Query scopeQuery = ESDataScope.scopeQuery();
             SearchRequest request = SearchRequest.of(b -> b
                     .index(ESIndexName.DOCUMENT_CHUNK_INDEX_NAME)
                     .query(q -> q.bool(bb -> {
@@ -413,7 +417,7 @@ public class KbRetrieve implements IKbRetriever {
         List<FieldValue> values = kbIds.stream()
                 .map(id -> FieldValue.of(id.longValue()))
                 .collect(Collectors.toList());
-        Query scopeQuery = ESDataScopeUtil.scopeQuery();
+        Query scopeQuery = ESDataScope.scopeQuery();
         return Query.of(q -> q.bool(b -> {
             b.must(scopeQuery);
             b.must(m -> m.terms(t -> t.field("prtId").terms(tv -> tv.value(values))));

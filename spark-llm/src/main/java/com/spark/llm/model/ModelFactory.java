@@ -15,6 +15,7 @@ import com.spark.common.utils.CollectionUtil;
 import com.spark.llm.usage.EmbeddingUsageWrapper;
 import com.spark.llm.usage.ModelUsageChatListener;
 import com.spark.llm.usage.ModelUsageRecorder;
+import com.spark.llm.usage.ScoringUsageWrapper;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
@@ -23,6 +24,7 @@ import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiChatRequestParameters;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import dev.langchain4j.model.scoring.ScoringModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +56,7 @@ public class ModelFactory {
     private final Map<Long, ChatModel> chatModelCache = new ConcurrentHashMap<>();
     private final Map<Long, StreamingChatModel> streamingChatModelCache = new ConcurrentHashMap<>();
     private final Map<Long, EmbeddingModel> embeddingModelCache = new ConcurrentHashMap<>();
-    private final Map<Long, RerankModel> rerankModelCache = new ConcurrentHashMap<>();
+    private final Map<Long, ScoringModel> rerankModelCache = new ConcurrentHashMap<>();
     
     /**
      * 获取默认的聊天模型
@@ -187,9 +189,9 @@ public class ModelFactory {
     /**
      * 根据模型ID获取排序模型
      * @param modelId 模型ID
-     * @return RerankModel 实例
+     * @return ScoringModel 实例（带用量采集包装）
      */
-    public RerankModel getRerankModel(Long modelId) {
+    public ScoringModel getRerankModel(Long modelId) {
         if (modelId == null) {
             return null;
         }
@@ -288,12 +290,14 @@ public class ModelFactory {
     /**
      * 创建排序模型实例
      */
-    private RerankModel createRerankModel(Model model) {
+    private ScoringModel createRerankModel(Model model) {
         ModelTypeEnum typeEnum = ModelTypeEnum.indexOf(model.getType());
         if (Objects.requireNonNull(typeEnum) == ModelTypeEnum.RERANK) {
             Provider provider = loadProvider(model.getProviderId());
             logger.info("create rerankModel, model={}, provider={}", model.getName(), provider.getName());
-            return new RerankModel(provider.getApiUrl(), provider.getSecretKey(), this.buildModelInfo(model), modelUsageRecorder);
+            ModelInfo modelInfo = this.buildModelInfo(model);
+            RerankModel rerankModel = new RerankModel(provider.getApiUrl(), provider.getSecretKey(), modelInfo);
+            return new ScoringUsageWrapper(rerankModel, modelUsageRecorder, modelInfo);
         }
         throw new UnsupportedOperationException("Unsupported model type: " + typeEnum.getDesc());
     }

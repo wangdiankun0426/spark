@@ -1,4 +1,4 @@
-package com.spark.common.utils;
+package com.spark.common.llm;
 
 import com.spark.common.enums.ModelUsageSceneEnum;
 

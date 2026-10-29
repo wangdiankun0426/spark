@@ -35,7 +35,7 @@ import com.spark.chat.service.IChatMsgService;
 import com.spark.chat.service.IChatSpaceService;
 import com.spark.chat.service.UserChannelRel;
 import com.spark.common.utils.CollectionUtil;
-import com.spark.common.utils.ModelUsageSceneHolder;
+import com.spark.common.llm.ModelUsageSceneHolder;
 import com.spark.common.utils.SessionContextUtil;
 import com.spark.common.utils.StringUtil;
 import dev.langchain4j.data.message.AiMessage;

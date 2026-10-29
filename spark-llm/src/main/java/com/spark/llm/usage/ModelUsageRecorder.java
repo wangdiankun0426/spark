@@ -1,7 +1,10 @@
 package com.spark.llm.usage;
 
 import com.spark.common.bean.llm.dto.ModelInfo;
+import com.spark.common.bean.llm.dto.UsageSnapshot;
 import com.spark.common.bean.llm.entity.ModelUsage;
+import com.spark.common.constant.DefaultBaseParam;
+import com.spark.common.enums.ModelUsageSceneEnum;
 import com.spark.dao.llm.ModelUsageDao;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
@@ -24,7 +27,8 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * @author wangdiankun
  * @since 2026/10/27 10:00:00
- * 模型token用量采集器，调用线程入队、定时批量落库，采集失败不影响模型主链路
+ * 模型token用量采集器
+ * 调用线程入队、定时批量落库，采集失败不影响模型主链路
  */
 @Component
 public class ModelUsageRecorder {
@@ -46,21 +50,6 @@ public class ModelUsageRecorder {
      */
     private static final long DROP_WARN_INTERVAL_MS = 60000L;
 
-    /**
-     * 无会话系统调用兜底租户id
-     */
-    private static final Long SYSTEM_TENANT_ID = 0L;
-
-    /**
-     * 无会话系统调用兜底用户id
-     */
-    private static final Long SYSTEM_USER_ID = 101L;
-
-    /**
-     * 无会话系统调用兜底部门id
-     */
-    private static final Long SYSTEM_DEPT_ID = 0L;
-
     @Autowired
     private ModelUsageDao modelUsageDao;
 
@@ -74,25 +63,27 @@ public class ModelUsageRecorder {
     /**
      * 采集一条模型用量
      * @param modelInfo 模型元数据
-     * @param tenantId 租户id
-     * @param userId 使用人id
-     * @param deptId 部门id
-     * @param scene 场景编码
+     * @param snapshot 调用瞬间的会话与场景快照
      * @param inputTokens 输入token
      * @param outputTokens 输出token
      * @param totalTokens 总token
      */
-    public void record(ModelInfo modelInfo, Long tenantId, Long userId, Long deptId, String scene,
-                       Integer inputTokens, Integer outputTokens, Integer totalTokens) {
+    public void record(ModelInfo modelInfo, UsageSnapshot snapshot, Integer inputTokens, Integer outputTokens, Integer totalTokens) {
         if (modelInfo == null || modelInfo.getModelId() == null) {
             return;
         }
+        if (snapshot == null) {
+            snapshot = new UsageSnapshot(DefaultBaseParam.SYSTEM_TENANT_ID, DefaultBaseParam.SYSTEM_USER_ID,
+                    DefaultBaseParam.SYSTEM_DEPT_ID, ModelUsageSceneEnum.OTHER.getValue());
+        }
         try {
-            Long tenantIdVal = tenantId == null ? SYSTEM_TENANT_ID : tenantId;
-            Long operatorId = userId == null ? SYSTEM_USER_ID : userId;
+            Long tenantId = snapshot.getTenantId() == null ? DefaultBaseParam.SYSTEM_TENANT_ID : snapshot.getTenantId();
+            Long userId = snapshot.getUserId() == null ? DefaultBaseParam.SYSTEM_USER_ID : snapshot.getUserId();
+            Long deptId = snapshot.getDeptId() == null ? DefaultBaseParam.SYSTEM_DEPT_ID : snapshot.getDeptId();
+            String scene = snapshot.getScene() == null ? ModelUsageSceneEnum.OTHER.getValue() : snapshot.getScene();
             ModelUsage usage = new ModelUsage();
-            usage.setTenantId(tenantIdVal);
-            usage.setUserId(operatorId);
+            usage.setTenantId(tenantId);
+            usage.setUserId(userId);
             usage.setModelId(modelInfo.getModelId());
             usage.setModelName(modelInfo.getModelName());
             usage.setProviderId(modelInfo.getProviderId());
@@ -101,9 +92,9 @@ public class ModelUsageRecorder {
             usage.setInputTokens(inputTokens);
             usage.setOutputTokens(outputTokens);
             usage.setTotalTokens(this.normalizeTotal(inputTokens, outputTokens, totalTokens));
-            usage.setDeptId(deptId == null ? SYSTEM_DEPT_ID : deptId);
-            usage.setCreatedBy(operatorId);
-            usage.setUpdatedBy(operatorId);
+            usage.setDeptId(deptId);
+            usage.setCreatedBy(userId);
+            usage.setUpdatedBy(userId);
             if (!queue.offer(usage)) {
                 this.warnDrop();
             }
@@ -114,6 +105,7 @@ public class ModelUsageRecorder {
 
     /**
      * 定时将队列用量批量落库
+     * 10秒一次
      */
     @Scheduled(fixedDelay = 10000)
     public void flush() {

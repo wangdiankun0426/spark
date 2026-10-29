@@ -16,7 +16,7 @@ import com.spark.common.enums.ModelUsageSceneEnum;
 import com.spark.common.enums.ObjectTypeEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.llm.model.ModelFactory;
-import com.spark.common.utils.ModelUsageSceneHolder;
+import com.spark.common.llm.ModelUsageSceneHolder;
 import com.spark.common.utils.TextChunkUtil;
 import com.spark.prompt.PromptTemplateLoader;
 import com.spark.common.utils.CollectionUtil;
@@ -165,14 +165,17 @@ public class KbVectorStore {
             Long chunkId = System.currentTimeMillis();
             Map<String, Object> chunkData = new HashMap<>();
             chunkData.put("id", chunkId);
-            chunkData.put("tenantId", document.getTenantId());
-            chunkData.put("deptId", document.getDeptId());
-            chunkData.put("createdBy", document.getCreatedBy());
             chunkData.put("prtId", document.getPrtId());
             chunkData.put("documentType", document.getDocumentType());
             chunkData.put("docId", document.getId());
             chunkData.put("chunkIndex", parentIndex + 1);
             chunkData.put("content", parentContent);
+            chunkData.put("tenantId", document.getTenantId());
+            chunkData.put("deptId", document.getDeptId());
+            chunkData.put("createdBy", document.getCreatedBy());
+            chunkData.put("createdDt", document.getCreatedDt().getTime());
+            chunkData.put("updatedBy", document.getUpdatedBy());
+            chunkData.put("updatedDt", document.getUpdatedDt().getTime());
             IndexQuery parentQuery = new IndexQueryBuilder()
                     .withId(chunkId.toString())
                     .withSource(JsonUtil.toString(chunkData))
@@ -227,9 +230,6 @@ public class KbVectorStore {
                     Response<Embedding> embedResp = embeddingModel.embed(childContent);
                     Map<String, Object> childData = new HashMap<>();
                     childData.put("id", childId);
-                    childData.put("tenantId", document.getTenantId());
-                    childData.put("deptId", document.getDeptId());
-                    childData.put("createdBy", document.getCreatedBy());
                     childData.put("chunkId", chunkId);
                     childData.put("prtId", prtId);
                     childData.put("documentType", documentType);
@@ -237,6 +237,12 @@ public class KbVectorStore {
                     childData.put("chunkIndex", childIndex + 1);
                     childData.put("content", childContent);
                     childData.put("embedding", embedResp.content().vectorAsList());
+                    childData.put("tenantId", document.getTenantId());
+                    childData.put("deptId", document.getDeptId());
+                    childData.put("createdBy", document.getCreatedBy());
+                    childData.put("createdDt", document.getCreatedDt().getTime());
+                    childData.put("updatedBy", document.getUpdatedBy());
+                    childData.put("updatedDt", document.getUpdatedDt().getTime());
                     IndexQuery childQuery = new IndexQueryBuilder()
                             .withId(childId.toString())
                             .withSource(JsonUtil.toString(childData))
@@ -321,9 +327,6 @@ public class KbVectorStore {
                 Long qaId = System.currentTimeMillis();
                 Map<String, Object> qaData = new HashMap<>();
                 qaData.put("id", qaId);
-                qaData.put("tenantId", document.getTenantId());
-                qaData.put("deptId", document.getDeptId());
-                qaData.put("createdBy", document.getCreatedBy());
                 qaData.put("chunkId", chunkId);
                 qaData.put("prtId", document.getPrtId());
                 qaData.put("documentType", document.getDocumentType());
@@ -331,6 +334,12 @@ public class KbVectorStore {
                 qaData.put("question", question);
                 qaData.put("answer", answer);
                 qaData.put("questionEmbedding", qaResp.content().vectorAsList());
+                qaData.put("tenantId", document.getTenantId());
+                qaData.put("deptId", document.getDeptId());
+                qaData.put("createdBy", document.getCreatedBy());
+                qaData.put("createdDt", document.getCreatedDt().getTime());
+                qaData.put("updatedBy", document.getUpdatedBy());
+                qaData.put("updatedDt", document.getUpdatedDt().getTime());
                 IndexQuery qaQuery = new IndexQueryBuilder()
                         .withId(qaId.toString())
                         .withSource(JsonUtil.toString(qaData))

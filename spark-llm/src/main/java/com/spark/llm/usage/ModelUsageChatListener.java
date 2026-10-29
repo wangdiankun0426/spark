@@ -2,8 +2,9 @@ package com.spark.llm.usage;
 
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.llm.dto.ModelInfo;
+import com.spark.common.bean.llm.dto.UsageSnapshot;
 import com.spark.common.enums.ModelUsageSceneEnum;
-import com.spark.common.utils.ModelUsageSceneHolder;
+import com.spark.common.llm.ModelUsageSceneHolder;
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
@@ -20,7 +21,8 @@ import org.slf4j.LoggerFactory;
  *
  * @author wangdiankun
  * @since 2026/10/27 10:00:00
- * 语言模型用量监听器，随模型实例创建；onRequest在业务线程快照会话与场景，onResponse在回调线程凭attributes上报
+ * 语言模型用量监听器
+ * 随模型实例创建；onRequest在业务线程快照会话与场景，onResponse在回调线程凭attributes上报
  */
 public class ModelUsageChatListener implements ChatModelListener {
 
@@ -45,7 +47,7 @@ public class ModelUsageChatListener implements ChatModelListener {
             Long tenantId = SessionHolder.getCurrentTenantId();
             Long userId = SessionHolder.getCurrentUserId();
             Long deptId = SessionHolder.getCurrentDeptId();
-            String scene = ModelUsageSceneHolder.current().getCode();
+            String scene = ModelUsageSceneHolder.current().getValue();
             UsageSnapshot snapshot = new UsageSnapshot(tenantId, userId, deptId, scene);
             context.attributes().put(SNAPSHOT_KEY, snapshot);
         } catch (Exception e) {
@@ -61,8 +63,7 @@ public class ModelUsageChatListener implements ChatModelListener {
             Integer inputTokens = tokenUsage == null ? null : tokenUsage.inputTokenCount();
             Integer outputTokens = tokenUsage == null ? null : tokenUsage.outputTokenCount();
             Integer totalTokens = tokenUsage == null ? null : tokenUsage.totalTokenCount();
-            recorder.record(modelInfo, snapshot.getTenantId(), snapshot.getUserId(), snapshot.getDeptId(), snapshot.getScene(),
-                    inputTokens, outputTokens, totalTokens);
+            recorder.record(modelInfo, snapshot, inputTokens, outputTokens, totalTokens);
         } catch (Exception e) {
             logger.warn("model usage onResponse error, modelId={}", modelInfo.getModelId(), e);
         }
@@ -82,6 +83,6 @@ public class ModelUsageChatListener implements ChatModelListener {
         if (value instanceof UsageSnapshot) {
             return (UsageSnapshot) value;
         }
-        return new UsageSnapshot(null, null, null, ModelUsageSceneEnum.OTHER.getCode());
+        return new UsageSnapshot(null, null, null, ModelUsageSceneEnum.OTHER.getValue());
     }
 }

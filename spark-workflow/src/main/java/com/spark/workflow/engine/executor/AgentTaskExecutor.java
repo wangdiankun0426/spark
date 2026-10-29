@@ -8,7 +8,7 @@ import com.spark.llm.agent.AgentFactory;
 import com.spark.manage.BaseService;
 import com.spark.common.utils.JsonUtil;
 import com.spark.common.utils.MapUtil;
-import com.spark.common.utils.ModelUsageSceneHolder;
+import com.spark.common.llm.ModelUsageSceneHolder;
 import com.spark.common.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

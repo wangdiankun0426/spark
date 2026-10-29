@@ -4,6 +4,7 @@ import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.sys.query.AttachmentQuery;
 import com.spark.common.bean.sys.result.AttachmentResult;
 import com.spark.common.utils.*;
+import com.spark.common.llm.ModelUsageSceneHolder;
 import com.spark.dao.dms.AttachmentDao;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.ModelUsageSceneEnum;

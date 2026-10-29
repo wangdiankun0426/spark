@@ -51,11 +51,12 @@ import java.util.stream.Collectors;
  *
  * @author wangdiankun
  * @since 2026-10-15 14:20:00
- * MCP服务端工具执行器，按密钥绑定用户的数据权限对外提供检索工具
+ * MCP服务端工具执行器
+ * 按密钥绑定用户的数据权限对外提供检索工具
  */
 @Component
-public class McpServerToolExecutor {
-    private final static Logger logger = LoggerFactory.getLogger(McpServerToolExecutor.class);
+public class McpServerExecutor {
+    private final static Logger logger = LoggerFactory.getLogger(McpServerExecutor.class);
     /**
      * 传输上下文中Authorization头的key
      */
@@ -89,7 +90,7 @@ public class McpServerToolExecutor {
      */
     @Autowired
     @Lazy
-    private McpServerToolExecutor selfProxy;
+    private McpServerExecutor selfProxy;
 
     /**
      * 构建对外暴露的工具列表

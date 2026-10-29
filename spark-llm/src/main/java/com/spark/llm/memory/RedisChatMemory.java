@@ -26,8 +26,8 @@ import java.util.List;
  * 基于Redis的会话记忆存储，按memoryId隔离对话历史
  */
 @Component
-public class RedisChatMemoryStore implements ChatMemoryStore {
-    private final static Logger logger = LoggerFactory.getLogger(RedisChatMemoryStore.class);
+public class RedisChatMemory implements ChatMemoryStore {
+    private final static Logger logger = LoggerFactory.getLogger(RedisChatMemory.class);
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 

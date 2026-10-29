@@ -32,7 +32,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author wangdiankun
  * @since 2026/07/19 15:30:00
- * MCP客户端管理器，负责维护MCP服务器连接，按服务器ID缓存客户端
+ * MCP客户端管理器
+ * 负责维护MCP服务器连接，按服务器ID缓存客户端
  */
 @Component
 public class McpClientManager {

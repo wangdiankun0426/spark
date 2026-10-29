@@ -2,7 +2,9 @@ package com.spark.common.utils;
 
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.base.SessionSnapshot;
+import com.spark.common.constant.DefaultBaseParam;
 import com.spark.common.enums.ModelUsageSceneEnum;
+import com.spark.common.llm.ModelUsageSceneHolder;
 import org.slf4j.MDC;
 
 import java.util.Map;
@@ -16,24 +18,10 @@ import java.util.concurrent.Callable;
  *
  * @author wangdiankun
  * @since 2026-10-28 10:00:00
- * 登录会话快照的跨线程传播工具，提交线程捕获、执行线程恢复、执行完还原或清空
+ * 登录会话快照的跨线程传播工具
+ * 提交线程捕获、执行线程恢复、执行完还原或清空
  */
 public class SessionContextUtil {
-
-    /**
-     * 无主系统调用兜底租户id
-     */
-    private static final Long SYSTEM_TENANT_ID = 0L;
-
-    /**
-     * 无主系统调用兜底用户id
-     */
-    private static final Long SYSTEM_USER_ID = 101L;
-
-    /**
-     * 无主系统调用兜底部门id
-     */
-    private static final Long SYSTEM_DEPT_ID = 0L;
 
     private SessionContextUtil() {
     }
@@ -83,7 +71,7 @@ public class SessionContextUtil {
      * @return 会话快照
      */
     public static SessionSnapshot system() {
-        return basic(SYSTEM_TENANT_ID, SYSTEM_USER_ID, SYSTEM_DEPT_ID);
+        return basic(DefaultBaseParam.SYSTEM_TENANT_ID, DefaultBaseParam.SYSTEM_USER_ID, DefaultBaseParam.SYSTEM_DEPT_ID);
     }
 
     /**

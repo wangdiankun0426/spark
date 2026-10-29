@@ -1,12 +1,19 @@
 package com.spark.kg.store;
 
 import com.spark.common.bean.kg.entity.KgEntity;
+import com.spark.common.bean.kg.query.KgEntityQuery;
+import com.spark.common.bean.kg.query.KgGraphQuery;
+import com.spark.common.bean.kg.result.KgEntityResult;
+import com.spark.common.bean.kg.result.KgGraphResult;
 import com.spark.common.constant.ESIndexName;
 import com.spark.common.enums.ModelUsageSceneEnum;
+import com.spark.config.es.ESDataScope;
+import com.spark.dao.kg.KgEntityDao;
+import com.spark.dao.kg.KgGraphDao;
 import com.spark.llm.model.ModelFactory;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.JsonUtil;
-import com.spark.common.utils.ModelUsageSceneHolder;
+import com.spark.common.llm.ModelUsageSceneHolder;
 import com.spark.common.utils.StringUtil;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
@@ -40,7 +47,7 @@ import java.util.stream.Collectors;
  *
  * @author wangdiankun
  * @since 2026-08-31 16:00:00
- * 知识库向量存储
+ * 知识图谱实体向量存储
  */
 @Component
 public class KgVectorStore {
@@ -51,6 +58,10 @@ public class KgVectorStore {
     private ElasticsearchClient client;
     @Autowired
     private ModelFactory modelFactory;
+    @Autowired
+    private KgEntityDao kgEntityDao;
+    @Autowired
+    private KgGraphDao kgGraphDao;
     /**
      * 语义召回候选数
      */
@@ -68,25 +79,45 @@ public class KgVectorStore {
         if (entity == null || entity.getId() == null) {
             return;
         }
+        // 回查完整实体，调用方可能只传精简对象，审计字段以库中为准
+        KgEntityQuery entityQuery = new KgEntityQuery();
+        entityQuery.setId(entity.getId());
+        KgEntityResult entityResult = kgEntityDao.queryKgEntity(entityQuery);
+        if (entityResult == null) {
+            return;
+        }
+        // 实体表无部门列，部门归属继承所属图谱
+        Long deptId = null;
+        KgGraphQuery graphQuery = new KgGraphQuery();
+        graphQuery.setId(entityResult.getGraphId());
+        KgGraphResult graphResult = kgGraphDao.queryKgGraph(graphQuery);
+        if (graphResult != null) {
+            deptId = graphResult.getDeptId();
+        }
         try {
             ModelUsageSceneHolder.push(ModelUsageSceneEnum.KG_ENTITY_VECTOR);
-            String text = buildEmbeddingText(entity.getName(), entity.getDescription());
+            String text = buildEmbeddingText(entityResult.getName(), entityResult.getDescription());
             if (StringUtil.isBlank(text)) {
                 return;
             }
             EmbeddingModel embeddingModel = modelFactory.getDefaultEmbeddingModel();
             Response<Embedding> embedResp = embeddingModel.embed(text);
             Map<String, Object> data = new HashMap<>();
-            data.put("id", entity.getId());
-            data.put("tenantId", entity.getTenantId());
-            data.put("graphId", entity.getGraphId());
-            data.put("name", entity.getName());
-            data.put("type", entity.getType());
-            data.put("description", entity.getDescription());
+            data.put("id", entityResult.getId());
+            data.put("tenantId", entityResult.getTenantId());
+            data.put("deptId", deptId);
+            data.put("createdBy", entityResult.getCreatedBy());
+            data.put("createdDt", entityResult.getCreatedDt().getTime());
+            data.put("updatedBy", entityResult.getUpdatedBy());
+            data.put("updatedDt", entityResult.getUpdatedDt().getTime());
+            data.put("graphId", entityResult.getGraphId());
+            data.put("name", entityResult.getName());
+            data.put("type", entityResult.getType());
+            data.put("description", entityResult.getDescription());
             data.put("embedding", embedResp.content().vectorAsList());
             String source = JsonUtil.toString(data);
             IndexQuery query = new IndexQueryBuilder()
-                    .withId(entity.getId().toString())
+                    .withId(entityResult.getId().toString())
                     .withSource(source)
                     .build();
             elasticsearchOperations.index(query, IndexCoordinates.of(ESIndexName.KG_ENTITY_VECTOR_INDEX_NAME));
@@ -204,7 +235,7 @@ public class KgVectorStore {
     }
 
     /**
-     * 构造图谱ID过滤条件
+     * 构造图谱范围过滤条件，恒含租户与数据权限
      * @param graphIds 图谱ID列表
      * @return 过滤Query
      */
@@ -212,6 +243,11 @@ public class KgVectorStore {
         List<FieldValue> values = graphIds.stream()
                 .map(id -> FieldValue.of(id.longValue()))
                 .collect(Collectors.toList());
-        return Query.of(q -> q.terms(t -> t.field("graphId").terms(tv -> tv.value(values))));
+        Query scopeQuery = ESDataScope.scopeQuery();
+        return Query.of(q -> q.bool(b -> {
+            b.must(m -> m.terms(t -> t.field("graphId").terms(tv -> tv.value(values))));
+            b.must(scopeQuery);
+            return b;
+        }));
     }
 }

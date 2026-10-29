@@ -1,6 +1,5 @@
-package com.spark.llm.usage;
+package com.spark.common.bean.llm.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**

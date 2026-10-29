@@ -35,7 +35,7 @@
 | `spark-flow` | 工作流引擎（Flowable）：流程模板/版本/节点/实例/审批人/讨论/消息，`BaseFlowService` + `FlowableService` 封装流程启停、审批、消息推送 |
 | `spark-form` | 表单引擎：表单模板/字段/版本/对象/值 |
 | `spark-kb` | RAG 知识库：知识库管理 `IKnowledgeService`、文档管理 `IDocumentService`（上传/分片）、文档分片 `IDocumentChunkService`、文档事件 `IDocumentEventService`（异步处理驱动）；知识库召回 `KbRetrieve`（实现 common 层 `IKbRetriever`）、向量存储 `KbVectorStore` |
-| `spark-llm` | LLM 集成：模型管理 `IModelService`、供应商 `IProviderService`、智能体 `IAgentService`、MCP `IMcpService`；底层 `ModelFactory`/`AgentFactory`、`RedisChatMemoryStore`、`PromptTemplateLoader`、Agent 工具 `SearchKnowledge/SearchKnowledgeGraph`、`ChunkUtil` 分片工具 |
+| `spark-llm` | LLM 集成：模型管理 `IModelService`、供应商 `IProviderService`、智能体 `IAgentService`、MCP `IMcpService`；底层 `ModelFactory`/`AgentFactory`、`RedisChatMemory`、`PromptTemplateLoader`、Agent 工具 `SearchKnowledge/SearchKnowledgeGraph`、`ChunkUtil` 分片工具 |
 | `spark-kg` | 知识图谱：实体 `IKgEntityService`、关系 `IKgRelationService`、图谱 `IKgGraphService`（异步抽取复用文档事件链路）；Neo4j 图谱存储 `KgGraphStore`、实体向量 `KgVectorStore`、图谱召回 `KgRetrieve`（实现 common 层 `IKgRetriever`）、`Neo4jConfig`（Driver Bean） |
 | `spark-task` | 定时/异步任务：文档处理任务 `DocumentTask`（内容解析、分片、向量化、ES/Neo4j 索引） |
 

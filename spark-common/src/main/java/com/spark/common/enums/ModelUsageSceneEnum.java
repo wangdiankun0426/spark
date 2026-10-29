@@ -27,16 +27,16 @@ public enum ModelUsageSceneEnum {
     OTHER("OTHER", "其他"),
     ;
 
-    private final String code;
+    private final String value;
     private final String desc;
 
-    ModelUsageSceneEnum(String code, String desc) {
-        this.code = code;
+    ModelUsageSceneEnum(String value, String desc) {
+        this.value = value;
         this.desc = desc;
     }
 
-    public String getCode() {
-        return code;
+    public String getValue() {
+        return value;
     }
 
     public String getDesc() {
@@ -48,9 +48,9 @@ public enum ModelUsageSceneEnum {
      * @param code 场景编码
      * @return 场景枚举
      */
-    public static ModelUsageSceneEnum indexOf(String code) {
+    public static ModelUsageSceneEnum indexOf(String value) {
         for (ModelUsageSceneEnum item : values()) {
-            if (item.getCode().equals(code)) {
+            if (item.getValue().equals(value)) {
                 return item;
             }
         }

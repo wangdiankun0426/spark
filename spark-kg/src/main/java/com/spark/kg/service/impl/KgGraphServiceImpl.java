@@ -34,7 +34,7 @@ import com.spark.prompt.PromptTemplateLoader;
 import com.spark.common.utils.BeanUtil;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.JsonUtil;
-import com.spark.common.utils.ModelUsageSceneHolder;
+import com.spark.common.llm.ModelUsageSceneHolder;
 import com.spark.common.utils.StringUtil;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.input.Prompt;

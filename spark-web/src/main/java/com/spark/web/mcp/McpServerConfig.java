@@ -1,6 +1,6 @@
 package com.spark.web.mcp;
 
-import com.spark.llm.mcp.McpServerToolExecutor;
+import com.spark.llm.mcp.McpServerExecutor;
 import io.modelcontextprotocol.common.McpTransportContext;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpSyncServer;
@@ -42,7 +42,7 @@ public class McpServerConfig {
                     Map<String, Object> contextMap = new HashMap<>();
                     String authorization = request.getHeader("Authorization");
                     if (authorization != null) {
-                        contextMap.put(McpServerToolExecutor.CONTEXT_AUTHORIZATION, authorization);
+                        contextMap.put(McpServerExecutor.CONTEXT_AUTHORIZATION, authorization);
                     }
                     return McpTransportContext.create(contextMap);
                 })
@@ -52,16 +52,16 @@ public class McpServerConfig {
     /**
      * 装配MCP服务端，注册对外工具
      * @param transportProvider 传输层
-     * @param mcpServerToolExecutor 工具执行器
+     * @param mcpServerExecutor 工具执行器
      * @return MCP服务端
      */
     @Bean
     public McpSyncServer mcpSyncServer(HttpServletStreamableServerTransportProvider transportProvider,
-                                       McpServerToolExecutor mcpServerToolExecutor) {
+                                       McpServerExecutor mcpServerExecutor) {
         return McpServer.sync(transportProvider)
                 .serverInfo("spark-mcp-server", "1.0.0")
                 .capabilities(McpSchema.ServerCapabilities.builder().tools(true).build())
-                .tools(mcpServerToolExecutor.toolSpecifications())
+                .tools(mcpServerExecutor.toolSpecifications())
                 .build();
     }
 

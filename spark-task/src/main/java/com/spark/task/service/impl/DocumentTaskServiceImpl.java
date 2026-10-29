@@ -14,6 +14,7 @@ import com.spark.common.bean.kg.query.KgGraphQuery;
 import com.spark.common.bean.kg.result.KgGraphResult;
 import com.spark.common.constant.ESIndexName;
 import com.spark.common.utils.*;
+import com.spark.common.llm.ModelUsageSceneHolder;
 import com.spark.dao.dms.DocumentDao;
 import com.spark.dao.dms.DocumentEventDao;
 import com.spark.dao.kg.KgEntityDao;
@@ -204,8 +205,6 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                     DocumentResult documentResult = docMap.get(docId);
                     Map<String, Object> document = new HashMap<>();
                     document.put("id", documentResult.getId());
-                    document.put("tenantId", documentResult.getTenantId());
-                    document.put("deptId", documentResult.getDeptId());
                     document.put("prtId", documentResult.getPrtId());
                     document.put("documentType", documentResult.getDocumentType());
                     document.put("name", documentResult.getName());
@@ -221,6 +220,8 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                         content = txtData.getData();
                     }
                     document.put("content", content);
+                    document.put("tenantId", documentResult.getTenantId());
+                    document.put("deptId", documentResult.getDeptId());
                     document.put("createdBy", documentResult.getCreatedBy());
                     document.put("createdDt", documentResult.getCreatedDt().getTime());
                     document.put("updatedBy", documentResult.getUpdatedBy());

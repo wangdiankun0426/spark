@@ -16,11 +16,11 @@ import org.springframework.stereotype.Service;
  *
  * @author wangdiankun
  * @since 2026-09-09 10:00:00
- * 超期租户自动关闭任务
+ * 系统定时任务
  */
 @Service
-public class TenantExpireTask {
-    private final static Logger logger = LoggerFactory.getLogger(TenantExpireTask.class);
+public class SystemTask {
+    private final static Logger logger = LoggerFactory.getLogger(SystemTask.class);
     @Autowired
     private ITenantService tenantService;
 

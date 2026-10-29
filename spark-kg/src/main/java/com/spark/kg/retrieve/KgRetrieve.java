@@ -14,7 +14,7 @@ import com.spark.common.enums.ModelUsageSceneEnum;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.EncryptUtil;
 import com.spark.common.utils.JsonUtil;
-import com.spark.common.utils.ModelUsageSceneHolder;
+import com.spark.common.llm.ModelUsageSceneHolder;
 import com.spark.common.utils.StringUtil;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.input.Prompt;

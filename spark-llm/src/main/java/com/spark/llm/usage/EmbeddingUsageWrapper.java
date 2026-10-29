@@ -2,7 +2,8 @@ package com.spark.llm.usage;
 
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.llm.dto.ModelInfo;
-import com.spark.common.utils.ModelUsageSceneHolder;
+import com.spark.common.bean.llm.dto.UsageSnapshot;
+import com.spark.common.llm.ModelUsageSceneHolder;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -21,7 +22,8 @@ import java.util.List;
  *
  * @author wangdiankun
  * @since 2026/10/27 10:00:00
- * 向量模型用量包装器，委托真实模型执行，批量返回后读取token用量上报；embed(String)经default方法最终走到embedAll，只需拦截一处
+ * 向量模型用量包装器
+ * 委托真实模型执行，批量返回后读取token用量上报；embed(String)经default方法最终走到embedAll，只需拦截一处
  */
 public class EmbeddingUsageWrapper implements EmbeddingModel {
 
@@ -40,7 +42,7 @@ public class EmbeddingUsageWrapper implements EmbeddingModel {
     @Override
     public Response<List<Embedding>> embedAll(List<TextSegment> segments) {
         Response<List<Embedding>> response = delegate.embedAll(segments);
-        this.report(response.tokenUsage());
+        this.reportUsage(response.tokenUsage());
         return response;
     }
 
@@ -53,17 +55,17 @@ public class EmbeddingUsageWrapper implements EmbeddingModel {
      * 上报向量调用用量
      * @param tokenUsage 第三方返回的token用量
      */
-    private void report(TokenUsage tokenUsage) {
+    private void reportUsage(TokenUsage tokenUsage) {
         try {
             Integer inputTokens = tokenUsage == null ? null : tokenUsage.inputTokenCount();
             Integer outputTokens = tokenUsage == null ? null : tokenUsage.outputTokenCount();
             Integer totalTokens = tokenUsage == null ? null : tokenUsage.totalTokenCount();
-            recorder.record(modelInfo,
+            UsageSnapshot snapshot = new UsageSnapshot(
                     SessionHolder.getCurrentTenantId(),
                     SessionHolder.getCurrentUserId(),
                     SessionHolder.getCurrentDeptId(),
-                    ModelUsageSceneHolder.current().getCode(),
-                    inputTokens, outputTokens, totalTokens);
+                    ModelUsageSceneHolder.current().getValue());
+            recorder.record(modelInfo, snapshot, inputTokens, outputTokens, totalTokens);
         } catch (Exception e) {
             logger.warn("embedding usage report error, modelId={}", modelInfo.getModelId(), e);
         }
