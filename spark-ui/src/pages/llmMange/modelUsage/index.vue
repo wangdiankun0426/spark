@@ -51,27 +51,35 @@
               :value="formatNumber(stat.callCount)"
               unit="次"
               type="primary"
-          />
+          >
+            <template #icon><el-icon><TrendCharts/></el-icon></template>
+          </stat-card>
           <stat-card
               class="usage-stat-item"
               label="总 Token"
               :value="formatNumber(stat.totalTokens)"
               unit="tokens"
-          />
+          >
+            <template #icon><el-icon><Coin/></el-icon></template>
+          </stat-card>
           <stat-card
               class="usage-stat-item"
               label="输入 Token"
               :value="formatNumber(stat.inputTokens)"
               unit="tokens"
               type="success"
-          />
+          >
+            <template #icon><el-icon><Download/></el-icon></template>
+          </stat-card>
           <stat-card
               class="usage-stat-item"
               label="输出 Token"
               :value="formatNumber(stat.outputTokens)"
               unit="tokens"
               type="warning"
-          />
+          >
+            <template #icon><el-icon><Upload/></el-icon></template>
+          </stat-card>
         </div>
       </div>
 
@@ -122,6 +130,7 @@ import {
 } from '@/api/llm/modelUsage.js'
 import StatCard from '@/pages/siteManage/monitor/components/StatCard.vue'
 import { useChart } from '@/utils/useChart'
+import { TrendCharts, Coin, Download, Upload } from '@element-plus/icons-vue'
 
 const TYPE_LANGUAGE = 1
 const TYPE_VECTOR = 2
@@ -339,6 +348,7 @@ function formatNumber(value) {
   display: flex;
   flex-direction: column;
   gap: $spacing-md;
+  overflow: hidden;
 }
 
 .usage-toolbar {
@@ -354,7 +364,8 @@ function formatNumber(value) {
 }
 
 .usage-overview {
-  flex: none;
+  flex: 0 1 320px;
+  min-height: 0;
   display: flex;
   align-items: stretch;
   gap: $spacing-md;
@@ -373,9 +384,7 @@ function formatNumber(value) {
 .usage-stat-item {
   flex: 1;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  overflow: hidden;
   padding: $spacing-sm $spacing-md;
 
   :deep(.stat-card__label) {
@@ -391,7 +400,8 @@ function formatNumber(value) {
 .usage-chart-card {
   flex: 1;
   min-width: 0;
-  height: 340px;
+  min-height: 0;
+  height: 100%;
   padding: $spacing-md $spacing-lg;
   background-color: $bg-card;
   border: 1px solid $border-color-light;
@@ -406,8 +416,9 @@ function formatNumber(value) {
 }
 
 .usage-table-card {
-  flex: 1;
+  flex: 1 1 0;
   min-height: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   padding: $spacing-md $spacing-lg;
@@ -418,8 +429,9 @@ function formatNumber(value) {
 }
 
 .usage-table-fill {
-  flex: 1;
+  flex: 1 1 0;
   min-height: 0;
+  overflow: hidden;
 }
 
 .usage-pagination {

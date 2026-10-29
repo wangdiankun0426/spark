@@ -1,80 +1,78 @@
 <template>
   <div class="login">
-    <!-- 浅色科技风动态背景（全屏铺满） -->
-    <div class="anim-bg">
-      <div class="anim-grid"></div>
-      <div class="anim-blob anim-blob-1"></div>
-      <div class="anim-blob anim-blob-2"></div>
-      <div class="anim-orbit anim-orbit-1"></div>
-      <div class="anim-orbit anim-orbit-2"></div>
-      <svg class="anim-net" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
-        <polyline class="net-line" points="80,620 220,480 380,560 520,360 680,460 860,280"/>
-        <polyline class="net-line net-line--2" points="120,220 260,330 420,180 560,320 720,150 880,240"/>
-        <polyline class="net-line net-line--3" points="180,720 340,650 480,720 640,580 800,660"/>
-        <polyline class="net-line net-line--4" points="960,520 1120,420 1260,500 1400,340 1520,420"/>
-        <circle class="net-node" cx="80" cy="620" r="4"/>
-        <circle class="net-node net-node--2" cx="220" cy="480" r="3"/>
-        <circle class="net-node net-node--3" cx="520" cy="360" r="4"/>
-        <circle class="net-node net-node--4" cx="860" cy="280" r="3"/>
-        <circle class="net-node net-node--5" cx="420" cy="180" r="3"/>
-        <circle class="net-node net-node--6" cx="720" cy="150" r="4"/>
-        <circle class="net-node net-node--7" cx="640" cy="580" r="3"/>
-        <circle class="net-node net-node--8" cx="1120" cy="420" r="4"/>
-        <circle class="net-node net-node--9" cx="1400" cy="340" r="3"/>
-      </svg>
-      <div class="anim-dot anim-dot-1"></div>
-      <div class="anim-dot anim-dot-2"></div>
-      <div class="anim-dot anim-dot-3"></div>
-      <div class="anim-dot anim-dot-4"></div>
-    </div>
     <!-- 左侧 -->
     <div class="el-login-sidebar">
-      <div class="sidebar-content">
+      <!-- 科技风动态背景，随左栏裁切在60%区域内 -->
+      <div class="anim-bg">
+        <div class="anim-grid"></div>
+        <div class="anim-blob anim-blob-1"></div>
+        <div class="anim-blob anim-blob-2"></div>
+        <div class="anim-orbit anim-orbit-1"></div>
+        <div class="anim-orbit anim-orbit-2"></div>
+        <div class="anim-dot anim-dot-1"></div>
+        <div class="anim-dot anim-dot-2"></div>
+        <div class="anim-dot anim-dot-3"></div>
+        <div class="anim-dot anim-dot-4"></div>
+      </div>
+      <div ref="contentRef" class="sidebar-content">
+        <p class="sidebar-kicker">SPARK AI PLATFORM</p>
         <h1 class="sidebar-title">星火云应用平台</h1>
-        <p style="font-size: 14px;">
+        <p class="sidebar-desc">
           欢迎使用星火云应用平台，我们的目标不仅是一个企业AI协作工具系统，更是以帮助企业实现高效运营、创新驱动和可持续发展的核心支撑为长远目标。
         </p>
-        <div class="sidebar-features">
+        <div ref="featuresRef" class="sidebar-features" :style="{ height: featuresHeight }">
           <div class="feature-item">
-            <div class="feature-icon"><el-icon><ChatDotRound /></el-icon></div>
+            <span class="feature-index">01</span>
+            <div class="feature-icon"><tech-chat/></div>
+            <div class="feature-line"></div>
             <div class="feature-text">
               <div class="feature-name">即时通信</div>
-              <div class="feature-desc">企业级即时消息与协作</div>
+              <div class="feature-desc">即时消息与群组协作，文件互传、消息提醒实时同步</div>
             </div>
           </div>
           <div class="feature-item">
-            <div class="feature-icon"><el-icon><Connection /></el-icon></div>
+            <span class="feature-index">02</span>
+            <div class="feature-icon"><tech-flow/></div>
+            <div class="feature-line"></div>
             <div class="feature-text">
               <div class="feature-name">自定义流程</div>
-              <div class="feature-desc">可视化编排业务流程</div>
+              <div class="feature-desc">可视化拖拽编排审批流程，支持条件分支与自动流转</div>
             </div>
           </div>
           <div class="feature-item">
-            <div class="feature-icon"><el-icon><EditPen /></el-icon></div>
+            <span class="feature-index">03</span>
+            <div class="feature-icon"><tech-form/></div>
+            <div class="feature-line"></div>
             <div class="feature-text">
               <div class="feature-name">自定义表单</div>
-              <div class="feature-desc">拖拽式表单设计器</div>
+              <div class="feature-desc">拖拽设计各类业务表单，丰富控件开箱即用、数据自动归集</div>
             </div>
           </div>
           <div class="feature-item">
-            <div class="feature-icon"><el-icon><MagicStick /></el-icon></div>
+            <span class="feature-index">04</span>
+            <div class="feature-icon"><tech-ai/></div>
+            <div class="feature-line"></div>
             <div class="feature-text">
               <div class="feature-name">AI管理</div>
-              <div class="feature-desc">智能对话与工作流编排</div>
+              <div class="feature-desc">多模型统一接入与管理，智能对话随问随答、能力灵活配置</div>
             </div>
           </div>
           <div class="feature-item">
-            <div class="feature-icon"><el-icon><SetUp /></el-icon></div>
+            <span class="feature-index">05</span>
+            <div class="feature-icon"><tech-workflow/></div>
+            <div class="feature-line"></div>
             <div class="feature-text">
               <div class="feature-name">AI工作流</div>
-              <div class="feature-desc">可视化构建智能工作流</div>
+              <div class="feature-desc">AI节点融入业务流程，检索推理自动执行、释放自动化潜力</div>
             </div>
           </div>
           <div class="feature-item">
-            <div class="feature-icon"><el-icon><User /></el-icon></div>
+            <span class="feature-index">06</span>
+            <div class="feature-icon"><tech-agent/></div>
+            <div class="feature-line"></div>
             <div class="feature-text">
               <div class="feature-name">Agent</div>
-              <div class="feature-desc">专属智能体助手</div>
+              <div class="feature-desc">专属智能体挂载知识库与工具，全天候自主完成任务</div>
             </div>
           </div>
         </div>
@@ -137,16 +135,15 @@
     </div>
 
     <!-- 右侧 -->
-    <div class="el-login-main">
+    <div class="el-login-aside">
+    <div ref="loginMainRef" class="el-login-main">
       <div class="login-title-row">
-        <span class="login-title-bar"></span>
-        <h2 class="login-title">
-          <strong>{{ loginForm.loginType === 1 ? '密码登录' : (loginForm.loginType === 2 ? '手机号登录' : '邮箱登录') }}</strong>
-        </h2>
+        <h2 class="login-title">欢迎回来</h2>
+        <p class="login-subtitle">登录之后开启您的AI辅助工作之旅吧</p>
       </div>
       <div>
         <el-form ref="loginRef" :model="loginForm" :rules="loginFormRules">
-          <div style="height: 210px; margin-top: 20px">
+          <div class="login-fields">
             <div v-if="loginForm.loginType === 1">
             <el-form-item prop="username">
               <el-input
@@ -259,7 +256,7 @@
             </el-form-item>
           </div>
           </div>
-          <el-form-item style="width: 100%;">
+          <el-form-item style="width: 100%; margin-top: 5px;">
             <el-button
                 :loading="loading"
                 type="primary"
@@ -271,7 +268,15 @@
         </el-form>
       </div>
 
-      <div style="margin-top: 10px; margin-bottom: 10px;">
+      <div class="login-agreement">
+        <el-checkbox v-model="agreed" @change="onAgreeChange">我已阅读并同意</el-checkbox>
+        <el-button type="primary" link @click="openAgreement('service')">《用户服务协议》</el-button>
+        <span class="agreement-and">和</span>
+        <el-button type="primary" link @click="openAgreement('privacy')">《隐私政策》</el-button>
+      </div>
+      <div v-if="agreementError" class="agreement-error">请先阅读并同意用户服务协议和隐私政策</div>
+
+      <div class="register-entry">
         <span style="font-size: 14px; color: #606266;">还没有账号？</span>
         <el-button type="primary" link @click="goRegister">立即注册</el-button>
       </div>
@@ -310,9 +315,10 @@
         </el-tooltip>
       </div>
     </div>
-    <!-- 版权说明 -->
-    <div class="login-copyright">
-      Copyright © 2024-2026 evancloud.top All Rights Reserved.
+      <!-- 版权说明 -->
+      <div class="login-copyright">
+        Copyright © 2024-2026 evancloud.top All Rights Reserved.
+      </div>
     </div>
   </div>
 </template>
@@ -320,13 +326,21 @@
 <script setup>
 import {getValidateCodeAPI, getSmsCodeAPI, getEmailCodeAPI, getSessionAPI, getEncryptKeyAPI} from '@/api/manage/auth/login.js';
 import { des } from '@/utils/encryptUtil.js';
+import { AGREEMENT_VERSION } from '@/utils/agreementDoc.js';
+import { localStorageKey } from '@/utils/keyUtils.js';
 import Validate from '@/assets/icons/validate.vue';
-import { ref, getCurrentInstance } from "vue";
+import { ref, getCurrentInstance, onMounted, onUnmounted, nextTick } from "vue";
 import { useRouter } from 'vue-router';
 import { useStore } from "vuex";
 import { ElMessage } from 'element-plus';
 import QRCode from 'qrcode';
 import { isDesktop } from '@/utils/desktop.js';
+import TechChat from '@/assets/icons/techChat.vue';
+import TechFlow from '@/assets/icons/techFlow.vue';
+import TechForm from '@/assets/icons/techForm.vue';
+import TechAi from '@/assets/icons/techAi.vue';
+import TechWorkflow from '@/assets/icons/techWorkflow.vue';
+import TechAgent from '@/assets/icons/techAgent.vue';
 
 const router = useRouter();
 const { proxy } = getCurrentInstance();
@@ -353,6 +367,40 @@ const loading = ref(false);
 const validateImg = ref(undefined);
 const count = ref(0);
 const timer = ref(null);
+
+/**
+ * 读取本地协议同意凭证，版本不一致视为未同意
+ */
+function getStoredAgreed() {
+  const record = JSON.parse(localStorage.getItem(localStorageKey.AGREEMENT_KEY) || 'null');
+  return !!(record && record.version === AGREEMENT_VERSION);
+}
+
+const agreed = ref(getStoredAgreed());
+
+// 未勾选协议提交时，在勾选区内联红框提示，不弹 toast
+const agreementError = ref(false);
+
+/**
+ * 勾选时持久化同意凭证，取消时移除
+ */
+function onAgreeChange(value) {
+  if (value) {
+    localStorage.setItem(localStorageKey.AGREEMENT_KEY, JSON.stringify({version: AGREEMENT_VERSION, time: Date.now()}));
+    agreementError.value = false;
+  } else {
+    localStorage.removeItem(localStorageKey.AGREEMENT_KEY);
+  }
+}
+
+/**
+ * 新标签打开协议文本页
+ * @param type service 用户服务协议 / privacy 隐私政策
+ */
+function openAgreement(type) {
+  const { href } = router.resolve({ path: '/agreement', query: { type } });
+  window.open(href, '_blank');
+}
 
 // Windows安装包下载地址
 const WIN_SETUP_URL = 'https://spark.evancloud.top:7101/bundle/星火云_0.0.1_x64-setup.exe';
@@ -454,12 +502,43 @@ function getValidateImg() {
 
 const store = useStore();
 
+// 功能竖条区补足到登录卡片同高，两栏各自垂直居中后顶底自然对齐
+const loginMainRef = ref();
+const contentRef = ref();
+const featuresRef = ref();
+const featuresHeight = ref(undefined);
+
+/**
+ * 按登录卡片高度计算功能竖条区高度，使左侧内容块与卡片等高等中
+ */
+function syncFeaturesHeight() {
+  if (!loginMainRef.value || !contentRef.value || !featuresRef.value) {
+    return;
+  }
+  const cardHeight = loginMainRef.value.getBoundingClientRect().height;
+  const headingHeight = featuresRef.value.getBoundingClientRect().top - contentRef.value.getBoundingClientRect().top;
+  featuresHeight.value = Math.max(200, cardHeight - headingHeight) + 'px';
+}
+
+onMounted(() => {
+  nextTick(syncFeaturesHeight);
+  window.addEventListener('resize', syncFeaturesHeight);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', syncFeaturesHeight);
+});
+
 /**
  * 提交登录表单
  */
 function submitLoginForm() {
   proxy.$refs.loginRef.validate(async valid => {
     if (valid) {
+      if (!agreed.value) {
+        agreementError.value = true;
+        return;
+      }
       loading.value = true;
       const data = {};
       if (loginForm.value.loginType === 1) {
@@ -532,6 +611,9 @@ function goRegister() {
   width: 60%;
   height: 100vh;
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   position: relative;
   overflow: hidden;
   color: $color-text-primary;
@@ -630,68 +712,6 @@ function goRegister() {
   }
 }
 
-.anim-net {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.net-line {
-  fill: none;
-  stroke: rgba(0, 79, 197, 0.22);
-  stroke-width: 1;
-  stroke-dasharray: 8 12;
-  animation: netFlow 6s linear infinite;
-}
-
-.net-line--2 {
-  stroke: rgba(0, 150, 216, 0.18);
-  animation-duration: 8s;
-  animation-direction: reverse;
-}
-
-.net-line--3 {
-  stroke: rgba(0, 79, 197, 0.14);
-  animation-duration: 10s;
-}
-
-@keyframes netFlow {
-  to {
-    stroke-dashoffset: -200;
-  }
-}
-
-.net-node {
-  fill: #004fc5;
-  filter: drop-shadow(0 0 4px rgba(0, 120, 255, 0.6));
-  animation: nodePulse 3s ease-in-out infinite;
-}
-
-.net-node--2,
-.net-node--4,
-.net-node--7,
-.net-node--9 {
-  fill: #00b8d9;
-  animation-delay: -1s;
-}
-
-.net-node--3,
-.net-node--6,
-.net-node--8 {
-  animation-delay: -2s;
-}
-
-@keyframes nodePulse {
-  0%,
-  100% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
 .anim-dot {
   position: absolute;
   width: 6px;
@@ -719,96 +739,165 @@ function goRegister() {
 }
 
 .sidebar-content {
-  margin: 140px 80px 20px 80px;
+  width: 80%;
+  margin: 0 auto;
+  transform: translateY(clamp(-20px, -7vh, -120px));
   text-align: left;
   position: relative;
   z-index: 1;
 }
 
+.sidebar-kicker {
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  color: #6366f1;
+  opacity: 0.75;
+}
+
 .sidebar-title {
-  font-size: 32px;
-  font-weight: 700;
-  letter-spacing: 2px;
+  margin: 0;
+  font-size: clamp(24px, 1.7vw, 32px);
+  font-weight: 600;
+  letter-spacing: 3px;
   background: linear-gradient(90deg, #004fc5 0%, #0072e0 45%, #00b8d9 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
+.sidebar-desc {
+  max-width: 90%;
+  margin: 18px 0 0;
+  padding-left: 14px;
+  border-left: 2px solid rgba(99, 102, 241, 0.35);
+  font-size: clamp(13px, 0.95vw, 15px);
+  line-height: 1.9;
+  color: $color-text-secondary;
+}
+
 .sidebar-features {
-  margin-top: 32px;
+  margin-top: clamp(28px, 2.4vw, 48px);
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px 20px;
-  max-width: 560px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: clamp(12px, 0.9vw, 20px);
 }
 
 .feature-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(0, 79, 197, 0.1);
-  box-shadow: 0 2px 8px rgba(26, 111, 232, 0.06);
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(22px, 1.8vw, 32px) 8px 16px;
+  box-sizing: border-box;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(245, 247, 255, 0.6));
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  box-shadow: 0 2px 10px rgba(79, 70, 229, 0.08), inset 0 0 24px rgba(139, 92, 246, 0.04);
   overflow: hidden;
-  transition: all 0.2s;
+  transition: all 0.25s ease;
+
   &::before {
     content: '';
     position: absolute;
-    left: 0;
     top: 0;
-    bottom: 0;
-    width: 3px;
-    background: linear-gradient(180deg, #004fc5, #00b8d9);
+    left: 20%;
+    right: 20%;
+    height: 2px;
+    border-radius: 0 0 2px 2px;
+    background: linear-gradient(90deg, transparent, #0072e0, #6366f1, transparent);
     opacity: 0;
-    transition: all 0.2s;
+    transition: opacity 0.25s ease;
   }
 
   &:hover {
-    background: #ffffff;
-    border-color: rgba(0, 79, 197, 0.2);
-    box-shadow: 0 6px 16px rgba(26, 111, 232, 0.14);
-    transform: translateY(-2px);
+    background: linear-gradient(180deg, #ffffff, rgba(240, 245, 255, 0.7));
+    border-color: rgba(0, 79, 197, 0.5);
+    box-shadow: 0 0 0 1px rgba(0, 79, 197, 0.15), 0 10px 28px rgba(0, 79, 197, 0.25);
+    transform: translateY(-3px);
 
     &::before {
       opacity: 1;
     }
+
+    .feature-icon {
+      color: #004fc5;
+      filter: drop-shadow(0 0 8px rgba(0, 114, 224, 0.35));
+    }
   }
+
 }
 
 .feature-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #004fc5, #00b8d9);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
   flex-shrink: 0;
-  box-shadow: 0 2px 10px rgba(0, 110, 220, 0.35);
+  font-size: clamp(44px, 3.4vw, 60px);
+  line-height: 1;
+  color: #6366f1;
+  filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.3));
+  transition: color 0.25s ease, filter 0.25s ease;
+  animation: iconPulse 2.4s ease-in-out infinite;
+}
+
+.feature-item:nth-child(2) .feature-icon { animation-delay: 0.4s; }
+.feature-item:nth-child(3) .feature-icon { animation-delay: 0.8s; }
+.feature-item:nth-child(4) .feature-icon { animation-delay: 1.2s; }
+.feature-item:nth-child(5) .feature-icon { animation-delay: 1.6s; }
+.feature-item:nth-child(6) .feature-icon { animation-delay: 2s; }
+
+@keyframes iconPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.14);
+  }
+}
+
+.feature-index {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: rgba(0, 79, 197, 0.28);
+}
+
+.feature-line {
+  width: 22px;
+  height: 2px;
+  margin-top: 12px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  opacity: 0.7;
 }
 
 .feature-text {
+  width: 100%;
   min-width: 0;
+  margin-top: 10px;
+  text-align: center;
 }
 
 .feature-name {
-  font-size: 15px;
+  font-size: clamp(13px, 0.95vw, 16px);
   font-weight: 600;
+  letter-spacing: 1px;
   color: $color-text-primary;
+  white-space: nowrap;
 }
 
 .feature-desc {
-  font-size: 12px;
+  display: -webkit-box;
+  margin-top: 5px;
+  font-size: clamp(11px, 0.75vw, 13px);
+  line-height: 1.5;
   color: $color-text-secondary;
-  margin-top: 2px;
-  white-space: nowrap;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .sidebar-downloads {
@@ -862,19 +951,22 @@ function goRegister() {
   }
 }
 
+.el-login-aside {
+  position: relative;
+  width: 40%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+}
+
 .el-login-main {
   display: flex;
   flex-direction: column;
   justify-content: center;
   width: 400px;
   max-width: 90%;
-  margin: auto;
-  margin-right: 8%;
-  padding: 40px 36px;
-  background: #ffffff;
-  border: 1px solid rgba(0, 79, 197, 0.08);
-  border-radius: $border-radius-lg;
-  box-shadow: 0 8px 32px rgba(26, 111, 232, 0.12);
   position: relative;
   z-index: 1;
 }
@@ -884,21 +976,25 @@ function goRegister() {
 }
 
 .login-title-row {
-  display: flex;
-  align-items: center;
-}
-
-.login-title-bar {
-  width: 4px;
-  height: 22px;
-  margin-right: 10px;
-  border-radius: 4px;
-  background: linear-gradient(180deg, $color-primary, #00b8d9);
+  margin-top: -16px;
 }
 
 .login-title {
+  margin: 0;
   font-size: 26px;
+  font-weight: 800;
   color: $color-text-primary;
+}
+
+.login-subtitle {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: $color-text-secondary;
+}
+
+.login-fields {
+  height: 174px;
+  margin-top: 24px;
 }
 
 .login-type-row {
@@ -914,7 +1010,7 @@ function goRegister() {
   margin: 0 16px 0 0;
   color: $color-primary;
   border: 1px solid rgba(0, 79, 197, 0.12);
-  border-radius: 50%;
+  border-radius: 50% !important;
   background-color: #ffffff;
   box-shadow: 0 2px 8px rgba(26, 111, 232, 0.1);
   transition: all 0.2s;
@@ -945,6 +1041,45 @@ function goRegister() {
   }
 }
 
+.login-agreement {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 12px 0 6px;
+  font-size: 13px;
+  color: $color-text-secondary;
+
+  :deep(.el-checkbox) {
+    height: auto;
+    margin-right: 0;
+  }
+
+  :deep(.el-button) {
+    height: auto;
+    padding: 0;
+    font-size: 13px;
+  }
+
+  .agreement-and {
+    margin: 0 2px;
+  }
+}
+
+.agreement-error {
+  padding-top: 4px;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+  color: var(--el-color-danger);
+}
+
+.register-entry {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  text-align: right;
+}
+
 ::v-deep(.el-divider__text) {
   background-color: #ffffff !important;
   color: $color-text-placeholder;
@@ -952,13 +1087,13 @@ function goRegister() {
 
 // 版权说明
 .login-copyright {
-  position: fixed;
+  position: absolute;
   bottom: 20px;
-  right: 8%;
-  text-align: center;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
   font-size: 12px;
   color: #909399;
-  z-index: 1;
 }
 </style>
 

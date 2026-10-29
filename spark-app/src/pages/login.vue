@@ -16,7 +16,8 @@
     <view class="login-brand">
       <text class="login-title">星火云应用平台</text>
       <view class="brand-bar"></view>
-      <text class="login-subtitle">欢迎使用 — 星火云应用平台</text>
+      <text class="login-subtitle">欢迎回来</text>
+      <text class="login-tip">登录之后开启您的AI辅助工作之旅吧</text>
     </view>
 
     <!-- 登录表单区 -->
@@ -223,6 +224,7 @@
 <script setup>
 import {getValidateCodeAPI, getSmsCodeAPI, getEmailCodeAPI, getEncryptKeyAPI} from '@/api/auth/login.js';
 import {des} from '@/utils/encryptUtil';
+import {AGREEMENT_VERSION} from '@/utils/agreementDoc';
 import {ref} from 'vue';
 import {useStore} from 'vuex';
 
@@ -242,9 +244,7 @@ const validateImg = ref(undefined);
 const count = ref(0);
 const timer = ref(null);
 
-// 协议版本升级后需重新征得用户同意
 const AGREEMENT_KEY = 'sparkAgreementAgree';
-const AGREEMENT_VERSION = '1.0.0';
 
 /**
  * 读取本地协议同意凭证，版本不一致视为未同意
@@ -624,7 +624,16 @@ async function submitLoginForm() {
 
 .login-subtitle {
   display: block;
-  font-size: 26rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: $spark-color-text;
+  letter-spacing: 1rpx;
+}
+
+.login-tip {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 24rpx;
   color: $spark-color-text-secondary;
   letter-spacing: 1rpx;
 }

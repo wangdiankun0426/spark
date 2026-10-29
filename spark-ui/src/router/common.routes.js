@@ -1,6 +1,7 @@
 import login from '@/pages/login/login.vue'
 import oauthLogin from '@/pages/login/oauthLogin.vue'
 import register from '@/pages/login/register.vue'
+import agreement from '@/pages/agreement/index.vue'
 import formDesigner from '@/views/formDesigner/index.vue'
 import flowDesigner from '@/views/flowDesigner/index.vue'
 import workflowIndex from "@/views/workflowDesigner/index.vue";
@@ -25,6 +26,13 @@ export default [
         component: register,
         meta: {
             title: '注册'
+        }
+    },
+    {
+        path: '/agreement',
+        component: agreement,
+        meta: {
+            title: '用户协议'
         }
     },
     {
