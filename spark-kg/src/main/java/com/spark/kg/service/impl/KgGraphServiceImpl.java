@@ -26,9 +26,9 @@ import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.kg.service.IKgGraphService;
 import com.spark.llm.model.ModelFactory;
-import com.spark.llm.retrieve.Neo4jRetrieve;
-import com.spark.llm.store.KgEntityVectorService;
-import com.spark.llm.store.Neo4jGraphStore;
+import com.spark.kg.retrieve.KgRetrieve;
+import com.spark.kg.store.KgVectorStore;
+import com.spark.kg.store.KgGraphStore;
 import com.spark.manage.BaseService;
 import com.spark.prompt.PromptTemplateLoader;
 import com.spark.common.utils.BeanUtil;
@@ -72,13 +72,13 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
     @Autowired
     private ModelDao modelDao;
     @Autowired
-    private Neo4jGraphStore graphStore;
+    private KgGraphStore kgGraphStore;
     @Autowired
     private ModelFactory modelFactory;
     @Autowired
-    private KgEntityVectorService entityVectorService;
+    private KgVectorStore kgVectorStore;
     @Autowired
-    private Neo4jRetrieve neo4jRetrieve;
+    private KgRetrieve kgRetrieve;
 
     /**
      * 创建知识图谱
@@ -171,13 +171,13 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
         }
         // 同步清理 Neo4j 图数据
         try {
-            graphStore.deleteByGraphId(kgGraphVO.getId());
+            kgGraphStore.deleteByGraphId(kgGraphVO.getId());
         } catch (Exception e) {
-            logger.error("deleteKgGraph graphStore error, graphId={}", kgGraphVO.getId(), e);
+            logger.error("deleteKgGraph kgGraphStore error, graphId={}", kgGraphVO.getId(), e);
         }
         // 同步清理ES实体向量数据
         try {
-            entityVectorService.deleteByGraphId(kgGraphVO.getId());
+            kgVectorStore.deleteByGraphId(kgGraphVO.getId());
         } catch (Exception e) {
             logger.error("deleteKgGraph entityVector error, graphId={}", kgGraphVO.getId(), e);
         }
@@ -249,12 +249,12 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
             result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
-        Map<String, Object> subgraph = graphStore.expandNode(nodeId, depth);
+        Map<String, Object> subgraph = kgGraphStore.expandNode(nodeId, depth);
         // 补充节点关联度
         List<KgEntity> nodes = (List<KgEntity>) subgraph.get("nodes");
         if (CollectionUtil.isNotEmpty(nodes)) {
             List<Long> nodeIds = nodes.stream().map(KgEntity::getId).toList();
-            Map<Long, Integer> degrees = graphStore.queryNodeDegrees(nodeIds);
+            Map<Long, Integer> degrees = kgGraphStore.queryNodeDegrees(nodeIds);
             subgraph.put("degrees", degrees);
         }
         result.setData(subgraph);
@@ -274,10 +274,10 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
             result.setErrorCode(graphId == null ? ErrorCodeEnum.INVALID_PARAM : ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
-        Map<String, Object> stats = graphStore.queryGraphStats(graphId);
+        Map<String, Object> stats = kgGraphStore.queryGraphStats(graphId);
         // 连通分量数
         try {
-            Map<Integer, List<Long>> components = graphStore.findConnectedComponents(graphId);
+            Map<Integer, List<Long>> components = kgGraphStore.findConnectedComponents(graphId);
             stats.put("componentCount", components.size());
         } catch (Exception e) {
             logger.warn("queryGraphStats wcc fail, graphId={}", graphId, e);
@@ -306,7 +306,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
             return result;
         }
         // 1. 检索相关三元组
-        ResultData<List<String>> retrieval = neo4jRetrieve.retrieve(question, graphIds);
+        ResultData<List<String>> retrieval = kgRetrieve.retrieve(question, graphIds);
         if (retrieval.getCode() != ResultData.OK || CollectionUtil.isEmpty(retrieval.getData())) {
             result.setData("根据当前知识图谱未检索到与问题相关的关系信息，无法进行推理。");
             result.setCode(ResultData.OK);
@@ -354,7 +354,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
             result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
-        result.setData(graphStore.findShortestPath(fromEntityId, toEntityId));
+        result.setData(kgGraphStore.findShortestPath(fromEntityId, toEntityId));
         result.setCode(ResultData.OK);
         return result;
     }

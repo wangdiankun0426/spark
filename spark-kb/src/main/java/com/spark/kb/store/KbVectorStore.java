@@ -1,4 +1,4 @@
-package com.spark.llm.store;
+package com.spark.kb.store;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
@@ -52,11 +52,11 @@ import java.util.stream.Collectors;
  *
  * @author wangdiankun
  * @since 2026-07-17 10:00:00
- * 知识库向量存储（Small-to-Big 父子分块）
+ * 知识库向量存储
  */
 @Component
-public class ESVectorStore {
-    private final static Logger logger = LoggerFactory.getLogger(ESVectorStore.class);
+public class KbVectorStore {
+    private final static Logger logger = LoggerFactory.getLogger(KbVectorStore.class);
     @Autowired
     private ElasticsearchOperations elasticsearchOperations;
     @Autowired
@@ -166,6 +166,8 @@ public class ESVectorStore {
             Map<String, Object> chunkData = new HashMap<>();
             chunkData.put("id", chunkId);
             chunkData.put("tenantId", document.getTenantId());
+            chunkData.put("deptId", document.getDeptId());
+            chunkData.put("createdBy", document.getCreatedBy());
             chunkData.put("prtId", document.getPrtId());
             chunkData.put("documentType", document.getDocumentType());
             chunkData.put("docId", document.getId());
@@ -226,6 +228,8 @@ public class ESVectorStore {
                     Map<String, Object> childData = new HashMap<>();
                     childData.put("id", childId);
                     childData.put("tenantId", document.getTenantId());
+                    childData.put("deptId", document.getDeptId());
+                    childData.put("createdBy", document.getCreatedBy());
                     childData.put("chunkId", chunkId);
                     childData.put("prtId", prtId);
                     childData.put("documentType", documentType);
@@ -318,6 +322,8 @@ public class ESVectorStore {
                 Map<String, Object> qaData = new HashMap<>();
                 qaData.put("id", qaId);
                 qaData.put("tenantId", document.getTenantId());
+                qaData.put("deptId", document.getDeptId());
+                qaData.put("createdBy", document.getCreatedBy());
                 qaData.put("chunkId", chunkId);
                 qaData.put("prtId", document.getPrtId());
                 qaData.put("documentType", document.getDocumentType());

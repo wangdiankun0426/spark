@@ -7,7 +7,7 @@ import com.spark.common.bean.dms.result.DocumentResult;
 import com.spark.common.bean.kb.result.KnowledgeResult;
 import com.spark.dao.dms.DocumentDao;
 import com.spark.dao.kb.KnowledgeDao;
-import com.spark.llm.retrieve.ESRetrieve;
+import com.spark.common.kb.IKbRetriever;
 import com.spark.common.bean.llm.result.RetrieveResult;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.StringUtil;
@@ -38,13 +38,14 @@ import java.util.stream.Collectors;
 public class SearchKnowledge {
     private static final Logger logger = LoggerFactory.getLogger(SearchKnowledge.class);
     @Autowired
-    private ESRetrieve esRetrieve;
+    private IKbRetriever kbRetrieve;
     @Autowired
     private KnowledgeDao knowledgeDao;
     @Autowired
     private DocumentDao documentDao;
+
     /**
-     * 会话级参考文档上下文，key为memoryId（即spaceId）
+     * 会话级参考文档上下文，key为memoryId
      * forAgent创建的子实例共享同一引用，便于ChatMsgServiceImpl通过单例读取
      */
     private Map<Object, List<ChatMsgAttResult>> referenceContext = new ConcurrentHashMap<>();
@@ -57,7 +58,7 @@ public class SearchKnowledge {
      */
     public SearchKnowledge forAgent(List<Long> kbIds) {
         SearchKnowledge tool = new SearchKnowledge();
-        tool.esRetrieve = this.esRetrieve;
+        tool.kbRetrieve = this.kbRetrieve;
         tool.knowledgeDao = this.knowledgeDao;
         tool.documentDao = this.documentDao;
         tool.kbIds = kbIds;
@@ -94,7 +95,7 @@ public class SearchKnowledge {
             if (knowledge == null) {
                 return "检索异常:知识库不存在";
             }
-            RetrieveResult retrieval = esRetrieve.retrieve(question, kbIds, knowledge);
+            RetrieveResult retrieval = kbRetrieve.retrieve(question, kbIds, knowledge);
             List<String> relevantDocs = retrieval.getContents();
             if (CollectionUtil.isEmpty(relevantDocs)) {
                 return "根据当前知识库，无法找到与您的问题相关的内容。";
@@ -139,7 +140,7 @@ public class SearchKnowledge {
 
     /**
      * 获取指定会话的参考文档
-     * @param memoryId 会话记忆id（即spaceId）
+     * @param memoryId 会话记忆id
      * @return 参考文档列表，无则返回null
      */
     public List<ChatMsgAttResult> getReferences(Object memoryId) {
@@ -151,7 +152,7 @@ public class SearchKnowledge {
 
     /**
      * 清除指定会话的参考文档
-     * @param memoryId 会话记忆id（即spaceId）
+     * @param memoryId 会话记忆id
      */
     public void clearReferences(Object memoryId) {
         if (memoryId == null) {

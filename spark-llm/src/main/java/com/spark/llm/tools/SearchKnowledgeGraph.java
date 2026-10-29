@@ -1,7 +1,7 @@
 package com.spark.llm.tools;
 
 import com.spark.common.bean.base.ResultData;
-import com.spark.llm.retrieve.Neo4jRetrieve;
+import com.spark.common.kg.IKgRetriever;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.StringUtil;
 import dev.langchain4j.agent.tool.Tool;
@@ -27,7 +27,7 @@ import java.util.List;
 public class SearchKnowledgeGraph {
     private static final Logger logger = LoggerFactory.getLogger(SearchKnowledgeGraph.class);
     @Autowired
-    private Neo4jRetrieve neo4jRetrieve;
+    private IKgRetriever kgRetrieve;
     private List<Long> graphIds;
 
     /**
@@ -37,7 +37,7 @@ public class SearchKnowledgeGraph {
      */
     public SearchKnowledgeGraph forAgent(List<Long> graphIds) {
         SearchKnowledgeGraph tool = new SearchKnowledgeGraph();
-        tool.neo4jRetrieve = this.neo4jRetrieve;
+        tool.kgRetrieve = this.kgRetrieve;
         tool.graphIds = graphIds;
         return tool;
     }
@@ -65,7 +65,7 @@ public class SearchKnowledgeGraph {
                 return "检索异常:当前Agent未关联知识图谱";
             }
             String question = query.replaceAll("\\n", "").trim();
-            ResultData<List<String>> retrieval = neo4jRetrieve.retrieve(question, graphIds);
+            ResultData<List<String>> retrieval = kgRetrieve.retrieve(question, graphIds);
             if (retrieval.getCode() != ResultData.OK || CollectionUtil.isEmpty(retrieval.getData())) {
                 return "根据当前知识图谱，未找到与您的问题相关的关系信息。";
             }

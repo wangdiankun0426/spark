@@ -50,11 +50,6 @@
             <groupId>io.modelcontextprotocol.sdk</groupId>
             <artifactId>mcp</artifactId>
         </dependency>
-        <!-- Neo4j Java Driver -->
-        <dependency>
-            <groupId>org.neo4j.driver</groupId>
-            <artifactId>neo4j-java-driver</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.spark</groupId>
             <artifactId>spark-manage</artifactId>

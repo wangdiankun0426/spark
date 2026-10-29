@@ -2,7 +2,7 @@ package com.spark.web.rest.controller.dms;
 
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.sys.result.AttachmentResult;
-import com.spark.dms.service.IDmsService;
+import com.spark.dms.service.IDmsUploadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,10 +24,10 @@ import java.util.List;
  * 文档管理通用控制器
  */
 @RestController
-@RequestMapping("dms")
-public class DmsController {
+@RequestMapping("dms/upload")
+public class DmsUploadController {
     @Autowired
-    private IDmsService dmsService;
+    private IDmsUploadService dmsService;
 
     /**
      * 通用上传文件，携带docId生成文档新版本，归档目标为知识库或知识图谱时直接创建文档，否则保存为附件
@@ -36,7 +36,7 @@ public class DmsController {
      * @param docId 文档id
      * @return 上传结果
      */
-    @PostMapping("upload")
+    @PostMapping
     private ResultData<AttachmentResult> uploadFile(@RequestParam("file") MultipartFile file, @RequestParam(value = "prtId", required = false) Long prtId, @RequestParam(value = "docId", required = false) Long docId) {
         return dmsService.uploadFile(file, prtId, docId);
     }
@@ -50,7 +50,7 @@ public class DmsController {
      * @param docId 文档id
      * @return 上传会话id
      */
-    @PostMapping("upload/init")
+    @PostMapping("init")
     private ResultData<String> initUpload(@RequestParam("fileName") String fileName, @RequestParam("fileSize") Long fileSize, @RequestParam("totalChunks") Integer totalChunks, @RequestParam(value = "prtId", required = false) Long prtId, @RequestParam(value = "docId", required = false) Long docId) {
         return dmsService.initUpload(fileName, fileSize, totalChunks, prtId, docId);
     }
@@ -62,7 +62,7 @@ public class DmsController {
      * @param chunkIndex 分片序号
      * @return 上传结果
      */
-    @PostMapping("upload/chunk")
+    @PostMapping("chunk")
     private ResultData<Void> uploadChunk(@RequestParam("file") MultipartFile file, @RequestParam("uploadId") String uploadId, @RequestParam("chunkIndex") Integer chunkIndex) {
         return dmsService.uploadChunk(uploadId, chunkIndex, file);
     }
@@ -72,7 +72,7 @@ public class DmsController {
      * @param uploadId 上传会话id
      * @return 分片序号列表
      */
-    @GetMapping("upload/chunks")
+    @GetMapping("chunks")
     private ResultData<List<Integer>> queryUploadChunks(@RequestParam("uploadId") String uploadId) {
         return dmsService.queryUploadChunks(uploadId);
     }
@@ -82,7 +82,7 @@ public class DmsController {
      * @param uploadId 上传会话id
      * @return 上传结果
      */
-    @PostMapping("upload/merge")
+    @PostMapping("merge")
     private ResultData<AttachmentResult> mergeUpload(@RequestParam("uploadId") String uploadId) {
         return dmsService.mergeUpload(uploadId);
     }

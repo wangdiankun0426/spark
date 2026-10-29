@@ -31,5 +31,10 @@
             <artifactId>spark-manage</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
+        <!-- Neo4j Java Driver -->
+        <dependency>
+            <groupId>org.neo4j.driver</groupId>
+            <artifactId>neo4j-java-driver</artifactId>
+        </dependency>
     </dependencies>
 </project>

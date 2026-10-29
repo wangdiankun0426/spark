@@ -14,7 +14,7 @@ import com.spark.common.enums.FlowInstanceStatusEnum;
 import com.spark.common.enums.MessageTypeEnum;
 import com.spark.common.enums.TaskTypeEnum;
 import com.spark.flow.service.FlowMessageService;
-import com.spark.task.service.ITaskTypeHandler;
+import com.spark.common.task.ITaskTypeHandler;
 import com.spark.common.utils.MapUtil;
 import com.spark.common.utils.StringUtil;
 import org.slf4j.Logger;

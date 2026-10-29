@@ -22,7 +22,7 @@ import java.util.List;
  *
  * @author wangdiankun
  * @since 2026/09/02 09:00:00
- * 技能读取工具（按Agent绑定的技能读取全文）
+ * 技能读取工具
  */
 @Component
 public class SkillTool {

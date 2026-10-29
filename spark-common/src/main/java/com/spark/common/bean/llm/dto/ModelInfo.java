@@ -1,6 +1,5 @@
 package com.spark.common.bean.llm.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
@@ -14,7 +13,6 @@ import lombok.Data;
  * 用量采集用模型元数据，模型创建时固化
  */
 @Data
-@AllArgsConstructor
 public class ModelInfo {
 
     /**

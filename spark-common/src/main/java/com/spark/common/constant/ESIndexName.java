@@ -28,7 +28,7 @@ public class ESIndexName {
     /**
      * 文档问答向量索引名称
      */
-    public static final String DOCUMENT_QA_VECTOR_INDEX_NAME = "spark-qa-vector";
+    public static final String DOCUMENT_QA_VECTOR_INDEX_NAME = "spark-document-qa-vector";
 
     /**
      * 知识图谱实体向量索引名称

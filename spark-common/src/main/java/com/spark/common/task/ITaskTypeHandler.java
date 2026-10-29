@@ -1,4 +1,4 @@
-package com.spark.task.service;
+package com.spark.common.task;
 
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.task.result.TaskInstanceResult;

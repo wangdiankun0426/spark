@@ -1,13 +1,14 @@
-package com.spark.llm.retrieve;
+package com.spark.kg.retrieve;
 
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.kg.entity.KgEntity;
 import com.spark.common.bean.kg.entity.RelationEdge;
+import com.spark.common.kg.IKgRetriever;
 import com.spark.config.redis.RedisService;
 import com.spark.common.constant.ObjectCacheKey;
+import com.spark.kg.store.KgVectorStore;
+import com.spark.kg.store.KgGraphStore;
 import com.spark.llm.model.ModelFactory;
-import com.spark.llm.store.KgEntityVectorService;
-import com.spark.llm.store.Neo4jGraphStore;
 import com.spark.prompt.PromptTemplateLoader;
 import com.spark.common.enums.ModelUsageSceneEnum;
 import com.spark.common.utils.CollectionUtil;
@@ -40,11 +41,11 @@ import java.util.Set;
  *
  * @author wangdiankun
  * @since 2026/7/23 14:44
- * neo4j召回服务：关键词与语义向量双路召回，RRF 融合后扩展子图生成三元组
+ * 知识图谱召回服务
  */
 @Service
-public class Neo4jRetrieve {
-    private final static Logger logger = LoggerFactory.getLogger(Neo4jRetrieve.class);
+public class KgRetrieve implements IKgRetriever {
+    private final static Logger logger = LoggerFactory.getLogger(KgRetrieve.class);
     /**
      * 单个关键词命中的最大实体数
      */
@@ -74,11 +75,11 @@ public class Neo4jRetrieve {
      */
     private static final long CACHE_TTL_SECONDS = 30 * 60L;
     @Autowired
-    private Neo4jGraphStore graphStore;
+    private KgGraphStore kgGraphStore;
     @Autowired
     private ModelFactory modelFactory;
     @Autowired
-    private KgEntityVectorService entityVectorService;
+    private KgVectorStore kgVectorStore;
     @Autowired
     private RedisService redisService;
 
@@ -89,6 +90,7 @@ public class Neo4jRetrieve {
      * @param graphIds 图谱 id 列表
      * @return 三元组文本列表
      */
+    @Override
     public ResultData<List<String>> retrieve(String question, List<Long> graphIds) {
         ResultData<List<String>> result = new ResultData<>();
         if (StringUtil.isBlank(question) || CollectionUtil.isEmpty(graphIds)) {
@@ -122,7 +124,7 @@ public class Neo4jRetrieve {
             // 3. 语义路径：问题向量 -> ES KNN 召回实体
             List<Long> semanticEntityIds = new ArrayList<>();
             try {
-                List<KgEntity> semanticEntities = entityVectorService.semanticSearch(question, graphIds, MAX_SEMANTIC_HIT);
+                List<KgEntity> semanticEntities = kgVectorStore.semanticSearch(question, graphIds, MAX_SEMANTIC_HIT);
                 for (KgEntity entity : semanticEntities) {
                     semanticEntityIds.add(entity.getId());
                 }
@@ -282,7 +284,7 @@ public class Neo4jRetrieve {
      * @param matchedEntityIds 命中实体 id 集合
      */
     private void matchEntities(Long graphId, String name, Set<Long> matchedEntityIds) {
-        List<KgEntity> entities = graphStore.queryEntityByName(graphId, name);
+        List<KgEntity> entities = kgGraphStore.queryEntityByName(graphId, name);
         if (CollectionUtil.isEmpty(entities)) {
             return;
         }
@@ -300,7 +302,7 @@ public class Neo4jRetrieve {
     private void buildTriplets(Collection<Long> entityIds, List<String> triplets) {
         Set<String> dedup = new HashSet<>();
         for (Long entityId : entityIds) {
-            Map<String, Object> subgraph = graphStore.querySubgraph(entityId, 2);
+            Map<String, Object> subgraph = kgGraphStore.querySubgraph(entityId, 2);
             List<KgEntity> nodes = (List<KgEntity>) subgraph.get("nodes");
             List<RelationEdge> edges = (List<RelationEdge>) subgraph.get("edges");
             if (CollectionUtil.isEmpty(nodes)) {

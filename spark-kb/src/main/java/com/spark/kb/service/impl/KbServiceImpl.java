@@ -18,7 +18,7 @@ import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.ObjectTypeEnum;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.StatusEnum;
-import com.spark.kb.service.IKnowledgeService;
+import com.spark.kb.service.IKbService;
 import com.spark.manage.BaseService;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.StringUtil;
@@ -46,8 +46,8 @@ import java.util.Set;
  */
 @Service
 @LogPrint
-public class KnowledgeServiceImpl extends BaseService<KnowledgeQuery, KnowledgeResult> implements IKnowledgeService {
-    private final static Logger logger = LoggerFactory.getLogger(KnowledgeServiceImpl.class);
+public class KbServiceImpl extends BaseService<KnowledgeQuery, KnowledgeResult> implements IKbService {
+    private final static Logger logger = LoggerFactory.getLogger(KbServiceImpl.class);
     @Autowired
     private KnowledgeDao knowledgeDao;
     @Autowired

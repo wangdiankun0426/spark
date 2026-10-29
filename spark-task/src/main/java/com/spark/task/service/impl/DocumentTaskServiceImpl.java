@@ -24,9 +24,9 @@ import com.spark.common.enums.KgSourceTypeEnum;
 import com.spark.common.enums.ModelUsageSceneEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.llm.model.ModelFactory;
-import com.spark.llm.store.ESVectorStore;
-import com.spark.llm.store.KgEntityVectorService;
-import com.spark.llm.store.Neo4jGraphStore;
+import com.spark.kb.store.KbVectorStore;
+import com.spark.kg.store.KgVectorStore;
+import com.spark.kg.store.KgGraphStore;
 import com.spark.task.service.IDocumentTaskService;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.input.Prompt;
@@ -75,7 +75,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
     @Autowired
     private DocumentDao documentDao;
     @Autowired
-    private ESVectorStore vectorStore;
+    private KbVectorStore kbVectorStore;
     @Autowired
     private KgEntityDao kgEntityDao;
     @Autowired
@@ -85,9 +85,9 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
     @Autowired
     private ModelFactory modelFactory;
     @Autowired
-    private Neo4jGraphStore graphStore;
+    private KgGraphStore kgGraphStore;
     @Autowired
-    private KgEntityVectorService entityVectorService;
+    private KgVectorStore kgVectorStore;
     private final Lock contentLock = new ReentrantLock();
     private final Lock indexLock = new ReentrantLock();
     private final Lock chunkLock = new ReentrantLock();
@@ -205,6 +205,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                     Map<String, Object> document = new HashMap<>();
                     document.put("id", documentResult.getId());
                     document.put("tenantId", documentResult.getTenantId());
+                    document.put("deptId", documentResult.getDeptId());
                     document.put("prtId", documentResult.getPrtId());
                     document.put("documentType", documentResult.getDocumentType());
                     document.put("name", documentResult.getName());
@@ -297,7 +298,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                         documentEventDao.updateDBById(documentEvent);
                         continue;
                     }
-                    vectorStore.addChunk(documentResult, content);
+                    kbVectorStore.addChunk(documentResult, content);
                     DocumentEvent documentEvent = new DocumentEvent();
                     documentEvent.setId(documentEventResult.getId());
                     documentEvent.setChunkStatus(DocumentEventStatusEnum.SUCCESS.getValue());
@@ -355,7 +356,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                     }
                     DocumentResult documentResult = docMap.get(docId);
                     SessionSnapshot snapshot = this.buildDocumentSnapshot(documentResult);
-                    SessionContextUtil.runWith(snapshot, () -> vectorStore.addVector(documentResult));
+                    SessionContextUtil.runWith(snapshot, () -> kbVectorStore.addVector(documentResult));
                     DocumentEvent documentEvent = new DocumentEvent();
                     documentEvent.setId(documentEventResult.getId());
                     documentEvent.setVectorStatus(DocumentEventStatusEnum.SUCCESS.getValue());
@@ -441,7 +442,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
             this.updateGraphStatus(eventId, DocumentEventStatusEnum.FAIL.getValue(), "图谱不存在");
             return;
         }
-        List<String> chunks = vectorStore.queryParentChunkContents(docId);
+        List<String> chunks = kbVectorStore.queryParentChunkContents(docId);
         if (CollectionUtil.isEmpty(chunks)) {
             this.updateGraphStatus(eventId, DocumentEventStatusEnum.FAIL.getValue(), "分块数据不存在");
             return;
@@ -695,13 +696,13 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                 continue;
             }
             try {
-                graphStore.upsertEntity(entity);
+                kgGraphStore.upsertEntity(entity);
             } catch (Exception e) {
                 logger.error("upsertEntity error, id={}", entity.getId(), e);
             }
             // 同步向量化实体描述写入ES
             try {
-                entityVectorService.vectorizeEntity(entity);
+                kgVectorStore.vectorizeEntity(entity);
             } catch (Exception e) {
                 logger.error("vectorizeEntity error, id={}", entity.getId(), e);
             }
@@ -739,7 +740,7 @@ public class DocumentTaskServiceImpl implements IDocumentTaskService {
                 edge.setTailEntityId(relation.getTailEntityId());
                 edge.setRelationType(relation.getRelationType());
                 edge.setWeight(relation.getWeight());
-                graphStore.upsertRelation(edge);
+                kgGraphStore.upsertRelation(edge);
             } catch (Exception e) {
                 logger.error("upsertRelation error, id={}", relation.getId(), e);
             }

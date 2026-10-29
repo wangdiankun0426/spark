@@ -18,8 +18,8 @@ import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.kg.service.IKgEntityService;
-import com.spark.llm.store.KgEntityVectorService;
-import com.spark.llm.store.Neo4jGraphStore;
+import com.spark.kg.store.KgVectorStore;
+import com.spark.kg.store.KgGraphStore;
 import com.spark.manage.BaseService;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.StringUtil;
@@ -57,9 +57,9 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
     @Autowired
     private KgGraphDao kgGraphDao;
     @Autowired
-    private Neo4jGraphStore graphStore;
+    private KgGraphStore kgGraphStore;
     @Autowired
-    private KgEntityVectorService entityVectorService;
+    private KgVectorStore kgVectorStore;
 
     /**
      * 新增实体
@@ -103,13 +103,13 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
             node.setName(kgEntity.getName());
             node.setType(kgEntity.getType());
             node.setDescription(kgEntity.getDescription());
-            graphStore.upsertEntity(node);
+            kgGraphStore.upsertEntity(node);
         } catch (Exception e) {
-            logger.error("createKgEntity graphStore error, id={}", id, e);
+            logger.error("createKgEntity kgGraphStore error, id={}", id, e);
         }
         // 同步向量化实体写入ES
         try {
-            entityVectorService.vectorizeEntity(kgEntity);
+            kgVectorStore.vectorizeEntity(kgEntity);
         } catch (Exception e) {
             logger.error("createKgEntity vectorize error, id={}", id, e);
         }
@@ -155,10 +155,10 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
                 node.setName(latest.getName());
                 node.setType(latest.getType());
                 node.setDescription(latest.getDescription());
-                graphStore.upsertEntity(node);
+                kgGraphStore.upsertEntity(node);
             }
         } catch (Exception e) {
-            logger.error("updateKgEntity graphStore error, id={}", kgEntityVO.getId(), e);
+            logger.error("updateKgEntity kgGraphStore error, id={}", kgEntityVO.getId(), e);
         }
         // 同步重新向量化实体
         try {
@@ -170,7 +170,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
                 latestEntity.setName(latest.getName());
                 latestEntity.setType(latest.getType());
                 latestEntity.setDescription(latest.getDescription());
-                entityVectorService.vectorizeEntity(latestEntity);
+                kgVectorStore.vectorizeEntity(latestEntity);
             }
         } catch (Exception e) {
             logger.error("updateKgEntity vectorize error, id={}", kgEntityVO.getId(), e);
@@ -209,13 +209,13 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
         }
         // 同步删除 Neo4j 节点及其关联边
         try {
-            graphStore.deleteByEntityId(kgEntityVO.getId());
+            kgGraphStore.deleteByEntityId(kgEntityVO.getId());
         } catch (Exception e) {
-            logger.error("deleteKgEntity graphStore error, id={}", kgEntityVO.getId(), e);
+            logger.error("deleteKgEntity kgGraphStore error, id={}", kgEntityVO.getId(), e);
         }
         // 同步删除ES实体向量
         try {
-            entityVectorService.deleteEntityVector(kgEntityVO.getId());
+            kgVectorStore.deleteEntityVector(kgEntityVO.getId());
         } catch (Exception e) {
             logger.error("deleteKgEntity vectorize error, id={}", kgEntityVO.getId(), e);
         }
@@ -318,13 +318,13 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
             int i = kgEntityDao.updateDBById(entity);
             // Neo4j 迁移关系并删除旧节点，保持双库一致
             try {
-                graphStore.migrateRelations(mainEntityId, mergedId);
+                kgGraphStore.migrateRelations(mainEntityId, mergedId);
             } catch (Exception e) {
-                logger.error("mergeKgEntity graphStore error, mergedId={}", mergedId, e);
+                logger.error("mergeKgEntity kgGraphStore error, mergedId={}", mergedId, e);
             }
             // ES 同步清理旧实体向量
             try {
-                entityVectorService.deleteEntityVector(mergedId);
+                kgVectorStore.deleteEntityVector(mergedId);
             } catch (Exception e) {
                 logger.error("mergeKgEntity vectorize error, mergedId={}", mergedId, e);
             }

@@ -1,4 +1,4 @@
-package com.spark.llm.config;
+package com.spark.kg.config;
 
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;

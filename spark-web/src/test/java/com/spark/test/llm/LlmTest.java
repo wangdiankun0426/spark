@@ -4,7 +4,7 @@ import cn.hutool.http.HttpRequest;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import com.spark.llm.model.ModelFactory;
-import com.spark.llm.store.ESVectorStore;
+import com.spark.kb.store.KbVectorStore;
 import com.spark.common.utils.TextChunkUtil;
 import com.spark.prompt.PromptTemplateLoader;
 import com.spark.llm.IAgent;
@@ -123,7 +123,7 @@ public class LlmTest {
     @Autowired
     private ModelFactory modelFactory;
     @Autowired
-    private ESVectorStore vectorStore;
+    private KbVectorStore kbVectorStore;
 
     @Test
     public void test2() {
@@ -152,7 +152,7 @@ public class LlmTest {
         }
 //        String question = "李威上任的时候穿的什么衣服？";
 //        Response<Embedding> response = modelFactory.getDefaultEmbeddingModel().embed(question);
-//        List<String> relevantDocs = vectorStore.search(response.content(), 2);
+//        List<String> relevantDocs = kbVectorStore.search(response.content(), 2);
 //        String context = String.join("\n", relevantDocs);
 //        Map<String, Object> variables = Map.of("document", context);
 //        Prompt prompt = PromptTemplateLoader.create("prompts/qa-prompt.txt", variables);

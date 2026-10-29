@@ -1,4 +1,4 @@
-package com.spark.llm.store;
+package com.spark.kg.store;
 
 import com.spark.common.bean.kg.entity.KgEntity;
 import com.spark.common.bean.kg.entity.RelationEdge;
@@ -28,11 +28,11 @@ import java.util.Objects;
  *
  * @author wangdiankun
  * @since 2026-07-22 10:30:00
- * Neo4j 图存储实现，使用 Cypher 语句操作节点和边
+ * Neo4j 图存储
  */
 @Component
-public class Neo4jGraphStore {
-    private final static Logger logger = LoggerFactory.getLogger(Neo4jGraphStore.class);
+public class KgGraphStore {
+    private final static Logger logger = LoggerFactory.getLogger(KgGraphStore.class);
     @Autowired
     private Driver neo4jDriver;
     /**
@@ -82,7 +82,7 @@ public class Neo4jGraphStore {
     }
 
     /**
-     * 写入或更新实体节点（按 id MERGE）
+     * 写入或更新实体节点
      * @param node 实体节点
      * @return 写入的节点数量
      */
@@ -103,24 +103,9 @@ public class Neo4jGraphStore {
         }
     }
 
-    /**
-     * 批量写入或更新实体节点
-     * @param nodes 实体节点列表
-     * @return 写入的节点数量
-     */
-    public int batchUpsertEntity(List<KgEntity> nodes) {
-        if (nodes == null || nodes.isEmpty()) {
-            return 0;
-        }
-        int success = 0;
-        for (KgEntity node : nodes) {
-            success += this.upsertEntity(node);
-        }
-        return success;
-    }
 
     /**
-     * 写入或更新关系边（按 id MERGE）
+     * 写入或更新关系边
      * @param edge 关系边
      * @return 写入的边数量
      */
@@ -146,22 +131,6 @@ public class Neo4jGraphStore {
             logger.error("upsert relation edge fail, id={}, type={}", edge.getId(), edge.getRelationType(), e);
             return 0;
         }
-    }
-
-    /**
-     * 批量写入或更新关系边
-     * @param edges 关系边列表
-     * @return 写入的边数量
-     */
-    public int batchUpsertRelation(List<RelationEdge> edges) {
-        if (edges == null || edges.isEmpty()) {
-            return 0;
-        }
-        int success = 0;
-        for (RelationEdge edge : edges) {
-            success += upsertRelation(edge);
-        }
-        return success;
     }
 
     /**
@@ -476,20 +445,6 @@ public class Neo4jGraphStore {
             logger.error("findShortestPath error, fromId={}, toId={}", fromEntityId, toEntityId, e);
         }
         return subgraph;
-    }
-
-    /**
-     * 校验图存储连接是否可用
-     * @return true 表示连接正常
-     */
-    public boolean verifyConnect() {
-        try (Session session = neo4jDriver.session()) {
-            Result result = session.run("RETURN 1 AS num");
-            return result.hasNext() && result.next().get("num").asInt() == 1;
-        } catch (Exception e) {
-            logger.error("neo4j connection verify fail", e);
-            return false;
-        }
     }
 
     /**

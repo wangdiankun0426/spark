@@ -1,4 +1,4 @@
-package com.spark.llm.retrieve;
+package com.spark.kb.retrieve;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
@@ -6,10 +6,11 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.kb.result.KnowledgeResult;
 import com.spark.common.bean.llm.result.RetrieveResult;
 import com.spark.common.constant.ESIndexName;
+import com.spark.common.kb.IKbRetriever;
+import com.spark.config.es.ESDataScopeUtil;
 import com.spark.llm.model.ModelFactory;
 import com.spark.llm.model.RerankModel;
 import com.spark.common.enums.ModelUsageSceneEnum;
@@ -35,11 +36,11 @@ import java.util.stream.Collectors;
  *
  * @author wangdiankun
  * @since 2026/7/23 14:43
- * es召回服务
+ * 知识库召回服务
  */
 @Service
-public class ESRetrieve {
-    private final static Logger logger = LoggerFactory.getLogger(ESRetrieve.class);
+public class KbRetrieve implements IKbRetriever {
+    private final static Logger logger = LoggerFactory.getLogger(KbRetrieve.class);
     @Autowired
     private ModelFactory modelFactory;
     @Autowired
@@ -94,6 +95,7 @@ public class ESRetrieve {
      * @param knowledge 知识库配置
      * @return 检索结果（含给LLM的文本和给前端的参考文档）
      */
+    @Override
     public RetrieveResult retrieve(String query, List<Long> kbIds, KnowledgeResult knowledge) {
         if (StringUtil.isBlank(query) || CollectionUtil.isEmpty(kbIds) || knowledge == null) {
             RetrieveResult empty = new RetrieveResult();
@@ -108,71 +110,6 @@ public class ESRetrieve {
         }
         RetrieveResult vectorResult = retrieveByVector(query, kbIds, knowledge);
         return rerankResult(query, vectorResult, knowledge);
-    }
-
-    /**
-     * 文档级语义召回
-     * 通过 chunk 向量 KNN 召回，按 docId 聚合（每篇文档取最高分），返回最相关文档ID列表
-     * @param keyWord 查询文本
-     * @param documentType 文档归属类型
-     * @param prtId 父ID
-     * @return 文档ID列表（按相关性降序）
-     */
-    public List<Long> retrieveDocumentIds(String keyWord, Integer documentType, Long prtId) {
-        if (StringUtil.isBlank(keyWord)) {
-            logger.error("keyword is blank");
-            return new ArrayList<>();
-        }
-        try {
-            ModelUsageSceneHolder.push(ModelUsageSceneEnum.RETRIEVE_VECTOR);
-            EmbeddingModel embeddingModel = getEmbeddingModel();
-            Response<Embedding> response = embeddingModel.embed(keyWord);
-            Embedding embedding = response.content();
-            logger.info("retrieveDocumentIds embedding={}", embedding);
-            // chunk 召回数量扩大 10 倍，保证聚合后有足够不同文档
-            int knnSize = topK * 10;
-            SearchRequest knnRequest = SearchRequest.of(b -> b
-                    .index(ESIndexName.DOCUMENT_VECTOR_INDEX_NAME)
-                    .knn(k -> {
-                        k.field("embedding")
-                                .queryVector(embedding.vectorAsList())
-                                .k(knnSize)
-                                .numCandidates(numCandidates)
-                                .similarity(similarity);
-                        Query filter = this.documentFilter(documentType, prtId);
-                        if (filter != null) {
-                            k.filter(filter);
-                        }
-                        return k;
-                    })
-                    .size(knnSize)
-            );
-            SearchResponse<Map> knnResponse = client.search(knnRequest, Map.class);
-            List<Hit<Map>> hits = knnResponse.hits().hits();
-            logger.info("retrieveDocumentIds hits={}", hits);
-            // 按 docId 聚合：每篇文档取最高分
-            Map<Long, Double> docMaxScore = new HashMap<>();
-            for (Hit<Map> hit : hits) {
-                Map<String, Object> source = hit.source();
-                if (source == null || source.get("docId") == null) {
-                    continue;
-                }
-                Long docId = ((Number) source.get("docId")).longValue();
-                double score = hit.score() == null ? 0.0 : hit.score();
-                docMaxScore.merge(docId, score, Math::max);
-            }
-            // 按分数降序，取前 topK 个文档
-            return docMaxScore.entrySet().stream()
-                    .sorted(Map.Entry.<Long, Double>comparingByValue().reversed())
-                    .limit(topK)
-                    .map(Map.Entry::getKey)
-                    .toList();
-        } catch (Exception e) {
-            logger.error("retrieveDocumentIds error", e);
-            throw new RuntimeException(e);
-        } finally {
-            ModelUsageSceneHolder.pop();
-        }
     }
 
     /**
@@ -392,9 +329,14 @@ public class ESRetrieve {
             List<FieldValue> values = parentIds.stream()
                     .map(id -> FieldValue.of(id.longValue()))
                     .collect(Collectors.toList());
+            Query scopeQuery = ESDataScopeUtil.scopeQuery();
             SearchRequest request = SearchRequest.of(b -> b
                     .index(ESIndexName.DOCUMENT_CHUNK_INDEX_NAME)
-                    .query(q -> q.terms(t -> t.field("id").terms(tv -> tv.value(values))))
+                    .query(q -> q.bool(bb -> {
+                        bb.must(m -> m.terms(t -> t.field("id").terms(tv -> tv.value(values))));
+                        bb.must(scopeQuery);
+                        return bb;
+                    }))
                     .size(parentIds.size())
             );
             SearchResponse<Map> response = client.search(request, Map.class);
@@ -463,46 +405,18 @@ public class ESRetrieve {
     }
 
     /**
-     * 构造 kbId 过滤条件
+     * 构造知识库召回过滤条件，恒含租户与数据权限
      * @param kbIds 知识库ID列表
      * @return 过滤Query
      */
     private Query kbIdFilter(List<Long> kbIds) {
-        Long tenantId = SessionHolder.getCurrentTenantId();
-        if (tenantId == null) {
-            // 无租户上下文时安全失败，用不存在的租户值禁止跨租户召回
-            return Query.of(q -> q.term(t -> t.field("tenantId").value(-1L)));
-        }
         List<FieldValue> values = kbIds.stream()
                 .map(id -> FieldValue.of(id.longValue()))
                 .collect(Collectors.toList());
-        return Query.of(q -> {
-            q.term(x -> x.field("tenantId").value(tenantId));
-            q.terms(t -> t.field("prtId").terms(tv -> tv.value(values)));
-            return q;
-        });
-    }
-
-    /**
-     * 构造文档过滤条件，恒含租户过滤，documentType与prtId可选
-     * @param documentType 文档归属类型
-     * @param prtId 父ID
-     * @return 过滤Query
-     */
-    private Query documentFilter(Integer documentType, Long prtId) {
-        Long tenantId = SessionHolder.getCurrentTenantId();
-        if (tenantId == null) {
-            // 无租户上下文时安全失败，用不存在的租户值禁止全量召回
-            return Query.of(q -> q.term(t -> t.field("tenantId").value(-1L)));
-        }
+        Query scopeQuery = ESDataScopeUtil.scopeQuery();
         return Query.of(q -> q.bool(b -> {
-            b.must(m -> m.term(t -> t.field("tenantId").value(tenantId)));
-            if (documentType != null) {
-                b.must(m -> m.term(t -> t.field("documentType").value(documentType.longValue())));
-            }
-            if (prtId != null) {
-                b.must(m -> m.term(t -> t.field("prtId").value(prtId)));
-            }
+            b.must(scopeQuery);
+            b.must(m -> m.terms(t -> t.field("prtId").terms(tv -> tv.value(values))));
             return b;
         }));
     }

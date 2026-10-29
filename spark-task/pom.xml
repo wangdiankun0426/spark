@@ -31,5 +31,15 @@
             <artifactId>spark-llm</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.spark</groupId>
+            <artifactId>spark-kb</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.spark</groupId>
+            <artifactId>spark-kg</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 </project>

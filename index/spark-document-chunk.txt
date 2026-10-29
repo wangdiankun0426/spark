@@ -15,6 +15,14 @@ curl -u elastic -X PUT "http://localhost:9203/spark-document-chunk" -H "Content-
         "type": "long",
         "index": true
       },
+      "deptId": {
+        "type": "long",
+        "index": true
+      },
+      "createdBy": {
+        "type": "long",
+        "index": true
+      },
       "prtId": {
         "type": "long",
         "index": true,

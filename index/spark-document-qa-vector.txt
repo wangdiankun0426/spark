@@ -1,4 +1,4 @@
-curl -u elastic -X PUT "http://localhost:9203/spark-qa-vector" -H "Content-Type: application/json" -d'
+curl -u elastic -X PUT "http://localhost:9203/spark-document-qa-vector" -H "Content-Type: application/json" -d'
 {
   "settings": {
     "number_of_shards": 1,
@@ -12,6 +12,14 @@ curl -u elastic -X PUT "http://localhost:9203/spark-qa-vector" -H "Content-Type:
           "doc_values": true
         },
         "tenantId": {
+          "type": "long",
+          "index": true
+        },
+        "deptId": {
+          "type": "long",
+          "index": true
+        },
+        "createdBy": {
           "type": "long",
           "index": true
         },

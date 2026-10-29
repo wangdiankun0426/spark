@@ -47,7 +47,7 @@ logger.info("readSkill name={}, skillIds={}", name, skillIds);
 9. **`@LogOperate` 与手动 ID 生成需用户确认（强制询问）**：为写方法生成 `@LogOperate(operateType = OperateTypeEnum.XXX_*)`，或为业务对象手动生成 ID（`genObjectId` + 新增 `ObjectTypeEnum` 枚举 + `queryMaxId`）之前，**必须先询问用户是否需要**；得到用户肯定回答后再生成，**默认不生成**。用户确认不需要时：省略 `@LogOperate` 及对应的 `result.setObjId(...)`；省略 `genObjectId`/`queryMaxId` 与 `ObjectTypeEnum` 枚举，改用数据库自增（`useGeneratedKeys`）。
 10. **守护式编程（强制，所有方法必须遵守）**：每个方法入口对入参做防御性校验，非法参数快速失败（guard clause 提前 return），禁止依赖 try-catch 兜底业务异常。详则见 `references/guard-clauses.md`。
 11. **JSON 统一走 JsonUtil（强制）**：JSON 解析/序列化一律用 `spark-common` 的 `JsonUtil`（`toObject/toList/toMap/toMapList/toArray/toString/isValidJson/parseMap/parseList/getMap/getMapList/getArray`），业务代码只持有 `Map<String, Object>` / `List` 等 JDK 类型；Map 的类型化取值用 `MapUtil`（`getStringVal/getIntegerVal/getLongVal/getBooleanVal/getDoubleVal`）。**业务类禁止 import 或调用第三方 JSON 库（`com.alibaba.fastjson2` / `com.fasterxml.jackson` / `cn.hutool.json`）；`JsonUtil` 不具备所需能力时，必须先在 `JsonUtil` 中补充封装方法再在业务代码中调用，禁止以"缺方法/不方便"为由直接调用第三方库。** 唯一例外：纯数据 Bean 上的 Jackson 声明式注解（`@JsonFormat`/`@JsonInclude`/`@JsonProperty`，仅作字段元数据，不得用于手动解析或序列化）。收口目的是便于后续维护与 jar 升级；`JsonUtil` 与 `MapUtil` 是唯一允许触达 JSON 库的封装点。
-12. **纯数据类用 Lombok，禁止手写样板（强制）**：一切纯数据持有类（含 entity/vo/query/result/dto，以及内部值对象、元数据持有类、快照类等）一律 Lombok 注解：可变对象 `@Data`；构造即不可变的用 `@Data @AllArgsConstructor` + `final` 字段；需要无参构造再加 `@NoArgsConstructor`。**禁止手写 getter/setter、toString、equals/hashCode、全参构造**。注意：Spring 组件/含业务逻辑的类不在此列，其手工构造里允许有初始化逻辑。
+12. **纯数据类用 Lombok，禁止手写样板（强制）**：一切纯数据持有类（含 entity/vo/query/result/dto，以及内部值对象、元数据持有类、快照类等）一律 Lombok 注解：可变对象 `@Data`；构造即不可变的用 `@Data` + `final` 字段（`@Data` 已含 `@RequiredArgsConstructor`，全字段 final 时即全参构造，**禁止再叠加 `@AllArgsConstructor`**）；final 与非 final 字段混存且确实需要全参构造时才允许 `@AllArgsConstructor`；需要无参构造再加 `@NoArgsConstructor`。**禁止手写 getter/setter、toString、equals/hashCode、全参构造**。注意：Spring 组件/含业务逻辑的类不在此列，其手工构造里允许有初始化逻辑。
 13. **禁止创建类中类（强制）**：新增代码一律不允许写内部类/嵌套类/静态内部类（含值对象、快照、DTO、枚举以外的一切数据结构）；需要的数据类型必须建独立顶层类文件。跨模块复用的数据对象放 `spark-common` 的 `bean/{module}/dto/` 包；仅单模块内部使用的放该模块对应业务包。本条约束新增代码，不溯及存量内部类（如 `RerankModel.RerankResult`），修改存量类时不做顺带搬迁。
 
 ## 4. 基类字段（继承体系）
@@ -162,7 +162,7 @@ taskInstanceResult.setDataList(dataList);
 - 修改无关代码、引入无关依赖、通配符导入
 - private 方法插在 public 方法之间（private 必须集中在类尾部，全部 public 方法之后）
 - 业务类直接 import/调用第三方 JSON 库（fastjson2 / jackson / hutool-json）做解析或序列化，绕过 JsonUtil；JsonUtil 缺方法时不补封装而直接调第三方库
-- 纯数据类手写 getter/setter/toString/构造方法（必须用 `@Data` / `@AllArgsConstructor` 等 Lombok 注解）
+- 纯数据类手写 getter/setter/toString/构造方法（必须用 `@Data` 等 Lombok 注解）；全 final 字段的 `@Data` 类叠加 `@AllArgsConstructor`（与隐式 `@RequiredArgsConstructor` 重复）
 - 新增内部类/类中类（静态嵌套类也不行，数据结构必须独立成顶层类文件）
 - 在代码中输出敏感信息（token/密码/密钥）到日志
 - 未经用户同意添加 `@Transactional` 或抽象层

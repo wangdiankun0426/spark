@@ -15,7 +15,7 @@ import com.spark.common.bean.kb.vo.KnowledgeVO;
  * @author wangdiankun
  * @since 2026-07-17 10:00:00
  */
-public interface IKnowledgeService {
+public interface IKbService {
 
     /**
      * 创建知识库

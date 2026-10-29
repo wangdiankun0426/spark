@@ -22,7 +22,7 @@ import com.spark.common.enums.KgSourceTypeEnum;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.kg.service.IKgRelationService;
-import com.spark.llm.store.Neo4jGraphStore;
+import com.spark.kg.store.KgGraphStore;
 import com.spark.manage.BaseService;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.StringUtil;
@@ -61,7 +61,7 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
     @Autowired
     private KgEntityDao kgEntityDao;
     @Autowired
-    private Neo4jGraphStore graphStore;
+    private KgGraphStore kgGraphStore;
 
     /**
      * 新增关系
@@ -129,9 +129,9 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
             edge.setTailEntityId(relation.getTailEntityId());
             edge.setRelationType(relation.getRelationType());
             edge.setWeight(relation.getWeight());
-            graphStore.upsertRelation(edge);
+            kgGraphStore.upsertRelation(edge);
         } catch (Exception e) {
-            logger.error("createKgRelation graphStore error, id={}", id, e);
+            logger.error("createKgRelation kgGraphStore error, id={}", id, e);
         }
         result.setObjId(id);
         result.setCode(ResultData.OK);
@@ -183,9 +183,9 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
                     ? kgRelationResult.getRelationType() : kgRelationVO.getRelationType());
             edge.setWeight(kgRelationVO.getWeight() == null
                     ? kgRelationResult.getWeight() : kgRelationVO.getWeight());
-            graphStore.upsertRelation(edge);
+            kgGraphStore.upsertRelation(edge);
         } catch (Exception e) {
-            logger.error("updateKgRelation graphStore error, id={}", kgRelationResult.getId(), e);
+            logger.error("updateKgRelation kgGraphStore error, id={}", kgRelationResult.getId(), e);
         }
         result.setObjId(kgRelationVO.getId());
         result.setCode(ResultData.OK);
@@ -221,9 +221,9 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
         }
         // 同步删除 Neo4j 边
         try {
-            graphStore.deleteByRelationId(kgRelationVO.getId());
+            kgGraphStore.deleteByRelationId(kgRelationVO.getId());
         } catch (Exception e) {
-            logger.error("deleteKgRelation graphStore error, id={}", kgRelationVO.getId(), e);
+            logger.error("deleteKgRelation kgGraphStore error, id={}", kgRelationVO.getId(), e);
         }
         result.setObjId(kgRelationVO.getId());
         result.setCode(ResultData.OK);

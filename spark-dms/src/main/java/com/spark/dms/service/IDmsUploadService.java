@@ -16,7 +16,7 @@ import java.util.List;
  * @since 2026-09-17 11:00:00
  * 文档管理通用服务
  */
-public interface IDmsService {
+public interface IDmsUploadService {
 
     /**
      * 通用上传文件，携带docId生成文档新版本，归档目标为知识库或知识图谱时直接创建文档，否则保存为附件

@@ -6,7 +6,7 @@ import com.spark.common.constant.TaskParamCode;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.TaskTypeEnum;
 import com.spark.dms.service.IDocumentService;
-import com.spark.task.service.ITaskTypeHandler;
+import com.spark.common.task.ITaskTypeHandler;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.MapUtil;
 import com.spark.common.utils.StringUtil;
@@ -30,8 +30,8 @@ import java.util.Map;
  * @since 2026/8/21 10:16
  */
 @Service
-public class KnowledgeTaskHandler implements ITaskTypeHandler {
-    private final static Logger logger = LoggerFactory.getLogger(KnowledgeTaskHandler.class);
+public class KbTaskHandler implements ITaskTypeHandler {
+    private final static Logger logger = LoggerFactory.getLogger(KbTaskHandler.class);
     @Autowired
     private IDocumentService documentService;
 

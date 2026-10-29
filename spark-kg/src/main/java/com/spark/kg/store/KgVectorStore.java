@@ -1,4 +1,4 @@
-package com.spark.llm.store;
+package com.spark.kg.store;
 
 import com.spark.common.bean.kg.entity.KgEntity;
 import com.spark.common.constant.ESIndexName;
@@ -14,11 +14,9 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
-import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,11 +40,11 @@ import java.util.stream.Collectors;
  *
  * @author wangdiankun
  * @since 2026-08-31 16:00:00
- * 知识图谱实体向量索引服务，将实体描述向量化写入ES，支持语义检索定位入口实体
+ * 知识库向量存储
  */
 @Component
-public class KgEntityVectorService {
-    private final static Logger logger = LoggerFactory.getLogger(KgEntityVectorService.class);
+public class KgVectorStore {
+    private final static Logger logger = LoggerFactory.getLogger(KgVectorStore.class);
     @Autowired
     private ElasticsearchOperations elasticsearchOperations;
     @Autowired
@@ -97,20 +95,6 @@ public class KgEntityVectorService {
         } finally {
             ModelUsageSceneHolder.pop();
         }
-    }
-
-    /**
-     * 批量向量化实体
-     * @param entities 实体列表
-     */
-    public void vectorizeEntities(List<KgEntity> entities) {
-        if (CollectionUtil.isEmpty(entities)) {
-            return;
-        }
-        for (KgEntity entity : entities) {
-            this.vectorizeEntity(entity);
-        }
-        logger.info("vectorizeEntities success, count={}", entities.size());
     }
 
     /**

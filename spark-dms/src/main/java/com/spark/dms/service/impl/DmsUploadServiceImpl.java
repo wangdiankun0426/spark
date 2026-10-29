@@ -12,7 +12,7 @@ import com.spark.common.utils.StringUtil;
 import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.redis.RedisService;
 import com.spark.dms.service.IAttachmentService;
-import com.spark.dms.service.IDmsService;
+import com.spark.dms.service.IDmsUploadService;
 import com.spark.dms.service.IDocumentService;
 import com.spark.dms.service.IDocumentVersionService;
 import com.spark.manage.BaseService;
@@ -50,10 +50,10 @@ import java.util.UUID;
  */
 @Service
 @LogPrint
-public class DmsServiceImpl extends BaseService<AttachmentQuery, AttachmentResult> implements IDmsService {
-    private final static Logger logger = LoggerFactory.getLogger(DmsServiceImpl.class);
+public class DmsUploadServiceImpl extends BaseService<AttachmentQuery, AttachmentResult> implements IDmsUploadService {
+    private final static Logger logger = LoggerFactory.getLogger(DmsUploadServiceImpl.class);
     private final static long MAX_CHUNK_SIZE = 1L * 1024 * 1024;
-    // 元数据过期时间：24小时（秒
+    // 元数据过期时间：24小时(秒)
     private final static long META_EXPIRE_SECONDS = 24 * 60 * 60;
     @Autowired
     private IAttachmentService attachmentService;
@@ -69,7 +69,8 @@ public class DmsServiceImpl extends BaseService<AttachmentQuery, AttachmentResul
     private String docsPath;
 
     /**
-     * 通用上传文件，携带docId生成文档新版本，归档目标为知识库或知识图谱时直接创建文档，否则保存为附件
+     * 通用上传文件
+     * 携带docId生成文档新版本，归档目标为知识库或知识图谱时直接创建文档，否则保存为附件
      * @param file 文件
      * @param prtId 归档目标父id
      * @param docId 文档id

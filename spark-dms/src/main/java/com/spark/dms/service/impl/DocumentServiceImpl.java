@@ -1,7 +1,5 @@
 package com.spark.dms.service.impl;
 
-import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
@@ -10,7 +8,6 @@ import com.spark.common.bean.dms.entity.DocumentEvent;
 import com.spark.common.bean.dms.entity.DocumentVersion;
 import com.spark.common.bean.dms.query.DocumentEventQuery;
 import com.spark.common.bean.dms.query.DocumentQuery;
-import com.spark.common.bean.dms.query.DocumentSearchQuery;
 import com.spark.common.bean.kb.query.KnowledgeQuery;
 import com.spark.common.bean.dms.result.DocumentEventResult;
 import com.spark.common.bean.dms.result.DocumentResult;
@@ -24,7 +21,6 @@ import com.spark.common.enums.*;
 import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.LogOperate;
-import com.spark.common.constant.ESIndexName;
 import com.spark.dao.dms.DocumentDao;
 import com.spark.dao.dms.DocumentEventDao;
 import com.spark.dao.dms.DocumentVersionDao;
@@ -32,7 +28,6 @@ import com.spark.dao.kb.KnowledgeDao;
 import com.spark.dao.kg.KgGraphDao;
 import com.spark.dao.dms.AttachmentDao;
 import com.spark.dms.service.IDocumentService;
-import com.spark.llm.retrieve.ESRetrieve;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.FileUtil;
 import com.spark.common.utils.StringUtil;
@@ -42,21 +37,10 @@ import org.slf4j.LoggerFactory;
 import com.spark.common.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
-import org.springframework.data.elasticsearch.core.*;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.*;
-import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
-import org.springframework.data.elasticsearch.core.query.highlight.HighlightField;
-import org.springframework.data.elasticsearch.core.query.highlight.HighlightFieldParameters;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 /**
@@ -84,10 +68,6 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
     private KgGraphDao kgGraphDao;
     @Autowired
     private AttachmentDao attachmentDao;
-    @Autowired
-    private ElasticsearchOperations elasticsearchOperations;
-    @Autowired
-    private ESRetrieve esRetrieve;
     @Value("${docs.file.path}")
     private String docsPath;
     @Autowired
@@ -355,27 +335,6 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
     }
 
     /**
-     * 搜索文档
-     * 根据 searchType 区分全文检索（基于 spark-document 索引的 BM25 + 高亮）和语义检索（基于 spark-store 索引的 KNN 召回）
-     * @param query 搜索参数
-     * @return 搜索结果
-     */
-    @Override
-    @LogOperate(operateType = OperateTypeEnum.DOCUMENT_SEARCH)
-    public ResultData<PageResult<Map>> searchDocument(DocumentSearchQuery query) {
-        ResultData<PageResult<Map>> result = new ResultData<>();
-        if (query == null) {
-            query = new DocumentSearchQuery();
-        }
-        if (DocumentSearchTypeEnum.CONTENT.getValue().equals(query.getSearchType())) {
-            result = searchDocumentContent(query);
-        } else if (DocumentSearchTypeEnum.SEMANTIC.getValue().equals(query.getSearchType())) {
-            result = searchDocumentSemantic(query);
-        }
-        return result;
-    }
-
-    /**
      * 下载文档
      * @param query 查询参数
      * @return 文档结果
@@ -468,166 +427,6 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         return result;
     }
 
-    /**
-     * 全文检索
-     * @param query 搜索参数
-     * @return 搜索结果
-     */
-    private ResultData<PageResult<Map>> searchDocumentContent(DocumentSearchQuery query) {
-        ResultData<PageResult<Map>> result = new ResultData<>();
-        if (StringUtil.isBlank(query.getKeyWord())) {
-            PageResult<Map> pageResult = new PageResult<>();
-            result.setData(pageResult);
-            result.setCode(ResultData.OK);
-            return result;
-        }
-        // 检查索引是否存在
-        IndexOperations indexOps = elasticsearchOperations.indexOps(IndexCoordinates.of(ESIndexName.DOCUMENT_INDEX_NAME));
-        if (!indexOps.exists()) {
-            result.setErrorCode(ErrorCodeEnum.FILE_ES_INDEX_NOT_EXIST);
-            return result;
-        }
-        // 构建查询条件
-        Long userId = SessionHolder.getCurrentUserId();
-        BoolQuery.Builder bqb = QueryBuilders.bool();
-        // term 精确匹配 ，通常用于非分词字段或 keyword 类型的字段
-//        bqb.must(tq -> tq.term(x -> x.field("ownerId").value(userId.toString())));
-        if (StringUtil.isNotBlank(query.getKeyWord())) {
-            BoolQuery.Builder keyWordBqb = QueryBuilders.bool();
-            // match_phrase 匹配分词之后的短语且必须按顺序匹配，但可以通过slop来调整允许间隔的长度，默认0 ， match 匹配分词之后的短语，不按顺序匹配
-            keyWordBqb.should(mp -> mp.matchPhrase(x -> x.field("content").query(query.getKeyWord()).slop(0).analyzer("standard")));
-            // wildcard 模糊查询 支持加通配符
-            keyWordBqb.should(mp -> mp.wildcard(x -> x.field("name.keyword").wildcard("*"+query.getKeyWord()+"*")));
-            bqb.must(keyWordBqb.build()._toQuery());
-        }
-        if (query.getDocumentType() != null) {
-            bqb.must(tq -> tq.term(x -> x.field("documentType").value(query.getDocumentType().longValue())));
-        }
-        if (query.getPrtId() != null) {
-            bqb.must(tq -> tq.term(x -> x.field("prtId").value(query.getPrtId())));
-        }
-        bqb.must(tq -> tq.term(x -> x.field("tenantId").value(SessionHolder.getCurrentTenantId())));
-
-//        bqb.must(rq -> rq.range(x -> x.term(l -> l.field("createdDt").gte(String.valueOf(query.getCreatedStartTime().getTime())))));
-//        bqb.must(rq -> rq.range(x -> x.term(l -> l.field("createdDt").lte(String.valueOf(query.getCreatedEndTime().getTime())))));
-
-        // 构建排序参数
-        Sort sort = Sort.by(new Sort.Order(Sort.Direction.ASC,"id"));
-        // 构建分页参数
-        Pageable pageable = PageRequest.of(query.getPageNo() - 1, query.getPageSize());
-        // 构建高亮设置
-        HighlightField highlightField = new HighlightField("content",
-                HighlightFieldParameters.builder()
-                        .withPreTags("<span style=\"color:red;\">")
-                        .withPostTags("</span>")
-                        .build());
-        HighlightQuery highlightQuery = new HighlightQuery(new Highlight(List.of(highlightField)), Map.class);
-        // 构建查询对象
-        NativeQueryBuilder searchQueryBuilder = new NativeQueryBuilder()
-                .withSort(sort)
-                .withPageable(pageable)
-                .withQuery(bqb.build()._toQuery())
-                .withHighlightQuery(highlightQuery);
-        // 检查索引中文档数量
-        long count = elasticsearchOperations.count(searchQueryBuilder.build(), IndexCoordinates.of(ESIndexName.DOCUMENT_INDEX_NAME));
-        if (count == 0) {
-            PageResult<Map> pageResult = new PageResult<>();
-            result.setData(pageResult);
-            result.setCode(ResultData.OK);
-            return result;
-        }
-        // 执行查询，使用 Map<String, Object> 接收结果
-        SearchHits<Map> searchHits = elasticsearchOperations.search(searchQueryBuilder.build(), Map.class, IndexCoordinates.of(ESIndexName.DOCUMENT_INDEX_NAME));
-        // 将搜索结果转换为 Page 对象
-        List<Map> rows = searchHits.getSearchHits().stream()
-                .map(hit -> {
-                    Map map = hit.getContent();
-                    map.put("content", null);
-                    map.put("ownerName", super.getObjName(Long.valueOf(map.get("ownerId").toString())));
-                    // 合并原始内容和高亮片段
-                    Map<String, List<String>> highlightFields = hit.getHighlightFields();
-                    if (highlightFields.containsKey("content")) {
-                        List<String> highlights = highlightFields.get("content");
-                        if (!highlights.isEmpty()) {
-                            map.put("fragment", String.join(" ", highlights));
-                        }
-                    }
-                    return map;
-                })
-                .collect(Collectors.toList());
-        // 设置返回结果
-        PageResult<Map> pageResult = new PageResult<>();
-        pageResult.setTotal((int) count);
-        pageResult.setRows(rows);
-        result.setData(pageResult);
-        result.setCode(ResultData.OK);
-        return result;
-    }
-
-    /**
-     * 语义检索
-     * 通过 chunk 向量 KNN 召回 docId，按当前用户过滤后回查 DB，按相关性顺序返回
-     * @param query 搜索参数
-     * @return 搜索结果
-     */
-    private ResultData<PageResult<Map>> searchDocumentSemantic(DocumentSearchQuery query) {
-        ResultData<PageResult<Map>> result = new ResultData<>();
-        if (StringUtil.isBlank(query.getKeyWord())) {
-            PageResult<Map> pageResult = new PageResult<>();
-            result.setData(pageResult);
-            result.setCode(ResultData.OK);
-            return result;
-        }
-        // 检查向量索引是否存在
-        IndexOperations indexOps = elasticsearchOperations.indexOps(IndexCoordinates.of(ESIndexName.DOCUMENT_VECTOR_INDEX_NAME));
-        if (!indexOps.exists()) {
-            result.setErrorCode(ErrorCodeEnum.FILE_ES_INDEX_NOT_EXIST);
-            return result;
-        }
-        // KNN 召回文档ID列表
-        List<Long> docIds = esRetrieve.retrieveDocumentIds(query.getKeyWord(), query.getDocumentType(), query.getPrtId());
-        if (CollectionUtil.isEmpty(docIds)) {
-            PageResult<Map> pageResult = new PageResult<>();
-            result.setData(pageResult);
-            result.setCode(ResultData.OK);
-            return result;
-        }
-        // 按 ownerId 查 DB
-        DocumentQuery documentQuery = new DocumentQuery();
-        documentQuery.setIds(docIds);
-        documentQuery.setDocumentType(query.getDocumentType());
-        documentQuery.setPrtId(query.getPrtId());
-        documentQuery.setTenantId(SessionHolder.getCurrentTenantId());
-        List<DocumentResult> documents = documentDao.queryDocumentList(documentQuery);
-        // 按召回顺序（相关性降序）组装结果
-        Map<Long, DocumentResult> docMap = documents.stream()
-                .collect(Collectors.toMap(DocumentResult::getId, d -> d));
-        List<Map> rows = new ArrayList<>();
-        for (Long docId : docIds) {
-            DocumentResult doc = docMap.get(docId);
-            if (doc == null) {
-                continue;
-            }
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", doc.getId());
-            map.put("name", doc.getName());
-            map.put("ext", doc.getExt());
-            map.put("size", doc.getSize());
-            map.put("sizeStr", doc.getSizeStr());
-            map.put("ownerId", doc.getOwnerId());
-            map.put("ownerName", super.getObjName(doc.getOwnerId()));
-            map.put("createdBy", doc.getCreatedBy());
-            map.put("createdDt", doc.getCreatedDt());
-            rows.add(map);
-        }
-        PageResult<Map> pageResult = new PageResult<>();
-        pageResult.setTotal(rows.size());
-        pageResult.setRows(rows);
-        result.setData(pageResult);
-        result.setCode(ResultData.OK);
-        return result;
-    }
-    
     /**
      * 补充列表数据
      * @param list 列表数据

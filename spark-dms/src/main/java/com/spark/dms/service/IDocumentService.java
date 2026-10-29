@@ -1,14 +1,12 @@
 package com.spark.dms.service;
 
 import com.spark.common.bean.dms.query.DocumentQuery;
-import com.spark.common.bean.dms.query.DocumentSearchQuery;
 import com.spark.common.bean.dms.result.DocumentResult;
 import com.spark.common.bean.dms.vo.DocumentVO;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * +++/\_/\
@@ -67,13 +65,6 @@ public interface IDocumentService {
      * @return 文档详情
      */
     ResultData<DocumentResult> queryDocumentDetail(DocumentQuery query);
-
-    /**
-     * 搜索文档
-     * @param query 搜索参数
-     * @return 搜索结果
-     */
-    ResultData<PageResult<Map>> searchDocument(DocumentSearchQuery query);
 
     /**
      * 下载文档

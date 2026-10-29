@@ -33,12 +33,6 @@
         </dependency>
         <dependency>
             <groupId>com.spark</groupId>
-            <artifactId>spark-task</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.spark</groupId>
             <artifactId>spark-dms</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>

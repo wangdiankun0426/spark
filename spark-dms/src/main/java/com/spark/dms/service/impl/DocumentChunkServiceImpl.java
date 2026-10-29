@@ -1,10 +1,10 @@
 package com.spark.dms.service.impl;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
-import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.dms.entity.DocumentEvent;
 import com.spark.common.bean.dms.query.DocumentEventQuery;
 import com.spark.common.bean.dms.query.DocumentQuery;
@@ -21,6 +21,7 @@ import com.spark.dao.dms.DocumentEventDao;
 import com.spark.dao.kb.KnowledgeDao;
 import com.spark.common.enums.DocumentEventStatusEnum;
 import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.config.es.ESDataScopeUtil;
 import com.spark.dms.service.IDocumentChunkService;
 import com.spark.common.utils.StringUtil;
 import org.slf4j.Logger;
@@ -89,7 +90,9 @@ public class DocumentChunkServiceImpl implements IDocumentChunkService {
         BoolQuery.Builder bqb = QueryBuilders.bool();
         // term 精确匹配 ，通常用于非分词字段或 keyword 类型的字段
         bqb.must(tq -> tq.term(x -> x.field("docId").value(query.getId())));
-        bqb.must(tq -> tq.term(x -> x.field("tenantId").value(SessionHolder.getCurrentTenantId())));
+        // 叠加租户与数据权限过滤
+        Query scopeQuery = ESDataScopeUtil.scopeQuery();
+        bqb.must(scopeQuery);
         // 构建排序参数
         Sort sort = Sort.by(new Sort.Order(Sort.Direction.ASC,"id"));
         // 构建分页参数
@@ -159,6 +162,9 @@ public class DocumentChunkServiceImpl implements IDocumentChunkService {
         // term 精确匹配 ，通常用于非分词字段或 keyword 类型的字段
         bqb.must(tq -> tq.term(x -> x.field("docId").value(query.getId())));
         bqb.must(tq -> tq.term(x -> x.field("chunkIndex").value(query.getChunkIndex())));
+        // 叠加租户与数据权限过滤
+        Query qaScopeQuery = ESDataScopeUtil.scopeQuery();
+        bqb.must(qaScopeQuery);
         // 构建排序参数
         Sort sort = Sort.by(new Sort.Order(Sort.Direction.ASC,"id"));
         // 构建分页参数
@@ -221,7 +227,9 @@ public class DocumentChunkServiceImpl implements IDocumentChunkService {
             // 查询分块总数
             BoolQuery.Builder bqb = QueryBuilders.bool();
             bqb.must(tq -> tq.term(x -> x.field("docId").value(docId)));
-            bqb.must(tq -> tq.term(x -> x.field("tenantId").value(SessionHolder.getCurrentTenantId())));
+            // 叠加租户与数据权限过滤
+            Query statsScopeQuery = ESDataScopeUtil.scopeQuery();
+            bqb.must(statsScopeQuery);
             NativeQueryBuilder countQuery = new NativeQueryBuilder()
                     .withQuery(bqb.build()._toQuery());
             long chunkCount = elasticsearchOperations.count(countQuery.build(), IndexCoordinates.of(ESIndexName.DOCUMENT_CHUNK_INDEX_NAME));
@@ -363,7 +371,9 @@ public class DocumentChunkServiceImpl implements IDocumentChunkService {
         BoolQuery.Builder bqb = QueryBuilders.bool();
         bqb.must(tq -> tq.term(x -> x.field("docId").value(docId)));
         bqb.must(tq -> tq.term(x -> x.field("chunkIndex").value(chunkIndex)));
-        bqb.must(tq -> tq.term(x -> x.field("tenantId").value(SessionHolder.getCurrentTenantId())));
+        // 叠加租户与数据权限过滤
+        Query editScopeQuery = ESDataScopeUtil.scopeQuery();
+        bqb.must(editScopeQuery);
         NativeQueryBuilder queryBuilder = new NativeQueryBuilder().withQuery(bqb.build()._toQuery());
         SearchHits<Map> hits = elasticsearchOperations.search(queryBuilder.build(), Map.class, IndexCoordinates.of(ESIndexName.DOCUMENT_CHUNK_INDEX_NAME));
         if (hits.hasSearchHits()) {

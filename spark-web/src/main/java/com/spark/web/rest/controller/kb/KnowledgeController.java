@@ -5,7 +5,7 @@ import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.kb.query.KnowledgeQuery;
 import com.spark.common.bean.kb.result.KnowledgeResult;
 import com.spark.common.bean.kb.vo.KnowledgeVO;
-import com.spark.kb.service.IKnowledgeService;
+import com.spark.kb.service.IKbService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("kb/knowledge")
 public class KnowledgeController {
     @Autowired
-    private IKnowledgeService knowledgeService;
+    private IKbService knowledgeService;
 
     /**
      * 创建知识库

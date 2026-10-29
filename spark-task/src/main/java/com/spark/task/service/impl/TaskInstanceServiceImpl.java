@@ -13,7 +13,7 @@ import com.spark.common.enums.TaskStatusEnum;
 import com.spark.common.enums.TaskTypeEnum;
 import com.spark.manage.BaseService;
 import com.spark.task.service.ITaskInstanceService;
-import com.spark.task.service.ITaskTypeHandler;
+import com.spark.common.task.ITaskTypeHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

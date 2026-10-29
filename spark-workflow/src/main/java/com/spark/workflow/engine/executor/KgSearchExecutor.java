@@ -4,7 +4,7 @@ import com.spark.common.bean.base.ResultData;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.WorkflowTemplateTypeEnum;
 import com.spark.common.utils.JsonUtil;
-import com.spark.llm.retrieve.Neo4jRetrieve;
+import com.spark.common.kg.IKgRetriever;
 import com.spark.manage.BaseService;
 import com.spark.common.utils.MapUtil;
 import com.spark.common.utils.StringUtil;
@@ -23,13 +23,13 @@ import java.util.*;
  *
  * @author wangdiankun
  * @since 2026-08-26 21:00:00
- * 知识图谱节点执行器：调用Neo4jRetrieve检索图谱三元组
+ * 知识图谱节点执行器：调用KgRetrieve检索图谱三元组
  */
 @Component
 public class KgSearchExecutor extends BaseService implements IWfNodeExecutor {
     private static final Logger logger = LoggerFactory.getLogger(KgSearchExecutor.class);
     @Autowired
-    private Neo4jRetrieve neo4jRetrieve;
+    private IKgRetriever kgRetrieve;
 
     /**
      * 节点类型
@@ -67,7 +67,7 @@ public class KgSearchExecutor extends BaseService implements IWfNodeExecutor {
         }
         List<Long> graphIds = Arrays.stream(graphIdsStr.split(",")).filter(StringUtil::isNumeric).map(Long::parseLong).toList();
         try {
-            ResultData<List<String>> resultData = neo4jRetrieve.retrieve(query, graphIds);
+            ResultData<List<String>> resultData = kgRetrieve.retrieve(query, graphIds);
             if (resultData.getCode() != ResultData.OK || resultData.getData() == null) {
                 throw new RuntimeException("知识图谱检索失败: " + resultData.getMessage());
             }

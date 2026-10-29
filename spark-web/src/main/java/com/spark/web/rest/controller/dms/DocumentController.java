@@ -1,7 +1,6 @@
 package com.spark.web.rest.controller.dms;
 
 import com.spark.common.bean.dms.query.DocumentQuery;
-import com.spark.common.bean.dms.query.DocumentSearchQuery;
 import com.spark.common.bean.dms.result.DocumentResult;
 import com.spark.common.bean.dms.vo.DocumentVO;
 import com.spark.common.bean.base.PageResult;
@@ -28,7 +27,6 @@ import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
 
 /**
  * +++/\_/\
@@ -84,16 +82,6 @@ public class DocumentController {
     @GetMapping("detail")
     public ResultData<DocumentResult> queryDocumentDetail(DocumentQuery query) {
         return documentService.queryDocumentDetail(query);
-    }
-
-    /**
-     * 搜索文件
-     * @param query 搜索参数
-     * @return 搜索结果
-     */
-    @GetMapping("search")
-    public ResultData<PageResult<Map>> searchDocument(DocumentSearchQuery query) {
-        return documentService.searchDocument(query);
     }
 
     /**

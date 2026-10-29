@@ -7,7 +7,7 @@ import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.WorkflowTemplateTypeEnum;
 import com.spark.common.utils.JsonUtil;
 import com.spark.dao.kb.KnowledgeDao;
-import com.spark.llm.retrieve.ESRetrieve;
+import com.spark.common.kb.IKbRetriever;
 import com.spark.manage.BaseService;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.MapUtil;
@@ -27,14 +27,14 @@ import java.util.*;
  *
  * @author wangdiankun
  * @since 2026-08-26 17:00:00
- * 知识库检索节点执行器：调用ESRetrieve进行知识检索
+ * 知识库检索节点执行器：调用KbRetrieve进行知识检索
  */
 @Component
 public class KbSearchExecutor extends BaseService implements IWfNodeExecutor {
     private static final Logger logger = LoggerFactory.getLogger(KbSearchExecutor.class);
 
     @Autowired
-    private ESRetrieve esRetrieve;
+    private IKbRetriever kbRetrieve;
     @Autowired
     private KnowledgeDao knowledgeDao;
 
@@ -85,7 +85,7 @@ public class KbSearchExecutor extends BaseService implements IWfNodeExecutor {
         }
         Integer topK = MapUtil.getIntegerVal(config, "topK", 5);
         try {
-            RetrieveResult result = esRetrieve.retrieve(query, kbIds, knowledge);
+            RetrieveResult result = kbRetrieve.retrieve(query, kbIds, knowledge);
             List<String> contents = result.getContents();
             if (CollectionUtil.isEmpty(contents)) {
                 contents = new ArrayList<>();

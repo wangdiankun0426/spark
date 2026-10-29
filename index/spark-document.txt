@@ -15,6 +15,10 @@ curl -u elastic -X PUT "http://localhost:9203/spark-document" -H "Content-Type: 
         "type": "long",
         "index": true
       },
+      "deptId": {
+        "type": "long",
+        "index": true
+      },
       "prtId": {
         "type": "long",
         "index": true

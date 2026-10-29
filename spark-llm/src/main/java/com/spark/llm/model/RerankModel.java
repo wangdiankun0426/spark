@@ -6,7 +6,6 @@ import com.spark.common.utils.JsonUtil;
 import com.spark.common.utils.MapUtil;
 import com.spark.common.utils.ModelUsageSceneHolder;
 import com.spark.llm.usage.ModelUsageRecorder;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -161,7 +160,6 @@ public class RerankModel {
      * 重排结果
      */
     @Data
-    @AllArgsConstructor
     public static class RerankResult {
         private final int index;
         private final double score;

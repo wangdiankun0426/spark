@@ -1,7 +1,6 @@
 package com.spark.common.bean.base;
 
 import com.spark.common.enums.ModelUsageSceneEnum;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.util.Map;
@@ -17,7 +16,6 @@ import java.util.Map;
  * 跨线程传递的登录会话快照
  */
 @Data
-@AllArgsConstructor
 public class SessionSnapshot {
 
     /**

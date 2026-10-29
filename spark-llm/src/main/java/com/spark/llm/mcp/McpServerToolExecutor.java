@@ -25,8 +25,8 @@ import com.spark.dao.llm.McpKeyDao;
 import com.spark.dao.sys.DepartmentDao;
 import com.spark.dao.sys.RoleDao;
 import com.spark.dao.sys.TenantUserDao;
-import com.spark.llm.retrieve.ESRetrieve;
-import com.spark.llm.retrieve.Neo4jRetrieve;
+import com.spark.common.kb.IKbRetriever;
+import com.spark.common.kg.IKgRetriever;
 import com.spark.llm.service.IMcpKeyService;
 import io.modelcontextprotocol.json.McpJsonMapper;
 import io.modelcontextprotocol.server.McpServerFeatures;
@@ -67,9 +67,9 @@ public class McpServerToolExecutor {
     @Autowired
     private IMcpKeyService mcpKeyService;
     @Autowired
-    private ESRetrieve esRetrieve;
+    private IKbRetriever kbRetrieve;
     @Autowired
-    private Neo4jRetrieve neo4jRetrieve;
+    private IKgRetriever kgRetrieve;
     @Autowired
     private KnowledgeDao knowledgeDao;
     @Autowired
@@ -200,7 +200,7 @@ public class McpServerToolExecutor {
             }
             List<Long> kbIds = kbList.stream().map(KnowledgeResult::getId).collect(Collectors.toList());
             KnowledgeResult knowledge = kbList.get(0);
-            RetrieveResult retrieval = esRetrieve.retrieve(query, kbIds, knowledge);
+            RetrieveResult retrieval = kbRetrieve.retrieve(query, kbIds, knowledge);
             List<String> relevantDocs = retrieval.getContents();
             if (CollectionUtil.isEmpty(relevantDocs)) {
                 return new McpSchema.CallToolResult("根据当前知识库，无法找到与您的问题相关的内容。", false);
@@ -245,7 +245,7 @@ public class McpServerToolExecutor {
                 return new McpSchema.CallToolResult("当前用户没有可检索的知识图谱", true);
             }
             List<Long> graphIds = graphList.stream().map(KgGraphResult::getId).collect(Collectors.toList());
-            ResultData<List<String>> retrieveResult = neo4jRetrieve.retrieve(question, graphIds);
+            ResultData<List<String>> retrieveResult = kgRetrieve.retrieve(question, graphIds);
             if (retrieveResult == null || retrieveResult.getCode() != ResultData.OK
                     || CollectionUtil.isEmpty(retrieveResult.getData())) {
                 return new McpSchema.CallToolResult("根据当前知识图谱，无法找到与您的问题相关的内容。", false);

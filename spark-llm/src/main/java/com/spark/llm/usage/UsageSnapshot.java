@@ -14,7 +14,6 @@ import lombok.Data;
  * 模型调用瞬间的会话与场景快照
  */
 @Data
-@AllArgsConstructor
 public class UsageSnapshot {
 
     /**

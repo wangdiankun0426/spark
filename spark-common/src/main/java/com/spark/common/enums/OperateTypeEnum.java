@@ -47,7 +47,6 @@ public enum OperateTypeEnum {
     DOCUMENT_UPDATE(71, "修改文档"),
     DOCUMENT_DELETE(72, "删除文档"),
     DOCUMENT_DETAIL(73, "查询文档详情"),
-    DOCUMENT_SEARCH(74, "文档检索"),
     DOCUMENT_EVENT_UPDATE(75, "修改文档事件"),
     DOCUMENT_EVENT_DETAIL(76, "查询文档事件详情"),
     DOCUMENT_CHUNK_EDIT(77, "编辑文档分块内容"),

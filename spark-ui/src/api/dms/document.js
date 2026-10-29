@@ -36,15 +36,6 @@ export function queryDocumentDetailAPI(query) {
     })
 }
 
-// 检索文档
-export function searchDocumentAPI(query) {
-    return request({
-        url: '/dms/document/search',
-        method: 'get',
-        params: query
-    })
-}
-
 /**
  * 下载文档（二进制流）
  * @param {Object} query 查询条件 { id, ext }
