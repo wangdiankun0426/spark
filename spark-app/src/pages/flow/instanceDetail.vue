@@ -531,7 +531,7 @@ const handleUserConfirm = useDebounceFn((users) => {
   gap: 10px;
   padding: 12px 16px;
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
-  background-color: #ffffff;
+  background-color: $spark-color-header-bg;
   border-top: 1rpx solid $spark-color-header-border;
 
   :deep(.u-button) {

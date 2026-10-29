@@ -77,15 +77,49 @@
     }
 
     .el-dialog__headerbtn {
-      top: 0;
+      top: 6px;
+      right: 8px;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background-color $transition-fast;
+
+      &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        padding: 2px;
+        background: conic-gradient(from 0deg, transparent 0deg, $color-primary 90deg, transparent 180deg);
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        opacity: 0;
+        transition: opacity $transition-fast;
+        pointer-events: none;
+      }
+
+      &:hover {
+        background-color: rgba(0, 79, 197, 0.12);
+
+        &::before {
+          opacity: 1;
+          animation: ep-close-spin 1.4s linear infinite;
+        }
+      }
+
       .el-dialog__close {
         color: var(--head-text);
-        transition: $transition-fast;
-        font-size: 26px;
-        &:hover {
-          color: $color-primary;
-          font-size: 30px;
-        }
+        transition: color $transition-fast;
+        font-size: 22px;
+      }
+
+      &:hover .el-dialog__close {
+        color: $color-primary;
       }
     }
   }
@@ -127,18 +161,53 @@
       font-size: 14px;
     }
     .el-drawer__close-btn {
+      position: relative;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
       color: var(--head-text);
-      transition: $transition-fast;
-      font-size: 26px;
+      transition: background-color $transition-fast, color $transition-fast;
+      font-size: 20px;
+
+      &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        padding: 2px;
+        background: conic-gradient(from 0deg, transparent 0deg, $color-primary 90deg, transparent 180deg);
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        opacity: 0;
+        transition: opacity $transition-fast;
+        pointer-events: none;
+      }
+
       &:hover {
-        font-size: 26px;
         color: $color-primary;
+        background-color: rgba(0, 79, 197, 0.12);
+
+        &::before {
+          opacity: 1;
+          animation: ep-close-spin 1.4s linear infinite;
+        }
       }
     }
   }
 
   .el-drawer__body {
     padding: 10px 16px !important; // 强制减少标题到底部的间隔
+  }
+}
+
+@keyframes ep-close-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
@@ -150,7 +219,7 @@
 
   // 表头
   .el-table__header th.el-table__cell {
-    background-color: #efefef;
+    background-color: #e8f0fd;
     color: #000000 !important;
     font-weight: 600;
     text-align: center !important;

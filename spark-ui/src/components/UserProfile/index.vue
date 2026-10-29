@@ -4,11 +4,12 @@
     v-model="visible"
     title="个人中心"
     width="800"
+    class="user-profile-dialog"
     style="height: 500px"
     :before-close="closeUserInfo"
   >
-    <el-tabs tab-position="left">
-      <el-tab-pane label="基础信息">
+    <el-tabs v-model="activeTab" tab-position="left">
+      <el-tab-pane label="基础信息" name="base">
         <el-form :model="userInfo" label-width="80px">
           <el-form-item label="头像">
             <user-avatar
@@ -36,7 +37,7 @@
           </el-form-item>
         </el-form>
       </el-tab-pane>
-      <el-tab-pane label="修改密码">
+      <el-tab-pane label="修改密码" name="password">
         <el-form :model="passwordForm" label-width="80px" :rules="passwordFormRules" ref="passwordFormRef">
           <el-form-item label="原密码" prop="oldPassword">
             <el-input v-model="passwordForm.oldPassword" type="password" placeholder="请输入原密码" show-password/>
@@ -48,12 +49,8 @@
             <el-input v-model="passwordForm.verifyPassword" type="password" placeholder="请输入确认密码" show-password/>
           </el-form-item>
         </el-form>
-
-        <div style="float: right">
-          <el-button type="primary" @click="submitPasswordForm">确定</el-button>
-        </div>
       </el-tab-pane>
-      <el-tab-pane label="修改头像">
+      <el-tab-pane label="修改头像" name="avatar">
         <el-form-item label="原头像" label-width="80px">
           <user-avatar
               :user-id="userInfo.id"
@@ -81,6 +78,10 @@
         </el-form-item>
       </el-tab-pane>
     </el-tabs>
+
+    <template v-if="activeTab === 'password'" #footer>
+      <el-button type="primary" @click="submitPasswordForm">确定</el-button>
+    </template>
   </el-dialog>
 </template>
 
@@ -110,6 +111,9 @@ const visible = computed({
   get: () => props.modelValue,
   set: val => emit('update:modelValue', val)
 })
+
+// 当前选中的页签
+const activeTab = ref('base')
 
 // 修改密码表单校验规则
 const passwordFormRules = ref({
@@ -302,5 +306,12 @@ function equalToPassword(rule, value, callback) {
   width: 178px;
   height: 178px;
   text-align: center;
+}
+
+:global(.user-profile-dialog .el-dialog__footer) {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  padding: 0;
 }
 </style>

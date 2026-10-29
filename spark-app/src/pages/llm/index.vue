@@ -499,7 +499,7 @@ function handleOnTabChange(index) {
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
-  background-color: #fff;
+  background-color: $spark-color-header-bg;
   flex-shrink: 0;
 }
 
@@ -515,17 +515,17 @@ function handleOnTabChange(index) {
 
 .seg-tab__text {
   font-size: 14px;
-  color: #86909c;
+  color: $spark-color-text-tertiary;
   transition: color 0.25s ease;
 }
 
 .seg-tab.is-active {
-  background-image: linear-gradient(135deg, #2f7bff 0%, #5b94f5 100%);
+  background-image: linear-gradient(135deg, $spark-color-brand 0%, $spark-color-brand-light 100%);
   box-shadow: 0 2px 8px rgba(47, 123, 255, 0.35);
 }
 
 .seg-tab.is-active .seg-tab__text {
-  color: #ffffff;
+  color: $uni-text-color-inverse;
   font-weight: 600;
 }
 
@@ -554,8 +554,6 @@ function handleOnTabChange(index) {
   padding-top: 80px;
 }
 
-/* Agent 卡片样式 */
-/* Agent 卡片样式：一行图标 + 名称 + 模型，与 AIChat 卡片保持一致 */
 .llm-card {
   display: flex;
   align-items: center;
@@ -592,7 +590,6 @@ function handleOnTabChange(index) {
   white-space: nowrap;
 }
 
-/* WorkFlow 卡片样式：一行图标 + 名称 + 运行状态 */
 .instance-card {
   display: flex;
   align-items: center;
@@ -662,7 +659,6 @@ function handleOnTabChange(index) {
   }
 }
 
-/* AIChat 模型卡片样式：一行图标 + 名称 + 厂商 */
 .model-card {
   display: flex;
   align-items: center;

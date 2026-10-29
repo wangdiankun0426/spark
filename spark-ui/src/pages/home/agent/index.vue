@@ -25,13 +25,10 @@
         >
           <template #header-left>
             <el-icon class="chat-panel-title-icon"><Agent /></el-icon>
-            <span class="chat-panel-title">{{ currentTitle }}</span>
-          </template>
-          <template #header-right>
             <el-select
                 v-model="selectedAgentId"
                 placeholder="请选择智能体"
-                class="agent-select"
+                class="header-select"
                 :disabled="!agentList.length"
                 @change="handleAgentChange"
             >
@@ -47,7 +44,7 @@
             <div class="chat-welcome">
               <el-icon class="chat-welcome-icon"><Agent /></el-icon>
               <div class="chat-welcome-title">有什么可以帮你的？</div>
-              <div class="chat-welcome-subtitle">点击右上角选择智能体后输入问题，即可开始对话</div>
+              <div class="chat-welcome-subtitle">点击左上角选择智能体后输入问题，即可开始对话</div>
             </div>
           </template>
         </chat>
@@ -251,8 +248,22 @@ function handleAgentChange(agentId) {
   box-shadow: $shadow-card;
 }
 
-.agent-select {
-  width: 200px;
+.header-select {
+  width: 220px;
+  margin-left: $spacing-xs;
+
+  :deep(.el-input__wrapper),
+  :deep(.el-select__wrapper) {
+    border-radius: 20px;
+    box-shadow: 0 0 0 1px $border-color-light inset;
+    background-color: $bg-page;
+    padding: 0 $spacing-md;
+  }
+
+  :deep(.el-input__wrapper.is-focus),
+  :deep(.el-select__wrapper.is-focused) {
+    box-shadow: 0 0 0 1px $border-color-light inset;
+  }
 }
 
 .chat-panel-title-icon {

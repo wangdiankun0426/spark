@@ -101,22 +101,18 @@
       </div>
 
       <div class="user-box">
-        <el-dropdown>
+        <el-dropdown ref="userDropdownRef">
           <div class="user-profile-trigger">
-            <user-avatar :user-id="userInfo.id" :size="36" @click="openUserInfoForm" />
+            <user-avatar :user-id="userInfo.id" :size="36" />
             <el-icon class="dropdown-icon"><ArrowDown /></el-icon>
           </div>
           <template #dropdown>
             <el-dropdown-menu>
               <!--当前登录用户信息-->
-              <div class="user-dropdown-header">
+              <div class="user-dropdown-header" @click="handleOpenUserProfile">
                 <div class="user-dropdown-name">{{ userInfo.name }}</div>
+                <el-icon class="user-online-icon"><CircleCheckFilled /></el-icon>
               </div>
-              <el-dropdown-item
-                  @click="openUserInfoForm"
-              >
-                <el-icon class="user-menu-icon"><User /></el-icon>个人中心
-              </el-dropdown-item>
               <el-dropdown-item
                   @click="openTenantSwitch"
               >
@@ -125,7 +121,7 @@
               <el-dropdown-item
                   @click="openMcpToken"
               >
-                <el-icon class="user-menu-icon"><Key /></el-icon>MCP Token
+                <el-icon class="user-menu-icon"><Key /></el-icon>MCP令牌
               </el-dropdown-item>
               <el-dropdown-item
                   @click="handleLogout"
@@ -154,7 +150,7 @@ import {logoutAPI} from "@/api/manage/auth/login.js";
 import {pageMyMessageListAPI} from "@/api/manage/sys/message.js";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {ref, computed, onMounted, onUnmounted} from "vue";
-import {ArrowDown, Setting, Moon, Sunny, Right, FullScreen, Aim, User, UserFilled, Help, HelpFilled, Suitcase, SuitcaseLine, OfficeBuilding, SwitchButton, Key} from "@element-plus/icons-vue";
+import {ArrowDown, Setting, Moon, Sunny, Right, FullScreen, Aim, User, UserFilled, Help, HelpFilled, Suitcase, SuitcaseLine, OfficeBuilding, SwitchButton, Key, CircleCheckFilled} from "@element-plus/icons-vue";
 import { useRouter, useRoute } from 'vue-router';
 import {useStore} from "vuex";
 import {getTheme, applyTheme, setTheme} from '@/utils/themeUtil';
@@ -173,6 +169,7 @@ const userInfo = computed(() => store.getters['user/getUserInfo'] || { id: undef
 
 const currentTheme = ref(getTheme());
 applyTheme(currentTheme.value);
+const userDropdownRef = ref(null);
 
 /**
  * 点击按钮在深色/浅色主题间切换并持久化
@@ -248,6 +245,16 @@ function openTenantSwitch() {
  */
 function openUserInfoForm() {
   userInfoVisible.value = true;
+}
+
+/**
+ * 点击下拉顶部用户名打开个人中心
+ */
+function handleOpenUserProfile() {
+  if (userDropdownRef.value && typeof userDropdownRef.value.handleClose === 'function') {
+    userDropdownRef.value.handleClose();
+  }
+  openUserInfoForm();
 }
 
 /**
@@ -524,19 +531,30 @@ function handleMessageClick(item) {
 }
 
 .user-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   padding: 8px 16px;
   border-bottom: 1px solid $border-color-light;
+  cursor: pointer;
 }
 
 .user-dropdown-name {
-  max-width: 0;
-  min-width: 100%;
+  flex: none;
+  max-width: 100%;
   font-size: 13px;
   font-weight: 600;
   color: $color-text-primary;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.user-online-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--el-color-success);
 }
 
 .user-menu-icon {

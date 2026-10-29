@@ -238,7 +238,7 @@ function handleOnTabChange(index) {
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
-  background-color: #ffffff;
+  background-color: $spark-color-header-bg;
 }
 
 .seg-tab {
@@ -253,17 +253,17 @@ function handleOnTabChange(index) {
 
 .seg-tab__text {
   font-size: 14px;
-  color: #86909c;
+  color: $spark-color-text-tertiary;
   transition: color 0.25s ease;
 }
 
 .seg-tab.is-active {
-  background-image: linear-gradient(135deg, #2f7bff 0%, #5b94f5 100%);
+  background-image: linear-gradient(135deg, $spark-color-brand 0%, $spark-color-brand-light 100%);
   box-shadow: 0 2px 8px rgba(47, 123, 255, 0.35);
 }
 
 .seg-tab.is-active .seg-tab__text {
-  color: #ffffff;
+  color: $uni-text-color-inverse;
   font-weight: 600;
 }
 
@@ -342,7 +342,6 @@ function handleOnTabChange(index) {
   }
 }
 
-// 状态着色：审批中蓝、通过绿、驳回红、撤回橙、转办/加签灰
 .status-1,
 .status-6,
 .status-7,

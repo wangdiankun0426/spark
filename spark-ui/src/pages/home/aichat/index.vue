@@ -25,20 +25,17 @@
         >
           <template #header-left>
             <el-icon class="chat-panel-title-icon"><Aichat /></el-icon>
-            <span class="chat-panel-title">{{ currentTitle }}</span>
-          </template>
-          <template #header-right>
             <el-select
                 v-model="selectedModelId"
                 placeholder="请选择语言模型"
-                class="model-select"
+                class="header-select"
                 :disabled="!modelList.length"
                 @change="handleModelChange"
             >
               <el-option
                   v-for="model in modelList"
                   :key="model.id"
-                  :label="model.name"
+                  :label="modelOptionLabel(model)"
                   :value="model.id"
               />
             </el-select>
@@ -47,7 +44,7 @@
             <div class="chat-welcome">
               <el-icon class="chat-welcome-icon"><Aichat /></el-icon>
               <div class="chat-welcome-title">有什么可以帮你的？</div>
-              <div class="chat-welcome-subtitle">点击右上角选择模型后输入问题，即可开始对话</div>
+              <div class="chat-welcome-subtitle">点击左上角选择模型后输入问题，即可开始对话</div>
             </div>
           </template>
         </chat>
@@ -130,6 +127,14 @@ function loadModels() {
  */
 function getCurrentModel() {
   return modelList.value.find(item => item.id === selectedModelId.value)
+}
+
+/**
+ * 模型下拉展示文案：厂商-模型
+ * @param model 模型
+ */
+function modelOptionLabel(model) {
+  return model.providerName ? model.providerName + '·' + model.name : model.name
 }
 
 /**
@@ -264,8 +269,22 @@ function handleModelChange(modelId) {
   box-shadow: $shadow-card;
 }
 
-.model-select {
-  width: 200px;
+.header-select {
+  width: 260px;
+  margin-left: $spacing-xs;
+
+  :deep(.el-input__wrapper),
+  :deep(.el-select__wrapper) {
+    border-radius: 20px;
+    box-shadow: 0 0 0 1px $border-color-light inset;
+    background-color: $bg-page;
+    padding: 0 $spacing-md;
+  }
+
+  :deep(.el-input__wrapper.is-focus),
+  :deep(.el-select__wrapper.is-focused) {
+    box-shadow: 0 0 0 1px $border-color-light inset;
+  }
 }
 
 .chat-panel-title-icon {

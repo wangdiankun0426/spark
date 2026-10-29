@@ -13,7 +13,7 @@
         <slot name="header-right"></slot>
         <el-tooltip v-if="activeSpaceId" content="聊天记录" placement="bottom">
           <span class="toolbar-btn" @click="openChatMessage">
-            <el-icon><ChatLineSquare /></el-icon>
+            <el-icon><MoreFilled /></el-icon>
           </span>
         </el-tooltip>
       </div>
@@ -190,7 +190,7 @@ import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useStore } from 'vuex'
 import router from '@/router/index.js'
 import { ElMessage } from 'element-plus'
-import { MagicStick, Cpu, ChatDotRound, CopyDocument, Loading, ArrowRight, Clock } from '@element-plus/icons-vue'
+import { MagicStick, Cpu, ChatDotRound, CopyDocument, Loading, ArrowRight, Clock, MoreFilled } from '@element-plus/icons-vue'
 import { createChatSpaceAPI } from '@/api/chat/space.js'
 import { getCurrentDate } from '@/utils/dateUtil.js'
 import { useChatHistory } from '@/components/Chat/chatMessage.js'
@@ -824,6 +824,10 @@ function setOncloseMessage(event) {
   display: flex;
   align-items: center;
   gap: $spacing-sm;
+
+  .toolbar-btn {
+    border: none;
+  }
 }
 
 .chat-panel-header-icon {
@@ -841,7 +845,7 @@ function setOncloseMessage(event) {
   flex: 1;
   min-height: 0;
   background-color: $bg-page;
-  border: 1px solid $color-primary;
+  border: 1px solid $border-color;
   border-radius: $border-radius-md;
   margin-bottom: $spacing-md;
   overflow: hidden;
@@ -1043,18 +1047,10 @@ function setOncloseMessage(event) {
 
 .chat-input-box {
   position: relative;
-  border: 1px solid var(--el-border-color);
+  border: 1px solid $color-primary;
   border-radius: $border-radius-md;
   background-color: $bg-card;
   transition: $transition-fast;
-
-  &:not(.chat-input-box-disabled):hover {
-    border-color: var(--el-border-color-hover);
-  }
-
-  &:focus-within {
-    border-color: var(--el-color-primary);
-  }
 
   :deep(.el-textarea__inner) {
     box-shadow: none;

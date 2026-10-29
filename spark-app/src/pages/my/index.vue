@@ -163,7 +163,6 @@ function handleOnTabChange(index) {
           #ffffff 176px);
 }
 
-/* 右上角设置入口 */
 .my-setting-entry {
   position: absolute;
   right: 12px;
@@ -173,7 +172,6 @@ function handleOnTabChange(index) {
 
 .my-avatar-row {
   width: 90%;
-  /* 用最小高度而非固定高度，名称/部门多行时不被裁切 */
   min-height: 100px;
   margin: auto;
   overflow: hidden;
@@ -189,7 +187,6 @@ function handleOnTabChange(index) {
 
 .my-info-right {
   width: 70%;
-  /* 用最小高度而非固定高度：内容不足时保持与头像居中对齐，多行时随内容撑高，不裁切 */
   min-height: 80px;
   float: right;
   display: flex;
@@ -238,7 +235,7 @@ function handleOnTabChange(index) {
 .func-card {
   width: 90%;
   margin: 4px auto 0;
-  background-color: #ffffff;
+  background-color: $spark-color-header-bg;
   border: 1px solid rgba(0, 52, 120, 0.04);
   border-radius: 10px;
   padding: 16px 8px;

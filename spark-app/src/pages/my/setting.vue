@@ -9,15 +9,15 @@
     </view>
 
     <view class="setting-content">
+      <view class="group-title">基础</view>
       <up-cell-group>
         <up-cell title="切换租户" isLink @click="openTenantPopup"/>
       </up-cell-group>
-      <view class="agreement-group">
-        <up-cell-group>
-          <up-cell title="用户服务协议" isLink @click="openAgreement('service')"/>
-          <up-cell title="隐私政策" isLink @click="openAgreement('privacy')"/>
-        </up-cell-group>
-      </view>
+      <view class="group-title group-title--spaced">系统</view>
+      <up-cell-group>
+        <up-cell title="用户服务协议" isLink @click="openAgreement('service')"/>
+        <up-cell title="隐私政策" isLink @click="openAgreement('privacy')"/>
+      </up-cell-group>
     </view>
 
     <!-- 登出按钮 -->
@@ -109,7 +109,7 @@ function handleLogout() {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: $uni-bg-color-dashboard;
+  background-color: $spark-color-header-bg;
 }
 
 .setting-header {
@@ -148,7 +148,13 @@ function handleLogout() {
   padding-bottom: 90px;
 }
 
-.agreement-group {
+.group-title {
+  padding: 12px 16px 6px;
+  font-size: 15px;
+  color: $spark-color-text-tertiary;
+}
+
+.group-title--spaced {
   margin-top: 12px;
 }
 
@@ -161,7 +167,7 @@ function handleLogout() {
   padding: 16px 20px;
   padding-bottom: calc(16px + constant(safe-area-inset-bottom));
   padding-bottom: calc(16px + env(safe-area-inset-bottom));
-  background-color: $uni-bg-color-dashboard;
+  background-color: $spark-color-header-bg;
 }
 
 .logout-text {

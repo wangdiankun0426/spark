@@ -518,7 +518,6 @@ onMounted(() => {
   min-width: 0;
   height: 48px;
   padding: 0 $spacing-md;
-  background-color: $bg-page;
   border-radius: $border-radius-sm;
   cursor: pointer;
   transition: background-color $transition-normal;

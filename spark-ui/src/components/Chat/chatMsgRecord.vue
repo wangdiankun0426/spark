@@ -18,6 +18,7 @@
           start-placeholder="开始日期"
           end-placeholder="结束日期"
           clearable
+          style="width: 460px"
           @change="handleSearch"
       />
     </div>
@@ -190,6 +191,7 @@ function loadChatRecords() {
   border: 1px solid $border-color;
   border-radius: $border-radius-md;
   padding: $spacing-sm $spacing-xs;
+  background-color: $bg-page;
 }
 
 .record-loading {
@@ -267,7 +269,7 @@ function loadChatRecords() {
 }
 
 .chat-bubble-agent {
-  background-color: $color-primary-light;
+  background-color: $bg-card;
   color: $color-text-primary;
 }
 

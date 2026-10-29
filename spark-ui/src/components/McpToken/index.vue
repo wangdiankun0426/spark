@@ -2,13 +2,13 @@
   <!-- MCP token 维护弹窗 -->
   <el-dialog
     v-model="visible"
-    title="MCP Token"
+    title="MCP 令牌"
     width="1100"
     :before-close="closeDialog"
   >
     <div class="mcp-token-toolbar">
       <el-button type="primary" @click="openCreateForm">
-        <el-icon><Plus /></el-icon>新增 MCP Token
+        <el-icon><Plus /></el-icon>新增 MCP 令牌
       </el-button>
     </div>
     <el-table :data="mcpKeyList" v-loading="loading" height="400">
@@ -27,10 +27,16 @@
         </template>
       </el-table-column>
       <el-table-column prop="useCount" label="使用次数" width="90" align="center"/>
-      <el-table-column fixed="right" label="操作" width="160" align="center">
+      <el-table-column fixed="right" label="操作" width="200" align="center">
         <template #default="scope">
-          <el-button type="success" text @click="copyText(buildConfig(scope.row))">复制</el-button>
-          <el-button type="danger" text @click="handleDelete(scope.row)">删除</el-button>
+          <el-button type="primary" text @click="openDetail(scope.row)">
+            <el-icon><View /></el-icon>
+            <span style="font-size: 12px; font-weight: 500">详情</span>
+          </el-button>
+          <el-button type="danger" text @click="handleDelete(scope.row)">
+            <el-icon><Delete /></el-icon>
+            <span style="font-size: 12px; font-weight: 500">删除</span>
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -38,7 +44,7 @@
     <!-- 新增 token 表单弹窗 -->
     <el-dialog
       v-model="formVisible"
-      title="新增 MCP Token"
+      title="新增 MCP 令牌"
       width="480"
       append-to-body
       :close-on-click-modal="false"
@@ -72,13 +78,31 @@
         <el-button @click="formVisible = false">取消</el-button>
       </template>
     </el-dialog>
+
+    <!-- 接入配置详情弹窗 -->
+    <el-dialog
+      v-model="detailVisible"
+      title="接入配置"
+      width="640"
+      append-to-body
+      :close-on-click-modal="false"
+    >
+      <div class="detail-key">密钥：<span class="key-value">{{ currentRow.keyValue }}</span></div>
+      <div v-for="platform in agentPlatforms" :key="platform.key" class="platform-block">
+        <div class="platform-head">
+          <span class="platform-name">{{ platform.name }}</span>
+          <el-button type="primary" text @click="copyText(platform.build(currentRow))">复制配置</el-button>
+        </div>
+        <pre class="platform-config">{{ platform.build(currentRow) }}</pre>
+      </div>
+    </el-dialog>
   </el-dialog>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, View, Delete } from '@element-plus/icons-vue'
 import { createMcpKeyAPI, deleteMcpKeyAPI, myMcpKeyListAPI } from '@/api/llm/mcpKey.js'
 
 const props = defineProps({
@@ -153,7 +177,7 @@ function submitForm() {
  * @param item 密钥
  */
 function handleDelete(item) {
-  ElMessageBox.confirm('是否确定删除此 token?', '提示', {
+  ElMessageBox.confirm('是否确定删除此令牌?', '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
@@ -184,6 +208,24 @@ function buildConfig(item) {
     }
   }
   return JSON.stringify(config, null, 2)
+}
+
+// 详情弹窗状态
+const detailVisible = ref(false)
+const currentRow = ref({})
+
+// 支持的接入平台，后续新增 agent 平台在此追加即可
+const agentPlatforms = [
+  { key: 'workbuddy', name: 'WorkBuddy', build: item => buildConfig(item) }
+]
+
+/**
+ * 打开接入配置详情
+ * @param row 密钥
+ */
+function openDetail(row) {
+  currentRow.value = row
+  detailVisible.value = true
 }
 
 /**
@@ -235,5 +277,39 @@ function closeDialog() {
 .key-value {
   margin-right: $spacing-sm;
   font-family: monospace;
+}
+
+.detail-key {
+  margin-bottom: $spacing-md;
+  color: $color-text-secondary;
+}
+
+.platform-block {
+  margin-bottom: $spacing-md;
+}
+
+.platform-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-xs;
+}
+
+.platform-name {
+  font-weight: 600;
+  color: $color-text-primary;
+}
+
+.platform-config {
+  margin: 0;
+  padding: $spacing-sm;
+  background-color: $bg-page;
+  border: 1px solid $border-color-light;
+  border-radius: $border-radius-md;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 </style>

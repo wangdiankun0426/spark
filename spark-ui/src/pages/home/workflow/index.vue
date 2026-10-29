@@ -39,7 +39,7 @@
             <span class="wf-pane-title">{{ currentWorkflow.name }}</span>
             <span v-if="currentWorkflow.revNum" class="wf-pane-version">v{{ currentWorkflow.revNum }}</span>
           </div>
-          <el-scrollbar class="wf-form-body" always>
+          <el-scrollbar class="wf-form-body">
             <form-view
                 v-if="formJson && formJson.widgetList && formJson.widgetList.length"
                 :form="formJson"
@@ -366,6 +366,14 @@ async function waitInstanceFinished(instanceId) {
   flex: 1;
   min-height: 0;
   padding: $spacing-md 0;
+
+  :deep(.el-scrollbar__wrap) {
+    overflow-x: hidden;
+  }
+
+  :deep(.el-scrollbar__bar.is-horizontal) {
+    display: none;
+  }
 }
 
 .wf-footer {

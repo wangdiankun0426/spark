@@ -242,7 +242,7 @@ function loadUserInfo() {
       store.dispatch("user/setUserInfo", { userInfo: res.data })
     }
   }).catch(err => {
-    console.error("获取用户信息失败", err)
+    console.error("loadUserInfo error", err)
   })
 }
 
@@ -533,7 +533,6 @@ function handleOnTabChange(index) {
   color: rgba(23, 43, 77, 0.5);
 }
 
-/* 滚动内容区 */
 .home-scroll-body {
   flex: 1;
   min-height: 0;
@@ -552,7 +551,6 @@ function handleOnTabChange(index) {
   margin-bottom: 12px;
 }
 
-/* 板块标题行 */
 .section-head {
   display: flex;
   align-items: center;
@@ -650,7 +648,6 @@ function handleOnTabChange(index) {
   white-space: nowrap;
 }
 
-/* 空状态 */
 .section-empty {
   height: 100%;
   display: flex;
@@ -679,7 +676,7 @@ function handleOnTabChange(index) {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  background-image: linear-gradient(135deg, #ffffff 0%, #f7faff 100%);
+  background-image: linear-gradient(135deg, $spark-color-header-bg 0%, $spark-color-bg-start 100%);
   border: 1px solid rgba(0, 79, 197, 0.06);
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(23, 43, 77, 0.08);
@@ -697,13 +694,13 @@ function handleOnTabChange(index) {
   font-size: 18px;
   font-weight: 700;
   line-height: 22px;
-  color: #172b4d;
+  color: $spark-color-text;
 }
 
 .kpi-label {
   font-size: 12px;
   line-height: 16px;
-  color: #86909c;
+  color: $spark-color-text-tertiary;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -726,7 +723,7 @@ function handleOnTabChange(index) {
   gap: 8px;
   height: 44px;
   padding: 0 12px;
-  background-image: linear-gradient(135deg, #ffffff 0%, #f7faff 100%);
+  background-image: linear-gradient(135deg, $spark-color-header-bg 0%, $spark-color-bg-start 100%);
   border: 1px solid rgba(0, 79, 197, 0.06);
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(23, 43, 77, 0.08);
@@ -756,8 +753,8 @@ function handleOnTabChange(index) {
 }
 
 .recommend-rank.is-third {
-  color: #fff;
-  background-color: #004fc5;
+  color: $uni-text-color-inverse;
+  background-color: $spark-color-primary;
 }
 
 .recommend-name {
@@ -768,7 +765,7 @@ function handleOnTabChange(index) {
   white-space: nowrap;
   font-size: 13px;
   font-weight: 600;
-  color: #172b4d;
+  color: $spark-color-text;
 }
 
 .recommend-tag {
@@ -776,7 +773,7 @@ function handleOnTabChange(index) {
   padding: 2px 8px;
   border-radius: 6px;
   font-size: 11px;
-  color: #2f7bff;
+  color: $spark-color-brand;
   background-color: rgba(47, 123, 255, 0.1);
 }
 
@@ -784,7 +781,7 @@ function handleOnTabChange(index) {
   flex-shrink: 0;
   font-size: 12px;
   font-weight: 600;
-  color: #004fc5;
+  color: $spark-color-primary;
 }
 
 .recommend-empty {
