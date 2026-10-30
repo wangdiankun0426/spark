@@ -38,6 +38,7 @@ export function setupDesktop() {
     if (!isDesktop) {
         return
     }
+    document.documentElement.classList.add('desktop-shell');
     const rawOpen = window.open.bind(window)
     window.open = (url) => {
         // 空 url（如 window.open()、about:blank）保持原生行为

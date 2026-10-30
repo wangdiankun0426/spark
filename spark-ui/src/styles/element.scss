@@ -18,6 +18,17 @@
   --el-line-height: $line-height-base !important;
 }
 
+.el-overlay {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  background-color: rgba(15, 23, 42, 0.28) !important;
+  transition: background-color 0.2s ease, backdrop-filter 0.2s ease;
+}
+
+html.dark .el-overlay {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
 // el-card 组件
 .el-card {
   --el-card-padding: 12px !important;
@@ -82,42 +93,21 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 50%;
+      border-radius: 8px;
       cursor: pointer;
       transition: background-color $transition-fast;
 
-      &::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        border-radius: 50%;
-        padding: 2px;
-        background: conic-gradient(from 0deg, transparent 0deg, $color-primary 90deg, transparent 180deg);
-        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
-        opacity: 0;
-        transition: opacity $transition-fast;
-        pointer-events: none;
-      }
-
       &:hover {
-        background-color: var(--app-primary-hover-bg);
-
-        &::before {
-          opacity: 1;
-          animation: ep-close-spin 1.4s linear infinite;
-        }
+        background-color: var(--app-bg-sub);
       }
 
       .el-dialog__close {
         color: var(--head-text);
-        transition: color $transition-fast;
         font-size: 22px;
       }
 
       &:hover .el-dialog__close {
-        color: $color-primary;
+        color: var(--head-text);
       }
     }
   }
@@ -167,53 +157,26 @@
       font-size: 14px;
     }
     .el-drawer__close-btn {
-      position: relative;
       width: 28px;
       height: 28px;
       padding: 0;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      border-radius: 50%;
+      border-radius: 8px;
       color: var(--head-text);
-      transition: background-color $transition-fast, color $transition-fast;
       font-size: 20px;
-
-      &::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        border-radius: 50%;
-        padding: 2px;
-        background: conic-gradient(from 0deg, transparent 0deg, $color-primary 90deg, transparent 180deg);
-        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
-        opacity: 0;
-        transition: opacity $transition-fast;
-        pointer-events: none;
-      }
+      transition: background-color $transition-fast;
 
       &:hover {
-        color: $color-primary;
-        background-color: var(--app-primary-hover-bg);
-
-        &::before {
-          opacity: 1;
-          animation: ep-close-spin 1.4s linear infinite;
-        }
+        background-color: var(--app-bg-sub);
+        color: var(--head-text);
       }
     }
   }
 
   .el-drawer__body {
-    padding: 10px 16px !important; // 强制减少标题到底部的间隔
-  }
-}
-
-@keyframes ep-close-spin {
-  to {
-    transform: rotate(360deg);
+    padding: 10px 16px !important;
   }
 }
 
@@ -223,10 +186,15 @@
   border: 1px solid $border-color-light;
   border-radius: $border-radius-sm;
   overflow: hidden;
+  --el-table-bg-color: var(--app-bg-card);
+  --el-table-tr-bg-color: var(--app-bg-card);
+  --el-table-header-bg-color: var(--app-table-head-bg);
+  --el-table-row-hover-bg-color: var(--app-table-row-hover);
+  --el-table-current-row-bg-color: var(--app-table-row-hover);
 
   // 表头
   .el-table__header th.el-table__cell {
-    background-color: var(--app-primary-light);
+    background-color: var(--app-table-head-bg);
     color: var(--app-text-primary) !important;
     font-weight: 600;
     text-align: center !important;
@@ -239,7 +207,20 @@
   }
   // 行 hover
   .el-table__row:hover td.el-table__cell {
-    background-color: var(--app-row-hover) !important;
+    background-color: var(--app-table-row-hover) !important;
+  }
+
+  td.el-table__cell.is-fixed-left,
+  td.el-table__cell.is-fixed-right {
+    background-color: var(--app-bg-card) !important;
+  }
+  .el-table__row:hover td.el-table__cell.is-fixed-left,
+  .el-table__row:hover td.el-table__cell.is-fixed-right {
+    background-color: var(--app-table-row-hover) !important;
+  }
+  th.el-table__cell.is-fixed-left,
+  th.el-table__cell.is-fixed-right {
+    background-color: var(--app-table-head-bg) !important;
   }
 
   // 数据行：统一行高（与操作列按钮 30px + 单元格上下 padding 协调）
@@ -376,6 +357,17 @@
   line-height: 28px !important;
   font-size: 12px !important;
   padding: 0 12px !important;
+
+  &.is-hovering,
+  &:hover {
+    background-color: var(--app-primary-light) !important;
+  }
+
+  &.selected {
+    background-color: var(--app-primary-light);
+    color: var(--app-primary);
+    font-weight: 600;
+  }
 }
 
 .el-select-dropdown__empty {

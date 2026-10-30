@@ -47,7 +47,7 @@ const defaultActive = computed(() => {
 
 <style scoped lang="scss">
 .bus-el-aside {
-  padding: 0 0 58px;
+  padding: 0;
   box-sizing: border-box;
   height: calc(100vh - $nav-height);
   background: var(--sidebar-bg);

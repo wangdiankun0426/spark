@@ -52,21 +52,24 @@ fn show_main_window(app: &tauri::AppHandle) {
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![open_app_window, open_external_url])
         .setup(|app| {
-            // 系统托盘：显示窗口 / 退出
-            let show = MenuItem::with_id(app, "show", "显示窗口", true, None::<&str>)?;
-            let quit = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&show, &quit])?;
+            // 系统托盘：右键仅退出；左键点击托盘图标显示主窗口
+            let quit = MenuItem::with_id(app, "quit", "退出星火云", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&quit])?;
+
+            let tray_icon = tauri::image::Image::from_bytes(include_bytes!("../icons/tray-icon.png"))
+                .unwrap_or_else(|_| app.default_window_icon().unwrap().clone());
 
             TrayIconBuilder::with_id("main-tray")
-                .icon(app.default_window_icon().unwrap().clone())
+                .icon(tray_icon)
                 .tooltip("星火云")
                 .menu(&menu)
                 // 左键点击不弹菜单，由点击事件显示主窗口
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id.as_ref() {
-                    "show" => show_main_window(app),
                     "quit" => app.exit(0),
                     _ => {}
                 })

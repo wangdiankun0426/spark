@@ -85,7 +85,7 @@ const defaultActive = computed(() => {
 
 <style lang="scss" scoped>
 .org-el-aside {
-  padding: 0 0 58px;
+  padding: 0;
   box-sizing: border-box;
   height: calc(100vh - $nav-height);
   background: var(--sidebar-bg);

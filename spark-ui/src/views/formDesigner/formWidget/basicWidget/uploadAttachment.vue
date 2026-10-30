@@ -81,6 +81,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { downloadAttachmentAPI } from '@/api/dms/attachment.js'
+import { saveBlob } from '@/utils/download.js'
 import { chunkUploadFile } from '@/utils/chunkUploadUtil.js'
 import { useWidgetEventBridge } from '@/components/FormView/formEvent.js'
 
@@ -270,14 +271,7 @@ function handlePreview(file) {
  */
 function handleDownload(file) {
   downloadAttachmentAPI({ id: file.id }).then(blob => {
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = file.name
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
+    saveBlob(blob, file.name)
   }).catch(() => {
     ElMessage.error('附件下载失败')
   })

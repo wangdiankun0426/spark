@@ -6,40 +6,53 @@
     width="1100"
     :before-close="closeDialog"
   >
-    <div class="mcp-token-toolbar">
-      <el-button type="primary" @click="openCreateForm">
-        <el-icon><Plus /></el-icon>新增 MCP 令牌
-      </el-button>
+    <div class="mcp-token-body">
+      <div class="mcp-token-toolbar">
+        <el-button type="primary" @click="openCreateForm">
+          <el-icon><Plus /></el-icon>新增 MCP 令牌
+        </el-button>
+      </div>
+      <el-table :data="pagedMcpKeyList" v-loading="loading" height="372">
+        <el-table-column prop="name" label="名称" min-width="120" align="left"/>
+        <el-table-column prop="keyValue" label="密钥" min-width="220" align="left">
+          <template #default="scope">
+            <span class="key-value">{{ scope.row.keyValue }}</span>
+            <el-button type="primary" text @click="copyText(scope.row.keyValue)">复制</el-button>
+          </template>
+        </el-table-column>
+        <el-table-column prop="statusName" label="状态" width="80" align="center"/>
+        <el-table-column prop="createdDt" label="创建时间" width="160" align="center"/>
+        <el-table-column label="最近使用" width="160" align="center">
+          <template #default="scope">
+            {{ scope.row.lastUsedDt || '暂无' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="useCount" label="使用次数" width="90" align="center"/>
+        <el-table-column fixed="right" label="操作" width="200" align="center">
+          <template #default="scope">
+            <el-button type="primary" text @click="openDetail(scope.row)">
+              <el-icon><View /></el-icon>
+              <span style="font-size: 12px; font-weight: 500">详情</span>
+            </el-button>
+            <el-button type="danger" text @click="handleDelete(scope.row)">
+              <el-icon><Delete /></el-icon>
+              <span style="font-size: 12px; font-weight: 500">删除</span>
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div class="mcp-token-pagination">
+        <el-pagination
+            v-model:current-page="pageNo"
+            small
+            background
+            layout="total, prev, pager, next"
+            :page-size="pageSize"
+            :total="mcpKeyList.length"
+        />
+      </div>
     </div>
-    <el-table :data="mcpKeyList" v-loading="loading" height="400">
-      <el-table-column prop="name" label="名称" min-width="120" align="left"/>
-      <el-table-column prop="keyValue" label="密钥" min-width="220" align="left">
-        <template #default="scope">
-          <span class="key-value">{{ scope.row.keyValue }}</span>
-          <el-button type="primary" text @click="copyText(scope.row.keyValue)">复制</el-button>
-        </template>
-      </el-table-column>
-      <el-table-column prop="statusName" label="状态" width="80" align="center"/>
-      <el-table-column prop="createdDt" label="创建时间" width="160" align="center"/>
-      <el-table-column label="最近使用" width="160" align="center">
-        <template #default="scope">
-          {{ scope.row.lastUsedDt || '暂无' }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="useCount" label="使用次数" width="90" align="center"/>
-      <el-table-column fixed="right" label="操作" width="200" align="center">
-        <template #default="scope">
-          <el-button type="primary" text @click="openDetail(scope.row)">
-            <el-icon><View /></el-icon>
-            <span style="font-size: 12px; font-weight: 500">详情</span>
-          </el-button>
-          <el-button type="danger" text @click="handleDelete(scope.row)">
-            <el-icon><Delete /></el-icon>
-            <span style="font-size: 12px; font-weight: 500">删除</span>
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
 
     <!-- 新增 token 表单弹窗 -->
     <el-dialog
@@ -120,6 +133,13 @@ const visible = computed({
 
 const mcpKeyList = ref([])
 const loading = ref(false)
+const pageNo = ref(1)
+const pageSize = 5
+
+const pagedMcpKeyList = computed(() => {
+  const start = (pageNo.value - 1) * pageSize
+  return mcpKeyList.value.slice(start, start + pageSize)
+})
 
 // 新增表单
 const formVisible = ref(false)
@@ -132,6 +152,7 @@ const formRules = {
 // 弹窗打开时加载密钥列表
 watch(() => props.modelValue, val => {
   if (val) {
+    pageNo.value = 1
     getList()
   }
 })
@@ -144,6 +165,8 @@ function getList() {
   myMcpKeyListAPI().then(res => {
     if (res.code === 200) {
       mcpKeyList.value = res.data || []
+      const maxPage = Math.max(1, Math.ceil(mcpKeyList.value.length / pageSize))
+      if (pageNo.value > maxPage) pageNo.value = maxPage
     }
     loading.value = false
   })
@@ -268,10 +291,22 @@ function closeDialog() {
 </script>
 
 <style scoped lang="scss">
+.mcp-token-body {
+  height: 480px;
+  display: flex;
+  flex-direction: column;
+}
+
 .mcp-token-toolbar {
   display: flex;
   justify-content: flex-end;
   margin-bottom: $spacing-md;
+}
+
+.mcp-token-pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
 }
 
 .key-value {

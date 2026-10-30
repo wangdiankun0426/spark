@@ -10,6 +10,7 @@ import '@/styles/main.scss';
 import '@/styles/theme.scss';
 import '@/styles/element.scss';
 import '@/styles/dark.scss';
+import '@/styles/desktop.scss';
 import * as ElIcon from '@element-plus/icons-vue';
 import router from '@/router/index';
 import store from '@/store/index';

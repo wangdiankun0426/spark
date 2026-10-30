@@ -32,7 +32,7 @@ const font = ref('rgba(0, 0, 0, .15)');
   margin: 0;
   height: $nav-height;
   font-size: 14px;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: var(--nav-shadow);
   position: relative;
   z-index: 100;
@@ -44,4 +44,3 @@ const font = ref('rgba(0, 0, 0, .15)');
   background-color: $bg-page;
 }
 </style>
-

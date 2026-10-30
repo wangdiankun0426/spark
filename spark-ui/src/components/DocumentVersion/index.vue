@@ -7,11 +7,11 @@
     :before-close="handleClose"
     :close-on-click-modal="false"
   >
-    <div class="drawer-tips">
-      提示：回滚版本后，系统将自动重新解析、分块、向量化文档内容。
-    </div>
     <!-- 版本列表 -->
-    <el-table :data="versionList" height="calc(100vh - 240px)">
+    <el-table
+        :data="versionList"
+        height="calc(100vh - 138px)"
+    >
       <el-table-column label="版本" width="90" align="center">
         <template #default="scope">
           <el-tag :type="scope.row.currentFlag ? 'success' : 'info'">
@@ -60,6 +60,7 @@ import {
   pageDocumentVersionListAPI,
   rollbackDocumentVersionAPI, deleteDocumentVersionAPI, downloadDocumentVersionAPI
 } from '@/api/dms/documentVersion.js'
+import { saveBlob } from '@/utils/download.js'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -125,16 +126,7 @@ function handleDownload(row) {
   const request = row.currentFlag
       ? downloadDocumentAPI({ id: props.docId, ext: row.ext })
       : downloadDocumentVersionAPI({ id: row.id, ext: row.ext })
-  request.then(blob => {
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = row.name
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-  }).catch(() => {
+  request.then(blob => saveBlob(blob, row.name)).catch(() => {
     ElMessage.error('版本文件下载失败')
   })
 }
@@ -185,14 +177,5 @@ function handleClose() {
 </script>
 
 <style scoped lang="scss">
-.drawer-tips {
-  margin-bottom: $spacing-md;
-  padding: $spacing-sm $spacing-md;
-  background-color: $color-primary-light;
-  border-left: 3px solid $color-primary;
-  border-radius: $border-radius-sm;
-  color: $color-text-secondary;
-  font-size: 12px;
-  line-height: 1.6;
-}
+
 </style>
