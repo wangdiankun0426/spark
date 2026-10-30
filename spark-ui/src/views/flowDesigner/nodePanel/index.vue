@@ -46,7 +46,7 @@ function onDragStart(event, nodeType) {
 <style scoped lang="scss">
 .node-panel {
   width: 200px;
-  background: #fff;
+  background: var(--app-bg-card);
   border-right: 1px solid $border-color;
   flex-shrink: 0;
   overflow-y: auto;

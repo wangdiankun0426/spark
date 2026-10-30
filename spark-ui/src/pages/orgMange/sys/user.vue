@@ -593,4 +593,8 @@ function pageChangeNo(pageNo) {
     margin-bottom: 2px;
   }
 }
+
+.dept_tree_box :deep(.el-tree-node__content:hover) {
+  background-color: transparent;
+}
 </style>

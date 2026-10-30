@@ -109,7 +109,8 @@ const defaultActive = computed(() => {
 
 <style lang="scss" scoped>
 .home-el-aside {
-  padding: 0;
+  padding: 0 0 58px;
+  box-sizing: border-box;
   height: calc(100vh - $nav-height);
   background: var(--sidebar-bg);
   color: var(--sidebar-text);
@@ -146,6 +147,9 @@ const defaultActive = computed(() => {
   font-weight: 400;
   justify-content: center;
   padding: 0 !important;
+  width: calc(100% - 10px);
+  margin: 3px 5px;
+  border-radius: $border-radius-md;
 }
 /*悬停菜单之后*/
 .home-el-menu :deep(.el-menu-item:hover),

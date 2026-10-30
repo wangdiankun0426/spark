@@ -1,5 +1,6 @@
 package com.spark.monitor.service.impl;
 
+import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.monitor.entity.MonitorDruidSnapshot;
@@ -259,21 +260,24 @@ public class MonitorServiceImpl implements IMonitorService {
     }
 
     /**
-     * 查询URI维度统计
+     * 分页查询URI维度统计（不限时间范围，按调用次数倒排）
      * @param query 查询参数
-     * @return URI统计
+     * @return URI统计分页
      */
     @Override
-    public ResultData<List<MonitorUriStatResult>> queryUriStats(MonitorSnapshotQuery query) {
-        ResultData<List<MonitorUriStatResult>> result = new ResultData<>();
+    public ResultData<PageResult<MonitorUriStatResult>> queryUriStats(MonitorSnapshotQuery query) {
+        ResultData<PageResult<MonitorUriStatResult>> result = new ResultData<>();
         if (!SessionHolder.isSysAdmin()) {
             result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
         query = ensureQuery(query);
-        fillDefaultRange(query);
+        int total = apiSnapshotDao.queryUriStatsCount(query);
         List<MonitorUriStatResult> uriStats = apiSnapshotDao.queryUriStats(query);
-        result.setData(uriStats);
+        PageResult<MonitorUriStatResult> pageResult = new PageResult<>();
+        pageResult.setRows(uriStats);
+        pageResult.setTotal(total);
+        result.setData(pageResult);
         result.setCode(ResultData.OK);
         return result;
     }

@@ -114,6 +114,9 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import * as echarts from 'echarts'
+import { chartTokens, currentChartTheme, registerAppChartTheme } from '@/utils/chartTheme'
+
+registerAppChartTheme()
 import {Connection, Search, Close, ArrowLeft} from '@element-plus/icons-vue'
 import { queryGraphDetailAPI, expandNodeAPI, queryGraphStatsAPI } from '@/api/kg/graph.js'
 import { queryDocumentDetailAPI } from '@/api/dms/document.js'
@@ -192,12 +195,21 @@ function getTypeColor(type) {
   return typeColorMap.get(key)
 }
 
+// 主题切换：重建实例（事件绑定随实例重建）并重新渲染
+function handleThemeChange() {
+  if (chart) { chart.dispose(); chart = null }
+  registerAppChartTheme()
+  nextTick(() => renderChart())
+}
+
 onMounted(() => {
+  window.addEventListener('app-theme-change', handleThemeChange)
   loadAll()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize)
+  window.removeEventListener('app-theme-change', handleThemeChange)
   if (searchTimer) clearTimeout(searchTimer)
   if (chart) { chart.dispose(); chart = null }
 })
@@ -376,7 +388,7 @@ const nodeDegreeMap = ref({})
 function renderChart() {
   if (!canvasRef.value) return
   if (!chart) {
-    chart = echarts.init(canvasRef.value)
+    chart = echarts.init(canvasRef.value, currentChartTheme())
     // 监听节点点击：展开关联实体
     chart.on('click', (params) => {
       if (params.dataType === 'node' && params.data) {
@@ -404,6 +416,7 @@ function renderChart() {
     renderEntities = visibleEntities.slice(0, MAX_GRAPH_NODES)
   }
   const renderIds = new Set(renderEntities.map(e => e.id))
+  const tokens = chartTokens()
   const nodes = renderEntities.map(e => {
     const degree = nodeDegreeMap.value[e.id] || 0
     return {
@@ -413,7 +426,7 @@ function renderChart() {
       category: e.type || '未分类',
       itemStyle: {
         color: getTypeColor(e.type),
-        borderColor: expandedNodeIds.value.has(e.id) ? '#333' : undefined,
+        borderColor: expandedNodeIds.value.has(e.id) ? tokens.text : undefined,
         borderWidth: expandedNodeIds.value.has(e.id) ? 3 : undefined
       },
       raw: e
@@ -425,8 +438,8 @@ function renderChart() {
       source: String(r.headEntityId),
       target: String(r.tailEntityId),
       value: r.relationType,
-      label: { show: true, formatter: r.relationType, fontSize: 11, color: '#5e6c84' },
-      lineStyle: { color: '#c0c8d4', width: 1.5, curveness: 0.15 }
+      label: { show: true, formatter: r.relationType, fontSize: 11, color: tokens.text },
+      lineStyle: { color: tokens.split, width: 1.5, curveness: 0.15 }
     }))
   const categoriesSet = new Set()
   renderEntities.forEach(e => categoriesSet.add(e.type || '未分类'))
@@ -439,8 +452,8 @@ function renderChart() {
     categories,
     data: nodes,
     links,
-    label: { show: true, position: 'right', fontSize: 12 },
-    lineStyle: { color: '#c0c8d4', curveness: 0.15 },
+    label: { show: true, position: 'right', fontSize: 12, color: tokens.text },
+    lineStyle: { color: tokens.split, curveness: 0.15 },
     emphasis: {
       focus: 'adjacency',
       lineStyle: { width: 3 },

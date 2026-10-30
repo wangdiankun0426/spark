@@ -243,6 +243,7 @@ defineExpose({ loadFirst: loadFirstSessionList, refresh: refreshSessionList })
   overflow: hidden;
   padding: $spacing-md;
   background-color: $bg-card;
+  border: 1px solid $border-color-light;
   border-radius: $border-radius-md;
   box-shadow: $shadow-card;
 }

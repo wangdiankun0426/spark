@@ -1,0 +1,100 @@
+html.dark {
+  ::-webkit-scrollbar-track {
+    background-color: #1b273b;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: #475569;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: #64748b;
+  }
+
+  .v-md-editor {
+    background-color: var(--app-bg-card);
+    color: var(--app-text-primary);
+    box-shadow: none;
+  }
+
+  .v-md-editor__toolbar {
+    background-color: var(--app-bg-overlay);
+    border-color: var(--app-border-light);
+  }
+
+  .v-md-editor__toolbar-item {
+    color: var(--app-text-secondary);
+
+    &:hover {
+      background-color: var(--app-primary-light);
+      color: var(--app-primary);
+    }
+  }
+
+  .v-md-editor__menu {
+    background-color: var(--app-bg-overlay);
+    border-color: var(--app-border-light);
+  }
+
+  .v-md-editor__menu-item:hover {
+    background-color: var(--app-primary-light);
+  }
+
+  .v-md-editor textarea {
+    color: var(--app-text-primary);
+  }
+
+  .v-md-editor.v-md-editor--fullscreen {
+    background-color: var(--app-bg-card);
+  }
+
+  .github-markdown-body {
+    color: var(--app-text-primary);
+    background: transparent;
+  }
+
+  .github-markdown-body pre,
+  .github-markdown-body div[class*=v-md-pre-wrapper-],
+  .github-markdown-body div[class*=v-md-pre-wrapper-].line-numbers-mode:after {
+    background-color: #0f172a;
+    border-color: var(--app-border);
+  }
+
+  .github-markdown-body code,
+  .github-markdown-body pre code,
+  .github-markdown-body pre .token {
+    color: var(--app-text-primary);
+    background: transparent;
+  }
+
+  .github-markdown-body :not(pre) > code {
+    background-color: rgba(148, 166, 192, 0.16);
+  }
+
+  .github-markdown-body table tr,
+  .github-markdown-body table tr:nth-child(2n) {
+    background-color: transparent;
+  }
+
+  .github-markdown-body table th,
+  .github-markdown-body table td {
+    border-color: var(--app-border);
+  }
+
+  .github-markdown-body .csv-data th {
+    background-color: var(--app-bg-sub);
+  }
+
+  .github-markdown-body blockquote {
+    color: var(--app-text-secondary);
+    border-left-color: var(--app-border);
+  }
+
+  .github-markdown-body a {
+    color: var(--app-primary);
+  }
+
+  .github-markdown-body hr {
+    background-color: var(--app-border-light);
+  }
+}

@@ -87,6 +87,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import StatCard from '@/components/Dashboard/StatCard.vue'
 import MonitorToolbar from '@/components/MonitorToolbar/index.vue'
 import { useChart } from '@/utils/useChart.js'
+import { chartTokens } from '@/utils/chartTheme.js'
 import { formatBytes, buildTimeRange, parseJson } from '@/utils/monitorUtil.js'
 import { queryLatestRedisAPI, queryRedisSeriesAPI } from '@/api/monitor/monitor.js'
 
@@ -115,14 +116,21 @@ const { elRef: cmdElRef, setOption: setCmdOption } = useChart()
 
 let timer = null
 
+// 主题切换后重建 option，图表色取自构建期 CSS 变量计算值
+function handleThemeChange() {
+  if (series.value.length) renderTrendCharts()
+}
+
 onMounted(() => {
   loadData()
+  window.addEventListener('app-theme-change', handleThemeChange)
   timer = setInterval(() => {
     if (range.value === '1h') loadData()
   }, REFRESH_INTERVAL)
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('app-theme-change', handleThemeChange)
   if (timer) clearInterval(timer)
 })
 
@@ -153,7 +161,7 @@ function renderTrendCharts() {
   const data = series.value
   const labels = data.map(item => item.snapshotDt?.substring(11, 16))
   setMemOption(buildLineOption(labels, [
-    { name: 'used', data: data.map(item => roundGb(item.usedMemory)), color: '#004fc5' },
+    { name: 'used', data: data.map(item => roundGb(item.usedMemory)), color: chartTokens().primary },
     { name: 'rss', data: data.map(item => roundGb(item.usedMemoryRss)), color: '#ff9500' }
   ], 'GB'))
   setHitOption(buildLineOption(labels, [

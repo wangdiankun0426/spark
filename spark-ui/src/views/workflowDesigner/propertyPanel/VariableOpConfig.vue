@@ -228,7 +228,7 @@ function fallbackCopy(text, done) {
   padding: 8px;
   border: 1px solid $border-color-light;
   border-radius: 4px;
-  background: #fafafa;
+  background: var(--app-bg-sub);
   width: 100%;
 }
 .var-item-header {
@@ -252,7 +252,7 @@ function fallbackCopy(text, done) {
   .var-code {
     flex: 1;
     font-size: 14px;
-    color: #409eff;
+    color: var(--app-primary);
     word-break: break-all;
   }
 }

@@ -175,7 +175,7 @@ const handleTemplateChange = (task) => {
   margin-bottom: 8px;
   border: 1px solid $border-color-light;
   border-radius: 4px;
-  background: #fafafa;
+  background: var(--app-bg-sub);
   cursor: move;
 
   &.task-dragging {

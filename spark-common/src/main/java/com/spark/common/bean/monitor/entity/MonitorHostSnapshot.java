@@ -1,5 +1,6 @@
 package com.spark.common.bean.monitor.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.spark.common.bean.base.BaseEntity;
 import lombok.Data;
 
@@ -27,6 +28,7 @@ public class MonitorHostSnapshot extends BaseEntity {
     /**
      * 快照时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     private Timestamp snapshotDt;
 
     /**

@@ -33,8 +33,7 @@ const font = ref('rgba(0, 0, 0, .15)');
   height: $nav-height;
   font-size: 14px;
   overflow: hidden;
-  // 导航栏向下投影，区分内容区
-  box-shadow: 0 2px 8px 0 rgba(23, 43, 77, 0.15);
+  box-shadow: var(--nav-shadow);
   position: relative;
   z-index: 100;
 }

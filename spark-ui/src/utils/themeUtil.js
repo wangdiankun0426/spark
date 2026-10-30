@@ -2,10 +2,16 @@ import {localStorageKey} from "@/utils/keyUtils.js";
 
 /**
  * 主题切换工具
- * 浅色主题（light，白色）为默认；深色主题（dark，蓝色）
- * 通过在 html 根节点挂载 theme-light 类切换，仅影响导航栏与左侧菜单栏配色
+ * 浅色主题（light，白色）为默认；深色主题（dark，品牌深蓝灰）
+ * 通过在 html 根节点挂载类名切换：
+ * - theme-light：导航栏与左侧菜单栏浅色皮肤
+ * - dark：内容区深色（Element Plus 暗色变量 + --app-* 变量）
+ * 独立页（登录/注册/协议/错误页）通过 setThemeExempt(true) 强制浅色
  */
 const LIGHT_THEME = 'light';
+
+// 独立页强制浅色开关
+let forceLight = false;
 
 /**
  * 读取本地保存的主题
@@ -20,7 +26,9 @@ export function getTheme() {
  * @param theme dark | light
  */
 export function applyTheme(theme) {
-  document.documentElement.classList.toggle('theme-light', theme === LIGHT_THEME);
+  const dark = !forceLight && theme === 'dark';
+  document.documentElement.classList.toggle('theme-light', !dark);
+  document.documentElement.classList.toggle('dark', dark);
 }
 
 /**
@@ -30,6 +38,16 @@ export function applyTheme(theme) {
 export function setTheme(theme) {
   localStorage.setItem(localStorageKey.THEME_KEY, theme);
   applyTheme(theme);
+  window.dispatchEvent(new CustomEvent('app-theme-change', { detail: theme }));
+}
+
+/**
+ * 设置当前页面是否强制浅色（独立页路由守卫调用）
+ * @param exempt true 强制浅色
+ */
+export function setThemeExempt(exempt) {
+  forceLight = exempt;
+  applyTheme(getTheme());
 }
 
 /**
@@ -43,6 +61,7 @@ export function initTheme() {
   window.addEventListener('storage', (e) => {
     if (e.key === localStorageKey.THEME_KEY) {
       applyTheme(getTheme());
+      window.dispatchEvent(new CustomEvent('app-theme-change', { detail: getTheme() }));
     }
   });
   // 切回本窗口时再核对一次

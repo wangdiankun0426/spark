@@ -156,17 +156,17 @@ watch(visible, async (val) => {
 .section-title {
   font-size: 13px;
   font-weight: 600;
-  color: #172b4d;
+  color: var(--app-text-primary);
   margin: $spacing-sm 0 6px;
 }
 .node-status {
   font-size: 12px;
-  color: #172b4d;
+  color: var(--app-text-primary);
 }
 .node-output {
   margin-top: 4px;
   padding: 8px;
-  background: #f5f7fa;
+  background: var(--app-bg-sub);
   border-radius: 4px;
   font-size: 12px;
   line-height: 1.6;

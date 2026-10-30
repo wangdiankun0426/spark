@@ -33,7 +33,7 @@ description: Spark 项目前端移动端（spark-app，uni-app H5 / 微信小程
 - 页面结构 `<template>` → `<script setup>` → `<style scoped lang="scss">`，样式单位用 `rpx`
 - 新增页面必须注册到 `pages.json` 的 `pages` 数组，统一 `"navigationStyle": "custom"`
 - H5 与微信小程序差异用条件编译 `#ifdef H5` / `#ifdef MP-WEIXIN` 处理
-- 注释在代码上方，只写一眼看不出来的核心信息，禁止用括号补充细化说明；`<style>` / `.scss` 内不写任何注释
+- 注释在代码上方，只写一眼看不出来的核心信息，禁止用括号补充细化说明；禁止 `// ===== 标题 =====` 装饰性分隔线，分组标题直接写 `// 标题`；`<style>` / `.scss` 内不写任何注释
 - 代码标识符统一首字母小写驼峰（lowerCamelCase）：变量、函数、事件处理函数、请求参数名等；组件名用 PascalCase；禁止 `snake_case`。日志/报错消息首词同样用驼峰，如 `console.log('receiverChange error', e)`
 - 完整模板与细则见 `references/templates.md`
 
@@ -52,7 +52,8 @@ description: Spark 项目前端移动端（spark-app，uni-app H5 / 微信小程
 11. 在代码中使用 emoji
 12. 在 `<style>` / `.scss` 内写任何注释 —— `//`、`/* */` 一律不写，CSS 不注释
 13. 注释复述代码本身已经表达的信息（"一眼就看明白的"），只为凑注释而注释
-14. 变量/函数/参数等标识符使用 `snake_case` 或首字母大写 —— 统一首字母小写驼峰（组件名 PascalCase 除外）
+14. 使用 `// ===== 标题 =====`、`// ==== 标题 ====` 等装饰性分隔线注释 —— 分组标题直接写普通 `// 标题`
+15. 变量/函数/参数等标识符使用 `snake_case` 或首字母大写 —— 统一首字母小写驼峰（组件名 PascalCase 除外）
 
 ## 6. 红线（违反必须返工）
 

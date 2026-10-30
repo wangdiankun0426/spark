@@ -1,8 +1,9 @@
 // router/index.js
 import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
 import { isDesktop } from '@/utils/desktop.js'
-import {isOrgAdmin, isSysAdmin} from '../utils/utils.js'
+import {isOrgAdmin, isSysAdmin} from '../utils/permissionUtil.js'
 import {hasMenu} from "@/utils/menuUtil.js";
+import {setThemeExempt} from '@/utils/themeUtil';
 
 // 判断是否为桌面端环境（桌面端环境 需使用 Hash 模式兼容应用内协议）
 const history = isDesktop ? createWebHashHistory() : createWebHistory()
@@ -26,15 +27,11 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
     // 设置标题
     document.title = to.meta.title ? `星火云应用平台 - ${to.meta.title}` : '星火云应用平台'
-    // 根据角色分发路由
+    // 登录/注册/协议/错误页等独立页始终浅色，不跟随深色主题
+    setThemeExempt(to.meta.lightOnly === true)
+    // 登录后统一进入工作台
     if (to.path === '/') {
-        if (isOrgAdmin()) {
-            return next('/org')
-        } else if (isSysAdmin()) {
-            return next('/site')
-        } else {
-            return next('/home')
-        }
+        return next('/home/dashboard')
     }
     // 系统后台权限校验
     if (to.path.startsWith('/site')) {

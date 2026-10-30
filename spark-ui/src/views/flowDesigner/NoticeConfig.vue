@@ -119,7 +119,7 @@ defineExpose({ open })
 }
 .notify-var-label {
   font-size: 12px;
-  color: #909399;
+  color: var(--app-text-secondary);
   flex-shrink: 0;
 }
 </style>

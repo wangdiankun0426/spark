@@ -108,10 +108,10 @@
             <user-avatar :user-id="scope.row.userId" :size="36" />
           </template>
         </el-table-column>
-        <el-table-column prop="userName" label="用户名称" min-width="90" align="center"/>
-        <el-table-column prop="loginName" label="登录名" min-width="110" align="center"/>
-        <el-table-column prop="roleTypeName" label="用户角色" min-width="110" align="center"/>
-        <el-table-column fixed="right" label="操作" min-width="180" align="center">
+        <el-table-column prop="userName" label="用户名称" min-width="80" align="center"/>
+        <el-table-column prop="loginName" label="登录名" min-width="100" align="center"/>
+        <el-table-column prop="roleTypeName" label="用户角色" min-width="96" align="center"/>
+        <el-table-column fixed="right" label="操作" width="190" align="center">
           <template #default="scope">
             <el-button
                 v-if="!isOrgAdminRole(scope.row.roleType)"
@@ -630,12 +630,14 @@ function openConfig(row) {
   overflow: hidden;
 }
 .tenant-box {
-  flex: 0 0 60%;
-  width: 60%;
+  flex: 0 0 55%;
+  width: 55%;
+  min-width: 0;
 }
 .tenant-user-box {
-  flex: 1 1 40%;
-  width: 40%;
+  flex: 1 1 45%;
+  width: 45%;
+  min-width: 0;
 }
 .tenant-toolbar {
   display: flex;

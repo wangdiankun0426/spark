@@ -11,28 +11,32 @@ export default [
         path: '/login',
         component: login,
         meta: {
-            title: '登录'
+            title: '登录',
+            lightOnly: true
         }
     },
     {
         path: '/oauthLogin',
         component: oauthLogin,
         meta: {
-            title: 'OAuth登录'
+            title: 'OAuth登录',
+            lightOnly: true
         }
     },
     {
         path: '/register',
         component: register,
         meta: {
-            title: '注册'
+            title: '注册',
+            lightOnly: true
         }
     },
     {
         path: '/agreement',
         component: agreement,
         meta: {
-            title: '用户协议'
+            title: '用户协议',
+            lightOnly: true
         }
     },
     {
@@ -116,7 +120,8 @@ export default [
         name: 'noPermission',
         component: () => import('@/pages/error/noPermission.vue'),
         meta: {
-            title: '无权限'
+            title: '无权限',
+            lightOnly: true
         }
     },
     {
@@ -124,7 +129,8 @@ export default [
         name: 'noFound',
         component: () => import('@/pages/error/noFound.vue'),
         meta: {
-            title: '404'
+            title: '404',
+            lightOnly: true
         }
     }
 ]

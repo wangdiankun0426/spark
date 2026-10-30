@@ -94,7 +94,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, nextTick, computed } from 'vue'
+import { onMounted, onBeforeUnmount, ref, nextTick, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import {
@@ -107,6 +107,7 @@ import {
   queryFlowCountAPI, queryApplyTemplatesAPI, queryRecommendAPI, queryAssetAPI
 } from '@/api/home/home'
 import { useChart } from '@/utils/useChart'
+import { chartTokens } from '@/utils/chartTheme'
 import StatCard from '@/components/Dashboard/StatCard.vue'
 import RankCard from '@/components/Dashboard/RankCard.vue'
 
@@ -216,29 +217,29 @@ function renderTrend() {
     }
   })
   const calls = fullLabels.map(full => map[full].callCount)
-  const tokens = fullLabels.map(full => map[full].totalTokens)
+  const tokensData = fullLabels.map(full => map[full].totalTokens)
+  const tokens = chartTokens()
   setTrendOption({
     tooltip: { trigger: 'axis' },
-    legend: { data: ['调用次数', 'Token消耗'], right: 0, top: 0, textStyle: { color: '#5e6c84' } },
+    legend: { data: ['调用次数', 'Token消耗'], right: 0, top: 0, textStyle: { color: tokens.text } },
     grid: { left: 48, right: 56, top: 40, bottom: 32 },
     xAxis: {
       type: 'category',
       data: labels,
-      axisLine: { lineStyle: { color: '#eef2f8' } },
-      axisLabel: { color: '#a0aec0' }
+      axisLine: { lineStyle: { color: tokens.split } },
+      axisLabel: { color: tokens.text }
     },
     yAxis: [
       {
         type: 'value',
         name: '次数',
-        splitLine: { lineStyle: { color: '#eef2f8' } },
-        axisLabel: { color: '#a0aec0' }
+        splitLine: { lineStyle: { color: tokens.split } },
+        axisLabel: { color: tokens.text }
       },
       {
         type: 'value',
-        name: 'Token',
         splitLine: { show: false },
-        axisLabel: { color: '#a0aec0' }
+        axisLabel: { color: tokens.text }
       }
     ],
     series: [
@@ -246,7 +247,7 @@ function renderTrend() {
         name: '调用次数',
         type: 'bar',
         barMaxWidth: 18,
-        itemStyle: { color: '#004fc5', borderRadius: [3, 3, 0, 0] },
+        itemStyle: { color: tokens.primary, borderRadius: [3, 3, 0, 0] },
         data: calls
       },
       {
@@ -259,7 +260,7 @@ function renderTrend() {
         lineStyle: { color: '#34c759', width: 2 },
         itemStyle: { color: '#34c759' },
         areaStyle: { color: 'rgba(52,199,89,0.08)' },
-        data: tokens
+        data: tokensData
       }
     ]
   })
@@ -274,16 +275,17 @@ function levelTagType(level) {
 function renderTodoChart() {
   const c = flowCount.value
   const total = (c.todoCount || 0) + (c.doneCount || 0) + (c.applicationCount || 0) + (c.copyCount || 0)
+  const tokens = chartTokens()
   setTodoOption({
     tooltip: { trigger: 'item' },
-    legend: { bottom: 0, textStyle: { color: '#5e6c84' } },
+    legend: { bottom: 0, textStyle: { color: tokens.text } },
     title: {
       text: String(total),
       subtext: '流程总数',
       left: 'center',
       top: '34%',
-      textStyle: { fontSize: 26, fontWeight: 600, color: '#004fc5' },
-      subtextStyle: { fontSize: 12, color: '#a0aec0' }
+      textStyle: { fontSize: 26, fontWeight: 600, color: tokens.primary },
+      subtextStyle: { fontSize: 12, color: tokens.text }
     },
     series: [
       {
@@ -296,7 +298,7 @@ function renderTodoChart() {
         data: [
           { value: c.todoCount || 0, name: '待办', itemStyle: { color: '#f56c6c' } },
           { value: c.doneCount || 0, name: '已办', itemStyle: { color: '#34c759' } },
-          { value: c.applicationCount || 0, name: '我的申请', itemStyle: { color: '#004fc5' } },
+          { value: c.applicationCount || 0, name: '我的申请', itemStyle: { color: tokens.primary } },
           { value: c.copyCount || 0, name: '抄送给我', itemStyle: { color: '#ff9500' } }
         ]
       }
@@ -324,11 +326,24 @@ function goWorkflow() {
   router.push('/home/workflow')
 }
 
+// 主题切换后重建 option（option 中的颜色是构建期读取的计算值，需重新渲染）
+function handleThemeChange() {
+  nextTick(() => {
+    renderTrend()
+    renderTodoChart()
+  })
+}
+
 onMounted(() => {
   loading.value = true
+  window.addEventListener('app-theme-change', handleThemeChange)
   Promise.all([loadRanged(), loadFixed()]).finally(() => {
     loading.value = false
   })
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('app-theme-change', handleThemeChange)
 })
 </script>
 

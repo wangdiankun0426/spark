@@ -222,7 +222,7 @@ function handleClose() {
 
 .instance-info {
   padding: 12px 0 0 0;
-  border-bottom: 5px solid #ebeef5;
+  border-bottom: 5px solid var(--app-border-light);
   margin-bottom: 12px;
 }
 
@@ -258,7 +258,7 @@ function handleClose() {
 
 .timeline-container {
   padding: 5px;
-  border-right: 1px solid #ebeef5;
+  border-right: 1px solid var(--app-border-light);
   height: calc(100vh - 200px);
   overflow-y: auto;
 }
@@ -295,7 +295,7 @@ function handleClose() {
   gap: 4px;
   padding: 8px 10px;
   border-radius: 6px;
-  background: #f5f7fa;
+  background: var(--app-bg-sub);
 }
 
 .discuss-header {

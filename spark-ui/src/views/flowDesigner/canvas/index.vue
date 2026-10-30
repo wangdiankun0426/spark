@@ -224,12 +224,12 @@ function nodeStyle(node) {
   }
 }
 
-// ====== 节点选中 ======
+// 节点选中
 function handleSelectNode(node) {
   emit('select-node', node)
 }
 
-// ====== 连线计算（锚点 + 折线） ======
+// 连线计算（锚点 + 折线）
 
 function getEdgeSource(edge) { return edge[props.sourceKey] }
 function getEdgeTarget(edge) { return edge[props.targetKey] }
@@ -443,7 +443,7 @@ function handleDeleteEdge(edge) {
   emit('delete-edge', edge.id)
 }
 
-// ====== 节点拖拽 ======
+// 节点拖拽
 function handleNodeMouseDown(event, node) {
   if (props.readonly) return
   if (event.button !== 0) return
@@ -469,7 +469,7 @@ function onNodeMouseUp() {
   dragging.value = null
 }
 
-// ====== 连线创建：从节点四周连接点拖到目标节点 ======
+// 连线创建：从节点四周连接点拖到目标节点
 function startConnect(node, dir, event) {
   event.stopPropagation()
   if (props.readonly) return
@@ -515,13 +515,13 @@ function findNodeAtPosition(pt) {
   return null
 }
 
-// ====== 画布空白点击：取消选中 ======
+// 画布空白点击：取消选中
 function handleCanvasMouseDown() {
   emit('select-node', null)
   emit('select-edge', null)
 }
 
-// ====== 拖放新节点 ======
+// 拖放新节点
 function handleDragOver(event) {
   if (!props.readonly) event.preventDefault()
 }
@@ -585,7 +585,7 @@ function handleDrop(event) {
   margin-top: 2px;
   font-size: 13px;
   font-weight: 400;
-  color: $color-text-primary;
+  color: #172b4d;
   line-height: 1.2;
   word-break: break-all;
   max-width: 120px;

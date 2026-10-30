@@ -1,5 +1,6 @@
 package com.spark.web.rest.controller.monitor;
 
+import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.monitor.query.MonitorSnapshotQuery;
 import com.spark.common.bean.monitor.result.MonitorApiTrendResult;
@@ -50,12 +51,12 @@ public class ApiMonitorController {
     }
 
     /**
-     * 查询URI维度统计
+     * 分页查询URI维度统计（全量聚合，按调用次数倒排）
      * @param query 查询参数
-     * @return URI统计
+     * @return URI统计分页
      */
     @GetMapping("uriStats")
-    private ResultData<List<MonitorUriStatResult>> queryUriStats(MonitorSnapshotQuery query) {
+    private ResultData<PageResult<MonitorUriStatResult>> queryUriStats(MonitorSnapshotQuery query) {
         return monitorService.queryUriStats(query);
     }
 }

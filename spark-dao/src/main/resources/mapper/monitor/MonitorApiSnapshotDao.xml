@@ -75,6 +75,16 @@
         <include refid="condition" />
     </select>
 
+    <select id="queryUriStatsCount" resultType="int">
+        select count(*) from (
+            select 1
+            from monitor_api_snapshot
+            where 1 = 1
+            <include refid="condition" />
+            group by uri, method
+        ) t
+    </select>
+
     <select id="queryUriStats" resultType="com.spark.common.bean.monitor.result.MonitorUriStatResult">
         select uri,
                method,
@@ -93,6 +103,9 @@
         <include refid="condition" />
         group by uri, method
         order by totalCount desc
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
     </select>
 
     <delete id="deleteApiExpired">

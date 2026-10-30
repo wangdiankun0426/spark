@@ -359,7 +359,7 @@ function parseFragment(frag) {
 <style scoped lang="scss">
 .attr-panel {
   width: 400px;
-  background: #fff;
+  background: var(--app-bg-card);
   border-left: 1px solid $border-color;
   flex-shrink: 0;
   display: flex;
@@ -408,7 +408,7 @@ function parseFragment(frag) {
   padding: 8px;
   border: 1px solid $border-color-light;
   border-radius: 4px;
-  background: #fafafa;
+  background: var(--app-bg-sub);
 }
 
 .condition-row-header {
@@ -429,18 +429,18 @@ function parseFragment(frag) {
 .condition-warning {
   padding: 6px 8px;
   border-radius: 4px;
-  background: #fdf6ec;
+  background: var(--el-color-warning-light-9);
   font-size: 12px;
-  color: #e6a23c;
+  color: var(--el-color-warning);
   word-break: break-all;
 }
 
 .condition-preview {
   padding: 6px 8px;
   border-radius: 4px;
-  background: #f5f7fa;
+  background: var(--app-bg-sub);
   font-size: 12px;
-  color: #0052cc;
+  color: var(--app-primary);
   word-break: break-all;
 }
 </style>

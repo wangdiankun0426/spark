@@ -4,6 +4,28 @@
  * 仅覆盖导航栏与各模块左侧菜单栏的颜色，页面主体样式不受影响
  */
 
+:root {
+  --app-primary: #004fc5;
+  --app-primary-hover: #2669cd;
+  --app-primary-light: #e8f0fd;
+  --app-primary-soft: rgba(26, 111, 232, 0.08);
+  --app-primary-hover-bg: rgba(0, 79, 197, 0.12);
+  --app-row-hover: #f5f8ff;
+  --app-text-primary: #172b4d;
+  --app-text-secondary: #5e6c84;
+  --app-text-placeholder: #a0aec0;
+  --app-bg-page: #fbfbfb;
+  --app-bg-card: #ffffff;
+  --app-bg-overlay: #ffffff;
+  --app-bg-sub: #f5f7fa;
+  --app-border: #e4eaf4;
+  --app-border-light: #eef2f8;
+  --app-shadow-card: 0 2px 12px 0 rgba(26, 111, 232, 0.08);
+  --app-shadow-card-hover: 0 6px 24px 0 rgba(26, 111, 232, 0.14);
+  --app-shadow-nav: 0 2px 8px 0 rgba(23, 43, 77, 0.18);
+  --app-shadow-dialog: 0 8px 32px 0 rgba(26, 111, 232, 0.12);
+}
+
 // 深色主题（默认，蓝色）
 :root {
   // 卡片/弹窗/抽屉头部
@@ -58,13 +80,13 @@ html.theme-light {
   --head-text: #172b4d;
 
   // 顶部导航栏
-  --nav-bg: #ffffff;
-  --nav-shadow: 0 2px 8px 0 rgba(23, 43, 77, 0.08);
+  --nav-bg: #fbfbfb;
+  --nav-shadow: none;
   --nav-text: #172b4d;
-  --nav-hover-bg: #e8f0fd;
+  --nav-hover-bg: transparent;
   --nav-hover-text: #004fc5;
-  --nav-active-bg: #e8f0fd;
-  --nav-active-border: #004fc5;
+  --nav-active-bg: transparent;
+  --nav-active-border: transparent;
   --nav-active-text: #004fc5;
   --nav-tool-color: #5e6c84;
   --nav-tool-hover-bg: #e8f0fd;
@@ -73,7 +95,7 @@ html.theme-light {
   --nav-dropdown-color: #5e6c84;
 
   // 左侧菜单栏
-  --sidebar-bg: #ffffff;
+  --sidebar-bg: #fbfbfb;
   --sidebar-shadow: 2px 0 8px rgba(23, 43, 77, 0.06);
   --sidebar-text: #172b4d;
   --sidebar-hover-bg: #e8f0fd;
@@ -92,4 +114,68 @@ html.theme-light {
   --sidebar-icon-color: #004fc5;
   --sidebar-menu-group-text: #8a94a6;
   --sidebar-menu-group-text-light: #aab2c0;
+
+  .el-menu--horizontal {
+    --el-menu-bg-color: #fbfbfb;
+  }
+}
+
+html.dark {
+  color-scheme: dark;
+
+  --nav-bg: #0f172a;
+  --sidebar-bg: #0f172a;
+
+  --app-primary: #4d8dff;
+  --app-primary-hover: #679eff;
+  --app-primary-light: rgba(77, 141, 255, 0.14);
+  --app-primary-soft: rgba(77, 141, 255, 0.12);
+  --app-primary-hover-bg: rgba(77, 141, 255, 0.18);
+  --app-row-hover: rgba(77, 141, 255, 0.08);
+  --app-text-primary: #e5edf7;
+  --app-text-secondary: #94a6c0;
+  --app-text-placeholder: #6b7c95;
+  --app-bg-page: #0f172a;
+  --app-bg-card: #1e293b;
+  --app-bg-overlay: #243044;
+  --app-bg-sub: #263549;
+  --app-border: #334155;
+  --app-border-light: #2b3a52;
+  --app-shadow-card: 0 2px 12px rgba(0, 0, 0, 0.4);
+  --app-shadow-card-hover: 0 6px 24px rgba(0, 0, 0, 0.5);
+  --app-shadow-nav: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --app-shadow-dialog: 0 8px 32px rgba(0, 0, 0, 0.55);
+
+  --card-head-bg: #243044;
+  --dialog-head-bg: #243044;
+  --drawer-head-bg: #243044;
+  --head-text: #e5edf7;
+
+  --el-color-primary: #4d8dff;
+  --el-color-primary-light-3: rgba(77, 141, 255, 0.7);
+  --el-color-primary-light-5: rgba(77, 141, 255, 0.5);
+  --el-color-primary-light-7: rgba(77, 141, 255, 0.32);
+  --el-color-primary-light-8: rgba(77, 141, 255, 0.22);
+  --el-color-primary-light-9: rgba(77, 141, 255, 0.14);
+  --el-color-primary-dark-2: #3a7bef;
+
+  --el-bg-color-page: #0f172a;
+  --el-bg-color: #1e293b;
+  --el-bg-color-overlay: #243044;
+  --el-fill-color-blank: #1e293b;
+  --el-fill-color: #263549;
+  --el-fill-color-light: #22304a;
+  --el-fill-color-lighter: #1e293b;
+  --el-fill-color-extra-light: #1a2436;
+  --el-border-color: #334155;
+  --el-border-color-light: #2b3a52;
+  --el-border-color-lighter: #263449;
+  --el-border-color-extra-light: #222f43;
+  --el-border-color-dark: #3d4d6a;
+  --el-mask-color: rgba(0, 0, 0, 0.7);
+
+  --el-text-color-primary: #e5edf7 !important;
+  --el-text-color-regular: #c6d3e6 !important;
+  --el-text-color-secondary: #94a6c0 !important;
+  --el-text-color-placeholder: #6b7c95 !important;
 }

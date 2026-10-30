@@ -27,10 +27,6 @@
   transition: $transition-normal;
   overflow: hidden;
 
-  &:hover {
-    box-shadow: $shadow-card-hover !important;
-  }
-
   .el-card__header {
     height: 40px;
     background-color: var(--card-head-bg);
@@ -44,7 +40,7 @@
   .el-card__body {
     padding: 0;
     margin: 10px 10px 0 10px;
-    background-color: #fff;
+    background-color: var(--app-bg-card);
   }
 
   .el-card__footer {
@@ -69,6 +65,7 @@
     margin-right: 0;
     background: var(--dialog-head-bg);
     border-bottom: 1px solid $border-color-light;
+    cursor: move;
 
     .el-dialog__title {
       color: var(--head-text);
@@ -86,6 +83,7 @@
       align-items: center;
       justify-content: center;
       border-radius: 50%;
+      cursor: pointer;
       transition: background-color $transition-fast;
 
       &::before {
@@ -104,7 +102,7 @@
       }
 
       &:hover {
-        background-color: rgba(0, 79, 197, 0.12);
+        background-color: var(--app-primary-hover-bg);
 
         &::before {
           opacity: 1;
@@ -134,6 +132,14 @@
     // 收紧底部
     padding-top: 10px !important;
   }
+}
+
+.el-message-box__header {
+  cursor: move;
+}
+
+.el-message-box__headerbtn {
+  cursor: pointer;
 }
 
 // el-drawer 组件样式
@@ -190,7 +196,7 @@
 
       &:hover {
         color: $color-primary;
-        background-color: rgba(0, 79, 197, 0.12);
+        background-color: var(--app-primary-hover-bg);
 
         &::before {
           opacity: 1;
@@ -214,16 +220,17 @@
 // el-table 组件
 .el-table {
   margin-top: 10px;
+  border: 1px solid $border-color-light;
   border-radius: $border-radius-sm;
   overflow: hidden;
 
   // 表头
   .el-table__header th.el-table__cell {
-    background-color: #e8f0fd;
-    color: #000000 !important;
+    background-color: var(--app-primary-light);
+    color: var(--app-text-primary) !important;
     font-weight: 600;
     text-align: center !important;
-    border-bottom: 1px solid #a5a5a5;
+    border-bottom: 1px solid var(--app-border);
     padding: 10px 0 !important;
   }
   // 表头字体
@@ -232,7 +239,7 @@
   }
   // 行 hover
   .el-table__row:hover td.el-table__cell {
-    background-color: #f5f8ff !important;
+    background-color: var(--app-row-hover) !important;
   }
 
   // 数据行：统一行高（与操作列按钮 30px + 单元格上下 padding 协调）
@@ -243,7 +250,7 @@
   .el-table__cell {
     padding: 3px 0 !important; // 行高彻底压榨
     font-size: 13px !important; // 字体减小为 13px
-    color: #000000;
+    color: var(--app-text-primary);
   }
 
   .cell {
@@ -266,8 +273,8 @@
     background: $color-primary !important;
     border-color: $color-primary !important;
     &:hover {
-      background: mix(#ffffff, $color-primary, 15%) !important;
-      border-color: mix(#ffffff, $color-primary, 15%) !important;
+      background: var(--app-primary-hover) !important;
+      border-color: var(--app-primary-hover) !important;
       transform: none; // 去掉原来的悬浮动画
       box-shadow: none; // 去掉阴影
     }
@@ -276,12 +283,12 @@
     }
   }
   &--default {
-    border-color: #dcdfe6;
-    color: #606266;
+    border-color: var(--el-border-color);
+    color: var(--el-text-color-regular);
     &:hover {
       border-color: $color-primary !important;
       color: $color-primary !important;
-      background-color: #ecf5ff !important;
+      background-color: var(--app-primary-light) !important;
     }
   }
 }
@@ -384,7 +391,7 @@
 // 表单 label 字体
 .el-form-item__label {
   font-size: 13px !important;
-  color: #000000 !important; /* 全局修改为纯黑色 */
+  color: var(--app-text-primary) !important;
   font-weight: 600 !important;
 }
 
@@ -410,9 +417,9 @@
     color: $color-text-white !important;
     box-shadow: -1px 0 0 0 $color-primary !important;
     &:hover {
-      background-color: mix(#ffffff, $color-primary, 15%) !important;
-      border-color: mix(#ffffff, $color-primary, 15%) !important;
-      box-shadow: -1px 0 0 0 mix(#ffffff, $color-primary, 15%) !important;
+      background-color: var(--app-primary-hover) !important;
+      border-color: var(--app-primary-hover) !important;
+      box-shadow: -1px 0 0 0 var(--app-primary-hover) !important;
     }
   }
   .el-radio-button__original-radio:focus + .el-radio-button__inner {
@@ -427,7 +434,30 @@
   padding-right: 15px;
   padding-bottom: 10px;
   float: right;
-  
+
+  .el-select {
+    width: 100px;
+  }
+
+  .el-select .el-select__wrapper {
+    min-height: 26px;
+    padding: 1px 11px;
+    font-size: 12px;
+  }
+
+  .el-select__caret {
+    font-size: 12px;
+  }
+
+  .el-input__inner {
+    font-size: 12px;
+  }
+
+  .el-pagination__editor.el-input {
+    --el-input-height: 26px;
+    width: 48px;
+  }
+
   .el-pager li {
     font-size: 12px;
     height: 26px;
@@ -447,19 +477,16 @@
     line-height: 26px;
   }
 
-  .el-pager li.is-active {
+  .el-pager li.is-active,
+  .el-pager li.is-active:hover {
     background-color: $color-primary !important;
+    color: #ffffff !important;
     border-radius: $border-radius-sm;
   }
 
-  .el-pager li:hover {
+  .el-pager li:not(.is-active):hover {
     color: $color-primary;
   }
-}
-
-// el-menu 组件 (全局水平菜单 active 下划线)
-.el-menu--horizontal > .el-menu-item.is-active {
-  border-bottom-color: $color-primary !important;
 }
 
 // el-timeline 组件
@@ -506,7 +533,7 @@
 }
 
 .el-tabs--card>.el-tabs__header .el-tabs__item.is-active {
-  background-color: #ffffff;
+  background-color: var(--app-bg-card);
 }
 
 // el-badge 组件

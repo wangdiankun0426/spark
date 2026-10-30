@@ -2,11 +2,14 @@ import { createApp } from 'vue';
 import App from './App.vue';
 import { setupDesktop } from '@/utils/desktop.js';
 import { initTheme } from '@/utils/themeUtil';
+import { initDialogDrag } from '@/utils/dialogDrag';
 import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
+import 'element-plus/theme-chalk/dark/css-vars.css';
 import '@/styles/main.scss';
 import '@/styles/theme.scss';
 import '@/styles/element.scss';
+import '@/styles/dark.scss';
 import * as ElIcon from '@element-plus/icons-vue';
 import router from '@/router/index';
 import store from '@/store/index';
@@ -82,6 +85,8 @@ const app = createApp(App);
 setupDesktop();
 // 初始化主题：独立路由（设计器、预览等）不经过导航栏，需在挂载前应用并跟随窗口间切换
 initTheme();
+// 全局弹窗按住标题栏可拖动
+initDialogDrag();
 app.use(VMdEditor);
 app.use(VMdPreview);
 app.use(ElementPlus, {locale})

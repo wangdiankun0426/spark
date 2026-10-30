@@ -543,6 +543,7 @@ function handleDelete(skill) {
   margin-bottom: $spacing-lg;
   padding: $spacing-md $spacing-xl;
   background-color: $bg-card;
+  border: 1px solid $border-color-light;
   border-radius: $border-radius-md;
   box-shadow: $shadow-card;
 }

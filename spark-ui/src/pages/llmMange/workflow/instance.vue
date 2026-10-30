@@ -119,6 +119,7 @@ onMounted(() => { loadList(); });
   margin-bottom: $spacing-md;
   padding: $spacing-md $spacing-lg;
   background-color: $bg-card;
+  border: 1px solid $border-color-light;
   border-radius: $border-radius-md;
   box-shadow: $shadow-card;
 }

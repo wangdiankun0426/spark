@@ -27,9 +27,9 @@
       <el-table-column prop="statusName" label="状态" width="100" align="center"/>
       <el-table-column prop="orderNum" label="排序号" width="100" align="center"/>
       <el-table-column prop="createdByName" label="创建人" width="120" align="center"/>
-      <el-table-column prop="createdDt" label="创建时间" width="180" align="center"/>
+      <el-table-column prop="createdDt" label="创建时间" width="170" align="center"/>
       <el-table-column prop="updatedByName" label="修改人" width="120" align="center"/>
-      <el-table-column prop="updatedDt" label="修改时间" width="180" align="center"/>
+      <el-table-column prop="updatedDt" label="修改时间" width="170" align="center"/>
       <el-table-column fixed="right" label="操作" width="240" align="center">
         <template #default="scope">
           <el-button

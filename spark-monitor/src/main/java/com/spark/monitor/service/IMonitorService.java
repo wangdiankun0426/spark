@@ -1,5 +1,6 @@
 package com.spark.monitor.service;
 
+import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.monitor.entity.MonitorDruidSnapshot;
 import com.spark.common.bean.monitor.entity.MonitorHostSnapshot;
@@ -92,9 +93,9 @@ public interface IMonitorService {
     ResultData<List<MonitorApiTrendResult>> queryApiTrend(MonitorSnapshotQuery query);
 
     /**
-     * 查询URI维度统计
+     * 分页查询URI维度统计（全量聚合，按调用次数倒排）
      * @param query 查询参数
-     * @return URI统计
+     * @return URI统计分页
      */
-    ResultData<List<MonitorUriStatResult>> queryUriStats(MonitorSnapshotQuery query);
+    ResultData<PageResult<MonitorUriStatResult>> queryUriStats(MonitorSnapshotQuery query);
 }

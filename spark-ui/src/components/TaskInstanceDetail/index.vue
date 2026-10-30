@@ -90,8 +90,8 @@ function formatJson(jsonStr) {
   color: $color-text-primary;
 }
 .json-block {
-  background: #f5f7fa;
-  border: 1px solid #e4e7ed;
+  background: var(--app-bg-sub);
+  border: 1px solid var(--app-border-light);
   border-radius: 4px;
   padding: 12px;
   margin: 0;

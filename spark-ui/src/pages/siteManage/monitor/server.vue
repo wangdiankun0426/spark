@@ -158,6 +158,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import StatCard from '@/components/Dashboard/StatCard.vue'
 import MonitorToolbar from '@/components/MonitorToolbar/index.vue'
 import { useChart } from '@/utils/useChart.js'
+import { chartTokens } from '@/utils/chartTheme.js'
 import { formatBytes, formatMs, buildTimeRange, parseJson } from '@/utils/monitorUtil.js'
 import { queryNodeListAPI, queryLatestHostAPI, queryHostSeriesAPI } from '@/api/monitor/monitor.js'
 
@@ -188,14 +189,21 @@ const { elRef: netElRef, setOption: setNetOption } = useChart()
 
 let timer = null
 
+// 主题切换后重建 option，图表色取自构建期 CSS 变量计算值
+function handleThemeChange() {
+  if (series.value.length) renderCharts()
+}
+
 onMounted(() => {
   loadNodeList()
+  window.addEventListener('app-theme-change', handleThemeChange)
   timer = setInterval(() => {
     if (range.value === '1h') loadData()
   }, REFRESH_INTERVAL)
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('app-theme-change', handleThemeChange)
   if (timer) clearInterval(timer)
 })
 
@@ -239,15 +247,16 @@ function loadData() {
 function renderCharts() {
   const data = series.value
   const labels = data.map(item => item.snapshotDt?.substring(11, 16))
+  const primary = chartTokens().primary
   setCpuOption(buildLineOption(labels, [
-    { name: 'CPU', data: data.map(item => item.cpuUsage), color: '#004fc5' }
+    { name: 'CPU', data: data.map(item => item.cpuUsage), color: primary }
   ], '%'))
   setMemOption(buildLineOption(labels, [
-    { name: '物理内存', data: data.map(item => roundGb(item.memUsed)), color: '#004fc5' },
+    { name: '物理内存', data: data.map(item => roundGb(item.memUsed)), color: primary },
     { name: 'JVM堆', data: data.map(item => roundGb(item.heapUsed)), color: '#ff9500' }
   ], 'GB'))
   setNetOption(buildLineOption(labels, [
-    { name: '下行', data: data.map(item => Math.round(item.netRxRate / 1024)), color: '#004fc5' },
+    { name: '下行', data: data.map(item => Math.round(item.netRxRate / 1024)), color: primary },
     { name: '上行', data: data.map(item => Math.round(item.netTxRate / 1024)), color: '#34c759' }
   ], 'KB/s'))
 }

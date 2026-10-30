@@ -125,8 +125,8 @@ export function queryApiTrendAPI(query) {
 }
 
 /**
- * 查询URI维度统计
- * @param query 查询参数 nodeKey、startTime、endTime
+ * 分页查询URI维度统计（全量聚合，按调用次数倒排）
+ * @param query 查询参数 nodeKey、pageNo、pageSize
  * @returns {Promise<AxiosResponse<any>>}
  */
 export function queryUriStatsAPI(query) {

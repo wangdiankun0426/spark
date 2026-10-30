@@ -46,11 +46,11 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import StatCard from '@/components/Dashboard/StatCard.vue'
 import MonitorToolbar from '@/components/MonitorToolbar/index.vue'
 import { useChart } from '@/utils/useChart.js'
+import { chartTokens } from '@/utils/chartTheme.js'
 import { buildTimeRange } from '@/utils/monitorUtil.js'
 import { queryLatestMqAPI, queryMqSeriesAPI } from '@/api/monitor/monitor.js'
 
 const REFRESH_INTERVAL = 30000
-const CHART_COLORS = ['#004fc5', '#ff9500', '#34c759']
 
 const range = ref('1h')
 const latestList = ref([])
@@ -70,14 +70,21 @@ const { elRef: trendElRef, setOption } = useChart()
 
 let timer = null
 
+// 主题切换后重建 option，图表色取自构建期 CSS 变量计算值
+function handleThemeChange() {
+  if (series.value.length) renderChart()
+}
+
 onMounted(() => {
   loadData()
+  window.addEventListener('app-theme-change', handleThemeChange)
   timer = setInterval(() => {
     if (range.value === '1h') loadData()
   }, REFRESH_INTERVAL)
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('app-theme-change', handleThemeChange)
   if (timer) clearInterval(timer)
 })
 
@@ -103,6 +110,7 @@ function loadData() {
 function renderChart() {
   const labels = [...new Set(series.value.map(item => item.snapshotDt?.substring(11, 16)))]
   const queueNames = [...new Set(series.value.map(item => item.queueName))]
+  const chartColors = [chartTokens().primary, '#ff9500', '#34c759']
   const chartSeries = queueNames.map((queueName, index) => {
     const rows = series.value.filter(item => item.queueName === queueName)
     const labelMap = new Map(rows.map(item => [item.snapshotDt?.substring(11, 16), item.messageCount]))
@@ -112,7 +120,7 @@ function renderChart() {
       type: 'line',
       smooth: true,
       showSymbol: false,
-      itemStyle: { color: CHART_COLORS[index % CHART_COLORS.length] },
+      itemStyle: { color: chartColors[index % chartColors.length] },
       areaStyle: { opacity: 0.08 },
       data: labels.map(time => labelMap.get(time) ?? 0)
     }

@@ -72,7 +72,7 @@ function getApproveTypeLabel(type) {
 .node-name {
   font-size: 13px;
   font-weight: 400;
-  color: $color-text-primary;
+  color: #172b4d;
   line-height: 1.2;
   word-break: break-all;
   max-width: 116px;

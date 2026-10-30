@@ -34,30 +34,42 @@
         <template #header>
           <div class="monitor-card__header">
             <span>接口调用统计</span>
-            <span class="monitor-card__extra">{{ rangeText }}</span>
+            <span class="monitor-card__extra">全量聚合 · 按调用次数倒排</span>
           </div>
         </template>
-        <div class="table-fill">
-          <el-table :data="uriStats" size="small" height="100%">
-            <el-table-column prop="uri" label="URI" min-width="260" show-overflow-tooltip />
-            <el-table-column prop="method" label="方法" width="90" align="center" />
-            <el-table-column prop="totalCount" label="调用次数" width="100" align="center" sortable />
-            <el-table-column prop="avgCost" label="平均耗时" width="110" align="center" sortable>
-              <template #default="scope">{{ formatMs(scope.row.avgCost) }}</template>
-            </el-table-column>
-            <el-table-column prop="maxCost" label="最大耗时" width="110" align="center" sortable>
-              <template #default="scope">{{ formatMs(scope.row.maxCost) }}</template>
-            </el-table-column>
-            <el-table-column prop="errorCount" label="错误次数" width="100" align="center" />
-            <el-table-column label="错误率" min-width="150">
-              <template #default="scope">
-                <el-progress
-                  :percentage="Number(scope.row.errorRate) || 0"
-                  :status="Number(scope.row.errorRate) > 5 ? 'exception' : ''"
-                />
-              </template>
-            </el-table-column>
-          </el-table>
+        <div class="table-fill uri-table-fill">
+          <div class="uri-table-wrap">
+            <el-table :data="uriStats" size="small" height="100%">
+              <el-table-column prop="uri" label="URI" min-width="260" show-overflow-tooltip />
+              <el-table-column prop="method" label="方法" width="90" align="center" />
+              <el-table-column prop="totalCount" label="调用次数" width="100" align="center" sortable />
+              <el-table-column prop="avgCost" label="平均耗时" width="110" align="center" sortable>
+                <template #default="scope">{{ formatMs(scope.row.avgCost) }}</template>
+              </el-table-column>
+              <el-table-column prop="maxCost" label="最大耗时" width="110" align="center" sortable>
+                <template #default="scope">{{ formatMs(scope.row.maxCost) }}</template>
+              </el-table-column>
+              <el-table-column prop="errorCount" label="错误次数" width="100" align="center" />
+              <el-table-column label="错误率" min-width="150">
+                <template #default="scope">
+                  <el-progress
+                    :percentage="Number(scope.row.errorRate) || 0"
+                    :status="Number(scope.row.errorRate) > 5 ? 'exception' : ''"
+                  />
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+          <el-pagination
+              class="uri-pagination"
+              v-model:current-page="uriQuery.pageNo"
+              v-model:page-size="uriQuery.pageSize"
+              :total="uriTotal"
+              :page-sizes="[20, 50, 100]"
+              layout="total, sizes, prev, pager, next"
+              @current-change="loadUriStats"
+              @size-change="handleUriSizeChange"
+          />
         </div>
       </el-card>
 
@@ -91,6 +103,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import StatCard from '@/components/Dashboard/StatCard.vue'
 import MonitorToolbar from '@/components/MonitorToolbar/index.vue'
 import { useChart } from '@/utils/useChart.js'
+import { chartTokens } from '@/utils/chartTheme.js'
 import { RANGE_OPTIONS, buildTimeRange, formatMs, parseJson } from '@/utils/monitorUtil.js'
 import {
   queryNodeListAPI, queryApiSummaryAPI, queryApiTrendAPI, queryUriStatsAPI, queryLatestDruidAPI
@@ -104,9 +117,10 @@ const range = ref('1h')
 const summary = ref(null)
 const trend = ref([])
 const uriStats = ref([])
+const uriTotal = ref(0)
+const uriQuery = ref({ pageNo: 1, pageSize: 20 })
 const slowSqlList = ref([])
 
-const rangeText = computed(() => (RANGE_OPTIONS.find(item => item.value === range.value) || {}).label || '')
 const avgQps = computed(() => {
   if (!summary.value?.totalCount) return 0
   const option = RANGE_OPTIONS.find(item => item.value === range.value) || RANGE_OPTIONS[0]
@@ -123,24 +137,37 @@ const { elRef: codeElRef, setOption: setCodeOption } = useChart()
 
 let timer = null
 
+// 主题切换后重建 option，图表色取自构建期 CSS 变量计算值
+function handleThemeChange() {
+  renderTrendChart()
+  renderCodeChart()
+}
+
 onMounted(() => {
   queryNodeListAPI().then(res => {
     if (res.code === 200) nodeList.value = res.data || []
   })
   loadData()
+  loadUriStats()
+  window.addEventListener('app-theme-change', handleThemeChange)
   timer = setInterval(() => {
     if (range.value === '1h') loadData()
   }, REFRESH_INTERVAL)
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('app-theme-change', handleThemeChange)
   if (timer) clearInterval(timer)
 })
 
+watch(nodeKey, () => {
+  uriQuery.value.pageNo = 1
+  loadUriStats()
+})
 watch([nodeKey, range], () => loadData())
 
 /**
- * 加载汇总、趋势、URI统计与慢SQL
+ * 加载汇总、趋势与慢SQL（按时间范围）
  */
 function loadData() {
   const query = { ...buildTimeRange(range.value), nodeKey: nodeKey.value }
@@ -153,10 +180,27 @@ function loadData() {
     renderTrendChart()
     renderCodeChart()
   })
-  queryUriStatsAPI(query).then(res => {
-    if (res.code === 200) uriStats.value = res.data || []
-  })
   loadSlowSql()
+}
+
+/**
+ * 加载全量URI聚合统计（分页，按调用次数倒排）
+ */
+function loadUriStats() {
+  const query = { ...uriQuery.value, nodeKey: nodeKey.value }
+  queryUriStatsAPI(query).then(res => {
+    if (res.code !== 200 || !res.data) return
+    uriStats.value = res.data.rows || []
+    uriTotal.value = res.data.total || 0
+  })
+}
+
+/**
+ * 切换每页条数后回到第一页
+ */
+function handleUriSizeChange() {
+  uriQuery.value.pageNo = 1
+  loadUriStats()
 }
 
 /**
@@ -184,6 +228,7 @@ function loadSlowSql() {
  */
 function renderTrendChart() {
   const data = trend.value
+  const tokens = chartTokens()
   const labels = data.map(item => item.snapshotDt?.substring(11, 16))
   setTrendOption({
     tooltip: { trigger: 'axis' },
@@ -199,7 +244,7 @@ function renderTrendChart() {
         name: 'QPS',
         type: 'bar',
         data: data.map(item => Number(((item.totalCount || 0) / 60).toFixed(2))),
-        itemStyle: { color: '#004fc5' }
+        itemStyle: { color: tokens.primary }
       },
       {
         name: '平均耗时',
@@ -218,6 +263,7 @@ function renderTrendChart() {
  * 渲染状态码分布饼图
  */
 function renderCodeChart() {
+  const tokens = chartTokens()
   const sum = key => trend.value.reduce((total, item) => total + (item[key] || 0), 0)
   setCodeOption({
     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
@@ -229,7 +275,7 @@ function renderCodeChart() {
       label: { show: false },
       data: [
         { name: '2xx', value: sum('count2xx'), itemStyle: { color: '#34c759' } },
-        { name: '3xx', value: sum('count3xx'), itemStyle: { color: '#004fc5' } },
+        { name: '3xx', value: sum('count3xx'), itemStyle: { color: tokens.primary } },
         { name: '4xx', value: sum('count4xx'), itemStyle: { color: '#e6a23c' } },
         { name: '5xx', value: sum('count5xx'), itemStyle: { color: '#f56c6c' } }
       ]
@@ -255,5 +301,21 @@ function shortDataSourceName(url) {
 .api-slow-card {
   flex: none;
   height: auto;
+}
+
+.uri-table-fill {
+  display: flex;
+  flex-direction: column;
+}
+
+.uri-table-wrap {
+  flex: 1;
+  min-height: 0;
+}
+
+.uri-pagination {
+  flex: none;
+  display: flex;
+  justify-content: flex-end;
 }
 </style>

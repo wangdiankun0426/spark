@@ -339,7 +339,7 @@ const confirmClear = () => {
   justify-content: space-between;
   height: 48px;
   padding: 0 $spacing-md;
-  background: #fff;
+  background: var(--app-bg-card);
   border-bottom: 1px solid $border-color;
   flex-shrink: 0;
 
@@ -372,7 +372,7 @@ const confirmClear = () => {
   padding: 0 $spacing-md;
   display: flex;
   align-items: center;
-  background: #fff;
+  background: var(--app-bg-card);
   border-top: 1px solid $border-color;
   font-size: 12px;
   color: $color-text-secondary;

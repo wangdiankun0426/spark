@@ -122,7 +122,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount, watch } from 'vue'
 import {
   pageModelUsageListAPI,
   queryModelUsageSummaryAPI,
@@ -130,6 +130,7 @@ import {
 } from '@/api/llm/modelUsage.js'
 import StatCard from '@/components/Dashboard/StatCard.vue'
 import { useChart } from '@/utils/useChart'
+import { chartTokens } from '@/utils/chartTheme'
 import { TrendCharts, Coin, Download, Upload } from '@element-plus/icons-vue'
 
 const TYPE_LANGUAGE = 1
@@ -179,10 +180,20 @@ const { elRef: chartRef, setOption } = useChart()
 
 let reloadTimer = null
 
+// 主题切换后重建 option，图表色取自构建期 CSS 变量计算值
+function handleThemeChange() {
+  loadTrend()
+}
+
 onMounted(() => {
   loadSummary()
   loadTrend()
   loadTable()
+  window.addEventListener('app-theme-change', handleThemeChange)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('app-theme-change', handleThemeChange)
 })
 
 watch([dateRange, typeFilter, sceneFilter], () => {
@@ -256,9 +267,10 @@ function loadTrend() {
     ;(res.data || []).forEach(item => {
       valueMap.set(`${item.dt}_${item.type}`, item.totalTokens || 0)
     })
+    const trendColors = [chartTokens().primary, '#34c759', '#ff9500']
     const seriesList = typeOptions.map((item, index) => ({
       name: item.label,
-      color: ['#004fc5', '#34c759', '#ff9500'][index],
+      color: trendColors[index],
       data: labels.map(dt => valueMap.get(`${dt}_${item.value}`) || 0)
     }))
     setOption(buildLineOption(labels, seriesList))

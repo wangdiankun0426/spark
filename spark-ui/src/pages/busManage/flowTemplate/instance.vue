@@ -242,7 +242,7 @@ import TaskInstanceDetail from '@/components/TaskInstanceDetail/index.vue';
 import {ArrowLeft, CircleClose, Refresh, Search, Select, Switch} from '@element-plus/icons-vue';
 import FlowDetailDrawer from '@/components/FlowDetailDrawer/index.vue';
 import SelectUser from '@/components/SelectUser/index.vue';
-import {isOrgAdmin, isSysAdmin} from '@/utils/utils.js';
+import {isOrgAdmin, isSysAdmin} from '@/utils/permissionUtil.js';
 
 const { proxy } = getCurrentInstance();
 const route = useRoute();
@@ -564,6 +564,7 @@ function handleBack() {
   margin-bottom: $spacing-md;
   padding: $spacing-md $spacing-lg;
   background-color: $bg-card;
+  border: 1px solid $border-color-light;
   border-radius: $border-radius-md;
   box-shadow: $shadow-card;
 }

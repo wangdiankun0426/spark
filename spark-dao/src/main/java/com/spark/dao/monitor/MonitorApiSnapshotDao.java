@@ -37,7 +37,14 @@ public interface MonitorApiSnapshotDao extends BaseDao<MonitorApiSnapshot> {
     MonitorApiTrendResult queryApiSummary(MonitorSnapshotQuery query);
 
     /**
-     * 查询URI维度聚合统计
+     * 统计URI维度聚合组数
+     * @param query 查询参数
+     * @return 组数
+     */
+    int queryUriStatsCount(MonitorSnapshotQuery query);
+
+    /**
+     * 分页查询URI维度聚合统计（按调用次数倒排）
      * @param query 查询参数
      * @return URI统计
      */

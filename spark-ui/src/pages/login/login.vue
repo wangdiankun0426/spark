@@ -23,7 +23,7 @@
         <div ref="featuresRef" class="sidebar-features" :style="{ height: featuresHeight }">
           <div class="feature-item">
             <span class="feature-index">01</span>
-            <div class="feature-icon"><tech-chat/></div>
+            <div class="feature-icon"><img :src="loginIcon1" alt=""/></div>
             <div class="feature-line"></div>
             <div class="feature-text">
               <div class="feature-name">即时通信</div>
@@ -32,7 +32,7 @@
           </div>
           <div class="feature-item">
             <span class="feature-index">02</span>
-            <div class="feature-icon"><tech-flow/></div>
+            <div class="feature-icon"><img :src="loginIcon2" alt=""/></div>
             <div class="feature-line"></div>
             <div class="feature-text">
               <div class="feature-name">自定义流程</div>
@@ -41,7 +41,7 @@
           </div>
           <div class="feature-item">
             <span class="feature-index">03</span>
-            <div class="feature-icon"><tech-form/></div>
+            <div class="feature-icon"><img :src="loginIcon3" alt=""/></div>
             <div class="feature-line"></div>
             <div class="feature-text">
               <div class="feature-name">自定义表单</div>
@@ -50,16 +50,16 @@
           </div>
           <div class="feature-item">
             <span class="feature-index">04</span>
-            <div class="feature-icon"><tech-ai/></div>
+            <div class="feature-icon"><img :src="loginIcon4" alt=""/></div>
             <div class="feature-line"></div>
             <div class="feature-text">
               <div class="feature-name">AI管理</div>
-              <div class="feature-desc">多模型统一接入与管理，智能对话随问随答、能力灵活配置</div>
+              <div class="feature-desc">模型/技能库/MCP统一接入，挂载知识库与知识图谱</div>
             </div>
           </div>
           <div class="feature-item">
             <span class="feature-index">05</span>
-            <div class="feature-icon"><tech-workflow/></div>
+            <div class="feature-icon"><img :src="loginIcon5" alt=""/></div>
             <div class="feature-line"></div>
             <div class="feature-text">
               <div class="feature-name">AI工作流</div>
@@ -68,7 +68,7 @@
           </div>
           <div class="feature-item">
             <span class="feature-index">06</span>
-            <div class="feature-icon"><tech-agent/></div>
+            <div class="feature-icon"><img :src="loginIcon6" alt=""/></div>
             <div class="feature-line"></div>
             <div class="feature-text">
               <div class="feature-name">Agent</div>
@@ -335,12 +335,12 @@ import { useStore } from "vuex";
 import { ElMessage } from 'element-plus';
 import QRCode from 'qrcode';
 import { isDesktop } from '@/utils/desktop.js';
-import TechChat from '@/assets/icons/techChat.vue';
-import TechFlow from '@/assets/icons/techFlow.vue';
-import TechForm from '@/assets/icons/techForm.vue';
-import TechAi from '@/assets/icons/techAi.vue';
-import TechWorkflow from '@/assets/icons/techWorkflow.vue';
-import TechAgent from '@/assets/icons/techAgent.vue';
+import loginIcon1 from '@/assets/images/login-1.png';
+import loginIcon2 from '@/assets/images/login-2.png';
+import loginIcon3 from '@/assets/images/login-3.png';
+import loginIcon4 from '@/assets/images/login-4.png';
+import loginIcon5 from '@/assets/images/login-5.png';
+import loginIcon6 from '@/assets/images/login-6.png';
 
 const router = useRouter();
 const { proxy } = getCurrentInstance();
@@ -822,22 +822,21 @@ function goRegister() {
       opacity: 1;
     }
 
-    .feature-icon {
-      color: #004fc5;
-      filter: drop-shadow(0 0 8px rgba(0, 114, 224, 0.35));
-    }
   }
 
 }
 
 .feature-icon {
   flex-shrink: 0;
-  font-size: clamp(44px, 3.4vw, 60px);
   line-height: 1;
-  color: #6366f1;
-  filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.3));
-  transition: color 0.25s ease, filter 0.25s ease;
   animation: iconPulse 2.4s ease-in-out infinite;
+
+  img {
+    display: block;
+    width: clamp(76px, 5.8vw, 104px);
+    height: clamp(76px, 5.8vw, 104px);
+    object-fit: contain;
+  }
 }
 
 .feature-item:nth-child(2) .feature-icon { animation-delay: 0.4s; }
@@ -973,6 +972,16 @@ function goRegister() {
 
 .el-input {
   height: 44px;
+}
+
+:deep(.el-input__inner) {
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus {
+    -webkit-text-fill-color: $color-text-primary;
+    caret-color: $color-text-primary;
+    -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  }
 }
 
 .login-title-row {

@@ -109,7 +109,8 @@ const defaultActive = computed(() => {
 
 <style lang="scss" scoped>
 .llm-el-aside {
-  padding: 0;
+  padding: 0 0 58px;
+  box-sizing: border-box;
   height: calc(100vh - $nav-height);
   background: var(--sidebar-bg);
   color: var(--sidebar-text);
@@ -144,6 +145,9 @@ const defaultActive = computed(() => {
   font-size: 13px;
   font-weight: 400;
   justify-content: center;
+  width: calc(100% - 10px);
+  margin: 3px 5px;
+  border-radius: $border-radius-md;
 }
 :deep(.el-menu-item) {
   padding: 0 !important;

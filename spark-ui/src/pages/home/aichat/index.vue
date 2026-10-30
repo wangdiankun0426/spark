@@ -237,18 +237,6 @@ function handleModelChange(modelId) {
   height: calc(100vh - 70px);
 }
 
-.aichat-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-shrink: 0;
-  margin-bottom: $spacing-lg;
-  padding: $spacing-md $spacing-xl;
-  background-color: $bg-card;
-  border-radius: $border-radius-md;
-  box-shadow: $shadow-card;
-}
-
 .aichat-body {
   display: flex;
   align-items: stretch;
@@ -265,6 +253,7 @@ function handleModelChange(modelId) {
   overflow: hidden;
   padding: $spacing-md;
   background-color: $bg-card;
+  border: 1px solid $border-color-light;
   border-radius: $border-radius-md;
   box-shadow: $shadow-card;
 }
