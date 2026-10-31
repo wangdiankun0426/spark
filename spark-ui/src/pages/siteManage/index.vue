@@ -88,13 +88,13 @@ const defaultActive = computed(() => {
 }
 .el-menu-item {
   color: var(--sidebar-text);
-  height: 44px;
-  line-height: 44px;
+  height: 40px;
+  line-height: 40px;
   font-size: 13px;
   font-weight: 400;
   justify-content: center;
   width: calc(100% - 10px);
-  margin: 3px 5px;
+  margin: 1px 5px;
   border-radius: $border-radius-md;
 }
 :deep(.el-menu-item) {

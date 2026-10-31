@@ -55,10 +55,14 @@ const emit = defineEmits(['update:nodeKey', 'update:range'])
 
 <style scoped lang="scss">
 .monitor-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
   gap: $spacing-md;
-  margin-bottom: $spacing-md;
+  padding: $spacing-sm 0 $spacing-md;
+  background-color: var(--app-bg-page);
 
   &__node {
     width: 260px;

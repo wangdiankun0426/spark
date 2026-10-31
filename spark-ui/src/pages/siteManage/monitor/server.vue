@@ -57,19 +57,19 @@
     <el-row :gutter="16" class="monitor-chart-row">
       <el-col :span="8">
         <el-card shadow="never" class="monitor-card">
-            <template #header>CPU 使用率（%）</template>
+            <template #header><div class="monitor-card__title"><el-icon><Cpu /></el-icon>CPU 使用率（%）</div></template>
             <div ref="cpuElRef" class="monitor-chart"></div>
         </el-card>
       </el-col>
       <el-col :span="8">
         <el-card shadow="never" class="monitor-card">
-            <template #header>内存 / JVM 堆（GB）</template>
+            <template #header><div class="monitor-card__title"><el-icon><Coin /></el-icon>内存 / JVM 堆（GB）</div></template>
             <div ref="memElRef" class="monitor-chart"></div>
         </el-card>
       </el-col>
       <el-col :span="8">
         <el-card shadow="never" class="monitor-card">
-            <template #header>网络速率（KB/s）</template>
+            <template #header><div class="monitor-card__title"><el-icon><Connection /></el-icon>网络速率（KB/s）</div></template>
             <div ref="netElRef" class="monitor-chart"></div>
         </el-card>
       </el-col>
@@ -80,7 +80,7 @@
         <el-card shadow="never" class="monitor-card">
           <template #header>
             <div class="monitor-card__header">
-              <span>磁盘分区</span>
+              <span class="monitor-card__title"><el-icon><Files /></el-icon>磁盘分区</span>
               <span class="monitor-card__extra">共 {{ diskList.length }} 个分区</span>
             </div>
           </template>
@@ -109,7 +109,7 @@
       </el-col>
       <el-col :span="10">
         <el-card shadow="never" class="monitor-card">
-          <template #header>JVM 运行状态</template>
+          <template #header><div class="monitor-card__title"><el-icon><Coffee /></el-icon>JVM 运行状态</div></template>
           <div class="jvm-grid" v-if="latest">
             <div class="jvm-grid__item">
               <label>Young GC</label>
@@ -155,6 +155,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { Cpu, Coin, Connection, Files, Coffee } from '@element-plus/icons-vue'
 import StatCard from '@/components/Dashboard/StatCard.vue'
 import MonitorToolbar from '@/components/MonitorToolbar/index.vue'
 import { useChart } from '@/utils/useChart.js'

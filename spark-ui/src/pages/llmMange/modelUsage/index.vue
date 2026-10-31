@@ -42,6 +42,9 @@
 
       <div class="usage-overview">
         <div class="usage-chart-card">
+          <div class="panel__head">
+            <div class="panel__title"><el-icon><Histogram/></el-icon><span>用量趋势</span></div>
+          </div>
           <div ref="chartRef" class="usage-chart"></div>
         </div>
         <div class="usage-stat-aside">
@@ -84,6 +87,9 @@
       </div>
 
       <div class="usage-table-card">
+        <div class="panel__head">
+          <div class="panel__title"><el-icon><Document/></el-icon><span>调用明细</span></div>
+        </div>
         <div class="usage-table-fill">
           <el-table
               :data="tableList"
@@ -91,18 +97,18 @@
               size="small"
               height="100%"
           >
-            <el-table-column prop="createdDt" label="时间" width="170"/>
-            <el-table-column prop="modelName" label="模型" min-width="160" show-overflow-tooltip/>
-            <el-table-column label="类型" width="100" align="center">
+            <el-table-column prop="createdDt" label="时间" min-width="150" align="center"/>
+            <el-table-column prop="modelName" label="模型" min-width="160" align="center" show-overflow-tooltip/>
+            <el-table-column label="类型" min-width="90" align="center">
               <template #default="scope">
                 <el-tag :type="tagType(scope.row.type)" size="small">{{ scope.row.typeName }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="sceneName" label="场景" width="130" show-overflow-tooltip/>
-            <el-table-column prop="userName" label="使用人" width="110" show-overflow-tooltip/>
-            <el-table-column prop="inputTokens" label="输入Token" width="110" align="right"/>
-            <el-table-column prop="outputTokens" label="输出Token" width="110" align="right"/>
-            <el-table-column prop="totalTokens" label="总Token" width="110" align="right"/>
+            <el-table-column prop="sceneName" label="场景" min-width="120" align="center" show-overflow-tooltip/>
+            <el-table-column prop="userName" label="使用人" min-width="100" align="center" show-overflow-tooltip/>
+            <el-table-column prop="inputTokens" label="输入Token" min-width="100" align="center"/>
+            <el-table-column prop="outputTokens" label="输出Token" min-width="100" align="center"/>
+            <el-table-column prop="totalTokens" label="总Token" min-width="100" align="center"/>
           </el-table>
         </div>
         <el-pagination
@@ -131,7 +137,7 @@ import {
 import StatCard from '@/components/Dashboard/StatCard.vue'
 import { useChart } from '@/utils/useChart'
 import { chartTokens } from '@/utils/chartTheme'
-import { TrendCharts, Coin, Download, Upload } from '@element-plus/icons-vue'
+import { TrendCharts, Coin, Download, Upload, Histogram, Document } from '@element-plus/icons-vue'
 
 const TYPE_LANGUAGE = 1
 const TYPE_VECTOR = 2
@@ -409,6 +415,29 @@ function formatNumber(value) {
   }
 }
 
+.panel__head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: $spacing-sm;
+  border-bottom: 1px solid $border-color-light;
+}
+
+.panel__title {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  font-size: 15px;
+  font-weight: 600;
+  color: $color-text-primary;
+
+  .el-icon {
+    color: $color-primary;
+    font-size: 18px;
+  }
+}
+
 .usage-chart-card {
   flex: 1;
   min-width: 0;
@@ -420,11 +449,14 @@ function formatNumber(value) {
   border-radius: $border-radius-md;
   box-shadow: $shadow-card;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 .usage-chart {
+  flex: 1;
+  min-height: 0;
   width: 100%;
-  height: 100%;
 }
 
 .usage-table-card {
@@ -438,6 +470,10 @@ function formatNumber(value) {
   border: 1px solid $border-color-light;
   border-radius: $border-radius-md;
   box-shadow: $shadow-card;
+
+  .panel__head {
+    margin-bottom: $spacing-sm;
+  }
 }
 
 .usage-table-fill {

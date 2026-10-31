@@ -1,7 +1,7 @@
 import login from '@/pages/login/login.vue'
 import oauthLogin from '@/pages/login/oauthLogin.vue'
 import register from '@/pages/login/register.vue'
-import agreement from '@/pages/agreement/index.vue'
+import agreement from '@/pages/base/agreement/index.vue'
 import formDesigner from '@/views/formDesigner/index.vue'
 import flowDesigner from '@/views/flowDesigner/index.vue'
 import workflowIndex from "@/views/workflowDesigner/index.vue";
@@ -11,32 +11,28 @@ export default [
         path: '/login',
         component: login,
         meta: {
-            title: '登录',
-            lightOnly: true
+            title: '登录'
         }
     },
     {
         path: '/oauthLogin',
         component: oauthLogin,
         meta: {
-            title: 'OAuth登录',
-            lightOnly: true
+            title: 'OAuth登录'
         }
     },
     {
         path: '/register',
         component: register,
         meta: {
-            title: '注册',
-            lightOnly: true
+            title: '注册'
         }
     },
     {
         path: '/agreement',
         component: agreement,
         meta: {
-            title: '用户协议',
-            lightOnly: true
+            title: '用户协议'
         }
     },
     {
@@ -118,19 +114,17 @@ export default [
     {
         path: '/noPermission',
         name: 'noPermission',
-        component: () => import('@/pages/error/noPermission.vue'),
+        component: () => import('@/pages/base/error/noPermission.vue'),
         meta: {
-            title: '无权限',
-            lightOnly: true
+            title: '无权限'
         }
     },
     {
         path: '/:catchAll(.*)*',
         name: 'noFound',
-        component: () => import('@/pages/error/noFound.vue'),
+        component: () => import('@/pages/base/error/noFound.vue'),
         meta: {
-            title: '404',
-            lightOnly: true
+            title: '404'
         }
     }
 ]

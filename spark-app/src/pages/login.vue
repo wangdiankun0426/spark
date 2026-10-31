@@ -403,6 +403,12 @@ async function submitLoginForm() {
     return;
   }
   loading.value = true;
+  // #ifdef MP-WEIXIN
+  const loginPlatform = 6;
+  // #endif
+  // #ifndef MP-WEIXIN
+  const loginPlatform = 2;
+  // #endif
   const data = {};
   if (loginForm.value.loginType === 1) {
     // 申请一次性加密密钥
@@ -417,19 +423,19 @@ async function submitLoginForm() {
     data.validateId = loginForm.value.validateId;
     data.validateValue = loginForm.value.validateValue;
     data.loginType = loginForm.value.loginType;
-    data.loginPlatform = 2;
+    data.loginPlatform = loginPlatform;
   } else if (loginForm.value.loginType === 2) {
     data.phone = loginForm.value.phone;
     data.validateId = loginForm.value.validateId;
     data.validateValue = loginForm.value.validateValue;
     data.loginType = loginForm.value.loginType;
-    data.loginPlatform = 2;
+    data.loginPlatform = loginPlatform;
   } else if (loginForm.value.loginType === 3) {
     data.email = loginForm.value.email;
     data.validateId = loginForm.value.validateId;
     data.validateValue = loginForm.value.validateValue;
     data.loginType = loginForm.value.loginType;
-    data.loginPlatform = 2;
+    data.loginPlatform = loginPlatform;
   }
   store.dispatch('user/login', {loginForm: data}).then(res => {
     if (res.code === 200) {

@@ -1,161 +1,142 @@
 <template>
-  <div>
-    <div class="nav-bar" data-tauri-drag-region>
-      <div class="logo-box" data-tauri-drag-region="false">
-        <img class="logo-lockup" :src="currentTheme === 'light' ? logoLockupDark : logoLockupLight" @click="$router.push('/home')"/>
-        <span class="logo-version">v{{ appVersion }}</span>
-      </div>
-
+  <div class="nav-bar" data-tauri-drag-region>
+    <div class="nav-left" data-tauri-drag-region="false">
+      <img class="logo-lockup" :src="currentTheme === 'light' ? logoLockupDark : logoLockupLight" @click="$router.push('/home')"/>
+      <span class="logo-version">v{{ appVersion }}</span>
       <div
-          class="user-dock"
-          :class="{ 'is-open': dockOpen }"
-          @mouseenter="dockOpen = true"
-          @mouseleave="dockOpen = false"
+          class="user-avatar-trigger"
+          data-tauri-drag-region="false"
+          @click="userInfoVisible = true"
       >
-        <div class="user-dock__trigger" data-tauri-drag-region="false" title="个人中心" @click="openUserInfoForm">
-          <user-avatar :user-id="userInfo.id" :size="38" />
+        <user-avatar :user-id="userInfo.id" :size="36" />
+      </div>
+      <div v-if="hasModuleMenu" class="dock-group">
+        <div
+            v-if="hasMenu(MODULE_CODES.LLM)"
+            class="dock-btn"
+            :class="{ 'is-active': defaultActive === '/llm' }"
+            @click="switchModule('/llm')"
+        >
+          <NavAi class="dock-nav-icon"/>
+          <span>AI</span>
         </div>
-        <div class="user-dock__items" data-tauri-drag-region="false">
-          <div class="dock-group">
-            <div
-                v-if="hasMenu(MODULE_CODES.LLM)"
-                class="dock-btn"
-                :class="{ 'is-active': defaultActive === '/llm' }"
-                @click="switchModule('/llm')"
-            >
-              <el-icon><Help /></el-icon>
-              <span>AI</span>
-            </div>
-            <div
-                v-if="hasMenu(MODULE_CODES.BUS)"
-                class="dock-btn"
-                :class="{ 'is-active': defaultActive === '/bus' }"
-                @click="switchModule('/bus')"
-            >
-              <el-icon><SuitcaseLine /></el-icon>
-              <span>业务</span>
-            </div>
-            <div
-                v-if="isOrgAdmin()"
-                class="dock-btn"
-                :class="{ 'is-active': defaultActive === '/org' }"
-                @click="switchModule('/org')"
-            >
-              <el-icon><User /></el-icon>
-              <span>组织</span>
-            </div>
-            <div
-                v-if="isSysAdmin()"
-                class="dock-btn"
-                :class="{ 'is-active': defaultActive === '/site' }"
-                @click="switchModule('/site')"
-            >
-              <el-icon><Setting /></el-icon>
-              <span>站点</span>
-            </div>
-          </div>
-          <div class="dock-divider"></div>
-          <div class="dock-group">
-            <div class="dock-btn" @click="openMessageDialog">
-              <el-icon><Bell /></el-icon>
-              <span>消息</span>
-            </div>
-            <div class="dock-btn" @click="toggleTheme">
-              <el-icon><Sunny v-if="currentTheme === 'light'" /><Moon v-else /></el-icon>
-              <span>主题</span>
-            </div>
-            <div class="dock-btn" @click="handleLocaleChange">
-              <el-icon><Globe /></el-icon>
-              <span>语言</span>
-            </div>
-            <div v-if="!isDesktop" class="dock-btn" @click="toggleFullscreen">
-              <el-icon><Aim v-if="isFullscreen" /><FullScreen v-else /></el-icon>
-              <span>全屏</span>
-            </div>
-            <div class="dock-btn" @click="openTenantSwitch">
-              <el-icon><OfficeBuilding /></el-icon>
-              <span>租户</span>
-            </div>
-            <div class="dock-btn" @click="openMcpToken">
-              <el-icon><Key /></el-icon>
-              <span>MCP</span>
-            </div>
-            <div class="dock-btn dock-btn--danger" @click="handleLogout">
-              <el-icon><SwitchButton /></el-icon>
-              <span>退出</span>
-            </div>
-          </div>
+        <div
+            v-if="hasMenu(MODULE_CODES.BUS)"
+            class="dock-btn"
+            :class="{ 'is-active': defaultActive === '/bus' }"
+            @click="switchModule('/bus')"
+        >
+          <NavBus class="dock-nav-icon"/>
+          <span>业务</span>
+        </div>
+        <div
+            v-if="isOrgAdmin()"
+            class="dock-btn"
+            :class="{ 'is-active': defaultActive === '/org' }"
+            @click="switchModule('/org')"
+        >
+          <NavOrg class="dock-nav-icon"/>
+          <span>组织</span>
+        </div>
+        <div
+            v-if="isSysAdmin()"
+            class="dock-btn"
+            :class="{ 'is-active': defaultActive === '/site' }"
+            @click="switchModule('/site')"
+        >
+          <NavSite class="dock-nav-icon"/>
+          <span>站点</span>
+        </div>
+      </div>
+      <div v-if="hasModuleMenu" class="dock-divider"></div>
+      <div class="dock-group">
+        <div class="dock-btn" @click="messageVisible = true">
+          <el-icon><Bell /></el-icon>
+          <span>消息</span>
+        </div>
+        <div class="dock-btn" @click="toggleTheme">
+          <el-icon><Sunny v-if="currentTheme === 'light'" /><Moon v-else /></el-icon>
+          <span>主题</span>
+        </div>
+        <div class="dock-btn" @click="handleLocaleChange">
+          <el-icon><Globe /></el-icon>
+          <span>语言</span>
+        </div>
+        <div class="dock-btn" @click="tenantSwitchVisible = true">
+          <el-icon><OfficeBuilding /></el-icon>
+          <span>租户</span>
+        </div>
+        <div class="dock-btn" @click="mcpTokenVisible = true">
+          <el-icon><Key /></el-icon>
+          <span>MCP</span>
+        </div>
+        <div class="dock-btn dock-btn--danger" @click="handleLogout">
+          <el-icon><SwitchButton /></el-icon>
+          <span>退出</span>
         </div>
       </div>
     </div>
-
-    <!--个人中心弹窗-->
-    <user-profile v-model="userInfoVisible" />
-
-    <!--切换租户抽屉-->
-    <tenant-switch v-model="tenantSwitchVisible" :current-tenant-id="userInfo.currentTenantId" />
-
-    <!--MCP token 维护弹窗-->
-    <mcp-token v-model="mcpTokenVisible" />
-
-    <!--消息通知弹窗-->
-    <el-dialog
-        v-model="messageVisible"
-        title="消息通知"
-        width="760px"
-        top="8vh"
-        class="nav-message-dialog"
-        @open="loadNavMessageData"
-    >
-      <div class="nav-message-body" ref="messageBodyRef">
-        <el-timeline v-if="messageList.length">
-          <el-timeline-item
-              v-for="(item, i) in messageList"
-              :key="i"
-              :timestamp="item.createdDt"
-              placement="top"
-          >
-            <div
-                class="nav-message-item"
-                :class="{ 'is-link': isClickableMessage(item.refId) }"
-                @click="handleMessageClick(item)"
-            >
-              <el-tag type="info" size="small">
-                {{ item.title }}
-              </el-tag>
-              <p class="nav-message-content">{{ item.content }}</p>
-              <div v-if="isClickableMessage(item.refId)" class="nav-message-detail">
-                <span>详情</span>
-                <el-icon><Right /></el-icon>
-              </div>
-            </div>
-          </el-timeline-item>
-        </el-timeline>
-        <el-empty v-else description="暂无消息" :image-size="60"/>
-      </div>
-      <template #footer>
-        <el-pagination
-            v-if="messageTotal > 0"
-            small
-            background
-            layout="total, prev, pager, next"
-            :current-page="messageQuery.pageNo"
-            :page-size="messageQuery.pageSize"
-            :total="messageTotal"
-            @current-change="handleMessagePageChange"
-        />
-      </template>
-    </el-dialog>
   </div>
+
+  <user-profile v-model="userInfoVisible" />
+  <tenant-switch v-model="tenantSwitchVisible" :current-tenant-id="userInfo.currentTenantId" />
+  <mcp-token v-model="mcpTokenVisible" />
+
+  <el-dialog
+      v-model="messageVisible"
+      title="消息通知"
+      width="760px"
+      top="8vh"
+      class="nav-message-dialog"
+      @open="loadNavMessageData"
+  >
+    <div class="nav-message-body" ref="messageBodyRef">
+      <el-timeline v-if="messageList.length">
+        <el-timeline-item
+            v-for="(item, i) in messageList"
+            :key="i"
+            :timestamp="item.createdDt"
+            placement="top"
+        >
+          <div
+              class="nav-message-item"
+              :class="{ 'is-link': isClickableMessage(item.refId) }"
+              @click="handleMessageClick(item)"
+          >
+            <el-tag type="info" size="small">
+              {{ item.title }}
+            </el-tag>
+            <p class="nav-message-content">{{ item.content }}</p>
+            <div v-if="isClickableMessage(item.refId)" class="nav-message-detail">
+              <span>详情</span>
+              <el-icon><Right /></el-icon>
+            </div>
+          </div>
+        </el-timeline-item>
+      </el-timeline>
+      <el-empty v-else description="暂无消息" :image-size="60"/>
+    </div>
+    <template #footer>
+      <el-pagination
+          v-if="messageTotal > 0"
+          small
+          background
+          layout="total, prev, pager, next"
+          :current-page="messageQuery.pageNo"
+          :page-size="messageQuery.pageSize"
+          :total="messageTotal"
+          @current-change="handleMessagePageChange"
+      />
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
 import {logoutAPI} from "@/api/manage/auth/login.js";
 import {pageMyMessageListAPI} from "@/api/manage/sys/message.js";
 import {ElMessage, ElMessageBox} from "element-plus";
-import {ref, computed, onMounted, onUnmounted} from "vue";
-import {Setting, Moon, Sunny, Right, User, Help, SuitcaseLine, OfficeBuilding, SwitchButton, Key, Aim, FullScreen} from "@element-plus/icons-vue";
-import {isDesktop} from '@/utils/desktop.js';
+import {ref, computed} from "vue";
+import {Moon, Sunny, Right, OfficeBuilding, SwitchButton, Key} from "@element-plus/icons-vue";
 import { useRouter, useRoute } from 'vue-router';
 import {useStore} from "vuex";
 import {getTheme, applyTheme, setTheme} from '@/utils/themeUtil';
@@ -166,6 +147,10 @@ import TenantSwitch from '@/components/TenantSwitch';
 import McpToken from '@/components/McpToken';
 import Bell from "@/assets/icons/bell.vue";
 import Globe from "@/assets/icons/globe.vue";
+import NavAi from "@/assets/icons/navAi.vue";
+import NavBus from "@/assets/icons/navBus.vue";
+import NavOrg from "@/assets/icons/navOrg.vue";
+import NavSite from "@/assets/icons/navSite.vue";
 import logoLockupDark from '@/assets/images/logo-lockup-dark.png';
 import logoLockupLight from '@/assets/images/logo-lockup-light.png';
 import {isOrgAdmin, isSysAdmin} from "@/utils/permissionUtil.js";
@@ -175,12 +160,14 @@ const store = useStore()
 
 const userInfo = computed(() => store.getters['user/getUserInfo'] || { id: undefined })
 
+const hasModuleMenu = computed(() =>
+    hasMenu(MODULE_CODES.LLM) || hasMenu(MODULE_CODES.BUS) || isOrgAdmin() || isSysAdmin()
+)
+
 const appVersion = __APP_VERSION__
 
 const currentTheme = ref(getTheme());
 applyTheme(currentTheme.value);
-
-const dockOpen = ref(false);
 
 /**
  * 点击按钮在深色/浅色主题间切换并持久化
@@ -190,36 +177,6 @@ function toggleTheme() {
   setTheme(currentTheme.value);
 }
 
-const isFullscreen = ref(false);
-
-/**
- * 切换全屏与退出全屏
- */
-function toggleFullscreen() {
-  if (document.fullscreenElement) {
-    document.exitFullscreen().catch(() => {});
-    return;
-  }
-  document.documentElement.requestFullscreen().catch(() => {
-    ElMessage.warning('当前环境不支持全屏');
-  });
-}
-
-/**
- * 全屏状态变化时同步图标，兼容 Esc、F11 等外部方式进出全屏
- */
-function onFullscreenChange() {
-  isFullscreen.value = !!document.fullscreenElement;
-}
-
-onMounted(() => {
-  document.addEventListener('fullscreenchange', onFullscreenChange);
-});
-
-onUnmounted(() => {
-  document.removeEventListener('fullscreenchange', onFullscreenChange);
-});
-
 /**
  * 切换语言，语言包尚未接入
  */
@@ -228,31 +185,8 @@ function handleLocaleChange() {
 }
 
 const userInfoVisible = ref(false);
-
 const tenantSwitchVisible = ref(false);
-
 const mcpTokenVisible = ref(false);
-
-/**
- * 打开 MCP token 维护弹窗
- */
-function openMcpToken() {
-  mcpTokenVisible.value = true;
-}
-
-/**
- * 打开切换租户抽屉
- */
-function openTenantSwitch() {
-  tenantSwitchVisible.value = true;
-}
-
-/**
- * 打开消息通知弹窗
- */
-function openMessageDialog() {
-  messageVisible.value = true;
-}
 
 /**
  * 切换模块
@@ -260,13 +194,6 @@ function openMessageDialog() {
  */
 function switchModule(path) {
   router.push(path).catch(() => {});
-}
-
-/**
- * 打开个人中心弹窗
- */
-function openUserInfoForm() {
-  userInfoVisible.value = true;
 }
 
 /**
@@ -282,19 +209,14 @@ function handleLogout() {
         type: 'warning',
       }
   ).then(() => {
-    logoutAPI().then(res => {
+    logoutAPI().then(() => {
       store.dispatch('user/logout');
       router.push({ path: "/login" }).catch(()=>{});
     })
-  }).catch(() => {
-  })
+  }).catch(() => {})
 }
 
-/**
- * 初始化路径
- */
 const defaultActive = computed(() => {
-  //监听路由，控制菜单选择
   const path = route.path.match(/\/([^\/]+)\//);
   if (path !== null) {
     return '/'+path[1];
@@ -304,7 +226,6 @@ const defaultActive = computed(() => {
 
 const messageVisible = ref(false);
 const messageList = ref([]);
-
 const messageQuery = ref({ pageNo: 1, pageSize: 8 });
 const messageTotal = ref(0);
 const messageBodyRef = ref(null);
@@ -351,7 +272,7 @@ function loadNavMessageData() {
 
 /**
  * 消息是否可点击跳转
- * @param refId
+ * @param refId 消息关联标识
  * @returns {boolean}
  */
 function isClickableMessage(refId) {
@@ -360,9 +281,7 @@ function isClickableMessage(refId) {
 
 /**
  * 消息点击跳转
- * 文档/附件跳转到文档预览页
- * 流程消息跳转到对应流程列表并打开详情
- * @param item
+ * @param item 消息
  */
 function handleMessageClick(item) {
   const refId = item.refId;
@@ -370,27 +289,22 @@ function handleMessageClick(item) {
     return;
   }
   const refType = Number(refId) % 100;
-  // 文档/附件 -> 文档预览页
   if (refType === 7 || refType === 9) {
     const { href } = router.resolve({ path: '/document/preview', query: { id: refId } })
     window.open(href, '_blank')
     messageVisible.value = false;
     return;
   }
-  // 流程消息 -> 我的待办 / 我的申请
   if (refType === 12) {
     if (item.type === 2 || item.type === 5) {
-      // 待办/催办通知 -> 我的待办
       router.push({ path: '/home/flow/myTodo', query: { id: refId } }).catch(() => {});
       messageVisible.value = false;
     } else if (item.type === 3 || item.type === 4) {
-      // 完结/驳回通知 -> 我的申请
       router.push({ path: '/home/flow/myApplication', query: { id: refId } }).catch(() => {});
       messageVisible.value = false;
     }
   }
 }
-
 </script>
 
 <style lang="scss" scoped>
@@ -399,107 +313,49 @@ function handleMessageClick(item) {
   display: flex;
   align-items: center;
   height: $nav-height;
-  padding: 0px;
   background: var(--nav-bg);
 }
-.logo-box {
+.nav-left {
   display: flex;
   align-items: center;
-  cursor: pointer;
+  gap: 4px;
   padding-left: 5px;
 }
 .logo-lockup {
   display: block;
   height: 32px;
   width: auto;
+  cursor: pointer;
 }
 .logo-version {
   align-self: flex-end;
   margin-left: 8px;
-  margin-bottom: 9px;
+  margin-bottom: 15px;
   font-size: 13px;
   line-height: 1;
   color: var(--nav-text);
   opacity: 0.7;
 }
-.user-dock {
-  position: relative;
+.user-avatar-trigger {
   flex: none;
-  width: 50px;
-  height: 100%;
+  width: 44px;
+  height: 44px;
   margin-left: 14px;
-  margin-top: 4px;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 
-  &__trigger {
-    position: relative;
-    z-index: 1;
-    width: 50px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-
-    :deep(.el-avatar) {
-      position: relative;
-      border: 1px dashed var(--nav-avatar-border);
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    :deep(.el-avatar::after) {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      padding: 2px;
-      background: conic-gradient(from 0deg, transparent 0deg 250deg, var(--nav-avatar-ring) 340deg, transparent 360deg);
-      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-      -webkit-mask-composite: xor;
-      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-      mask-composite: exclude;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-    }
-
-    &:hover :deep(.el-avatar::after) {
-      opacity: 1;
-      animation: nav-avatar-ring-spin 1.4s linear infinite;
-    }
+  :deep(.el-avatar) {
+    border: 1px dashed var(--nav-avatar-border);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    transition: transform 0.18s ease;
   }
 
-  &__items {
-    position: absolute;
-    left: 50px;
-    top: 0;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    height: 50px;
-    padding: 0 12px 0 2px;
-    background: var(--nav-bg);
-    border-radius: 0 0 10px 10px;
-    white-space: nowrap;
-    overflow: hidden;
-    max-width: 0;
-    opacity: 0;
-    pointer-events: none;
-    transition: max-width 0.22s ease, opacity 0.18s ease;
-  }
-
-  &.is-open &__items {
-    max-width: 620px;
-    opacity: 1;
-    pointer-events: auto;
-    box-shadow: var(--app-shadow-nav);
-  }
-}
-
-@keyframes nav-avatar-ring-spin {
-  to {
-    transform: rotate(360deg);
+  &:hover :deep(.el-avatar) {
+    transform: scale(1.12);
   }
 }
 
@@ -528,6 +384,11 @@ function handleMessageClick(item) {
   color: var(--sidebar-text);
   cursor: pointer;
   transition: all 0.18s ease;
+
+  .dock-nav-icon {
+    width: 22px;
+    height: 22px;
+  }
 
   .el-icon {
     font-size: 21px;
@@ -593,17 +454,6 @@ function handleMessageClick(item) {
     font-size: 12px;
     .el-icon {
       font-size: 12px;
-    }
-  }
-  .nav-message-footer {
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid $border-color-light;
-    display: flex;
-    justify-content: center;
-    .el-pagination {
-      float: none;
-      padding: 0;
     }
   }
 }

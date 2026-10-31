@@ -30,7 +30,6 @@
           :icon="FlowApplication"
           :title="item.name"
           :description="item.remark || '暂无备注'"
-          :disabled="item.status !== 1"
           :actions="cardActions(item)"
       />
     </div>
@@ -167,6 +166,7 @@ function loadTemplateList() {
   const params = {
     pageNo: query.value.pageNo,
     pageSize: query.value.pageSize,
+    status: 1,
   }
   if (keyword.value) {
     params.name = keyword.value;
@@ -322,6 +322,7 @@ function handleCloseFlowForm() {
 .flow-grid {
   height: calc(100vh - #{$nav-height} - 178px);
   overflow-y: auto;
+  padding-top: 6px;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: $spacing-lg;

@@ -83,6 +83,10 @@ onMounted(() => {
   background: linear-gradient(160deg, #f7faff 0%, #eaf2fe 55%, #e3edfd 100%);
 }
 
+html.dark .oauth-login {
+  background: linear-gradient(160deg, #131c2e 0%, #0f172a 55%, #0c1424 100%);
+}
+
 .oauth-container {
   display: flex;
   justify-content: center;
@@ -95,14 +99,15 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   padding: 60px 80px;
-  background: #ffffff;
+  background: var(--app-bg-card);
+  border: 1px solid var(--app-border-light);
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(26, 111, 232, 0.12);
+  box-shadow: var(--app-shadow-card);
 }
 
 .oauth-desc {
   font-size: 14px;
-  color: #909399;
+  color: var(--app-text-secondary);
   margin: 0;
 }
 </style>

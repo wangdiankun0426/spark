@@ -19,14 +19,14 @@
 }
 
 .el-overlay {
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  background-color: rgba(15, 23, 42, 0.28) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background-color: rgba(15, 23, 42, 0.38) !important;
   transition: background-color 0.2s ease, backdrop-filter 0.2s ease;
 }
 
 html.dark .el-overlay {
-  background-color: rgba(0, 0, 0, 0.5) !important;
+  background-color: rgba(0, 0, 0, 0.6) !important;
 }
 
 // el-card 组件
@@ -40,18 +40,21 @@ html.dark .el-overlay {
 
   .el-card__header {
     height: 40px;
-    background-color: var(--card-head-bg);
-    color: var(--head-text);
+    background-color: transparent;
+    color: var(--app-text-primary);
     font-weight: 580;
     overflow: hidden;
     font-size: 14px;
-    border-bottom: 1px solid $border-color-light;
+    border-bottom: none;
   }
 
   .el-card__body {
     padding: 0;
     margin: 10px 10px 0 10px;
-    background-color: var(--app-bg-card);
+  }
+
+  .el-card__body > .el-form {
+    padding: 8px 0 6px;
   }
 
   .el-card__footer {
@@ -67,7 +70,7 @@ html.dark .el-overlay {
 // el-dialog 组件
 .el-dialog {
   --el-dialog-padding-primary: 16px !important;
-  border-radius: $border-radius-sm;
+  border-radius: $border-radius-md;
   overflow: hidden;
   box-shadow: $shadow-dialog;
   .el-dialog__header {
@@ -75,7 +78,6 @@ html.dark .el-overlay {
     padding-bottom: 10px;
     margin-right: 0;
     background: var(--dialog-head-bg);
-    border-bottom: 1px solid $border-color-light;
     cursor: move;
 
     .el-dialog__title {
@@ -113,13 +115,11 @@ html.dark .el-overlay {
   }
 
   .el-dialog__body {
-    // 强制减少标题到底部的间隔
     padding-top: 10px !important;
     padding-bottom: 10px !important;
   }
-  
+
   .el-dialog__footer {
-    // 收紧底部
     padding-top: 10px !important;
   }
 }
@@ -134,11 +134,8 @@ html.dark .el-overlay {
 
 // el-drawer 组件样式
 .el-drawer {
-  // 缩小抽屉弹窗内容的基础边距
   --el-drawer-padding-primary: 16px !important;
-  // 改为更小的圆角
-  border-bottom-left-radius: 2px;
-  border-top-left-radius: 2px;
+  border-radius: 0 $border-radius-md $border-radius-md 0;
   overflow: hidden;
   box-shadow: $shadow-dialog;
   .el-drawer__header {
@@ -146,11 +143,8 @@ html.dark .el-overlay {
     padding-top: 10px;
     padding-bottom: 10px;
     margin-right: 0;
-    // 去掉原来的 margin-bottom
     margin-bottom: 0;
-    // 改回更纯粹硬朗的普通灰色
     background: var(--drawer-head-bg);
-    border-bottom: 1px solid $border-color-light;
     .el-drawer__title {
       color: var(--head-text);
       font-weight: 600;
@@ -178,6 +172,16 @@ html.dark .el-overlay {
   .el-drawer__body {
     padding: 10px 16px !important;
   }
+}
+
+// el-tree 组件
+.el-tree {
+  background-color: transparent;
+  --el-tree-node-hover-bg-color: var(--app-bg-sub);
+}
+
+.el-tree-node:focus > .el-tree-node__content {
+  background-color: transparent;
 }
 
 // el-table 组件
@@ -250,6 +254,10 @@ html.dark .el-overlay {
   padding: 0 5px;
   transition: all 0.1s ease;
   min-width: 26px !important;
+  &:focus,
+  &:focus-visible {
+    outline: none;
+  }
   &--primary {
     background: $color-primary !important;
     border-color: $color-primary !important;
@@ -278,6 +286,13 @@ html.dark .el-overlay {
   margin-left: 8px;
 }
 
+.el-pagination button:focus,
+.el-pagination button:focus-visible,
+.el-pagination .el-pager li:focus,
+.el-pagination .el-pager li:focus-visible {
+  outline: none;
+}
+
 // 修复全局 element.scss 中 .el-button--primary 背景色 !important 覆盖导致 text 按钮被填充蓝色的问题
 .el-button--primary.is-text {
   background-color: transparent !important;
@@ -290,10 +305,12 @@ html.dark .el-overlay {
 }
 
 .el-button--primary.is-link {
+  color: $color-primary !important;
   background-color: transparent !important;
   border-color: transparent !important;
 
   &:hover {
+    color: var(--app-primary-hover) !important;
     background-color: transparent !important;
     border-color: transparent !important;
   }

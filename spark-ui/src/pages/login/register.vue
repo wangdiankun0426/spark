@@ -80,7 +80,7 @@
           <el-button
               :loading="loading"
               type="primary"
-              style="width: 100%; background-color: #004fc5;height: 40px; font-weight: bold; font-size: 18px"
+              class="auth-submit-btn"
               @click="submitRegisterForm"
           >注 册
           </el-button>
@@ -206,22 +206,23 @@ function goLogin() {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #f5f7fa;
+  background: linear-gradient(160deg, var(--app-bg-page) 0%, var(--app-bg-card) 100%);
 }
 
 .register-card {
   width: 400px;
   padding: 40px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  background: var(--app-bg-card);
+  border: 1px solid var(--app-border-light);
+  border-radius: 12px;
+  box-shadow: var(--app-shadow-card);
 }
 
 .register-title {
   text-align: center;
   margin-bottom: 30px;
   font-size: 24px;
-  color: #303133;
+  color: var(--app-text-primary);
 }
 
 .validate-row {
@@ -235,16 +236,42 @@ function goLogin() {
   height: 40px;
   cursor: pointer;
   border-radius: 4px;
-  border: 1px solid #dcdfe6;
+  border: 1px solid var(--app-border);
 }
 
 .register-footer {
   margin-top: 16px;
   font-size: 14px;
-  color: #606266;
+  color: var(--app-text-secondary);
 }
 
 .el-input {
   height: 44px;
+}
+
+.auth-submit-btn {
+  width: 100%;
+  height: 40px;
+  font-weight: bold;
+  font-size: 18px;
+  background-color: #004fc5 !important;
+  border-color: #004fc5 !important;
+
+  &:hover,
+  &:focus {
+    background-color: #2669cd !important;
+    border-color: #2669cd !important;
+  }
+}
+
+:deep(.el-input__inner) {
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--app-text-primary);
+    caret-color: var(--app-text-primary);
+    -webkit-box-shadow: 0 0 0 1000px var(--el-fill-color-blank) inset;
+    transition: background-color 9999s ease-in-out 0s;
+  }
 }
 </style>

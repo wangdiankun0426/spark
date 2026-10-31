@@ -10,7 +10,7 @@
     </div>
 
     <el-card shadow="never" class="monitor-card mq-trend-card">
-      <template #header>队列积压趋势（条）</template>
+      <template #header><div class="monitor-card__title"><el-icon><TrendCharts /></el-icon>队列积压趋势（条）</div></template>
       <div ref="trendElRef" class="monitor-chart monitor-chart--tall"></div>
     </el-card>
 
@@ -18,7 +18,7 @@
       <el-card shadow="never" class="monitor-card is-fill">
         <template #header>
           <div class="monitor-card__header">
-            <span>队列明细</span>
+            <span class="monitor-card__title"><el-icon><List /></el-icon>队列明细</span>
             <span class="monitor-card__extra">每 30 秒刷新</span>
           </div>
         </template>
@@ -43,6 +43,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { TrendCharts, List } from '@element-plus/icons-vue'
 import StatCard from '@/components/Dashboard/StatCard.vue'
 import MonitorToolbar from '@/components/MonitorToolbar/index.vue'
 import { useChart } from '@/utils/useChart.js'

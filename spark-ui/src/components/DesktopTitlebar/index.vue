@@ -1,6 +1,5 @@
 <template>
   <div v-if="desktopVisible" class="desktop-titlebar is-desktop">
-    <div class="desktop-titlebar__drag" data-tauri-drag-region></div>
     <div class="desktop-titlebar__actions">
       <el-popover
           v-model:visible="helpVisible"
@@ -52,10 +51,7 @@
       <div class="window-btn" :title="isMaximized ? '还原' : '最大化'" @click="toggleMaximize">
         <el-icon><CopyDocument v-if="isMaximized" /><FullScreen v-else /></el-icon>
       </div>
-      <div class="window-btn" :title="isFullscreen ? '退出全屏' : '全屏'" @click="toggleFullscreen">
-        <el-icon><Aim /></el-icon>
-      </div>
-      <div class="window-btn window-btn--close" title="关闭" @click="close">
+      <div class="window-btn window-btn--close" title="关闭" @click="hideWindow">
         <el-icon><Close /></el-icon>
       </div>
     </div>
@@ -77,13 +73,13 @@
 
 <script setup>
 import {ref} from 'vue'
-import {Minus, Close, FullScreen, CopyDocument, Aim, Setting, FolderOpened, Document, Lock, Refresh} from '@element-plus/icons-vue';
+import {Minus, Close, FullScreen, CopyDocument, Setting, FolderOpened, Document, Lock, Refresh} from '@element-plus/icons-vue';
 import Question from '@/assets/icons/question.vue';
 import {ElMessage} from 'element-plus';
 import {useDesktopWindow} from '@/utils/desktopWindow';
 import {getDownloadDir, pickDownloadDir, saveDownloadDir} from '@/utils/download';
 
-const {desktopVisible, isMaximized, isFullscreen, minimize, toggleMaximize, toggleFullscreen, close} = useDesktopWindow();
+const {desktopVisible, isMaximized, minimize, toggleMaximize, hideWindow} = useDesktopWindow();
 
 const settingVisible = ref(false)
 const helpVisible = ref(false)
@@ -131,11 +127,6 @@ function confirmDir() {
   height: 50px;
   display: flex;
   align-items: stretch;
-}
-
-.desktop-titlebar__drag {
-  width: 80px;
-  height: 100%;
 }
 
 .desktop-titlebar__actions {

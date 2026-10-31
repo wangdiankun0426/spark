@@ -6,6 +6,7 @@
         <div class="flow-header-title">
           流程模板
         </div>
+        <div class="flow-header-subtitle">管理可发起的流程模板，维护表单、流程图与启停状态</div>
       </div>
       <div class="flow-header-right">
         <el-input
@@ -448,6 +449,10 @@ function handleDelete(item) {
   color: $color-text-primary;
 }
 
+.flow-header-subtitle {
+  font-size: 13px;
+  color: $color-text-secondary;
+}
 .flow-header-right {
   display: flex;
   align-items: center;
@@ -457,6 +462,7 @@ function handleDelete(item) {
 .flow-grid {
   height: calc(100vh - #{$nav-height} - 160px);
   overflow-y: auto;
+  padding-top: 6px;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: $spacing-lg;

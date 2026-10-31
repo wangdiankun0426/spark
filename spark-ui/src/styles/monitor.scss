@@ -86,6 +86,17 @@
   justify-content: space-between;
 }
 
+.monitor-card__title {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+
+  .el-icon {
+    color: $color-primary;
+    font-size: 16px;
+  }
+}
+
 .monitor-card__extra {
   font-size: 12px;
   font-weight: 400;

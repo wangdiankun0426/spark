@@ -543,6 +543,7 @@ function buildSubmitData() {
 .mcp-grid {
   height: calc(100vh - #{$nav-height} - 190px);
   overflow-y: auto;
+  padding-top: 6px;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: $spacing-lg;

@@ -6,12 +6,8 @@ import {localStorageKey} from "@/utils/keyUtils.js";
  * 通过在 html 根节点挂载类名切换：
  * - theme-light：导航栏与左侧菜单栏浅色皮肤
  * - dark：内容区深色（Element Plus 暗色变量 + --app-* 变量）
- * 独立页（登录/注册/协议/错误页）通过 setThemeExempt(true) 强制浅色
  */
 const LIGHT_THEME = 'light';
-
-// 独立页强制浅色开关
-let forceLight = false;
 
 /**
  * 读取本地保存的主题
@@ -26,7 +22,7 @@ export function getTheme() {
  * @param theme dark | light
  */
 export function applyTheme(theme) {
-  const dark = !forceLight && theme === 'dark';
+  const dark = theme === 'dark';
   document.documentElement.classList.toggle('theme-light', !dark);
   document.documentElement.classList.toggle('dark', dark);
 }
@@ -39,15 +35,6 @@ export function setTheme(theme) {
   localStorage.setItem(localStorageKey.THEME_KEY, theme);
   applyTheme(theme);
   window.dispatchEvent(new CustomEvent('app-theme-change', { detail: theme }));
-}
-
-/**
- * 设置当前页面是否强制浅色（独立页路由守卫调用）
- * @param exempt true 强制浅色
- */
-export function setThemeExempt(exempt) {
-  forceLight = exempt;
-  applyTheme(getTheme());
 }
 
 /**

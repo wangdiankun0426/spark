@@ -124,9 +124,10 @@ fn open_external_url(app: tauri::AppHandle, url: String) {
     }
 }
 
-/// 显示并聚焦主窗口
+/// 显示并聚焦主窗口，最小化或隐藏状态下都直接恢复到前台
 fn show_main_window(app: &tauri::AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
+        let _ = window.unminimize();
         let _ = window.show();
         let _ = window.set_focus();
     }
@@ -283,6 +284,16 @@ fn main() {
             open_external_url,
             pet_fix_position
         ])
+        // 主窗口收到关闭请求时隐藏到托盘而不是退出进程，退出统一走托盘菜单
+        // 子窗口与宠物窗口不拦截，保持系统标题栏的正常关闭行为
+        .on_window_event(|window, event| {
+            if window.label() == "main" {
+                if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                    let _ = window.hide();
+                    api.prevent_close();
+                }
+            }
+        })
         // 自定义协议 pet://：向宠物窗口提供内嵌的宠物页面与姿势图资源
         .register_uri_scheme_protocol("pet", |_ctx, request| {
             let path = request.uri().path().trim_start_matches('/');

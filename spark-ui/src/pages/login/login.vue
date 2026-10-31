@@ -138,8 +138,22 @@
     <div class="el-login-aside">
     <div ref="loginMainRef" class="el-login-main">
       <div class="login-title-row">
-        <h2 class="login-title">欢迎回来</h2>
-        <p class="login-subtitle">登录之后开启您的AI辅助工作之旅吧</p>
+        <div>
+          <h2 class="login-title">欢迎回来</h2>
+          <p class="login-subtitle">登录之后开启您的AI辅助工作之旅吧</p>
+        </div>
+        <div class="login-header-tools">
+          <el-tooltip :content="currentTheme === 'light' ? '深色模式' : '浅色模式'" placement="top">
+            <el-button circle @click="toggleTheme">
+              <el-icon><Sunny v-if="currentTheme === 'light'" /><Moon v-else /></el-icon>
+            </el-button>
+          </el-tooltip>
+          <el-tooltip content="语言" placement="top">
+            <el-button circle @click="handleLocaleChange">
+              <el-icon><Globe /></el-icon>
+            </el-button>
+          </el-tooltip>
+        </div>
       </div>
       <div>
         <el-form ref="loginRef" :model="loginForm" :rules="loginFormRules">
@@ -260,7 +274,7 @@
             <el-button
                 :loading="loading"
                 type="primary"
-                style="width: 100%; background-color: #004fc5;height: 40px; font-weight: bold; font-size: 18px"
+                class="auth-submit-btn"
                 @click="submitLoginForm"
             >登 录
             </el-button>
@@ -333,8 +347,11 @@ import { ref, getCurrentInstance, onMounted, onUnmounted, nextTick } from "vue";
 import { useRouter } from 'vue-router';
 import { useStore } from "vuex";
 import { ElMessage } from 'element-plus';
+import { Sunny, Moon } from '@element-plus/icons-vue';
+import Globe from '@/assets/icons/globe.vue';
 import QRCode from 'qrcode';
 import { isDesktop } from '@/utils/desktop.js';
+import { getTheme, setTheme } from '@/utils/themeUtil.js';
 import loginIcon1 from '@/assets/images/login-1.png';
 import loginIcon2 from '@/assets/images/login-2.png';
 import loginIcon3 from '@/assets/images/login-3.png';
@@ -377,6 +394,23 @@ function getStoredAgreed() {
 }
 
 const agreed = ref(getStoredAgreed());
+
+const currentTheme = ref(getTheme());
+
+/**
+ * 切换深浅色主题并持久化，与主界面导航栏共用同一份主题配置
+ */
+function toggleTheme() {
+  currentTheme.value = currentTheme.value === 'light' ? 'dark' : 'light';
+  setTheme(currentTheme.value);
+}
+
+/**
+ * 切换语言，语言包尚未接入
+ */
+function handleLocaleChange() {
+  ElMessage.info('功能开发中');
+}
 
 // 未勾选协议提交时，在勾选区内联红框提示，不弹 toast
 const agreementError = ref(false);
@@ -554,19 +588,19 @@ function submitLoginForm() {
         data.validateId = loginForm.value.validateId;
         data.validateValue = loginForm.value.validateValue;
         data.loginType = loginForm.value.loginType;
-        data.loginPlatform = 1;
+        data.loginPlatform = isDesktop ? 3 : 1;
       } else if (loginForm.value.loginType === 2) {
         data.phone = loginForm.value.phone;
         data.validateId = loginForm.value.validateId;
         data.validateValue = loginForm.value.validateValue;
         data.loginType = loginForm.value.loginType;
-        data.loginPlatform = 1;
+        data.loginPlatform = isDesktop ? 3 : 1;
       } else if (loginForm.value.loginType === 3) {
         data.email = loginForm.value.email;
         data.validateId = loginForm.value.validateId;
         data.validateValue = loginForm.value.validateValue;
         data.loginType = loginForm.value.loginType;
-        data.loginPlatform = 1;
+        data.loginPlatform = isDesktop ? 3 : 1;
       }
       store.dispatch('user/login', {loginForm: data}).then(res => {
         if (res.code === 200) {
@@ -957,7 +991,104 @@ function goRegister() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #ffffff;
+  background-color: var(--app-bg-card);
+}
+
+// 暗色左侧品牌区整体灰蓝调，卡片与文字颜色保持浅色主题原样
+html.dark {
+  .login {
+    background: linear-gradient(160deg, #1b2740 0%, #16203a 55%, #111a30 100%);
+  }
+
+  .sidebar-kicker {
+    color: #a5b4fc;
+    opacity: 0.95;
+  }
+
+  .sidebar-title {
+    background: linear-gradient(90deg, #93c5fd 0%, #7dd3fc 45%, #67e8f9 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .sidebar-desc {
+    color: #b8c5dc;
+  }
+
+  .anim-grid {
+    background-image:
+        linear-gradient(rgba(147, 197, 253, 0.09) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(147, 197, 253, 0.09) 1px, transparent 1px),
+        linear-gradient(rgba(147, 197, 253, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(147, 197, 253, 0.05) 1px, transparent 1px);
+  }
+
+  .anim-blob-1 {
+    opacity: 0.4;
+    background: radial-gradient(circle at 30% 30%, rgba(96, 165, 250, 0.5) 0%, rgba(59, 130, 246, 0.22) 40%, transparent 70%);
+  }
+
+  .anim-blob-2 {
+    opacity: 0.36;
+    background: radial-gradient(circle at 60% 40%, rgba(56, 189, 248, 0.42) 0%, rgba(14, 116, 144, 0.18) 40%, transparent 70%);
+  }
+
+  .anim-orbit {
+    border-color: rgba(147, 197, 253, 0.3);
+  }
+
+  .anim-dot {
+    background: rgba(147, 197, 253, 0.6);
+    box-shadow: 0 0 12px rgba(96, 165, 250, 0.55);
+  }
+
+  .feature-item {
+    background: linear-gradient(180deg, rgba(51, 65, 92, 0.72), rgba(41, 54, 80, 0.6));
+    border-color: rgba(147, 197, 253, 0.25);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 0 24px rgba(96, 165, 250, 0.06);
+
+    &:hover {
+      background: linear-gradient(180deg, rgba(62, 78, 110, 0.85), rgba(51, 65, 92, 0.75));
+      border-color: rgba(147, 197, 253, 0.5);
+    }
+  }
+
+  .feature-name {
+    color: #f1f5f9;
+  }
+
+  .feature-desc {
+    color: #b6c4da;
+  }
+
+  .feature-index {
+    color: rgba(191, 219, 254, 0.6);
+  }
+
+  .download-item {
+    color: #dbe6f4;
+    background: rgba(41, 54, 80, 0.7);
+    border-color: rgba(147, 197, 253, 0.22);
+
+    &:hover {
+      color: #ffffff;
+      background: rgba(58, 73, 102, 0.9);
+    }
+  }
+
+  .login-type-btn {
+    background-color: var(--app-bg-sub);
+
+    &:hover,
+    &:focus {
+      background-color: var(--app-bg-sub);
+    }
+  }
+
+  .el-divider__text {
+    background-color: var(--app-bg-card) !important;
+  }
 }
 
 .el-login-main {
@@ -974,18 +1105,42 @@ function goRegister() {
   height: 44px;
 }
 
+.auth-submit-btn {
+  width: 100%;
+  height: 40px;
+  font-weight: bold;
+  font-size: 18px;
+  background-color: #004fc5 !important;
+  border-color: #004fc5 !important;
+
+  &:hover,
+  &:focus {
+    background-color: #2669cd !important;
+    border-color: #2669cd !important;
+  }
+}
+
 :deep(.el-input__inner) {
   &:-webkit-autofill,
   &:-webkit-autofill:hover,
   &:-webkit-autofill:focus {
-    -webkit-text-fill-color: $color-text-primary;
-    caret-color: $color-text-primary;
-    -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+    -webkit-text-fill-color: var(--app-text-primary);
+    caret-color: var(--app-text-primary);
+    -webkit-box-shadow: 0 0 0 1000px var(--el-fill-color-blank) inset;
+    transition: background-color 9999s ease-in-out 0s;
   }
 }
 
 .login-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   margin-top: -16px;
+}
+
+.login-header-tools {
+  display: flex;
+  gap: 8px;
 }
 
 .login-title {
@@ -1020,7 +1175,7 @@ function goRegister() {
   color: $color-primary;
   border: 1px solid rgba(0, 79, 197, 0.12);
   border-radius: 50% !important;
-  background-color: #ffffff;
+  background-color: var(--app-bg-card);
   box-shadow: 0 2px 8px rgba(26, 111, 232, 0.1);
   transition: all 0.2s;
 
@@ -1028,7 +1183,7 @@ function goRegister() {
   &:focus {
     color: $color-primary;
     border-color: rgba(0, 79, 197, 0.32);
-    background-color: #ffffff;
+    background-color: var(--app-bg-sub);
     box-shadow: 0 6px 16px rgba(26, 111, 232, 0.18);
     transform: translateY(-1px);
   }
@@ -1090,7 +1245,7 @@ function goRegister() {
 }
 
 ::v-deep(.el-divider__text) {
-  background-color: #ffffff !important;
+  background-color: var(--app-bg-card);
   color: $color-text-placeholder;
 }
 

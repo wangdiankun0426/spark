@@ -1063,6 +1063,7 @@ function handleProviderCommand(command, provider) {
 .model-grid {
   height: calc(100vh - #{$nav-height} - 270px);
   overflow-y: auto;
+  padding-top: 6px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: $spacing-lg;

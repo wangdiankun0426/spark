@@ -9,11 +9,18 @@
             mode="vertical"
             class="home-el-menu"
         >
+          <div class="home-menu-group">通用</div>
           <el-menu-item index="/home/dashboard">
             <el-icon style="font-size: 24px;">
               <Dashboard/>
             </el-icon>
             <template #title>工作台</template>
+          </el-menu-item>
+          <el-menu-item index="/home/contact">
+            <el-icon style="font-size: 24px;">
+              <Chat/>
+            </el-icon>
+            <template #title>通讯录</template>
           </el-menu-item>
           <div class="home-menu-group">AI</div>
           <el-menu-item index="/home/aichat">
@@ -64,13 +71,6 @@
               <CopyMe/>
             </el-icon>
             <template #title>抄送给我</template>
-          </el-menu-item>
-          <div class="home-menu-group">通用</div>
-          <el-menu-item index="/home/contact">
-            <el-icon style="font-size: 24px;">
-              <Chat/>
-            </el-icon>
-            <template #title>通讯录</template>
           </el-menu-item>
         </el-menu>
       </el-aside>
@@ -141,14 +141,14 @@ const defaultActive = computed(() => {
 .home-el-menu :deep(.el-menu-item),
 .home-el-menu :deep(.el-sub-menu__title) {
   color: var(--sidebar-text);
-  height: 44px;
-  line-height: 44px;
+  height: 40px;
+  line-height: 40px;
   font-size: 13px;
   font-weight: 400;
   justify-content: center;
   padding: 0 !important;
   width: calc(100% - 10px);
-  margin: 3px 5px;
+  margin: 1px 5px;
   border-radius: $border-radius-md;
 }
 /*悬停菜单之后*/

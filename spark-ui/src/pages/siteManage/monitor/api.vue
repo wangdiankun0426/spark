@@ -4,7 +4,6 @@
       v-model:node-key="nodeKey"
       v-model:range="range"
       :node-list="nodeList"
-      allow-all
     />
 
     <div class="monitor-stat-row">
@@ -17,13 +16,13 @@
     <el-row :gutter="16" class="monitor-chart-row">
       <el-col :span="16">
         <el-card shadow="never" class="monitor-card">
-          <template #header>QPS / 平均响应耗时</template>
+          <template #header><div class="monitor-card__title"><el-icon><DataLine /></el-icon>QPS / 平均响应耗时</div></template>
           <div ref="trendElRef" class="monitor-chart"></div>
         </el-card>
       </el-col>
       <el-col :span="8">
         <el-card shadow="never" class="monitor-card">
-          <template #header>状态码分布</template>
+          <template #header><div class="monitor-card__title"><el-icon><PieChart /></el-icon>状态码分布</div></template>
           <div ref="codeElRef" class="monitor-chart"></div>
         </el-card>
       </el-col>
@@ -33,8 +32,7 @@
       <el-card shadow="never" class="monitor-card is-fill">
         <template #header>
           <div class="monitor-card__header">
-            <span>接口调用统计</span>
-            <span class="monitor-card__extra">全量聚合 · 按调用次数倒排</span>
+            <span class="monitor-card__title"><el-icon><Histogram /></el-icon>接口调用统计</span>
           </div>
         </template>
         <div class="table-fill uri-table-fill">
@@ -65,7 +63,7 @@
               v-model:current-page="uriQuery.pageNo"
               v-model:page-size="uriQuery.pageSize"
               :total="uriTotal"
-              :page-sizes="[20, 50, 100]"
+              :page-sizes="[10, 20, 50]"
               layout="total, sizes, prev, pager, next"
               @current-change="loadUriStats"
               @size-change="handleUriSizeChange"
@@ -73,26 +71,38 @@
         </div>
       </el-card>
 
-      <el-card v-if="nodeKey" shadow="never" class="monitor-card api-slow-card">
+      <el-card shadow="never" class="monitor-card api-slow-card">
         <template #header>
           <div class="monitor-card__header">
-            <span>慢 SQL Top20</span>
-            <span class="monitor-card__extra">{{ nodeKey }}</span>
+            <span class="monitor-card__title"><el-icon><Timer /></el-icon>慢 SQL</span>
           </div>
         </template>
-        <el-table :data="slowSqlList" size="small" height="240">
-          <el-table-column prop="dataSource" label="数据源" width="120" align="center" />
-          <el-table-column prop="sql" label="SQL" min-width="320" show-overflow-tooltip />
-          <el-table-column prop="executeCount" label="执行次数" width="100" align="center" />
-          <el-table-column label="总耗时" width="110" align="center">
-            <template #default="scope">{{ formatMs(scope.row.totalTime) }}</template>
-          </el-table-column>
-          <el-table-column label="最大耗时" width="110" align="center">
-            <template #default="scope">
-              <span :class="{ 'is-danger-text': scope.row.maxTime >= 1000 }">{{ formatMs(scope.row.maxTime) }}</span>
-            </template>
-          </el-table-column>
-        </el-table>
+        <div class="table-fill slow-table-fill">
+          <div class="slow-table-wrap">
+            <el-table :data="slowSqlPage" size="small" height="240">
+              <el-table-column prop="nodeKey" label="节点" width="120" align="center" show-overflow-tooltip />
+              <el-table-column prop="dataSource" label="数据源" width="120" align="center" />
+              <el-table-column prop="sql" label="SQL" min-width="320" show-overflow-tooltip />
+              <el-table-column prop="executeCount" label="执行次数" width="100" align="center" />
+              <el-table-column label="总耗时" width="110" align="center">
+                <template #default="scope">{{ formatMs(scope.row.totalTime) }}</template>
+              </el-table-column>
+              <el-table-column label="最大耗时" width="110" align="center">
+                <template #default="scope">
+                  <span :class="{ 'is-danger-text': scope.row.maxTime >= 1000 }">{{ formatMs(scope.row.maxTime) }}</span>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+          <el-pagination
+              class="uri-pagination"
+              v-model:current-page="slowSqlQuery.pageNo"
+              v-model:page-size="slowSqlQuery.pageSize"
+              :total="slowSqlList.length"
+              :page-sizes="[10, 20, 50]"
+              layout="total, sizes, prev, pager, next"
+          />
+        </div>
       </el-card>
     </div>
   </div>
@@ -100,6 +110,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { DataLine, PieChart, Histogram, Timer } from '@element-plus/icons-vue'
 import StatCard from '@/components/Dashboard/StatCard.vue'
 import MonitorToolbar from '@/components/MonitorToolbar/index.vue'
 import { useChart } from '@/utils/useChart.js'
@@ -118,8 +129,13 @@ const summary = ref(null)
 const trend = ref([])
 const uriStats = ref([])
 const uriTotal = ref(0)
-const uriQuery = ref({ pageNo: 1, pageSize: 20 })
+const uriQuery = ref({ pageNo: 1, pageSize: 10 })
 const slowSqlList = ref([])
+const slowSqlQuery = ref({ pageNo: 1, pageSize: 10 })
+const slowSqlPage = computed(() => {
+  const start = (slowSqlQuery.value.pageNo - 1) * slowSqlQuery.value.pageSize
+  return slowSqlList.value.slice(start, start + slowSqlQuery.value.pageSize)
+})
 
 const avgQps = computed(() => {
   if (!summary.value?.totalCount) return 0
@@ -143,12 +159,17 @@ function handleThemeChange() {
   renderCodeChart()
 }
 
-onMounted(() => {
-  queryNodeListAPI().then(res => {
-    if (res.code === 200) nodeList.value = res.data || []
-  })
-  loadData()
-  loadUriStats()
+onMounted(async () => {
+  const nodeRes = await queryNodeListAPI()
+  if (nodeRes.code === 200) nodeList.value = nodeRes.data || []
+  const defaultNode = nodeList.value.find(node => node.online)
+  if (defaultNode && !nodeKey.value) {
+    // 默认选中第一个在线节点，nodeKey watcher 会触发首次加载
+    nodeKey.value = defaultNode.nodeKey
+  } else {
+    loadData()
+    loadUriStats()
+  }
   window.addEventListener('app-theme-change', handleThemeChange)
   timer = setInterval(() => {
     if (range.value === '1h') loadData()
@@ -162,6 +183,7 @@ onBeforeUnmount(() => {
 
 watch(nodeKey, () => {
   uriQuery.value.pageNo = 1
+  slowSqlQuery.value.pageNo = 1
   loadUriStats()
 })
 watch([nodeKey, range], () => loadData())
@@ -204,23 +226,43 @@ function handleUriSizeChange() {
 }
 
 /**
- * 加载节点慢SQL快照
+ * 加载节点慢SQL快照，未选节点时聚合全部在线节点
  */
 function loadSlowSql() {
-  if (!nodeKey.value) {
-    slowSqlList.value = []
+  if (nodeKey.value) {
+    queryLatestDruidAPI({ nodeKey: nodeKey.value }).then(res => {
+      slowSqlList.value = parseSlowSql(res.data, nodeKey.value)
+      slowSqlQuery.value.pageNo = 1
+    })
     return
   }
-  queryLatestDruidAPI({ nodeKey: nodeKey.value }).then(res => {
-    if (res.code !== 200 || !res.data?.sqlJson) {
-      slowSqlList.value = []
-      return
-    }
-    const groupList = parseJson(res.data.sqlJson) || []
-    slowSqlList.value = groupList.flatMap(group =>
-      (group.sqlList || []).map(item => ({ ...item, dataSource: shortDataSourceName(group.name) }))
-    )
+  const onlineNodes = nodeList.value.filter(node => node.online)
+  Promise.all(onlineNodes.map(node =>
+      queryLatestDruidAPI({ nodeKey: node.nodeKey }).catch(() => null)
+  )).then(resList => {
+    slowSqlList.value = resList
+        .flatMap((res, index) => parseSlowSql(res?.data, onlineNodes[index]?.nodeKey))
+        .sort((a, b) => Number(b.totalTime || 0) - Number(a.totalTime || 0))
+    slowSqlQuery.value.pageNo = 1
   })
+}
+
+/**
+ * 解析单节点 Druid 慢 SQL 快照
+ * @param snapshot 节点快照
+ * @param currentNodeKey 节点标识
+ * @returns {*[]}
+ */
+function parseSlowSql(snapshot, currentNodeKey) {
+  if (!snapshot?.sqlJson) return []
+  const groupList = parseJson(snapshot.sqlJson) || []
+  return groupList.flatMap(group =>
+      (group.sqlList || []).map(item => ({
+        ...item,
+        nodeKey: currentNodeKey,
+        dataSource: shortDataSourceName(group.name)
+      }))
+  )
 }
 
 /**
@@ -232,12 +274,12 @@ function renderTrendChart() {
   const labels = data.map(item => item.snapshotDt?.substring(11, 16))
   setTrendOption({
     tooltip: { trigger: 'axis' },
-    legend: { top: 0, right: 0, itemWidth: 12, textStyle: { fontSize: 12 } },
-    grid: { left: 48, right: 52, top: 36, bottom: 28 },
+    legend: { top: 0, left: 'center', itemWidth: 12, textStyle: { fontSize: 12 } },
+    grid: { left: 48, right: 56, top: 40, bottom: 28 },
     xAxis: { type: 'category', data: labels, axisLabel: { fontSize: 10 } },
     yAxis: [
-      { type: 'value', name: 'QPS', scale: true },
-      { type: 'value', name: 'ms', scale: true }
+      { type: 'value', name: 'QPS', nameGap: 8, scale: true },
+      { type: 'value', name: 'ms', nameGap: 8, scale: true }
     ],
     series: [
       {
@@ -301,6 +343,19 @@ function shortDataSourceName(url) {
 .api-slow-card {
   flex: none;
   height: auto;
+}
+
+.slow-table-fill {
+  display: flex;
+  flex-direction: column;
+}
+
+.slow-table-wrap {
+  flex: none;
+
+  :deep(.el-table__body-wrapper) {
+    overflow-x: hidden !important;
+  }
 }
 
 .uri-table-fill {

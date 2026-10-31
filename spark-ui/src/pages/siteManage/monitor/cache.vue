@@ -12,19 +12,19 @@
     <el-row :gutter="16" class="monitor-chart-row">
       <el-col :span="8">
         <el-card shadow="never" class="monitor-card">
-          <template #header>内存使用（GB）</template>
+          <template #header><div class="monitor-card__title"><el-icon><Coin /></el-icon>内存使用（GB）</div></template>
           <div ref="memElRef" class="monitor-chart"></div>
         </el-card>
       </el-col>
       <el-col :span="8">
         <el-card shadow="never" class="monitor-card">
-          <template #header>命中率（%）</template>
+          <template #header><div class="monitor-card__title"><el-icon><Aim /></el-icon>命中率（%）</div></template>
           <div ref="hitElRef" class="monitor-chart"></div>
         </el-card>
       </el-col>
       <el-col :span="8">
         <el-card shadow="never" class="monitor-card">
-          <template #header>命令统计 Top10</template>
+          <template #header><div class="monitor-card__title"><el-icon><Histogram /></el-icon>命令统计 Top10</div></template>
           <div ref="cmdElRef" class="monitor-chart"></div>
         </el-card>
       </el-col>
@@ -33,7 +33,7 @@
     <el-row :gutter="16" class="monitor-row-fill">
       <el-col :span="12">
         <el-card shadow="never" class="monitor-card">
-          <template #header>Redis 信息</template>
+          <template #header><div class="monitor-card__title"><el-icon><InfoFilled /></el-icon>Redis 信息</div></template>
           <div v-if="latest" class="metric-grid cache-metric">
             <div class="metric-grid__cell"><label>版本</label><span>{{ latest.version || '--' }}</span></div>
             <div class="metric-grid__cell"><label>运行时长</label><span>{{ latest.uptimeDays }} 天</span></div>
@@ -64,7 +64,7 @@
         <el-card shadow="never" class="monitor-card">
           <template #header>
             <div class="monitor-card__header">
-              <span>键空间（db）</span>
+              <span class="monitor-card__title"><el-icon><Key /></el-icon>键空间（db）</span>
               <span class="monitor-card__extra">共 {{ keyspaceList.length }} 个库</span>
             </div>
           </template>
@@ -84,6 +84,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { Coin, Aim, Histogram, InfoFilled, Key } from '@element-plus/icons-vue'
 import StatCard from '@/components/Dashboard/StatCard.vue'
 import MonitorToolbar from '@/components/MonitorToolbar/index.vue'
 import { useChart } from '@/utils/useChart.js'

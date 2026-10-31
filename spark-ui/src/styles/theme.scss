@@ -31,7 +31,6 @@
 // 深色主题（默认，蓝色）
 :root {
   // 卡片/弹窗/抽屉头部
-  --card-head-bg: #003178;
   --dialog-head-bg: #0140af;
   --drawer-head-bg: #0140af;
   --head-text: #ffffff;
@@ -49,7 +48,6 @@
   --nav-tool-hover-bg: rgba(96, 165, 250, 0.25);
   --nav-tool-hover-color: #ffffff;
   --nav-avatar-border: rgba(255, 255, 255, 0.6);
-  --nav-avatar-ring: #60a5fa;
   --nav-dropdown-color: rgba(255, 255, 255, 0.9);
 
   // 左侧菜单栏
@@ -77,9 +75,8 @@
 // 浅色主题（白色）
 html.theme-light {
   // 卡片/弹窗/抽屉头部
-  --card-head-bg: #e8f0fd;
-  --dialog-head-bg: #e8f0fd;
-  --drawer-head-bg: #e8f0fd;
+  --dialog-head-bg: var(--app-bg-card);
+  --drawer-head-bg: var(--app-bg-card);
   --head-text: #172b4d;
 
   // 顶部导航栏
@@ -95,7 +92,6 @@ html.theme-light {
   --nav-tool-hover-bg: #e8f0fd;
   --nav-tool-hover-color: #004fc5;
   --nav-avatar-border: rgba(23, 43, 77, 0.2);
-  --nav-avatar-ring: #004fc5;
   --nav-dropdown-color: #5e6c84;
 
   // 左侧菜单栏
@@ -130,7 +126,6 @@ html.dark {
   --nav-bg: #0f172a;
   --sidebar-bg: #0f172a;
 
-  --nav-avatar-ring: #4d8dff;
 
   --sidebar-hover-bg: rgba(77, 141, 255, 0.1);
   --sidebar-active-bg: rgba(77, 141, 255, 0.14);
@@ -160,9 +155,8 @@ html.dark {
   --app-shadow-nav: 0 2px 8px rgba(0, 0, 0, 0.5);
   --app-shadow-dialog: 0 8px 32px rgba(0, 0, 0, 0.55);
 
-  --card-head-bg: #243044;
-  --dialog-head-bg: #243044;
-  --drawer-head-bg: #243044;
+  --dialog-head-bg: var(--app-bg-card);
+  --drawer-head-bg: var(--app-bg-card);
   --head-text: #e5edf7;
 
   --el-color-primary: #4d8dff;
