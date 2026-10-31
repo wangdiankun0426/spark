@@ -7,9 +7,9 @@ const fs = require('fs')
 const path = require('path')
 
 const root = path.join(__dirname, '..')
-const version = require('../package.json').version
+const version = require('../../package.json').version
 
-const cargoTomlPath = path.join(root, 'src-tauri', 'Cargo.toml')
+const cargoTomlPath = path.join(root, 'Cargo.toml')
 let cargoToml = fs.readFileSync(cargoTomlPath, 'utf8')
 const nextCargoToml = cargoToml.replace(/(^version\s*=\s*")[^"]+(")/m, `$1${version}$2`)
 if (nextCargoToml !== cargoToml) {

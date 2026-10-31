@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>小星</title>
+<style>
+  :root {
+    --pet-surface: #fff;
+    --pet-surface-strong: rgba(255, 255, 255, .96);
+    --pet-surface-soft: rgba(255, 255, 255, .94);
+    --pet-text: #444;
+    --pet-text-strong: #5b6478;
+    --pet-text-muted: #7d8db0;
+    --pet-accent: #7f9cf5;
+    --pet-accent-strong: #3d6c93;
+    --pet-accent-soft: #bfe3f3;
+    --pet-accent-plus: #4a78f0;
+    --pet-warn: #f0a35e;
+    --pet-lid: #eee6d6;
+    --pet-heart: #e0708a;
+    --pet-sparkle: #e0b64e;
+    --pet-tear: #6fa8d8;
+    --pet-border: rgba(120, 175, 205, .45);
+    --pet-track: rgba(91, 100, 120, .18);
+    --pet-shadow-bubble: 0 3px 10px rgba(0, 0, 0, .18);
+    --pet-shadow-button: 0 2px 7px rgba(0, 0, 0, .2);
+    --pet-shadow-button-hover: 0 3px 10px rgba(0, 0, 0, .26);
+    --pet-shadow-timer: 0 2px 8px rgba(0, 0, 0, .16);
+    --pet-shadow-plus: 0 2px 8px rgba(0, 0, 0, .18);
+    --pet-radius-xs: 2px;
+    --pet-radius-md: 10px;
+    --pet-radius-pill: 999px;
+    --pet-font-2xs: 10px;
+    --pet-font-xs: 11px;
+    --pet-font-sm: 12px;
+    --pet-font-md: 15px;
+    --pet-font-lg: 18px;
+    --pet-icon-size: 18px;
+    --pet-btn-size: 30px;
+    --pet-stage-size: 120px;
+    --pet-bar-width: 12px;
+    --pet-bar-height: 3px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+  html, body {
+    width: 100%; height: 100%;
+    background: transparent;
+    overflow: hidden;
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  }
+  body { position: relative; }
+
+  #bubble {
+    position: absolute; bottom: 104px; left: 50%;
+    transform: translateX(-50%) scale(0);
+    transform-origin: bottom center;
+    max-width: 210px;
+    background: var(--pet-surface);
+    color: var(--pet-text);
+    font-size: var(--pet-font-sm); line-height: 1.5;
+    padding: 6px 10px;
+    border-radius: var(--pet-radius-md);
+    box-shadow: var(--pet-shadow-bubble);
+    opacity: 0;
+    transition: transform .25s cubic-bezier(.34,1.56,.64,1), opacity .25s, bottom .22s cubic-bezier(.34,1.56,.64,1);
+    pointer-events: none;
+    z-index: 30;
+    white-space: pre-line;
+  }
+  body.timing #bubble { bottom: 127px; }
+  #bubble.show { transform: translateX(-50%) scale(1); opacity: 1; }
+  #bubble::after {
+    content: ""; position: absolute;
+    bottom: -6px; right: 34px;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid var(--pet-surface);
+  }
+
+  #stage {
+    position: absolute; left: 50%; bottom: 2px;
+    width: var(--pet-stage-size); height: var(--pet-stage-size);
+    margin-left: calc(var(--pet-stage-size) / -2);
+    cursor: grab;
+    z-index: 10;
+    will-change: transform;
+  }
+  #stage:active { cursor: grabbing; }
+
+  #petWrap {
+    position: absolute; inset: 0;
+    transform-origin: 50% 96%;
+  }
+  .pet-layer {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+    -webkit-user-drag: none;
+    opacity: 0;
+    transition: opacity .08s ease;
+  }
+  .pet-layer.on { opacity: 1; }
+
+  .lid {
+    position: absolute;
+    background: var(--pet-lid);
+    border-radius: 45% 45% 50% 50%;
+    transform: scaleY(0);
+    transform-origin: 50% 0%;
+    z-index: 12;
+    pointer-events: none;
+  }
+  #lidLeft { left: 37.2%; top: 47.8%; width: 7.5%; height: 11.5%; }
+  #lidRight { left: 53.8%; top: 47.7%; width: 7.5%; height: 11.5%; }
+  #stage.blinking .lid { transform: scaleY(1); transition: transform .06s; }
+
+  .state-idle #petWrap { animation: none; }
+
+  .fastfade .pet-layer { transition-duration: .04s; }
+
+  @keyframes settle {
+    0% { transform: scale(1.05, .93) translateY(2px); }
+    60% { transform: scale(.98, 1.02) translateY(-1px); }
+    100% { transform: scale(1, 1) translateY(0); }
+  }
+  .settle #petWrap { animation: settle .32s ease-out; }
+
+  @keyframes jump-happy {
+    0%, 100% { transform: translateY(0) scale(1, 1); }
+    12% { transform: translateY(3px) scale(1.1, .88); }
+    45% { transform: translateY(-40px) scale(.95, 1.08) rotate(-3deg); }
+    78% { transform: translateY(0) scale(1.08, .9); }
+    90% { transform: translateY(0) scale(1, 1); }
+  }
+  .state-happy #petWrap { animation: jump-happy .95s ease-in-out infinite; }
+
+  .state-sleep #petWrap {
+    animation: breathe 3.4s ease-in-out infinite;
+    filter: brightness(.94) saturate(.85);
+  }
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.025); }
+  }
+
+  .state-sad #petWrap {
+    animation: none;
+    filter: saturate(.7) brightness(.96);
+  }
+
+  .state-wooden-fish #petWrap { animation: none; }
+
+  @keyframes greet-shake {
+    0%   { transform: rotate(0deg); }
+    16%  { transform: rotate(4.5deg) translateY(1px); }
+    34%  { transform: rotate(-4deg); }
+    52%  { transform: rotate(3.6deg); }
+    70%  { transform: rotate(-2.8deg); }
+    86%  { transform: rotate(1.4deg); }
+    100% { transform: rotate(0deg); }
+  }
+  #stage.greeting #petWrap { animation: greet-shake 1.05s ease-in-out; }
+
+  #zzz {
+    position: absolute; right: 2px; top: 6px;
+    font-size: var(--pet-font-md); font-weight: bold; color: var(--pet-text-muted);
+    opacity: 0; pointer-events: none; z-index: 20;
+  }
+  .state-sleep #zzz { opacity: 1; }
+  #zzz span { position: absolute; right: 0; top: 0; animation: zzz-float 2.4s ease-out infinite; }
+  #zzz span:nth-child(2) { font-size: var(--pet-font-sm); right: 12px; top: -10px; animation-delay: .8s; }
+  #zzz span:nth-child(3) { font-size: var(--pet-font-2xs); right: 22px; top: -18px; animation-delay: 1.6s; }
+  @keyframes zzz-float {
+    0% { opacity: 0; transform: translate(0, 4px); }
+    25% { opacity: 1; }
+    100% { opacity: 0; transform: translate(10px, -18px); }
+  }
+
+  .float-item {
+    position: absolute;
+    font-size: var(--pet-font-lg);
+    pointer-events: none;
+    z-index: 20;
+    animation: float-up 1.4s ease-out forwards;
+  }
+  .float-item--heart { color: var(--pet-heart); }
+  .float-item--sparkle { color: var(--pet-sparkle); }
+  .float-item--tear { color: var(--pet-tear); }
+  @keyframes float-up {
+    0% { opacity: 0; transform: translateY(0) scale(.6); }
+    15% { opacity: 1; transform: translateY(-14px) scale(1.15); }
+    100% { opacity: 0; transform: translateY(-80px) scale(1); }
+  }
+
+  #toolbar {
+    position: absolute; inset: 0;
+    z-index: 25;
+    pointer-events: none;
+  }
+  .orbit-slot {
+    position: absolute;
+    width: 0; height: 0;
+  }
+  .tool-btn {
+    position: absolute; left: calc(var(--pet-btn-size) / -2); top: calc(var(--pet-btn-size) / -2);
+    width: var(--pet-btn-size); height: var(--pet-btn-size);
+    border: 1px solid var(--pet-border);
+    background: var(--pet-surface-strong);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--pet-shadow-button);
+    opacity: 0;
+    transform: scale(.4);
+    pointer-events: none;
+    transition: transform .24s cubic-bezier(.34, 1.56, .64, 1), opacity .18s, background .15s, box-shadow .15s;
+  }
+  .tool-btn svg { width: var(--pet-icon-size); height: var(--pet-icon-size); display: block; stroke: var(--pet-accent-strong); fill: none; }
+  .tool-btn .fill-soft { fill: var(--pet-accent-soft); }
+  .tool-btn .fill-strong { fill: var(--pet-accent-strong); stroke: none; }
+  #toolbar.show .tool-btn { opacity: 1; transform: scale(1); pointer-events: auto; }
+  .tool-btn:hover { background: var(--pet-surface); box-shadow: var(--pet-shadow-button-hover); }
+  .tool-btn:active { transform: scale(.86); }
+  #toolbar.show .orbit-slot.gone .tool-btn,
+  .orbit-slot.gone .tool-btn {
+    opacity: 0; transform: scale(.35); pointer-events: none; box-shadow: none;
+  }
+
+  #timer {
+    position: absolute; left: 50%; top: 57px; z-index: 30;
+    display: flex; align-items: center; gap: 4px;
+    padding: 3px 7px;
+    border-radius: var(--pet-radius-pill);
+    background: var(--pet-surface-soft);
+    box-shadow: var(--pet-shadow-timer);
+    font-weight: 700; font-size: var(--pet-font-2xs); line-height: 1;
+    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+    color: var(--pet-text-strong);
+    opacity: 0;
+    transform: translateX(-50%) translateY(-6px) scale(.85);
+    transition: opacity .2s, transform .22s cubic-bezier(.34, 1.56, .64, 1);
+    pointer-events: none;
+  }
+  #timer.on {
+    opacity: 1;
+    transform: translateX(-50%);
+    pointer-events: auto;
+    cursor: pointer;
+  }
+  #timer .bar {
+    display: block; width: var(--pet-bar-width); height: var(--pet-bar-height); border-radius: var(--pet-radius-xs);
+    background: var(--pet-track); overflow: hidden;
+  }
+  #timer .bar i {
+    display: block; width: 100%; height: 100%; border-radius: var(--pet-radius-xs);
+    background: var(--pet-accent); transform-origin: left center;
+    transform: scaleX(1);
+  }
+  #timer.low .bar i { background: var(--pet-warn); }
+  #timer.bump { animation: timer-bump .3s ease-out; }
+  @keyframes timer-bump {
+    0% { transform: translateX(-50%) scale(1); }
+    45% { transform: translateX(-50%) scale(1.14); }
+    100% { transform: translateX(-50%) scale(1); }
+  }
+
+  .float-plus {
+    position: absolute; left: 50%; top: 40px;
+    font-weight: 700; font-size: var(--pet-font-xs); line-height: 1;
+    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+    color: var(--pet-accent-plus);
+    background: var(--pet-surface);
+    padding: 3px 9px;
+    border-radius: var(--pet-radius-pill);
+    box-shadow: var(--pet-shadow-plus);
+    pointer-events: none;
+    z-index: 40;
+    animation: plus-pop .9s ease-out forwards;
+  }
+  @keyframes plus-pop {
+    0% { opacity: 0; transform: translateX(-50%) translateY(8px) scale(.7); }
+    22% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.1); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-28px) scale(1); }
+  }
+
+  @keyframes enter-drop {
+    0% { transform: translateY(-230px) scale(1.08); opacity: 0; }
+    12% { opacity: 1; }
+    55% { transform: translateY(0) scale(1.06, .9); }
+    70% { transform: translateY(-16px) scale(.96, 1.06); }
+    85% { transform: translateY(0) scale(1.04, .96); }
+    100% { transform: translateY(0) scale(1, 1); opacity: 1; }
+  }
+  .entering #petWrap { animation: enter-drop .94s cubic-bezier(.33, .7, .4, 1) both; }
+
+  @keyframes exit-up {
+    0% { transform: translateY(0) scale(1, 1); opacity: 1; }
+    28% { transform: translateY(5px) scale(1.14, .8); }
+    100% { transform: translateY(-180px) scale(.45, .55); opacity: 0; }
+  }
+  .exiting #petWrap { animation: exit-up .78s ease-in both; }
+</style>
+</head>
+<body>
+  <div id="bubble"></div>
+
+  <div id="stage" class="state-idle">
+    <div id="petWrap">
+      <img class="pet-layer on" id="petA" src="poses/idle/idle.png" alt="小星" />
+      <img class="pet-layer" id="petB" src="poses/idle/idle.png" alt="" />
+      <div class="lid" id="lidLeft"></div>
+      <div class="lid" id="lidRight"></div>
+      <div id="zzz"><span>Z</span><span>z</span><span>z</span></div>
+    </div>
+  </div>
+
+  <div id="timer"><span id="timerNum">30s</span><span class="bar"><i id="timerFill"></i></span></div>
+
+  <div id="toolbar">
+    <div class="orbit-slot" id="slotWoodenFish"><button class="tool-btn" id="btnWoodenFish" aria-label="敲木鱼">
+      <svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <ellipse cx="10.4" cy="15.4" rx="7.2" ry="5.3" class="fill-soft"/>
+        <path d="M6.6 15.2c1.5 1.9 5 1.9 6.6 0"/>
+        <path d="M15.1 4.5l4 4"/>
+        <circle cx="20.2" cy="10" r="2" class="fill-soft"/>
+      </svg>
+    </button></div>
+    <div class="orbit-slot" id="slotPat"><button class="tool-btn" id="btnPat" aria-label="摸摸头">
+      <svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 11.7V7a1.7 1.7 0 0 1 3.4 0v4.2"/>
+        <path d="M12.4 10.6V5.6a1.6 1.6 0 0 1 3.2 0v5.3"/>
+        <path d="M15.6 11V8a1.5 1.5 0 0 1 3 0v5.1a6.9 6.9 0 0 1-6.9 6.9h-1.1a5.3 5.3 0 0 1-3.8-1.6l-3.1-3.1a1.7 1.7 0 0 1 2.4-2.4L9 15.2"/>
+      </svg>
+    </button></div>
+    <div class="orbit-slot" id="slotRun"><button class="tool-btn" id="btnRun" aria-label="跑两步">
+      <svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path class="fill-strong" d="M14.4 6.1c1 0 1.9-.85 1.9-1.9 0-1.05-.85-1.9-1.9-1.9-1.05 0-1.9.85-1.9 1.9 0 1.05.85 1.9 1.9 1.9zm-2.9 10.9l.8-3.5 1.7 1.6v4.8h1.6v-6l-1.7-1.6.5-2.4c1.05 1.2 2.65 2 4.4 2v-1.6c-1.5 0-2.8-.8-3.45-1.9l-.8-1.3c-.3-.5-.85-.8-1.4-.8-.25 0-.45.05-.65.1l-4.15 1.75v3.75h1.6V9.55l1.45-.55-1.3 6.5-3.9-.8-.3 1.6 5.55 1.1z"/>
+      </svg>
+    </button></div>
+    <div class="orbit-slot" id="slotSleep"><button class="tool-btn" id="btnSleep" aria-label="睡一会">
+      <svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path class="fill-soft" d="M19.5 17.5A6.8 6.8 0 1 1 12 7.2a6.8 6.8 0 0 0 7.5 10.3z"/>
+        <path d="M3 3.6h3.4l-3.4 3.8h3.6"/>
+      </svg>
+    </button></div>
+  </div>
+
+  <script src="pet.js"></script>
+</body>
+</html>

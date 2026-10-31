@@ -1,19 +1,19 @@
 /**
  * 由 496x496 logo.png 生成任务栏优化版 icon.ico
- * 全部使用 BMP 光栅帧（含 AND 掩码），覆盖 16~256 常用 DPI：
+ * 全部使用 BMP 光栅帧并保留 AND 掩码，覆盖 16~256 常用 DPI：
  * Windows 任务栏/Alt-Tab 对光栅帧的 DPI 匹配优于 PNG 压缩帧，可避免发虚
  */
 const fs = require('fs')
 const path = require('path')
 const zlib = require('zlib')
 
-const FRAMES_DIR = path.join(__dirname, '..', 'src-tauri', 'icons', 'frames')
-const ICON_SOURCE = path.join(__dirname, '..', 'src-tauri', 'icons', 'icon-source.png')
-const OUT = path.join(__dirname, '..', 'src-tauri', 'icons', 'icon.ico')
+const FRAMES_DIR = path.join(__dirname, '..', 'icons', 'frames')
+const ICON_SOURCE = path.join(__dirname, '..', 'icons', 'icon-source.png')
+const OUT = path.join(__dirname, '..', 'icons', 'icon.ico')
 const SIZES = [16, 20, 24, 32, 40, 48, 64, 128, 256]
 
 /**
- * 极简 PNG 解码器：仅支持 8-bit RGBA/RGB + 无 interlace（GDI+ 导出的 PNG 满足）
+ * 极简 PNG 解码器：仅支持 8-bit RGBA/RGB 且无 interlace，GDI+ 导出的 PNG 满足该条件
  * @param {Buffer} buf PNG 字节
  * @returns {{width:number,height:number,rgba:Buffer}}
  */
@@ -173,7 +173,7 @@ const ico = Buffer.concat([head, ...entries, ...frames.map(f => f.data)])
 fs.writeFileSync(OUT, ico)
 
 // 同步为网页 favicon：WebView2 任务栏窗口图标实际取 favicon，必须与窗口图标一致
-const FAVICON = path.join(__dirname, '..', 'favicon.ico')
+const FAVICON = path.join(__dirname, '..', '..', 'public', 'favicon.ico')
 fs.writeFileSync(FAVICON, ico)
 
 console.log(`icon.ico + favicon.ico generated: ${SIZES.join('/')} -> ${(ico.length / 1024).toFixed(1)}KB`)

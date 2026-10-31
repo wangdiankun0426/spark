@@ -9,7 +9,7 @@
     "dev:web": "vite --mode dev",
     "build:web": "vite build --mode prod",
     "dev:win": "tauri dev",
-    "pack:win": "node scripts/sync-version.cjs && tauri build && node scripts/rename-installer.cjs"
+    "pack:win": "node src-tauri/scripts/sync-version.cjs && tauri build && node src-tauri/scripts/rename-installer.cjs"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.2.1",

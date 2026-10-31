@@ -1,12 +1,12 @@
 /**
  * 将 Tauri NSIS 安装包重命名为 sparkcloud_<version>_x64-setup.exe
- * 应用安装后的显示名仍由 tauri.conf.json 的 productName（星火云）决定
+ * 应用安装后的显示名仍由 tauri.conf.json 的 productName 决定
  */
 const fs = require('fs')
 const path = require('path')
 
-const pkg = require('../package.json')
-const nsisDir = path.join(__dirname, '..', 'src-tauri', 'target', 'release', 'bundle', 'nsis')
+const pkg = require('../../package.json')
+const nsisDir = path.join(__dirname, '..', 'target', 'release', 'bundle', 'nsis')
 const targetName = `sparkcloud_${pkg.version}_x64-setup.exe`
 
 if (!fs.existsSync(nsisDir)) {
