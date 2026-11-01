@@ -10,6 +10,8 @@ export default defineConfig((mode) => {
     resolve: {
       alias: {
         "@": resolve(__dirname, 'src'), // 路径别名
+        // 桌面端专属前端代码（Tauri 壳内才生效），与 Rust 侧代码同放 src-tauri，便于成套维护
+        "@desktop": resolve(__dirname, 'src-tauri/desktop'),
       },
       extensions: ['.js', '.vue', '.json', '.scss'] // 使用路径别名时想要省略的后缀名，可以自己 增减
     },

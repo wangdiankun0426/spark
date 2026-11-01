@@ -1,5 +1,5 @@
 import {ref, onMounted, onBeforeUnmount} from 'vue'
-import {isDesktop} from '@/utils/desktop.js'
+import {isDesktop} from './env.js'
 
 /**
  * Tauri 无边框窗口控制：最小化、最大化/还原、关闭到托盘及最大化状态同步

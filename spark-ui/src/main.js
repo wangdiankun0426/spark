@@ -1,6 +1,6 @@
 import { createApp } from 'vue';
 import App from './App.vue';
-import { setupDesktop } from '@/utils/desktop.js';
+import { setupDesktop } from '@desktop/env.js';
 import { initTheme } from '@/utils/themeUtil';
 import { initDialogDrag } from '@/utils/dialogDrag';
 import ElementPlus from 'element-plus';
@@ -10,7 +10,7 @@ import '@/styles/main.scss';
 import '@/styles/theme.scss';
 import '@/styles/element.scss';
 import '@/styles/dark.scss';
-import '@/styles/desktop.scss';
+import '@desktop/desktop.scss';
 import * as ElIcon from '@element-plus/icons-vue';
 import router from '@/router/index';
 import store from '@/store/index';

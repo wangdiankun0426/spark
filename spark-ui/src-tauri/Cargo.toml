@@ -1,6 +1,6 @@
 [package]
 name = "spark-ui"
-version = "0.0.9"
+version = "0.0.11"
 description = "星火云"
 authors = ["wangdiankun"]
 edition = "2021"
@@ -20,6 +20,12 @@ tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+# 热更新下载走 Windows 原生 schannel，避免 rustls 依赖 aws-lc-rs 带来的额外编译工具链
+reqwest = { version = "0.13", default-features = false, features = ["native-tls", "system-proxy"] }
+# 仅需读包解压能力，关闭默认特性避免引入 bzip2/lzma 等无关算法
+zip = { version = "9", default-features = false, features = ["deflate"] }
+# 热更包下载后做 sha256 完整性校验
+sha2 = "0.10"
 
 # 释放包体积优化
 [profile.release]

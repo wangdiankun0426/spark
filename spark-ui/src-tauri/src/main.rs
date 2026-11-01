@@ -2,6 +2,8 @@
 // Release 构建时隐藏 Windows 控制台窗口
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod hot_update;
+
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
 use tauri::{
@@ -79,6 +81,17 @@ fn pet_webview_url() -> tauri::Url {
     raw.parse().expect("pet url must be valid")
 }
 
+/// 应用窗口加载地址，走 app 协议以便热更目录覆盖内置资源
+/// 开发模式由 Vite 开发服务器承载，不使用该协议
+fn app_webview_url(route: &str) -> tauri::Url {
+    let raw = if cfg!(windows) {
+        format!("http://app.localhost/index.html{}", route)
+    } else {
+        format!("app://localhost/index.html{}", route)
+    };
+    raw.parse().expect("app url must be valid")
+}
+
 /// 按路径返回内嵌的宠物资源，作为自定义协议的处理器
 fn pet_asset_response(path: &str) -> tauri::http::Response<Vec<u8>> {
     let (body, mime, status): (&[u8], &str, u16) = match path {
@@ -104,7 +117,11 @@ fn pet_asset_response(path: &str) -> tauri::http::Response<Vec<u8>> {
 #[tauri::command]
 async fn open_app_window(app: tauri::AppHandle, route: String) {
     let label = format!("window-{}", WINDOW_SEQ.fetch_add(1, Ordering::Relaxed));
-    let url = WebviewUrl::App(format!("index.html{}", route).into());
+    let url = if tauri::is_dev() {
+        WebviewUrl::App(format!("index.html{}", route).into())
+    } else {
+        WebviewUrl::External(app_webview_url(&route))
+    };
     let result = WebviewWindowBuilder::new(&app, label, url)
         .title("星火云")
         .inner_size(1400.0, 900.0)
@@ -282,7 +299,10 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             open_app_window,
             open_external_url,
-            pet_fix_position
+            pet_fix_position,
+            hot_update::hot_update_check,
+            hot_update::hot_update_install,
+            hot_update::hot_update_reload
         ])
         // 主窗口收到关闭请求时隐藏到托盘而不是退出进程，退出统一走托盘菜单
         // 子窗口与宠物窗口不拦截，保持系统标题栏的正常关闭行为
@@ -300,7 +320,13 @@ fn main() {
             let path = if path.is_empty() { "index.html" } else { path };
             pet_asset_response(path)
         })
+        // 自定义协议 app://：正式包的前端资源入口，热更目录优先、安装包内置资源兜底
+        .register_uri_scheme_protocol("app", |ctx, request| {
+            hot_update::serve(ctx.app_handle(), request.uri().path())
+        })
         .setup(|app| {
+            // 安装包升级后清理已失效的旧热更资源
+            hot_update::cleanup_outdated(app.handle());
             // 系统托盘右键菜单提供桌面宠物开关和退出，左键点击托盘图标显示主窗口
             // 初始宠物未显示，菜单文案为召唤小星，切换后由 update_pet_tray_menu 同步
             let pet = MenuItem::with_id(app, "pet", "召唤小星", true, None::<&str>)?;

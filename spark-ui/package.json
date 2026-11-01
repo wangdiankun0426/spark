@@ -1,7 +1,7 @@
 {
   "name": "spark-ui",
   "private": true,
-  "version": "0.0.9",
+  "version": "0.0.11",
   "description": "星火云应用平台PC端",
   "author": "wangdiankun",
   "type": "module",
@@ -9,7 +9,8 @@
     "dev:web": "vite --mode dev",
     "build:web": "vite build --mode prod",
     "dev:win": "tauri dev",
-    "pack:win": "node src-tauri/scripts/sync-version.cjs && tauri build && node src-tauri/scripts/rename-installer.cjs"
+    "pack:win": "node src-tauri/scripts/sync-version.cjs && tauri build && node src-tauri/scripts/rename-installer.cjs",
+    "pack:update": "node src-tauri/scripts/pack-hot-update.cjs"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.2.1",

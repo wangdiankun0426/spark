@@ -350,7 +350,7 @@ import { ElMessage } from 'element-plus';
 import { Sunny, Moon } from '@element-plus/icons-vue';
 import Globe from '@/assets/icons/globe.vue';
 import QRCode from 'qrcode';
-import { isDesktop } from '@/utils/desktop.js';
+import { isDesktop } from '@desktop/env.js';
 import { getTheme, setTheme } from '@/utils/themeUtil.js';
 import loginIcon1 from '@/assets/images/login-1.png';
 import loginIcon2 from '@/assets/images/login-2.png';
@@ -436,8 +436,8 @@ function openAgreement(type) {
   window.open(href, '_blank');
 }
 
-// Windows安装包下载地址
-const WIN_SETUP_URL = 'https://spark.evancloud.top:7101/bundle/星火云_0.0.1_x64-setup.exe';
+// Windows安装包下载地址，文件名与 rename-installer.cjs 产物一致
+const WIN_SETUP_URL = `https://spark.evancloud.top:7101/bundle/sparkcloud_${__APP_VERSION__}_x64-setup.exe`;
 // 移动端 H5 访问地址
 const H5_URL = 'https://spark.evancloud.top:7102/';
 // 移动端 H5 二维码图片

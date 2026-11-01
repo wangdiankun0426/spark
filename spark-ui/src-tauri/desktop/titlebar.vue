@@ -76,8 +76,9 @@ import {ref} from 'vue'
 import {Minus, Close, FullScreen, CopyDocument, Setting, FolderOpened, Document, Lock, Refresh} from '@element-plus/icons-vue';
 import Question from '@/assets/icons/question.vue';
 import {ElMessage} from 'element-plus';
-import {useDesktopWindow} from '@/utils/desktopWindow';
-import {getDownloadDir, pickDownloadDir, saveDownloadDir} from '@/utils/download';
+import {useDesktopWindow} from './window.js';
+import {getDownloadDir, pickDownloadDir, saveDownloadDir} from './download.js';
+import {checkHotUpdate} from './update.js';
 
 const {desktopVisible, isMaximized, minimize, toggleMaximize, hideWindow} = useDesktopWindow();
 
@@ -93,7 +94,7 @@ function openAgreement(type) {
 
 function checkUpdate() {
   settingVisible.value = false
-  ElMessage.info('功能开发中')
+  checkHotUpdate(false)
 }
 
 async function changeDir() {
@@ -118,7 +119,7 @@ function confirmDir() {
 }
 </script>
 
-<style lang="scss" scoped>
+<style scoped lang="scss">
 .desktop-titlebar {
   position: fixed;
   top: 0;
@@ -139,7 +140,7 @@ function confirmDir() {
 .window-btn {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: $border-radius-md;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -157,8 +158,8 @@ function confirmDir() {
   }
 
   &--close:hover {
-    background: #fde7e9;
-    color: #e81123;
+    background: var(--el-color-danger-light-9);
+    color: var(--el-color-danger);
   }
 
   &--tool {
@@ -178,7 +179,7 @@ function confirmDir() {
     align-items: center;
     gap: 6px;
     padding: 10px 6px;
-    border-radius: 8px;
+    border-radius: $border-radius-md;
     font-size: 13px;
     color: var(--app-text-primary);
     cursor: pointer;

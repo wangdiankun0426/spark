@@ -1,6 +1,6 @@
 // router/index.js
 import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
-import { isDesktop } from '@/utils/desktop.js'
+import { isDesktop } from '@desktop/env.js'
 import {isOrgAdmin, isSysAdmin} from '../utils/permissionUtil.js'
 import {hasMenu} from "@/utils/menuUtil.js";
 

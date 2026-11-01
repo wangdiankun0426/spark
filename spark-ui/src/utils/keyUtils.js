@@ -4,4 +4,6 @@ export const localStorageKey = {
     USERINFO: 'SPARK_USER_INFO',
     THEME_KEY: 'THEME_KEY',
     AGREEMENT_KEY: 'SPARK_AGREEMENT_AGREE',
+    HOT_UPDATE_IGNORE: 'SPARK_HOT_UPDATE_IGNORE',
+    DOWNLOAD_DIR: 'sparkDownloadDir',
 }

@@ -1,0 +1,4 @@
+# 桌面端前端代码（env/window/update/download/Titlebar/desktop.scss）由 Vite 构建，
+# 改动时不需要重启 tauri dev 的 Rust 进程，故从文件监听中排除。
+# 语法同 .gitignore，路径相对本文件所在目录（src-tauri/）。
+desktop/
