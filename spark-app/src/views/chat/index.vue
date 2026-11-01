@@ -1,5 +1,5 @@
 <template>
-  <view class="chat-container safe-area-page">
+  <view class="chat-container safe-area-page" :class="themeClass">
     <!-- 标题栏 -->
     <view class="chat-header" :style="navHeaderBelowStyle()">
       <view class="header-back" @click="goBack">
@@ -82,7 +82,7 @@
             <up-parse
                 v-else
                 :content="renderMarkdown(chatMsg.message)"
-                :tag-style="MD_TAG_STYLE"
+                :tag-style="mdTagStyle"
             ></up-parse>
           </view>
 
@@ -119,7 +119,7 @@
               <view v-else class="markdown-body">
                 <up-parse
                     :content="renderMarkdown(chatMsg.message)"
-                    :tag-style="MD_TAG_STYLE"
+                    :tag-style="mdTagStyle"
                 ></up-parse>
               </view>
             </template>
@@ -175,15 +175,20 @@ import { onShow } from "@dcloudio/uni-app"
 import { navHeaderBelowStyle } from "@/utils/navBarUtil"
 import { useStore } from "vuex"
 import { createChatSpaceAPI, createAiChatSpaceAPI } from "@/api/chat/space.js"
-import { renderMarkdown, MD_TAG_STYLE } from "@/utils/markdownUtil.js"
+import { renderMarkdown, getMdTagStyle } from "@/utils/markdownUtil.js"
 import { useChatHistory } from "@/views/chat/chatMessage.js"
 import { parseSticker, buildStickerMessage } from "@/views/chat/emojiData.js"
+import { useTheme } from "@/utils/useTheme"
 import UserAvatar from "@/components/UserAvatar/index.vue"
 import EmojiPicker from "@/views/chat/emojiPicker.vue"
 
 const { proxy } = getCurrentInstance()
 const store = useStore()
+const { isDark, themeClass } = useTheme()
 const message = ref("")
+
+// 富文本内联样式随皮肤切换，代码块与小标签才有足够对比度
+const mdTagStyle = computed(() => getMdTagStyle(isDark.value))
 
 const websocket = ref(null)
 // 连接是否可用，断开与重连期间为false，用于锁定输入框
@@ -841,7 +846,7 @@ function openChatDetail() {
   flex-direction: column;
   height: 100vh;
   box-sizing: border-box;
-  background-color: #f5f7fa;
+  background-color: var(--app-chat-bg);
   overflow: hidden;
 }
 
@@ -868,10 +873,10 @@ function openChatDetail() {
   font-weight: 700;
   letter-spacing: 1px;
   /* #ifdef MP-WEIXIN */
-  color: #2f7bff;
+  color: var(--app-brand);
   /* #endif */
   /* #ifdef H5 */
-  background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+  background-image: var(--app-title-gradient);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -912,9 +917,9 @@ function openChatDetail() {
 
 .chat-tip {
   font-size: 12px;
-  color: #999;
+  color: var(--app-text-secondary);
   padding: 4px 12px;
-  background-color: #e9e9e9;
+  background-color: var(--app-bg-sub);
   border-radius: 100px;
 }
 
@@ -942,7 +947,7 @@ function openChatDetail() {
 
 .chat-time {
   font-size: 11px;
-  color: #999;
+  color: var(--app-text-secondary);
 }
 
 .chat-msg-content {
@@ -962,14 +967,14 @@ function openChatDetail() {
 }
 
 .chat-bubble-user {
-  background-color: #0052cc;
-  color: #fff;
+  background-color: var(--app-bubble-self-bg);
+  color: var(--app-bubble-self-text);
   border-top-right-radius: 2px;
 }
 
 .chat-bubble-agent {
-  background-color: #fff;
-  color: #333;
+  background-color: var(--app-bubble-agent-bg);
+  color: var(--app-bubble-agent-text);
   border-top-left-radius: 2px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
@@ -982,7 +987,7 @@ function openChatDetail() {
 
 .thinking-label {
   font-size: 12px;
-  color: #666;
+  color: var(--app-text-regular);
 }
 
 .thinking-arrow-open {
@@ -1001,16 +1006,16 @@ function openChatDetail() {
 .thinking-content {
   margin-top: 6px;
   padding-top: 6px;
-  border-top: 1px dashed #e9e9e9;
+  border-top: 1px dashed var(--app-border-light);
   font-size: 12px;
-  color: #666;
+  color: var(--app-text-regular);
   line-height: 1.6;
   white-space: pre-line;
 }
 
 .thinking-divider {
   height: 1px;
-  background-color: #f0f0f0;
+  background-color: var(--app-divide);
   margin: 8px 0;
 }
 
@@ -1019,9 +1024,9 @@ function openChatDetail() {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #fff;
+  background-color: var(--app-bg-card);
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-  border-top: 1px solid #e9e9e9;
+  border-top: 1px solid var(--app-border-light);
   z-index: 100;
   box-sizing: border-box;
 }
@@ -1031,18 +1036,19 @@ function openChatDetail() {
   align-items: center;
   height: 44px;
   padding: 0 16px;
-  background-color: #f5f7fa;
+  background-color: var(--app-bg-sub);
   border-radius: 10px;
 }
 
 .input-wrapper-disabled {
-  background-color: #eef0f3;
+  background-color: var(--app-bg-page);
 }
 
 .chat-input {
   flex: 1;
   height: 24px;
   font-size: 15px;
+  color: var(--app-text-primary);
   background-color: transparent;
   border: none;
 }
@@ -1062,7 +1068,7 @@ function openChatDetail() {
   position: relative;
   width: 18px;
   height: 18px;
-  border: 1px solid #666;
+  border: 1px solid var(--app-text-regular);
   border-radius: 50%;
   box-sizing: border-box;
 }
@@ -1073,7 +1079,7 @@ function openChatDetail() {
   width: 2px;
   height: 2px;
   border-radius: 50%;
-  background-color: #666;
+  background-color: var(--app-text-regular);
 }
 
 .emoji-eye-left {
@@ -1091,7 +1097,7 @@ function openChatDetail() {
   width: 8px;
   height: 4px;
   margin-left: -4px;
-  border: 1px solid #666;
+  border: 1px solid var(--app-text-regular);
   border-top: none;
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
@@ -1134,5 +1140,24 @@ function openChatDetail() {
   .hljs-attr { color: #6f42c1; }
   .hljs-tag { color: #22863a; }
   .hljs-name { color: #22863a; }
+}
+
+.chat-container.theme-dark :deep(.markdown-body) {
+  .hljs-keyword { color: #ff7b72; }
+  .hljs-string { color: #a5d6ff; }
+  .hljs-number { color: #79c0ff; }
+  .hljs-comment { color: #8b949e; font-style: italic; }
+  .hljs-function { color: #d2a8ff; }
+  .hljs-title { color: #d2a8ff; }
+  .hljs-params { color: #e6edf3; }
+  .hljs-literal { color: #79c0ff; }
+  .hljs-built_in { color: #ffa657; }
+  .hljs-operator { color: #ff7b72; }
+  .hljs-punctuation { color: #e6edf3; }
+  .hljs-property { color: #79c0ff; }
+  .hljs-variable { color: #ffa657; }
+  .hljs-attr { color: #d2a8ff; }
+  .hljs-tag { color: #7ee787; }
+  .hljs-name { color: #7ee787; }
 }
 </style>

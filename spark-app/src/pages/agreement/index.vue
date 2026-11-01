@@ -1,5 +1,5 @@
 <template>
-  <div class="agreement-container safe-area-page">
+  <div class="agreement-container safe-area-page" :class="themeClass">
     <view class="agreement-header" :style="navHeaderStyle()">
       <view class="header-left" @click="onClickBack">
         <up-icon name="arrow-left" size="20" color="#2f7bff"></up-icon>
@@ -30,8 +30,10 @@
 import {computed, ref} from 'vue';
 import {onLoad} from '@dcloudio/uni-app';
 import {navHeaderStyle} from '@/utils/navBarUtil';
+import {useTheme} from '@/utils/useTheme';
 import {agreementMap} from '@/utils/agreementDoc';
 
+const {themeClass} = useTheme();
 const docType = ref('service');
 
 const doc = computed(() => agreementMap[docType.value] || agreementMap.service);
@@ -56,7 +58,7 @@ function onClickBack() {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: #ffffff;
+  background-color: var(--app-page-base);
 }
 
 .agreement-header {
@@ -77,10 +79,10 @@ function onClickBack() {
     font-weight: 700;
     letter-spacing: 1px;
     /* #ifdef MP-WEIXIN */
-    color: #2f7bff;
+    color: var(--app-brand);
     /* #endif */
     /* #ifdef H5 */
-    background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+    background-image: var(--app-title-gradient);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;

@@ -13,7 +13,7 @@
             v-model="keyword"
             placeholder="搜索姓名"
             :showAction="false"
-            bgColor="#f5f7fa"
+            :bgColor="searchBgColor"
         />
       </view>
 
@@ -56,7 +56,13 @@
 import {computed, ref, watch} from "vue";
 import {pageUserListAPI} from "@/api/sys/user";
 import {toast} from "uview-plus";
+import {useTheme} from "@/utils/useTheme";
+import {getSearchBgColor} from "@/utils/themeUtil";
 import UserAvatar from '@/components/UserAvatar/index.vue'
+
+const {isDark} = useTheme();
+
+const searchBgColor = computed(() => getSearchBgColor(isDark.value));
 
 // 每页条数
 const PAGE_SIZE = 20;
@@ -228,7 +234,7 @@ function handleClose() {
   gap: 10px;
 
   .picker-search {
-    background-color: #ffffff;
+    background-color: var(--app-bg-card);
   }
 
   .picker-list {
@@ -256,11 +262,11 @@ function handleClose() {
 
     .picker-name {
       font-size: 14px;
-      color: #303133;
+      color: var(--app-text-primary);
     }
 
     &.picker-item--active {
-      background-color: #f0f6ff;
+      background-color: var(--app-primary-light);
     }
   }
 }

@@ -43,7 +43,7 @@ description: Spark 项目前端 Web（spark-ui，Vue3 PC 端）编码规范。�
 1. 未经用户同意引入新的 UI 库、HTTP 库、状态管理库
 2. 使用 Options API、`Vue.extend`、mixin、普通 `<script>` —— 业务组件必须 `<script setup>`
 3. 在 `.vue` 中写非 `scoped` 的 `<style>`（`src/styles/*.scss` 全局文件除外）
-4. 业务组件中硬编码颜色/字号/间距 —— 优先用 `src/styles/variables.scss` token
+4. 业务组件中硬编码颜色/字号/间距 —— 优先用 `src/styles/variables.scss` token；会随主题变化的底色/文字色用 `src/styles/theme.scss` 的 `--app-*` 变量，不要写死 `#fff`
 5. 直接调用 `axios` —— 必须从 `@/api/request` 引入
 6. 硬编码 localStorage key 字符串 —— 用 `utils/keyUtils.js#localStorageKey`
 7. 修改 `VITE_ENCRYPT_PRIVATE_KEY`，或将密钥写入源码/日志
@@ -102,6 +102,7 @@ description: Spark 项目前端 Web（spark-ui，Vue3 PC 端）编码规范。�
 | 文档类型 | `@/utils/documentUtil.js` | `getDocumentCategory`、文件后缀映射 |
 | 管理员判断 | `@/utils/utils.js#isAdmin()` | `userInfo.id === 101` |
 | 设计 token | `@/styles/variables.scss` | 颜色、圆角、阴影、间距、过渡 |
+| 主题变量 | `@/styles/theme.scss` | 亮/暗两套 `--app-*` 变量与公共主题底座（`html.dark` / `html.theme-light`）；第三方组件（v-md-editor 等）的深色覆盖在 `@/styles/dark.scss` |
 | Element 覆盖 | `@/styles/element.scss` | 全局 `--el-*` 变量与组件选择器覆盖 |
 | 全局基础样式 | `@/styles/main.scss` | 页面基础、滚动条、`app-container` |
 | Markdown 编辑/预览 | `@kangc/v-md-editor` | 已在 `main.js` 全局注册 |
@@ -118,7 +119,7 @@ description: Spark 项目前端 Web（spark-ui，Vue3 PC 端）编码规范。�
 
 ## 8. 视觉风格基调
 
-**纯白底、细描边淡投影、贴边铺满、无多余留白**；卡片复用 `element.scss` 的 `.el-card` 配方不另造；颜色/间距/圆角/阴影全走 `variables.scss` token。涉及 UI 样式与布局时必读 `references/visual-style.md`。
+**纯白底、细描边淡投影、贴边铺满、无多余留白**；卡片复用 `element.scss` 的 `.el-card` 配方不另造；颜色/间距/圆角/阴影全走 `variables.scss` token。上述"纯白底"是浅色主题的基准，深色主题由 `styles/theme.scss` 的 `--app-*` 变量接管，页面不写死色值即自动跟随。涉及 UI 样式与布局时必读 `references/visual-style.md`。
 
 ## 9. 红线（违反必须返工）
 
@@ -136,7 +137,7 @@ description: Spark 项目前端 Web（spark-ui，Vue3 PC 端）编码规范。�
 | 场景 | 动手前必须先 Read |
 |------|----------|
 | 新增页面/组件/API/路由/Vuex 模块（即几乎一切前端编码任务） | `references/templates.md` |
-| 涉及页面样式、布局、卡片、配色、留白 | `references/visual-style.md` |
+| 涉及页面样式、布局、卡片、配色、留白、亮/暗主题 | `references/visual-style.md` |
 | 交付前自查视觉质量 | `references/visual-style.md`（交付前自查清单） |
 
 判断依据：拿不准是否命中时，一律按命中处理——先 Read 再写。

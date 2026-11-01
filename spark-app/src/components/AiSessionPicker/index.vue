@@ -22,7 +22,7 @@
             placeholder="搜索会话名称"
             :showAction="false"
             :height="46"
-            bgColor="#f5f7fa"
+            :bgColor="searchBgColor"
         />
       </view>
 
@@ -66,9 +66,11 @@
 </template>
 
 <script setup>
-import {ref, watch} from "vue";
+import {ref, computed, watch} from "vue";
 import {pageMyChatSpaceListAPI} from "@/api/chat/space";
 import {useDebounceFn} from "@/utils/debounce";
+import {useTheme} from "@/utils/useTheme";
+import {getSearchBgColor} from "@/utils/themeUtil";
 
 // 会话类型，对应后端 ChatSpaceTypeEnum 的取值
 const SPACE_TYPE = {agent: 3, model: 2}
@@ -85,6 +87,10 @@ const props = defineProps({
   title: {type: String, default: '会话记录'}
 });
 const emit = defineEmits(['update:show', 'select', 'new']);
+
+const {isDark} = useTheme();
+
+const searchBgColor = computed(() => getSearchBgColor(isDark.value));
 
 // 会话名称检索关键字
 const keyword = ref("");
@@ -225,7 +231,7 @@ function handleNew() {
 .picker-title {
   font-size: 16px;
   font-weight: 600;
-  color: #333333;
+  color: var(--app-text-primary);
 }
 
 .picker-close {
@@ -233,7 +239,7 @@ function handleNew() {
 }
 
 .picker-search {
-  background-color: #ffffff;
+  background-color: var(--app-bg-card);
 }
 
 /* 开启新对话 */
@@ -244,13 +250,13 @@ function handleNew() {
   gap: 6px;
   height: 40px;
   border-radius: 8px;
-  background-color: #f0f6ff;
+  background-color: var(--app-primary-light);
 }
 
 .picker-new-text {
   font-size: 14px;
   font-weight: 500;
-  color: #0052cc;
+  color: var(--app-text-info);
 }
 
 .picker-list {
@@ -267,7 +273,7 @@ function handleNew() {
   padding: 12px 0;
   text-align: center;
   font-size: 12px;
-  color: #999999;
+  color: var(--app-text-secondary);
 }
 
 .picker-item {
@@ -278,7 +284,7 @@ function handleNew() {
   border-radius: 6px;
 
   &:active {
-    background-color: #f5f7fa;
+    background-color: var(--app-bg-hover);
   }
 }
 
@@ -292,7 +298,7 @@ function handleNew() {
 
 .picker-item-title {
   font-size: 14px;
-  color: #303133;
+  color: var(--app-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -303,7 +309,7 @@ function handleNew() {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #999999;
+  color: var(--app-text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

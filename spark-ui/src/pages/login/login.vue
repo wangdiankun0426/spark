@@ -145,7 +145,7 @@
         <div class="login-header-tools">
           <el-tooltip :content="currentTheme === 'light' ? '深色模式' : '浅色模式'" placement="top">
             <el-button circle @click="toggleTheme">
-              <el-icon><Sunny v-if="currentTheme === 'light'" /><Moon v-else /></el-icon>
+              <el-icon><Moon v-if="currentTheme === 'light'" /><Sunny v-else /></el-icon>
             </el-button>
           </el-tooltip>
           <el-tooltip content="语言" placement="top">
@@ -1140,7 +1140,34 @@ html.dark {
 
 .login-header-tools {
   display: flex;
-  gap: 8px;
+  /* 按钮本身是 34px 无边框圆形、图标仅 20px，留白已足够，间距收紧到 2px 视觉上才不散 */
+  gap: 2px;
+
+  /* 主题 / 语言：去掉描边和底色，只在悬停时浮出淡色底，图标放大到 20px */
+  :deep(.el-button.is-circle) {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: none !important;
+    /* 全局 .el-button 用 !important 把圆角压成了 5px，这里拉回正圆 */
+    border-radius: 50% !important;
+    background-color: transparent !important;
+    color: var(--app-text-secondary);
+    font-size: 20px;
+    transition: background-color 0.18s ease, color 0.18s ease;
+
+    &:hover,
+    &:focus-visible,
+    &:active {
+      background-color: var(--app-primary-light) !important;
+      color: var(--app-primary) !important;
+      border: none !important;
+    }
+
+    .el-icon {
+      font-size: 20px;
+    }
+  }
 }
 
 .login-title {

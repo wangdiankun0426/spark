@@ -13,9 +13,9 @@
 | 端           | 地址                                                              |
 |-------------|-----------------------------------------------------------------|
 | PC 端        | https://spark.evancloud.top:7101                                |
-| Windows 桌面端 | https://spark.evancloud.top:7101/bundle/星火云_0.0.1_x64-setup.exe |
+| Windows 桌面端 | https://spark.evancloud.top:7101/bundle/sparkcloud_0.0.11_x64-setup.exe |
 | H5 移动端      | https://spark.evancloud.top:7102                                |
-| 微信小程序       | <img src="https://spark.evancloud.top:7101/bundle/wechatUrl.png">                                                               |
+| 微信小程序       | <img src="https://spark.evancloud.top:7101/bundle/wechatUrl.png" alt="微信小程序" width="160" height="160"> |
 
 **测试账号**
 
@@ -119,6 +119,7 @@ spark/
 ├── spark-llm/         # 大模型接入、Agent、MCP、向量/排序模型
 ├── spark-kg/          # 知识图谱
 ├── spark-workflow/    # AI 工作流（DAG 编排、执行引擎）
+├── spark-home/        # 用户工作台：首页看板聚合（待办、推荐、可申请模板、模型用量趋势）
 ├── spark-task/        # 定时/异步任务（任务实例框架 ITaskTypeHandler）
 ├── spark-monitor/     # 站点监控（主机/JVM/接口/Redis/MQ 指标采集、快照清理）
 ├── spark-dms/         # 文档管理（上传、预览、在线编辑、分块）
@@ -216,7 +217,7 @@ spark/
 - 租户下用户加入/移除、设置/取消租户管理员
 - 用户可加入多个租户，左下角一键切换默认租户，切换后菜单、数据权限整体生效
 
-### 5.10 数据看板
+### 5.10 数据看板（spark-home）
 工作台聚合展示：模型调用量与 Token 趋势、流程待办/已办/申请分布、通知公告、员工工作日历、待办事项、快捷入口及知识库/知识图谱统计卡片，图表随主题自适应。
 
 ### 5.11 后台管理
@@ -232,7 +233,7 @@ spark/
 - **全局双主题**：浅色与品牌深蓝灰深色主题一键切换，覆盖页面、卡片、表格、表单、抽屉、弹窗、下拉、分页、滚动条；ECharts 图表与 v-md-editor 编辑器/预览同步适配；登录/注册/错误等独立页保持浅色
 - **品牌化设计**：品牌 Lockup 标识、登录页六大能力展示、圆角胶囊菜单选中态、统一卡片描边与投影体系
 - **全局弹窗拖拽**：el-dialog 与 ElMessageBox 标题栏按住可拖动、双击复位
-- **桌面端适配**：Tauri 2 打包 Windows 安装包，Hash 路由兼容应用内协议，窗口内打开设计器/文档页面
+- **桌面端适配**：Tauri 2 打包 Windows 安装包，Hash 路由兼容应用内协议，窗口内打开设计器/文档页面；支持前端资源热更新，界面与逻辑改动无需重装客户端
 
 ---
 
@@ -273,7 +274,27 @@ npm run dev:win
 npm run pack:win
 ```
 
-### 6.3 移动端
+### 6.3 桌面端热更新
+
+前端资源支持在线热更新，改 `src/**` 或 `src-tauri/desktop/**` 无需重装客户端；`desktopPet/`、Rust 代码与 `tauri.conf.json` 仍需重新打包。
+
+```bash
+cd spark-ui
+
+# 提升版本号（package.json 为唯一版本源）
+npm pkg set version=0.0.12
+
+# 构建前端，产出 release/desktop/{dist-0.0.12.zip, latest.json}
+npm run build:web
+npm run pack:update -- "本次更新说明"
+
+# 上传到服务器静态目录，客户端启动时静默检查，也可在「设置 → 系统更新」手动触发
+# scp release/desktop/dist-0.0.12.zip release/desktop/latest.json <server>:/opt/spark/bundle/desktop/
+```
+
+清单地址由 `.env.prod` 的 `VITE_HOT_UPDATE_URL` 指定，服务器需直接返回 `latest.json` 本体（不可回落到 `index.html`）。升级到首个热更版本后会掉一次登录态（窗口源由 `tauri://localhost` 变为 `http://app.localhost`）。
+
+### 6.4 移动端
 
 ```bash
 cd spark-app

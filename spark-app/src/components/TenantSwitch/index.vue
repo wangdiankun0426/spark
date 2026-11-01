@@ -165,7 +165,7 @@ function handleClose() {
     .tenant-popup-title {
       font-size: 17px;
       font-weight: 600;
-      color: #303133;
+      color: var(--app-text-primary);
     }
   }
 
@@ -183,19 +183,19 @@ function handleClose() {
       align-items: center;
       justify-content: space-between;
       padding: 12px 6px;
-      border-bottom: 1px solid #f5f7fa;
+      border-bottom: 1px solid var(--app-divide);
 
       &:last-child {
         border-bottom: 0;
       }
 
       &:active {
-        background-color: #f5f7fa;
+        background-color: var(--app-bg-hover);
       }
 
       &.is-current {
         .tenant-name {
-          color: #0052cc;
+          color: var(--app-text-info);
         }
       }
 
@@ -207,12 +207,12 @@ function handleClose() {
 
         .tenant-name {
           font-size: 15px;
-          color: #303133;
+          color: var(--app-text-primary);
         }
 
         .tenant-meta {
           font-size: 12px;
-          color: #909399;
+          color: var(--app-text-muted);
         }
       }
 

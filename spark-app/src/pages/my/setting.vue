@@ -1,5 +1,5 @@
 <template>
-  <div class="setting-container safe-area-page">
+  <div class="setting-container safe-area-page" :class="themeClass">
     <!-- 顶部标题栏 -->
     <view class="setting-header" :style="navHeaderStyle()">
       <view class="header-left" @click="onClickLeft">
@@ -22,6 +22,7 @@
 
     <!-- 登出按钮 -->
     <view class="setting-logout">
+      <text class="app-version">v{{ appVersion }}</text>
       <up-button
           type="primary"
           color="linear-gradient(90deg, #004fc5 0%, #0072e0 100%)"
@@ -54,10 +55,15 @@ import {computed, ref} from 'vue';
 import {useStore} from 'vuex';
 import {logoutAPI} from "@/api/auth/login";
 import {navHeaderStyle} from "@/utils/navBarUtil";
+import {useTheme} from "@/utils/useTheme";
 import TenantSwitch from "@/components/TenantSwitch/index.vue"
 
 const store = useStore();
+const {themeClass} = useTheme();
 const modalVisible = ref(false);
+
+// 版本号由 vite.config.js 的 define 在编译期从 package.json 注入，与 PC 端同一套做法
+const appVersion = __APP_VERSION__;
 
 // 切换租户弹层显隐
 const tenantPopupVisible = ref(false);
@@ -130,10 +136,10 @@ function handleLogout() {
     font-weight: 700;
     letter-spacing: 1px;
     /* #ifdef MP-WEIXIN */
-    color: #2f7bff;
+    color: var(--app-brand);
     /* #endif */
     /* #ifdef H5 */
-    background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+    background-image: var(--app-title-gradient);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -145,7 +151,7 @@ function handleLogout() {
   flex: 1;
   overflow-y: auto;
   padding-top: 8px;
-  padding-bottom: 90px;
+  padding-bottom: 112px;
 }
 
 .group-title {
@@ -168,6 +174,15 @@ function handleLogout() {
   padding-bottom: calc(16px + constant(safe-area-inset-bottom));
   padding-bottom: calc(16px + env(safe-area-inset-bottom));
   background-color: $spark-color-header-bg;
+}
+
+.app-version {
+  display: block;
+  margin-bottom: 14rpx;
+  text-align: center;
+  font-size: 24rpx;
+  letter-spacing: 1rpx;
+  color: var(--app-text-tertiary);
 }
 
 .logout-text {

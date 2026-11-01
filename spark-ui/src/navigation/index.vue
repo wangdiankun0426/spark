@@ -54,14 +54,6 @@
           <el-icon><Bell /></el-icon>
           <span>消息</span>
         </div>
-        <div class="dock-btn" @click="toggleTheme">
-          <el-icon><Sunny v-if="currentTheme === 'light'" /><Moon v-else /></el-icon>
-          <span>主题</span>
-        </div>
-        <div class="dock-btn" @click="handleLocaleChange">
-          <el-icon><Globe /></el-icon>
-          <span>语言</span>
-        </div>
         <div class="dock-btn" @click="tenantSwitchVisible = true">
           <el-icon><OfficeBuilding /></el-icon>
           <span>租户</span>
@@ -69,6 +61,14 @@
         <div class="dock-btn" @click="mcpTokenVisible = true">
           <el-icon><Key /></el-icon>
           <span>MCP</span>
+        </div>
+        <div class="dock-btn" @click="toggleTheme">
+          <el-icon><Moon v-if="currentTheme === 'light'" /><Sunny v-else /></el-icon>
+          <span>主题</span>
+        </div>
+        <div class="dock-btn" @click="handleLocaleChange">
+          <el-icon><Globe /></el-icon>
+          <span>语言</span>
         </div>
         <div class="dock-btn dock-btn--danger" @click="handleLogout">
           <el-icon><SwitchButton /></el-icon>

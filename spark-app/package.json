@@ -1,6 +1,6 @@
 {
   "name": "spark-app",
-  "version": "0.0.1",
+  "version": "0.0.11",
   "scripts": {
     "dev:h5": "uni --mode dev",
     "build:h5": "uni build --mode prod",

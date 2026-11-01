@@ -1,5 +1,5 @@
 <template>
-  <view class="flow-container safe-area-page">
+  <view class="flow-container safe-area-page" :class="themeClass">
     <!-- 顶部标题栏 -->
     <view class="flow-header" :style="navHeaderStyle()">
       <text class="header-title">流程</text>
@@ -67,22 +67,15 @@
       </template>
     </scroll-view>
 
-    <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#004fc5">
-      <up-tabbar-item
-          v-for="tab in tabBarItems"
-          :key="tab.name"
-          :name="tab.name"
-          :icon="tab.icon"
-          :text="tab.text"
-      />
-    </up-tabbar>
+    <AppTabbar :value="active" @change="handleOnTabChange"/>
   </view>
 </template>
 <script setup>
 import {ref, computed} from "vue";
 import {onLoad} from "@dcloudio/uni-app";
-import {visibleTabs} from "@/utils/menuUtil";
 import {navHeaderStyle} from "@/utils/navBarUtil";
+import {useTheme} from "@/utils/useTheme";
+import AppTabbar from "@/components/AppTabbar/index.vue";
 import {
   pageMyApplicationListAPI,
   pageMyTodoListAPI,
@@ -91,9 +84,9 @@ import {
 } from "@/api/flow/instance";
 
 const active = ref("flow");
+const {themeClass} = useTheme();
 
-// 按菜单权限过滤后的底部导航项
-const tabBarItems = computed(() => visibleTabs());
+
 // 流程中心页签
 const visibleTabList = [
   {name: '我的申请', api: pageMyApplicationListAPI, type: 1},
@@ -222,10 +215,10 @@ function handleOnTabChange(index) {
     font-weight: 700;
     letter-spacing: 1px;
     /* #ifdef MP-WEIXIN */
-    color: #2f7bff;
+    color: var(--app-brand);
     /* #endif */
     /* #ifdef H5 */
-    background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+    background-image: var(--app-title-gradient);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -258,7 +251,7 @@ function handleOnTabChange(index) {
 }
 
 .seg-tab.is-active {
-  background-image: linear-gradient(135deg, $spark-color-brand 0%, $spark-color-brand-light 100%);
+  background-image: var(--app-gradient-brand);
   box-shadow: 0 2px 8px rgba(47, 123, 255, 0.35);
 }
 
@@ -292,11 +285,11 @@ function handleOnTabChange(index) {
 }
 
 .instance-card {
-  background-color: #ffffff;
+  background-color: var(--app-bg-card);
   border-radius: 8px;
   padding: 12px;
   margin-bottom: 10px;
-  box-shadow: 0 2px 8px rgba(23, 43, 77, 0.08);
+  box-shadow: var(--app-shadow-card);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -309,7 +302,7 @@ function handleOnTabChange(index) {
     .instance-name {
       font-size: 15px;
       font-weight: 600;
-      color: #303133;
+      color: var(--app-text-primary);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -328,13 +321,13 @@ function handleOnTabChange(index) {
     font-size: 13px;
 
     .info-label {
-      color: #909399;
+      color: var(--app-text-muted);
       width: 70px;
       flex-shrink: 0;
     }
 
     .info-value {
-      color: #606266;
+      color: var(--app-text-regular);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -346,23 +339,23 @@ function handleOnTabChange(index) {
 .status-6,
 .status-7,
 .status-8 {
-  color: #909399;
+  color: var(--app-text-muted);
 }
 
 .status-2 {
-  color: #0052cc;
+  color: var(--app-text-info);
 }
 
 .status-3,
 .status-5 {
-  color: #52c41a;
+  color: var(--app-text-success);
 }
 
 .status-4 {
-  color: #f56c6c;
+  color: var(--app-text-error);
 }
 
 .status-9 {
-  color: #e6a23c;
+  color: var(--app-text-warning);
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <view class="chat-detail-container safe-area-page">
+  <view class="chat-detail-container safe-area-page" :class="themeClass">
     <!-- 顶部标题栏 -->
     <view class="detail-header" :style="navHeaderStyle()">
       <view class="header-left" @click="goBack">
@@ -24,6 +24,9 @@
 import {ref} from 'vue'
 import {onLoad} from '@dcloudio/uni-app'
 import {navHeaderStyle} from '@/utils/navBarUtil'
+import {useTheme} from '@/utils/useTheme'
+
+const {themeClass} = useTheme()
 
 // 会话参数由聊天页带入，跳转聊天记录页时原样透传
 const spaceId = ref('')
@@ -89,10 +92,10 @@ function openChatRecord() {
     font-weight: 700;
     letter-spacing: 1px;
     /* #ifdef MP-WEIXIN */
-    color: #2f7bff;
+    color: var(--app-brand);
     /* #endif */
     /* #ifdef H5 */
-    background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+    background-image: var(--app-title-gradient);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;

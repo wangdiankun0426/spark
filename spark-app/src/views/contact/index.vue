@@ -1,5 +1,5 @@
 <template>
-  <view class="contact-container safe-area-page">
+  <view class="contact-container safe-area-page" :class="themeClass">
     <!-- 顶部标题栏 -->
     <view class="contact-header" :style="navHeaderStyle()">
       <view class="header-left" @click="goBack">
@@ -15,7 +15,7 @@
           placeholder="搜索姓名"
           :showAction="false"
           :height="4"
-          bgColor="#f5f7fa"
+          :bgColor="searchBgColor"
       />
     </view>
 
@@ -60,12 +60,18 @@
   </view>
 </template>
 <script setup>
-import {ref, watch} from "vue";
+import {ref, watch, computed} from "vue";
 import {onShow} from "@dcloudio/uni-app";
 import {pageUserMyListAPI} from "@/api/chat/user";
 import {useDebounceFn} from "@/utils/debounce";
 import {navHeaderStyle} from "@/utils/navBarUtil";
+import {useTheme} from "@/utils/useTheme";
+import {getSearchBgColor} from "@/utils/themeUtil";
 import UserAvatar from '@/components/UserAvatar/index.vue'
+
+const {isDark, themeClass} = useTheme();
+
+const searchBgColor = computed(() => getSearchBgColor(isDark.value));
 
 // 每页加载的联系人数量
 const PAGE_SIZE = 20
@@ -188,10 +194,10 @@ function goBack() {
     font-weight: 700;
     letter-spacing: 1px;
     /* #ifdef MP-WEIXIN */
-    color: #2f7bff;
+    color: var(--app-brand);
     /* #endif */
     /* #ifdef H5 */
-    background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+    background-image: var(--app-title-gradient);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -225,15 +231,15 @@ function goBack() {
   padding: 12px 0 30px;
   text-align: center;
   font-size: 12px;
-  color: #999;
+  color: var(--app-text-secondary);
 }
 
 .user-card {
-  background-color: #fff;
+  background-color: var(--app-bg-card);
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--app-shadow-card);
 }
 
 .card-header {
@@ -266,13 +272,13 @@ function goBack() {
 .user-name {
   font-size: 16px;
   font-weight: 600;
-  color: #333333;
+  color: var(--app-text-primary);
 }
 
 /* 直属部门名称 */
 .user-dept {
   font-size: 12px;
-  color: #999999;
+  color: var(--app-text-secondary);
 }
 
 .badge-noread {

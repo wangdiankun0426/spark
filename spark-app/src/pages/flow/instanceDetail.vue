@@ -1,5 +1,5 @@
 <template>
-  <view class="detail-container safe-area-page">
+  <view class="detail-container safe-area-page" :class="themeClass">
     <!-- 顶部标题栏 -->
     <view class="detail-header" :style="navHeaderStyle()">
       <up-icon
@@ -100,7 +100,7 @@
         @cancel="approvalVisible = false"
     >
       <view class="modal-body">
-        <up-textarea v-model="approvalDiscuss" placeholder="请输入审批意见" count :maxlength="200"/>
+        <up-textarea v-model="approvalDiscuss" placeholder="请输入审批意见" count :maxlength="200" :customStyle="textareaStyle"/>
       </view>
     </up-modal>
 
@@ -130,8 +130,11 @@ import {
 import {toast} from "uview-plus";
 import UserPicker from '@/components/UserPicker/index.vue'
 import FormFieldValue from '@/components/FormFieldValue/index.vue'
+import {useTheme} from '@/utils/useTheme'
 import store from "@/store/index.js";
 import {useDebounceFn} from "@/utils/debounce";
+
+const {themeClass} = useTheme();
 
 const instanceId = ref(undefined);
 // 详情类型：1 我的申请 3 我的待办 4 我的已办 5 抄送给我
@@ -229,6 +232,12 @@ function handleBack() {
 const approvalVisible = ref(false);
 const approvalStatus = ref(3);
 const approvalDiscuss = ref('');
+
+// 文本域根节点底色写死在组件内部，只能靠 customStyle 内联覆盖，变量会被继承进来
+const textareaStyle = {
+  backgroundColor: 'var(--app-bg-sub)',
+  borderRadius: '8rpx'
+};
 
 /**
  * 打开审批意见弹窗
@@ -377,10 +386,10 @@ const handleUserConfirm = useDebounceFn((users) => {
     font-weight: 700;
     letter-spacing: 1px;
     /* #ifdef MP-WEIXIN */
-    color: #2f7bff;
+    color: var(--app-brand);
     /* #endif */
     /* #ifdef H5 */
-    background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+    background-image: var(--app-title-gradient);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -397,7 +406,7 @@ const handleUserConfirm = useDebounceFn((users) => {
 }
 
 .section-card {
-  background-color: #ffffff;
+  background-color: var(--app-bg-card);
   border-radius: 8px;
   padding: 12px;
   margin-bottom: 10px;
@@ -408,9 +417,9 @@ const handleUserConfirm = useDebounceFn((users) => {
   .section-title {
     font-size: 15px;
     font-weight: 600;
-    color: #303133;
+    color: var(--app-text-primary);
     padding-bottom: 4px;
-    border-bottom: 1px solid #ebeef5;
+    border-bottom: 1px solid var(--app-border-light);
   }
 }
 
@@ -419,14 +428,14 @@ const handleUserConfirm = useDebounceFn((users) => {
   font-size: 13px;
 
   .info-label {
-    color: #909399;
+    color: var(--app-text-muted);
     width: 80px;
     flex-shrink: 0;
   }
 
   .info-value {
     flex: 1;
-    color: #606266;
+    color: var(--app-text-regular);
     word-break: break-all;
   }
 }
@@ -436,7 +445,7 @@ const handleUserConfirm = useDebounceFn((users) => {
   justify-content: center;
   padding: 10px 0;
   font-size: 13px;
-  color: #909399;
+  color: var(--app-text-muted);
 }
 
 // 审批节点
@@ -445,7 +454,7 @@ const handleUserConfirm = useDebounceFn((users) => {
   flex-direction: column;
   gap: 6px;
   padding: 8px 0;
-  border-bottom: 1px solid #f5f7fa;
+  border-bottom: 1px solid var(--app-border-light);
 
   .node-header {
     display: flex;
@@ -455,7 +464,7 @@ const handleUserConfirm = useDebounceFn((users) => {
     .node-name {
       font-size: 14px;
       font-weight: 600;
-      color: #303133;
+      color: var(--app-text-primary);
     }
 
     .node-status {
@@ -465,7 +474,7 @@ const handleUserConfirm = useDebounceFn((users) => {
 
   .node-waiter {
     font-size: 12px;
-    color: #909399;
+    color: var(--app-text-muted);
   }
 }
 
@@ -475,7 +484,7 @@ const handleUserConfirm = useDebounceFn((users) => {
   gap: 4px;
   padding: 8px 10px;
   border-radius: 6px;
-  background-color: #f5f7fa;
+  background-color: var(--app-bg-sub);
 
   .discuss-header {
     display: flex;
@@ -484,17 +493,17 @@ const handleUserConfirm = useDebounceFn((users) => {
     font-size: 12px;
 
     .discuss-name {
-      color: #303133;
+      color: var(--app-text-primary);
     }
 
     .discuss-time {
-      color: #909399;
+      color: var(--app-text-muted);
     }
   }
 
   .discuss-content {
     font-size: 12px;
-    color: #606266;
+    color: var(--app-text-regular);
     line-height: 1.6;
     word-break: break-all;
   }
@@ -506,24 +515,24 @@ const handleUserConfirm = useDebounceFn((users) => {
 .status-7,
 .status-8,
 .status-10 {
-  color: #909399;
+  color: var(--app-text-muted);
 }
 
 .status-2 {
-  color: #0052cc;
+  color: var(--app-text-info);
 }
 
 .status-3,
 .status-5 {
-  color: #52c41a;
+  color: var(--app-text-success);
 }
 
 .status-4 {
-  color: #f56c6c;
+  color: var(--app-text-error);
 }
 
 .status-9 {
-  color: #e6a23c;
+  color: var(--app-text-warning);
 }
 
 .detail-footer {

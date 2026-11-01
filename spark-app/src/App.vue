@@ -2,10 +2,13 @@
 </template>
 <script setup>
 import {onLaunch, onPageNotFound} from '@dcloudio/uni-app';
+import store from '@/store';
 import {initNavBarInfo} from '@/utils/navBarUtil';
 
 onLaunch(() => {
   initNavBarInfo();
+  // 启动即应用已保存的主题，避免首屏先亮后暗
+  store.dispatch('theme/initTheme');
 });
 
 // 打开不存在的页面时 兜底跳转 404
@@ -20,6 +23,7 @@ onPageNotFound(() => {
 </script>
 <style lang="scss">
 @import 'node_modules/uview-plus/index.scss';
+@import './styles/theme.scss';
 
 .u-tabbar-item__icon {
   width: auto !important;
@@ -63,6 +67,31 @@ uni-app::-webkit-scrollbar {
   height: 0 !important;
 }
 
+.safe-area-page {
+  box-sizing: border-box;
+  min-height: 100vh;
+  background-color: var(--app-page-base);
+}
+
+app-tabbar {
+  display: block;
+  flex: none;
+  flex-shrink: 0;
+}
+
+/* #ifdef H5 */
+.uni-input-input:-webkit-autofill,
+.uni-input-input:-webkit-autofill:hover,
+.uni-input-input:-webkit-autofill:focus,
+.uni-input-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px var(--app-bg-card) inset !important;
+  box-shadow: 0 0 0 1000px var(--app-bg-card) inset !important;
+  -webkit-text-fill-color: var(--app-text-primary) !important;
+  caret-color: var(--app-text-primary);
+  transition: background-color 100000s ease-in-out 0s;
+}
+/* #endif */
+
 /* 全局页面顶部蓝色标题栏 */
 .page-header {
   display: flex;
@@ -71,7 +100,7 @@ uni-app::-webkit-scrollbar {
   padding: 0 16px;
   background-color: $spark-color-header-bg;
   border-bottom: 1rpx solid $spark-color-header-border;
-  color: #2f7bff;
+  color: var(--app-brand);
   flex-shrink: 0;
 
   .page-header-back {
@@ -86,10 +115,10 @@ uni-app::-webkit-scrollbar {
     font-weight: 700;
     letter-spacing: 1px;
     /* #ifdef MP-WEIXIN */
-    color: #2f7bff;
+    color: var(--app-brand);
     /* #endif */
     /* #ifdef H5 */
-    background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+    background-image: var(--app-title-gradient);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;

@@ -28,7 +28,8 @@
 
 ### 1.3 配色与底纹
 
-- 白/灰为主，主色 `$color-primary` 只作点缀（选中态、可点击强调）。
+- 白/灰为主，主色 `$color-primary` 只作点缀（选中态、可点击强调）。上述"纯白底"是**浅色主题**的基准；深色主题下同一处改用 `@/styles/theme.scss` 的 `--app-bg-card` / `--app-bg-page` 等同名变量，页面不要写死 `#fff`。
+- 主题切换按钮的图标表示「**点一下会变成什么**」：浅色时显示月亮、深色时显示太阳，tooltip / 提示文案（深色模式 / 浅色模式）必须与图标同义。`src/pages/login/login.vue` 与 `src/navigation/index.vue` 两处保持一致，改一处必须同步另一处。
 - 底纹可用低密度点阵营造科技氛围：点距约 26px、点径约 1.2px、alpha 8%–18%，不干扰内容阅读。
 - **`background:` 简写会重置 `background-image`**；已有底纹时改背景色必须用 `background-color:`。
 - Element Plus 2.3.12 **没有 `--el-border-color-dashed`**；用未定义的 `var()` 会让整条 `border` 简写在计算期失效并退化为无边框。虚线用 `--el-border-color-darker` 等已定义变量。
@@ -39,6 +40,7 @@
 - 大屏下是否出现大面积空白（宽度是否两头钳制）
 - 该贴边的是否贴住，圆角是否只朝内容一侧
 - 颜色/间距/圆角/阴影是否全走 `variables.scss` token，无硬编码
+- 深色主题下是否仍可读：文字与底色对比、输入框正文字色、弹层与表格底色、图标是否发暗
 - 新增视觉手法前先查 `element.scss` 是否已有配方，有就复用
 
 ## 2. 输出格式

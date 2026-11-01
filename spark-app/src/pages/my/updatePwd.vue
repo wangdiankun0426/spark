@@ -1,5 +1,5 @@
 <template>
-  <div class="safe-area-page">
+  <div class="safe-area-page" :class="themeClass">
     <!-- 顶部标题栏 -->
     <view class="update-password-header" :style="navHeaderStyle()">
       <view class="header-left" @click="onClickLeft">
@@ -49,6 +49,9 @@ import {des} from "@/utils/encryptUtil";
 import {ref} from 'vue';
 import {toast} from "uview-plus";
 import {navHeaderStyle} from "@/utils/navBarUtil";
+import {useTheme} from "@/utils/useTheme";
+
+const {themeClass} = useTheme();
 
 // 租户密码长度规则，接口未返回时使用默认值
 const passwordRule = ref({
@@ -168,10 +171,10 @@ async function submitPasswordForm() {
     font-weight: 700;
     letter-spacing: 1px;
     /* #ifdef MP-WEIXIN */
-    color: #2f7bff;
+    color: var(--app-brand);
     /* #endif */
     /* #ifdef H5 */
-    background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+    background-image: var(--app-title-gradient);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;

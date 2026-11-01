@@ -1,5 +1,5 @@
 <template>
-  <view class="status-page">
+  <view class="status-page" :class="themeClass">
     <view class="status-body">
       <view class="status-num">404</view>
       <text class="status-title">页面不存在</text>
@@ -9,7 +9,9 @@
 </template>
 
 <script setup>
+import {useTheme} from '@/utils/useTheme';
 
+const {themeClass} = useTheme();
 </script>
 
 <style scoped lang="scss">
@@ -19,7 +21,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: #f5f7fa;
+  background-color: var(--app-bg-page);
 }
 
 .status-body {
@@ -34,7 +36,7 @@
 .status-num {
   font-size: 88px;
   font-weight: 700;
-  color: #0052cc;
+  color: var(--app-text-info);
   line-height: 1;
 }
 
@@ -42,13 +44,13 @@
   margin-top: 24px;
   font-size: 22px;
   font-weight: 600;
-  color: #303133;
+  color: var(--app-text-primary);
 }
 
 .status-desc {
   margin-top: 12px;
   font-size: 14px;
-  color: #909399;
+  color: var(--app-text-muted);
   text-align: center;
   line-height: 22px;
 }

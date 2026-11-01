@@ -1,5 +1,5 @@
 <template>
-  <view class="record-container safe-area-page">
+  <view class="record-container safe-area-page" :class="themeClass">
     <!-- 标题栏 -->
     <view class="record-header" :style="navHeaderStyle()">
       <view class="header-back" @click="goBack">
@@ -76,7 +76,7 @@
           <up-parse
               v-else
               :content="renderMarkdown(chatMsg.message)"
-              :tag-style="MD_TAG_STYLE"
+              :tag-style="mdTagStyle"
           ></up-parse>
         </view>
       </view>
@@ -102,13 +102,18 @@ import { ref, computed, onMounted } from "vue"
 import { onLoad } from "@dcloudio/uni-app"
 import { navHeaderStyle } from "@/utils/navBarUtil"
 import { useStore } from "vuex"
-import { renderMarkdown, MD_TAG_STYLE } from "@/utils/markdownUtil.js"
+import { renderMarkdown, getMdTagStyle } from "@/utils/markdownUtil.js"
 import { useChatHistory } from "@/views/chat/chatMessage.js"
 import { parseSticker } from "@/views/chat/emojiData.js"
+import { useTheme } from "@/utils/useTheme"
 import UserAvatar from "@/components/UserAvatar/index.vue"
 
 const store = useStore()
 const userInfo = computed(() => store.getters["user/getUserInfo"] || {})
+const { isDark, themeClass } = useTheme()
+
+// 富文本内联样式随皮肤切换
+const mdTagStyle = computed(() => getMdTagStyle(isDark.value))
 
 const title = ref('聊天记录')
 const targetName = ref('')
@@ -223,7 +228,7 @@ function loadChatRecords() {
   flex-direction: column;
   height: 100vh;
   box-sizing: border-box;
-  background-color: #f5f7fa;
+  background-color: var(--app-chat-bg);
 }
 
 .record-header {
@@ -249,10 +254,10 @@ function loadChatRecords() {
   font-weight: 700;
   letter-spacing: 1px;
   /* #ifdef MP-WEIXIN */
-  color: #2f7bff;
+  color: var(--app-brand);
   /* #endif */
   /* #ifdef H5 */
-  background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+  background-image: var(--app-title-gradient);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -279,17 +284,17 @@ function loadChatRecords() {
   gap: 6px;
   height: 36px;
   padding: 0 12px;
-  background-color: #fff;
+  background-color: var(--app-bg-card);
   border-radius: 8px;
   font-size: 14px;
 }
 
 .record-search-value {
-  color: #333;
+  color: var(--app-text-primary);
 }
 
 .record-search-placeholder {
-  color: #999;
+  color: var(--app-text-secondary);
 }
 
 .record-search-clear {
@@ -316,7 +321,7 @@ function loadChatRecords() {
   padding: 12px 0;
   text-align: center;
   font-size: 12px;
-  color: #999;
+  color: var(--app-text-secondary);
 }
 
 /* 消息项：对方靠左、自己靠右，与聊天页保持一致 */
@@ -344,21 +349,21 @@ function loadChatRecords() {
 
 .record-time {
   font-size: 12px;
-  color: #999;
+  color: var(--app-text-secondary);
 }
 
 .record-bubble {
   max-width: 80%;
   padding: 10px 14px;
   border-radius: 8px;
-  background-color: #fff;
-  color: #333;
+  background-color: var(--app-bubble-agent-bg);
+  color: var(--app-bubble-agent-text);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
 .record-item-self .record-bubble {
-  background-color: #0052cc;
-  color: #fff;
+  background-color: var(--app-bubble-self-bg);
+  color: var(--app-bubble-self-text);
 }
 
 .record-bubble-sticker,

@@ -1,5 +1,5 @@
 <template>
-  <div class="safe-area-page">
+  <div class="safe-area-page" :class="themeClass">
     <!-- 顶部标题栏 -->
     <view class="update-avatar-header" :style="navHeaderStyle()">
       <view class="header-left" @click="onClickLeft">
@@ -37,8 +37,10 @@ import {computed} from "vue";
 import {useStore} from "vuex";
 import {toast} from "uview-plus";
 import {navHeaderStyle} from "@/utils/navBarUtil";
+import {useTheme} from "@/utils/useTheme";
 import UserAvatar from "@/components/UserAvatar/index.vue"
 
+const {themeClass} = useTheme();
 const store = useStore();
 const userInfo = computed(() => store.getters["user/getUserInfo"] || {});
 
@@ -101,10 +103,10 @@ function beforeRead(file) {
     font-weight: 700;
     letter-spacing: 1px;
     /* #ifdef MP-WEIXIN */
-    color: #2f7bff;
+    color: var(--app-brand);
     /* #endif */
     /* #ifdef H5 */
-    background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+    background-image: var(--app-title-gradient);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;

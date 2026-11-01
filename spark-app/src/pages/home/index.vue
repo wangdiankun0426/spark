@@ -1,5 +1,5 @@
 <template>
-  <view class="home-container safe-area-page">
+  <view class="home-container safe-area-page" :class="themeClass">
     <!-- 顶部欢迎卡片 -->
     <view class="welcome-card" :style="welcomeCardStyle">
       <view class="welcome-top">
@@ -118,15 +118,7 @@
     </view>
 
     <!-- 底部导航栏 -->
-    <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#004fc5">
-      <up-tabbar-item
-          v-for="tab in tabBarItems"
-          :key="tab.name"
-          :name="tab.name"
-          :icon="tab.icon"
-          :text="tab.text"
-      />
-    </up-tabbar>
+    <AppTabbar :value="active" @change="handleOnTabChange"/>
 
     <!-- 会话记录选择 -->
     <ai-session-picker
@@ -147,8 +139,9 @@ import { useStore } from "vuex"
 import UserAvatar from "@/components/UserAvatar/index.vue"
 import AiSessionPicker from "@/components/AiSessionPicker/index.vue"
 import {useAiSessionPicker} from "@/components/AiSessionPicker/aiSessionUtil"
+import {useTheme} from "@/utils/useTheme"
+import AppTabbar from "@/components/AppTabbar/index.vue";
 import {getSessionAPI} from "@/api/auth/login";
-import {visibleTabs} from "@/utils/menuUtil";
 import {navBarInfo} from "@/utils/navBarUtil";
 import {pageMyTodoListAPI} from "@/api/flow/instance"
 import {agentPageListAPI} from "@/api/llm/agent"
@@ -166,6 +159,8 @@ const active = ref("home")
 const asset = ref({})
 const todoTotal = ref(0)
 const recommendList = ref([])
+const {themeClass} = useTheme()
+
 
 // 会话选择弹层：点击智能体/模型后先选会话再进入对话
 const {
@@ -178,8 +173,6 @@ const {
   handleNew: handleSessionNew
 } = useAiSessionPicker()
 
-// 按菜单权限过滤后的底部导航项
-const tabBarItems = computed(() => visibleTabs())
 
 const userInfo = computed(() => store.getters["user/getUserInfo"] || {
   id: undefined,
@@ -489,12 +482,8 @@ function handleOnTabChange(index) {
   box-sizing: border-box;
   padding: 52px 16px 6px;
   color: $spark-color-text;
-  background-image: linear-gradient(180deg,
-      #5b94f5 0%,
-      #7babff 44px,
-      #b6d2ff 92px,
-      #eaf2ff 140px);
-  background-color: #eaf2ff;
+  background-image: var(--app-gradient-welcome);
+  background-color: var(--app-bg-mid);
 }
 .welcome-top {
   display: flex;
@@ -523,14 +512,14 @@ function handleOnTabChange(index) {
   font-size: 13px;
   font-weight: 400;
   line-height: 1.5;
-  color: rgba(23, 43, 77, 0.6);
+  color: var(--app-text-secondary);
 }
 .welcome-date {
   margin-top: 2px;
   font-size: 13px;
   font-weight: 400;
   line-height: 1.5;
-  color: rgba(23, 43, 77, 0.5);
+  color: var(--app-text-tertiary);
 }
 
 .home-scroll-body {
@@ -569,10 +558,10 @@ function handleOnTabChange(index) {
   font-weight: 700;
   letter-spacing: 1px;
   /* #ifdef MP-WEIXIN */
-  color: #2f7bff;
+  color: var(--app-brand);
   /* #endif */
   /* #ifdef H5 */
-  background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+  background-image: var(--app-title-gradient);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -606,10 +595,10 @@ function handleOnTabChange(index) {
   display: flex;
   align-items: center;
   gap: 8px;
-  background-image: linear-gradient(135deg, #ffffff 0%, #f7faff 100%);
-  border: 1px solid rgba(0, 79, 197, 0.06);
+  background-image: var(--app-gradient-card);
+  border: 1px solid var(--app-border-light);
   border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(23, 43, 77, 0.08);
+  box-shadow: var(--app-shadow-card);
 }
 
 .item-icon {
@@ -632,7 +621,7 @@ function handleOnTabChange(index) {
 .item-name {
   font-size: 13px;
   font-weight: 600;
-  color: #172b4d;
+  color: var(--app-text-primary);
   line-height: 17px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -642,7 +631,7 @@ function handleOnTabChange(index) {
 .item-meta {
   font-size: 11px;
   line-height: 15px;
-  color: #999;
+  color: var(--app-text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -657,7 +646,7 @@ function handleOnTabChange(index) {
 
 .empty-text {
   font-size: 12px;
-  color: #b3b3b3;
+  color: var(--app-text-placeholder);
 }
 
 .kpi-row {
@@ -676,10 +665,10 @@ function handleOnTabChange(index) {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  background-image: linear-gradient(135deg, $spark-color-header-bg 0%, $spark-color-bg-start 100%);
-  border: 1px solid rgba(0, 79, 197, 0.06);
+  background-image: var(--app-gradient-card);
+  border: 1px solid var(--app-border-light);
   border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(23, 43, 77, 0.08);
+  box-shadow: var(--app-shadow-card);
 }
 
 .kpi-text {
@@ -723,10 +712,10 @@ function handleOnTabChange(index) {
   gap: 8px;
   height: 44px;
   padding: 0 12px;
-  background-image: linear-gradient(135deg, $spark-color-header-bg 0%, $spark-color-bg-start 100%);
-  border: 1px solid rgba(0, 79, 197, 0.06);
+  background-image: var(--app-gradient-card);
+  border: 1px solid var(--app-border-light);
   border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(23, 43, 77, 0.08);
+  box-shadow: var(--app-shadow-card);
 }
 
 .recommend-rank {
@@ -738,8 +727,8 @@ function handleOnTabChange(index) {
   border-radius: 4px;
   font-size: 12px;
   font-weight: 600;
-  color: #666;
-  background-color: #eef2f8;
+  color: var(--app-text-regular);
+  background-color: var(--app-bg-sub);
 }
 
 .recommend-rank.is-first {
@@ -774,7 +763,7 @@ function handleOnTabChange(index) {
   border-radius: 6px;
   font-size: 11px;
   color: $spark-color-brand;
-  background-color: rgba(47, 123, 255, 0.1);
+  background-color: var(--app-primary-soft);
 }
 
 .recommend-count {

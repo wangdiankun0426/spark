@@ -2,11 +2,13 @@
  * 桌面端热更新打包：把 dist 压成 zip 并生成版本清单 latest.json
  * 用法：npm run build:web && npm run pack:update -- "本次更新说明"
  * 发布：把 release/desktop 下的 zip 与 latest.json 传到服务器 /opt/spark/bundle/desktop/
+ * 打包结束后只保留本次 zip 与 latest.json，旧版本包自动删除
  */
 const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
 const {execFileSync} = require('child_process')
+const {cleanUpdate} = require('./clean-artifacts.cjs')
 
 const root = path.join(__dirname, '..', '..')
 const distDir = path.join(root, 'dist')
@@ -41,7 +43,11 @@ const manifest = {
   sha256,
   publishedAt: new Date().toISOString(),
 }
-fs.writeFileSync(path.join(outDir, 'latest.json'), JSON.stringify(manifest, null, 2), 'utf8')
+const manifestPath = path.join(outDir, 'latest.json')
+fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf8')
+
+// 只保留本次的 zip 与清单，旧版本包直接删除，避免 release/desktop 越攒越多
+cleanUpdate([zipPath, manifestPath])
 
 console.log(`[pack-update] 版本 ${version} 打包完成，产物目录：${outDir}`)
 console.log(`[pack-update] 上传文件：${zipName}、latest.json`)

@@ -1,6 +1,10 @@
 import { defineConfig , loadEnv} from 'vite'
 import uni from '@dcloudio/vite-plugin-uni'
 import { resolve } from 'path'
+import { readFileSync } from 'fs'
+
+// 版本号与 package.json 同源，编译期注入为常量（与 PC 端 spark-ui 的 __APP_VERSION__ 一致）
+const pkg = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf-8'))
 
 export default defineConfig((mode) => {
     const env = loadEnv(mode.mode, process.cwd());
@@ -33,7 +37,8 @@ export default defineConfig((mode) => {
         define: {
             'process.env': {
                 'BASE_HTTP_API':  env.VITE_HTTP_BASE_API
-            }
+            },
+            '__APP_VERSION__': JSON.stringify(pkg.version)
         }
     }
 })

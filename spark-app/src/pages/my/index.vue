@@ -1,8 +1,8 @@
 <template>
-  <div class="my-box safe-area-page">
+  <div class="my-box safe-area-page" :class="themeClass">
     <div class="my-header" :style="headerStyle">
       <view class="my-setting-entry" :style="settingEntryStyle" @click="goSetting">
-        <up-icon name="setting" size="22" color="#172b4d"/>
+        <up-icon name="setting" size="22" :color="settingIconColor"/>
       </view>
 
       <div class="my-avatar-row">
@@ -23,17 +23,23 @@
     </div>
 
     <div class="my-content">
-      <view class="func-card" v-for="section in funcSections" :key="section.title">
+      <view class="func-card" v-for="section in funcSections" :key="section.key">
         <text class="func-card-title">{{ section.title }}</text>
         <view class="func-grid">
           <view
               class="func-item"
               v-for="item in section.list"
-              :key="item.url"
-              @click="goFunc(item.url)"
+              :key="item.url || item.key"
+              @click="goFunc(item)"
           >
             <view class="func-icon-wrap" :style="{backgroundColor: item.bgColor}">
-              <up-icon :name="item.icon" size="32" :color="item.color"></up-icon>
+              <ThemeGlyph
+                  v-if="item.glyph"
+                  :dark="isDark"
+                  size="normal"
+                  :style="{color: item.color}"
+              />
+              <up-icon v-else :name="item.icon" size="32" :color="item.color"></up-icon>
             </view>
             <text class="func-label">{{ item.label }}</text>
           </view>
@@ -41,26 +47,24 @@
       </view>
     </div>
 
-    <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#004fc5">
-      <up-tabbar-item
-          v-for="tab in tabBarItems"
-          :key="tab.name"
-          :name="tab.name"
-          :icon="tab.icon"
-          :text="tab.text"
-      />
-    </up-tabbar>
+    <AppTabbar :value="active" @change="handleOnTabChange"/>
   </div>
 </template>
 <script setup>
 import {ref, computed} from "vue";
 import {useStore} from "vuex";
-import {visibleTabs} from "@/utils/menuUtil";
 import {navBarInfo} from "@/utils/navBarUtil";
+import {useTheme} from "@/utils/useTheme";
 import UserAvatar from "@/components/UserAvatar/index.vue"
+import ThemeGlyph from "@/components/ThemeGlyph/index.vue"
+import AppTabbar from "@/components/AppTabbar/index.vue"
 
 const store = useStore();
 const active = ref("my");
+const {isDark, themeClass, toggleTheme} = useTheme();
+
+// 主题相关的图标配色
+const settingIconColor = computed(() => (isDark.value ? '#e5edf7' : '#172b4d'));
 
 // 小程序端渐变头延伸到状态栏，H5 保持原间距
 const headerStyle = computed(() => {
@@ -83,31 +87,53 @@ const settingEntryStyle = computed(() => {
 })
 
 // 按菜单权限过滤后的底部导航项
-const tabBarItems = computed(() => visibleTabs());
-
 const userInfo = computed(() => store.getters["user/getUserInfo"] || {
   id: undefined,
   name: undefined,
   deptPath: undefined
 });
 
-// 功能入口，按热门与基础分组
-const funcSections = [
+// 功能入口按热门与基础分组；主题入口排在「修改头像」右侧，同一套图标格样式，点击即切换皮肤
+const funcSections = computed(() => [
   {
+    key: 'hot',
     title: '热门功能',
     list: [
-      {label: '通讯录', icon: 'man-add-fill', color: '#1890ff', bgColor: '#e6f7ff', url: '/views/contact/index'}
+      {label: '通讯录', icon: 'man-add-fill', color: '#1890ff', bgColor: isDark.value ? 'rgba(24, 144, 255, 0.16)' : '#e6f7ff', url: '/views/contact/index'}
     ]
   },
   {
+    key: 'basic',
     title: '基础功能',
     list: [
-      {label: '个人信息', icon: 'account-fill', color: '#13c2c2', bgColor: '#e6fffb', url: '/pages/my/information'},
-      {label: '修改密码', icon: 'lock-fill', color: '#52c41a', bgColor: '#f6ffed', url: '/pages/my/updatePwd'},
-      {label: '修改头像', icon: 'photo-fill', color: '#fa8c16', bgColor: '#fff7e6', url: '/pages/my/updateAvatar'}
+      {label: '个人信息', icon: 'account-fill', color: '#13c2c2', bgColor: isDark.value ? 'rgba(19, 194, 194, 0.16)' : '#e6fffb', url: '/pages/my/information'},
+      {label: '修改密码', icon: 'lock-fill', color: '#52c41a', bgColor: isDark.value ? 'rgba(82, 196, 26, 0.16)' : '#f6ffed', url: '/pages/my/updatePwd'},
+      {label: '修改头像', icon: 'photo-fill', color: '#fa8c16', bgColor: isDark.value ? 'rgba(250, 140, 22, 0.16)' : '#fff7e6', url: '/pages/my/updateAvatar'},
+      {
+        key: 'theme',
+        action: 'theme',
+        label: isDark.value ? '浅色模式' : '深色模式',
+        glyph: true,
+        color: isDark.value ? '#f5b544' : '#7c5cff',
+        bgColor: isDark.value ? 'rgba(245, 181, 68, 0.16)' : '#f3f0ff'
+      }
     ]
   }
-];
+]);
+
+/**
+ * 跳转常用功能
+ * @param item 功能项，action 为内置行为时走内置逻辑，否则按 url 跳转
+ */
+function goFunc(item) {
+  if (item.action === 'theme') {
+    toggleTheme();
+    return;
+  }
+  uni.navigateTo({
+    url: item.url
+  })
+}
 
 /**
  * 跳转设置页
@@ -115,16 +141,6 @@ const funcSections = [
 function goSetting() {
   uni.navigateTo({
     url: '/pages/my/setting'
-  })
-}
-
-/**
- * 跳转常用功能
- * @param url 目标页面路径
- */
-function goFunc(url) {
-  uni.navigateTo({
-    url: url
   })
 }
 
@@ -146,21 +162,14 @@ function handleOnTabChange(index) {
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
-}
-
-.my-box :deep(.u-tabbar) {
-  flex: none;
+  background-color: var(--app-bg-page);
 }
 
 .my-header {
   height: 170px;
   width: 100%;
   position: relative;
-  background-image: linear-gradient(180deg,
-          #5b94f5 0%,
-          #83b3ff 70px,
-          #b6d2ff 138px,
-          #ffffff 176px);
+  background-image: var(--app-gradient-profile);
 }
 
 .my-setting-entry {
@@ -215,7 +224,7 @@ function handleOnTabChange(index) {
   line-height: 1.4;
   letter-spacing: 0.5px;
   font-weight: 400;
-  color: rgba(23, 43, 77, 0.6);
+  color: var(--app-text-secondary);
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -235,11 +244,11 @@ function handleOnTabChange(index) {
 .func-card {
   width: 90%;
   margin: 4px auto 0;
-  background-color: $spark-color-header-bg;
-  border: 1px solid rgba(0, 52, 120, 0.04);
+  background-color: var(--app-bg-card);
+  border: 1px solid var(--app-border-light);
   border-radius: 10px;
   padding: 16px 8px;
-  box-shadow: 0 3px 10px rgba(0, 52, 120, 0.06);
+  box-shadow: var(--app-shadow-card);
 }
 
 .func-card + .func-card {
@@ -250,7 +259,7 @@ function handleOnTabChange(index) {
   display: block;
   font-size: 15px;
   font-weight: 600;
-  color: #303133;
+  color: var(--app-text-primary);
   padding-left: 8px;
 }
 
@@ -280,6 +289,6 @@ function handleOnTabChange(index) {
 
 .func-label {
   font-size: 14px;
-  color: #9e9e9e;
+  color: var(--app-text-secondary);
 }
 </style>

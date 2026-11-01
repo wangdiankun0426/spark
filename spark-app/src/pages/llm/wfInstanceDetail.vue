@@ -1,5 +1,5 @@
 <template>
-  <view class="wf-instance-detail safe-area-page">
+  <view class="wf-instance-detail safe-area-page" :class="themeClass">
     <!-- 顶部标题栏 -->
     <view class="detail-header" :style="navHeaderStyle()">
       <view class="header-left" @click="goBack">
@@ -147,10 +147,12 @@
 import {ref} from 'vue'
 import {onLoad} from '@dcloudio/uni-app'
 import {navHeaderStyle} from '@/utils/navBarUtil'
+import {useTheme} from '@/utils/useTheme'
 import {queryInstanceDetailAPI, queryInstanceNodesAPI} from '@/api/workflow/instance'
 import {detailFormValueAPI} from '@/api/form/formValue'
 import FormFieldValue from '@/components/FormFieldValue/index.vue'
 
+const {themeClass} = useTheme()
 const instanceId = ref(null)
 const loading = ref(false)
 const nodesLoading = ref(false)
@@ -294,10 +296,10 @@ function goBack() {
     font-weight: 700;
     letter-spacing: 1px;
     /* #ifdef MP-WEIXIN */
-    color: #2f7bff;
+    color: var(--app-brand);
     /* #endif */
     /* #ifdef H5 */
-    background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+    background-image: var(--app-title-gradient);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -328,7 +330,7 @@ function goBack() {
 
 .empty-text text {
   font-size: 13px;
-  color: #999;
+  color: var(--app-text-secondary);
 }
 
 .detail-section {
@@ -341,10 +343,10 @@ function goBack() {
 .section-title {
   font-size: 15px;
   font-weight: 600;
-  color: #333;
+  color: var(--app-text-primary);
   margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--app-divide);
   display: block;
 }
 
@@ -363,14 +365,14 @@ function goBack() {
 
 .detail-label {
   font-size: 13px;
-  color: #999;
+  color: var(--app-text-secondary);
   flex-shrink: 0;
   width: 80px;
 }
 
 .detail-value {
   font-size: 13px;
-  color: #333;
+  color: var(--app-text-primary);
   text-align: right;
   flex: 1;
   overflow: hidden;
@@ -382,43 +384,43 @@ function goBack() {
   font-weight: 500;
 
   &.status-1 {
-    color: #0052cc;
+    color: var(--app-text-info);
   }
   &.status-2 {
-    color: #52c41a;
+    color: var(--app-text-success);
   }
   &.status-3 {
-    color: #faad14;
+    color: var(--app-text-warning);
   }
   &.status-4 {
-    color: #ff4d4f;
+    color: var(--app-text-error);
   }
 }
 
 /* 错误信息 */
 .error-section {
   .error-title {
-    color: #ff4d4f;
-    border-bottom-color: #ffccc7;
+    color: var(--app-text-error);
+    border-bottom-color: var(--app-border);
   }
 }
 
 .error-content {
-  background-color: #fff2f0;
-  border: 1px solid #ffccc7;
+  background-color: var(--app-bg-error);
+  border: 1px solid var(--app-border);
   border-radius: 8px;
   padding: 12px;
 }
 
 .error-text {
   font-size: 13px;
-  color: #ff4d4f;
+  color: var(--app-text-error);
   word-break: break-all;
 }
 
 /* 表单数据 */
 .form-data-list {
-  background-color: #f8f9fa;
+  background-color: var(--app-bg-sub);
   border-radius: 8px;
   padding: 12px;
 }
@@ -428,7 +430,7 @@ function goBack() {
   justify-content: space-between;
   align-items: flex-start;
   padding: 8px 0;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--app-border-light);
 
   &:last-child {
     border-bottom: none;
@@ -437,14 +439,14 @@ function goBack() {
 
 .form-label {
   font-size: 13px;
-  color: #666;
+  color: var(--app-text-regular);
   flex-shrink: 0;
   width: 100px;
 }
 
 .form-value {
   font-size: 13px;
-  color: #333;
+  color: var(--app-text-primary);
   text-align: right;
   flex: 1;
   word-break: break-all;
@@ -459,7 +461,7 @@ function goBack() {
 
 .nodes-empty text {
   font-size: 13px;
-  color: #999;
+  color: var(--app-text-secondary);
 }
 
 .nodes-list {
@@ -469,7 +471,7 @@ function goBack() {
 }
 
 .node-item {
-  background-color: #f8f9fa;
+  background-color: var(--app-bg-sub);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -497,16 +499,16 @@ function goBack() {
   margin-top: 4px;
 
   &.node-status-1 {
-    background-color: #0052cc;
+    background-color: var(--app-text-info);
   }
   &.node-status-2 {
-    background-color: #52c41a;
+    background-color: var(--app-text-success);
   }
   &.node-status-3 {
-    background-color: #faad14;
+    background-color: var(--app-text-warning);
   }
   &.node-status-4 {
-    background-color: #ff4d4f;
+    background-color: var(--app-text-error);
   }
 }
 
@@ -520,7 +522,7 @@ function goBack() {
 
 .node-name {
   font-size: 14px;
-  color: #333;
+  color: var(--app-text-primary);
   font-weight: 500;
 }
 
@@ -532,21 +534,21 @@ function goBack() {
 
 .node-type {
   font-size: 11px;
-  color: #722ed1;
-  background-color: #f9f0ff;
+  color: var(--app-text-purple);
+  background-color: var(--app-bg-purple);
   padding: 1px 6px;
   border-radius: 4px;
 }
 
 .node-status-text {
   font-size: 12px;
-  color: #666;
+  color: var(--app-text-regular);
 }
 
 /* 节点参数展开 */
 .node-params {
   padding: 0 12px 12px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--app-border-light);
 }
 
 .param-block {
@@ -556,23 +558,23 @@ function goBack() {
 .param-title {
   font-size: 12px;
   font-weight: 600;
-  color: #666;
+  color: var(--app-text-regular);
   margin-bottom: 6px;
   display: block;
 }
 
 .param-content {
-  background-color: #fff;
+  background-color: var(--app-bg-card);
   border-radius: 6px;
   padding: 8px;
-  border: 1px solid #eee;
+  border: 1px solid var(--app-border-light);
   max-height: 160px;
   overflow-y: auto;
 }
 
 .param-json {
   font-size: 12px;
-  color: #333;
+  color: var(--app-text-primary);
   font-family: monospace;
   word-break: break-all;
   white-space: pre-wrap;

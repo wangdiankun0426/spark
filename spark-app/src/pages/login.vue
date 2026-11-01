@@ -1,5 +1,5 @@
 <template>
-  <div class="login-box safe-area-page">
+  <div class="login-box safe-area-page" :class="themeClass">
     <!-- 科技风背景装饰层：纯 CSS 实现，规避小程序不支持的 SVG / blur / mask -->
     <view class="login-bg">
       <view class="bg-grid"></view>
@@ -10,6 +10,11 @@
       <view class="bg-dot bg-dot-1"></view>
       <view class="bg-dot bg-dot-2"></view>
       <view class="bg-dot bg-dot-3"></view>
+    </view>
+
+    <!-- 主题切换：登录前也能选好皮肤，只放图标不放文案 -->
+    <view class="login-theme-btn" :style="themeToggleStyle" @click="toggleTheme">
+      <ThemeGlyph :dark="isDark" size="normal" :style="{color: isDark ? '#f5b544' : '#4b6584'}"/>
     </view>
 
     <!-- 品牌区 -->
@@ -33,6 +38,8 @@
                 prop="loginForm.username"
             >
               <up-input
+                  :color="inputTextColor"
+                  :placeholder-style="inputPlaceholderStyle"
                   v-model="loginForm.username"
                   placeholder="请输入用户名"
                   border="bottom"
@@ -45,6 +52,8 @@
                 prop="loginForm.password"
             >
               <up-input
+                  :color="inputTextColor"
+                  :placeholder-style="inputPlaceholderStyle"
                   v-model="loginForm.password"
                   :placeholder="'请输入密码'"
                   :type="showPassword ? 'text' : 'password'"
@@ -67,6 +76,8 @@
             >
               <!-- #ifdef H5 -->
               <up-input
+                  :color="inputTextColor"
+                  :placeholder-style="inputPlaceholderStyle"
                   v-model="loginForm.validateValue"
                   placeholder="请输入验证码"
                   border="bottom"
@@ -74,7 +85,7 @@
               >
                 <template #suffix>
                   <view @click="getValidateImg">
-                    <img :src="validateImg" width="120" height="50"/>
+                    <img :src="validateImg" width="120" height="50" class="validate-img-h5"/>
                   </view>
                 </template>
               </up-input>
@@ -82,6 +93,8 @@
               <!-- #ifdef MP-WEIXIN -->
               <view class="code-input-wrap">
                 <up-input
+                    :color="inputTextColor"
+                    :placeholder-style="inputPlaceholderStyle"
                     v-model="loginForm.validateValue"
                     placeholder="请输入验证码"
                     border="bottom"
@@ -100,6 +113,8 @@
                 prop="loginForm.phone"
             >
               <up-input
+                  :color="inputTextColor"
+                  :placeholder-style="inputPlaceholderStyle"
                   v-model="loginForm.phone"
                   placeholder="请输入手机号"
                   border="bottom"
@@ -112,6 +127,8 @@
                 prop="loginForm.validateValue"
             >
               <up-input
+                  :color="inputTextColor"
+                  :placeholder-style="inputPlaceholderStyle"
                   v-model="loginForm.validateValue"
                   placeholder="请输入验证码"
                   border="bottom"
@@ -133,6 +150,8 @@
                 prop="loginForm.email"
             >
               <up-input
+                  :color="inputTextColor"
+                  :placeholder-style="inputPlaceholderStyle"
                   v-model="loginForm.email"
                   placeholder="请输入邮箱"
                   border="bottom"
@@ -145,6 +164,8 @@
                 prop="loginForm.validateValue"
             >
               <up-input
+                  :color="inputTextColor"
+                  :placeholder-style="inputPlaceholderStyle"
                   v-model="loginForm.validateValue"
                   placeholder="请输入验证码"
                   border="bottom"
@@ -165,8 +186,8 @@
         <up-button
             @click="submitLoginForm"
             type="primary"
-            color="linear-gradient(90deg, #004fc5 0%, #0072e0 100%)"
-            :custom-style="{ height: '88rpx', borderRadius: '12rpx', boxShadow: '0 12rpx 28rpx rgba(0, 79, 197, 0.28)', fontSize: '32rpx', fontWeight: '700', letterSpacing: '4rpx' }"
+            :color="loginBtnColor"
+            :custom-style="loginBtnStyle"
             :loading="loading"
             loading-text="登 录 中...">
           <text class="login-text">登 录</text>
@@ -177,7 +198,7 @@
             class="agree-icon"
             :name="agreed ? 'checkmark-circle-fill' : 'checkmark-circle'"
             size="18"
-            :color="agreed ? '#004fc5' : '#909399'"
+            :color="agreed ? primaryColor : mutedColor"
         ></up-icon>
         <text class="agreement-text">我已阅读并同意</text>
         <text class="agreement-link" @click.stop="openAgreement('service')">《用户服务协议》</text>
@@ -188,22 +209,22 @@
 
     <!-- 其他方式登录 -->
     <view class="login-other">
-      <up-divider text="其他方式登录" textColor="#9296a5" lineColor="#d9e2f2"/>
+      <up-divider text="其他方式登录" :textColor="dividerTextColor" :lineColor="dividerLineColor"/>
 
       <div class="login-type-icons">
         <view class="login-type-icon-item" v-if="loginForm.loginType !== 1" @click="switchLoginType(1)">
           <view class="icon-circle">
-            <up-icon name="lock" size="24" color="#004fc5"></up-icon>
+            <up-icon name="lock" size="24" :color="primaryColor"></up-icon>
           </view>
         </view>
         <view class="login-type-icon-item" v-if="loginForm.loginType !== 2" @click="switchLoginType(2)">
           <view class="icon-circle">
-            <up-icon name="phone" size="24" color="#004fc5"></up-icon>
+            <up-icon name="phone" size="24" :color="primaryColor"></up-icon>
           </view>
         </view>
         <view class="login-type-icon-item" v-if="loginForm.loginType !== 3" @click="switchLoginType(3)">
           <view class="icon-circle">
-            <up-icon name="email" size="24" color="#004fc5"></up-icon>
+            <up-icon name="email" size="24" :color="primaryColor"></up-icon>
           </view>
         </view>
         <!-- #ifdef MP-WEIXIN -->
@@ -225,12 +246,50 @@
 import {getValidateCodeAPI, getSmsCodeAPI, getEmailCodeAPI, getEncryptKeyAPI} from '@/api/auth/login.js';
 import {des} from '@/utils/encryptUtil';
 import {AGREEMENT_VERSION} from '@/utils/agreementDoc';
-import {ref} from 'vue';
+import {useTheme} from '@/utils/useTheme';
+import ThemeGlyph from '@/components/ThemeGlyph/index.vue';
+import {navBarInfo} from '@/utils/navBarUtil';
+import {ref, computed} from 'vue';
 import {useStore} from 'vuex';
 
 const store = useStore();
+const {isDark, themeClass, toggleTheme} = useTheme();
 const loading = ref(false);
 const showPassword = ref(false);
+
+// 主题相关的图标与分隔线配色，避免深色皮肤下底色发灰、文字发暗
+const primaryColor = computed(() => (isDark.value ? '#4d8dff' : '#004fc5'));
+const mutedColor = computed(() => (isDark.value ? '#94a6c0' : '#909399'));
+const dividerTextColor = computed(() => (isDark.value ? '#94a6c0' : '#9296a5'));
+const dividerLineColor = computed(() => (isDark.value ? '#334155' : '#d9e2f2'));
+
+// uview 把输入框文字色写死成 JS 默认值内联下发，小程序对 var() 内联支持不稳，这里按主题给实色
+const inputTextColor = computed(() => (isDark.value ? '#e5edf7' : '#303133'));
+const inputPlaceholderStyle = computed(() => (isDark.value ? 'color: #8595ad' : 'color: #c0c4cc'));
+
+// 登录按钮：暗色下用更亮的蓝，避免深底上按钮发闷
+const loginBtnColor = computed(() => (isDark.value
+    ? 'linear-gradient(90deg, #2f6fe0 0%, #4d8dff 100%)'
+    : 'linear-gradient(90deg, #004fc5 0%, #0072e0 100%)'));
+
+const loginBtnStyle = computed(() => ({
+  height: '88rpx',
+  borderRadius: '12rpx',
+  boxShadow: isDark.value ? '0 12rpx 28rpx rgba(77, 141, 255, 0.32)' : '0 12rpx 28rpx rgba(0, 79, 197, 0.28)',
+  fontSize: '32rpx',
+  fontWeight: '700',
+  letterSpacing: '4rpx'
+}));
+
+// 切换按钮贴状态栏下方，小程序端避开微信胶囊按钮
+const themeToggleStyle = computed(() => {
+  // #ifdef MP-WEIXIN
+  return {top: navBarInfo.menuBottom + 10 + 'px'}
+  // #endif
+  // #ifdef H5
+  return {top: '16px'}
+  // #endif
+});
 const loginForm = ref({
   username: undefined,
   password: undefined,
@@ -463,7 +522,7 @@ async function submitLoginForm() {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  background-image: linear-gradient(160deg, $spark-color-bg-start 0%, $spark-color-bg-mid 55%, $spark-color-bg-end 100%);
+  background-image: var(--app-gradient-login);
 }
 
 .login-bg {
@@ -613,7 +672,7 @@ async function submitLoginForm() {
   // 小程序不支持 background-clip: text，故以品牌色兜底
   color: $spark-color-primary;
   /* #ifdef H5 */
-  background-image: linear-gradient(90deg, #004fc5 0%, #0072e0 45%, #00b8d9 100%);
+  background-image: var(--app-title-gradient);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -625,7 +684,7 @@ async function submitLoginForm() {
   height: 8rpx;
   margin: 20rpx 0;
   border-radius: 8rpx;
-  background-image: linear-gradient(90deg, #004fc5 0%, #00b8d9 100%);
+  background-image: var(--app-gradient-brand);
 }
 
 .login-subtitle {
@@ -650,6 +709,18 @@ async function submitLoginForm() {
   z-index: 1;
 }
 
+/* #ifdef H5 */
+.login-card :deep(.uni-input-input) {
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus,
+  &:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px var(--app-autofill-bg) inset !important;
+    box-shadow: 0 0 0 1000px var(--app-autofill-bg) inset !important;
+  }
+}
+/* #endif */
+
 .login-form-body {
   min-height: 200px;
 }
@@ -668,6 +739,13 @@ async function submitLoginForm() {
   width: 100px;
   height: 40px;
   margin-left: 8px;
+  border-radius: 6rpx;
+  background-color: #ffffff;
+}
+
+.validate-img-h5 {
+  border-radius: 6rpx;
+  background-color: #ffffff;
 }
 
 .login-other {
@@ -697,8 +775,8 @@ async function submitLoginForm() {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background-color: #ffffff;
-  border: 1rpx solid rgba(0, 79, 197, 0.12);
+  background-color: var(--app-bg-card);
+  border: 1rpx solid var(--app-border);
   box-shadow: 0 6rpx 18rpx rgba(26, 111, 232, 0.1);
 }
 
@@ -728,7 +806,7 @@ async function submitLoginForm() {
 
   .agreement-link {
     font-size: 24rpx;
-    color: #2f7bff;
+    color: var(--app-brand);
   }
 }
 
@@ -750,6 +828,66 @@ async function submitLoginForm() {
 
 .copyright-text {
   font-size: 22rpx;
-  color: #909399;
+  color: var(--app-text-muted);
+}
+
+.login-theme-btn {
+  position: absolute;
+  right: 48rpx;
+  z-index: 3;
+  width: 76rpx;
+  height: 76rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: var(--app-bg-card);
+  border: 1rpx solid var(--app-border);
+  box-shadow: 0 8rpx 24rpx rgba(26, 111, 232, 0.14);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-theme-btn:active {
+  transform: scale(0.94);
+  box-shadow: 0 4rpx 12rpx rgba(26, 111, 232, 0.14);
+}
+
+.login-box.theme-dark .login-theme-btn {
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.45);
+}
+
+.login-box.theme-dark {
+  .bg-grid {
+    opacity: 1;
+    background-image:
+        linear-gradient(rgba(110, 164, 255, 0.07) 1rpx, transparent 1rpx),
+        linear-gradient(90deg, rgba(110, 164, 255, 0.07) 1rpx, transparent 1rpx);
+  }
+
+  .bg-blob-1,
+  .bg-blob-2 {
+    opacity: 1;
+  }
+
+  .bg-blob-1 {
+    background-image: radial-gradient(circle at 30% 30%, rgba(47, 111, 224, 0.3) 0%, rgba(37, 78, 160, 0.12) 45%, rgba(37, 78, 160, 0) 72%);
+  }
+
+  .bg-blob-2 {
+    background-image: radial-gradient(circle at 60% 40%, rgba(32, 178, 190, 0.22) 0%, rgba(28, 110, 150, 0.1) 45%, rgba(28, 110, 150, 0) 72%);
+  }
+
+  .bg-orbit {
+    border-color: rgba(77, 141, 255, 0.14);
+  }
+
+  .bg-dot {
+    background-color: rgba(110, 164, 255, 0.55);
+    box-shadow: 0 0 16rpx rgba(110, 164, 255, 0.35);
+  }
+
+  .icon-circle {
+    box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.4);
+  }
 }
 </style>

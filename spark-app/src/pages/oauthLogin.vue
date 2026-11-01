@@ -1,5 +1,5 @@
 <template>
-  <view class="oauth-login">
+  <view class="oauth-login" :class="themeClass">
     <view class="oauth-container">
       <view class="oauth-card">
         <text class="oauth-desc">{{ statusText }}</text>
@@ -12,8 +12,10 @@
 import { ref } from 'vue'
 import { useStore } from 'vuex'
 import {onLoad} from "@dcloudio/uni-app";
+import {useTheme} from "@/utils/useTheme";
 
 const store = useStore()
+const {themeClass} = useTheme()
 const statusText = ref('正在处理OAuth授权，请稍候...')
 const code = ref('')
 const state = ref('')
@@ -80,7 +82,7 @@ onLoad((options) => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(160deg, #f7faff 0%, #eaf2fe 55%, #e3edfd 100%);
+  background-image: var(--app-gradient-login);
 }
 
 .oauth-container {
@@ -95,13 +97,13 @@ onLoad((options) => {
   flex-direction: column;
   align-items: center;
   padding: 60rpx 80rpx;
-  background: #ffffff;
+  background-color: var(--app-bg-card);
   border-radius: 24rpx;
-  box-shadow: 0 8rpx 32rpx rgba(26, 111, 232, 0.12);
+  box-shadow: var(--app-shadow-card);
 }
 
 .oauth-desc {
   font-size: 28rpx;
-  color: #909399;
+  color: var(--app-text-muted);
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <view class="message-container safe-area-page">
+  <view class="message-container safe-area-page" :class="themeClass">
     <!-- 顶部标题栏 -->
     <view class="message-header" :style="navHeaderStyle()">
       <text class="header-title">消息</text>
@@ -42,34 +42,29 @@
           </view>
           <view v-if="isFlowMessage(item)" class="card-link">
             <text class="link-text">详情</text>
-            <up-icon name="arrow-right" size="12" color="#0052cc"/>
+            <up-icon name="arrow-right" size="12" :color="linkColor"/>
           </view>
         </view>
         <up-loadmore :status="loadStatus" class="list-loadmore"/>
       </template>
     </scroll-view>
 
-    <up-tabbar :value="active" @change="handleOnTabChange" activeColor="#004fc5">
-      <up-tabbar-item
-          v-for="tab in tabBarItems"
-          :key="tab.name"
-          :name="tab.name"
-          :icon="tab.icon"
-          :text="tab.text"
-      />
-    </up-tabbar>
+    <AppTabbar :value="active" @change="handleOnTabChange"/>
   </view>
 </template>
 <script setup>
 import {ref, computed} from "vue";
-import {visibleTabs} from "@/utils/menuUtil";
 import {navHeaderStyle} from "@/utils/navBarUtil";
+import {useTheme} from "@/utils/useTheme";
+import AppTabbar from "@/components/AppTabbar/index.vue";
 import {pageMyMessageListAPI} from "@/api/sys/message";
 
 const active = ref("message");
+const {isDark, themeClass} = useTheme();
 
-// 按菜单权限过滤后的底部导航项（随用户菜单权限响应式更新）
-const tabBarItems = computed(() => visibleTabs());
+// 卡片详情链接色，与文字链接保持一致
+const linkColor = computed(() => (isDark.value ? '#6ea8ff' : '#0052cc'));
+
 
 const messageList = ref([]);
 // 初值 true：首屏渲染「加载中」，避免闪现空状态
@@ -184,10 +179,10 @@ function handleOnTabChange(index) {
     font-weight: 700;
     letter-spacing: 1px;
     /* #ifdef MP-WEIXIN */
-    color: #2f7bff;
+    color: var(--app-brand);
     /* #endif */
     /* #ifdef H5 */
-    background-image: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
+    background-image: var(--app-title-gradient);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -220,14 +215,14 @@ function handleOnTabChange(index) {
 }
 
 .message-card {
-  background-color: #fff;
+  background-color: var(--app-bg-card);
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 12px;
-  box-shadow: 0 2px 8px rgba(23, 43, 77, 0.08);
+  box-shadow: var(--app-shadow-card);
 
   &:active {
-    background-color: #f5f7fa;
+    background-color: var(--app-bg-hover);
   }
 }
 
@@ -242,11 +237,11 @@ function handleOnTabChange(index) {
   gap: 2px;
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px dashed #ebeef5;
+  border-top: 1px dashed var(--app-border-light);
 
   .link-text {
     font-size: 12px;
-    color: #0052cc;
+    color: var(--app-text-info);
   }
 }
 
@@ -266,26 +261,26 @@ function handleOnTabChange(index) {
 .card-title {
   font-size: 16px;
   font-weight: 600;
-  color: #333333;
+  color: var(--app-text-primary);
 }
 
 .card-time {
   font-size: 12px;
-  color: #999;
+  color: var(--app-text-secondary);
   flex-shrink: 0;
   margin-left: 12px;
 }
 
 .card-divider {
   height: 1px;
-  background-color: #f0f2f5;
+  background-color: var(--app-divide);
   margin-bottom: 12px;
 }
 
 .card-content {
   .content-text {
     font-size: 14px;
-    color: #5a5a5a;
+    color: var(--app-text-regular);
     line-height: 1.7;
     word-break: break-all;
   }
