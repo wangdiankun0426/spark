@@ -1,74 +1,105 @@
 <template>
   <view class="detail-container safe-area-page" :class="themeClass">
     <!-- 顶部标题栏 -->
-    <view class="detail-header" :style="navHeaderStyle()">
-      <up-icon
-          name="arrow-left"
-          size="20"
-          color="#2f7bff"
-          @click="handleBack"
-      />
-      <text class="header-title">流程详情</text>
+    <view class="page-header" :style="navHeaderStyle()">
+      <view class="page-header-back" @click="handleBack">
+        <up-icon name="arrow-left" size="19" :color="headerIconColor"/>
+      </view>
+      <text class="page-header-title">流程详情</text>
+      <view class="page-header-extra"></view>
     </view>
 
     <!-- 内容区 -->
     <scroll-view class="detail-body" scroll-y>
-      <!-- 基本信息区 -->
+      <!-- 基本信息：流程标题作为第一行，状态胶囊挂在分组标题右侧 -->
       <view class="section-card">
-        <view class="section-title">基本信息</view>
-        <view class="info-row">
-          <text class="info-label">标题</text>
-          <text class="info-value">{{ instance.name || '-' }}</text>
+        <view class="section-head">
+          <view class="section-bar"></view>
+          <text class="section-title">基本信息</text>
+          <text class="tag section-tag" :class="'is-' + statusTone(instance.status)">
+            {{ instance.statusName || '处理中' }}
+          </text>
         </view>
-        <view class="info-row">
-          <text class="info-label">申请人</text>
-          <text class="info-value">{{ instance.createdByName || '-' }}</text>
+        <view class="kv-row">
+          <text class="kv-key">流程标题</text>
+          <text class="kv-value kv-value--strong">{{ instance.name || '-' }}</text>
         </view>
-        <view class="info-row">
-          <text class="info-label">申请部门</text>
-          <text class="info-value">{{ instance.deptName || '-' }}</text>
+        <view class="kv-row">
+          <text class="kv-key">流程类型</text>
+          <text class="kv-value">{{ instance.typeName || '-' }}</text>
         </view>
-        <view class="info-row">
-          <text class="info-label">紧急程度</text>
-          <text class="info-value">{{ instance.levelName }}</text>
+        <view class="kv-row">
+          <text class="kv-key">申请人</text>
+          <text class="kv-value">{{ instance.createdByName || '-' }}</text>
         </view>
-        <view class="info-row">
-          <text class="info-label">备注</text>
-          <text class="info-value">{{ instance.description || '-' }}</text>
+        <view class="kv-row">
+          <text class="kv-key">申请部门</text>
+          <text class="kv-value">{{ instance.deptName || '-' }}</text>
+        </view>
+        <view class="kv-row">
+          <text class="kv-key">紧急程度</text>
+          <text class="kv-value" :class="'lvl-' + (instance.level || 1)">{{ instance.levelName || '-' }}</text>
+        </view>
+        <view class="kv-row">
+          <text class="kv-key">申请时间</text>
+          <text class="kv-value">{{ instance.createdDt || '-' }}</text>
+        </view>
+        <view class="kv-row">
+          <text class="kv-key">备注</text>
+          <text class="kv-value">{{ instance.description || '无' }}</text>
         </view>
       </view>
 
-      <!-- 只读表单区 -->
+      <!-- 表单详情 -->
       <view class="section-card">
-        <view class="section-title">表单详情</view>
-        <view class="info-row" v-for="widget in visibleWidgetList" :key="widget.config.code">
-          <text class="info-label">{{ widget.config.label }}</text>
-          <form-field-value class="info-value" :widget="widget"/>
+        <view class="section-head">
+          <view class="section-bar"></view>
+          <text class="section-title">表单详情</text>
         </view>
-        <view v-if="visibleWidgetList.length === 0" class="form-empty">
+        <template v-if="visibleWidgetList.length">
+          <view class="kv-row" v-for="widget in visibleWidgetList" :key="widget.config.code">
+            <text class="kv-key">{{ widget.config.label }}</text>
+            <form-field-value class="kv-value" :widget="widget"/>
+          </view>
+        </template>
+        <view v-else class="empty-row">
           <text>暂无表单数据</text>
         </view>
       </view>
 
-      <!-- 审批记录区 -->
+      <!-- 审批记录：时间线 -->
       <view class="section-card">
-        <view class="section-title">审批记录</view>
-        <view class="node-item" v-for="(node, index) in nodes" :key="node.id || index">
-          <view class="node-header">
-            <text class="node-name">{{ node.name }}</text>
-            <text class="node-status" :class="'status-' + node.status">{{ node.statusName }}</text>
-          </view>
-          <view v-if="node.status === 2" class="node-waiter">待审批人：{{ node.unAssigneeName || '-' }}</view>
-          <view class="discuss-item" v-for="(discuss, dIndex) in node.discusses" :key="discuss.id || dIndex">
-            <view class="discuss-header">
-              <text class="discuss-name">{{ discuss.assigneeName }}</text>
-              <text class="discuss-status" :class="'status-' + discuss.status">{{ discuss.statusName }}</text>
-              <text class="discuss-time">{{ discuss.createdDt }}</text>
+        <view class="section-head">
+          <view class="section-bar"></view>
+          <text class="section-title">审批记录</text>
+          <text v-if="nodes.length" class="section-count">{{ nodes.length }} 个节点</text>
+        </view>
+        <view v-if="nodes.length" class="timeline">
+          <view class="tl-item" v-for="(node, index) in nodes" :key="node.id || index">
+            <view class="tl-rail">
+              <view class="tl-dot" :class="'dot-' + statusTone(node.status)"></view>
+              <view v-if="index < nodes.length - 1" class="tl-line"></view>
             </view>
-            <text v-if="discuss.discuss" class="discuss-content">{{ discuss.discuss }}</text>
+            <view class="tl-body">
+              <view class="tl-head">
+                <text class="tl-name">{{ node.name }}</text>
+                <text class="tag tag--mini" :class="'is-' + statusTone(node.status)">{{ node.statusName }}</text>
+              </view>
+              <view v-if="node.status === 2 && node.unAssigneeName" class="tl-note">
+                待审批人：{{ node.unAssigneeName }}
+              </view>
+              <view class="tl-discuss" v-for="(discuss, dIndex) in node.discusses" :key="discuss.id || dIndex">
+                <view class="tl-discuss-head">
+                  <text class="tl-discuss-name">{{ discuss.assigneeName }}</text>
+                  <text class="tag tag--mini" :class="'is-' + statusTone(discuss.status)">{{ discuss.statusName }}</text>
+                  <text class="tl-discuss-time">{{ discuss.createdDt }}</text>
+                </view>
+                <text v-if="discuss.discuss" class="tl-discuss-content">{{ discuss.discuss }}</text>
+              </view>
+            </view>
           </view>
         </view>
-        <view v-if="nodes.length === 0" class="form-empty">
+        <view v-else class="empty-row">
           <text>暂无审批记录</text>
         </view>
       </view>
@@ -76,44 +107,79 @@
 
     <!-- 底部操作栏 -->
     <view class="detail-footer" v-if="showFooter">
-      <!-- 我的待办：通过/驳回/转办/加签/抄送 -->
-      <template v-if="type === 3">
-        <up-button v-if="hasPermission(1)" type="primary" size="small" text="通过" @click="openApprovalDialog(3)"/>
-        <up-button v-if="hasPermission(2)" type="error" size="small" text="驳回" @click="openApprovalDialog(4)"/>
-        <up-button v-if="hasPermission(16)" type="warning" size="small" text="转办" @click="openUserPicker('transfer')"/>
-        <up-button v-if="hasPermission(32)" type="primary" size="small" text="加签" @click="openUserPicker('addSign')"/>
-        <up-button v-if="hasPermission(64)" type="info" size="small" text="抄送" @click="openUserPicker('copy')"/>
-      </template>
-      <!-- 我的申请：催办/撤回 -->
-      <template v-else-if="type === 1">
-        <up-button v-if="instance.status === 2 && hasPermission(8)" type="warning" size="small" text="催办" :loading="urging" @click="handleUrge"/>
-        <up-button v-if="instance.status === 2 && isCreator && hasPermission(128)" type="error" size="small" text="撤回" :loading="recalling" @click="handleRecall"/>
-      </template>
+      <!-- 次要操作：转办/加签/抄送，横向排开，不抢主按钮的视觉 -->
+      <view
+          v-if="type === 3 && (hasPermission(16) || hasPermission(32) || hasPermission(64))"
+          class="footer-extra"
+      >
+        <view v-if="hasPermission(16)" class="extra-btn" @click="openUserPicker('transfer')">转办</view>
+        <view v-if="hasPermission(32)" class="extra-btn" @click="openUserPicker('addSign')">加签</view>
+        <view v-if="hasPermission(64)" class="extra-btn" @click="openUserPicker('copy')">抄送</view>
+      </view>
+
+      <view class="footer-actions">
+        <!-- 催办：描边次级按钮，先弹确认再发通知，避免误触 -->
+        <view v-if="canUrge" class="action-btn action-btn--soft" @click="urgeVisible = true">
+          <up-icon name="bell" size="16" :color="headerIconColor"/>
+          <text class="action-btn__text">{{ urging ? '催办中...' : '催办审批人' }}</text>
+        </view>
+        <view
+            v-if="type === 3 && hasPermission(2)"
+            class="action-btn action-btn--ghost"
+            @click="openApprovalDialog(4)"
+        >驳回</view>
+        <view
+            v-if="type === 3 && hasPermission(1)"
+            class="action-btn action-btn--primary"
+            @click="openApprovalDialog(3)"
+        >同意</view>
+        <!-- 申请页签：发起人在审批中可撤回 -->
+        <view
+            v-if="canRecall"
+            class="action-btn action-btn--primary"
+            @click="handleRecall"
+        >撤回申请</view>
+      </view>
     </view>
 
-    <!-- 审批意见弹窗 -->
-    <up-modal
-        :show="approvalVisible"
-        :title="approvalStatus === 3 ? '通过' : '驳回'"
-        showCancelButton
-        @confirm="handleApproval"
-        @cancel="approvalVisible = false"
-    >
-      <view class="modal-body">
-        <up-textarea v-model="approvalDiscuss" placeholder="请输入审批意见" count :maxlength="200" :customStyle="textareaStyle"/>
-      </view>
-    </up-modal>
+    <!-- 弹层宿主：小程序端 modal/picker 内部的 popup 插槽内容会参与 flex 分配顶高底部操作栏 -->
+    <view class="sheet-host">
+      <!-- 催办确认弹窗 -->
+      <up-modal
+          :show="urgeVisible"
+          title="催办审批人"
+          content="将向当前审批人发送一条催办通知，确定发送吗？"
+          showCancelButton
+          confirmText="发送催办"
+          @confirm="handleUrge"
+          @cancel="urgeVisible = false"
+      />
 
-    <!-- 加签/转办/抄送选人弹层（复用选择用户组件） -->
-    <user-picker
-        v-model:show="userPickerVisible"
-        :title="operateType === 'transfer' ? '选择转办人' : operateType === 'copy' ? '选择抄送人' : '选择加签人'"
-        :multiple="operateType !== 'transfer'"
-        :loading="operating"
-        @confirm="handleUserConfirm"
-    />
+      <!-- 审批意见弹窗 -->
+      <up-modal
+          :show="approvalVisible"
+          :title="approvalStatus === 3 ? '通过' : '驳回'"
+          showCancelButton
+          @confirm="handleApproval"
+          @cancel="approvalVisible = false"
+      >
+        <view class="modal-body">
+          <up-textarea v-model="approvalDiscuss" placeholder="请输入审批意见" count :maxlength="200" :customStyle="textareaStyle"/>
+        </view>
+      </up-modal>
+
+      <!-- 加签、转办、抄送选人弹层，复用选择用户组件 -->
+      <user-picker
+          v-model:show="userPickerVisible"
+          :title="operateType === 'transfer' ? '选择转办人' : operateType === 'copy' ? '选择抄送人' : '选择加签人'"
+          :multiple="operateType !== 'transfer'"
+          :loading="operating"
+          @confirm="handleUserConfirm"
+      />
+    </view>
   </view>
 </template>
+
 <script setup>
 import {computed, ref} from "vue";
 import {onLoad} from "@dcloudio/uni-app";
@@ -131,10 +197,14 @@ import {toast} from "uview-plus";
 import UserPicker from '@/components/UserPicker/index.vue'
 import FormFieldValue from '@/components/FormFieldValue/index.vue'
 import {useTheme} from '@/utils/useTheme'
+import {getHeaderIconColor, getSearchBgColor} from '@/utils/themeUtil'
 import store from "@/store/index.js";
 import {useDebounceFn} from "@/utils/debounce";
 
-const {themeClass} = useTheme();
+const {isDark, themeClass} = useTheme();
+
+// 头部返回与描边按钮图标共用品牌色，暗色下提亮一档
+const headerIconColor = computed(() => getHeaderIconColor(isDark.value));
 
 const instanceId = ref(undefined);
 // 详情类型：1 我的申请 3 我的待办 4 我的已办 5 抄送给我
@@ -146,6 +216,8 @@ const nodeId = ref(undefined);
 const nodePermission = ref(undefined);
 const urging = ref(false);
 const recalling = ref(false);
+// 催办确认弹窗显隐
+const urgeVisible = ref(false);
 
 /** 当前登录用户ID */
 const currentUserId = computed(() => {
@@ -173,7 +245,7 @@ function handleLoadDetail() {
       return;
     }
     instance.value = res.data;
-    // 给模板字段回填值（value/showValue）
+    // 给模板字段回填 value 与 showValue
     const formJson = res.data.formJson ? JSON.parse(res.data.formJson) : {};
     const values = res.data.values || [];
     const codes = values.map(value => value.code);
@@ -207,16 +279,20 @@ const showFooter = computed(() => {
     return nodeId.value !== undefined && (hasPermission(1) || hasPermission(2) || hasPermission(16) || hasPermission(32) || hasPermission(64));
   }
   if (type.value === 1) {
-    // 审批中：催办（有权限）或撤回（发起人+有撤回权限）
-    if (instance.value.status !== 2) return false;
-    return (nodeId.value !== undefined && hasPermission(8)) || (isCreator.value && hasPermission(128));
+    return canUrge.value || canRecall.value;
   }
   return false;
 });
 
+// 催办：我的申请 + 审批中 + 有催办权限
+const canUrge = computed(() => type.value === 1 && instance.value.status === 2
+    && nodeId.value !== undefined && hasPermission(8));
+// 撤回：我的申请 + 审批中 + 本人发起 + 有撤回权限
+const canRecall = computed(() => type.value === 1 && instance.value.status === 2
+    && isCreator.value && hasPermission(128));
 /**
  * 判断节点操作权限
- * @param bit 权限位 1-通过 2-驳回 8-催办 16-转办 32-加签
+ * @param bit 权限位 1-通过 2-驳回 8-催办 16-转办 32-加签 64-抄送 128-撤回
  */
 function hasPermission(bit) {
   return ((nodePermission.value || 0) & bit) === bit;
@@ -233,11 +309,11 @@ const approvalVisible = ref(false);
 const approvalStatus = ref(3);
 const approvalDiscuss = ref('');
 
-// 文本域根节点底色写死在组件内部，只能靠 customStyle 内联覆盖，变量会被继承进来
-const textareaStyle = {
-  backgroundColor: 'var(--app-bg-sub)',
+// 小程序原生输入组件拿不到 CSS 变量，customStyle 按皮肤给实色
+const textareaStyle = computed(() => ({
+  backgroundColor: getSearchBgColor(isDark.value),
   borderRadius: '8rpx'
-};
+}));
 
 /**
  * 打开审批意见弹窗
@@ -272,9 +348,13 @@ const handleApproval = useDebounceFn(() => {
 });
 
 /**
- * 催办流程实例
+ * 催办流程实例：由确认弹窗触发，避免点一下就发通知
  */
 const handleUrge = useDebounceFn(() => {
+  if (urging.value) {
+    return;
+  }
+  urgeVisible.value = false;
   urging.value = true;
   urgeFlowInstanceAPI({id: instanceId.value}).then(res => {
     if (res.code === 200) {
@@ -357,7 +437,29 @@ const handleUserConfirm = useDebounceFn((users) => {
     });
   }
 });
+
+/**
+ * 状态 → 颜色语义，胶囊与时间线圆点共用同一套映射
+ * @param status 流程/节点状态值
+ * @returns {string} 颜色语义类名后缀
+ */
+function statusTone(status) {
+  if (status === 3 || status === 5) {
+    return 'success';
+  }
+  if (status === 4) {
+    return 'danger';
+  }
+  if (status === 1) {
+    return 'warning';
+  }
+  if (status === 2 || status === 6) {
+    return 'info';
+  }
+  return 'neutral';
+}
 </script>
+
 <style scoped lang="scss">
 .detail-container {
   height: 100vh;
@@ -365,187 +467,345 @@ const handleUserConfirm = useDebounceFn((users) => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: $uni-bg-color-dashboard;
+  background-color: var(--app-bg-page);
 }
 
-.detail-container :deep(.u-popup) {
-  flex: none;
-}
-
-.detail-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 16px 16px;
-  background-color: $spark-color-header-bg;
-  border-bottom: 1rpx solid $spark-color-header-border;
-
-  .header-title {
-    font-size: 17px;
-    font-style: italic;
-    font-weight: 700;
-    letter-spacing: 1px;
-    /* #ifdef MP-WEIXIN */
-    color: var(--app-brand);
-    /* #endif */
-    /* #ifdef H5 */
-    background-image: var(--app-title-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    /* #endif */
-  }
-}
 
 .detail-body {
   flex: 1;
   height: 0;
   min-height: 0;
-  padding: 10px 12px;
+  padding: 12px 14px 16px;
   box-sizing: border-box;
 }
 
+.tag {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.tag--mini {
+  padding: 1px 7px;
+  font-size: 10px;
+}
+
+.tag.is-neutral {
+  color: var(--app-text-secondary);
+  background-color: var(--app-bg-sub);
+}
+
+.tag.is-info {
+  color: var(--app-text-info);
+  background-color: var(--app-bg-info);
+}
+
+.tag.is-warning {
+  color: var(--app-text-warning);
+  background-color: var(--app-bg-warning);
+}
+
+.tag.is-success {
+  color: var(--app-text-success);
+  background-color: var(--app-bg-success);
+}
+
+.tag.is-danger {
+  color: var(--app-text-error);
+  background-color: var(--app-bg-error);
+}
+
+.section-tag {
+  margin-left: auto;
+}
+
 .section-card {
-  background-color: var(--app-bg-card);
-  border-radius: 8px;
-  padding: 12px;
+  padding: 13px 14px 4px;
   margin-bottom: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-
-  .section-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--app-text-primary);
-    padding-bottom: 4px;
-    border-bottom: 1px solid var(--app-border-light);
-  }
+  border-radius: 16px;
+  background-color: var(--app-bg-card);
+  box-shadow: var(--app-shadow-card);
 }
 
-.info-row {
+.section-head {
   display: flex;
-  font-size: 13px;
-
-  .info-label {
-    color: var(--app-text-muted);
-    width: 80px;
-    flex-shrink: 0;
-  }
-
-  .info-value {
-    flex: 1;
-    color: var(--app-text-regular);
-    word-break: break-all;
-  }
+  align-items: center;
+  gap: 7px;
+  padding-bottom: 8px;
 }
 
-.form-empty {
+.section-bar {
+  width: 3px;
+  height: 12px;
+  border-radius: 2px;
+  background-image: var(--app-gradient-fill);
+}
+
+.section-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--app-text-primary);
+}
+
+.section-count {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--app-text-tertiary);
+}
+
+.kv-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 8px 0;
+  border-top: 1px solid var(--app-divide);
+  font-size: 12.5px;
+}
+
+.kv-key {
+  flex-shrink: 0;
+  width: 68px;
+  line-height: 18px;
+  color: var(--app-text-tertiary);
+}
+
+.kv-value {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  line-height: 18px;
+  color: var(--app-text-primary);
+  word-break: break-all;
+}
+
+.kv-value--strong {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.kv-value.lvl-2 {
+  color: var(--app-text-warning);
+  font-weight: 600;
+}
+
+.kv-value.lvl-3 {
+  color: var(--app-text-error);
+  font-weight: 600;
+}
+
+.empty-row {
   display: flex;
   justify-content: center;
-  padding: 10px 0;
+  padding: 14px 0 16px;
+  font-size: 12px;
+  color: var(--app-text-tertiary);
+}
+
+.timeline {
+  padding-top: 2px;
+}
+
+.tl-item {
+  display: flex;
+  gap: 10px;
+}
+
+.tl-rail {
+  flex-shrink: 0;
+  width: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tl-dot {
+  width: 8px;
+  height: 8px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background-color: var(--app-border);
+  box-shadow: 0 0 0 3px var(--app-bg-card);
+}
+
+.tl-dot.dot-info {
+  background-color: var(--app-text-info);
+}
+
+.tl-dot.dot-warning {
+  background-color: var(--app-text-warning);
+}
+
+.tl-dot.dot-success {
+  background-color: var(--app-text-success);
+}
+
+.tl-dot.dot-danger {
+  background-color: var(--app-text-error);
+}
+
+.tl-line {
+  flex: 1;
+  width: 2px;
+  margin: 3px 0;
+  border-radius: 2px;
+  background-color: var(--app-border);
+}
+
+.tl-body {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 12px;
+}
+
+.tl-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 18px;
+}
+
+.tl-name {
+  flex: 1;
+  min-width: 0;
   font-size: 13px;
-  color: var(--app-text-muted);
+  font-weight: 600;
+  color: var(--app-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-// 审批节点
-.node-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--app-border-light);
-
-  .node-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    .node-name {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--app-text-primary);
-    }
-
-    .node-status {
-      font-size: 12px;
-    }
-  }
-
-  .node-waiter {
-    font-size: 12px;
-    color: var(--app-text-muted);
-  }
+.tl-note {
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--app-text-tertiary);
 }
 
-.discuss-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.tl-discuss {
+  margin-top: 7px;
   padding: 8px 10px;
-  border-radius: 6px;
+  border-radius: 10px;
   background-color: var(--app-bg-sub);
-
-  .discuss-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-
-    .discuss-name {
-      color: var(--app-text-primary);
-    }
-
-    .discuss-time {
-      color: var(--app-text-muted);
-    }
-  }
-
-  .discuss-content {
-    font-size: 12px;
-    color: var(--app-text-regular);
-    line-height: 1.6;
-    word-break: break-all;
-  }
 }
 
-// 状态着色：审批中蓝、通过绿、驳回红、撤回橙、转办/加签/替换灰
-.status-1,
-.status-6,
-.status-7,
-.status-8,
-.status-10 {
-  color: var(--app-text-muted);
+.tl-discuss-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
 }
 
-.status-2 {
-  color: var(--app-text-info);
+.tl-discuss-name {
+  color: var(--app-text-regular);
+  font-weight: 500;
 }
 
-.status-3,
-.status-5 {
-  color: var(--app-text-success);
+.tl-discuss-time {
+  margin-left: auto;
+  font-size: 10.5px;
+  color: var(--app-text-tertiary);
 }
 
-.status-4 {
-  color: var(--app-text-error);
-}
-
-.status-9 {
-  color: var(--app-text-warning);
+.tl-discuss-content {
+  display: block;
+  margin-top: 5px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--app-text-regular);
+  word-break: break-all;
 }
 
 .detail-footer {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px;
+  padding-bottom: calc(10px + constant(safe-area-inset-bottom));
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  background-color: var(--app-bg-card);
+  border-top: 1px solid var(--app-border-light);
+}
+
+.footer-extra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.extra-btn {
+  height: 30px;
+  padding: 0 13px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--app-text-secondary);
+  background-color: var(--app-bg-sub);
+  border: 1px solid var(--app-border-light);
+
+  &:active {
+    background-color: var(--app-bg-hover);
+  }
+}
+
+.footer-actions {
   display: flex;
   gap: 10px;
-  padding: 12px 16px;
-  padding-bottom: calc(12px + env(safe-area-inset-bottom));
-  background-color: $spark-color-header-bg;
-  border-top: 1rpx solid $spark-color-header-border;
+}
 
-  :deep(.u-button) {
-    flex: 1;
+.action-btn {
+  flex: 1;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: 1px;
+
+  &:active {
+    opacity: 0.85;
   }
+}
+
+.action-btn--primary {
+  color: var(--app-fill-tx);
+  background-image: var(--app-gradient-fill);
+  box-shadow: var(--app-shadow-brand);
+}
+
+.action-btn--soft {
+  gap: 6px;
+  color: var(--app-brand);
+  background-color: var(--app-bg-card);
+  border: 1px solid var(--app-brand-border);
+
+  &:active {
+    background-color: var(--app-primary-soft);
+  }
+}
+
+.action-btn__text {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.action-btn--ghost {
+  color: var(--app-text-error);
+  background-color: var(--app-bg-card);
+  border: 1px solid var(--app-error-border);
+}
+
+.action-btn--ghost:active {
+  background-color: var(--app-bg-error);
 }
 
 .modal-body {

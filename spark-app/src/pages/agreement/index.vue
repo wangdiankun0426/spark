@@ -1,15 +1,15 @@
 <template>
-  <div class="agreement-container safe-area-page" :class="themeClass">
-    <view class="agreement-header" :style="navHeaderStyle()">
-      <view class="header-left" @click="onClickBack">
-        <up-icon name="arrow-left" size="20" color="#2f7bff"></up-icon>
-        <text class="header-title">{{ doc.title }}</text>
+  <view class="agreement-container safe-area-page" :class="themeClass">
+    <view class="page-header" :style="navHeaderStyle()">
+      <view class="page-header-back" @click="onClickBack">
+        <up-icon name="arrow-left" size="19" :color="backIconColor"></up-icon>
       </view>
+      <text class="page-header-title">{{ doc.title }}</text>
+      <view class="page-header-extra"></view>
     </view>
 
     <scroll-view scroll-y class="agreement-body">
       <view class="doc-meta">
-        <text class="doc-name">{{ doc.title }}</text>
         <text class="doc-desc">更新日期：{{ doc.updateDate }}　版本：{{ doc.version }}</text>
       </view>
       <view class="doc-section" v-for="(section, index) in doc.sections" :key="index">
@@ -24,16 +24,19 @@
         <text class="footer-text">本文件更新日期：{{ doc.updateDate }}，自发布之日起生效。</text>
       </view>
     </scroll-view>
-  </div>
+  </view>
 </template>
 <script setup>
 import {computed, ref} from 'vue';
 import {onLoad} from '@dcloudio/uni-app';
 import {navHeaderStyle} from '@/utils/navBarUtil';
 import {useTheme} from '@/utils/useTheme';
+import {getHeaderIconColor} from '@/utils/themeUtil';
 import {agreementMap} from '@/utils/agreementDoc';
 
-const {themeClass} = useTheme();
+const {isDark, themeClass} = useTheme();
+
+const backIconColor = computed(() => getHeaderIconColor(isDark.value));
 const docType = ref('service');
 
 const doc = computed(() => agreementMap[docType.value] || agreementMap.service);
@@ -61,37 +64,10 @@ function onClickBack() {
   background-color: var(--app-page-base);
 }
 
-.agreement-header {
-  flex-shrink: 0;
-  padding: 16px 16px;
-  background-color: $spark-color-header-bg;
-  border-bottom: 1rpx solid $spark-color-header-border;
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .header-title {
-    font-size: 17px;
-    font-style: italic;
-    font-weight: 700;
-    letter-spacing: 1px;
-    /* #ifdef MP-WEIXIN */
-    color: var(--app-brand);
-    /* #endif */
-    /* #ifdef H5 */
-    background-image: var(--app-title-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    /* #endif */
-  }
-}
-
 .agreement-body {
   flex: 1;
+  /* 小程序里 scroll-view 不认 flex:1，必须补 height:0 才会被撑满 */
+  height: 0;
   min-height: 0;
   box-sizing: border-box;
   padding: 32rpx 32rpx 0;
@@ -101,7 +77,7 @@ function onClickBack() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 16rpx 0 8rpx;
+  padding: 10rpx 0 8rpx;
 
   .doc-name {
     font-size: 36rpx;

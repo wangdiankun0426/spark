@@ -189,6 +189,7 @@ CREATE TABLE `sys_message_user` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
     `msg_id` bigint(2) NOT NULL COMMENT '消息id',
     `user_id` bigint(2) NOT NULL COMMENT '用户id',
+    `read_flag` tinyint(3) NOT NULL DEFAULT '0' COMMENT '阅读状态：0-未读，1-已读',
 
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
     `created_by` bigint(12) NOT NULL COMMENT '创建人id',

@@ -42,7 +42,7 @@
               <user-avatar type="user" :userId="user.id" :name="user.name" :size="36"/>
               <text class="picker-name">{{ user.name }}</text>
             </view>
-            <up-icon v-if="selectedIds.includes(user.id)" name="checkmark" size="16" color="#0052cc"/>
+            <up-icon v-if="selectedIds.includes(user.id)" name="checkmark" size="16" :color="checkColor"/>
           </view>
           <up-loadmore :status="loadStatus" class="picker-loadmore"/>
         </template>
@@ -57,16 +57,17 @@ import {computed, ref, watch} from "vue";
 import {pageUserListAPI} from "@/api/sys/user";
 import {toast} from "uview-plus";
 import {useTheme} from "@/utils/useTheme";
-import {getSearchBgColor} from "@/utils/themeUtil";
+import {getSearchBgColor, getInfoColor} from "@/utils/themeUtil";
 import UserAvatar from '@/components/UserAvatar/index.vue'
 
 const {isDark} = useTheme();
 
 const searchBgColor = computed(() => getSearchBgColor(isDark.value));
+const checkColor = computed(() => getInfoColor(isDark.value));
 
 // 每页条数
-const PAGE_SIZE = 20;
-// 检索防抖时长（毫秒）
+const pageSizeConst = 20;
+// 检索防抖时长，单位毫秒
 const SEARCH_DELAY = 300;
 
 const props = defineProps({
@@ -101,7 +102,7 @@ const loadStatus = ref('loadmore');
 const pageNo = ref(1);
 const total = ref(0);
 const selectedIds = ref([]);
-// 已选用户对象缓存（id -> user），跨页/跨检索保留已选中项
+// 已选用户对象缓存，id 映射 user，跨页/跨检索保留已选中项
 const selectedUserMap = ref({});
 // 检索防抖定时器
 let searchTimer = null;
@@ -137,7 +138,7 @@ function resetAndLoad() {
 }
 
 /**
- * 分页加载用户列表（系统用户，按姓名检索）
+ * 分页加载系统用户，按姓名检索
  */
 function handleLoadUserList() {
   userLoading.value = true;
@@ -145,7 +146,7 @@ function handleLoadUserList() {
   pageUserListAPI({
     page: true,
     pageNo: pageNo.value,
-    pageSize: PAGE_SIZE,
+    pageSize: pageSizeConst,
     name: keyword.value.trim() || undefined
   }).then(res => {
     if (res.code === 200 && res.data) {
@@ -181,7 +182,7 @@ const selectedUsers = computed(() => {
 });
 
 /**
- * 切换选中用户（单选覆盖、多选增删）
+ * 切换选中用户，单选覆盖、多选增删
  * @param user 用户对象
  */
 function handleToggleUser(user) {

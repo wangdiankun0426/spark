@@ -1,210 +1,229 @@
 <template>
   <div class="login-box safe-area-page" :class="themeClass">
-    <!-- 科技风背景装饰层：纯 CSS 实现，规避小程序不支持的 SVG / blur / mask -->
+    <!-- 背景装饰：顶部品牌蓝光晕 + 右上细圆环，纯 CSS 规避小程序不支持的 SVG / blur / mask -->
     <view class="login-bg">
-      <view class="bg-grid"></view>
-      <view class="bg-blob bg-blob-1"></view>
-      <view class="bg-blob bg-blob-2"></view>
-      <view class="bg-orbit bg-orbit-1"></view>
-      <view class="bg-orbit bg-orbit-2"></view>
-      <view class="bg-dot bg-dot-1"></view>
-      <view class="bg-dot bg-dot-2"></view>
-      <view class="bg-dot bg-dot-3"></view>
+      <view class="bg-glow"></view>
+      <view class="bg-ring bg-ring-1"></view>
+      <view class="bg-ring bg-ring-2"></view>
     </view>
 
     <!-- 主题切换：登录前也能选好皮肤，只放图标不放文案 -->
     <view class="login-theme-btn" :style="themeToggleStyle" @click="toggleTheme">
-      <ThemeGlyph :dark="isDark" size="normal" :style="{color: isDark ? '#f5b544' : '#4b6584'}"/>
+      <ThemeGlyph :dark="isDark" size="normal" :style="{color: themeGlyphColor}"/>
     </view>
 
-    <!-- 品牌区 -->
+    <!-- 品牌区：logo 磁贴 + 平台名，下面是问候语，两级层次 -->
     <view class="login-brand">
-      <text class="login-title">星火云应用平台</text>
-      <view class="brand-bar"></view>
-      <text class="login-subtitle">欢迎回来</text>
-      <text class="login-tip">登录之后开启您的AI辅助工作之旅吧</text>
+      <view class="brand-row">
+        <view class="brand-logo">
+          <image class="brand-logo__img" src="/static/icons/logo.png" mode="aspectFit"/>
+        </view>
+        <view class="brand-name">
+          <text class="brand-name__cn">星火云应用平台</text>
+          <text class="brand-name__en">SPARK CLOUD</text>
+        </view>
+      </view>
+      <text class="login-title">欢迎回来</text>
+      <text class="login-tip">登录后开启你的 AI 辅助工作之旅</text>
     </view>
 
-    <!-- 登录表单区 -->
-    <view class="login-card">
-      <!-- 表单区固定高度：密码登录 3 行、手机号/邮箱登录 2 行，
-           固定高度可避免切换登录方式时下方按钮与整页布局跳动 -->
-      <view class="login-form-body">
-        <up-form labelWidth="60">
-          <!--账号登录-->
-          <div v-if = "loginForm.loginType === 1">
-            <up-form-item
-                label="用户名"
-                prop="loginForm.username"
-            >
-              <up-input
-                  :color="inputTextColor"
-                  :placeholder-style="inputPlaceholderStyle"
-                  v-model="loginForm.username"
-                  placeholder="请输入用户名"
-                  border="bottom"
-                  clearable
-              >
-              </up-input>
-            </up-form-item>
-            <up-form-item
-                label="密码"
-                prop="loginForm.password"
-            >
-              <up-input
-                  :color="inputTextColor"
-                  :placeholder-style="inputPlaceholderStyle"
-                  v-model="loginForm.password"
-                  :placeholder="'请输入密码'"
-                  :type="showPassword ? 'text' : 'password'"
-                  border="bottom"
-                  clearable
-              >
-                <template #suffix>
-                  <up-icon
-                      :name="showPassword ? 'eye-fill' : 'eye-off'"
-                      size="22"
-                      color="#909399"
-                      @click="showPassword = !showPassword"
-                  ></up-icon>
-                </template>
-              </up-input>
-            </up-form-item>
-            <up-form-item
-                label="验证码"
-                prop="loginForm.validateValue"
-            >
-              <!-- #ifdef H5 -->
-              <up-input
-                  :color="inputTextColor"
-                  :placeholder-style="inputPlaceholderStyle"
-                  v-model="loginForm.validateValue"
-                  placeholder="请输入验证码"
-                  border="bottom"
-                  clearable
-              >
-                <template #suffix>
-                  <view @click="getValidateImg">
-                    <img :src="validateImg" width="120" height="50" class="validate-img-h5"/>
-                  </view>
-                </template>
-              </up-input>
-              <!-- #endif -->
-              <!-- #ifdef MP-WEIXIN -->
-              <view class="code-input-wrap">
-                <up-input
-                    :color="inputTextColor"
-                    :placeholder-style="inputPlaceholderStyle"
-                    v-model="loginForm.validateValue"
-                    placeholder="请输入验证码"
-                    border="bottom"
-                    clearable
-                    class="code-input-flex"
-                />
-                <image v-if="validateImg" :src="validateImg" class="validate-img" mode="scaleToFill" @click="getValidateImg" @error="onValidateImgError" @load="onValidateImgLoad" />
+    <!-- 表单区：三个白色胶囊输入框直接落在浅蓝背景上，无外层卡片 -->
+    <view class="login-form">
+      <!--账号登录-->
+      <block v-if="loginForm.loginType === 1">
+        <view class="field" :class="fieldClass('username')">
+          <view class="field-icon">
+            <up-icon name="account" size="19" :color="fieldIconColor"/>
+          </view>
+          <up-input
+              v-model="loginForm.username"
+              placeholder="请输入用户名"
+              border="none"
+              clearable
+              :color="inputTextColor"
+              :placeholder-style="inputPlaceholderStyle"
+              :custom-style="inputStyle"
+              @focus="onFieldFocus('username')"
+              @blur="onFieldBlur('username')"
+          />
+        </view>
+        <view v-if="fieldErrors.username" class="field-err">{{ fieldErrors.username }}</view>
+
+        <view class="field" :class="fieldClass('password')">
+          <view class="field-icon">
+            <up-icon name="lock" size="19" :color="fieldIconColor"/>
+          </view>
+          <up-input
+              v-model="loginForm.password"
+              :placeholder="'请输入密码'"
+              :type="showPassword ? 'text' : 'password'"
+              border="none"
+              :color="inputTextColor"
+              :placeholder-style="inputPlaceholderStyle"
+              :custom-style="inputStyle"
+              @focus="onFieldFocus('password')"
+              @blur="onFieldBlur('password')"
+          >
+            <template #suffix>
+              <up-icon
+                  :name="showPassword ? 'eye-fill' : 'eye-off'"
+                  size="20"
+                  :color="eyeIconColor"
+                  @click="showPassword = !showPassword"
+              />
+            </template>
+          </up-input>
+        </view>
+        <view v-if="fieldErrors.password" class="field-err">{{ fieldErrors.password }}</view>
+
+        <view class="field" :class="fieldClass('validateValue')">
+          <view class="field-icon">
+            <up-icon name="integral" size="19" :color="fieldIconColor"/>
+          </view>
+          <!-- #ifdef H5 -->
+          <up-input
+              v-model="loginForm.validateValue"
+              placeholder="请输入验证码"
+              border="none"
+              clearable
+              :color="inputTextColor"
+              :placeholder-style="inputPlaceholderStyle"
+              :custom-style="inputStyle"
+              @focus="onFieldFocus('validateValue')"
+              @blur="onFieldBlur('validateValue')"
+          >
+            <template #suffix>
+              <view @click="getValidateImg">
+                <img :src="validateImg" width="96" height="40" class="validate-img-h5"/>
               </view>
-              <!-- #endif -->
-            </up-form-item>
-          </div>
-          <!--手机号登录-->
-          <div v-if = "loginForm.loginType === 2">
-            <up-form-item
-                label="手机号"
-                prop="loginForm.phone"
-            >
-              <up-input
-                  :color="inputTextColor"
-                  :placeholder-style="inputPlaceholderStyle"
-                  v-model="loginForm.phone"
-                  placeholder="请输入手机号"
-                  border="bottom"
-                  clearable
-              >
-              </up-input>
-            </up-form-item>
-            <up-form-item
-                label="验证码"
-                prop="loginForm.validateValue"
-            >
-              <up-input
-                  :color="inputTextColor"
-                  :placeholder-style="inputPlaceholderStyle"
-                  v-model="loginForm.validateValue"
-                  placeholder="请输入验证码"
-                  border="bottom"
-                  clearable
-              >
-                <template #suffix>
-                  <up-button plain size="mini" type="primary" :custom-style="{ height: '38px', fontSize: '18px' }" @click="getSmsCode" :disabled="count != 0">
-                    <text v-if="count == 0">获取验证码</text>
-                    <text v-else>等待({{count}}秒)</text>
-                  </up-button>
-                </template>
-              </up-input>
-            </up-form-item>
-          </div>
-          <!--邮箱登录-->
-          <div v-if = "loginForm.loginType === 3">
-            <up-form-item
-                label="邮箱"
-                prop="loginForm.email"
-            >
-              <up-input
-                  :color="inputTextColor"
-                  :placeholder-style="inputPlaceholderStyle"
-                  v-model="loginForm.email"
-                  placeholder="请输入邮箱"
-                  border="bottom"
-                  clearable
-              >
-              </up-input>
-            </up-form-item>
-            <up-form-item
-                label="验证码"
-                prop="loginForm.validateValue"
-            >
-              <up-input
-                  :color="inputTextColor"
-                  :placeholder-style="inputPlaceholderStyle"
-                  v-model="loginForm.validateValue"
-                  placeholder="请输入验证码"
-                  border="bottom"
-                  clearable
-              >
-                <template #suffix>
-                  <up-button plain size="mini" type="primary" :custom-style="{ height: '38px', fontSize: '18px' }" @click="getEmailCode" :disabled="count !== 0">
-                    <text v-if="count == 0">获取验证码</text>
-                    <text v-else>等待({{count}}秒)</text>
-                  </up-button>
-                </template>
-              </up-input>
-            </up-form-item>
-          </div>
-        </up-form>
-      </view>
-      <div class="login-middle-btn">
-        <up-button
-            @click="submitLoginForm"
-            type="primary"
-            :color="loginBtnColor"
-            :custom-style="loginBtnStyle"
-            :loading="loading"
-            loading-text="登 录 中...">
-          <text class="login-text">登 录</text>
-        </up-button>
-      </div>
-      <view class="login-agreement" @click="toggleAgree">
-        <up-icon
-            class="agree-icon"
-            :name="agreed ? 'checkmark-circle-fill' : 'checkmark-circle'"
-            size="18"
-            :color="agreed ? primaryColor : mutedColor"
-        ></up-icon>
-        <text class="agreement-text">我已阅读并同意</text>
-        <text class="agreement-link" @click.stop="openAgreement('service')">《用户服务协议》</text>
-        <text class="agreement-text">和</text>
-        <text class="agreement-link" @click.stop="openAgreement('privacy')">《隐私政策》</text>
-      </view>
+            </template>
+          </up-input>
+          <!-- #endif -->
+          <!-- #ifdef MP-WEIXIN -->
+          <view class="code-input-wrap">
+            <up-input
+                v-model="loginForm.validateValue"
+                placeholder="请输入验证码"
+                border="none"
+                clearable
+                class="code-input-flex"
+                :color="inputTextColor"
+                :placeholder-style="inputPlaceholderStyle"
+                :custom-style="inputStyle"
+                @focus="onFieldFocus('validateValue')"
+                @blur="onFieldBlur('validateValue')"
+            />
+            <image v-if="validateImg" :src="validateImg" class="validate-img" mode="scaleToFill" @click="getValidateImg" @error="onValidateImgError" @load="onValidateImgLoad"/>
+          </view>
+          <!-- #endif -->
+        </view>
+        <view v-if="fieldErrors.validateValue && loginForm.loginType === 1" class="field-err">{{ fieldErrors.validateValue }}</view>
+      </block>
+
+      <!-- 手机号登录 -->
+      <block v-if="loginForm.loginType === 2">
+        <view class="field" :class="fieldClass('phone')">
+          <view class="field-icon">
+            <up-icon name="phone" size="19" :color="fieldIconColor"/>
+          </view>
+          <up-input
+              v-model="loginForm.phone"
+              type="number"
+              maxlength="11"
+              placeholder="请输入手机号"
+              border="none"
+              clearable
+              :color="inputTextColor"
+              :placeholder-style="inputPlaceholderStyle"
+              :custom-style="inputStyle"
+              @focus="onFieldFocus('phone')"
+              @blur="onFieldBlur('phone')"
+          />
+        </view>
+        <view v-if="fieldErrors.phone" class="field-err">{{ fieldErrors.phone }}</view>
+
+        <view class="field" :class="fieldClass('validateValue')">
+          <view class="field-icon">
+            <up-icon name="integral" size="19" :color="fieldIconColor"/>
+          </view>
+          <up-input
+              v-model="loginForm.validateValue"
+              placeholder="请输入短信验证码"
+              border="none"
+              clearable
+              :color="inputTextColor"
+              :placeholder-style="inputPlaceholderStyle"
+              :custom-style="inputStyle"
+              @focus="onFieldFocus('validateValue')"
+              @blur="onFieldBlur('validateValue')"
+          >
+            <template #suffix>
+              <view class="sms-btn" :class="count > 0 ? 'is-wait' : ''" @click="getSmsCode">
+                <text v-if="count === 0">获取验证码</text>
+                <text v-else>{{ count }}s 后重发</text>
+              </view>
+            </template>
+          </up-input>
+        </view>
+        <view v-if="fieldErrors.validateValue && loginForm.loginType === 2" class="field-err">{{ fieldErrors.validateValue }}</view>
+      </block>
+
+      <!--邮箱登录-->
+      <block v-if="loginForm.loginType === 3">
+        <view class="field" :class="fieldClass('email')">
+          <view class="field-icon">
+            <up-icon name="email" size="19" :color="fieldIconColor"/>
+          </view>
+          <up-input
+              v-model="loginForm.email"
+              placeholder="请输入邮箱"
+              border="none"
+              clearable
+              :color="inputTextColor"
+              :placeholder-style="inputPlaceholderStyle"
+              :custom-style="inputStyle"
+              @focus="onFieldFocus('email')"
+              @blur="onFieldBlur('email')"
+          />
+        </view>
+        <view v-if="fieldErrors.email" class="field-err">{{ fieldErrors.email }}</view>
+
+        <view class="field" :class="fieldClass('validateValue')">
+          <view class="field-icon">
+            <up-icon name="integral" size="19" :color="fieldIconColor"/>
+          </view>
+          <up-input
+              v-model="loginForm.validateValue"
+              placeholder="请输入邮箱验证码"
+              border="none"
+              clearable
+              :color="inputTextColor"
+              :placeholder-style="inputPlaceholderStyle"
+              :custom-style="inputStyle"
+              @focus="onFieldFocus('validateValue')"
+              @blur="onFieldBlur('validateValue')"
+          >
+            <template #suffix>
+              <view class="sms-btn" :class="count > 0 ? 'is-wait' : ''" @click="getEmailCode">
+                <text v-if="count === 0">获取验证码</text>
+                <text v-else>{{ count }}s 后重发</text>
+              </view>
+            </template>
+          </up-input>
+        </view>
+        <view v-if="fieldErrors.validateValue && loginForm.loginType === 3" class="field-err">{{ fieldErrors.validateValue }}</view>
+      </block>
+
+      <up-button
+          class="login-btn"
+          @click="submitLoginForm"
+          type="primary"
+          :color="loginBtnColor"
+          :custom-style="loginBtnStyle"
+          :loading="loading"
+          loading-text="登 录 中...">
+        <text class="login-text">登 录</text>
+      </up-button>
     </view>
 
     <!-- 其他方式登录 -->
@@ -214,31 +233,51 @@
       <div class="login-type-icons">
         <view class="login-type-icon-item" v-if="loginForm.loginType !== 1" @click="switchLoginType(1)">
           <view class="icon-circle">
-            <up-icon name="lock" size="24" :color="primaryColor"></up-icon>
+            <up-icon name="lock" size="22" :color="primaryColor"></up-icon>
           </view>
         </view>
         <view class="login-type-icon-item" v-if="loginForm.loginType !== 2" @click="switchLoginType(2)">
           <view class="icon-circle">
-            <up-icon name="phone" size="24" :color="primaryColor"></up-icon>
+            <up-icon name="phone" size="22" :color="primaryColor"></up-icon>
           </view>
         </view>
         <view class="login-type-icon-item" v-if="loginForm.loginType !== 3" @click="switchLoginType(3)">
           <view class="icon-circle">
-            <up-icon name="email" size="24" :color="primaryColor"></up-icon>
+            <up-icon name="email" size="22" :color="primaryColor"></up-icon>
           </view>
         </view>
         <!-- #ifdef MP-WEIXIN -->
         <view class="login-type-icon-item" @click="wxQuickLogin">
           <view class="icon-circle">
-            <up-icon name="weixin-fill" size="24" color="#07c160"></up-icon>
+            <up-icon name="weixin-fill" size="22" color="#07c160"></up-icon>
           </view>
         </view>
         <!-- #endif -->
       </div>
+
+      <view class="login-secure">
+        <up-icon name="lock" size="12" :color="mutedColor"/>
+        <text class="secure-text">安全登录 · 数据全程加密传输</text>
+      </view>
     </view>
-    <!-- 版权说明 -->
-    <view class="login-copyright">
-      <text class="copyright-text">Copyright © 2024-2026 evancloud.top All Rights Reserved.</text>
+
+    <!-- 协议与版权：同意声明放到页脚，勾选凭证逻辑保持不变 -->
+    <view class="login-foot">
+      <view class="login-agreement" @click="toggleAgree">
+        <up-icon
+            class="agree-icon"
+            :name="agreed ? 'checkmark-circle-fill' : 'checkmark-circle'"
+            size="16"
+            :color="agreed ? primaryColor : mutedColor"
+        ></up-icon>
+        <text class="agreement-text">登录即代表同意</text>
+        <text class="agreement-link" @click.stop="openAgreement('service')">《用户服务协议》</text>
+        <text class="agreement-text">与</text>
+        <text class="agreement-link" @click.stop="openAgreement('privacy')">《隐私政策》</text>
+      </view>
+      <view class="login-copyright">
+        <text class="copyright-text">Copyright © 2024-2026 evancloud.top All Rights Reserved.</text>
+      </view>
     </view>
   </div>
 </template>
@@ -247,6 +286,14 @@ import {getValidateCodeAPI, getSmsCodeAPI, getEmailCodeAPI, getEncryptKeyAPI} fr
 import {des} from '@/utils/encryptUtil';
 import {AGREEMENT_VERSION} from '@/utils/agreementDoc';
 import {useTheme} from '@/utils/useTheme';
+import {
+  getPrimaryColor,
+  getTertiaryColor,
+  getTextPrimaryColor,
+  getPlaceholderColor,
+  getBorderColor,
+  getGradientFill
+} from '@/utils/themeUtil';
 import ThemeGlyph from '@/components/ThemeGlyph/index.vue';
 import {navBarInfo} from '@/utils/navBarUtil';
 import {ref, computed} from 'vue';
@@ -258,27 +305,40 @@ const loading = ref(false);
 const showPassword = ref(false);
 
 // 主题相关的图标与分隔线配色，避免深色皮肤下底色发灰、文字发暗
-const primaryColor = computed(() => (isDark.value ? '#4d8dff' : '#004fc5'));
-const mutedColor = computed(() => (isDark.value ? '#94a6c0' : '#909399'));
-const dividerTextColor = computed(() => (isDark.value ? '#94a6c0' : '#9296a5'));
-const dividerLineColor = computed(() => (isDark.value ? '#334155' : '#d9e2f2'));
+const primaryColor = computed(() => getPrimaryColor(isDark.value));
+const mutedColor = computed(() => getTertiaryColor(isDark.value));
+const dividerTextColor = computed(() => getTertiaryColor(isDark.value));
+const dividerLineColor = computed(() => getBorderColor(isDark.value));
 
-// uview 把输入框文字色写死成 JS 默认值内联下发，小程序对 var() 内联支持不稳，这里按主题给实色
-const inputTextColor = computed(() => (isDark.value ? '#e5edf7' : '#303133'));
-const inputPlaceholderStyle = computed(() => (isDark.value ? 'color: #8595ad' : 'color: #c0c4cc'));
+// 主题按钮与密码眼睛的图标色，按皮肤给实色
+const themeGlyphColor = computed(() => (isDark.value ? '#f5b544' : '#4b6584'));
+const eyeIconColor = computed(() => getTertiaryColor(isDark.value));
 
-// 登录按钮：暗色下用更亮的蓝，避免深底上按钮发闷
-const loginBtnColor = computed(() => (isDark.value
-    ? 'linear-gradient(90deg, #2f6fe0 0%, #4d8dff 100%)'
-    : 'linear-gradient(90deg, #004fc5 0%, #0072e0 100%)'));
+// 输入框内左侧图标色，跟随占位文字一档
+const fieldIconColor = computed(() => getTertiaryColor(isDark.value));
+
+// uview 把输入框文字色写死成 JS 默认值内联下发，小程序对 CSS 变量内联支持不稳，这里按主题给实色
+const inputTextColor = computed(() => getTextPrimaryColor(isDark.value));
+const inputPlaceholderStyle = computed(() => 'color:' + getPlaceholderColor(isDark.value));
+
+// 输入框透明，胶囊外壳的底色描边由 .field 承担
+const inputStyle = computed(() => ({
+  backgroundColor: 'transparent',
+  height: '100%',
+  fontSize: '27rpx'
+}));
+
+// 登录按钮走品牌渐变填充，暗色为降亮度的深蓝渐变
+const loginBtnColor = computed(() => getGradientFill(isDark.value));
 
 const loginBtnStyle = computed(() => ({
-  height: '88rpx',
-  borderRadius: '12rpx',
-  boxShadow: isDark.value ? '0 12rpx 28rpx rgba(77, 141, 255, 0.32)' : '0 12rpx 28rpx rgba(0, 79, 197, 0.28)',
-  fontSize: '32rpx',
+  height: '104rpx',
+  borderRadius: '28rpx',
+  boxShadow: 'var(--app-shadow-brand)',
+  fontSize: '31rpx',
   fontWeight: '700',
-  letterSpacing: '4rpx'
+  letterSpacing: '6rpx',
+  border: 'none'
 }));
 
 // 切换按钮贴状态栏下方，小程序端避开微信胶囊按钮
@@ -290,6 +350,65 @@ const themeToggleStyle = computed(() => {
   return {top: '16px'}
   // #endif
 });
+
+// 输入框聚焦态与前端必填校验
+const focusField = ref('');
+const fieldErrors = ref({});
+
+function fieldClass(key) {
+  return {
+    'is-focus': focusField.value === key,
+    'is-error': !!fieldErrors.value[key]
+  };
+}
+
+function onFieldFocus(key) {
+  focusField.value = key;
+  if (fieldErrors.value[key]) {
+    fieldErrors.value = {...fieldErrors.value, [key]: ''};
+  }
+}
+
+function onFieldBlur() {
+  focusField.value = '';
+}
+
+/**
+ * 前端必填校验：不通过时把错误文案挂到对应输入框下方
+ */
+function validateFields() {
+  const f = loginForm.value;
+  const t = f.loginType;
+  const errs = {};
+  if (t === 1) {
+    if (!f.username || !f.username.trim()) {
+      errs.username = '请输入用户名';
+    }
+    if (!f.password) {
+      errs.password = '请输入密码';
+    }
+    if (!f.validateValue) {
+      errs.validateValue = '请输入验证码';
+    }
+  } else if (t === 2) {
+    if (!/^1\d{10}$/.test(f.phone || '')) {
+      errs.phone = '请输入正确的手机号';
+    }
+    if (!f.validateValue) {
+      errs.validateValue = '请输入短信验证码';
+    }
+  } else if (t === 3) {
+    if (!/^[\w.-]+@[\w-]+(\.[\w-]+)+$/.test(f.email || '')) {
+      errs.email = '请输入正确的邮箱地址';
+    }
+    if (!f.validateValue) {
+      errs.validateValue = '请输入邮箱验证码';
+    }
+  }
+  fieldErrors.value = errs;
+  return Object.keys(errs).length === 0;
+}
+
 const loginForm = ref({
   username: undefined,
   password: undefined,
@@ -385,6 +504,9 @@ getValidateImg();
  * 获取邮箱验证码
  */
 function getEmailCode() {
+  if (count.value !== 0) {
+    return;
+  }
   const param = {
     email: loginForm.value.email
   }
@@ -394,12 +516,12 @@ function getEmailCode() {
     }
     loginForm.value.validateId = res.data.uuid
     count.value = 60;
-    clearInterval(timer.value); // 清除之前的计时器
+    clearInterval(timer.value);
     timer.value = setInterval(() => {
       if (count.value > 0) {
         count.value -= 1;
       } else {
-        clearInterval(timer.value); // 计时结束，清除计时器
+        clearInterval(timer.value);
       }
     }, 1000);
   })
@@ -408,6 +530,9 @@ function getEmailCode() {
  * 获取短信验证码
  */
 function getSmsCode() {
+  if (count.value !== 0) {
+    return;
+  }
   const param = {
     phone: loginForm.value.phone
   }
@@ -416,13 +541,13 @@ function getSmsCode() {
       return ;
     }
     loginForm.value.validateId = res.data.uuid
-    this.count = 60;
-    clearInterval(this.timer); // 清除之前的计时器
-    this.timer = setInterval(() => {
-      if (this.count > 0) {
-        this.count -= 1;
+    count.value = 60;
+    clearInterval(timer.value);
+    timer.value = setInterval(() => {
+      if (count.value > 0) {
+        count.value -= 1;
       } else {
-        clearInterval(this.timer); // 计时结束，清除计时器
+        clearInterval(timer.value);
       }
     }, 1000);
   })
@@ -432,6 +557,7 @@ function getSmsCode() {
  */
 function switchLoginType(type) {
   loginForm.value.loginType = type;
+  fieldErrors.value = {};
 }
 /**
  * 获取验证码
@@ -459,6 +585,9 @@ function getValidateImg() {
 async function submitLoginForm() {
   if (!agreed.value) {
     uni.showToast({title: '请先阅读并同意用户服务协议和隐私政策', icon: 'none'});
+    return;
+  }
+  if (!validateFields()) {
     return;
   }
   loading.value = true;
@@ -517,9 +646,11 @@ async function submitLoginForm() {
 .login-box {
   position: relative;
   box-sizing: border-box;
-  padding: 0 48rpx;
+  padding: 0 44rpx;
+  width: 100%;
   height: 100vh;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   background-image: var(--app-gradient-login);
@@ -535,182 +666,199 @@ async function submitLoginForm() {
   pointer-events: none;
 }
 
-.bg-grid {
+.bg-glow {
   position: absolute;
-  left: -10%;
-  top: -10%;
-  width: 120%;
-  height: 120%;
-  opacity: 0.7;
-  background-image:
-      linear-gradient(rgba(0, 79, 197, 0.06) 1rpx, transparent 1rpx),
-      linear-gradient(90deg, rgba(0, 79, 197, 0.06) 1rpx, transparent 1rpx);
-  background-size: 80rpx 80rpx;
+  left: 50%;
+  top: -400rpx;
+  transform: translateX(-50%);
+  width: 1240rpx;
+  height: 920rpx;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(47, 123, 255, 0.14) 0%, rgba(47, 123, 255, 0) 66%);
 }
 
-.bg-blob {
+.bg-ring {
   position: absolute;
   border-radius: 50%;
-  animation: blobFloat 18s ease-in-out infinite alternate;
+  border: 2rpx solid rgba(47, 123, 255, 0.08);
 }
 
-.bg-blob-1 {
-  width: 520rpx;
-  height: 520rpx;
-  left: -160rpx;
-  top: -140rpx;
-  background-image: radial-gradient(circle at 30% 30%, rgba(147, 197, 253, 0.55) 0%, rgba(191, 219, 254, 0.25) 45%, rgba(191, 219, 254, 0) 72%);
+.bg-ring-1 {
+  width: 920rpx;
+  height: 920rpx;
+  right: -380rpx;
+  top: 120rpx;
 }
 
-.bg-blob-2 {
-  width: 480rpx;
-  height: 480rpx;
-  right: -150rpx;
-  top: 700rpx;
-  background-image: radial-gradient(circle at 60% 40%, rgba(165, 243, 252, 0.5) 0%, rgba(205, 226, 252, 0.22) 45%, rgba(205, 226, 252, 0) 72%);
-  animation-delay: -6s;
-}
-
-@keyframes blobFloat {
-  0% {
-    transform: translate(0, 0) scale(1);
-  }
-  33% {
-    transform: translate(30rpx, -24rpx) scale(1.08);
-  }
-  66% {
-    transform: translate(-24rpx, 20rpx) scale(0.95);
-  }
-  100% {
-    transform: translate(16rpx, -12rpx) scale(1.04);
-  }
-}
-
-.bg-orbit {
-  position: absolute;
-  border: 1rpx dashed rgba(0, 79, 197, 0.22);
-  border-radius: 50%;
-  animation: orbitSpin 30s linear infinite;
-}
-
-.bg-orbit-1 {
-  width: 360rpx;
-  height: 360rpx;
-  right: -120rpx;
-  top: -80rpx;
-}
-
-.bg-orbit-2 {
-  width: 240rpx;
-  height: 240rpx;
-  left: -80rpx;
-  bottom: 120rpx;
-  border-color: rgba(0, 150, 255, 0.18);
-  animation-direction: reverse;
-  animation-duration: 24s;
-}
-
-@keyframes orbitSpin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.bg-dot {
-  position: absolute;
-  width: 10rpx;
-  height: 10rpx;
-  border-radius: 50%;
-  background-color: rgba(0, 120, 255, 0.45);
-  box-shadow: 0 0 16rpx rgba(0, 120, 255, 0.4);
-  animation: dotFloat 8s ease-in-out infinite alternate;
-}
-
-.bg-dot-1 {
-  left: 18%;
-  top: 20%;
-}
-
-.bg-dot-2 {
-  right: 16%;
-  top: 30%;
-  animation-delay: -3s;
-}
-
-.bg-dot-3 {
-  left: 30%;
-  bottom: 22%;
-  animation-delay: -6s;
-}
-
-@keyframes dotFloat {
-  0% {
-    transform: translateY(0);
-    opacity: 0.55;
-  }
-  100% {
-    transform: translateY(-28rpx);
-    opacity: 1;
-  }
+.bg-ring-2 {
+  width: 600rpx;
+  height: 600rpx;
+  right: -220rpx;
+  top: 300rpx;
+  border-color: rgba(47, 123, 255, 0.11);
 }
 
 .login-brand {
   position: relative;
   z-index: 1;
-  padding-top: 300rpx;
-  padding-bottom: 56rpx;
+  padding-top: 250rpx;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.brand-logo {
+  flex: none;
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 24rpx;
+  box-shadow: var(--app-shadow-logo);
+}
+
+.brand-logo__img {
+  width: 76rpx;
+  height: 76rpx;
+}
+
+.brand-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2rpx;
+}
+
+.brand-name__cn {
+  font-size: 31rpx;
+  font-weight: 700;
+  letter-spacing: 0.4rpx;
+  color: var(--app-text-primary);
+}
+
+.brand-name__en {
+  font-size: 19rpx;
+  font-weight: 600;
+  letter-spacing: 3.2rpx;
+  color: var(--app-text-secondary);
+  opacity: 0.62;
 }
 
 .login-title {
   display: block;
-  font-size: 52rpx;
-  font-weight: 700;
-  letter-spacing: 4rpx;
-  // 小程序不支持 background-clip: text，故以品牌色兜底
-  color: $spark-color-primary;
-  /* #ifdef H5 */
-  background-image: var(--app-title-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  /* #endif */
-}
-
-.brand-bar {
-  width: 96rpx;
-  height: 8rpx;
-  margin: 20rpx 0;
-  border-radius: 8rpx;
-  background-image: var(--app-gradient-brand);
-}
-
-.login-subtitle {
-  display: block;
-  font-size: 32rpx;
-  font-weight: 700;
-  color: $spark-color-text;
-  letter-spacing: 1rpx;
+  margin-top: 60rpx;
+  font-size: 54rpx;
+  font-weight: 800;
+  letter-spacing: -0.8rpx;
+  color: var(--app-text-primary);
 }
 
 .login-tip {
   display: block;
-  margin-top: 10rpx;
-  font-size: 24rpx;
-  color: $spark-color-text-secondary;
-  letter-spacing: 1rpx;
+  margin-top: 18rpx;
+  font-size: 25rpx;
+  line-height: 1.6;
+  color: var(--app-text-tertiary);
+  letter-spacing: 0.4rpx;
 }
 
-/* 登录表单区：直接落在背景上，不用白色卡片包裹 */
-.login-card {
+.login-form {
   position: relative;
   z-index: 1;
+  margin-top: 56rpx;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  height: 100rpx;
+  padding: 0 26rpx;
+  border-radius: 26rpx;
+  border: 3rpx solid var(--app-field-border);
+  background-color: var(--app-field-bg);
+  box-shadow: 0 12rpx 32rpx -20rpx rgba(23, 43, 77, 0.2);
+  margin-bottom: 26rpx;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field.is-focus {
+  border-color: var(--app-brand);
+  box-shadow: 0 0 0 7rpx rgba(47, 123, 255, 0.13), 0 12rpx 32rpx -20rpx rgba(23, 43, 77, 0.2);
+}
+
+.field.is-error {
+  border-color: var(--app-text-error);
+  box-shadow: 0 0 0 7rpx rgba(255, 77, 79, 0.11), 0 12rpx 32rpx -20rpx rgba(23, 43, 77, 0.2);
+}
+
+.field-icon {
+  flex: none;
+  display: flex;
+}
+
+.field :deep(.u-input) {
+  flex: 1;
+  min-width: 0;
+}
+
+.field-err {
+  margin: -14rpx 10rpx 20rpx;
+  font-size: 23rpx;
+  color: var(--app-text-error);
+}
+
+.code-input-wrap {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.code-input-flex {
+  flex: 1;
+  min-width: 0;
+}
+
+.validate-img {
+  width: 96px;
+  height: 40px;
+  margin-left: 8px;
+  border-radius: 18rpx;
+  flex-shrink: 0;
+}
+
+.validate-img-h5 {
+  width: 96px;
+  height: 40px;
+  border-radius: 18rpx;
+  flex-shrink: 0;
+}
+
+.sms-btn {
+  flex: none;
+  height: 68rpx;
+  padding: 0 24rpx;
+  border-radius: 18rpx;
+  display: flex;
+  align-items: center;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #1b5fe0;
+  background-color: rgba(47, 123, 255, 0.1);
+
+  &.is-wait {
+    color: #86909c;
+    background-color: #eef2f8;
+  }
+}
+
+.login-btn {
+  margin-top: 40rpx;
 }
 
 /* #ifdef H5 */
-.login-card :deep(.uni-input-input) {
+.login-form :deep(.uni-input-input) {
   &:-webkit-autofill,
   &:-webkit-autofill:hover,
   &:-webkit-autofill:focus,
@@ -721,50 +869,22 @@ async function submitLoginForm() {
 }
 /* #endif */
 
-.login-form-body {
-  min-height: 200px;
-}
-
-.code-input-wrap {
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.code-input-flex {
-  flex: 1;
-}
-
-.validate-img {
-  width: 100px;
-  height: 40px;
-  margin-left: 8px;
-  border-radius: 6rpx;
-  background-color: #ffffff;
-}
-
-.validate-img-h5 {
-  border-radius: 6rpx;
-  background-color: #ffffff;
-}
-
 .login-other {
   position: relative;
   z-index: 1;
-  margin-top: 40rpx;
+  margin-top: 52rpx;
 }
 
 .login-type-icons {
   display: flex;
   justify-content: center;
-  margin-top: 16rpx;
+  margin-top: 24rpx;
 }
 
 .login-type-icon-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  // 用 margin 代替 flex gap，兼容低版本小程序基础库
   margin: 0 20rpx;
 }
 
@@ -777,117 +897,132 @@ async function submitLoginForm() {
   border-radius: 50%;
   background-color: var(--app-bg-card);
   border: 1rpx solid var(--app-border);
-  box-shadow: 0 6rpx 18rpx rgba(26, 111, 232, 0.1);
+  box-shadow: var(--app-shadow-card);
 }
 
-.login-middle-btn {
-  margin-top: 32rpx;
-  overflow: hidden;
-}
-
-.login-agreement {
-  position: relative;
-  z-index: 1;
+.login-secure {
+  margin-top: 56rpx;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  margin-top: 28rpx;
-  padding: 0 24rpx;
-
-  .agree-icon {
-    margin-right: 8rpx;
-  }
-
-  .agreement-text {
-    font-size: 24rpx;
-    color: $spark-color-text-secondary;
-  }
-
-  .agreement-link {
-    font-size: 24rpx;
-    color: var(--app-brand);
-  }
+  gap: 10rpx;
 }
 
-.logout-text {
-  font-size: 20px;
-  font-weight: bolder;
-  color: #ffffff;
+.secure-text {
+  font-size: 22rpx;
+  letter-spacing: 0.6rpx;
+  color: var(--app-text-tertiary);
 }
 
-.login-copyright {
+.login-foot {
   position: relative;
   z-index: 1;
   margin-top: auto;
   padding-top: 40rpx;
   padding-bottom: calc(40rpx + constant(safe-area-inset-bottom));
   padding-bottom: calc(40rpx + env(safe-area-inset-bottom));
+}
+
+.login-agreement {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+
+  .agree-icon {
+    margin-right: 6rpx;
+  }
+
+  .agreement-text {
+    font-size: 22rpx;
+    color: var(--app-text-tertiary);
+  }
+
+  .agreement-link {
+    font-size: 22rpx;
+    color: var(--app-brand);
+    font-weight: 600;
+  }
+}
+
+.login-copyright {
+  margin-top: 12rpx;
   text-align: center;
 }
 
 .copyright-text {
-  font-size: 22rpx;
+  font-size: 20rpx;
   color: var(--app-text-muted);
 }
 
 .login-theme-btn {
   position: absolute;
-  right: 48rpx;
+  right: 36rpx;
   z-index: 3;
-  width: 76rpx;
-  height: 76rpx;
+  width: 64rpx;
+  height: 64rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background-color: var(--app-bg-card);
-  border: 1rpx solid var(--app-border);
-  box-shadow: 0 8rpx 24rpx rgba(26, 111, 232, 0.14);
+  border-radius: 20rpx;
+  background-color: rgba(255, 255, 255, 0.72);
+  border: 1rpx solid var(--app-border-light);
+  box-shadow: var(--app-shadow-card);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .login-theme-btn:active {
   transform: scale(0.94);
-  box-shadow: 0 4rpx 12rpx rgba(26, 111, 232, 0.14);
-}
-
-.login-box.theme-dark .login-theme-btn {
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.45);
 }
 
 .login-box.theme-dark {
-  .bg-grid {
-    opacity: 1;
-    background-image:
-        linear-gradient(rgba(110, 164, 255, 0.07) 1rpx, transparent 1rpx),
-        linear-gradient(90deg, rgba(110, 164, 255, 0.07) 1rpx, transparent 1rpx);
+  .login-theme-btn {
+    background-color: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: var(--app-shadow-card);
   }
 
-  .bg-blob-1,
-  .bg-blob-2 {
-    opacity: 1;
+  .bg-glow {
+    background: radial-gradient(circle, rgba(77, 141, 255, 0.3) 0%, rgba(77, 141, 255, 0) 66%);
   }
 
-  .bg-blob-1 {
-    background-image: radial-gradient(circle at 30% 30%, rgba(47, 111, 224, 0.3) 0%, rgba(37, 78, 160, 0.12) 45%, rgba(37, 78, 160, 0) 72%);
+  .bg-ring {
+    border-color: rgba(140, 180, 255, 0.12);
   }
 
-  .bg-blob-2 {
-    background-image: radial-gradient(circle at 60% 40%, rgba(32, 178, 190, 0.22) 0%, rgba(28, 110, 150, 0.1) 45%, rgba(28, 110, 150, 0) 72%);
+  .bg-ring-2 {
+    border-color: rgba(140, 180, 255, 0.16);
   }
 
-  .bg-orbit {
-    border-color: rgba(77, 141, 255, 0.14);
+  .field {
+    box-shadow: 0 12rpx 32rpx -20rpx rgba(0, 0, 0, 0.6);
   }
 
-  .bg-dot {
-    background-color: rgba(110, 164, 255, 0.55);
-    box-shadow: 0 0 16rpx rgba(110, 164, 255, 0.35);
+  .field.is-focus {
+    box-shadow: 0 0 0 7rpx rgba(77, 141, 255, 0.16), 0 12rpx 32rpx -20rpx rgba(0, 0, 0, 0.6);
+  }
+
+  .field.is-error {
+    box-shadow: 0 0 0 7rpx rgba(255, 140, 140, 0.12), 0 12rpx 32rpx -20rpx rgba(0, 0, 0, 0.6);
   }
 
   .icon-circle {
-    box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.4);
+    box-shadow: var(--app-shadow-card);
+  }
+
+  .sms-btn {
+    color: #9dc0ff;
+    background-color: rgba(77, 141, 255, 0.16);
+
+    &.is-wait {
+      color: #8595ad;
+      background-color: #2b3a52;
+    }
+  }
+
+  .validate-img,
+  .validate-img-h5 {
+    opacity: 0.86;
   }
 }
 </style>

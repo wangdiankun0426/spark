@@ -1,6 +1,7 @@
 package com.spark.manage.sys;
 
 import com.spark.common.bean.sys.query.MessageQuery;
+import com.spark.common.bean.sys.result.MessageCountResult;
 import com.spark.common.bean.sys.result.MessageResult;
 import com.spark.common.bean.sys.vo.MessageVO;
 import com.spark.common.bean.base.PageResult;
@@ -37,6 +38,19 @@ public interface IMessageService {
      * @return 分页结果
      */
     ResultData<PageResult<MessageResult>> pageMessageList(MessageQuery query);
+
+    /**
+     * 查询我的消息分类计数，全部、未读、已读
+     * @return 分类计数
+     */
+    ResultData<MessageCountResult> queryMyMessageCount();
+
+    /**
+     * 标记消息已读
+     * @param messageVO 消息数据，只需 id
+     * @return 处理结果
+     */
+    ResultData<Void> readMessage(MessageVO messageVO);
 
     /**
      * 发送消息

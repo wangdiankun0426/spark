@@ -89,6 +89,8 @@ mybatis:
     cache-enabled: false
     lazy-loading-enabled: true
     aggressive-lazy-loading: false
+app:
+  ai-enabled: true
 user:
   avatar:
     path: /opt/spark/docs/avatar/

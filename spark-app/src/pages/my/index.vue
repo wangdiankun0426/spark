@@ -1,122 +1,186 @@
 <template>
   <div class="my-box safe-area-page" :class="themeClass">
+    <!-- 头部：渐变个人卡 -->
     <div class="my-header" :style="headerStyle">
-      <view class="my-setting-entry" :style="settingEntryStyle" @click="goSetting">
-        <up-icon name="setting" size="22" :color="settingIconColor"/>
-      </view>
-
       <div class="my-avatar-row">
-        <div class="my-avatar-left">
+        <view class="my-avatar-ring">
           <UserAvatar
               type="user"
               :userId="userInfo.id"
               :name="userInfo.name"
-              :size="100"
+              :size="62"
           />
-        </div>
+        </view>
 
         <div class="my-info-right">
           <text class="my-name-text">{{userInfo.name}}</text>
-          <text class="my-dept-text">部门：{{userInfo.deptPath}}</text>
+          <text class="my-dept-text">{{userInfo.deptPath}}</text>
+          <view class="my-tenant-chip">
+            <up-icon name="home-fill" size="10" color="#ffffff"/>
+            <text class="my-tenant-text">{{userInfo.tenantName || '未分配租户'}}</text>
+          </view>
         </div>
       </div>
     </div>
 
-    <div class="my-content">
-      <view class="func-card" v-for="section in funcSections" :key="section.key">
-        <text class="func-card-title">{{ section.title }}</text>
-        <view class="func-grid">
-          <view
-              class="func-item"
-              v-for="item in section.list"
-              :key="item.url || item.key"
-              @click="goFunc(item)"
-          >
-            <view class="func-icon-wrap" :style="{backgroundColor: item.bgColor}">
-              <ThemeGlyph
-                  v-if="item.glyph"
-                  :dark="isDark"
-                  size="normal"
-                  :style="{color: item.color}"
-              />
-              <up-icon v-else :name="item.icon" size="32" :color="item.color"></up-icon>
-            </view>
-            <text class="func-label">{{ item.label }}</text>
+    <!-- 中部：分组列表卡，小程序普通 view 不支持滚动容器，必须用 scroll-view -->
+    <scroll-view class="my-content" scroll-y>
+      <view class="section-card" v-for="section in funcSections" :key="section.key">
+        <view class="section-head">
+          <view class="section-bar"></view>
+          <text class="section-title">{{ section.title }}</text>
+        </view>
+
+        <view
+            class="setting-row"
+            v-for="item in section.list"
+            :key="item.url || item.key"
+            @click="goFunc(item)"
+        >
+          <view class="row-icon" :style="{backgroundColor: item.bgColor}">
+            <ThemeGlyph
+                v-if="item.glyph"
+                :dark="isDark"
+                size="small"
+                :style="{color: item.color}"
+            />
+            <up-icon v-else :name="item.icon" size="17" :color="item.color"></up-icon>
           </view>
+          <text class="row-title">{{ item.label }}</text>
+
+          <!-- 当前租户在标题右侧显示租户名 -->
+          <text v-if="item.action === 'tenant'" class="row-value">{{ userInfo.tenantName || '未分配' }}</text>
+
+          <!-- 主题入口用开关表达当前状态，点击整行同样生效 -->
+          <up-switch
+              v-if="item.action === 'theme'"
+              :model-value="isDark"
+              :size="20"
+              :active-color="switchColor"
+              :inactive-color="switchOffColor"
+          />
+          <up-icon v-else name="arrow-right" size="12" :color="chevronColor"/>
         </view>
       </view>
+    </scroll-view>
+
+    <!-- 底部：退出登录 + 版本号，内边距避让上探约 26px 的 AI 圆钮 -->
+    <div class="my-footer">
+      <view class="logout-btn" @click="modalVisible = true">
+        <text class="logout-text">退出登录</text>
+      </view>
+      <text class="version-text">v{{ appVersion }}</text>
     </div>
+
+    <!-- 弹层宿主：小程序端 modal/switch 内部 popup 的插槽内容会参与 flex 分配顶高底栏 -->
+    <view class="sheet-host">
+      <up-modal
+          :show="modalVisible"
+          title="提示"
+          content="是否确定退出系统?"
+          showCancelButton
+          @confirm="handleLogout"
+          @cancel="modalVisible = false"
+      />
+
+      <!-- 切换租户弹层 -->
+      <tenant-switch
+          :show="tenantPopupVisible"
+          :current-tenant-id="userInfo.currentTenantId"
+          @update:show="tenantPopupVisible = $event"
+      />
+    </view>
 
     <AppTabbar :value="active" @change="handleOnTabChange"/>
   </div>
 </template>
 <script setup>
 import {ref, computed} from "vue";
+import {onShow} from "@dcloudio/uni-app";
 import {useStore} from "vuex";
 import {navBarInfo} from "@/utils/navBarUtil";
 import {useTheme} from "@/utils/useTheme";
+import {getPrimaryColor, getChevronColor} from "@/utils/themeUtil";
+import {getSessionAPI, logoutAPI} from "@/api/auth/login";
 import UserAvatar from "@/components/UserAvatar/index.vue"
 import ThemeGlyph from "@/components/ThemeGlyph/index.vue"
+import TenantSwitch from "@/components/TenantSwitch/index.vue"
 import AppTabbar from "@/components/AppTabbar/index.vue"
 
 const store = useStore();
 const active = ref("my");
 const {isDark, themeClass, toggleTheme} = useTheme();
+const modalVisible = ref(false);
+// 切换租户弹层显隐
+const tenantPopupVisible = ref(false);
 
-// 主题相关的图标配色
-const settingIconColor = computed(() => (isDark.value ? '#e5edf7' : '#172b4d'));
+// 版本号由 vite.config.js 的 define 在编译期从 package.json 注入，与设置页同一来源
+const appVersion = __APP_VERSION__;
+
+// 开关选中色、行尾箭头，组件只能传实色
+const switchColor = computed(() => getPrimaryColor(isDark.value));
+// 关闭态轨道：u-switch 只吃实色，用比分割线稍重一档的灰，否则亮色下整条轨道几乎看不见
+const switchOffColor = computed(() => isDark.value ? '#3a4a63' : '#d5dbe6');
+const chevronColor = computed(() => getChevronColor(isDark.value));
+
+// 每次进入都刷一次会话信息：部门路径、租户名等字段由后端补齐，避免沿用旧缓存
+onShow(() => {
+  getSessionAPI().then(res => {
+    if (res.code === 200 && res.data) {
+      store.dispatch("user/setUserInfo", {userInfo: res.data});
+    }
+  });
+});
 
 // 小程序端渐变头延伸到状态栏，H5 保持原间距
 const headerStyle = computed(() => {
   // #ifdef MP-WEIXIN
-  return {paddingTop: navBarInfo.statusBarHeight + 20 + 'px'}
+  return {paddingTop: navBarInfo.statusBarHeight + 16 + 'px'}
   // #endif
   // #ifdef H5
-  return {paddingTop: '42px'}
+  return {paddingTop: '34px'}
   // #endif
 })
 
-// 小程序端设置入口下移到微信胶囊按钮下方
-const settingEntryStyle = computed(() => {
-  // #ifdef MP-WEIXIN
-  return {top: navBarInfo.menuBottom + 10 + 'px'}
-  // #endif
-  // #ifdef H5
-  return {top: '22px'}
-  // #endif
-})
-
-// 按菜单权限过滤后的底部导航项
 const userInfo = computed(() => store.getters["user/getUserInfo"] || {
   id: undefined,
   name: undefined,
-  deptPath: undefined
+  deptPath: undefined,
+  tenantName: undefined
 });
 
-// 功能入口按热门与基础分组；主题入口排在「修改头像」右侧，同一套图标格样式，点击即切换皮肤
+// 功能入口分三组：账号与安全、通用、关于；租户与主题为内置行为，其余按 url 跳转
 const funcSections = computed(() => [
   {
-    key: 'hot',
-    title: '热门功能',
-    list: [
-      {label: '通讯录', icon: 'man-add-fill', color: '#1890ff', bgColor: isDark.value ? 'rgba(24, 144, 255, 0.16)' : '#e6f7ff', url: '/views/contact/index'}
-    ]
-  },
-  {
-    key: 'basic',
-    title: '基础功能',
+    key: 'account',
+    title: '账号与安全',
     list: [
       {label: '个人信息', icon: 'account-fill', color: '#13c2c2', bgColor: isDark.value ? 'rgba(19, 194, 194, 0.16)' : '#e6fffb', url: '/pages/my/information'},
       {label: '修改密码', icon: 'lock-fill', color: '#52c41a', bgColor: isDark.value ? 'rgba(82, 196, 26, 0.16)' : '#f6ffed', url: '/pages/my/updatePwd'},
       {label: '修改头像', icon: 'photo-fill', color: '#fa8c16', bgColor: isDark.value ? 'rgba(250, 140, 22, 0.16)' : '#fff7e6', url: '/pages/my/updateAvatar'},
+      {key: 'tenant', action: 'tenant', label: '当前租户', icon: 'home-fill', color: '#2f7bff', bgColor: isDark.value ? 'rgba(47, 123, 255, 0.16)' : '#eaf2ff'}
+    ]
+  },
+  {
+    key: 'general',
+    title: '通用',
+    list: [
       {
         key: 'theme',
         action: 'theme',
-        label: isDark.value ? '浅色模式' : '深色模式',
+        label: '深色模式',
         glyph: true,
         color: isDark.value ? '#f5b544' : '#7c5cff',
         bgColor: isDark.value ? 'rgba(245, 181, 68, 0.16)' : '#f3f0ff'
       }
+    ]
+  },
+  {
+    key: 'about',
+    title: '关于',
+    list: [
+      {key: 'service', action: 'agreement', type: 'service', label: '用户服务协议', icon: 'file-text-fill', color: '#2f7bff', bgColor: isDark.value ? 'rgba(47, 123, 255, 0.16)' : '#eaf2ff'},
+      {key: 'privacy', action: 'agreement', type: 'privacy', label: '隐私政策', icon: 'info-circle-fill', color: '#8b5cf6', bgColor: isDark.value ? 'rgba(139, 92, 246, 0.18)' : '#f3f0ff'}
     ]
   }
 ]);
@@ -130,18 +194,30 @@ function goFunc(item) {
     toggleTheme();
     return;
   }
+  if (item.action === 'tenant') {
+    tenantPopupVisible.value = true;
+    return;
+  }
+  if (item.action === 'agreement') {
+    uni.navigateTo({url: `/pages/agreement/index?type=${item.type}`});
+    return;
+  }
   uni.navigateTo({
     url: item.url
   })
 }
 
 /**
- * 跳转设置页
+ * 退出登录：清本地会话后回登录页
  */
-function goSetting() {
-  uni.navigateTo({
-    url: '/pages/my/setting'
-  })
+function handleLogout() {
+  modalVisible.value = false;
+  logoutAPI().then(() => {
+    store.dispatch('user/logout');
+    uni.reLaunch({
+      url: '/pages/login'
+    });
+  });
 }
 
 /**
@@ -166,50 +242,79 @@ function handleOnTabChange(index) {
 }
 
 .my-header {
-  height: 170px;
-  width: 100%;
   position: relative;
+  flex: none;
+  width: 100%;
+  padding-bottom: 18px;
+  overflow: hidden;
+  border-radius: 0 0 22px 22px;
+  box-shadow: var(--app-shadow-hero);
   background-image: var(--app-gradient-profile);
+  background-color: var(--app-bg-mid);
 }
 
-.my-setting-entry {
+.my-header::after {
+  content: '';
   position: absolute;
-  right: 12px;
-  z-index: 2;
-  padding: 6px;
+  right: -78px;
+  top: -96px;
+  width: 214px;
+  height: 214px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  box-shadow: 0 0 0 26px rgba(255, 255, 255, 0.06) inset;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.my-header::before {
+  content: '';
+  position: absolute;
+  left: -40px;
+  top: -60px;
+  width: 220px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 68%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .my-avatar-row {
-  width: 90%;
-  min-height: 100px;
-  margin: auto;
-  overflow: hidden;
   position: relative;
-  top: 16px;
+  z-index: 1;
+  width: 100%;
+  padding: 10px 16px 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 13px;
 }
 
-.my-avatar-left {
-  float: left;
-  width: 30%;
-  overflow: hidden;
+.my-avatar-ring {
+  flex: none;
+  padding: 2px;
+  border-radius: 50%;
+  background-image: linear-gradient(150deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.28));
+  box-shadow: 0 10px 20px -12px rgba(4, 20, 40, 0.7);
+  line-height: 0;
 }
 
 .my-info-right {
-  width: 70%;
-  min-height: 80px;
-  float: right;
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   justify-content: center;
-  padding-right: 34px;
   box-sizing: border-box;
 }
 
 .my-name-text {
-  font-size: 20px;
-  line-height: 1.4;
-  letter-spacing: 0.5px;
-  color: $spark-color-text;
+  font-size: 19px;
+  line-height: 1.3;
+  letter-spacing: 0.4px;
+  color: var(--app-fill-tx);
   font-weight: 700;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -220,11 +325,13 @@ function handleOnTabChange(index) {
 }
 
 .my-dept-text {
-  font-size: 14px;
-  line-height: 1.4;
-  letter-spacing: 0.5px;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0.2px;
   font-weight: 400;
-  color: var(--app-text-secondary);
+  color: var(--app-fill-tx);
+  opacity: 0.82;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -233,62 +340,149 @@ function handleOnTabChange(index) {
   word-break: break-all;
 }
 
+.my-tenant-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  margin-top: 7px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.18);
+  box-sizing: border-box;
+}
+
+.my-tenant-text {
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: 0.2px;
+  color: var(--app-fill-tx);
+  opacity: 0.92;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .my-content {
   flex: 1;
-  overflow-y: auto;
-  margin-top: -12px;
+  height: 0;
+  min-height: 0;
+  padding: 14px 14px 12px;
+  box-sizing: border-box;
   position: relative;
   z-index: 1;
 }
 
-.func-card {
-  width: 90%;
-  margin: 4px auto 0;
+.section-card {
+  padding: 13px 14px 2px;
+  border-radius: 16px;
   background-color: var(--app-bg-card);
   border: 1px solid var(--app-border-light);
-  border-radius: 10px;
-  padding: 16px 8px;
   box-shadow: var(--app-shadow-card);
 }
 
-.func-card + .func-card {
-  margin-top: 16px;
+.section-card + .section-card {
+  margin-top: 12px;
 }
 
-.func-card-title {
-  display: block;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--app-text-primary);
-  padding-left: 8px;
-}
-
-.func-grid {
+.section-head {
   display: flex;
-  flex-wrap: wrap;
-  margin-top: 16px;
-}
-
-.func-item {
-  width: 25%;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
+  padding-bottom: 2px;
 }
 
-.func-icon-wrap {
-  width: 60px;
-  height: 60px;
-  border-radius: 12px;
+.section-bar {
+  width: 3px;
+  height: 12px;
+  border-radius: 2px;
+  background-image: var(--app-gradient-fill);
+}
+
+.section-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: var(--app-text-primary);
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 0;
+  border-top: 1px solid var(--app-divide);
+
+  &:active {
+    opacity: 0.72;
+  }
+}
+
+.row-icon {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.func-label {
-  font-size: 14px;
-  color: var(--app-text-secondary);
+.row-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--app-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-value {
+  flex: none;
+  max-width: 45%;
+  font-size: 12px;
+  color: var(--app-text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-footer {
+  flex: none;
+  padding: 6px 16px 38px;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 52px;
+  border-radius: 15px;
+  background-color: var(--app-bg-card);
+  border: 1px solid var(--app-border-light);
+  box-shadow: var(--app-shadow-card);
+
+  &:active {
+    background-color: var(--app-bg-hover);
+  }
+}
+
+.logout-text {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--app-text-error);
+}
+
+.version-text {
+  display: block;
+  margin-top: 9px;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  color: var(--app-text-tertiary);
 }
 </style>

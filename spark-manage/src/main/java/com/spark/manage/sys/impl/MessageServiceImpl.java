@@ -6,6 +6,7 @@ import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.sys.entity.Message;
 import com.spark.common.bean.sys.query.MessageQuery;
 import com.spark.common.bean.sys.query.MessageUserQuery;
+import com.spark.common.bean.sys.result.MessageCountResult;
 import com.spark.common.bean.sys.result.MessageResult;
 import com.spark.common.bean.sys.result.MessageUserResult;
 import com.spark.common.bean.sys.vo.MessageVO;
@@ -103,12 +104,69 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
         }
         query.setUserId(userId);
         query.setTenantId(SessionHolder.getCurrentTenantId());
+        // 筛选条件由服务端翻译成 SQL 条件，分页与计数作用在同一份数据上
+        resolveFilter(query);
         PageResult<MessageResult> list = new PageResult<>();
         int count = messageDao.queryMyMessageCount(query);
         List<MessageResult> msgList = messageDao.queryMyMessageList(query);
         list.setTotal(count);
         list.setRows(msgList);
         result.setData(list);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 查询我的消息分类计数，全部、未读、已读
+     * @return 分类计数
+     */
+    @Override
+    public ResultData<MessageCountResult> queryMyMessageCount() {
+        ResultData<MessageCountResult> result = new ResultData<>();
+        Long userId = SessionHolder.getCurrentUserId();
+        if (userId == null) {
+            result.setErrorCode(ErrorCodeEnum.NOT_LOGIN);
+            return result;
+        }
+        MessageQuery query = new MessageQuery();
+        query.setUserId(userId);
+        query.setTenantId(SessionHolder.getCurrentTenantId());
+        MessageCountResult countResult = messageDao.queryMyMessageCountGroup(query);
+        if (countResult == null) {
+            countResult = new MessageCountResult();
+            countResult.setTotal(0);
+            countResult.setUnread(0);
+            countResult.setReadCount(0);
+        }
+        result.setData(countResult);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 标记消息已读
+     * @param messageVO 消息数据，只需 id
+     * @return 处理结果
+     */
+    @Override
+    public ResultData<Void> readMessage(MessageVO messageVO) {
+        ResultData<Void> result = new ResultData<>();
+        Long userId = SessionHolder.getCurrentUserId();
+        if (userId == null) {
+            result.setErrorCode(ErrorCodeEnum.NOT_LOGIN);
+            return result;
+        }
+        if (messageVO == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (messageVO.getId() == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        // 已读是幂等操作：重复点击时影响行数为 0 也算成功
+        messageUserDao.updateReadFlag(messageVO.getId(), userId);
+        result.setObjId(messageVO.getId());
         result.setCode(ResultData.OK);
         return result;
     }
@@ -262,5 +320,28 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
     @Override
     protected List<MessageResult> queryList(MessageQuery query) {
         return messageDao.queryMessageList(query);
+    }
+
+    /**
+     * 把前端的筛选标识翻译成查询条件
+     * all-全部不加条件，unread-未读，read-已读
+     * @param query 查询参数
+     */
+    private void resolveFilter(MessageQuery query) {
+        String filterType = query.getFilterType();
+        if (StringUtil.isBlank(filterType)) {
+            return;
+        }
+        switch (filterType.toLowerCase()) {
+            case "unread":
+                query.setReadFlag(0);
+                break;
+            case "read":
+                query.setReadFlag(1);
+                break;
+            default:
+                // all 及其它未知值按全部处理
+                break;
+        }
     }
 }

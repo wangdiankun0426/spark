@@ -1,5 +1,5 @@
 <template>
-  <view class="status-page" :class="themeClass">
+  <view class="status-page safe-area-page" :class="themeClass">
     <view class="status-body">
       <view class="status-num">403</view>
       <text class="status-title">暂无访问权限</text>

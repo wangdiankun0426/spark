@@ -39,7 +39,7 @@ export function getPasswordRuleAPI() {
 }
 
 /**
- * 上传头像（使用 uni.uploadFile）
+ * 上传头像，使用 uni.uploadFile
  * @param filePath 文件路径
  * @returns {Promise<any>}
  */

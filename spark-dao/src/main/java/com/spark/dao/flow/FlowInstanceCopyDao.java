@@ -15,6 +15,7 @@ import java.util.List;
  *
  * @author wangdiankun
  * @since 2026-08-27 10:00:00
+ * 流程实例抄送 DAO，流程维度筛选走 flow_instance 子查询，count 与分页共用同一条件
  */
 public interface FlowInstanceCopyDao extends BaseDao<FlowInstanceCopy> {
 

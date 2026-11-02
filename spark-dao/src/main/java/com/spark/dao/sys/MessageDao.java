@@ -2,6 +2,7 @@ package com.spark.dao.sys;
 
 import com.spark.common.bean.sys.entity.Message;
 import com.spark.common.bean.sys.query.MessageQuery;
+import com.spark.common.bean.sys.result.MessageCountResult;
 import com.spark.common.bean.sys.result.MessageResult;
 import com.spark.dao.BaseDao;
 
@@ -75,4 +76,11 @@ public interface MessageDao extends BaseDao<Message> {
      * @return 列表
      */
     List<MessageResult> queryMyMessageList(MessageQuery query);
+
+    /**
+     * 查询我的消息分类计数，全部、未读、已读
+     * @param query 查询参数，按 userId 关联接收人
+     * @return 分类计数
+     */
+    MessageCountResult queryMyMessageCountGroup(MessageQuery query);
 }

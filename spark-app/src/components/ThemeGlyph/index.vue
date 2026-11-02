@@ -1,5 +1,5 @@
 <template>
-  <!-- 主题图标：亮色显示月亮（切到暗色），暗色显示太阳（切回亮色），纯 CSS 绘制以兼容小程序 -->
+  <!-- 主题图标：亮色显示月亮，点了切到暗色；暗色显示太阳，点了切回亮色；纯 CSS 绘制以兼容小程序 -->
   <view class="theme-glyph" :class="[dark ? 'theme-glyph--sun' : 'theme-glyph--moon', 'theme-glyph--' + size]"/>
 </template>
 <script setup>

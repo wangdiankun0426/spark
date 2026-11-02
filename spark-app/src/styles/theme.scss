@@ -5,10 +5,13 @@
   --app-primary-soft: rgba(0, 79, 197, 0.08);
   --app-brand: #2f7bff;
   --app-brand-light: #5b94f5;
-  --app-title-gradient: linear-gradient(92deg, #2563eb 0%, #3d8bff 100%);
   --app-gradient-brand: linear-gradient(135deg, #2f7bff 0%, #5b94f5 100%);
+  --app-gradient-fill: linear-gradient(135deg, #2f7bff 0%, #5b94f5 100%);
+  --app-fill-tx: #ffffff;
   --app-gradient-card: linear-gradient(135deg, #ffffff 0%, #f5f7fa 100%);
-  --app-gradient-login: linear-gradient(160deg, #f7faff 0%, #eaf2fe 55%, #e3edfd 100%);
+  --app-gradient-login: linear-gradient(180deg, #f4f8ff 0%, #f2f6ff 46%, #f4f8fd 100%);
+  --app-field-bg: #ffffff;
+  --app-field-border: #e6edf8;
   --app-text-primary: #172b4d;
   --app-text-regular: #5a5a5a;
   --app-text-secondary: #5e6c84;
@@ -21,22 +24,33 @@
   --app-bg-overlay: #ffffff;
   --app-bg-sub: #f5f7fa;
   --app-bg-hover: #f5f7fa;
+  --app-tab-track: #eceff5;
   --app-header-bg: #ffffff;
   --app-bg-tabbar: #ffffff;
   --app-border: #e4eaf4;
   --app-border-light: #eef2f8;
   --app-divide: #f0f2f5;
-  --app-shadow-card: 0 2px 8px rgba(23, 43, 77, 0.08);
-  --app-header-border: rgba(55, 48, 163, 0.08);
+  --app-shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(23, 43, 77, 0.04),
+    0 12px 28px -14px rgba(23, 43, 77, 0.16);
+  --app-shadow-brand: 0 8px 18px -8px rgba(47, 123, 255, 0.75);
+  --app-shadow-center: 0 0 0 5px var(--app-bg-tabbar), 0 8px 18px -8px rgba(47, 123, 255, 0.75);
+  --app-shadow-hero: 0 12px 26px -20px rgba(4, 20, 40, 0.55);
+  --app-shadow-logo: 0 10px 20px -12px rgba(27, 95, 224, 0.9);
+  --app-error-solid: #f5483b;
+  --app-brand-border: rgba(47, 123, 255, 0.35);
+  --app-error-border: rgba(255, 77, 79, 0.35);
   --app-bg-start: #f7faff;
   --app-bg-mid: #eaf2fe;
   --app-bg-end: #e3edfd;
-  --app-autofill-bg: #edf4fe;
-  --app-gradient-welcome: linear-gradient(180deg, #5b94f5 0%, #7babff 44px, #b6d2ff 92px, #eaf2ff 140px);
-  --app-gradient-profile: linear-gradient(180deg, #5b94f5 0%, #83b3ff 70px, #b6d2ff 138px, #ffffff 176px);
-  --app-chat-bg: #f5f7fa;
-  --app-bubble-self-bg: #0052cc;
-  --app-bubble-self-text: #ffffff;
+  --app-autofill-bg: #ffffff;
+  --app-bg-texture: none;
+  --app-gradient-welcome: linear-gradient(172deg, #2b68e0 0%, #3f82fb 46%, #6ba0ff 80%, #8fb8ff 100%);
+  --app-gradient-assistant: linear-gradient(120deg, #2a63f2 0%, #3f7df7 52%, #5d97fb 100%);
+  --app-gradient-profile: linear-gradient(172deg, #2b68e0 0%, #3f82fb 46%, #6ba0ff 80%, #8fb8ff 100%);
+  --app-gradient-hero: linear-gradient(135deg, #f8fbff 0%, #edf4ff 100%);
+  --app-hero-border: rgba(47, 123, 255, 0.12);
+  --app-chat-bg: #f4f6fa;
+  --app-avatar-bg: linear-gradient(145deg, #5b94f5 0%, #8fb8ff 100%);
   --app-bubble-agent-bg: #ffffff;
   --app-bubble-agent-text: #333333;
   --app-bg-info: #e6f7ff;
@@ -49,6 +63,11 @@
   --app-text-error: #ff4d4f;
   --app-bg-purple: #f9f0ff;
   --app-text-purple: #722ed1;
+  /* 列表左侧状态磁贴：半透明淡底，保证在卡片底色上不抢内容 */
+  --app-tile-info: rgba(0, 82, 204, 0.08);
+  --app-tile-success: rgba(82, 196, 26, 0.1);
+  --app-tile-error: rgba(255, 77, 79, 0.1);
+  --app-tile-warning: rgba(250, 173, 20, 0.12);
 }
 
 @mixin theme-dark-vars {
@@ -58,10 +77,11 @@
   --app-primary-soft: rgba(77, 141, 255, 0.12);
   --app-brand: #4d8dff;
   --app-brand-light: #6ea4ff;
-  --app-title-gradient: linear-gradient(92deg, #6ea4ff 0%, #9cc4ff 100%);
   --app-gradient-brand: linear-gradient(135deg, #4d8dff 0%, #6ea4ff 100%);
   --app-gradient-card: linear-gradient(135deg, #1a2537 0%, #223047 100%);
-  --app-gradient-login: linear-gradient(160deg, #0d1424 0%, #111b2f 55%, #16233c 100%);
+  --app-gradient-login: linear-gradient(180deg, #0e1626 0%, #0f172a 60%, #101b30 100%);
+  --app-field-bg: #1e2a3f;
+  --app-field-border: #2a3a55;
   --app-text-primary: #e5edf7;
   --app-text-regular: #c6d3e6;
   --app-text-secondary: #94a6c0;
@@ -74,22 +94,37 @@
   --app-bg-overlay: #1e2b40;
   --app-bg-sub: #223047;
   --app-bg-hover: rgba(77, 141, 255, 0.12);
+  --app-tab-track: #182238;
   --app-header-bg: #131d2e;
   --app-bg-tabbar: #131d2e;
   --app-border: #2c3b53;
   --app-border-light: #24324a;
   --app-divide: #24324a;
-  --app-shadow-card: 0 2px 10px rgba(0, 0, 0, 0.45);
-  --app-header-border: #1e2b40;
+  --app-shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    0 12px 28px -14px rgba(0, 0, 0, 0.55);
+  --app-shadow-brand: 0 8px 18px -10px rgba(77, 141, 255, 0.55);
+  --app-shadow-center: 0 0 0 5px var(--app-bg-tabbar), 0 8px 18px -8px rgba(0, 0, 0, 0.6);
+  --app-shadow-hero: 0 12px 26px -20px rgba(0, 0, 0, 0.55);
+  --app-shadow-logo: 0 10px 20px -12px rgba(77, 141, 255, 0.5);
+  --app-error-solid: #e5484d;
+  --app-brand-border: rgba(77, 141, 255, 0.4);
+  --app-error-border: rgba(255, 140, 140, 0.4);
+  --app-fill-tx: #e9f1ff;
+  --app-gradient-fill: linear-gradient(135deg, #2f63bd 0%, #244d97 100%);
   --app-bg-start: #0d1424;
   --app-bg-mid: #111b2f;
   --app-bg-end: #16233c;
-  --app-autofill-bg: #101b2f;
-  --app-gradient-welcome: linear-gradient(180deg, #16294a 0%, #142440 44px, #121f36 92px, #101a2c 140px);
-  --app-gradient-profile: linear-gradient(180deg, #16294a 0%, #14243e 70px, #111e33 138px, #0f172a 176px);
+  --app-autofill-bg: #1e2a3f;
+  --app-bg-texture: none;
+  --app-gradient-welcome: radial-gradient(70% 60% at 88% 0%, rgba(77, 141, 255, 0.28), transparent 60%),
+    linear-gradient(172deg, #16233c 0%, #1a2537 55%, #223047 100%);
+  --app-gradient-assistant: linear-gradient(120deg, #1e3f8f 0%, #25519f 52%, #2d63b5 100%);
+  --app-gradient-profile: radial-gradient(70% 60% at 88% 0%, rgba(77, 141, 255, 0.28), transparent 60%),
+    linear-gradient(172deg, #16233c 0%, #1a2537 55%, #223047 100%);
+  --app-gradient-hero: linear-gradient(135deg, #1c2b45 0%, #17233a 100%);
+  --app-hero-border: rgba(77, 141, 255, 0.2);
   --app-chat-bg: #0f172a;
-  --app-bubble-self-bg: #2a5dbf;
-  --app-bubble-self-text: #ffffff;
+  --app-avatar-bg: linear-gradient(145deg, #2f5286 0%, #41689f 100%);
   --app-bubble-agent-bg: #1a2537;
   --app-bubble-agent-text: #e5edf7;
   --app-bg-info: #12304d;
@@ -102,6 +137,10 @@
   --app-text-error: #ff8c8c;
   --app-bg-purple: #271d38;
   --app-text-purple: #b39dff;
+  --app-tile-info: rgba(110, 168, 255, 0.14);
+  --app-tile-success: rgba(111, 207, 91, 0.13);
+  --app-tile-error: rgba(255, 140, 140, 0.13);
+  --app-tile-warning: rgba(245, 181, 68, 0.14);
 }
 
 page,

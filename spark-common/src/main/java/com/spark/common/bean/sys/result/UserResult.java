@@ -52,6 +52,11 @@ public class UserResult extends BaseResult {
     private String deptPath;
 
     /**
+     * 归属租户名称：移动端「我的」页展示当前登录的租户
+     */
+    private String tenantName;
+
+    /**
      * 角色id
      */
     private List<Long> roleIds;
@@ -65,6 +70,11 @@ public class UserResult extends BaseResult {
      * 具有权限的菜单标识码
      */
     private List<String> menuCodes;
+
+    /**
+     * 移动端AI应用入口开关
+     */
+    private Boolean appAiEnabled;
 
     /**
      * 手机号

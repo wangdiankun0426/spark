@@ -1,16 +1,12 @@
 <template>
   <view class="wf-instance-detail safe-area-page" :class="themeClass">
     <!-- 顶部标题栏 -->
-    <view class="detail-header" :style="navHeaderStyle()">
-      <view class="header-left" @click="goBack">
-        <up-icon
-            name="arrow-left"
-            size="20"
-            color="#2f7bff">
-
-        </up-icon>
-        <text class="header-title">运行详情</text>
+    <view class="page-header" :style="navHeaderStyle()">
+      <view class="page-header-back" @click="goBack">
+        <up-icon name="arrow-left" size="19" :color="backIconColor"></up-icon>
       </view>
+      <text class="page-header-title">运行详情</text>
+      <view class="page-header-extra"></view>
     </view>
 
     <!-- 内容区 -->
@@ -102,11 +98,11 @@
               <up-icon
                   :name="node._expanded ? 'arrow-up' : 'arrow-down'"
                   size="14"
-                  color="#999"
+                  :color="nodeArrowColor"
               ></up-icon>
             </view>
 
-            <!-- 节点入参出参（展开显示） -->
+            <!-- 节点入参出参 -->
             <view class="node-params" v-if="node._expanded">
               <!-- 入参 -->
               <view class="param-block">
@@ -144,15 +140,22 @@
 </template>
 
 <script setup>
-import {ref} from 'vue'
+import {ref, computed} from 'vue'
 import {onLoad} from '@dcloudio/uni-app'
+import {useStore} from 'vuex'
 import {navHeaderStyle} from '@/utils/navBarUtil'
 import {useTheme} from '@/utils/useTheme'
+import {getHeaderIconColor, getTertiaryColor} from '@/utils/themeUtil'
 import {queryInstanceDetailAPI, queryInstanceNodesAPI} from '@/api/workflow/instance'
 import {detailFormValueAPI} from '@/api/form/formValue'
 import FormFieldValue from '@/components/FormFieldValue/index.vue'
 
-const {themeClass} = useTheme()
+const store = useStore()
+const {isDark, themeClass} = useTheme();
+
+const backIconColor = computed(() => getHeaderIconColor(isDark.value));
+// 节点展开箭头用次级图标色，暗色下提亮保证对比度
+const nodeArrowColor = computed(() => getTertiaryColor(isDark.value));
 const instanceId = ref(null)
 const loading = ref(false)
 const nodesLoading = ref(false)
@@ -162,6 +165,12 @@ const formFields = ref([])
 const formLoaded = ref(false)
 
 onLoad((options) => {
+  // AI应用开关关闭时禁止直达AI工作流详情
+  const userInfo = store.getters['user/getUserInfo']
+  if (!userInfo || userInfo.appAiEnabled !== true) {
+    uni.reLaunch({url: '/pages/error/noPermission'})
+    return
+  }
   if (options && options.id) {
     instanceId.value = options.id
     loadData(options.id)
@@ -221,7 +230,7 @@ function loadFormData(instanceId) {
           values.forEach(v => {
             const widget = widgetList.find(w => w.config && w.config.code === v.code)
             fields.push({
-              // 字段类型决定展示形式（如上传附件需解析 JSON 后展示文件名称）
+              // 字段类型决定展示形式，上传附件需解析 JSON 后展示文件名称
               type: widget && widget.type ? widget.type : '',
               label: widget && widget.config && widget.config.label ? widget.config.label : v.code,
               value: v.value,
@@ -280,33 +289,6 @@ function goBack() {
   background-color: $uni-bg-color-dashboard;
 }
 
-.detail-header {
-  padding: 16px 16px;
-  background-color: $spark-color-header-bg;
-  border-bottom: 1rpx solid $spark-color-header-border;
-  flex-shrink: 0;
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .header-title {
-    font-size: 17px;
-    font-style: italic;
-    font-weight: 700;
-    letter-spacing: 1px;
-    /* #ifdef MP-WEIXIN */
-    color: var(--app-brand);
-    /* #endif */
-    /* #ifdef H5 */
-    background-image: var(--app-title-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    /* #endif */
-  }
-}
-
 .detail-content {
   flex: 1;
   height: 0;
@@ -350,7 +332,6 @@ function goBack() {
   display: block;
 }
 
-/* 基本信息网格 */
 .detail-grid {
   display: flex;
   flex-direction: column;
@@ -397,7 +378,6 @@ function goBack() {
   }
 }
 
-/* 错误信息 */
 .error-section {
   .error-title {
     color: var(--app-text-error);
@@ -418,7 +398,6 @@ function goBack() {
   word-break: break-all;
 }
 
-/* 表单数据 */
 .form-data-list {
   background-color: var(--app-bg-sub);
   border-radius: 8px;
@@ -452,7 +431,6 @@ function goBack() {
   word-break: break-all;
 }
 
-/* 节点列表 */
 .nodes-loading, .nodes-empty {
   display: flex;
   justify-content: center;
@@ -545,7 +523,6 @@ function goBack() {
   color: var(--app-text-regular);
 }
 
-/* 节点参数展开 */
 .node-params {
   padding: 0 12px 12px;
   border-top: 1px solid var(--app-border-light);

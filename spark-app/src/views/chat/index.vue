@@ -3,7 +3,7 @@
     <!-- 标题栏 -->
     <view class="chat-header" :style="navHeaderBelowStyle()">
       <view class="header-back" @click="goBack">
-        <up-icon name="arrow-left" size="20" color="#2f7bff"></up-icon>
+        <up-icon name="arrow-left" size="20" :color="headerIconColor"></up-icon>
       </view>
       <view class="header-title">
         <text v-if="target && target.id">{{ target.name }}</text>
@@ -15,7 +15,7 @@
           class="header-record"
           @click="openChatDetail"
       >
-        <up-icon name="more-dot-fill" size="22" color="#2f7bff"></up-icon>
+        <up-icon name="more-dot-fill" size="20" :color="headerIconColor"></up-icon>
       </view>
     </view>
 
@@ -43,86 +43,86 @@
         <view v-if="chatMsg.unreadStart" class="chat-divider chat-unread-divider">
           <text class="chat-tip">以下是最新消息</text>
         </view>
-        <!-- 消息头部 -->
-        <view class="chat-msg-header">
-          <template v-if="chatMsg.senderId === userInfo.id">
-            <view class="chat-time">{{ chatMsg.createdDt }}</view>
+        <!-- 消息行：头像在气泡外侧，时间与气泡放同一列 -->
+        <view class="chat-row">
+          <view class="chat-avatar">
             <user-avatar
+                v-if="chatMsg.senderId === userInfo.id"
                 type="user"
+                shape="rounded"
                 :userId="chatMsg.senderId"
+                :name="userInfo.name"
                 :size="32"
             />
-          </template>
-          <template v-else>
-            <user-avatar
-                v-if="targetType === 'user'"
-                type="user"
-                :userId="chatMsg.senderId"
-                :name="target.name"
-                :size="32"
-            />
-            <user-avatar
-                v-else
-                :type="targetType"
-                :size="32"
-            />
-            <view class="chat-time">{{ chatMsg.createdDt }}</view>
-          </template>
-        </view>
-
-        <!-- 消息内容 -->
-        <view class="chat-msg-content">
-          <!-- 自己发出的消息 -->
-          <view
-              v-if="chatMsg.senderId === userInfo.id"
-              class="chat-bubble chat-bubble-user"
-              :class="parseSticker(chatMsg.message) ? 'chat-bubble-sticker' : 'markdown-body'"
-          >
-            <text v-if="parseSticker(chatMsg.message)" class="chat-sticker">{{ parseSticker(chatMsg.message) }}</text>
-            <up-parse
-                v-else
-                :content="renderMarkdown(chatMsg.message)"
-                :tag-style="mdTagStyle"
-            ></up-parse>
+            <template v-else>
+              <user-avatar
+                  v-if="targetType === 'user'"
+                  type="user"
+                  shape="rounded"
+                  :userId="chatMsg.senderId"
+                  :name="target.name"
+                  :size="32"
+              />
+              <user-avatar v-else :type="targetType" shape="rounded" show-icon :size="32"/>
+            </template>
           </view>
 
-          <!-- 对方消息 -->
-          <view
-              v-else
-              class="chat-bubble chat-bubble-agent"
-              :class="{ 'chat-bubble-sticker': parseSticker(chatMsg.message) }"
-          >
-            <!-- 思考内容：占位期间只有状态，服务端推送思考过程后展示在状态下方，思考结束自动折叠 -->
-            <template v-if="chatMsg.thinkingContent || chatMsg.thinkingPending">
-              <view class="thinking-header" @click="toggleThinking(chatMsg)">
-                <view v-if="!chatMsg.thinkingDone" class="thinking-loading">
-                  <up-icon name="reload" size="14" color="#f5a623"></up-icon>
-                </view>
-                <text class="thinking-label">{{ thinkingLabel(chatMsg) }}</text>
-                <up-icon
-                    v-if="chatMsg.thinkingContent"
-                    name="arrow-right"
-                    size="12"
-                    color="#999"
-                    :class="{ 'thinking-arrow-open': !chatMsg.thinkingCollapsed }"
-                ></up-icon>
-              </view>
+          <view class="chat-main">
+            <view class="chat-time">{{ chatMsg.createdDt }}</view>
+            <view class="chat-msg-content">
+              <!-- 自己发出的消息 -->
               <view
-                  v-if="chatMsg.thinkingContent && !chatMsg.thinkingCollapsed"
-                  class="thinking-content"
-              >{{ chatMsg.thinkingContent }}</view>
-            </template>
-            <!-- 正式内容：统一走Markdown，贴纸消息渲染为大表情 -->
-            <template v-if="chatMsg.message">
-              <view v-if="chatMsg.thinkingContent" class="thinking-divider"></view>
-              <text v-if="parseSticker(chatMsg.message)" class="chat-sticker">{{ parseSticker(chatMsg.message) }}</text>
-              <view v-else class="markdown-body">
+                  v-if="chatMsg.senderId === userInfo.id"
+                  class="chat-bubble chat-bubble-user"
+                  :class="parseSticker(chatMsg.message) ? 'chat-bubble-sticker' : 'markdown-body'"
+              >
+                <text v-if="parseSticker(chatMsg.message)" class="chat-sticker">{{ parseSticker(chatMsg.message) }}</text>
                 <up-parse
+                    v-else
                     :content="renderMarkdown(chatMsg.message)"
                     :tag-style="mdTagStyle"
                 ></up-parse>
               </view>
-            </template>
+
+              <!-- 对方消息 -->
+              <view
+                  v-else
+                  class="chat-bubble chat-bubble-agent"
+                  :class="{ 'chat-bubble-sticker': parseSticker(chatMsg.message) }"
+              >
+                <!-- 思考内容：占位期间只有状态，服务端推送思考过程后展示在状态下方，思考结束自动折叠 -->
+                <template v-if="chatMsg.thinkingContent || chatMsg.thinkingPending">
+                  <view class="thinking-header" @click="toggleThinking(chatMsg)">
+                    <view v-if="!chatMsg.thinkingDone" class="thinking-loading">
+                      <up-icon name="reload" size="14" :color="thinkingLoadingColor"></up-icon>
+                    </view>
+                    <text class="thinking-label">{{ thinkingLabel(chatMsg) }}</text>
+                    <up-icon
+                        v-if="chatMsg.thinkingContent"
+                        name="arrow-right"
+                        size="12"
+                        :color="thinkingArrowColor"
+                        :class="{ 'thinking-arrow-open': !chatMsg.thinkingCollapsed }"
+                    ></up-icon>
+                  </view>
+                  <view
+                      v-if="chatMsg.thinkingContent && !chatMsg.thinkingCollapsed"
+                      class="thinking-content"
+                  >{{ chatMsg.thinkingContent }}</view>
+                </template>
+                <!-- 正式内容：统一走Markdown，贴纸消息渲染为大表情 -->
+                <template v-if="chatMsg.message">
+                  <view v-if="chatMsg.thinkingContent" class="thinking-divider"></view>
+                  <text v-if="parseSticker(chatMsg.message)" class="chat-sticker">{{ parseSticker(chatMsg.message) }}</text>
+                  <view v-else class="markdown-body">
+                    <up-parse
+                        :content="renderMarkdown(chatMsg.message)"
+                        :tag-style="mdTagStyle"
+                    ></up-parse>
+                  </view>
+                </template>
+              </view>
+            </view>
           </view>
         </view>
       </view>
@@ -130,11 +130,12 @@
       <view :style="{ height: spacerHeight + 'px' }"></view>
     </scroll-view>
 
-    <!-- 输入区-->
+    <!-- 输入区：胶囊输入框 + 右侧圆形发送键 -->
     <view class="chat-footer">
-      <view
-          class="input-wrapper"
-          :class="{ 'input-wrapper-disabled': inputDisabled }">
+      <view class="input-row">
+        <view
+            class="input-wrapper"
+            :class="{ 'input-wrapper-disabled': inputDisabled }">
         <input
             v-model="message"
             :maxlength="200"
@@ -158,7 +159,13 @@
             <view class="emoji-mouth"></view>
           </view>
         </view>
+        </view>
+
+        <view class="send-btn" :class="{ 'is-off': !canSend }" @click="sendMessage">
+          <up-icon name="arrow-upward" size="19" :color="sendIconColor"/>
+        </view>
       </view>
+
       <emoji-picker
           v-if="emojiVisible"
           @select="insertEmoji"
@@ -179,12 +186,19 @@ import { renderMarkdown, getMdTagStyle } from "@/utils/markdownUtil.js"
 import { useChatHistory } from "@/views/chat/chatMessage.js"
 import { parseSticker, buildStickerMessage } from "@/views/chat/emojiData.js"
 import { useTheme } from "@/utils/useTheme"
+import { getOnFillColor, getHeaderIconColor, getWarningColor, getTertiaryColor } from "@/utils/themeUtil"
 import UserAvatar from "@/components/UserAvatar/index.vue"
 import EmojiPicker from "@/views/chat/emojiPicker.vue"
 
 const { proxy } = getCurrentInstance()
 const store = useStore()
 const { isDark, themeClass } = useTheme()
+
+// uview 图标 color 只收实色，按皮肤给值
+const headerIconColor = computed(() => getHeaderIconColor(isDark.value))
+const sendIconColor = computed(() => getOnFillColor(isDark.value))
+const thinkingLoadingColor = computed(() => getWarningColor(isDark.value))
+const thinkingArrowColor = computed(() => getTertiaryColor(isDark.value))
 const message = ref("")
 
 // 富文本内联样式随皮肤切换，代码块与小标签才有足够对比度
@@ -208,7 +222,15 @@ let destroyed = false
 // 未选择聊天对象或连接不可用时禁止输入
 const inputDisabled = computed(() => !currentTargetId.value || !connected.value)
 // 断开与重连期间给出提示文案
-const inputPlaceholder = computed(() => (connected.value ? '请输入聊天内容' : '连接服务器中...'))
+const inputPlaceholder = computed(() => {
+  if (!connected.value) {
+    return '连接服务器中...'
+  }
+  return targetType.value === 'user' ? '请输入聊天内容' : '有问题，随时问我…'
+})
+
+// 有内容且连接正常时才允许点发送
+const canSend = computed(() => !inputDisabled.value && !!message.value.trim())
 
 const emojiVisible = ref(false)
 // 仅IM会话启用表情功能，AI会话不启用
@@ -376,6 +398,9 @@ function handleConfirm(e) {
 }
 
 function sendMessage() {
+  if (inputDisabled.value) {
+    return
+  }
   if (!message.value || !message.value.trim()) {
     return
   }
@@ -520,7 +545,7 @@ function createPlatformSocket() {
 function initWebsocket() {
   clearReconnectTimer()
   if (destroyed) return
-  // 已有连接且未关闭（含正在建立中）直接复用
+  // 连接存在且未关闭，含建立中状态，直接复用
   if (websocket.value && websocket.value.readyState !== 3) {
     return
   }
@@ -574,7 +599,7 @@ function closeWebsocket() {
 function setErrorMessage() {
   console.log('webSocket 连接发生错误')
   connected.value = false
-  // 当前连接已不可用（部分端报错后不触发 onclose，readyState 不再是 3），置空引用保证重连时能重新创建
+  // 当前连接已不可用却可能不触发 onclose，置空引用保证重连时能重新创建
   websocket.value = null
   scheduleReconnect()
 }
@@ -696,7 +721,7 @@ function handleReply(chatMsg) {
 
 /**
  * 是否为当前会话的消息
- * 自己账号发出的消息按接收人判断（多端登录时服务端会回推），对方消息按发送人判断
+ * 自己账号发出的消息按接收人判断，多端登录时服务端会回推；对方消息按发送人判断
  * @param chatMsg 服务端消息
  */
 function isCurrentChatMsg(chatMsg) {
@@ -853,45 +878,46 @@ function openChatDetail() {
 .chat-header {
   display: flex;
   align-items: center;
-  background-color: $spark-color-header-bg;
-  border-bottom: 1rpx solid $spark-color-header-border;
-  padding: 16px 16px;
+  height: 48px;
+  padding: 0 14px;
+  background-color: var(--app-bg-card);
+  border-bottom: 1px solid var(--app-border-light);
   flex-shrink: 0;
+  box-sizing: content-box;
 }
 
 .header-back {
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
 }
 
 .header-title {
   flex: 1;
+  min-width: 0;
   text-align: center;
-  font-size: 17px;
-  font-style: italic;
+  font-size: 18px;
   font-weight: 700;
-  letter-spacing: 1px;
-  /* #ifdef MP-WEIXIN */
-  color: var(--app-brand);
-  /* #endif */
-  /* #ifdef H5 */
-  background-image: var(--app-title-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  /* #endif */
+  letter-spacing: 0.4px;
+  color: var(--app-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .header-record {
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
-  padding-left: 12px;
+  justify-content: center;
 }
 
 .header-tip {
-  font-size: 14px;
-  color: rgba(47, 123, 255, 0.7);
+  font-size: 13px;
+  color: var(--app-text-tertiary);
 }
 
 .chat-body {
@@ -926,57 +952,64 @@ function openChatDetail() {
 .chat-item {
   display: flex;
   flex-direction: column;
-  padding: 8px 16px;
+  padding: 7px 14px;
 }
 
-.chat-item-self {
+.chat-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+
+.chat-item-self .chat-row {
+  flex-direction: row-reverse;
+}
+
+.chat-avatar {
+  flex-shrink: 0;
+}
+
+.chat-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.chat-item-self .chat-main {
   align-items: flex-end;
 }
 
-.chat-msg-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.chat-time {
+  font-size: 10.5px;
+  color: var(--app-text-tertiary);
   margin-bottom: 4px;
 }
 
-.chat-item-self .chat-msg-header {
-  justify-content: flex-end;
-}
-
-
-.chat-time {
-  font-size: 11px;
-  color: var(--app-text-secondary);
-}
-
 .chat-msg-content {
-  align-self: flex-start;
-  max-width: 75%;
-}
-
-.chat-item-self .chat-msg-content {
-  align-self: flex-end;
+  max-width: 80%;
 }
 
 .chat-bubble {
   padding: 10px 14px;
-  border-radius: 8px;
+  border-radius: 14px;
   word-break: break-word;
   position: relative;
+  line-height: 1.55;
 }
 
 .chat-bubble-user {
-  background-color: var(--app-bubble-self-bg);
-  color: var(--app-bubble-self-text);
-  border-top-right-radius: 2px;
+  background-image: var(--app-gradient-fill);
+  color: var(--app-fill-tx);
+  box-shadow: var(--app-shadow-brand);
 }
 
 .chat-bubble-agent {
   background-color: var(--app-bubble-agent-bg);
   color: var(--app-bubble-agent-text);
-  border-top-left-radius: 2px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--app-shadow-card);
 }
 
 .thinking-header {
@@ -1025,19 +1058,49 @@ function openChatDetail() {
   right: 0;
   bottom: 0;
   background-color: var(--app-bg-card);
-  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--app-border-light);
   z-index: 100;
   box-sizing: border-box;
 }
 
-.input-wrapper {
+.input-row {
   display: flex;
   align-items: center;
-  height: 44px;
-  padding: 0 16px;
+  gap: 9px;
+}
+
+.input-wrapper {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 14px;
   background-color: var(--app-bg-sub);
-  border-radius: 10px;
+  border-radius: 999px;
+}
+
+.send-btn {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image: var(--app-gradient-fill);
+  box-shadow: var(--app-shadow-brand);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+
+  &:active {
+    transform: scale(0.94);
+  }
+}
+
+.send-btn.is-off {
+  opacity: 0.32;
+  box-shadow: none;
 }
 
 .input-wrapper-disabled {
@@ -1115,14 +1178,12 @@ function openChatDetail() {
   line-height: 1.2;
 }
 
-/* Markdown 基线排版，标签级样式由 up-parse 的 tag-style 内联下发 */
 .markdown-body {
   font-size: 14px;
   line-height: 1.5;
   word-break: break-word;
 }
 
-/* 代码高亮：小程序端 rich-text 节点不认外部样式，仅 H5 生效 */
 :deep(.markdown-body) {
   .hljs-keyword { color: #d73a49; }
   .hljs-string { color: #032f62; }

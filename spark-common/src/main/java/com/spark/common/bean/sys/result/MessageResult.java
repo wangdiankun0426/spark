@@ -43,6 +43,11 @@ public class MessageResult extends BaseResult {
     private String typeName;
 
     /**
+     * 阅读状态，取自 sys_message_user：0-未读 1-已读
+     */
+    private Integer readFlag;
+
+    /**
      * 接收人ids
      */
     private List<Long> userIds;

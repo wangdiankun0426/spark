@@ -7,7 +7,7 @@
 /**
  * Vue 组合式 API：防抖函数
  * @param {Function} fn 需要防抖的函数
- * @param {number} delay 延迟时间（毫秒），默认 1000
+ * @param {number} delay 延迟时间，单位毫秒，默认 1000
  * @returns {Function} 防抖后的函数
  */
 export function useDebounceFn(fn, delay = 1000) {
@@ -42,7 +42,7 @@ export function useDebounceFn(fn, delay = 1000) {
 /**
  * 节流函数
  * @param {Function} fn 需要节流的函数
- * @param {number} interval 间隔时间（毫秒），默认 1000
+ * @param {number} interval 间隔时间，单位毫秒，默认 1000
  * @returns {Function} 节流后的函数
  */
 export function useThrottleFn(fn, interval = 1000) {

@@ -20,7 +20,7 @@ import java.util.List;
  *
  * @author wangdiankun
  * @since 2026/10/27 10:00:00
- * 模型token用量明细DAO
+ * 模型token用量明细DAO，明细表只追加写，不提供单条insert，批量写入走insertBatch
  */
 public interface ModelUsageDao extends BaseDao<ModelUsage> {
 

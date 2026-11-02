@@ -18,22 +18,22 @@ import {
 const FORM_TYPE_TEXTAREA = 'textarea';
 
 const props = defineProps({
-  // 表单组件对象（含 type 与 config），与 type/value/showValue 二选一
+  // 表单组件对象，含 type 与 config，与 type/value/showValue 二选一
   widget: {
     type: Object,
     default: null
   },
-  // 字段类型（未传 widget 时指定）
+  // 字段类型，未传 widget 时指定
   type: {
     type: String,
     default: ''
   },
-  // 表单值（未传 widget 时指定）
+  // 表单值，未传 widget 时指定
   value: {
     type: [String, Number],
     default: null
   },
-  // 表单展示值（未传 widget 时指定）
+  // 表单展示值，未传 widget 时指定
   showValue: {
     type: [String, Number],
     default: null

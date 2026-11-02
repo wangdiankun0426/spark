@@ -47,8 +47,24 @@
         <if test="status != null">
             and status = #{status}
         </if>
+        <if test="statusList != null and statusList.size() > 0">
+            and status in (
+            <foreach collection="statusList" item="item" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test="level != null">
+            and level = #{level}
+        </if>
         <if test="name != null and name != ''">
             and name like concat('%', #{name}, '%')
+        </if>
+        <if test="createdStartTime != null">
+            and created_dt &gt;= #{createdStartTime}
+        </if>
+        <if test="createdEndTime != null">
+            and created_dt &lt;= #{createdEndTime}
         </if>
         <if test="createdBy != null">
             and created_by = #{createdBy}

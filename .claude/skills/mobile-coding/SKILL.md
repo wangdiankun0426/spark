@@ -31,10 +31,11 @@ description: Spark 项目前端移动端（spark-app，uni-app H5 / 微信小程
 
 ## 4. 页面与平台适配（要点）
 
-- 页面结构 `<template>` → `<script setup>` → `<style scoped lang="scss">`，样式单位用 `rpx`
+- 页面结构 `<template>` → `<script setup>` → `<style scoped lang="scss">`，样式单位以 `px` 为主（全站先例统一用 px，`rpx` 仅限指示条等极少数需随屏宽等比缩放的装饰）
 - 每个页面根节点必须同时挂 `safe-area-page` 与 `:class="themeClass"`（`const {themeClass} = useTheme()`），漏一个该页切主题就不跟随
 - 颜色一律走 `var(--app-*)`（`uni.scss` 的 `$spark-color-*` 已映射），禁止硬编码；渐变整段用 `var(--app-gradient-*)`，不在 `linear-gradient()` 里嵌 `var()`
-- 底部导航统一用自绘 `@/components/AppTabbar`，禁止 `up-tabbar`（uview 的 tabbar 底色写死 `#fff` 且组件样式隔离，小程序暗色下必然露白）
+- 底部导航统一用自绘 `@/components/AppTabbar`，禁止 `up-tabbar`（uview 的 tabbar 底色写死 `#fff` 且组件样式隔离，小程序暗色下必然露白）；中间「AI应用」为凸起圆钮（`star-fill` + `center:true`），配置在 `menuUtil.js#visibleTabs()`
+- 流程/AI 应用首页的页签统一用自绘分段控件（`.seg-tab`），不再新增 `up-tabs`；两级头部（tab 主页 / 二级页）与标题字号、欢迎卡白字体系以 templates.md 3.1 为准
 - 新增页面必须注册到 `pages.json` 的 `pages` 数组，统一 `"navigationStyle": "custom"`
 - H5 与微信小程序差异用条件编译 `#ifdef H5` / `#ifdef MP-WEIXIN` 处理
 - 注释在代码上方，只写一眼看不出来的核心信息，禁止用括号补充细化说明；禁止 `// ===== 标题 =====` 装饰性分隔线，分组标题直接写 `// 标题`；`<style>` / `.scss` 内不写任何注释

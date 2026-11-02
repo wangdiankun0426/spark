@@ -3,18 +3,24 @@
     <!-- 顶部标题栏 -->
     <view class="llm-header" :style="navHeaderStyle()">
       <text class="header-title">AI应用</text>
+      <view v-if="headTail" class="header-sub">
+        <text v-if="headCount !== null" class="sub-num">{{ headCount }}</text>
+        <text class="sub-text">{{ headTail }}</text>
+      </view>
     </view>
 
     <!-- 分类页签 -->
     <view class="llm-tabs">
-      <view
-          v-for="(tab, index) in tabList"
-          :key="index"
-          class="seg-tab"
-          :class="{ 'is-active': index === tabIndex }"
-          @click="handleTabChange(index)"
-      >
-        <text class="seg-tab__text">{{ tab.name }}</text>
+      <view class="tabs-track">
+        <view
+            v-for="(tab, index) in tabList"
+            :key="index"
+            class="seg-tab"
+            :class="{ 'is-active': index === tabIndex }"
+            @click="handleTabChange(index)"
+        >
+          <text class="seg-tab__text">{{ tab.name }}</text>
+        </view>
       </view>
     </view>
 
@@ -25,33 +31,55 @@
         scroll-y
         @scrolltolower="loadMoreAgents"
     >
-      <!-- 加载中 -->
-      <view v-if="agentLoading" class="loading-box">
+      <view v-if="agentLoading && agentList.length === 0" class="state-box">
         <up-loading-icon text="加载中..."/>
       </view>
 
-      <!-- 空状态 -->
-      <view v-else-if="agentList.length === 0" class="empty-box">
-        <up-empty text="暂无智能体" icon="grid-fill"/>
-      </view>
-
-      <!-- 智能体卡片：只展示名称与模型 -->
-      <template v-else>
-        <view
-            class="llm-card"
-            v-for="item in agentList"
-            :key="item.id"
-            @click="handleAgentClick(item)"
-        >
-          <view class="card-icon">
-            <AgentIcon :size="34"/>
+      <view v-else-if="agentList.length === 0" class="state-box state-box--empty">
+        <view class="empty-card">
+          <view class="empty-glow"></view>
+          <view class="empty-ring"></view>
+          <view class="empty-icon">
+            <up-icon name="star-fill" size="22" :color="brandColor"/>
           </view>
-          <view class="llm-info">
-            <text class="llm-name">{{ item.name }}</text>
-            <text class="llm-desc">{{ item.description || '暂无备注' }}</text>
+          <text class="empty-title">{{ emptyMeta.title }}</text>
+          <text class="empty-sub">{{ emptyMeta.sub }}</text>
+          <view class="empty-btn" @click="refreshTab">
+            <up-icon name="reload" size="11" :color="brandColor"/>
+            <text class="empty-btn__text" :style="'color:' + brandColor">刷新看看</text>
           </view>
         </view>
-        <up-loadmore :status="agentLoadStatus" class="list-loadmore"/>
+      </view>
+
+      <template v-else>
+        <view class="section-head">
+          <view class="section-head-left">
+            <text class="section-title">全部智能体</text>
+          </view>
+          <text class="section-note">共 {{ agentTotal }} 个</text>
+        </view>
+
+        <view class="list-card">
+          <template v-for="(item, index) in agentList" :key="item.id">
+            <view class="row" @click="handleAgentClick(item)">
+              <view class="row-icon">
+                <AgentIcon :size="26"/>
+              </view>
+              <view class="row-main">
+                <text class="row-name">{{ item.name }}</text>
+                <text class="row-desc" :class="{ 'is-mute': !item.description }">
+                  {{ item.description || '暂无描述' }}
+                </text>
+              </view>
+              <view class="row-chev">
+                <up-icon name="arrow-right" size="9" :color="chevronColor"/>
+              </view>
+            </view>
+            <view v-if="index < agentList.length - 1" class="row-divider"></view>
+          </template>
+        </view>
+
+        <view class="list-tip">{{ tipText(agentLoadStatus) }}</view>
       </template>
     </scroll-view>
 
@@ -62,34 +90,51 @@
         scroll-y
         @scrolltolower="loadMoreInstances"
     >
-      <!-- 加载中 -->
-      <view v-if="instanceLoading && instanceList.length === 0" class="loading-box">
+      <view v-if="instanceLoading && instanceList.length === 0" class="state-box">
         <up-loading-icon text="加载中..."/>
       </view>
 
-      <!-- 空状态 -->
-      <view v-else-if="instanceList.length === 0" class="empty-box">
-        <up-empty text="暂无运行记录" icon="list"/>
+      <view v-else-if="instanceList.length === 0" class="state-box state-box--empty">
+        <view class="empty-card">
+          <view class="empty-glow"></view>
+          <view class="empty-ring"></view>
+          <view class="empty-icon">
+            <up-icon name="list-dot" size="22" :color="brandColor"/>
+          </view>
+          <text class="empty-title">{{ emptyMeta.title }}</text>
+          <text class="empty-sub">{{ emptyMeta.sub }}</text>
+          <view class="empty-btn" @click="refreshTab">
+            <up-icon name="reload" size="11" :color="brandColor"/>
+            <text class="empty-btn__text" :style="'color:' + brandColor">刷新看看</text>
+          </view>
+        </view>
       </view>
 
-      <!-- 实例卡片：展示名称、创建时间与运行状态 -->
       <template v-else>
-        <view
-            class="instance-card"
-            v-for="item in instanceList"
-            :key="item.id"
-            @click="showInstanceDetail(item)"
-        >
-          <view class="card-icon">
-            <WorkflowIcon :size="34"/>
+        <view class="section-head">
+          <view class="section-head-left">
+            <text class="section-title">运行记录</text>
           </view>
-          <view class="instance-info">
-            <text class="instance-name">{{ item.templateName || item.name || '未命名工作流' }}</text>
-            <text class="instance-created">{{ item.createdDt }}</text>
-          </view>
-          <text class="instance-status" :class="'status-' + item.status">{{ item.statusName }}</text>
+          <text class="section-note">共 {{ instanceTotal }} 条</text>
         </view>
-        <up-loadmore :status="instanceLoadStatus" class="list-loadmore"/>
+
+        <view class="list-card">
+          <template v-for="(item, index) in instanceList" :key="item.id">
+            <view class="row" @click="showInstanceDetail(item)">
+              <view class="row-icon">
+                <WorkflowIcon :size="26"/>
+              </view>
+              <view class="row-main">
+                <text class="row-name">{{ item.templateName || item.name || '未命名工作流' }}</text>
+                <text class="row-desc">{{ instanceMeta(item) }}</text>
+              </view>
+              <text class="row-pill" :class="'pill-' + item.status">{{ item.statusName }}</text>
+            </view>
+            <view v-if="index < instanceList.length - 1" class="row-divider"></view>
+          </template>
+        </view>
+
+        <view class="list-tip">{{ tipText(instanceLoadStatus) }}</view>
       </template>
     </scroll-view>
 
@@ -100,50 +145,81 @@
         scroll-y
         @scrolltolower="loadMoreModels"
     >
-      <!-- 加载中 -->
-      <view v-if="modelLoading && modelList.length === 0" class="loading-box">
+      <view v-if="modelLoading && modelList.length === 0" class="state-box">
         <up-loading-icon text="加载中..."/>
       </view>
 
-      <!-- 空状态 -->
-      <view v-else-if="modelList.length === 0" class="empty-box">
-        <up-empty text="暂无可用模型" icon="list"/>
-      </view>
-
-      <!-- 模型卡片：只展示名称与厂商 -->
-      <template v-else>
-        <view
-            class="model-card"
-            v-for="model in modelList"
-            :key="model.id"
-            @click="handleSelectModel(model)"
-        >
-          <view class="card-icon">
-            <ModelIcon :size="34"/>
+      <view v-else-if="modelList.length === 0" class="state-box state-box--empty">
+        <view class="empty-card">
+          <view class="empty-glow"></view>
+          <view class="empty-ring"></view>
+          <view class="empty-icon">
+            <up-icon name="chat" size="22" :color="brandColor"/>
           </view>
-          <view class="model-info">
-            <text class="model-name">{{ model.name }}</text>
-            <text class="model-provider">{{ model.providerName ? '厂商：' + model.providerName : '未知厂商' }}</text>
+          <text class="empty-title">{{ emptyMeta.title }}</text>
+          <text class="empty-sub">{{ emptyMeta.sub }}</text>
+          <view class="empty-btn" @click="refreshTab">
+            <up-icon name="reload" size="11" :color="brandColor"/>
+            <text class="empty-btn__text" :style="'color:' + brandColor">刷新看看</text>
           </view>
         </view>
-        <up-loadmore :status="modelLoadStatus" class="list-loadmore"/>
+      </view>
+
+      <template v-else>
+        <view class="section-head">
+          <view class="section-head-left">
+            <text class="section-title">可用模型</text>
+          </view>
+          <text class="section-note">共 {{ modelTotal }} 个</text>
+        </view>
+
+        <view class="list-card">
+          <template v-for="(model, index) in modelList" :key="model.id">
+            <view class="row" @click="handleSelectModel(model)">
+              <view class="row-icon">
+                <ModelIcon :size="26"/>
+              </view>
+              <view class="row-main">
+                <text class="row-name">{{ model.name }}</text>
+                <text class="row-desc">{{ model.providerName ? '厂商：' + model.providerName : '未知厂商' }}</text>
+              </view>
+              <view class="row-talk">
+                <text class="row-talk__text" :style="'color:' + brandColor">对话</text>
+                <up-icon name="arrow-right" size="8" :color="brandColor"/>
+              </view>
+            </view>
+            <view v-if="index < modelList.length - 1" class="row-divider"></view>
+          </template>
+        </view>
+
+        <view class="list-tip">{{ tipText(modelLoadStatus) }}</view>
       </template>
     </scroll-view>
 
     <!-- 无任何页签权限时展示空态 -->
-    <view v-else class="empty-box">
-      <up-empty text="暂无可用功能" icon="grid-fill"/>
+    <view v-else class="state-box state-box--empty">
+      <view class="empty-card">
+        <view class="empty-glow"></view>
+        <view class="empty-ring"></view>
+        <view class="empty-icon">
+          <up-icon name="grid-fill" size="22" :color="brandColor"/>
+        </view>
+        <text class="empty-title">{{ emptyMeta.title }}</text>
+        <text class="empty-sub">{{ emptyMeta.sub }}</text>
+      </view>
     </view>
 
-    <!-- 会话记录选择 -->
-    <ai-session-picker
-        v-model:show="sessionPickerShow"
-        :title="sessionPickerTitle"
-        :target-type="sessionTargetType"
-        :receiver-id="sessionTarget.id"
-        @select="handleSessionSelect"
-        @new="handleSessionNew"
-    />
+    <!-- 弹层宿主：小程序端 picker 内部 popup 的插槽内容会参与 flex 分配顶高底栏 -->
+    <view class="sheet-host">
+      <ai-session-picker
+          v-model:show="sessionPickerShow"
+          :title="sessionPickerTitle"
+          :target-type="sessionTargetType"
+          :receiver-id="sessionTarget.id"
+          @select="handleSessionSelect"
+          @new="handleSessionNew"
+      />
+    </view>
 
     <AppTabbar :value="active" @change="handleOnTabChange"/>
   </view>
@@ -152,7 +228,9 @@
 <script setup>
 import {ref, computed} from "vue"
 import {onLoad, onShow} from "@dcloudio/uni-app"
+import {useStore} from "vuex"
 import {navHeaderStyle} from "@/utils/navBarUtil";
+import {getHeaderIconColor, getChevronColor} from "@/utils/themeUtil"
 import {agentPageListAPI} from "@/api/llm/agent"
 import {pageInstanceListAPI} from "@/api/workflow/instance"
 import {pageModelListAPI} from "@/api/llm/model"
@@ -164,8 +242,12 @@ import AgentIcon from "@/components/icons/AgentIcon.vue"
 import WorkflowIcon from "@/components/icons/WorkflowIcon.vue"
 import ModelIcon from "@/components/icons/ModelIcon.vue"
 
+const store = useStore()
 const active = ref("llm")
-const {themeClass} = useTheme()
+const {isDark, themeClass} = useTheme()
+
+const brandColor = computed(() => getHeaderIconColor(isDark.value))
+const chevronColor = computed(() => getChevronColor(isDark.value))
 
 
 // 会话选择弹层：点击智能体/模型后先选会话再进入对话
@@ -180,11 +262,11 @@ const {
 } = useAiSessionPicker()
 
 
-// AI应用页签配置
+// AI应用页签配置：智能体放第一位，是平台最常用的入口
 const allowedTabs = [
-  {key: 'chat', name: 'AI对话'},
   {key: 'agent', name: '智能体'},
-  {key: 'workflow', name: '工作流'}
+  {key: 'workflow', name: '工作流'},
+  {key: 'chat', name: 'AI对话'}
 ]
 
 const tabList = computed(() => allowedTabs.map(tab => ({name: tab.name})))
@@ -240,9 +322,51 @@ const modelLoadedCount = ref(0)
 // 列表底部加载提示状态
 const modelLoadStatus = ref('loadmore')
 
+// 头部副标题：数字用品牌色单独一段，无数据时只留文案
+const headCount = computed(() => {
+  if (activeTabKey.value === 'agent') {
+    return agentLoaded.value && agentTotal.value > 0 ? agentTotal.value : null
+  }
+  if (activeTabKey.value === 'workflow') {
+    return instanceLoaded.value && instanceTotal.value > 0 ? instanceTotal.value : null
+  }
+  if (activeTabKey.value === 'chat') {
+    return modelLoaded.value && modelTotal.value > 0 ? modelTotal.value : null
+  }
+  return null
+})
+
+const headTail = computed(() => {
+  const loaded = {agent: agentLoaded.value, workflow: instanceLoaded.value, chat: modelLoaded.value}
+  if (activeTabKey.value === 'agent') {
+    if (!loaded.agent) return '正在加载智能体…'
+    return agentTotal.value > 0 ? '个可用智能体' : '还没有可用的智能体'
+  }
+  if (activeTabKey.value === 'workflow') {
+    if (!loaded.workflow) return '正在加载运行记录…'
+    return instanceTotal.value > 0 ? '条运行记录' : '还没有运行记录'
+  }
+  if (activeTabKey.value === 'chat') {
+    if (!loaded.chat) return '正在加载模型…'
+    return modelTotal.value > 0 ? '个可用模型' : '还没有可用的模型'
+  }
+  return ''
+})
+
+// 空态文案按页签区分，说明「为什么空」和「缺什么权限」
+const emptyMeta = computed(() => {
+  if (activeTabKey.value === 'workflow') {
+    return {title: '还没有运行记录', sub: '运行过工作流后，记录会按时间顺序出现在这里'}
+  }
+  if (activeTabKey.value === 'chat') {
+    return {title: '还没有可用的模型', sub: '管理员启用语言模型后，就能在这里开始对话'}
+  }
+  return {title: '还没有可用的智能体', sub: '管理员为你开通智能体后，就能在这里和它对话了'}
+})
+
 /**
  * 按页签key懒加载对应列表
- * @param key 页签key（chat/agent/workflow）
+ * @param key 页签key，取 chat、agent、workflow
  */
 function loadTab(key) {
   if (key === 'agent' && !agentLoading.value && !agentLoaded.value) {
@@ -270,7 +394,7 @@ function handleTabChange(index) {
 }
 
 /**
- * 页面加载：支持从首页带 tab 参数直达指定页签（下标 0 AIChat / 1 Agent / 2 WorkFlow）
+ * 页面加载：支持从首页带 tab 参数直达指定页签，下标 0 智能体、1 工作流、2 AI对话
  * @param options 页面参数
  */
 onLoad(options => {
@@ -282,22 +406,40 @@ onLoad(options => {
 
 // 页面显示时懒加载当前可见页签
 onShow(async () => {
+  const userInfo = store.getters['user/getUserInfo']
+  if (!userInfo || userInfo.appAiEnabled !== true) {
+    uni.reLaunch({url: '/pages/error/noPermission'})
+    return
+  }
   loadTab(activeTabKey.value)
 })
 
 /**
- * 获取智能体列表
+ * 列表底部提示文案
+ * @param status loadmore / loading / nomore
+ * @returns {string} 提示文字
+ */
+function tipText(status) {
+  if (status === 'loading') {
+    return '正在加载...'
+  }
+  if (status === 'nomore') {
+    return '没有更多了'
+  }
+  return '上拉加载更多'
+}
+
+/**
+ * 智能体列表
  */
 function getAgentList() {
   agentLoading.value = true
   agentLoadStatus.value = 'loading'
+  agentQuery.value.pageNo = 1
   agentPageListAPI(agentQuery.value).then(res => {
-    if (res.code !== 200) {
+    if (res.code !== 200 || res.data === undefined || res.data === null) {
       agentLoadStatus.value = 'nomore'
-      return
-    }
-    if (res.data === undefined || res.data === null) {
-      agentLoadStatus.value = 'nomore'
+      agentLoaded.value = true
       return
     }
     const rows = res.data.rows || []
@@ -341,11 +483,67 @@ function handleAgentClick(item) {
 }
 
 /**
+ * 运行实例的副标题：创建时间 + 耗时，两块信息都从接口来
+ * @param item 实例行
+ * @returns {string} 副标题
+ */
+function instanceMeta(item) {
+  const parts = []
+  const dt = formatDt(item.createdDt)
+  if (dt) {
+    parts.push(dt)
+  }
+  const duration = formatDuration(item.durationMs)
+  if (duration) {
+    parts.push('耗时 ' + duration)
+  }
+  return parts.length > 0 ? parts.join(' · ') : '暂无运行信息'
+}
+
+/**
+ * 时间截成 MM-DD HH:mm，年份相同不必占位
+ * @param value 后端时间串
+ * @returns {string} 短时间
+ */
+function formatDt(value) {
+  if (!value) {
+    return '暂无时间'
+  }
+  const text = String(value).replace('T', ' ')
+  const matched = text.match(/^(\d{4})-(\d{2})-(\d{2})[ ]?(\d{2}):(\d{2})/)
+  if (matched) {
+    return matched[2] + '-' + matched[3] + ' ' + matched[4] + ':' + matched[5]
+  }
+  return text
+}
+
+/**
+ * 毫秒转可读耗时
+ * @param ms 耗时毫秒
+ * @returns {string} 如 820ms / 3.2s / 1m20s
+ */
+function formatDuration(ms) {
+  if (ms === undefined || ms === null || ms <= 0) {
+    return ''
+  }
+  if (ms < 1000) {
+    return ms + 'ms'
+  }
+  if (ms < 60000) {
+    return (ms / 1000).toFixed(1) + 's'
+  }
+  const minutes = Math.floor(ms / 60000)
+  const seconds = Math.round((ms % 60000) / 1000)
+  return minutes + 'm' + seconds + 's'
+}
+
+/**
  * 加载运行实例列表
  */
 function loadInstances() {
   instanceLoading.value = true
   instanceLoadStatus.value = 'loading'
+  instanceQuery.value.pageNo = 1
   pageInstanceListAPI(instanceQuery.value).then(res => {
     if (res.code === 200 && res.data) {
       instanceList.value = (res.data.rows || []).map(row => ({...row}))
@@ -354,6 +552,7 @@ function loadInstances() {
       instanceLoadStatus.value = instanceList.value.length >= instanceTotal.value ? 'nomore' : 'loadmore'
     } else {
       instanceLoadStatus.value = 'nomore'
+      instanceLoaded.value = true
     }
   }).finally(() => {
     instanceLoading.value = false
@@ -396,6 +595,7 @@ function showInstanceDetail(item) {
 function loadModels() {
   modelLoading.value = true
   modelLoadStatus.value = 'loading'
+  modelQuery.value.pageNo = 1
   pageModelListAPI(modelQuery.value).then(res => {
     if (res.code === 200 && res.data) {
       const rows = res.data.rows || []
@@ -406,6 +606,7 @@ function loadModels() {
       modelLoadStatus.value = modelLoadedCount.value >= modelTotal.value ? 'nomore' : 'loadmore'
     } else {
       modelLoadStatus.value = 'nomore'
+      modelLoaded.value = true
     }
   }).finally(() => {
     modelLoading.value = false
@@ -442,6 +643,23 @@ function handleSelectModel(model) {
 }
 
 /**
+ * 空态里的刷新：清掉已加载标记后重新拉当前页签
+ */
+function refreshTab() {
+  const key = activeTabKey.value
+  if (key === 'agent' && !agentLoading.value) {
+    agentLoaded.value = false
+    getAgentList()
+  } else if (key === 'workflow' && !instanceLoading.value) {
+    instanceLoaded.value = false
+    loadInstances()
+  } else if (key === 'chat' && !modelLoading.value) {
+    modelLoaded.value = false
+    loadModels()
+  }
+}
+
+/**
  * 底部导航栏
  */
 function handleOnTabChange(index) {
@@ -458,230 +676,355 @@ function handleOnTabChange(index) {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: $uni-bg-color-dashboard;
-}
-
-.llm-container :deep(.u-tabbar) {
-  flex: none;
+  background-color: var(--app-bg-page);
 }
 
 .llm-header {
-  padding: 16px 16px;
+  padding: 14px 16px 10px;
   background-color: $spark-color-header-bg;
-  border-bottom: 1rpx solid $spark-color-header-border;
   flex-shrink: 0;
+
   .header-title {
-    font-size: 20px;
-    font-style: italic;
+    display: block;
+    font-size: 24px;
     font-weight: 700;
-    letter-spacing: 1px;
-    /* #ifdef MP-WEIXIN */
-    color: var(--app-brand);
-    /* #endif */
-    /* #ifdef H5 */
-    background-image: var(--app-title-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    /* #endif */
+    letter-spacing: 0.5px;
+    color: var(--app-text-primary);
   }
 }
 
-.llm-tabs {
+.header-sub {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background-color: $spark-color-header-bg;
+  gap: 4px;
+  margin-top: 5px;
+  padding-left: 1px;
+}
+
+.sub-num {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--app-brand);
+}
+
+.sub-text {
+  font-size: 11.5px;
+  color: var(--app-text-tertiary);
+}
+
+.llm-tabs {
   flex-shrink: 0;
+  padding: 2px 14px 10px;
+  background-color: $spark-color-header-bg;
+}
+
+.tabs-track {
+  display: flex;
+  gap: 3px;
+  height: 38px;
+  padding: 3px;
+  border-radius: 12px;
+  background-color: var(--app-tab-track);
 }
 
 .seg-tab {
   flex: 1;
-  height: 34px;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 9px;
-  transition: background 0.25s ease, box-shadow 0.25s ease;
+  transition: background 0.22s ease, box-shadow 0.22s ease;
 }
 
 .seg-tab__text {
-  font-size: 14px;
-  color: $spark-color-text-tertiary;
-  transition: color 0.25s ease;
+  font-size: 13px;
+  color: var(--app-text-secondary);
+  transition: color 0.22s ease;
 }
 
 .seg-tab.is-active {
-  background-image: var(--app-gradient-brand);
-  box-shadow: 0 2px 8px rgba(47, 123, 255, 0.35);
-}
+  background-image: var(--app-gradient-fill);
+  box-shadow: var(--app-shadow-brand);
 
-.seg-tab.is-active .seg-tab__text {
-  color: $uni-text-color-inverse;
-  font-weight: 600;
+  .seg-tab__text {
+    color: var(--app-fill-tx);
+    font-weight: 600;
+  }
 }
 
 .llm-list {
-  width: 94%;
-  margin: 0 auto;
-  padding-top: 12px;
-  /* #ifdef H5 */
-  height: calc(100vh - 170px);
-  /* #endif */
-  /* #ifdef MP-WEIXIN */
-  height: calc(100vh - 250px);
-  /* #endif */
-  overflow-y: auto;
+  width: 100%;
+  padding: 0 14px;
+  box-sizing: border-box;
+  flex: 1;
+  height: 0;
+  min-height: 0;
 }
 
-.list-loadmore {
-  padding-bottom: 30px;
-}
-
-.loading-box, .empty-box {
+.state-box {
+  padding-top: 90px;
   display: flex;
-  flex-direction: column;
   justify-content: center;
-  align-items: center;
-  padding-top: 80px;
 }
 
-.llm-card {
+.state-box--empty {
+  padding-top: 18px;
+}
+
+.section-head {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  height: 22px;
+  margin: 16px 2px 10px;
+}
+
+.section-head-left {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.section-title {
+  position: relative;
+  padding-left: 11px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: var(--app-text-primary);
+}
+
+.section-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 13px;
+  border-radius: 2px;
+  background-image: var(--app-gradient-brand);
+}
+
+.section-note {
+  font-size: 11px;
+  color: var(--app-text-tertiary);
+}
+
+.list-card {
   background-color: var(--app-bg-card);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 12px;
+  border-radius: 16px;
+  overflow: hidden;
   box-shadow: var(--app-shadow-card);
 }
 
-.llm-info {
+.row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 14px;
+
+  &:active {
+    background-color: var(--app-bg-hover);
+  }
+}
+
+.row-icon {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--app-bg-sub);
+  border: 1px solid var(--app-border-light);
+}
+
+.row-main {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
-.llm-name {
-  font-size: 16px;
+.row-name {
+  font-size: 15px;
   font-weight: 600;
+  letter-spacing: 0.2px;
   color: var(--app-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.llm-desc {
-  font-size: 12px;
-  color: var(--app-text-secondary);
+.row-desc {
+  font-size: 11.5px;
+  line-height: 16px;
+  color: var(--app-text-tertiary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  &.is-mute {
+    color: var(--app-text-placeholder);
+  }
 }
 
-.instance-card {
+.row-chev {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 12px;
-  background-color: var(--app-bg-card);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 12px;
+  justify-content: center;
+  background-color: var(--app-bg-sub);
+}
+
+.row-pill {
+  flex: none;
+  padding: 1px 8px;
+  border-radius: 7px;
+  font-size: 11px;
+  line-height: 17px;
+
+  &.pill-1 {
+    color: var(--app-text-info);
+    background-color: var(--app-bg-info);
+  }
+  &.pill-2 {
+    color: var(--app-text-success);
+    background-color: var(--app-bg-success);
+  }
+  &.pill-3 {
+    color: var(--app-text-error);
+    background-color: var(--app-bg-error);
+  }
+  &.pill-4 {
+    color: var(--app-text-warning);
+    background-color: var(--app-bg-warning);
+  }
+  &.pill-5 {
+    color: var(--app-text-tertiary);
+    background-color: var(--app-bg-sub);
+  }
+}
+
+.row-talk {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 26px;
+  padding: 0 9px;
+  border-radius: 8px;
+  background-color: var(--app-primary-soft);
+}
+
+.row-talk__text {
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.row-divider {
+  height: 1px;
+  margin-left: 67px;
+  background-color: var(--app-border-light);
+}
+
+.list-tip {
+  padding: 14px 0 26px;
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--app-text-tertiary);
+}
+
+.empty-card {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 22px 18px 20px;
+  border-radius: 18px;
+  background-image: var(--app-gradient-hero);
+  border: 1px solid var(--app-hero-border);
   box-shadow: var(--app-shadow-card);
 }
 
-.card-icon {
+.empty-glow {
+  position: absolute;
+  right: -46px;
+  top: -52px;
+  width: 168px;
+  height: 168px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(47, 123, 255, 0.14) 0%, rgba(47, 123, 255, 0) 66%);
+  pointer-events: none;
+}
+
+.empty-ring {
+  position: absolute;
+  right: -14px;
+  top: -20px;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 1px solid var(--app-hero-border);
+  pointer-events: none;
+}
+
+.empty-icon {
+  position: relative;
   width: 46px;
   height: 46px;
+  border-radius: 15px;
+  background-color: var(--app-primary-soft);
+  border: 1px solid var(--app-brand-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
 }
 
-.instance-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.instance-name {
-  font-size: 15px;
+.empty-title {
+  position: relative;
+  display: block;
+  margin-top: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--app-text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.instance-created {
-  font-size: 12px;
-  color: var(--app-text-secondary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.empty-sub {
+  position: relative;
+  display: block;
+  margin-top: 6px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--app-text-tertiary);
 }
 
-.instance-status {
-  font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 10px;
-  flex-shrink: 0;
-
-  &.status-1 {
-    background-color: var(--app-bg-info);
-    color: var(--app-text-info);
-  }
-  &.status-2 {
-    background-color: var(--app-bg-success);
-    color: var(--app-text-success);
-  }
-  &.status-3 {
-    background-color: var(--app-bg-warning);
-    color: var(--app-text-warning);
-  }
-  &.status-4 {
-    background-color: var(--app-bg-error);
-    color: var(--app-text-error);
-  }
-}
-
-.model-card {
-  display: flex;
+.empty-btn {
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
-  background-color: var(--app-bg-card);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 12px;
-  box-shadow: var(--app-shadow-card);
+  gap: 3px;
+  margin-top: 14px;
+  height: 30px;
+  padding: 0 13px;
+  border-radius: 9px;
+  background-color: var(--app-primary-soft);
+  border: 1px solid var(--app-brand-border);
+
+  &:active {
+    opacity: 0.85;
+  }
 }
 
-.model-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.model-name {
-  font-size: 15px;
+.empty-btn__text {
+  font-size: 11.5px;
   font-weight: 600;
-  color: var(--app-text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.model-provider {
-  font-size: 12px;
-  color: var(--app-text-secondary);
 }
 </style>

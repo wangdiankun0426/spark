@@ -3,6 +3,7 @@ package com.spark.web.rest.controller.manage.sys;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.sys.query.MessageQuery;
+import com.spark.common.bean.sys.result.MessageCountResult;
 import com.spark.common.bean.sys.result.MessageResult;
 import com.spark.common.bean.sys.vo.MessageVO;
 import com.spark.manage.sys.IMessageService;
@@ -35,6 +36,25 @@ public class MessageController {
     @GetMapping("pageMyList")
     public ResultData<PageResult<MessageResult>> pageMyMessageList(MessageQuery query) {
         return messageService.pageMyMessageList(query);
+    }
+
+    /**
+     * 查询我的消息分类计数，全部、未读、已读，供筛选标签展示数量
+     * @return 分类计数
+     */
+    @GetMapping("myCount")
+    public ResultData<MessageCountResult> queryMyMessageCount() {
+        return messageService.queryMyMessageCount();
+    }
+
+    /**
+     * 标记消息已读：点开消息详情时调用，幂等
+     * @param messageVO 消息参数，只需 id
+     * @return 处理结果
+     */
+    @PostMapping("read")
+    public ResultData<Void> readMessage(MessageVO messageVO) {
+        return messageService.readMessage(messageVO);
     }
 
     /**

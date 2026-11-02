@@ -1,7 +1,7 @@
 import CryptoJS from 'crypto-js';
 
 /**
- * DES加密（ECB + Pkcs7）
+ * DES加密，ECB + Pkcs7 模式
  * @param str 待加密内容
  * @param key 服务端下发的一次性密钥，固定8位ASCII字符
  * @returns {string} 16进制密文

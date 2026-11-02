@@ -30,7 +30,6 @@
         </if>
     </sql>
 
-    <!-- 普通记录表：数据库自增 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into sys_tenant_config ( tenant_id , name , `key` , `value` , delete_flag , created_by , created_dt , updated_by , updated_dt )
         values (#{tenantId}, #{name}, #{key}, #{value}, 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})

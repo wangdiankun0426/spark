@@ -66,7 +66,7 @@ export function showInstanceDetailAPI(params) {
 }
 
 /**
- * 审批流程实例（通过/驳回）
+ * 审批流程实例，通过或驳回
  * @param data 审批参数
  * @returns {Promise<AxiosResponse<any>>}
  */

@@ -35,4 +35,15 @@ public class MessageQuery extends BaseQuery {
      */
     private Long userId;
 
+    /**
+     * 列表过滤器：all-全部 unread-未读 read-已读
+     * 由服务端翻译成 readFlag 条件，前端不再自行过滤分页数据
+     */
+    private String filterType;
+
+    /**
+     * 阅读状态：0-未读 1-已读
+     */
+    private Integer readFlag;
+
 }

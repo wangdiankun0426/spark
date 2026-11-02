@@ -7,41 +7,45 @@
     <!-- 用户头像：默认图标占位，图片加载完成后展示 -->
     <template v-if="type === 'user'">
       <view class="avatar-img-wrap">
+        <!-- 形状跟随外层容器：方形列表里不再套一个圆形头像 -->
         <up-image
           :src="userAvatarUrl"
           :width="size + 'px'"
           :height="size + 'px'"
-          shape="circle"
+          :shape="imageShape"
+          :radius="shape === 'rounded' ? 10 : 0"
           :show-loading="false"
           :error-icon="false"
+          :custom-style="{opacity: avatarLoaded ? 1 : 0}"
           @load="handleAvatarLoad"
         />
-        <!-- 加载完成前覆盖显示默认头像图标 -->
+        <!-- 加载完成前覆盖显示文字头像，与设计稿的姓名首字一致 -->
         <view v-if="!avatarLoaded" class="avatar-placeholder">
-          <up-icon name="account-fill" :size="iconSize" color="#ffffff"></up-icon>
+          <text v-if="initial" class="avatar-initial" :style="{fontSize: initialSize + 'px'}">{{ initial }}</text>
+          <up-icon v-else name="account-fill" :size="iconSize" color="#ffffff"></up-icon>
         </view>
       </view>
     </template>
 
     <!-- 智能体/模型图标头像 -->
     <template v-else-if="type === 'agent'">
-      <template v-if="shape === 'rounded'">
+      <template v-if="shape === 'rounded' && !showIcon">
         <!-- 智能体列表：圆角矩形 + 文字 -->
         <text class="avatar-text">{{ avatarText }}</text>
       </template>
       <template v-else>
-        <!-- 聊天中：紫色圆形 + 图标 -->
-        <up-icon name="grid-fill" size="18" color="#fff"></up-icon>
+        <!-- 聊天中：品牌色方块 + 图标 -->
+        <up-icon name="grid-fill" :size="iconSize" color="#fff"></up-icon>
       </template>
     </template>
 
     <template v-else-if="type === 'model'">
-      <template v-if="shape === 'rounded'">
+      <template v-if="shape === 'rounded' && !showIcon">
         <!-- 模型列表：圆角矩形 + 文字 -->
         <text class="avatar-text">{{ avatarText }}</text>
       </template>
       <template v-else>
-        <!-- 聊天中：青色圆形 + 图标 -->
+        <!-- 聊天中：青色方块 + 图标 -->
         <up-icon name="grid-fill" :size="iconSize" color="#fff"></up-icon>
       </template>
     </template>
@@ -78,6 +82,11 @@ const props = defineProps({
     type: String,
     default: 'circle',
     validator: (val) => ['circle', 'rounded'].includes(val)
+  },
+  // 智能体/模型在聊天里用图标而不是文字，列表里仍用文字
+  showIcon: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -97,6 +106,16 @@ watch(() => props.userId, () => {
 })
 
 const iconSize = computed(() => Math.round(props.size * 0.62))
+
+// uview 的 shape 只识别 circle，圆角矩形传 square 并由 radius 控制圆角
+const imageShape = computed(() => props.shape === 'circle' ? 'circle' : 'square')
+
+// 文字头像：统一取姓名首字，与设计稿的「李 / 王 / 陈」单字一致
+const initial = computed(() => {
+  const name = (props.name || '').trim()
+  return name ? name.slice(0, 1) : ''
+})
+const initialSize = computed(() => Math.max(12, Math.round(props.size * 0.42)))
 
 /**
  * 头像图片加载完成
@@ -126,13 +145,11 @@ const avatarStyle = computed(() => ({
   border-radius: 50%;
   overflow: hidden;
 
-  // 圆角矩形形状
   &.avatar-shape-rounded {
     border-radius: 10px;
   }
 }
 
-// 文字回退
 .avatar-text {
   display: flex;
   align-items: center;
@@ -144,7 +161,6 @@ const avatarStyle = computed(() => ({
   color: #fff;
 }
 
-// 头像图片容器：占位图标覆盖在图片上层
 .avatar-img-wrap {
   position: relative;
   width: 100%;
@@ -162,12 +178,20 @@ const avatarStyle = computed(() => ({
   justify-content: center;
 }
 
-// 用户头像背景（中性灰渐变，作为默认图标底色）
-.avatar-user {
-  background: linear-gradient(135deg, #8d99ae 0%, #adb5c0 100%);
+.avatar-initial {
+  font-weight: 600;
+  color: var(--app-fill-tx);
+  line-height: 1;
 }
 
-// 智能体图标背景（紫色）
+.avatar-user {
+  background-image: linear-gradient(135deg, #8d99ae 0%, #adb5c0 100%);
+}
+
+.avatar-user.avatar-shape-rounded {
+  background-image: var(--app-avatar-bg);
+}
+
 .avatar-agent {
   background: linear-gradient(135deg, #722ed1 0%, #9254de 100%);
   &.avatar-shape-rounded {
@@ -175,12 +199,10 @@ const avatarStyle = computed(() => ({
   }
 }
 
-// 模型图标背景（青色）
 .avatar-model {
   background: linear-gradient(135deg, #13c2c2 0%, #36cfc9 100%);
 }
 
-// 自己消息背景（绿色）
 .avatar-self {
   background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
 }

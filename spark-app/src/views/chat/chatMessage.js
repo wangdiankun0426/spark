@@ -9,12 +9,12 @@ const LOAD_TOP_OFFSET = 40
 const BOTTOM_SCROLL_TOP = 999999
 
 /**
- * 聊天消息加载（移动端）
- * 首屏取未读消息（服务端同时标记已读），条数不足一页时补一页种子；
+ * 移动端聊天消息加载
+ * 首屏取未读消息，服务端同时标记已读，条数不足一页时补一页种子；
  * 滚动到顶部时按页加载更早的历史，加载后用 scroll-into-view 定位到加载前的最早一条，避免视口跳动
- * 服务端按 id 倒序返回，统一转成正序（旧 -> 新）使用，历史页插到列表头部
+ * 服务端按 id 倒序返回，统一转成旧到新的正序使用，历史页插到列表头部
  * @param spaceId 会话空间 id，ref 或 computed
- * @param filter 历史查询的额外检索条件，ref 对象（如 { createdStartTime, createdEndTime }）
+ * @param filter 历史查询的额外检索条件，ref 对象，如 { createdStartTime, createdEndTime }
  * @returns 列表状态、滚动绑定值与操作方法
  */
 export function useChatHistory(spaceId, filter) {
@@ -145,7 +145,7 @@ function toAsc(rows) {
 }
 
 /**
- * 把更早的历史页并到列表头部，按 id 去重（历史页可能与本轮已加载的消息重叠）
+ * 把更早的历史页并到列表头部，按 id 去重，历史页可能与本轮已加载的消息重叠
  * @param rows 历史页消息
  * @param current 已加载列表
  * @returns 合并后的列表

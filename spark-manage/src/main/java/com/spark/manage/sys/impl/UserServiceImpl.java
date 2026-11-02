@@ -3,11 +3,13 @@ package com.spark.manage.sys.impl;
 import com.spark.common.bean.base.BaseAssert;
 import com.spark.common.bean.sys.query.DepartmentQuery;
 import com.spark.common.bean.sys.query.RoleUserQuery;
+import com.spark.common.bean.sys.query.TenantQuery;
 import com.spark.common.bean.sys.query.TenantUserQuery;
 import com.spark.common.bean.sys.query.UserQuery;
 import com.spark.common.bean.sys.result.DepartmentResult;
 import com.spark.common.bean.sys.result.PasswordRuleResult;
 import com.spark.common.bean.sys.result.RoleUserResult;
+import com.spark.common.bean.sys.result.TenantResult;
 import com.spark.common.bean.sys.result.TenantUserResult;
 import com.spark.common.bean.sys.result.UserResult;
 import com.spark.common.bean.sys.vo.TenantUserVO;
@@ -49,6 +51,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -85,11 +88,19 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
     @Autowired
     private TenantUserDao tenantUserDao;
     @Autowired
+    private TenantDao tenantDao;
+    @Autowired
     private ITenantConfigService tenantConfigService;
     @Autowired
     private IEncryptKeyService encryptKeyService;
     @Value("${user.avatar.path}")
     private String userAvatarPath;
+
+    /**
+     * 移动端AI应用入口开关
+     */
+    @Value("${app.ai-enabled:false}")
+    private Boolean appAiEnabled;
 
     /**
      * 创建用户
@@ -283,6 +294,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         this.supplyUserDeptInfo(userResult);
         this.supplyUserRoleInfo(userResult);
         this.supplyUserMenu(userResult);
+        userResult.setAppAiEnabled(appAiEnabled);
         result.setData(userResult);
         result.setObjId(query.getId());
         result.setCode(ResultData.OK);
@@ -438,11 +450,44 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         tenantUserQuery.setUserId(userResult.getId());
         TenantUserResult tenantUserResult = tenantUserDao.queryTenantUser(tenantUserQuery);
         if (tenantUserResult == null) {
+            // 会话租户与用户归属不一致时，退化为按用户查一条
+            TenantUserQuery fallbackQuery = new TenantUserQuery();
+            fallbackQuery.setUserId(userResult.getId());
+            tenantUserResult = tenantUserDao.queryTenantUser(fallbackQuery);
+        }
+        if (tenantUserResult == null) {
             return;
         }
         userResult.setTenantId(tenantUserResult.getTenantId());
         userResult.setRoleType(tenantUserResult.getRoleType());
         userResult.setDeptId(tenantUserResult.getDeptId());
+        // 移动端「我的」页要展示当前租户名称，随会话一起返回
+        userResult.setTenantName(this.queryTenantName(tenantUserResult.getTenantId()));
+    }
+
+    /**
+     * 查询租户名称：单条查询查不到时退化为列表查询，避免租户状态过滤导致名称丢失
+     * @param tenantId 租户id
+     * @return 租户名称，查不到返回null
+     */
+    private String queryTenantName(Long tenantId) {
+        if (tenantId == null) {
+            return null;
+        }
+        TenantQuery tenantQuery = new TenantQuery();
+        tenantQuery.setId(tenantId);
+        TenantResult tenantResult = tenantDao.queryTenant(tenantQuery);
+        if (tenantResult != null && tenantResult.getName() != null) {
+            return tenantResult.getName();
+        }
+        TenantQuery listQuery = new TenantQuery();
+        listQuery.setIds(Collections.singletonList(tenantId));
+        listQuery.setPage(false);
+        List<TenantResult> tenantList = tenantDao.queryTenantList(listQuery);
+        if (tenantList == null || tenantList.isEmpty()) {
+            return null;
+        }
+        return tenantList.get(0).getName();
     }
 
     /**

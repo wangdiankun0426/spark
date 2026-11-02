@@ -1,5 +1,5 @@
 <template>
-  <view class="status-page" :class="themeClass">
+  <view class="status-page safe-area-page" :class="themeClass">
     <view class="status-body">
       <view class="status-num">404</view>
       <text class="status-title">页面不存在</text>

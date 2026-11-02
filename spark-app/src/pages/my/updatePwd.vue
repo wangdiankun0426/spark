@@ -1,14 +1,15 @@
 <template>
-  <div class="safe-area-page" :class="themeClass">
+  <view class="safe-area-page" :class="themeClass">
     <!-- 顶部标题栏 -->
-    <view class="update-password-header" :style="navHeaderStyle()">
-      <view class="header-left" @click="onClickLeft">
-        <up-icon name="arrow-left" size="20" color="#2f7bff"></up-icon>
-        <text class="header-title">修改密码</text>
+    <view class="page-header" :style="navHeaderStyle()">
+      <view class="page-header-back" @click="onClickLeft">
+        <up-icon name="arrow-left" size="19" :color="backIconColor"></up-icon>
       </view>
+      <text class="page-header-title">修改密码</text>
+      <view class="page-header-extra"></view>
     </view>
 
-    <div class="update-password-form">
+    <view class="update-password-form">
     <up-form>
       <up-form-item
           label-width="100px"
@@ -28,30 +29,34 @@
       >
         <up-input v-model="passwordForm.verifyPassword" placeholder="请填写确认密码" border="bottom"/>
       </up-form-item>
-      <div>
+      <view>
         <up-button
             type="primary"
-            color="linear-gradient(90deg, #004fc5 0%, #0072e0 100%)"
-            :custom-style="{ height: '80rpx', borderRadius: '12rpx', boxShadow: '0 12rpx 28rpx rgba(0, 79, 197, 0.28)', marginTop: 'calc(100vh - 360px)' }"
+            :color="btnColor"
+            :custom-style="{ height: '80rpx', borderRadius: '12rpx', boxShadow: 'var(--app-shadow-brand)', marginTop: 'calc(100vh - 360px)' }"
             @click="submitPasswordForm"
         >
           <text class="update-password-text">保 存</text>
         </up-button>
-      </div>
+      </view>
     </up-form>
-  </div>
-</div>
+  </view>
+</view>
 </template>
 <script setup>
 import {updatePasswordAPI, getPasswordRuleAPI} from "@/api/sys/user";
 import {getEncryptKeyAPI} from "@/api/auth/login.js";
 import {des} from "@/utils/encryptUtil";
-import {ref} from 'vue';
+import {ref, computed} from 'vue';
 import {toast} from "uview-plus";
 import {navHeaderStyle} from "@/utils/navBarUtil";
 import {useTheme} from "@/utils/useTheme";
+import {getHeaderIconColor, getGradientFill} from "@/utils/themeUtil";
 
-const {themeClass} = useTheme();
+const {isDark, themeClass} = useTheme();
+
+const backIconColor = computed(() => getHeaderIconColor(isDark.value));
+const btnColor = computed(() => getGradientFill(isDark.value));
 
 // 租户密码长度规则，接口未返回时使用默认值
 const passwordRule = ref({
@@ -155,32 +160,6 @@ async function submitPasswordForm() {
 }
 </script>
 <style scoped lang="scss">
-.update-password-header {
-  flex-shrink: 0;
-  padding: 16px 16px;
-  background-color: $spark-color-header-bg;
-  border-bottom: 1rpx solid $spark-color-header-border;
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .header-title {
-    font-size: 17px;
-    font-style: italic;
-    font-weight: 700;
-    letter-spacing: 1px;
-    /* #ifdef MP-WEIXIN */
-    color: var(--app-brand);
-    /* #endif */
-    /* #ifdef H5 */
-    background-image: var(--app-title-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    /* #endif */
-  }
-}
 .update-password-form{
   padding-top: 20px;
   width: 90%;
@@ -190,6 +169,6 @@ async function submitPasswordForm() {
   font-size: 32rpx;
   font-weight: 700;
   letter-spacing: 4rpx;
-  color: #ffffff;
+  color: var(--app-fill-tx);
 }
 </style>

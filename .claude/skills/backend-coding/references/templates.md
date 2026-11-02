@@ -120,17 +120,42 @@ protected Long queryMaxId() { return entityDao.queryEntityMaxId(); }
 
 ```java
 public interface EntityDao extends BaseDao<Entity> {
+    /**
+     * 查询实体数量
+     * @param query 查询参数
+     * @return 数量
+     */
     int queryEntityCount(EntityQuery query);
+
+    /**
+     * 查询实体列表
+     * @param query 查询参数
+     * @return 实体列表
+     */
     List<EntityResult> queryEntityList(EntityQuery query);
+
+    /**
+     * 查询单个实体
+     * @param query 查询参数
+     * @return 实体
+     */
     EntityResult queryEntity(EntityQuery query);
+
+    /**
+     * 查询当前最大id
+     * @return 最大id
+     */
     Long queryEntityMaxId();
 }
 ```
+
+- DAO 方法必须有中文 Javadoc；SQL 语义、幂等约束、子查询意图等实现说明只写在这里，Mapper XML 不写任何注释（见第 6 节）
 
 业务层一律调用 `insertDB` / `updateDBById` / `deleteDBById`（BaseDao 默认方法），**禁止直接调用 Mapper 的 `insert` / `updateById` / `deleteById`**。Mapper XML 中的 `insert` / `updateById` / `deleteById` 为默认方法底层语句，`deleteById` 是逻辑删除（`delete_flag = -1`）。
 
 ## 6. Mapper XML 要点
 
+- **XML 内禁止任何 `<!-- -->` 注释**（DOCTYPE 声明除外）：SQL 语义、幂等约束、子查询意图、语句缺省等说明写在 DAO 接口方法或类的 Javadoc；insert 自增/手动 id 属通用约定，靠语句本身表达，不写注释
 - `insert`：`delete_flag` 硬编码 `1`；`created_dt` / `updated_dt` 可用 `now()` 或 `#{createdDt}`/`#{updatedDt}`（后者由 `BaseDao.insertDB` 填充）；实体对象级别的表手动插入 `id` 列（`genObjectId` 构造，须用户确认），普通记录表用 `useGeneratedKeys="true" keyProperty="id"` 自增
 - `updateById`：先写 `set updated_dt = #{updatedDt}, updated_by = #{updatedBy}`，再用 `<if>` 动态追加可更新字段，`where id = #{id}`
 - 逻辑删除：`update table set delete_flag = -1, updated_by = #{updatedBy}, updated_dt = #{updatedDt} where id = #{id}`
@@ -151,7 +176,6 @@ public interface EntityDao extends BaseDao<Entity> {
         xxx_field , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
-    <!-- 查询条件：deleteFlag 仅在 id/ids 为空时生效；配合 @DataScope 时末尾追加 ${dataScopeSQL} -->
     <sql id="searchCondition">
         <if test="id != null">
             and id = #{id}
@@ -168,7 +192,6 @@ public interface EntityDao extends BaseDao<Entity> {
         </if>
     </sql>
 
-    <!-- 普通记录表：数据库自增，用 useGeneratedKeys，不插入 id 列 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into xxx_table (xxx_field , delete_flag , created_by , created_dt , updated_by , updated_dt)
         values ( #{xxxField} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})

@@ -27,7 +27,6 @@
         </if>
     </sql>
 
-    <!-- 实体对象级别表：手动插入 id，不做数据库自增 -->
     <insert id="insert">
         insert into sys_tenant ( id , name , status , deadline , account_count , delete_flag , created_by , created_dt , updated_by , updated_dt )
         values (#{id}, #{name}, #{status}, #{deadline}, #{accountCount}, 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})

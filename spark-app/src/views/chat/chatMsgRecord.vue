@@ -1,25 +1,28 @@
 <template>
   <view class="record-container safe-area-page" :class="themeClass">
     <!-- 标题栏 -->
-    <view class="record-header" :style="navHeaderStyle()">
-      <view class="header-back" @click="goBack">
-        <up-icon name="arrow-left" size="20" color="#2f7bff"></up-icon>
+    <view class="page-header" :style="navHeaderStyle()">
+      <view class="page-header-back" @click="goBack">
+        <up-icon name="arrow-left" size="19" :color="backIconColor"></up-icon>
       </view>
-      <view class="header-title">
-        <text>{{ title }}</text>
-      </view>
+      <text class="page-header-title">{{ title }}</text>
+      <view class="page-header-extra"></view>
     </view>
 
-    <!-- 检索区 -->
+    <!-- 时间范围：快捷胶囊 + 自定义日历入口 -->
     <view class="record-search">
-      <view class="record-search-field" @click="calendarShow = true">
-        <up-icon name="calendar" size="16" color="#999"></up-icon>
-        <text :class="dateRangeText ? 'record-search-value' : 'record-search-placeholder'">
-          {{ dateRangeText || '选择时间范围' }}
-        </text>
+      <view
+          v-for="range in quickRanges"
+          :key="range.key"
+          class="range-chip"
+          :class="{ 'is-on': activeRange === range.key }"
+          @click="selectQuickRange(range)"
+      >
+        <text class="range-chip__text">{{ range.label }}</text>
       </view>
-      <view v-if="dateRangeText" class="record-search-clear" @click="clearDateRange">
-        <up-icon name="close" size="14" color="#999"></up-icon>
+      <view class="range-chip range-chip--custom" :class="{ 'is-on': activeRange === 'custom' }" @click="calendarShow = true">
+        <up-icon name="calendar" size="13" :color="activeRange === 'custom' ? customIconOn : customIconOff"/>
+        <text class="range-chip__text">{{ activeRange === 'custom' ? dateRangeText : '自定义' }}</text>
       </view>
     </view>
 
@@ -35,49 +38,55 @@
       <view v-if="!chatHisMsgs.length && !historyLoading" class="record-tip">暂无聊天记录</view>
 
       <view
-          v-for="(chatMsg, idx) in chatHisMsgs"
-          :key="idx"
-          :id="chatMsg.id === undefined ? '' : 'msg-' + chatMsg.id"
+          v-for="(item, idx) in displayItems"
+          :key="item.key"
           class="record-item"
-          :class="{ 'record-item-self': chatMsg.senderId === userInfo.id }"
+          :class="{ 'record-item-self': item.self }"
       >
-        <!-- 消息头部 -->
-        <view class="record-item-header">
-          <template v-if="chatMsg.senderId === userInfo.id">
-            <view class="record-time">{{ chatMsg.createdDt }}</view>
-            <user-avatar
-                type="user"
-                :userId="chatMsg.senderId"
-                :size="32"
-            />
-          </template>
-          <template v-else>
-            <user-avatar
-                v-if="targetType === 'user'"
-                type="user"
-                :userId="chatMsg.senderId"
-                :name="targetName"
-                :size="32"
-            />
-            <user-avatar
-                v-else
-                :type="targetType"
-                :size="32"
-            />
-            <view class="record-time">{{ chatMsg.createdDt }}</view>
-          </template>
+        <!-- 日期分隔：同一天只出现一次，消息上只留 HH:mm -->
+        <view v-if="item.divider" class="record-day">
+          <text class="record-day__text">{{ item.label }}</text>
         </view>
-        <!-- 消息内容：统一走Markdown，贴纸消息渲染为大表情 -->
-        <view
-            class="record-bubble"
-            :class="parseSticker(chatMsg.message) ? 'record-bubble-sticker' : 'markdown-body'"
-        >
-          <text v-if="parseSticker(chatMsg.message)" class="record-sticker">{{ parseSticker(chatMsg.message) }}</text>
-          <up-parse
-              v-else
-              :content="renderMarkdown(chatMsg.message)"
-              :tag-style="mdTagStyle"
-          ></up-parse>
+
+        <!-- 消息行：头像在外侧，时间与气泡同一列 -->
+        <view v-else class="record-row" :id="item.msg && item.msg.id !== undefined ? 'msg-' + item.msg.id : ''">
+          <view class="record-avatar">
+            <user-avatar
+                v-if="item.msg.senderId === userInfo.id"
+                type="user"
+                shape="rounded"
+                :userId="item.msg.senderId"
+                :name="userInfo.name"
+                :size="32"
+            />
+            <template v-else>
+              <user-avatar
+                  v-if="targetType === 'user'"
+                  type="user"
+                  shape="rounded"
+                  :userId="item.msg.senderId"
+                  :name="targetName"
+                  :size="32"
+              />
+              <user-avatar v-else :type="targetType" shape="rounded" show-icon :size="32"/>
+            </template>
+          </view>
+
+          <view class="record-main">
+            <view class="record-time">{{ item.time }}</view>
+            <!-- 消息内容：统一走Markdown，贴纸消息渲染为大表情 -->
+            <view
+                class="record-bubble"
+                :class="parseSticker(item.msg.message) ? 'record-bubble-sticker' : 'markdown-body'"
+            >
+              <text v-if="parseSticker(item.msg.message)" class="record-sticker">{{ parseSticker(item.msg.message) }}</text>
+              <up-parse
+                  v-else
+                  :content="renderMarkdown(item.msg.message)"
+                  :tag-style="mdTagStyle"
+              ></up-parse>
+            </view>
+          </view>
         </view>
       </view>
     </scroll-view>
@@ -106,6 +115,7 @@ import { renderMarkdown, getMdTagStyle } from "@/utils/markdownUtil.js"
 import { useChatHistory } from "@/views/chat/chatMessage.js"
 import { parseSticker } from "@/views/chat/emojiData.js"
 import { useTheme } from "@/utils/useTheme"
+import { getHeaderIconColor, getOnFillColor, getSearchIconColor } from "@/utils/themeUtil"
 import UserAvatar from "@/components/UserAvatar/index.vue"
 
 const store = useStore()
@@ -115,6 +125,10 @@ const { isDark, themeClass } = useTheme()
 // 富文本内联样式随皮肤切换
 const mdTagStyle = computed(() => getMdTagStyle(isDark.value))
 
+const backIconColor = computed(() => getHeaderIconColor(isDark.value))
+const customIconOff = computed(() => getSearchIconColor(isDark.value))
+const customIconOn = computed(() => getOnFillColor(isDark.value))
+
 const title = ref('聊天记录')
 const targetName = ref('')
 const targetType = ref('agent')
@@ -123,6 +137,16 @@ const spaceId = ref(null)
 // 检索时间范围 [开始日期, 结束日期]
 const dateRange = ref(null)
 const calendarShow = ref(false)
+// 当前选中的快捷范围：all / 7 / today / 30 / custom
+const activeRange = ref('all')
+
+// 快捷时间范围，和后端按天过滤一一对应；「全部」不带时间条件，默认选中
+const quickRanges = [
+  { key: 'all', label: '全部' },
+  { key: '7', label: '近7天', days: 7 },
+  { key: 'today', label: '今天', days: 1 },
+  { key: '30', label: '近30天', days: 30 }
+]
 
 // 日历可选范围
 const calendarMinDate = formatDay(new Date(new Date().setFullYear(new Date().getFullYear() - 2)))
@@ -162,6 +186,43 @@ const {
   loadMore
 } = useChatHistory(spaceId, historyFilter)
 
+// 渲染列表：按天插入日期分隔，消息自身只显示时分
+const displayItems = computed(() => {
+  const items = []
+  let lastDay = ''
+  const rows = chatHisMsgs.value || []
+  rows.forEach((msg) => {
+    const {day, time} = splitDateTime(msg.createdDt)
+    if (day && day !== lastDay) {
+      items.push({divider: true, key: 'day-' + items.length, label: day})
+      lastDay = day
+    }
+    items.push({
+      divider: false,
+      key: 'msg-' + (msg.id === undefined ? items.length : msg.id),
+      msg,
+      time,
+      self: msg.senderId === userInfo.value.id
+    })
+  })
+  return items
+})
+
+/**
+ * 拆出日期与时间：后端格式为 yyyy-MM-dd HH:mm:ss，缺失时降级为原文
+ * @param value 创建时间
+ * @returns {{day: string, time: string}}
+ */
+function splitDateTime(value) {
+  const text = value === undefined || value === null ? '' : String(value).trim()
+  const matched = text.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})/)
+  if (matched) {
+    return {day: matched[1], time: matched[2]}
+  }
+  const timeMatched = text.match(/(\d{2}:\d{2})/)
+  return {day: text, time: timeMatched ? timeMatched[1] : ''}
+}
+
 onLoad((options) => {
   spaceId.value = options && options.spaceId ? Number(options.spaceId) : null
   targetType.value = (options && options.targetType) || 'agent'
@@ -190,6 +251,29 @@ function formatDay(date) {
 }
 
 /**
+ * 选中快捷时间范围
+ * @param range 快捷范围配置
+ */
+function selectQuickRange(range) {
+  if (!range || activeRange.value === range.key) {
+    return
+  }
+  if (range.key === 'all') {
+    activeRange.value = 'all'
+    dateRange.value = null
+    loadChatRecords()
+    return
+  }
+  const end = new Date()
+  const start = new Date()
+  // 近 7 天含今天，回溯 days-1 天
+  start.setDate(end.getDate() - (range.days - 1))
+  activeRange.value = range.key
+  dateRange.value = [formatDay(start), formatDay(end)]
+  loadChatRecords()
+}
+
+/**
  * 确认时间范围后重新加载
  */
 function handleDateConfirm(dates) {
@@ -199,14 +283,7 @@ function handleDateConfirm(dates) {
     return
   }
   dateRange.value = [list[0], list[list.length - 1]]
-  loadChatRecords()
-}
-
-/**
- * 清空时间范围后重新加载
- */
-function clearDateRange() {
-  dateRange.value = null
+  activeRange.value = 'custom'
   loadChatRecords()
 }
 
@@ -231,145 +308,138 @@ function loadChatRecords() {
   background-color: var(--app-chat-bg);
 }
 
-.record-header {
-  display: flex;
-  align-items: center;
-  height: 48px;
-  background-color: $spark-color-header-bg;
-  border-bottom: 1rpx solid $spark-color-header-border;
-  padding: 0 16px;
-  flex-shrink: 0;
-}
-
-.header-back {
-  display: flex;
-  align-items: center;
-}
-
-.header-title {
-  flex: 1;
-  text-align: center;
-  font-size: 17px;
-  font-style: italic;
-  font-weight: 700;
-  letter-spacing: 1px;
-  /* #ifdef MP-WEIXIN */
-  color: var(--app-brand);
-  /* #endif */
-  /* #ifdef H5 */
-  background-image: var(--app-title-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  /* #endif */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  padding: 0 8px;
-}
-
-/* 检索区 */
 .record-search {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
-  padding: 10px 12px 0;
+  padding: 10px 14px 8px;
+  overflow-x: auto;
 }
 
-.record-search-field {
-  flex: 1;
+.range-chip {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
-  height: 36px;
-  padding: 0 12px;
+  gap: 5px;
+  height: 30px;
+  padding: 0 13px;
+  border-radius: 999px;
   background-color: var(--app-bg-card);
-  border-radius: 8px;
-  font-size: 14px;
+  border: 1px solid var(--app-border-light);
+  box-shadow: var(--app-shadow-card);
 }
 
-.record-search-value {
-  color: var(--app-text-primary);
-}
-
-.record-search-placeholder {
+.range-chip__text {
+  font-size: 12.5px;
   color: var(--app-text-secondary);
+  font-weight: 500;
 }
 
-.record-search-clear {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
+.range-chip.is-on {
+  background-image: var(--app-gradient-fill);
+  border-color: transparent;
+  box-shadow: var(--app-shadow-brand);
+}
+
+.range-chip.is-on .range-chip__text {
+  color: var(--app-fill-tx);
+  font-weight: 600;
+}
+
+.range-chip--custom .range-chip__text {
+  max-width: 118px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .record-body {
   flex: 1;
   min-height: 0;
-  padding: 8px 12px;
+  padding: 6px 14px 20px;
   box-sizing: border-box;
 }
 
-/* u-popup 根节点常驻，去掉 flex 占位，避免把记录列表挤成半屏、下方留白 */
-.record-container :deep(.u-popup) {
-  flex: none;
-}
-
 .record-tip {
-  padding: 12px 0;
+  padding: 14px 0;
   text-align: center;
-  font-size: 12px;
-  color: var(--app-text-secondary);
+  font-size: 11.5px;
+  color: var(--app-text-tertiary);
 }
 
-/* 消息项：对方靠左、自己靠右，与聊天页保持一致 */
 .record-item {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   margin-bottom: 16px;
 }
 
-.record-item-self {
-  align-items: flex-end;
-}
-
-.record-item-header {
+.record-day {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
+  justify-content: center;
+  padding: 6px 0 10px;
 }
 
-.record-item-self .record-item-header {
+.record-day__text {
+  font-size: 11.5px;
+  color: var(--app-text-tertiary);
+  letter-spacing: 0.4px;
+}
+
+.record-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+
+.record-item-self .record-row {
   flex-direction: row-reverse;
 }
 
+.record-avatar {
+  flex-shrink: 0;
+}
+
+.record-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.record-item-self .record-main {
+  align-items: flex-end;
+}
+
 .record-time {
-  font-size: 12px;
-  color: var(--app-text-secondary);
+  font-size: 10.5px;
+  line-height: 14px;
+  color: var(--app-text-tertiary);
+  margin-bottom: 5px;
 }
 
 .record-bubble {
   max-width: 80%;
   padding: 10px 14px;
-  border-radius: 8px;
+  border-radius: 14px;
   background-color: var(--app-bubble-agent-bg);
   color: var(--app-bubble-agent-text);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--app-shadow-card);
 }
 
 .record-item-self .record-bubble {
-  background-color: var(--app-bubble-self-bg);
-  color: var(--app-bubble-self-text);
+  background-image: var(--app-gradient-fill);
+  color: var(--app-fill-tx);
+  box-shadow: var(--app-shadow-brand);
 }
 
 .record-bubble-sticker,
 .record-item-self .record-bubble-sticker {
   padding: 0;
   background-color: transparent;
+  background-image: none;
   box-shadow: none;
 }
 

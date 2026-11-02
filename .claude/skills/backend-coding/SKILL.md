@@ -104,6 +104,7 @@ logger.info("readSkill name={}, skillIds={}", name, skillIds);
 - **分页租户收口（强制）**：走 `super.pageList` 的分页方法内禁止再写 `setTenantId(SessionHolder.getCurrentTenantId())`，租户由 `BaseService.pageList` 对非系统管理员统一强制；非分页查询（直查 DAO、详情、下载、写操作）不享受兜底，仍需自行设置
 - K&R 大括号；关键字后空格；左括号前无空格
 - 注释独立成行（代码上方），禁止行尾注释
+- **Mapper XML 禁止注释（强制）**：XML 中除 DOCTYPE 声明外不允许任何 `<!-- -->` 注释（含 SQL 片段上方的说明、分组分隔）；SQL 语义、幂等约束、子查询/缺省语句等实现说明一律写在对应 DAO 接口方法或类的 Javadoc 上，通用 insert 约定（自增/手动 id）不写注释、按第 6 节 Mapper 要点执行
 - **注释核心明了**：注释只说明做什么，禁止在注释中用括号补充细致说明
 
 ```java
@@ -159,6 +160,7 @@ taskInstanceResult.setDataList(dataList);
 - 直接调用 `insert` / `updateById` / `deleteById`（绕过 BaseDao 审计填充）
 - 手写 ID、手工赋值审计字段（created_by/updated_by/timestamp/dept_id）
 - 注释或用户消息用英文、logger 消息用中文/非首字母小写驼峰/未用 `key={}` 占位
+- Mapper XML 中写 `<!-- -->` 注释，注释必须归位 DAO 接口 Javadoc
 - 修改无关代码、引入无关依赖、通配符导入
 - private 方法插在 public 方法之间（private 必须集中在类尾部，全部 public 方法之后）
 - 业务类直接 import/调用第三方 JSON 库（fastjson2 / jackson / hutool-json）做解析或序列化，绕过 JsonUtil；JsonUtil 缺方法时不补封装而直接调第三方库

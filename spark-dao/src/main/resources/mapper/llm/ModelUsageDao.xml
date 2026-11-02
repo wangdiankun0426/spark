@@ -38,8 +38,6 @@
         </if>
     </sql>
 
-    <!-- 明细表只追加写，单条入口禁用，批量写走 insertBatch；insert 语句故意缺省 -->
-
     <update id="updateById">
         update llm_model_usage set id = id where id = #{id}
     </update>

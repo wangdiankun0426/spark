@@ -1,5 +1,5 @@
 /**
- * 用户模块 - 管理用户登录状态和信息（uni-app 移动端版本）
+ * 用户模块 - 管理用户登录状态和信息，uni-app 移动端版本
  */
 import { loginAPI } from "@/api/auth/login.js";
 import { localStorageKey } from "@/utils/keyUtils.js";
@@ -76,7 +76,7 @@ const mutations = {
 
 /**
  * 动作
- * 可以包含异步操作（如 API 调用）
+ * 可以包含异步操作，如 API 调用
  * 通过 dispatch 触发
  * 接收 context 对象作为第一个参数
  * 通过 context.commit 提交 mutation

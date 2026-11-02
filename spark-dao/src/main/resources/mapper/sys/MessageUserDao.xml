@@ -35,12 +35,18 @@
     </sql>
 
     <insert id="batchInsert">
-        insert into sys_message_user (msg_id, user_id, delete_flag,created_by, created_dt, updated_by, updated_dt)
+        insert into sys_message_user (msg_id, user_id, read_flag, delete_flag,created_by, created_dt, updated_by, updated_dt)
         values
         <foreach collection="userIds" item="userId" separator=",">
-            (#{msgId}, #{userId}, 1, #{createdBy}, now(), #{createdBy}, now())
+            (#{msgId}, #{userId}, 0, 1, #{createdBy}, now(), #{createdBy}, now())
         </foreach>
     </insert>
+
+    <update id="updateReadFlag">
+        update sys_message_user
+        set read_flag = 1 , updated_by = #{userId} , updated_dt = now()
+        where msg_id = #{msgId} and user_id = #{userId} and read_flag = 0 and delete_flag = 1
+    </update>
 
     <update id="deleteByMsgId">
         update sys_message_user set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}

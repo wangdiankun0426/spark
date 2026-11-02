@@ -58,6 +58,16 @@ public class FlowInstanceQuery extends BaseQuery {
     private Integer status;
 
     /**
+     * 流程状态集合：用于「进行中」这类跨多个状态的分组筛选
+     */
+    private List<Integer> statusList;
+
+    /**
+     * 紧急程度：1-一般 2-重要 3-紧急
+     */
+    private Integer level;
+
+    /**
      * 流程实例名称(模糊查询)
      */
     private String name;

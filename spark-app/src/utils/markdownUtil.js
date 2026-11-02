@@ -53,7 +53,7 @@ const marked = new Marked({
 })
 
 /**
- * 将 Markdown 渲染为 HTML（带代码高亮）
+ * 将 Markdown 渲染为带代码高亮的 HTML
  * @param {string} content
  * @returns {string}
  */
@@ -65,7 +65,7 @@ export function renderMarkdown(content) {
 /**
  * up-parse(mp-html) 的标签默认样式，通过 tag-style 内联到节点上
  * 小程序端 rich-text 节点不认外部样式，只能用内联样式；
- * 配色对用户气泡（深底）与智能体气泡（普通底）都要可读，故按皮肤给两套值
+ * 配色对深底用户气泡与普通底智能体气泡都要可读，故按皮肤给两套值
  * @param {boolean} isDark 是否暗色皮肤
  * @returns {Object} 标签内联样式表
  */

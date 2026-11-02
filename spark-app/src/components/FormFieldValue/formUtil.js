@@ -4,8 +4,8 @@
  * @since 2026-09-15 10:00:00
  * 统一各字段类型的取值规则，以及附件信息的 JSON 解析
  * 取值约定与 PC 端表单设计器保持一致：
- *   value    业务值（ID、选项值、原始文本），多选为逗号串
- *   showValue 展示值（名称文本），附件字段为附件信息 JSON 数组字符串
+ *   value    业务值，含 ID、选项值、原始文本，多选为逗号串
+ *   showValue 展示值即名称文本，附件字段为附件信息 JSON 数组字符串
  */
 
 /** 空值占位文本 */
@@ -25,7 +25,7 @@ export function isAttachmentField(type) {
 
 /**
  * 获取表单字段展示文本
- * 优先展示 showValue（已转换的名称文本）；缺失时按选项类字段从选项配置中匹配名称，最后回退原始 value
+ * 优先展示已转换为名称文本的 showValue；缺失时按选项类字段从选项配置中匹配名称，最后回退原始 value
  * @param value 表单值
  * @param showValue 表单展示值
  * @param options 选项配置 [{value, label}]，用于 showValue 缺失时匹配名称
@@ -66,8 +66,8 @@ function findOptionLabel(options, value) {
  * 展示值约定为附件信息 JSON 数组字符串，如
  * [{"id":1,"name":"a.pdf","sizeStr":"1MB","ownerName":"张三","createdDt":"2026-08-20 15:00:00"}]
  * 兼容历史格式：展示值为逗号分隔的文件名称，表单值为逗号分隔的附件ID
- * @param value 表单值（附件ID，多选为逗号串）
- * @param showValue 表单展示值（附件信息 JSON 数组字符串）
+ * @param value 表单值即附件ID，多选为逗号串
+ * @param showValue 表单展示值，附件信息 JSON 数组字符串
  * @returns {Array} 附件列表 [{id, name}]，仅提取文件名称用于展示
  */
 export function parseAttachmentList(value, showValue) {
@@ -95,8 +95,8 @@ export function parseAttachmentList(value, showValue) {
 
 /**
  * 获取附件文件名称列表
- * @param value 表单值（附件ID，多选为逗号串）
- * @param showValue 表单展示值（附件信息 JSON 数组字符串）
+ * @param value 表单值即附件ID，多选为逗号串
+ * @param showValue 表单展示值，附件信息 JSON 数组字符串
  * @returns {Array} 文件名称列表
  */
 export function getAttachmentNames(value, showValue) {
@@ -127,7 +127,7 @@ function parseAttachmentJson(raw) {
 
 /**
  * 遍历附件信息并收集到列表
- * @param list 附件列表（结果集）
+ * @param list 附件结果集列表
  * @param items 附件信息项
  */
 function collectAttachmentItems(list, items) {

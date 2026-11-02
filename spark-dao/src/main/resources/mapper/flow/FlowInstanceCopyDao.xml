@@ -21,6 +21,30 @@
         <if test="deleteFlag != null and id == null and ids == null">
             and delete_flag = #{deleteFlag}
         </if>
+        <if test="(name != null and name != '') or statusList != null or level != null">
+            and instance_id in (
+            select id from flow_instance where 1 = 1
+            <if test="name != null and name != ''">
+                and name like concat('%', #{name}, '%')
+            </if>
+            <if test="statusList != null and statusList.size() > 0">
+                and status in (
+                <foreach collection="statusList" item="item" separator=",">
+                    #{item}
+                </foreach>
+                )
+            </if>
+            <if test="level != null">
+                and level = #{level}
+            </if>
+            )
+        </if>
+        <if test="createdStartTime != null">
+            and created_dt &gt;= #{createdStartTime}
+        </if>
+        <if test="createdEndTime != null">
+            and created_dt &lt;= #{createdEndTime}
+        </if>
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">

@@ -82,7 +82,6 @@
         limit 1
     </select>
 
-    <!-- 查询同组中执行顺序靠前且未结束的任务数量 -->
     <select id="countUnfinishedPrecedingTask" resultType="java.lang.Integer">
         select count(1)
         from task_instance

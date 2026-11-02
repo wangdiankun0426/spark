@@ -9,7 +9,7 @@
     <view class="tenant-switch-popup">
       <view class="tenant-popup-header">
         <text class="tenant-popup-title">切换租户</text>
-        <up-icon name="close" size="18" color="#909399" @click="handleClose"/>
+        <up-icon name="close" size="18" :color="closeColor" @click="handleClose"/>
       </view>
 
       <!-- 加载中 -->
@@ -39,8 +39,8 @@
             <up-tag type="primary" size="mini" plain>当前租户</up-tag>
           </view>
           <view v-else class="tenant-state">
-            <up-loading-icon v-if="switchingTenantId === item.id" size="16" color="#0052cc"/>
-            <up-icon v-else name="arrow-right" size="16" color="#0052cc"/>
+            <up-loading-icon v-if="switchingTenantId === item.id" size="16" :color="activeColor"/>
+            <up-icon v-else name="arrow-right" size="16" :color="activeColor"/>
           </view>
         </view>
       </scroll-view>
@@ -48,11 +48,17 @@
   </up-popup>
 </template>
 <script setup>
-import {ref, watch} from "vue";
+import {ref, computed, watch} from "vue";
 import {useStore} from "vuex";
 import {getSessionAPI} from "@/api/auth/login";
 import {queryMyTenantListAPI, switchTenantAPI} from "@/api/sys/tenant";
 import {toast} from "uview-plus"
+import {useTheme} from "@/utils/useTheme";
+import {getTertiaryColor, getInfoColor} from "@/utils/themeUtil";
+
+const {isDark} = useTheme();
+const closeColor = computed(() => getTertiaryColor(isDark.value));
+const activeColor = computed(() => getInfoColor(isDark.value));
 
 const props = defineProps({
   // 弹层显隐

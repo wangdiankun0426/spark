@@ -30,7 +30,6 @@ onPageNotFound(() => {
   min-width: 0;
 }
 
-/* 全局字体优化：消除大屏幕失真 */
 page,
 body,
 html {
@@ -42,7 +41,6 @@ html {
     sans-serif;
 }
 
-/* 隐藏全局滚动条，禁止页面主体滚动（各页面自行管理内部滚动） */
 page,
 body,
 html,
@@ -92,42 +90,56 @@ app-tabbar {
 }
 /* #endif */
 
-/* 全局页面顶部蓝色标题栏 */
 .page-header {
   display: flex;
   align-items: center;
-  height: 44px;
-  padding: 0 16px;
-  background-color: $spark-color-header-bg;
-  border-bottom: 1rpx solid $spark-color-header-border;
-  color: var(--app-brand);
+  height: 48px;
+  padding: 0 14px;
+  background-color: var(--app-bg-card);
+  border-bottom: 1px solid var(--app-border-light);
   flex-shrink: 0;
+}
 
-  .page-header-back {
-    margin-right: 12px;
-    flex-shrink: 0;
-  }
+.page-header-back,
+.page-header-extra {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
 
-  .page-header-title {
-    flex: 1;
-    font-size: 17px;
-    font-style: italic;
-    font-weight: 700;
-    letter-spacing: 1px;
-    /* #ifdef MP-WEIXIN */
-    color: var(--app-brand);
-    /* #endif */
-    /* #ifdef H5 */
-    background-image: var(--app-title-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    /* #endif */
-    text-align: center;
-  }
+.page-header-title {
+  flex: 1;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--app-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-  .page-header-extra {
-    flex-shrink: 0;
-  }
+/* #ifdef H5 */
+.u-popup {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  flex: none !important;
+  z-index: 10090;
+}
+/* #endif */
+
+.sheet-host {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  overflow: visible;
 }
 </style>

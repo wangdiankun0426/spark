@@ -11,7 +11,7 @@
       <view class="picker-header">
         <text class="picker-title">{{ title }}</text>
         <view class="picker-close" @click="handleClose">
-          <up-icon name="close" size="18" color="#999"></up-icon>
+          <up-icon name="close" size="18" :color="closeColor"></up-icon>
         </view>
       </view>
 
@@ -28,7 +28,7 @@
 
       <!-- 开启新对话 -->
       <view class="picker-new" @click="handleNew">
-        <up-icon name="plus" size="16" color="#0052cc"></up-icon>
+        <up-icon name="plus" size="16" :color="plusColor"></up-icon>
         <text class="picker-new-text">开启新对话</text>
       </view>
 
@@ -56,7 +56,7 @@
                 <text v-if="formatTime(item.createdDt)">{{ formatTime(item.createdDt) }}</text>
               </view>
             </view>
-            <up-icon name="arrow-right" size="14" color="#c8c8c8"></up-icon>
+            <up-icon name="arrow-right" size="14" :color="arrowColor"></up-icon>
           </view>
           <view class="picker-more">{{ loading ? '正在加载...' : (hasMore ? '上拉加载更多' : '没有更多会话了') }}</view>
         </template>
@@ -70,12 +70,12 @@ import {ref, computed, watch} from "vue";
 import {pageMyChatSpaceListAPI} from "@/api/chat/space";
 import {useDebounceFn} from "@/utils/debounce";
 import {useTheme} from "@/utils/useTheme";
-import {getSearchBgColor} from "@/utils/themeUtil";
+import {getSearchBgColor, getTertiaryColor, getInfoColor, getChevronColor} from "@/utils/themeUtil";
 
 // 会话类型，对应后端 ChatSpaceTypeEnum 的取值
-const SPACE_TYPE = {agent: 3, model: 2}
+const spaceType = {agent: 3, model: 2}
 // 每页加载的会话数量
-const PAGE_SIZE = 20
+const pageSizeConst = 20
 
 const props = defineProps({
   show: {type: Boolean, default: false},
@@ -91,6 +91,9 @@ const emit = defineEmits(['update:show', 'select', 'new']);
 const {isDark} = useTheme();
 
 const searchBgColor = computed(() => getSearchBgColor(isDark.value));
+const closeColor = computed(() => getTertiaryColor(isDark.value));
+const plusColor = computed(() => getInfoColor(isDark.value));
+const arrowColor = computed(() => getChevronColor(isDark.value));
 
 // 会话名称检索关键字
 const keyword = ref("");
@@ -100,10 +103,10 @@ const loading = ref(false);
 const hasMore = ref(true);
 // 已加载到的页码
 let pageNo = 0;
-// 请求序号，用于丢弃过期响应（检索期间连续输入时）
+// 请求序号，检索连续输入时丢弃过期响应，只取最后一次
 let requestSeq = 0;
 
-// 关键字变化后防抖检索（走后端）
+// 关键字变化后防抖检索，走后端
 const searchSessions = useDebounceFn(() => loadSessions(true), 500);
 
 watch(keyword, () => {
@@ -121,7 +124,7 @@ watch(() => props.show, (value) => {
 
 /**
  * 加载会话记录，检索条件变化时从头加载
- * @param reset 是否重置为第一页，仅显式传 true 才重置（避免事件对象被当成参数）
+ * @param reset 是否重置为第一页，仅显式传 true 才重置，避免事件对象被当成参数
  */
 function loadSessions(reset) {
   if (reset === true) {
@@ -139,10 +142,10 @@ function loadSessions(reset) {
   const nextPage = pageNo + 1;
   const seq = ++requestSeq;
   pageMyChatSpaceListAPI({
-    spaceType: SPACE_TYPE[props.targetType] || SPACE_TYPE.agent,
+    spaceType: spaceType[props.targetType] || spaceType.agent,
     receiverId: props.receiverId,
     pageNo: nextPage,
-    pageSize: PAGE_SIZE,
+    pageSize: pageSizeConst,
     title: keyword.value.trim() || undefined
   }).then(res => {
     if (seq !== requestSeq || res.code !== 200) {
@@ -150,7 +153,7 @@ function loadSessions(reset) {
     }
     const rows = (res.data && res.data.rows) || [];
     pageNo = nextPage;
-    hasMore.value = rows.length >= PAGE_SIZE;
+    hasMore.value = rows.length >= pageSizeConst;
     sessionList.value = sessionList.value.concat(rows);
   }).finally(() => {
     // 过期请求不解除加载态，避免打断有新请求时的加载提示

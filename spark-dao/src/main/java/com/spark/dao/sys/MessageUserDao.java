@@ -42,4 +42,12 @@ public interface MessageUserDao {
      * @return 删除数量
      */
     int deleteByMsgId(@Param("msgId") Long msgId, @Param("updatedBy") Long updatedBy, @Param("updatedDt") Date updatedDt);
+
+    /**
+     * 标记已读：只更新未读行，重复调用不会产生额外写
+     * @param msgId 消息id
+     * @param userId 接收人id
+     * @return 更新数量
+     */
+    int updateReadFlag(@Param("msgId") Long msgId, @Param("userId") Long userId);
 }

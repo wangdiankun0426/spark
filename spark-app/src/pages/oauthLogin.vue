@@ -1,5 +1,5 @@
 <template>
-  <view class="oauth-login" :class="themeClass">
+  <view class="oauth-login safe-area-page" :class="themeClass">
     <view class="oauth-container">
       <view class="oauth-card">
         <text class="oauth-desc">{{ statusText }}</text>
@@ -22,7 +22,7 @@ const state = ref('')
 
 /**
  * 解析OAuth授权的state参数
- * state 格式为「登录类型.租户id」，如 4.103（4：企微oauth2登录，103：租户id）
+ * state 格式为「登录类型.租户id」，如 4.103，其中 4 表示企微oauth2登录
  * @param {string} stateValue state参数值
  * @returns {{loginType: number, tenantId: number|undefined}} 解析结果
  */
@@ -99,6 +99,7 @@ onLoad((options) => {
   padding: 60rpx 80rpx;
   background-color: var(--app-bg-card);
   border-radius: 24rpx;
+  border: 1rpx solid var(--app-border-light);
   box-shadow: var(--app-shadow-card);
 }
 

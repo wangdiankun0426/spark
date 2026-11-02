@@ -7,111 +7,138 @@
             type="user"
             :userId="userInfo.id"
             :name="userInfo.name"
-            :size="100"
+            :size="64"
         />
         <view class="welcome-info">
           <text class="welcome-greeting">{{ greeting }}，{{ userInfo.name }}</text>
           <text class="welcome-slogan">欢迎使用星火云应用平台，聚微光成智，燃无限可能！</text>
-          <text class="welcome-date">{{ todayText }}</text>
+          <view class="welcome-date-row">
+            <text class="welcome-date">{{ todayText }}</text>
+          </view>
         </view>
       </view>
     </view>
 
     <!-- 滚动内容区 -->
     <view class="home-scroll-body">
-      <!-- 顶部统计卡片 -->
-      <view class="kpi-row">
-        <view class="kpi-card" @click="goKpi(0)">
-          <ModelIcon :size="32"/>
-          <view class="kpi-text">
-            <text class="kpi-label">模型</text>
-            <text class="kpi-count">{{ asset.modelCount || 0 }}</text>
+      <!-- 快捷入口 -->
+      <view class="quick-bar">
+        <view
+            class="quick-cell"
+            v-for="entry in quickEntries"
+            :key="entry.key"
+            @click="handleQuickClick(entry.key)"
+        >
+          <view class="quick-icon">
+            <up-icon :name="entry.icon" size="22" :color="quickIconColor"/>
+            <view v-if="entry.key === 'message' && unreadCount > 0" class="quick-badge">
+              {{ unreadCount > 99 ? '99+' : unreadCount }}
+            </view>
           </view>
+          <text class="quick-text">{{ entry.text }}</text>
         </view>
-        <view class="kpi-card" @click="goKpi(1)">
-          <AgentIcon :size="32"/>
-          <view class="kpi-text">
-            <text class="kpi-label">智能体</text>
-            <text class="kpi-count">{{ asset.agentCount || 0 }}</text>
-          </view>
-        </view>
-        <view class="kpi-card" @click="goKpi(2)">
-          <WorkflowIcon :size="32"/>
-          <view class="kpi-text">
-            <text class="kpi-label">工作流</text>
-            <text class="kpi-count">{{ asset.workflowCount || 0 }}</text>
-          </view>
-        </view>
-        <view class="kpi-card" @click="goKpi(3)">
-          <TodoIcon :size="32"/>
-          <view class="kpi-text">
-            <text class="kpi-label">待办</text>
-            <text class="kpi-count">{{ todoTotal }}</text>
-          </view>
+      </view>
+
+      <!-- 星火助手卡：一键打开 AI 应用 -->
+      <view v-if="aiEnabled" class="assistant-card" @click="handleAssistant">
+        <view class="assistant-ring assistant-ring--lg"></view>
+        <view class="assistant-ring assistant-ring--md"></view>
+        <view class="assistant-ring assistant-ring--sm"></view>
+        <text class="assistant-title">星火助手</text>
+        <text class="assistant-desc">问答、总结、写文档，一键打开 AI 应用</text>
+        <view class="assistant-btn">
+          <text class="assistant-btn__text">开始使用</text>
+          <up-icon name="arrow-right" size="10" color="#ffffff"/>
         </view>
       </view>
 
       <!-- 智能推荐 -->
-      <view class="recommend-box">
-        <view class="section-head">
+      <view v-if="aiEnabled" class="section-box">
+        <view class="section-head" @click="handleRecommendMore">
           <view class="section-head-left">
             <text class="section-title">智能推荐</text>
           </view>
+          <view class="section-more" v-if="recommendList.length > 0">
+            <text class="section-more__text">更多</text>
+            <up-icon name="arrow-right" size="12" :color="moreIconColor"></up-icon>
+          </view>
         </view>
-        <view class="recommend-list" v-if="recommendList.length > 0">
+        <view class="card-grid" v-if="recommendList.length > 0">
           <view
-              class="recommend-item"
-              v-for="(item, index) in recommendList"
+              class="qcard"
+              v-for="item in recommendTop"
               :key="item.hotType + '-' + item.id"
               @click="handleRecommendClick(item)"
           >
-            <text class="recommend-rank" :class="rankClass(index)">{{ index + 1 }}</text>
-            <text class="recommend-name">{{ item.name }}</text>
-            <text class="recommend-tag">{{ typeText(item.hotType) }}</text>
-            <text class="recommend-count">{{ item.count }}次</text>
+            <view class="qcard-top">
+              <view class="qcard-icon">
+                <ModelIcon v-if="item.hotType === 'model'" :size="18"/>
+                <AgentIcon v-else-if="item.hotType === 'agent'" :size="18"/>
+                <WorkflowIcon v-else :size="18"/>
+              </view>
+              <text class="qcard-count">{{ item.count }}次</text>
+            </view>
+            <text class="qcard-name">{{ item.name }}</text>
+            <view class="qcard-meta">
+              <i class="qcard-dot"></i>
+              <text>{{ typeText(item.hotType) }}</text>
+            </view>
           </view>
         </view>
-        <view class="recommend-empty" v-else>
-          <text class="empty-text">暂无推荐</text>
+        <view class="big-empty" v-else>
+          <view class="big-empty__glow"></view>
+          <view class="big-empty__ring"></view>
+          <view class="big-empty__icon">
+            <up-icon name="star-fill" size="22" :color="quickIconColor"/>
+          </view>
+          <text class="big-empty__title">还没有使用记录</text>
+          <text class="big-empty__sub">你用过的智能体、工作流会按使用频次排在这里</text>
+          <view class="big-empty__btn" @click.stop="handleRecommendMore">
+            <text>去 AI 应用看看</text>
+            <up-icon name="arrow-right" size="10" :color="quickIconColor"/>
+          </view>
         </view>
       </view>
 
-      <view
-          class="section-box"
-          v-for="section in sections"
-          :key="section.key"
-      >
-        <view class="section-head" @click="handleSectionMore(section.key)">
+      <!-- 我的待办 -->
+      <view class="section-box">
+        <view class="section-head" @click="handleTodoMore">
           <view class="section-head-left">
-            <text class="section-title">{{ section.title }}</text>
+            <text class="section-title">我的待办</text>
           </view>
-          <up-icon name="arrow-right" size="18" color="#b3b3b3"></up-icon>
+          <view class="section-more" v-if="todoList.length > 0">
+            <text class="section-more__text">更多</text>
+            <up-icon name="arrow-right" size="12" :color="moreIconColor"></up-icon>
+          </view>
         </view>
-        <view class="section-body">
-          <view class="item-grid" v-if="section.items.length > 0">
-            <view
-                class="item-card"
-                v-for="item in section.items"
-                :key="section.key + '-' + item.id"
-                @click="handleItemClick(section.key, item)"
-            >
-              <view class="item-icon">
-                <TodoIcon v-if="section.key === 'todo'" :size="34"/>
-                <AiChatIcon v-else-if="section.key === 'chat'" :size="34"/>
-                <AgentIcon v-else-if="section.key === 'agent'" :size="34"/>
-                <WorkflowIcon v-else-if="section.key === 'workflow'" :size="34"/>
-              </view>
-              <view class="item-text">
-                <text class="item-name">{{ item.name }}</text>
-                <text class="item-meta">{{ item.meta }}</text>
-                <text class="item-meta" v-if="item.meta2">{{ item.meta2 }}</text>
-              </view>
+        <view class="card-grid" v-if="todoList.length > 0">
+          <view
+              class="qcard"
+              v-for="item in todoList"
+              :key="'todo-' + item.id"
+              @click="handleTodoClick(item)"
+          >
+            <view class="qcard-top">
+              <text class="todo-tag" :class="todoTagCls(item.raw)">{{ todoTagText(item.raw) }}</text>
+              <text class="todo-time" :class="{'todo-time--warn': isUrgent(item.raw)}">{{ item.timeText }}</text>
+            </view>
+            <text class="qcard-name">{{ item.name }}</text>
+            <view class="qcard-meta">
+              <text>{{ item.meta }}</text>
             </view>
           </view>
-
-          <!-- 空状态 -->
-          <view class="section-empty" v-else-if="!section.loading">
-            <text class="empty-text">{{ section.emptyText }}</text>
+        </view>
+        <view class="big-empty" v-else>
+          <view class="big-empty__glow"></view>
+          <view class="big-empty__ring"></view>
+          <view class="big-empty__icon">
+            <up-icon name="calendar-fill" size="22" :color="quickIconColor"/>
+          </view>
+          <text class="big-empty__title">今天没有待处理</text>
+          <text class="big-empty__sub">分配给你的审批任务会出现在这里</text>
+          <view class="big-empty__btn" @click.stop="handleTodoMore">
+            <text>查看全部待办</text>
+            <up-icon name="arrow-right" size="10" :color="quickIconColor"/>
           </view>
         </view>
       </view>
@@ -119,90 +146,70 @@
 
     <!-- 底部导航栏 -->
     <AppTabbar :value="active" @change="handleOnTabChange"/>
-
-    <!-- 会话记录选择 -->
-    <ai-session-picker
-        v-model:show="sessionPickerShow"
-        :title="sessionPickerTitle"
-        :target-type="sessionTargetType"
-        :receiver-id="sessionTarget.id"
-        @select="handleSessionSelect"
-        @new="handleSessionNew"
-    />
   </view>
 </template>
 
 <script setup>
-import { ref, reactive, computed } from "vue"
+import { ref, computed } from "vue"
 import { onShow } from "@dcloudio/uni-app"
 import { useStore } from "vuex"
 import UserAvatar from "@/components/UserAvatar/index.vue"
-import AiSessionPicker from "@/components/AiSessionPicker/index.vue"
-import {useAiSessionPicker} from "@/components/AiSessionPicker/aiSessionUtil"
 import {useTheme} from "@/utils/useTheme"
+import {getHeaderIconColor, getTertiaryColor} from "@/utils/themeUtil"
 import AppTabbar from "@/components/AppTabbar/index.vue";
 import {getSessionAPI} from "@/api/auth/login";
 import {navBarInfo} from "@/utils/navBarUtil";
 import {pageMyTodoListAPI} from "@/api/flow/instance"
-import {agentPageListAPI} from "@/api/llm/agent"
-import {pageModelListAPI} from "@/api/llm/model"
-import {pageInstanceListAPI} from "@/api/workflow/instance"
-import {queryAssetAPI, queryTodoTotalAPI, queryRecommendAPI} from "@/api/home/home"
+import {queryRecommendAPI} from "@/api/home/home"
+import {queryMyMessageCountAPI} from "@/api/sys/message"
 import ModelIcon from "@/components/icons/ModelIcon.vue"
 import AgentIcon from "@/components/icons/AgentIcon.vue"
 import WorkflowIcon from "@/components/icons/WorkflowIcon.vue"
-import TodoIcon from "@/components/icons/TodoIcon.vue"
-import AiChatIcon from "@/components/icons/AiChatIcon.vue"
 
 const store = useStore()
 const active = ref("home")
-const asset = ref({})
-const todoTotal = ref(0)
 const recommendList = ref([])
-const {themeClass} = useTheme()
+const todoList = ref([])
+const unreadCount = ref(0)
+const {isDark, themeClass} = useTheme()
 
-
-// 会话选择弹层：点击智能体/模型后先选会话再进入对话
-const {
-  show: sessionPickerShow,
-  title: sessionPickerTitle,
-  target: sessionTarget,
-  targetType: sessionTargetType,
-  open: openSessionPicker,
-  handleSelect: handleSessionSelect,
-  handleNew: handleSessionNew
-} = useAiSessionPicker()
-
+const quickIconColor = computed(() => getHeaderIconColor(isDark.value))
+const moreIconColor = computed(() => getTertiaryColor(isDark.value))
 
 const userInfo = computed(() => store.getters["user/getUserInfo"] || {
   id: undefined,
   name: undefined,
 })
 
-// 顶部统计卡片跳转地址，依次为 模型、智能体、工作流、待办
-const kpiUrls = ['/pages/llm/index?tab=0', '/pages/llm/index?tab=1', '/pages/llm/index?tab=2', '/pages/flow/index?tab=1']
+// 移动端AI应用开关
+const aiEnabled = computed(() => userInfo.value && userInfo.value.appAiEnabled === true)
 
-// 每个板块最多展示的卡片数
-const SECTION_LIMIT = 6
+const allQuickEntries = [
+  {key: 'todo', icon: 'file-text-fill', text: '待办'},
+  {key: 'chat', icon: 'chat-fill', text: 'AI 对话'},
+  {key: 'agent', icon: 'star-fill', text: '智能体'},
+  {key: 'workflow', icon: 'share-fill', text: '工作流'},
+  {key: 'message', icon: 'bell-fill', text: '消息'}
+]
+const quickEntries = computed(() => {
+  if (aiEnabled.value) {
+    return allQuickEntries
+  }
+  return allQuickEntries.filter(entry => ['todo', 'message'].includes(entry.key))
+})
 
-const sections = reactive([
-  {key: 'todo', title: '我的待办', emptyText: '暂无待办', loading: true, items: []},
-  {key: 'chat', title: 'AI对话', emptyText: '暂无可用模型', loading: true, items: []},
-  {key: 'agent', title: '智能体', emptyText: '暂无智能体', loading: true, items: []},
-  {key: 'workflow', title: '工作流', emptyText: '暂无运行记录', loading: true, items: []}
-])
+const recommendTop = computed(() => recommendList.value.slice(0, 6))
 
 // 小程序端欢迎卡片延伸到状态栏底部，H5 走样式默认内边距
 const welcomeCardStyle = computed(() => {
   // #ifdef MP-WEIXIN
-  return {paddingTop: navBarInfo.statusBarHeight + 22 + 'px'}
+  return {paddingTop: navBarInfo.statusBarHeight + 14 + 'px'}
   // #endif
   // #ifdef H5
   return {}
   // #endif
 })
 
-// 根据时间段显示问候语
 const greeting = computed(() => {
   const hour = new Date().getHours()
   if (hour < 6) return '夜深了'
@@ -212,7 +219,6 @@ const greeting = computed(() => {
   return '晚上好'
 })
 
-// 今天的日期文案
 const todayText = computed(() => {
   const week = ['日', '一', '二', '三', '四', '五', '六']
   const now = new Date()
@@ -221,145 +227,28 @@ const todayText = computed(() => {
 
 onShow(() => {
   loadUserInfo()
-  loadKpi()
-  loadRecommend()
+  if (aiEnabled.value) {
+    loadRecommend()
+  }
   loadTodoList()
-  loadChatModelList()
-  loadAgentList()
-  loadWorkflowList()
+  loadUnread()
 })
 
 function loadUserInfo() {
   getSessionAPI().then(res => {
     if (res.code === 200) {
+      const wasEnabled = aiEnabled.value
       store.dispatch("user/setUserInfo", { userInfo: res.data })
+      // 开关由关变开时补加载推荐数据
+      if (!wasEnabled && res.data.appAiEnabled === true) {
+        loadRecommend()
+      }
     }
   }).catch(err => {
     console.error("loadUserInfo error", err)
   })
 }
 
-/**
- * 写入板块卡片数据
- */
-function setSectionItems(key, items) {
-  const section = sections.find(s => s.key === key)
-  if (!section) {
-    return
-  }
-  section.items = items.slice(0, SECTION_LIMIT)
-  section.loading = false
-}
-
-/**
- * 加载我的待办
- */
-function loadTodoList() {
-  pageMyTodoListAPI({pageSize: SECTION_LIMIT}).then(res => {
-    if (res.code !== 200 || !res.data) {
-      setSectionItems('todo', [])
-      return
-    }
-    const items = (res.data.rows || []).map(row => ({
-      id: row.instanceId || row.id,
-      name: row.instanceName || row.name || '未命名流程',
-      // 副信息第一行：流程类型 · 紧急程度
-      meta: [row.typeName, row.levelName].filter(Boolean).join(' · '),
-      // 副信息第二行：申请人 · 申请时间
-      meta2: [row.createdByName, row.createdDt].filter(Boolean).join(' · '),
-      raw: row
-    }))
-    setSectionItems('todo', items)
-  }).catch(() => {
-    setSectionItems('todo', [])
-  })
-}
-
-/**
- * 加载 AIChat 卡片
- */
-function loadChatModelList() {
-  pageModelListAPI({pageSize: SECTION_LIMIT, type: 1, status : 1}).then(res => {
-    if (res.code !== 200 || !res.data) {
-      setSectionItems('chat', [])
-      return
-    }
-    const items = (res.data.rows || [])
-        .filter(row => row.type === 1 && row.status === 1)
-        .map(row => ({
-          id: row.id,
-          name: row.name,
-          meta: row.providerName ? '厂商：' + row.providerName : '未知厂商',
-          raw: row
-        }))
-    setSectionItems('chat', items)
-  }).catch(() => {
-    setSectionItems('chat', [])
-  })
-}
-
-/**
- * 加载智能体列表
- */
-function loadAgentList() {
-  agentPageListAPI({pageSize: SECTION_LIMIT, status : 1}).then(res => {
-    if (res.code !== 200 || !res.data) {
-      setSectionItems('agent', [])
-      return
-    }
-    const items = (res.data.rows || []).map(row => ({
-      id: row.id,
-      name: row.name,
-      meta: row.description || '暂无备注',
-      raw: row
-    }))
-    setSectionItems('agent', items)
-  }).catch(() => {
-    setSectionItems('agent', [])
-  })
-}
-
-/**
- * 加载工作流运行记录
- */
-function loadWorkflowList() {
-  pageInstanceListAPI({pageSize: SECTION_LIMIT}).then(res => {
-    if (res.code !== 200 || !res.data) {
-      setSectionItems('workflow', [])
-      return
-    }
-    const items = (res.data.rows || []).map(row => ({
-      id: row.id,
-      name: row.templateName || row.name || '未命名工作流',
-      meta: row.statusName || '',
-      meta2: row.createdDt || '',
-      raw: row
-    }))
-    setSectionItems('workflow', items)
-  }).catch(() => {
-    setSectionItems('workflow', [])
-  })
-}
-
-/**
- * 加载顶部统计卡片
- */
-function loadKpi() {
-  queryAssetAPI().then(res => {
-    if (res.code === 200 && res.data) {
-      asset.value = res.data
-    }
-  }).catch(() => {})
-  queryTodoTotalAPI().then(res => {
-    if (res.code === 200) {
-      todoTotal.value = res.data || 0
-    }
-  }).catch(() => {})
-}
-
-/**
- * 加载智能推荐
- */
 function loadRecommend() {
   queryRecommendAPI({rangeDays: 30}).then(res => {
     if (res.code === 200 && res.data) {
@@ -368,12 +257,32 @@ function loadRecommend() {
   }).catch(() => {})
 }
 
-/**
- * 点击统计卡片
- * @param index 卡片序号
- */
-function goKpi(index) {
-  uni.reLaunch({url: kpiUrls[index]})
+function loadTodoList() {
+  pageMyTodoListAPI({pageSize: 6}).then(res => {
+    if (res.code !== 200 || !res.data) {
+      todoList.value = []
+      return
+    }
+    todoList.value = (res.data.rows || []).map(row => ({
+      id: row.instanceId || row.id,
+      name: row.instanceName || row.name || '未命名流程',
+      meta: [row.typeName, row.createdByName].filter(Boolean).join(' · '),
+      timeText: formatTodoTime(row.createdDt),
+      raw: row
+    }))
+  }).catch(() => {
+    todoList.value = []
+  })
+}
+
+function loadUnread() {
+  queryMyMessageCountAPI().then(res => {
+    if (res.code === 200 && res.data) {
+      unreadCount.value = res.data.unread || 0
+    }
+  }).catch(() => {
+    unreadCount.value = 0
+  })
 }
 
 /**
@@ -386,11 +295,36 @@ function typeText(type) {
 }
 
 /**
+ * 点击快捷入口
+ * @param key 入口标识
+ */
+function handleQuickClick(key) {
+  if (key === 'todo') {
+    uni.reLaunch({url: '/pages/flow/index?tab=1'})
+  } else if (key === 'chat') {
+    uni.reLaunch({url: '/pages/llm/index?tab=2'})
+  } else if (key === 'agent') {
+    uni.reLaunch({url: '/pages/llm/index?tab=0'})
+  } else if (key === 'workflow') {
+    uni.reLaunch({url: '/pages/llm/index?tab=1'})
+  } else if (key === 'message') {
+    uni.navigateTo({url: '/views/message/index'})
+  }
+}
+
+/**
+ * 星火助手卡：进入 AI 应用「AI 对话」页签
+ */
+function handleAssistant() {
+  uni.reLaunch({url: '/pages/llm/index?tab=2'})
+}
+
+/**
  * 点击推荐项
  * @param item 推荐数据
  */
 function handleRecommendClick(item) {
-  const tabMap = {model: 0, agent: 1, workflow: 2}
+  const tabMap = {model: 2, agent: 0, workflow: 1}
   const tab = tabMap[item.hotType]
   if (tab === undefined) {
     return
@@ -398,63 +332,66 @@ function handleRecommendClick(item) {
   uni.reLaunch({url: '/pages/llm/index?tab=' + tab})
 }
 
-/**
- * 排名样式
- * @param index 名次索引
- */
-function rankClass(index) {
-  if (index === 0) {
-    return 'is-first'
-  }
-  if (index === 1) {
-    return 'is-second'
-  }
-  if (index === 2) {
-    return 'is-third'
-  }
-  return ''
+function handleRecommendMore() {
+  uni.reLaunch({url: '/pages/llm/index?tab=0'})
+}
+
+function handleTodoClick(item) {
+  // 流程详情，type=3 表示「我的待办」
+  uni.navigateTo({url: '/pages/flow/instanceDetail?id=' + item.id + '&type=3'})
+}
+
+function handleTodoMore() {
+  uni.reLaunch({url: '/pages/flow/index?tab=1'})
 }
 
 /**
- * 查看更多
- * @param key
+ * 紧急程度判断
+ * @param row 待办原始数据
  */
-function handleSectionMore(key) {
-  if (key === 'todo') {
-    // 流程页「我的待办」页签
-    uni.reLaunch({url: '/pages/flow/index?tab=1'})
-  } else if (key === 'chat') {
-    // AI应用页「AIChat」页签
-    uni.reLaunch({url: '/pages/llm/index?tab=0'})
-  } else if (key === 'agent') {
-    // AI应用页「Agent」页签
-    uni.reLaunch({url: '/pages/llm/index?tab=1'})
-  } else {
-    // AI应用页「WorkFlow」页签
-    uni.reLaunch({url: '/pages/llm/index?tab=2'})
-  }
+function isUrgent(row) {
+  return !!(row && row.levelName && row.levelName.indexOf('急') !== -1)
 }
 
 /**
- * 点击卡片：按板块进入对应详情或对话
- * @param key 板块标识
- * @param item 卡片数据
+ * 待办状态胶囊文案
+ * @param row 待办原始数据
  */
-function handleItemClick(key, item) {
-  const row = item.raw || {}
-  if (key === 'todo') {
-    // 流程详情，type=3 表示「我的待办」
-    uni.navigateTo({url: '/pages/flow/instanceDetail?id=' + item.id + '&type=3'})
-  } else if (key === 'chat') {
-    // 与模型对话：先选会话记录
-    openSessionPicker(row, 'model')
-  } else if (key === 'agent') {
-    // 与智能体对话：先选会话记录
-    openSessionPicker(row, 'agent')
-  } else {
-    // 工作流运行详情
-    uni.navigateTo({url: '/pages/llm/wfInstanceDetail?id=' + item.id})
-  }
+function todoTagText(row) {
+  if (!row) return '审批中'
+  return row.levelName || '审批中'
+}
+
+/**
+ * 待办状态胶囊样式类
+ * @param row 待办原始数据
+ */
+function todoTagCls(row) {
+  if (!row || !row.levelName) return 'todo-tag--primary'
+  const lv = row.levelName
+  if (lv.indexOf('急') !== -1) return 'todo-tag--warn'
+  if (lv.indexOf('待') !== -1) return 'todo-tag--gray'
+  return 'todo-tag--primary'
+}
+
+/**
+ * 待办时间文案：今天 / 明天 / 昨天 / MM-DD
+ * @param dt 后端时间字符串
+ */
+function formatTodoTime(dt) {
+  if (!dt) return ''
+  const d = new Date(String(dt).replace(/-/g, '/'))
+  if (isNaN(d.getTime())) return ''
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const target = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  const diffDays = Math.round((target - today) / 86400000)
+  if (diffDays === 0) return '今天'
+  if (diffDays === 1) return '明天'
+  if (diffDays === -1) return '昨天'
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return mm + '-' + dd
 }
 
 function handleOnTabChange(index) {
@@ -470,25 +407,41 @@ function handleOnTabChange(index) {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background-color: $uni-bg-color-dashboard;
-}
-
-.home-container :deep(.u-tabbar) {
-  flex: none;
+  background-color: var(--app-bg-page);
 }
 
 .welcome-card {
+  position: relative;
+  overflow: hidden;
   flex-shrink: 0;
   box-sizing: border-box;
-  padding: 52px 16px 6px;
-  color: $spark-color-text;
+  padding: 36px 16px 26px;
+  color: var(--app-fill-tx);
+  border-radius: 0 0 20px 20px;
+  box-shadow: var(--app-shadow-hero);
   background-image: var(--app-gradient-welcome);
   background-color: var(--app-bg-mid);
 }
+
+.welcome-card::after {
+  content: '';
+  position: absolute;
+  right: -96px;
+  top: -70px;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 0 0 26px rgba(255, 255, 255, 0.07) inset;
+  pointer-events: none;
+  z-index: 0;
+}
 .welcome-top {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 .welcome-info {
   flex: 1;
@@ -497,284 +450,429 @@ function handleOnTabChange(index) {
   line-height: 1.5;
 }
 .welcome-greeting {
-  font-size: 17px;
+  font-size: 21px;
   font-weight: 700;
-  line-height: 1.4;
+  line-height: 1.35;
+  color: var(--app-fill-tx);
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
   text-overflow: ellipsis;
   word-break: break-all;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 .welcome-slogan {
-  font-size: 13px;
+  display: block;
+  font-size: 12.5px;
   font-weight: 400;
   line-height: 1.5;
-  color: var(--app-text-secondary);
+  color: var(--app-fill-tx);
+  opacity: 0.82;
+}
+
+.welcome-date-row {
+  margin-top: 7px;
 }
 .welcome-date {
-  margin-top: 2px;
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 1.5;
-  color: var(--app-text-tertiary);
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  line-height: 18px;
+  color: var(--app-fill-tx);
+  opacity: 0.92;
+  background-color: rgba(255, 255, 255, 0.18);
 }
 
 .home-scroll-body {
   flex: 1;
   min-height: 0;
   box-sizing: border-box;
-  padding: 20px 12px;
+  padding: 14px 14px 18px;
   overflow-y: auto;
 }
 
-.section-box {
-  height: 260px;
+.quick-bar {
+  display: flex;
+  align-items: stretch;
   box-sizing: border-box;
-  margin-bottom: 24px;
+  padding: 13px 4px 12px;
+  margin-bottom: 12px;
+  background-image: var(--app-gradient-card);
+  border: 1px solid var(--app-border-light);
+  border-radius: 16px;
+  box-shadow: var(--app-shadow-card);
+}
+
+.quick-cell {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 2px 0;
+
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+.quick-icon {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background-color: var(--app-primary-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quick-badge {
+  position: absolute;
+  top: -7px;
+  right: -9px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background-color: var(--app-error-solid);
+  color: var(--app-fill-tx);
+  font-size: 9.5px;
+  line-height: 15px;
+  text-align: center;
+  box-shadow: 0 0 0 1.5px var(--app-bg-card);
+}
+
+.quick-text {
+  font-size: 12px;
+  color: var(--app-text-secondary);
+  white-space: nowrap;
+}
+
+.assistant-card {
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 14px 15px;
+  margin-bottom: 14px;
+  border-radius: 18px;
+  background-image: var(--app-gradient-assistant);
+  box-shadow: var(--app-shadow-brand);
+
+  &:active {
+    opacity: 0.92;
+  }
+}
+
+.assistant-ring {
+  position: absolute;
+  right: -46px;
+  top: -58px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  pointer-events: none;
+
+  &.assistant-ring--lg {
+    width: 168px;
+    height: 168px;
+  }
+  &.assistant-ring--md {
+    width: 118px;
+    height: 118px;
+    border-color: rgba(255, 255, 255, 0.13);
+  }
+  &.assistant-ring--sm {
+    width: 68px;
+    height: 68px;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.assistant-title {
+  position: relative;
+  display: block;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--app-fill-tx);
+  letter-spacing: 0.3px;
+}
+
+.assistant-desc {
+  position: relative;
+  display: block;
+  margin-top: 5px;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.84);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.assistant-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 9px;
+  height: 29px;
+  padding: 0 12px;
+  border-radius: 9px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+
+  .assistant-btn__text {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--app-fill-tx);
+  }
+}
+
+.section-box {
+  box-sizing: border-box;
+  margin-bottom: 16px;
 }
 
 .section-box:last-child {
-  margin-bottom: 12px;
+  margin-bottom: 4px;
 }
 
 .section-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 24px;
+  height: 22px;
+  margin-bottom: 9px;
 }
 
 .section-head-left {
   display: flex;
   align-items: center;
+  gap: 7px;
 }
 
 .section-title {
-  font-size: 17px;
-  font-style: italic;
+  position: relative;
+  padding-left: 11px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: 1px;
-  /* #ifdef MP-WEIXIN */
-  color: var(--app-brand);
-  /* #endif */
-  /* #ifdef H5 */
-  background-image: var(--app-title-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  /* #endif */
+  letter-spacing: 0.2px;
+  color: var(--app-text-primary);
 }
 
-.section-body {
-  height: 156px;
-  box-sizing: border-box;
-  padding-top: 12px;
+.section-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 13px;
+  border-radius: 2px;
+  background-image: var(--app-gradient-brand);
 }
 
-.item-grid {
+.section-more {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 1px;
 
-  .item-card:nth-child(odd) {
-    margin-right: 8px;
-  }
-
-  .item-card:nth-child(n+3) {
-    margin-top: 8px;
+  .section-more__text {
+    font-size: 11px;
+    color: var(--app-text-tertiary);
   }
 }
 
-.item-card {
-  width: calc(50% - 4px);
-  height: 72px;
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  grid-auto-rows: 1fr;
+}
+
+.qcard {
   box-sizing: border-box;
-  padding: 8px 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background-image: var(--app-gradient-card);
-  border: 1px solid var(--app-border-light);
-  border-radius: 10px;
-  box-shadow: var(--app-shadow-card);
-}
-
-.item-icon {
-  width: 46px;
-  height: 46px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.item-text {
-  flex: 1;
-  min-width: 0;
+  padding: 10px 13px 11px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  min-height: 90px;
+  background-image: var(--app-gradient-card);
+  border: 1px solid var(--app-border-light);
+  border-radius: 16px;
+  box-shadow: var(--app-shadow-card);
+
+  &:active {
+    background-color: var(--app-bg-hover);
+  }
 }
 
-.item-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--app-text-primary);
-  line-height: 17px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.qcard-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
 
-.item-meta {
-  font-size: 11px;
-  line-height: 15px;
-  color: var(--app-text-secondary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.section-empty {
-  height: 100%;
+.qcard-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background-color: var(--app-primary-soft);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.empty-text {
-  font-size: 12px;
+.qcard-count {
+  font-size: 11px;
   color: var(--app-text-placeholder);
 }
 
-.kpi-row {
-  display: flex;
-  gap: 5px;
-  margin-bottom: 24px;
-}
-
-.kpi-card {
-  flex: 1;
-  min-width: 0;
-  box-sizing: border-box;
-  height: 72px;
-  padding: 0 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  background-image: var(--app-gradient-card);
-  border: 1px solid var(--app-border-light);
-  border-radius: 10px;
-  box-shadow: var(--app-shadow-card);
-}
-
-.kpi-text {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 2px;
-}
-
-.kpi-count {
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 22px;
-  color: $spark-color-text;
-}
-
-.kpi-label {
-  font-size: 12px;
-  line-height: 16px;
-  color: $spark-color-text-tertiary;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.recommend-box {
-  margin-bottom: 24px;
-}
-
-.recommend-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-top: 12px;
-}
-
-.recommend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 44px;
-  padding: 0 12px;
-  background-image: var(--app-gradient-card);
-  border: 1px solid var(--app-border-light);
-  border-radius: 10px;
-  box-shadow: var(--app-shadow-card);
-}
-
-.recommend-rank {
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  line-height: 20px;
-  text-align: center;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--app-text-regular);
-  background-color: var(--app-bg-sub);
-}
-
-.recommend-rank.is-first {
-  color: #fff;
-  background-color: #f5b544;
-}
-
-.recommend-rank.is-second {
-  color: #fff;
-  background-color: #ff9500;
-}
-
-.recommend-rank.is-third {
-  color: $uni-text-color-inverse;
-  background-color: $spark-color-primary;
-}
-
-.recommend-name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.qcard-name {
+  margin-top: 8px;
   font-size: 13px;
   font-weight: 600;
-  color: $spark-color-text;
+  line-height: 1.32;
+  color: var(--app-text-primary);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  word-break: break-all;
 }
 
-.recommend-tag {
-  flex-shrink: 0;
-  padding: 2px 8px;
+.qcard-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 5px;
+  font-size: 11px;
+  color: var(--app-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.qcard-dot {
+  flex: none;
+  width: 3.5px;
+  height: 3.5px;
+  border-radius: 50%;
+  background-color: var(--app-text-placeholder);
+}
+
+.todo-tag {
+  flex: none;
+  padding: 2.5px 7px;
   border-radius: 6px;
   font-size: 11px;
-  color: $spark-color-brand;
+  line-height: 16px;
+
+  &.todo-tag--primary {
+    color: var(--app-brand);
+    background-color: var(--app-primary-soft);
+  }
+  &.todo-tag--warn {
+    color: var(--app-text-warning);
+    background-color: var(--app-bg-warning);
+  }
+  &.todo-tag--gray {
+    color: var(--app-text-tertiary);
+    background-color: var(--app-bg-sub);
+  }
+}
+
+.todo-time {
+  font-size: 11px;
+  color: var(--app-text-placeholder);
+
+  &.todo-time--warn {
+    color: var(--app-text-warning);
+  }
+}
+
+.big-empty {
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 22px 16px 20px;
+  border-radius: 18px;
+  background-image: var(--app-gradient-hero);
+  border: 1px solid var(--app-hero-border);
+  box-shadow: var(--app-shadow-card);
+}
+
+.big-empty__glow {
+  position: absolute;
+  right: -46px;
+  top: -52px;
+  width: 168px;
+  height: 168px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(47, 123, 255, 0.14) 0%, rgba(47, 123, 255, 0) 66%);
+  pointer-events: none;
+}
+
+.big-empty__ring {
+  position: absolute;
+  right: -16px;
+  top: -22px;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  border: 1px solid var(--app-hero-border);
+  pointer-events: none;
+}
+
+.big-empty__icon {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 15px;
   background-color: var(--app-primary-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.recommend-count {
-  flex-shrink: 0;
-  font-size: 12px;
+.big-empty__title {
+  position: relative;
+  display: block;
+  margin-top: 12px;
+  font-size: 13.5px;
   font-weight: 600;
-  color: $spark-color-primary;
+  color: var(--app-text-primary);
 }
 
-.recommend-empty {
-  padding: 24px 0;
-  text-align: center;
+.big-empty__sub {
+  position: relative;
+  display: block;
+  margin-top: 6px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--app-text-tertiary);
+}
+
+.big-empty__btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 14px;
+  height: 29px;
+  padding: 0 13px;
+  border-radius: 9px;
+  background-color: var(--app-primary-soft);
+  border: 1px solid var(--app-brand-border);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--app-brand);
+
+  &:active {
+    opacity: 0.85;
+  }
 }
 </style>
