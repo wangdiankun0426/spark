@@ -10,16 +10,16 @@
 
 | 元素 | 写法 | 说明 |
 |---|---|---|
-| 页面/容器底 | `background-color: $bg-card`（白） | 不用 `$bg-page`(#f8f7f7) 灰底，禁用 `$color-primary-light` 淡彩底 |
-| 卡片浮起 | `border: 1px solid $border-color-light; box-shadow: $shadow-card;` | 即 `element.scss` 中 `.el-card` 的原配方，直接复用不另造 |
-| 悬浮交互 | `transition: $transition-normal;` + `&:hover { box-shadow: $shadow-card-hover; }` | 只加深投影，不加 `transform` 位移/缩放 |
+| 页面/容器底 | 内容区用 `$bg-page` 分层底色，卡片用 `background-color: $bg-card`（白） | 外壳导航与侧栏为白底（`$shell-*`），内容区灰底承托白卡片；禁用 `$color-primary-light` 淡彩底 |
+| 卡片浮起 | `border: 1px solid $ds-line; box-shadow: $ds-shadow-md;` | 即 `element.scss` 中 `.el-card` 的配方，直接复用不另造 |
+| 悬浮交互 | `transition: $transition-normal;` + `&:hover { box-shadow: $ds-shadow-lg; }` | 只加深投影，不加 `transform` 位移/缩放 |
 
 - 白上白时阴影偏虚，**描边是必要的一刀**，不要只靠投影。
 - 圆角一律 `$border-radius-md`(10px)；侧边面板**只朝内容/画布一侧**圆角，贴屏侧直角 —— 左面板 `border-radius: 0 $border-radius-md $border-radius-md 0`，右面板 `border-radius: $border-radius-md 0 0 $border-radius-md`。
 
 ### 1.2 布局与留白
 
-- **贴边铺满**：面板顶到底、左右贴屏、内侧贴主内容区，外层容器 `padding: 0`，不留缝隙。
+- **贴边铺满**：面板顶到底、左右贴屏、内侧贴主内容区；内容页统一用 `.app-container`（现状 `padding: 10px`，卡片之间保留一层灰底缝隙），全屏外壳与设计器画布除外。
 - **间距小**：内边距用 `$spacing-sm`(8px)，慎用 `$spacing-md`(16px)。
 - **间距对称**：框内上下等距，内容既不贴头也不贴底。`el-row` 是 flex 容器、子项外边距**不折叠**，`el-form-item` 自带的 `margin-bottom: 14px` 会留在框内撑出多余留白，需要时 `:deep(.el-col .el-form-item) { margin-bottom: 0; }` 归零并改用 `padding`。
 - **宽度两头钳制**：`min-width` + `max-width` 一起写，避免大屏出现大面积空白；面板宽度用百分比 + 钳制，例 `width: 11%; min-width: 136px; max-width: 152px`。
@@ -28,7 +28,7 @@
 
 ### 1.3 配色与底纹
 
-- 白/灰为主，主色 `$color-primary` 只作点缀（选中态、可点击强调）。上述"纯白底"是**浅色主题**的基准；深色主题下同一处改用 `@/styles/theme.scss` 的 `--app-bg-card` / `--app-bg-page` 等同名变量，页面不要写死 `#fff`。
+- 白/灰为主，主色 `$color-primary` 只作点缀（选中态、可点击强调）。上述"纯白底"是**浅色主题**的基准；深色主题由 `variables.scss` 的同名 `$` 映射自动接管（如 `$app-bg-card`、`$bg-page`），消费层写 `$` 变量即可，不要写死 `#fff`，也不要直接写 `var(--xxx)`。
 - 主题切换按钮的图标表示「**点一下会变成什么**」：浅色时显示月亮、深色时显示太阳，tooltip / 提示文案（深色模式 / 浅色模式）必须与图标同义。`src/pages/login/login.vue` 与 `src/navigation/index.vue` 两处保持一致，改一处必须同步另一处。
 - 底纹可用低密度点阵营造科技氛围：点距约 26px、点径约 1.2px、alpha 8%–18%，不干扰内容阅读。
 - **`background:` 简写会重置 `background-image`**；已有底纹时改背景色必须用 `background-color:`。

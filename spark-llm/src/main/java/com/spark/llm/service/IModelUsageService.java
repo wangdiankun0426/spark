@@ -60,12 +60,10 @@ public interface IModelUsageService {
     List<ModelUsageTrendResult> queryMyUsageTrend(String startTime, String endTime);
 
     /**
-     * 查询我的热门模型
-     * @param startTime 开始时间
-     * @param endTime 结束时间
+     * 查询我的热门语言模型，仅统计语言模型调用
      * @param limit 条数
      * @return 热门模型列表
      */
-    List<DashboardHotResult> queryMyHotModels(String startTime, String endTime, int limit);
+    List<DashboardHotResult> queryMyHotModels(int limit);
 
 }

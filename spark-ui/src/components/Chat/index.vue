@@ -1072,7 +1072,7 @@ function setOncloseMessage(event) {
 }
 
 .chat-input-box-disabled {
-  background-color: var(--el-disabled-bg-color);
+  background-color: $el-disabled-bg-color;
   cursor: not-allowed;
 }
 

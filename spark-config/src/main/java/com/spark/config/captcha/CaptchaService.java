@@ -31,9 +31,9 @@ public class CaptchaService {
         DefaultKaptcha defaultKaptcha = new DefaultKaptcha();
         Properties properties = new Properties();
         // 是否有边框 默认为true 我们可以自己设置yes，no
-        properties.setProperty(KAPTCHA_BORDER, "yes");
-        // 验证码文本字符颜色 设置为白色
-        properties.setProperty(KAPTCHA_TEXTPRODUCER_FONT_COLOR, "white");
+        properties.setProperty(KAPTCHA_BORDER, "no");
+        // 验证码文本字符颜色 设为深藏蓝，在浅底上清晰可读
+        properties.setProperty(KAPTCHA_TEXTPRODUCER_FONT_COLOR, "36,87,168");
         // 验证码图片宽度 默认为200
         properties.setProperty(KAPTCHA_IMAGE_WIDTH, "250");
         // 验证码图片高度 默认为50
@@ -46,9 +46,9 @@ public class CaptchaService {
         properties.setProperty(KAPTCHA_TEXTPRODUCER_CHAR_LENGTH, "4");
         // 验证码文本字体样式 默认为new Font("Arial", 1, fontSize), new Font("Courier", 1, fontSize)
         properties.setProperty(KAPTCHA_TEXTPRODUCER_FONT_NAMES, "Arial,Courier");
-        // 图片背景颜色 设置为蓝色
-        properties.setProperty(KAPTCHA_BACKGROUND_CLR_FROM, "0,0,255");
-        properties.setProperty(KAPTCHA_BACKGROUND_CLR_TO, "0,0,255");
+        // 图片背景颜色 与浅色主题保持一致的浅蓝白渐变（#eef2f9 -> #f7f9fc）
+        properties.setProperty(KAPTCHA_BACKGROUND_CLR_FROM, "238,242,249");
+        properties.setProperty(KAPTCHA_BACKGROUND_CLR_TO, "247,249,252");
         // 字符间距 默认值为2，可以适当增大
         properties.setProperty(KAPTCHA_TEXTPRODUCER_CHAR_SPACE, "10");
         // 图片样式 水纹com.google.code.kaptcha.executor.WaterRipple 鱼眼com.google.code.kaptcha.executor.FishEyeGimpy 阴影com.google.code.kaptcha.executor.ShadowGimpy

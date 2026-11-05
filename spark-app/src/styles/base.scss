@@ -1,0 +1,65 @@
+// 全局底座：字体、滚动条、页面容器、输入框兜底，由 App.vue 全局引入
+
+page,
+body,
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial,
+    sans-serif;
+}
+
+// 移动端不展示滚动条，兼容 H5 与小程序 webview 宿主
+page,
+body,
+html,
+uni-page,
+uni-page-body,
+uni-page-wrapper,
+uni-app {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+  overflow: hidden;
+}
+
+page::-webkit-scrollbar,
+body::-webkit-scrollbar,
+html::-webkit-scrollbar,
+uni-page::-webkit-scrollbar,
+uni-page-body::-webkit-scrollbar,
+uni-page-wrapper::-webkit-scrollbar,
+uni-app::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+// 页面节点底色，与根容器兜底同色，下拉区与短内容页暗色下不露白
+page,
+html,
+body {
+  background-color: $app-page-base;
+}
+
+// 页面根容器，短内容页底色兜底，暗色下不露白
+.safe-area-page {
+  box-sizing: border-box;
+  min-height: 100vh;
+  background-color: $app-page-base;
+}
+
+/* #ifdef H5 */
+// H5 浏览器自动填充默认蓝底，用内阴影盖住并强制文字色跟随主题
+.uni-input-input:-webkit-autofill,
+.uni-input-input:-webkit-autofill:hover,
+.uni-input-input:-webkit-autofill:focus,
+.uni-input-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px $app-bg-card inset !important;
+  box-shadow: 0 0 0 1000px $app-bg-card inset !important;
+  -webkit-text-fill-color: $app-text-primary !important;
+  caret-color: $app-text-primary;
+  transition: background-color 100000s ease-in-out 0s;
+}
+/* #endif */

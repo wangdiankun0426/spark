@@ -144,7 +144,7 @@ function confirmDir() {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--app-text-secondary);
+  color: $app-text-secondary;
   cursor: pointer;
   transition: background 0.15s ease;
 
@@ -153,13 +153,13 @@ function confirmDir() {
   }
 
   &:hover {
-    background: var(--app-bg-sub);
-    color: var(--app-text-primary);
+    background: $app-bg-sub;
+    color: $app-text-primary;
   }
 
   &--close:hover {
-    background: var(--el-color-danger-light-9);
-    color: var(--el-color-danger);
+    background: $el-color-danger-light-9;
+    color: $el-color-danger;
   }
 
   &--tool {
@@ -181,16 +181,16 @@ function confirmDir() {
     padding: 10px 6px;
     border-radius: $border-radius-md;
     font-size: 13px;
-    color: var(--app-text-primary);
+    color: $app-text-primary;
     cursor: pointer;
 
     .el-icon {
       font-size: 16px;
-      color: var(--app-text-secondary);
+      color: $app-text-secondary;
     }
 
     &:hover {
-      background: var(--app-bg-sub);
+      background: $app-bg-sub;
     }
   }
 }
@@ -198,7 +198,7 @@ function confirmDir() {
 .dir-tip {
   margin-top: 8px;
   font-size: 12px;
-  color: var(--app-text-placeholder);
+  color: $app-text-placeholder;
   line-height: 1.6;
 }
 </style>

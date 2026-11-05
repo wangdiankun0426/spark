@@ -14,6 +14,30 @@ export function pageMyMessageListAPI(query) {
 }
 
 /**
+ * 查询我的消息分类计数，覆盖全部、未读、已读
+ * @returns {Promise<AxiosResponse<any>>}
+ */
+export function queryMyMessageCountAPI() {
+    return request({
+        url: '/sys/message/myCount',
+        method: 'get'
+    })
+}
+
+/**
+ * 标记消息已读，已读状态在服务端持久化，重复调用幂等
+ * @param data 消息参数，至少含 id
+ * @returns {Promise<AxiosResponse<any>>}
+ */
+export function readMessageAPI(data) {
+    return request({
+        url: '/sys/message/read',
+        method: 'post',
+        params: data
+    })
+}
+
+/**
  * 分页查询消息列表
  * @param query 查询参数
  * @returns {Promise<AxiosResponse<any>>}

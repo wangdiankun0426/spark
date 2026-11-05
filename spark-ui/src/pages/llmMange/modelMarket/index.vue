@@ -844,7 +844,7 @@ function handleProviderCommand(command, provider) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: $spacing-lg;
+  margin-bottom: $spacing-md;
   padding: $spacing-md $spacing-xl;
   background-color: $bg-card;
   border: 1px solid $border-color-light;
@@ -892,7 +892,6 @@ function handleProviderCommand(command, provider) {
   box-shadow: $shadow-card;
   padding: $spacing-md;
   position: sticky;
-  top: $spacing-md;
 }
 
 .provider-pane-title-row {
@@ -957,7 +956,7 @@ function handleProviderCommand(command, provider) {
   display: flex;
   flex-direction: column;
   gap: $spacing-xs;
-  height: calc(100vh - 270px);
+  height: calc(100vh - 260px);
   overflow-y: auto;
 }
 
@@ -1061,7 +1060,7 @@ function handleProviderCommand(command, provider) {
 }
 
 .model-grid {
-  height: calc(100vh - #{$nav-height} - 270px);
+  height: calc(100vh - #{$nav-height} - 275px);
   overflow-y: auto;
   padding-top: 6px;
   display: grid;
@@ -1070,7 +1069,7 @@ function handleProviderCommand(command, provider) {
   align-content: start;
 }
 .empty-grid {
-  height: calc(100vh - #{$nav-height} - 270px);
+  height: calc(100vh - #{$nav-height} - 275px);
 }
 
 .model-toolbar-actions {

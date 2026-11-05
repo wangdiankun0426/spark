@@ -11,7 +11,7 @@
         </el-button>
       </div>
       <div class="toolbar-right">
-        <el-button @click="saveProcess">
+        <el-button type="primary" @click="saveProcess">
           <el-icon><Folder /></el-icon>保存流程
         </el-button>
         <el-button @click="notificationConfigRef.open()">
@@ -339,7 +339,7 @@ const confirmClear = () => {
   justify-content: space-between;
   height: 48px;
   padding: 0 $spacing-md;
-  background: var(--app-bg-card);
+  background: $app-bg-card;
   border-bottom: 1px solid $border-color;
   flex-shrink: 0;
 
@@ -372,7 +372,7 @@ const confirmClear = () => {
   padding: 0 $spacing-md;
   display: flex;
   align-items: center;
-  background: var(--app-bg-card);
+  background: $app-bg-card;
   border-top: 1px solid $border-color;
   font-size: 12px;
   color: $color-text-secondary;

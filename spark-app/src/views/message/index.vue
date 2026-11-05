@@ -1,15 +1,6 @@
 <template>
   <view class="message-container safe-area-page" :class="themeClass">
-    <!-- 顶部标题栏：带返回按钮的三段式 -->
-    <view class="message-top" :style="navHeaderStyle()">
-      <view class="message-header">
-        <view class="header-back" @click="handleBack">
-          <up-icon name="arrow-left" size="20" :color="backIconColor"/>
-        </view>
-        <text class="header-title">消息</text>
-        <view class="header-slot"></view>
-      </view>
-    </view>
+    <PageHeader title="消息" @back="handleBack"/>
 
     <!-- 筛选标签：只看已读/未读，数量与列表都由接口按同一条 SQL 条件返回 -->
     <view class="msg-filter">
@@ -72,9 +63,9 @@
 <script setup>
 import {ref, computed} from "vue";
 import {onShow} from "@dcloudio/uni-app";
-import {navHeaderStyle} from "@/utils/navBarUtil";
 import {useTheme} from "@/utils/useTheme";
-import {getInfoColor, getHeaderIconColor} from "@/utils/themeUtil";
+import {getInfoColor} from "@/utils/themeUtil";
+import PageHeader from "@/components/PageHeader/index.vue";
 import {
   pageMyMessageListAPI,
   queryMyMessageCountAPI,
@@ -83,7 +74,6 @@ import {
 
 const {isDark, themeClass} = useTheme();
 
-const backIconColor = computed(() => getHeaderIconColor(isDark.value));
 const linkColor = computed(() => getInfoColor(isDark.value));
 
 const messageList = ref([]);
@@ -274,51 +264,16 @@ function handleMsgClick(item) {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background-color: var(--app-bg-page);
+  background-color: $app-bg-page;
 }
 
-.message-top {
-  flex-shrink: 0;
-  background-color: var(--app-bg-card);
-  border-bottom: 1px solid var(--app-border-light);
-}
-
-.message-header {
-  position: relative;
-  display: flex;
-  align-items: center;
-  height: 48px;
-  padding: 0 14px;
-}
-
-.header-back,
-.header-slot {
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.header-back:active {
-  opacity: 0.6;
-}
-
-.header-title {
-  flex: 1;
-  text-align: center;
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 0.4px;
-  color: var(--app-text-primary);
-}
 
 .msg-filter {
   display: flex;
   align-items: center;
   gap: 7px;
   padding: 10px 14px 4px;
-  background-color: var(--app-bg-page);
+  background-color: $app-bg-page;
 }
 
 .filter-chip {
@@ -328,31 +283,31 @@ function handleMsgClick(item) {
   height: 30px;
   padding: 0 12px;
   border-radius: 10px;
-  background-color: var(--app-bg-card);
-  border: 1px solid var(--app-border-light);
+  background-color: $app-bg-card;
+  border: 1px solid $app-border-light;
   transition: background 0.2s ease, box-shadow 0.2s ease;
 
   .filter-chip__text {
     font-size: 12.5px;
-    color: var(--app-text-secondary);
+    color: $app-text-secondary;
     font-weight: 500;
   }
 
   .filter-chip__count {
     font-size: 11px;
-    color: var(--app-text-tertiary);
+    color: $app-text-tertiary;
     font-weight: 600;
   }
 }
 
 .filter-chip.is-on {
-  background-image: var(--app-gradient-fill);
+  background-image: $app-gradient-fill;
   border-color: transparent;
-  box-shadow: var(--app-shadow-brand);
+  box-shadow: $app-shadow-brand;
 
   .filter-chip__text,
   .filter-chip__count {
-    color: var(--app-fill-tx);
+    color: $app-fill-tx;
     font-weight: 700;
   }
 }
@@ -379,15 +334,15 @@ function handleMsgClick(item) {
 
 .message-card {
   position: relative;
-  background-color: var(--app-bg-card);
-  border: 1px solid var(--app-border-light);
+  background-color: $app-bg-card;
+  border: 1px solid $app-border-light;
   border-radius: 14px;
   padding: 13px 14px 11px;
   margin-bottom: 10px;
-  box-shadow: var(--app-shadow-card);
+  box-shadow: $app-shadow-card;
 
   &:active {
-    background-color: var(--app-bg-hover);
+    background-color: $app-bg-hover;
   }
 }
 
@@ -399,7 +354,7 @@ function handleMsgClick(item) {
   bottom: 16px;
   width: 3px;
   border-radius: 0 3px 3px 0;
-  background-image: var(--app-gradient-fill);
+  background-image: $app-gradient-fill;
 }
 
 .card-top {
@@ -432,33 +387,33 @@ function handleMsgClick(item) {
 }
 
 .pill-todo {
-  color: var(--app-text-info);
-  background-color: var(--app-bg-info);
+  color: $app-text-info;
+  background-color: $app-bg-info;
 }
 
 .pill-urge {
-  color: var(--app-text-warning);
-  background-color: var(--app-bg-warning);
+  color: $app-text-warning;
+  background-color: $app-bg-warning;
 }
 
 .pill-reject {
-  color: var(--app-text-error);
-  background-color: var(--app-bg-error);
+  color: $app-text-error;
+  background-color: $app-bg-error;
 }
 
 .pill-done {
-  color: var(--app-text-success);
-  background-color: var(--app-bg-success);
+  color: $app-text-success;
+  background-color: $app-bg-success;
 }
 
 .pill-info {
-  color: var(--app-text-info);
-  background-color: var(--app-bg-info);
+  color: $app-text-info;
+  background-color: $app-bg-info;
 }
 
 .pill-system {
-  color: var(--app-text-purple);
-  background-color: var(--app-bg-purple);
+  color: $app-text-purple;
+  background-color: $app-bg-purple;
 }
 
 .card-title {
@@ -466,7 +421,7 @@ function handleMsgClick(item) {
   min-width: 0;
   font-size: 15px;
   font-weight: 600;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -475,14 +430,14 @@ function handleMsgClick(item) {
 .card-time {
   flex-shrink: 0;
   font-size: 11.5px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
 }
 
 .card-content {
   margin-top: 8px;
   font-size: 13px;
   line-height: 1.62;
-  color: var(--app-text-secondary);
+  color: $app-text-secondary;
   word-break: break-all;
   overflow: hidden;
   display: -webkit-box;
@@ -500,7 +455,7 @@ function handleMsgClick(item) {
   .link-text {
     font-size: 12px;
     font-weight: 600;
-    color: var(--app-text-info);
+    color: $app-text-info;
   }
 }
 </style>

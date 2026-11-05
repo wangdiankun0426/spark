@@ -39,8 +39,7 @@
 
       <div
           v-if="detail.errorMsg"
-          class="section-title"
-          style="color:#f56c6c"
+          class="section-title section-title--error"
       >错误信息</div>
       <el-alert
           v-if="detail.errorMsg"
@@ -156,17 +155,20 @@ watch(visible, async (val) => {
 .section-title {
   font-size: 13px;
   font-weight: 600;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
   margin: $spacing-sm 0 6px;
+}
+.section-title--error {
+  color: $el-color-danger;
 }
 .node-status {
   font-size: 12px;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
 }
 .node-output {
   margin-top: 4px;
   padding: 8px;
-  background: var(--app-bg-sub);
+  background: $app-bg-sub;
   border-radius: 4px;
   font-size: 12px;
   line-height: 1.6;

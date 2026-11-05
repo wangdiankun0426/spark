@@ -234,34 +234,34 @@ function handleClose() {
 
 <style scoped lang="scss">
 .document-uploader :deep(.el-upload) {
-  border: 2px dashed var(--el-border-color);
+  border: 2px dashed $el-border-color;
   border-radius: 8px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: var(--el-transition-duration-fast);
+  transition: $el-transition-duration-fast;
   width: 100%;
   padding: 40px 20px;
 }
 .document-uploader :deep(.el-upload:hover) {
-  border-color: var(--el-color-primary);
-  background-color: var(--el-color-primary-light-9);
+  border-color: $el-color-primary;
+  background-color: $el-color-primary-light-9;
 }
 .document-uploader :deep(.el-upload.is-dragover) {
-  border-color: var(--el-color-primary);
-  background-color: var(--el-color-primary-light-8);
+  border-color: $el-color-primary;
+  background-color: $el-color-primary-light-8;
 }
 .el-icon--upload {
   font-size: 48px;
-  color: var(--el-color-primary);
+  color: $el-color-primary;
   margin-bottom: 16px;
 }
 .el-upload__text {
-  color: var(--el-text-color-regular);
+  color: $el-text-color-regular;
   font-size: 14px;
 }
 .el-upload__text em {
-  color: var(--el-color-primary);
+  color: $el-color-primary;
   font-style: normal;
   font-weight: 400;
 }
@@ -274,12 +274,12 @@ function handleClose() {
   justify-content: space-between;
   margin-top: 8px;
   font-size: 12px;
-  color: var(--el-text-color-secondary);
+  color: $el-text-color-secondary;
 }
 .progress-status {
   margin-top: 8px;
   font-size: 12px;
-  color: var(--el-text-color-secondary);
+  color: $el-text-color-secondary;
 }
 .drawer-tips {
   margin-top: $spacing-md;

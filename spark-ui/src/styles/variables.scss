@@ -1,75 +1,51 @@
-/**
- * 设计系统变量文件 - Design Tokens
- * 统一管理颜色、圆角、阴影、过渡等设计 Token
- * 修改此文件可全局生效
- */
+// 编译期参数与主题变量映射，本文件是 SCSS 侧唯一变量入口，主题色定义在 theme.scss 与 element.scss
 
-// 主色调
+// 语义别名，历史命名，与下方同名映射指向同一 CSS 变量
 $color-primary: var(--app-primary);
-$color-primary-dark:   #1e3a6e;
 $color-primary-mid:    #2c5aad;
 $color-primary-light:  var(--app-primary-light);
 $color-primary-soft:   var(--app-primary-soft);
 
-// 文字颜色
 $color-text-primary:   var(--app-text-primary);
 $color-text-secondary: var(--app-text-secondary);
 $color-text-placeholder: var(--app-text-placeholder);
 $color-text-white:     #ffffff;
+// 遮罩 alpha 通道固定不透明白，与主题无关
+$mask-opaque:          #000;
 
-// 背景颜色
 $bg-page: var(--app-bg-page);
 $bg-card: var(--app-bg-card);
-$bg-sidebar:   linear-gradient(180deg, #204588 0%, #204588 100%);
-$bg-nav:       linear-gradient(90deg, #204588 0%, #1e3a6e 60%, #204588 100%);
 
-// 边框
 $border-color:         var(--app-border);
 $border-color-light:   var(--app-border-light);
 $border-radius-sm:     5px;
 $border-radius-md:     10px;
 $border-radius-lg:     14px;
-$border-radius-xl:     20px;
 
-// 阴影
 $shadow-card:   var(--app-shadow-card);
 $shadow-card-hover: var(--app-shadow-card-hover);
-$shadow-nav:    var(--app-shadow-nav);
-$shadow-dialog: var(--app-shadow-dialog);
 
-// 过渡动画
 $transition-fast:   all 0.18s ease;
 $transition-normal: all 0.25s ease;
 
-// 间距
 $spacing-xs:   4px;
 $spacing-sm:   8px;
 $spacing-md:   16px;
 $spacing-lg:   24px;
 $spacing-xl:   32px;
 
-// 导航
-$nav-height:   50px;   // 顶部导航栏高度
+$nav-height:   58px;
 
-// 字体
-// 字体栈：优先现代系统字体；Windows 下 'Microsoft YaHei UI' 比 'Microsoft YaHei' 字形更精细
+// 左侧菜单栏宽度，与 railUtil.js 的 railWidth / railWidthMini 保持同值
+$sidebar-width: 82px;
+$sidebar-width-mini: 56px;
+
 $font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei UI', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'Source Han Sans CN', 'Noto Sans CJK SC', 'Inter', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
 
-// 行高：1.6 提升多行文本的阅读舒适度
 $line-height-base: 1.6;
-
-// 紧凑行高：用于聊天 markdown 预览等密集场景，避免内容显得过于松散
 $line-height-compact: 1.45;
-
-// 字间距：优化字符间距，提升大屏幕可读性
 $letter-spacing-base: 0.2px;
 
-// 大屏幕基础字号（用于媒体查询）
-$font-size-base-screen-lg: 15px;
-$font-size-base-screen-xl: 17px;
-
-// AI 应用卡片主题色
-// 用于 AI 应用页面不同 agent 卡片的视觉区分，按 agent.id 取模分配
 $agent-theme-blue:        #1a6fe8;
 $agent-theme-blue-soft:   #e8f0fd;
 $agent-theme-green:       #34c759;
@@ -84,3 +60,143 @@ $agent-theme-pink:        #ff6b9d;
 $agent-theme-pink-soft:   #ffe8f0;
 $agent-theme-indigo:      #5e72e4;
 $agent-theme-indigo-soft: #eaedff;
+
+// app 运行时主题变量同名映射，定义在 theme.scss
+$app-bg-card: var(--app-bg-card);
+$app-bg-overlay: var(--app-bg-overlay);
+$app-bg-page: var(--app-bg-page);
+$app-bg-sub: var(--app-bg-sub);
+$app-border: var(--app-border);
+$app-border-light: var(--app-border-light);
+$app-canvas-bg: var(--app-canvas-bg);
+$app-canvas-dot: var(--app-canvas-dot);
+$app-canvas-dot-soft: var(--app-canvas-dot-soft);
+$app-hero-accent: var(--app-hero-accent);
+$app-hero-grad: var(--app-hero-grad);
+$app-node-approve-ok: var(--app-node-approve-ok);
+$app-node-approve-ok-bg: var(--app-node-approve-ok-bg);
+$app-node-approve-warn: var(--app-node-approve-warn);
+$app-node-approve-warn-bg: var(--app-node-approve-warn-bg);
+$app-node-end: var(--app-node-end);
+$app-node-end-bg: var(--app-node-end-bg);
+$app-node-gateway: var(--app-node-gateway);
+$app-node-gateway-bg: var(--app-node-gateway-bg);
+$app-node-llm: var(--app-node-llm);
+$app-node-llm-bg: var(--app-node-llm-bg);
+$app-node-start: var(--app-node-start);
+$app-node-start-bg: var(--app-node-start-bg);
+$app-node-task: var(--app-node-task);
+$app-node-task-bg: var(--app-node-task-bg);
+$app-node-task-tag: var(--app-node-task-tag);
+$app-node-task-tag-bg: var(--app-node-task-tag-bg);
+$app-primary: var(--app-primary);
+$app-primary-light: var(--app-primary-light);
+$app-primary-soft: var(--app-primary-soft);
+$app-scrollbar-thumb: var(--app-scrollbar-thumb);
+$app-scrollbar-thumb-hover: var(--app-scrollbar-thumb-hover);
+$app-scrollbar-track: var(--app-scrollbar-track);
+$app-shadow-card: var(--app-shadow-card);
+$app-shadow-card-hover: var(--app-shadow-card-hover);
+$app-text-placeholder: var(--app-text-placeholder);
+$app-text-primary: var(--app-text-primary);
+$app-text-secondary: var(--app-text-secondary);
+
+// 全屏舞台页同名映射，定义在 theme.scss
+$auth-ai-grad: var(--auth-ai-grad);
+$auth-oauth-bg: var(--auth-oauth-bg);
+$auth-stage-bg: var(--auth-stage-bg);
+$auth-title-grad: var(--auth-title-grad);
+$error-page-bg: var(--error-page-bg);
+$error-subtitle: var(--error-subtitle);
+$error-title-grad: var(--error-title-grad);
+$error-title-grad-rose: var(--error-title-grad-rose);
+
+// ds 皮肤令牌同名映射，定义在 element.scss
+$ds-badge-grad: var(--ds-badge-grad);
+$ds-brand: var(--ds-brand);
+$ds-brand-hover: var(--ds-brand-hover);
+$ds-err-bg: var(--ds-err-bg);
+$ds-err-line: var(--ds-err-line);
+$ds-err-tx: var(--ds-err-tx);
+$ds-glow: var(--ds-glow);
+$ds-glow-strong: var(--ds-glow-strong);
+$ds-grad: var(--ds-grad);
+$ds-info-bg: var(--ds-info-bg);
+$ds-info-line: var(--ds-info-line);
+$ds-info-tx: var(--ds-info-tx);
+$ds-line: var(--ds-line);
+$ds-line-strong: var(--ds-line-strong);
+$ds-mask: var(--ds-mask);
+$ds-ok-bg: var(--ds-ok-bg);
+$ds-ok-line: var(--ds-ok-line);
+$ds-ok-tx: var(--ds-ok-tx);
+$ds-online: var(--ds-online);
+$ds-shadow-lg: var(--ds-shadow-lg);
+$ds-shadow-md: var(--ds-shadow-md);
+$ds-shadow-sm: var(--ds-shadow-sm);
+$ds-surface-2: var(--ds-surface-2);
+$ds-surface-3: var(--ds-surface-3);
+$ds-warn-bg: var(--ds-warn-bg);
+$ds-warn-line: var(--ds-warn-line);
+$ds-warn-tx: var(--ds-warn-tx);
+
+// shell 应用外壳同名映射，定义在 theme.scss
+$shell-dock-bg: var(--shell-dock-bg);
+$shell-dock-border: var(--shell-dock-border);
+$shell-group-text: var(--shell-group-text);
+$shell-icon: var(--shell-icon);
+$shell-item-active-bg: var(--shell-item-active-bg);
+$shell-item-active-text: var(--shell-item-active-text);
+$shell-item-hover: var(--shell-item-hover);
+$shell-item-text: var(--shell-item-text);
+$shell-nav-active-bg: var(--shell-nav-active-bg);
+$shell-nav-active-text: var(--shell-nav-active-text);
+$shell-nav-bg: var(--shell-nav-bg);
+$shell-nav-border: var(--shell-nav-border);
+$shell-nav-faint: var(--shell-nav-faint);
+$shell-nav-hover: var(--shell-nav-hover);
+$shell-nav-muted: var(--shell-nav-muted);
+$shell-nav-text: var(--shell-nav-text);
+$shell-sidebar-bg: var(--shell-sidebar-bg);
+$shell-sidebar-border: var(--shell-sidebar-border);
+$shell-tab-active-bg: var(--shell-tab-active-bg);
+$shell-toggle-bg: var(--shell-toggle-bg);
+$shell-toggle-border: var(--shell-toggle-border);
+
+// el 框架变量同名映射，EP 内置或 element.scss 覆盖
+$el-border-color: var(--el-border-color);
+$el-border-color-darker: var(--el-border-color-darker);
+$el-color-danger: var(--el-color-danger);
+$el-color-danger-light-9: var(--el-color-danger-light-9);
+$el-color-info: var(--el-color-info);
+$el-color-primary: var(--el-color-primary);
+$el-color-primary-light-5: var(--el-color-primary-light-5);
+$el-color-primary-light-8: var(--el-color-primary-light-8);
+$el-color-primary-light-9: var(--el-color-primary-light-9);
+$el-color-success: var(--el-color-success);
+$el-color-warning: var(--el-color-warning);
+$el-color-warning-light-9: var(--el-color-warning-light-9);
+$el-dialog-bg-color: var(--el-dialog-bg-color);
+$el-disabled-bg-color: var(--el-disabled-bg-color);
+$el-fill-color-light: var(--el-fill-color-light);
+$el-tag-bg-color: var(--el-tag-bg-color);
+$el-tag-border-color: var(--el-tag-border-color);
+$el-tag-text-color: var(--el-tag-text-color);
+$el-text-color-primary: var(--el-text-color-primary);
+$el-text-color-regular: var(--el-text-color-regular);
+$el-text-color-secondary: var(--el-text-color-secondary);
+$el-transition-duration-fast: var(--el-transition-duration-fast);
+
+// 导航栏阴影映射，定义在 theme.scss
+$nav-shadow: var(--nav-shadow);
+
+// EP 控件私有圆角刻度与过渡，仅 element.scss 消费，与页面圆角刻度刻意不合并
+$r-xs: 4px;
+$r-sm: 6px;
+$r-md: 8px;
+$r-lg: 9px;
+$r-xl: 10px;
+
+$ease: cubic-bezier(0.32, 0.72, 0.3, 1);
+$t-fast: all 0.16s #{$ease};
+$t-base: all 0.22s #{$ease};

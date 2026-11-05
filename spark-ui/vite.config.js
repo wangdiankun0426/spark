@@ -3,10 +3,40 @@ import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 import pkg from './package.json'
 
+// 开发服务器启动横幅，把当前 mode 与实际加载的接口基址显式打印，env 文件改动需重启才能生效
+function envBannerPlugin(mode, env) {
+  return {
+    name: 'spark-env-banner',
+    configureServer(server) {
+      server.httpServer?.once('listening', () => {
+        const address = server.httpServer.address()
+        const port = address && typeof address === 'object' ? address.port : ''
+        const api = env.VITE_HTTP_BASE_API || '(未配置)'
+        const hotUpdate = env.VITE_HOT_UPDATE_URL || '未启用'
+        const isRemoteApi = !/127\.0\.0\.1|localhost/i.test(api)
+        const c = { cyan: '\x1b[36m', yellow: '\x1b[33m', gray: '\x1b[90m', reset: '\x1b[0m' }
+        const lines = [
+          '',
+          `${c.cyan}  ── 星火云开发服务器 ──────────────────────────────${c.reset}`,
+          `  运行模式: ${mode}`,
+          `  接口基址: ${api}`,
+          `  热更清单: ${hotUpdate}`,
+          `  监听地址: http://127.0.0.1:${port}`,
+        ]
+        if (mode === 'dev' && isRemoteApi) {
+          lines.push(`${c.yellow}  [警告] dev 模式接口基址指向远程环境，请检查 .env.dev 并重启 dev 服务${c.reset}`)
+        }
+        lines.push(`${c.gray}  ─────────────────────────────────────────────────${c.reset}`, '')
+        server.config.logger.info(lines.join('\n'), { clear: false })
+      })
+    },
+  }
+}
+
 export default defineConfig((mode) => {
   const env = loadEnv(mode.mode, process.cwd());
   return {
-    plugins: [vue(),],
+    plugins: [vue(), envBannerPlugin(mode.mode, env)],
     resolve: {
       alias: {
         "@": resolve(__dirname, 'src'), // 路径别名

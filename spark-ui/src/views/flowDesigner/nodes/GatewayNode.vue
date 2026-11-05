@@ -23,8 +23,8 @@ defineProps({
   justify-content: center;
   gap: 2px;
   border-radius: 8px;
-  background: #fffbe6;
-  border: 1.5px solid #fa8c16;
+  background: $app-node-gateway-bg;
+  border: 1.5px solid $app-node-gateway;
 
   &.selected {
     border-width: 2.5px;
@@ -34,14 +34,19 @@ defineProps({
 .node-icon {
   font-size: 20px;
   line-height: 1;
-  color: #fa8c16;
+  color: $app-node-gateway;
 }
 .node-name {
   font-size: 13px;
   font-weight: 400;
-  color: #172b4d;
+  color: $app-text-primary;
   line-height: 1.2;
   word-break: break-all;
   max-width: 120px;
+}
+
+// 暗色主题节点边框改为同色系半透明，底色与图标由节点 token 自动翻转
+html.dark .gateway-node {
+  border-color: rgba(255, 169, 64, 0.55);
 }
 </style>

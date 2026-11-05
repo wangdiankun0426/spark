@@ -135,15 +135,19 @@ public class ModelUsageServiceImpl extends BaseService<ModelUsageQuery, ModelUsa
     }
 
     /**
-     * 查询我的热门模型
-     * @param startTime 开始时间
-     * @param endTime 结束时间
+     * 查询我的热门语言模型
      * @param limit 条数
      * @return 热门模型列表
      */
     @Override
-    public List<DashboardHotResult> queryMyHotModels(String startTime, String endTime, int limit) {
-        ModelUsageQuery query = this.buildMyQuery(startTime, endTime);
+    public List<DashboardHotResult> queryMyHotModels(int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        ModelUsageQuery query = new ModelUsageQuery();
+        query.setUserId(SessionHolder.getCurrentUserId());
+        query.setTenantId(SessionHolder.getCurrentTenantId());
+        query.setType(ModelTypeEnum.LANGUAGE.getType());
         query.setPageSize(limit);
         return modelUsageDao.queryHotModels(query);
     }

@@ -1,77 +1,63 @@
 <template>
   <div>
     <el-container>
-      <el-aside width="50px" class="llm-el-aside">
+      <el-aside :width="railMini ? railWidthMini : railWidth" class="app-sidebar" :class="{ 'app-sidebar--mini': railMini }">
         <el-menu
             :default-active="defaultActive"
             :router='true'
-            :collapse="true"
+            :collapse="railMini"
+            :collapse-transition="false"
             mode="vertical"
-            class="llm-el-menu"
+            class="app-sidebar-menu"
         >
           <div
               v-if="hasMenu(MENU_CODES.LLM_MODEL_USAGE) || hasMenu(MENU_CODES.LLM_MODEL_MARKET) || hasMenu(MENU_CODES.LLM_SKILL) || hasMenu(MENU_CODES.LLM_MCP)"
-              class="llm-menu-group"
+              class="app-sidebar__group"
           >基础</div>
           <el-menu-item v-if="hasMenu(MENU_CODES.LLM_MODEL_USAGE)" index="/llm/modelUsage">
-            <el-icon style="font-size: 24px;">
-              <ModelUsage/>
-            </el-icon>
+            <el-icon><ModelUsage/></el-icon>
             <template #title>模型用量</template>
           </el-menu-item>
           <el-menu-item v-if="hasMenu(MENU_CODES.LLM_MODEL_MARKET)" index="/llm/modelMarket">
-            <el-icon style="font-size: 24px;">
-              <ModelMarket/>
-            </el-icon>
+            <el-icon><ModelMarket/></el-icon>
             <template #title>模型市场</template>
           </el-menu-item>
           <el-menu-item v-if="hasMenu(MENU_CODES.LLM_SKILL)" index="/llm/skill">
-            <el-icon style="font-size: 24px;">
-              <Skill/>
-            </el-icon>
+            <el-icon><Skill/></el-icon>
             <template #title>技能库</template>
           </el-menu-item>
           <el-menu-item v-if="hasMenu(MENU_CODES.LLM_MCP)" index="/llm/mcp">
-            <el-icon style="font-size: 24px;">
-              <Mcp/>
-            </el-icon>
+            <el-icon><Mcp/></el-icon>
             <template #title>MCP服务</template>
           </el-menu-item>
 
           <div
               v-if="hasMenu(MENU_CODES.LLM_AGENT) || hasMenu(MENU_CODES.LLM_WORKFLOW)"
-              class="llm-menu-group"
+              class="app-sidebar__group"
           >应用</div>
           <el-menu-item v-if="hasMenu(MENU_CODES.LLM_AGENT)" index="/llm/agent">
-            <el-icon style="font-size: 24px;">
-              <Agent/>
-            </el-icon>
+            <el-icon><Agent/></el-icon>
             <template #title>智能体</template>
           </el-menu-item>
           <el-menu-item v-if="hasMenu(MENU_CODES.LLM_WORKFLOW)" index="/llm/workflow">
-            <el-icon style="font-size: 24px;">
-              <Workflow/>
-            </el-icon>
+            <el-icon><Workflow/></el-icon>
             <template #title>工作流</template>
           </el-menu-item>
 
           <div
               v-if="hasMenu(MENU_CODES.LLM_KNOWLEDGE) || hasMenu(MENU_CODES.LLM_GRAPH)"
-              class="llm-menu-group"
+              class="app-sidebar__group"
           >增强</div>
           <el-menu-item v-if="hasMenu(MENU_CODES.LLM_KNOWLEDGE)" index="/llm/knowledge">
-            <el-icon style="font-size: 24px;">
-              <Knowledge/>
-            </el-icon>
+            <el-icon><Knowledge/></el-icon>
             <template #title>知识库</template>
           </el-menu-item>
           <el-menu-item v-if="hasMenu(MENU_CODES.LLM_GRAPH)" index="/llm/graph">
-            <el-icon style="font-size: 24px;">
-              <Graph/>
-            </el-icon>
+            <el-icon><Graph/></el-icon>
             <template #title>知识图谱</template>
           </el-menu-item>
         </el-menu>
+        <rail-toggle/>
       </el-aside>
 
       <el-main class="affix-container">
@@ -86,13 +72,15 @@
 
 import {computed} from "vue";
 import {useRoute} from "vue-router";
-import Agent from "@/assets/icons/agent.vue";
+import RailToggle from '@/components/RailToggle.vue';
+import {railMini, railWidth, railWidthMini} from '@/utils/railUtil.js';
+import {hasMenu, MENU_CODES} from "@/utils/menuUtil.js";
 import ModelUsage from "@/assets/icons/modelUsage.vue";
 import ModelMarket from "@/assets/icons/modelMarket.vue";
-import Workflow from "@/assets/icons/workflow.vue";
 import Skill from "@/assets/icons/skill.vue";
-import {hasMenu, MENU_CODES} from "@/utils/menuUtil.js";
 import Mcp from "@/assets/icons/mcp.vue";
+import Agent from "@/assets/icons/agent.vue";
+import Workflow from "@/assets/icons/workflow.vue";
 import Knowledge from "@/assets/icons/knowledge.vue";
 import Graph from "@/assets/icons/graph.vue";
 
@@ -106,64 +94,3 @@ const defaultActive = computed(() => {
 })
 
 </script>
-
-<style lang="scss" scoped>
-.llm-el-aside {
-  padding: 0;
-  box-sizing: border-box;
-  height: calc(100vh - $nav-height);
-  background: var(--sidebar-bg);
-  color: var(--sidebar-text);
-  box-shadow: var(--sidebar-shadow);
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-.llm-el-menu {
-  border: 0;
-  padding: 0;
-  margin: 0;
-  background: transparent !important;
-}
-:deep(.el-menu--collapse) {
-  width: 50px;
-}
-.llm-menu-group {
-  height: 30px;
-  line-height: 28px;
-  margin-top: $spacing-xs;
-  font-size: 11px;
-  letter-spacing: 2px;
-  text-align: center;
-  color: var(--sidebar-menu-group-text);
-  user-select: none;
-  pointer-events: none;
-}
-.el-menu-item {
-  color: var(--sidebar-text);
-  height: 40px;
-  line-height: 40px;
-  font-size: 13px;
-  font-weight: 400;
-  justify-content: center;
-  width: calc(100% - 10px);
-  margin: 1px 5px;
-  border-radius: $border-radius-md;
-}
-:deep(.el-menu-item) {
-  padding: 0 !important;
-}
-/*悬停一级菜单之后*/
-.el-menu-item:hover {
-  background-color: var(--sidebar-hover-bg);
-}
-/*点击一级菜单之后*/
-.el-menu-item.is-active {
-  background-color: var(--sidebar-active-bg);
-  color: var(--sidebar-active-text);
-  border-bottom: 0;
-}
-:deep(.el-menu-item .el-menu-tooltip__trigger) {
-  padding: 0 !important;
-  justify-content: center;
-}
-</style>

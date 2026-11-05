@@ -21,7 +21,7 @@ const {themeClass} = useTheme();
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: var(--app-bg-page);
+  background-color: $app-bg-page;
 }
 
 .status-body {
@@ -36,7 +36,7 @@ const {themeClass} = useTheme();
 .status-num {
   font-size: 88px;
   font-weight: 700;
-  color: var(--app-text-info);
+  color: $app-text-info;
   line-height: 1;
 }
 
@@ -44,13 +44,13 @@ const {themeClass} = useTheme();
   margin-top: 24px;
   font-size: 22px;
   font-weight: 600;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
 }
 
 .status-desc {
   margin-top: 12px;
   font-size: 14px;
-  color: var(--app-text-muted);
+  color: $app-text-muted;
   text-align: center;
   line-height: 22px;
 }

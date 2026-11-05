@@ -17,7 +17,8 @@ function getTranslate(el) {
 }
 
 const HEADER_SELECTOR = '.el-dialog__header, .el-message-box__header';
-const CLOSE_BTN_SELECTOR = '.el-dialog__headerbtn, .el-message-box__headerbtn';
+// 自定义关闭钮（流程详情 .fd-close / 个人中心 .up-close）不作为拖动把手
+const CLOSE_BTN_SELECTOR = '.el-dialog__headerbtn, .el-message-box__headerbtn, .fd-close, .up-close';
 const BOX_SELECTOR = '.el-dialog, .el-message-box';
 
 function onMouseDown(e) {

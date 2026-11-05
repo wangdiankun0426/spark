@@ -5,7 +5,8 @@
     "dev:h5": "uni --mode dev",
     "build:h5": "uni build --mode prod",
     "dev:mp-weixin": "uni -p mp-weixin --mode dev",
-    "build:mp-weixin": "uni build -p mp-weixin --mode prod"
+    "build:mp-weixin": "uni build -p mp-weixin --mode prod",
+    "lint:style": "stylelint \"src/**/*.{vue,scss}\""
   },
   "dependencies": {
     "@dcloudio/uni-app": "3.0.0-4000820240401001",
@@ -25,6 +26,9 @@
   "devDependencies": {
     "@dcloudio/vite-plugin-uni": "3.0.0-4000820240401001",
     "@types/node": "^17.0.0",
+    "postcss-html": "^2.0.0",
+    "postcss-scss": "^4.0.9",
+    "stylelint": "^17.16.0",
     "vite": "4.3.5"
   }
 }

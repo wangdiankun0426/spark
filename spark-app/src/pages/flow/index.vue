@@ -61,20 +61,14 @@
         <up-loading-icon text="加载中..." color="#2f7bff"/>
       </view>
 
-      <!-- 空状态 -->
-      <view v-else-if="instanceList.length === 0" class="empty-card">
-        <view class="empty-glow"></view>
-        <view class="empty-ring"></view>
-        <view class="empty-icon">
-          <up-icon :name="emptyIcon" size="21" :color="brandColor"/>
-        </view>
-        <text class="empty-title">{{ emptyTitle }}</text>
-        <text class="empty-desc">{{ emptyDesc }}</text>
-        <view class="empty-btn" @click="refreshList">
-          <up-icon name="reload" size="11" :color="brandColor"/>
-          <text class="empty-btn__text">刷新看看</text>
-        </view>
-      </view>
+      <EmptyState
+          v-else-if="instanceList.length === 0"
+          :icon="emptyIcon"
+          :title="emptyTitle"
+          :desc="emptyDesc"
+          btn-text="刷新看看"
+          @btn-click="refreshList"
+      />
 
       <!-- 实例卡片 -->
       <template v-else>
@@ -235,6 +229,7 @@ import {navHeaderStyle} from "@/utils/navBarUtil";
 import {useTheme} from "@/utils/useTheme";
 import {getSecondaryColor, getCardBgColor, getThemeToken} from "@/utils/themeUtil";
 import AppTabbar from "@/components/AppTabbar/index.vue";
+import EmptyState from "@/components/EmptyState/index.vue";
 import {
   pageMyApplicationListAPI,
   pageMyTodoListAPI,
@@ -652,14 +647,14 @@ function handleOnTabChange(index) {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: var(--app-page-base);
+  background-color: $app-page-base;
 }
 
 .flow-header {
   display: flex;
   align-items: flex-start;
   padding: 14px 16px 10px;
-  background-color: $spark-color-header-bg;
+  background-color: $app-header-bg;
   border-bottom: none;
 
   .header-left {
@@ -672,7 +667,7 @@ function handleOnTabChange(index) {
     font-size: 24px;
     font-weight: 700;
     letter-spacing: 0.5px;
-    color: var(--app-text-primary);
+    color: $app-text-primary;
   }
 
   .header-sub {
@@ -680,14 +675,14 @@ function handleOnTabChange(index) {
     align-items: center;
     margin-top: 5px;
     font-size: 11.5px;
-    color: var(--app-text-tertiary);
+    color: $app-text-tertiary;
   }
 
   .sub-num {
     margin: 0 3px;
     font-size: 11.5px;
     font-weight: 600;
-    color: var(--app-brand);
+    color: $app-brand;
   }
 }
 
@@ -700,22 +695,22 @@ function handleOnTabChange(index) {
   margin-left: auto;
   padding: 0 11px;
   border-radius: 15px;
-  background-color: var(--app-bg-card);
-  border: 1px solid var(--app-border-light);
-  box-shadow: var(--app-shadow-card);
+  background-color: $app-bg-card;
+  border: 1px solid $app-border-light;
+  box-shadow: $app-shadow-card;
 }
 
 .header-filter__text {
   font-size: 12.5px;
-  color: var(--app-text-secondary);
+  color: $app-text-secondary;
 }
 
 .header-filter.is-on {
-  border-color: var(--app-primary-soft);
+  border-color: $app-primary-soft;
 }
 
 .header-filter.is-on .header-filter__text {
-  color: var(--app-brand);
+  color: $app-brand;
   font-weight: 600;
 }
 
@@ -732,9 +727,9 @@ function handleOnTabChange(index) {
   font-weight: 700;
   line-height: 15px;
   text-align: center;
-  color: var(--app-fill-tx);
-  background-image: var(--app-gradient-fill);
-  box-shadow: 0 0 0 2px $spark-color-header-bg;
+  color: $app-fill-tx;
+  background-image: $app-gradient-fill;
+  box-shadow: 0 0 0 2px $app-header-bg;
 }
 
 .applied-row {
@@ -743,7 +738,7 @@ function handleOnTabChange(index) {
   flex-wrap: wrap;
   gap: 6px;
   padding: 0 14px 2px;
-  background-color: $spark-color-header-bg;
+  background-color: $app-header-bg;
 }
 
 .applied-chip {
@@ -753,7 +748,7 @@ function handleOnTabChange(index) {
   height: 24px;
   padding: 0 8px;
   border-radius: 8px;
-  background-color: var(--app-primary-soft);
+  background-color: $app-primary-soft;
 }
 
 .applied-chip__text {
@@ -762,18 +757,18 @@ function handleOnTabChange(index) {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 11.5px;
-  color: var(--app-brand);
+  color: $app-brand;
 }
 
 .applied-clear {
   margin-left: auto;
   font-size: 11.5px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
 }
 
 .flow-tabs {
   padding: 0 14px 12px;
-  background-color: $spark-color-header-bg;
+  background-color: $app-header-bg;
 }
 
 .tabs-track {
@@ -783,7 +778,7 @@ function handleOnTabChange(index) {
   height: 38px;
   padding: 3px;
   border-radius: 12px;
-  background-color: var(--app-tab-track);
+  background-color: $app-tab-track;
 }
 
 .seg-tab {
@@ -798,18 +793,18 @@ function handleOnTabChange(index) {
 
 .seg-tab__text {
   font-size: 12.5px;
-  color: var(--app-text-secondary);
+  color: $app-text-secondary;
   white-space: nowrap;
   transition: color 0.25s ease;
 }
 
 .seg-tab.is-active {
-  background-image: var(--app-gradient-fill);
-  box-shadow: var(--app-shadow-brand);
+  background-image: $app-gradient-fill;
+  box-shadow: $app-shadow-brand;
 }
 
 .seg-tab.is-active .seg-tab__text {
-  color: var(--app-fill-tx);
+  color: $app-fill-tx;
   font-weight: 600;
 }
 
@@ -836,12 +831,12 @@ function handleOnTabChange(index) {
   padding: 12px 13px;
   margin-bottom: 10px;
   border-radius: 16px;
-  background-color: var(--app-bg-card);
-  border: 1px solid var(--app-border);
-  box-shadow: var(--app-shadow-card);
+  background-color: $app-bg-card;
+  border: 1px solid $app-border;
+  box-shadow: $app-shadow-card;
 
   &:active {
-    background-color: var(--app-bg-hover);
+    background-color: $app-bg-hover;
   }
 }
 
@@ -856,23 +851,23 @@ function handleOnTabChange(index) {
   justify-content: center;
 
   &.tone-info {
-    background-color: var(--app-tile-info);
+    background-color: $app-tile-info;
   }
 
   &.tone-success {
-    background-color: var(--app-tile-success);
+    background-color: $app-tile-success;
   }
 
   &.tone-error {
-    background-color: var(--app-tile-error);
+    background-color: $app-tile-error;
   }
 
   &.tone-warning {
-    background-color: var(--app-tile-warning);
+    background-color: $app-tile-warning;
   }
 
   &.tone-gray {
-    background-color: var(--app-bg-sub);
+    background-color: $app-bg-sub;
   }
 }
 
@@ -894,7 +889,7 @@ function handleOnTabChange(index) {
   font-weight: 600;
   letter-spacing: 0.2px;
   line-height: 20px;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -929,13 +924,13 @@ function handleOnTabChange(index) {
   height: 25px;
   padding: 0 9px;
   border-radius: 8px;
-  background-color: var(--app-primary-soft);
+  background-color: $app-primary-soft;
 }
 
 .card-go__text {
   font-size: 11.5px;
   font-weight: 600;
-  color: var(--app-brand);
+  color: $app-brand;
 }
 
 .card-meta {
@@ -945,7 +940,7 @@ function handleOnTabChange(index) {
   margin-top: 4px;
   font-size: 11.5px;
   line-height: 16px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
   overflow: hidden;
   white-space: nowrap;
 }
@@ -962,22 +957,22 @@ function handleOnTabChange(index) {
   width: 3px;
   height: 3px;
   border-radius: 50%;
-  background-color: var(--app-text-placeholder);
+  background-color: $app-text-placeholder;
 }
 
 .meta-level {
   flex: none;
 
   &.is-normal {
-    color: var(--app-text-tertiary);
+    color: $app-text-tertiary;
   }
 
   &.is-important {
-    color: var(--app-text-warning);
+    color: $app-text-warning;
   }
 
   &.is-urgent {
-    color: var(--app-text-error);
+    color: $app-text-error;
     font-weight: 600;
   }
 }
@@ -997,13 +992,13 @@ function handleOnTabChange(index) {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--app-primary-soft);
+  background-color: $app-primary-soft;
 }
 
 .foot-ava__text {
   font-size: 9.5px;
   font-weight: 600;
-  color: var(--app-brand);
+  color: $app-brand;
   line-height: 1;
 }
 
@@ -1011,7 +1006,7 @@ function handleOnTabChange(index) {
   flex: 1;
   min-width: 0;
   font-size: 11.5px;
-  color: var(--app-text-secondary);
+  color: $app-text-secondary;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1020,36 +1015,36 @@ function handleOnTabChange(index) {
 .foot-when {
   flex: none;
   font-size: 11px;
-  color: var(--app-text-placeholder);
+  color: $app-text-placeholder;
 }
 
 .status-1,
 .status-6,
 .status-7,
 .status-8 {
-  color: var(--app-text-tertiary);
-  background-color: var(--app-bg-sub);
+  color: $app-text-tertiary;
+  background-color: $app-bg-sub;
 }
 
 .status-2 {
-  color: var(--app-text-info);
-  background-color: var(--app-bg-info);
+  color: $app-text-info;
+  background-color: $app-bg-info;
 }
 
 .status-3,
 .status-5 {
-  color: var(--app-text-success);
-  background-color: var(--app-bg-success);
+  color: $app-text-success;
+  background-color: $app-bg-success;
 }
 
 .status-4 {
-  color: var(--app-text-error);
-  background-color: var(--app-bg-error);
+  color: $app-text-error;
+  background-color: $app-bg-error;
 }
 
 .status-9 {
-  color: var(--app-text-warning);
-  background-color: var(--app-bg-warning);
+  color: $app-text-warning;
+  background-color: $app-bg-warning;
 }
 
 .end-row {
@@ -1062,101 +1057,19 @@ function handleOnTabChange(index) {
 .end-line {
   flex: 1;
   height: 1px;
-  background-color: var(--app-border-light);
+  background-color: $app-border-light;
 }
 
 .end-text {
   flex: none;
   font-size: 11px;
-  color: var(--app-text-tertiary);
-}
-
-.empty-card {
-  position: relative;
-  overflow: hidden;
-  margin: 2px 0 0;
-  padding: 22px 18px 20px;
-  border-radius: 18px;
-  background-image: var(--app-gradient-hero);
-  border: 1px solid var(--app-border-light);
-  box-shadow: var(--app-shadow-hero);
-}
-
-.empty-glow {
-  position: absolute;
-  right: -46px;
-  top: -52px;
-  width: 168px;
-  height: 168px;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--app-primary-soft) 0%, rgba(47, 123, 255, 0) 68%);
-}
-
-.empty-ring {
-  position: absolute;
-  right: -14px;
-  top: -20px;
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
-  border: 1px solid var(--app-primary-soft);
-}
-
-.empty-icon {
-  position: relative;
-  width: 46px;
-  height: 46px;
-  border-radius: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--app-bg-card);
-  border: 1px solid var(--app-border-light);
-  box-shadow: var(--app-shadow-card);
-}
-
-.empty-title {
-  position: relative;
-  display: block;
-  margin-top: 13px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--app-text-primary);
-}
-
-.empty-desc {
-  position: relative;
-  display: block;
-  margin-top: 6px;
-  font-size: 11.5px;
-  line-height: 1.65;
-  color: var(--app-text-tertiary);
-  white-space: pre-line;
-}
-
-.empty-btn {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 14px;
-  height: 30px;
-  padding: 0 13px;
-  border-radius: 9px;
-  background-color: var(--app-primary-soft);
-  border: 1px solid var(--app-primary-soft);
-}
-
-.empty-btn__text {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--app-brand);
+  color: $app-text-tertiary;
 }
 
 .fs {
   border-radius: 18px 18px 0 0;
   padding: 18px 18px calc(20px + env(safe-area-inset-bottom));
-  background-color: var(--app-bg-card);
+  background-color: $app-bg-card;
   max-height: 78vh;
   overflow-y: auto;
 }
@@ -1171,12 +1084,12 @@ function handleOnTabChange(index) {
 .fs-title {
   font-size: 17px;
   font-weight: 700;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
 }
 
 .fs-reset {
   font-size: 12.5px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
 }
 
 .fs-group + .fs-group {
@@ -1188,7 +1101,7 @@ function handleOnTabChange(index) {
   margin-bottom: 9px;
   font-size: 12.5px;
   font-weight: 600;
-  color: var(--app-text-secondary);
+  color: $app-text-secondary;
 }
 
 .fs-input {
@@ -1198,20 +1111,20 @@ function handleOnTabChange(index) {
   height: 38px;
   padding: 0 11px;
   border-radius: 10px;
-  background-color: var(--app-bg-sub);
-  border: 1px solid var(--app-border-light);
+  background-color: $app-bg-sub;
+  border: 1px solid $app-border-light;
 }
 
 .fs-input__inner {
   flex: 1;
   min-width: 0;
   font-size: 13px;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
 }
 
 .fs-input__ph {
   font-size: 13px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
 }
 
 .fs-chips {
@@ -1228,15 +1141,15 @@ function handleOnTabChange(index) {
   padding: 0 14px;
   border-radius: 9px;
   font-size: 12.5px;
-  color: var(--app-text-secondary);
-  background-color: var(--app-bg-sub);
+  color: $app-text-secondary;
+  background-color: $app-bg-sub;
   border: 1px solid transparent;
 }
 
 .fs-chip.is-on {
-  color: var(--app-fill-tx);
+  color: $app-fill-tx;
   font-weight: 600;
-  background-image: var(--app-gradient-fill);
+  background-image: $app-gradient-fill;
   border-color: transparent;
 }
 
@@ -1257,13 +1170,13 @@ function handleOnTabChange(index) {
   justify-content: center;
   gap: 3px;
   border-radius: 10px;
-  background-color: var(--app-bg-sub);
+  background-color: $app-bg-sub;
   border: 1px solid transparent;
 }
 
 .level-cell.is-on {
-  border-color: var(--app-brand);
-  background-color: var(--app-primary-soft);
+  border-color: $app-brand;
+  background-color: $app-primary-soft;
 }
 
 .level-cell__top {
@@ -1279,41 +1192,41 @@ function handleOnTabChange(index) {
   height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
-  background-color: var(--app-text-tertiary);
+  background-color: $app-text-tertiary;
 }
 
 .lv-2 .level-dot {
-  background-color: var(--app-text-warning);
+  background-color: $app-text-warning;
 }
 
 .lv-3 .level-dot {
-  background-color: var(--app-text-error);
+  background-color: $app-text-error;
 }
 
 .level-cell__name {
   font-size: 12.5px;
   font-weight: 600;
   line-height: 17px;
-  color: var(--app-text-secondary);
+  color: $app-text-secondary;
   white-space: nowrap;
 }
 
 .level-cell.is-on .level-cell__name {
-  color: var(--app-brand);
+  color: $app-brand;
 }
 
 .level-cell__desc {
   max-width: 100%;
   font-size: 9.5px;
   line-height: 12px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .level-cell.is-on .level-cell__desc {
-  color: var(--app-brand);
+  color: $app-brand;
   opacity: 0.82;
 }
 
@@ -1335,14 +1248,14 @@ function handleOnTabChange(index) {
 }
 
 .fs-btn.is-ghost {
-  color: var(--app-text-secondary);
-  background-color: var(--app-bg-sub);
-  border: 1px solid var(--app-border-light);
+  color: $app-text-secondary;
+  background-color: $app-bg-sub;
+  border: 1px solid $app-border-light;
 }
 
 .fs-btn.is-main {
-  color: var(--app-fill-tx);
-  background-image: var(--app-gradient-fill);
-  box-shadow: var(--app-shadow-brand);
+  color: $app-fill-tx;
+  background-image: $app-gradient-fill;
+  box-shadow: $app-shadow-brand;
 }
 </style>

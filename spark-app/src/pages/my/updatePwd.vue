@@ -1,13 +1,6 @@
 <template>
   <view class="safe-area-page" :class="themeClass">
-    <!-- 顶部标题栏 -->
-    <view class="page-header" :style="navHeaderStyle()">
-      <view class="page-header-back" @click="onClickLeft">
-        <up-icon name="arrow-left" size="19" :color="backIconColor"></up-icon>
-      </view>
-      <text class="page-header-title">修改密码</text>
-      <view class="page-header-extra"></view>
-    </view>
+    <PageHeader title="修改密码" @back="onClickLeft"/>
 
     <view class="update-password-form">
     <up-form>
@@ -33,7 +26,7 @@
         <up-button
             type="primary"
             :color="btnColor"
-            :custom-style="{ height: '80rpx', borderRadius: '12rpx', boxShadow: 'var(--app-shadow-brand)', marginTop: 'calc(100vh - 360px)' }"
+            :custom-style="{ height: '80rpx', borderRadius: '12rpx', boxShadow: '$app-shadow-brand', marginTop: 'calc(100vh - 360px)' }"
             @click="submitPasswordForm"
         >
           <text class="update-password-text">保 存</text>
@@ -49,13 +42,12 @@ import {getEncryptKeyAPI} from "@/api/auth/login.js";
 import {des} from "@/utils/encryptUtil";
 import {ref, computed} from 'vue';
 import {toast} from "uview-plus";
-import {navHeaderStyle} from "@/utils/navBarUtil";
 import {useTheme} from "@/utils/useTheme";
-import {getHeaderIconColor, getGradientFill} from "@/utils/themeUtil";
+import {getGradientFill} from "@/utils/themeUtil";
+import PageHeader from "@/components/PageHeader/index.vue";
 
 const {isDark, themeClass} = useTheme();
 
-const backIconColor = computed(() => getHeaderIconColor(isDark.value));
 const btnColor = computed(() => getGradientFill(isDark.value));
 
 // 租户密码长度规则，接口未返回时使用默认值
@@ -169,6 +161,6 @@ async function submitPasswordForm() {
   font-size: 32rpx;
   font-weight: 700;
   letter-spacing: 4rpx;
-  color: var(--app-fill-tx);
+  color: $app-fill-tx;
 }
 </style>

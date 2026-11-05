@@ -46,7 +46,7 @@ function onDragStart(event, nodeType) {
 <style scoped lang="scss">
 .node-panel {
   width: 200px;
-  background: var(--app-bg-card);
+  background: $app-bg-card;
   border-right: 1px solid $border-color;
   flex-shrink: 0;
   overflow-y: auto;
@@ -56,14 +56,25 @@ function onDragStart(event, nodeType) {
   display: flex;
   align-items: center;
   gap: $spacing-sm;
-  padding: $spacing-sm $spacing-md;
+  margin: 0 $spacing-sm $spacing-xs;
+  padding: $spacing-sm;
+  border: 1px solid transparent;
+  border-radius: $border-radius-md;
   cursor: grab;
   font-size: 13px;
   color: $color-text-primary;
-  transition: background 0.15s;
+  transition: $transition-fast;
 
-  &:hover { background: $color-primary-light; }
+  &:hover {
+    background: $app-bg-card;
+    border-color: $app-border-light;
+    box-shadow: $app-shadow-card;
+  }
   &:active { cursor: grabbing; }
+}
+
+html.dark .node-item:hover {
+  background: $app-bg-sub;
 }
 
 .node-icon {
@@ -72,8 +83,9 @@ function onDragStart(event, nodeType) {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 14px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
 }
 
 :deep(.el-collapse) { border: none; }

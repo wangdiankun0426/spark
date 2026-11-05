@@ -85,3 +85,9 @@ function getFieldSettingName(widget) {
   return "custom-"+widget.type+"-setting";
 }
 </script>
+<style scoped lang="scss">
+// 设置面板内的表单标签不加粗（覆盖全局 600 加粗，仅限设计器右侧面板）
+:deep(.el-form-item__label) {
+  font-weight: 400 !important;
+}
+</style>

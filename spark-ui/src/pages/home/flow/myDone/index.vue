@@ -19,7 +19,7 @@
     <div>
       <el-table
           ref="tableRef"
-          height="calc(100vh - 155px)"
+          height="calc(100vh - 160px)"
           :data="instanceList"
           highlight-current-row
           @row-click="handleRowClick"

@@ -1,60 +1,62 @@
 <template>
   <div>
     <el-container>
-      <el-aside width="50px" class="org-el-aside">
+      <el-aside :width="railMini ? railWidthMini : railWidth" class="app-sidebar" :class="{ 'app-sidebar--mini': railMini }">
         <el-menu
             :default-active="defaultActive"
             :router='true'
-            :collapse="true"
+            :collapse="railMini"
+            :collapse-transition="false"
             mode="vertical"
-            class="org-el-menu"
+            class="app-sidebar-menu"
         >
-          <div class="org-menu-group">数据</div>
+          <div class="app-sidebar__group">数据</div>
           <el-menu-item index="/org/sys/user">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+            <el-icon>
               <User />
             </el-icon>
             <template #title>用户管理</template>
           </el-menu-item>
           <el-menu-item index="/org/sys/dept">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+            <el-icon>
               <OfficeBuilding />
             </el-icon>
             <template #title>部门管理</template>
           </el-menu-item>
           <el-menu-item index="/org/sys/role">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+            <el-icon>
               <Role />
             </el-icon>
             <template #title>角色管理</template>
           </el-menu-item>
           <el-menu-item index="/org/sys/message">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+            <el-icon>
               <Bell />
             </el-icon>
             <template #title>消息管理</template>
           </el-menu-item>
-          <div class="org-menu-group">监控</div>
+          <div class="app-sidebar__group">监控</div>
           <el-menu-item index="/org/log/login">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+            <el-icon>
               <Key />
             </el-icon>
             <template #title>登录日志</template>
           </el-menu-item>
           <el-menu-item index="/org/log/operate">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+            <el-icon>
               <Document />
             </el-icon>
             <template #title>操作日志</template>
           </el-menu-item>
-          <div class="org-menu-group">配置</div>
+          <div class="app-sidebar__group">配置</div>
           <el-menu-item index="/org/sys/config">
-            <el-icon style="font-size:18px;color:var(--sidebar-icon);vertical-align: middle;">
+            <el-icon>
               <SetUp />
             </el-icon>
             <template #title>系统配置</template>
           </el-menu-item>
         </el-menu>
+        <rail-toggle/>
       </el-aside>
 
       <el-main class="affix-container">
@@ -69,6 +71,8 @@
 
 import {computed} from "vue";
 import {useRoute} from "vue-router";
+import RailToggle from '@/components/RailToggle.vue';
+import {railMini, railWidth, railWidthMini} from '@/utils/railUtil.js';
 import {SetUp} from "@element-plus/icons-vue";
 import Role from "@/assets/icons/role.vue";
 
@@ -82,64 +86,3 @@ const defaultActive = computed(() => {
 })
 
 </script>
-
-<style lang="scss" scoped>
-.org-el-aside {
-  padding: 0;
-  box-sizing: border-box;
-  height: calc(100vh - $nav-height);
-  background: var(--sidebar-bg);
-  color: var(--sidebar-text);
-  box-shadow: var(--sidebar-shadow);
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-.org-el-menu {
-  border: 0;
-  padding: 0;
-  margin: 0;
-  background: transparent !important;
-}
-.el-menu-item {
-  color: var(--sidebar-text);
-  height: 40px;
-  line-height: 40px;
-  font-size: 13px;
-  font-weight: 400;
-  justify-content: center;
-  width: calc(100% - 10px);
-  margin: 1px 5px;
-  border-radius: $border-radius-md;
-}
-:deep(.el-menu-item) {
-  padding: 0 !important;
-}
-/*悬停一级菜单*/
-.el-menu-item:hover {
-  background-color: var(--sidebar-hover-bg);
-}
-/*点击一级菜单*/
-.el-menu-item.is-active {
-  background-color: var(--sidebar-active-bg);
-  color: var(--sidebar-active-text);
-  border-bottom: 0;
-}
-:deep(.el-menu-item .el-menu-tooltip__trigger) {
-  padding: 0 !important;
-  justify-content: center;
-}
-.org-menu-group {
-  height: 30px;
-  line-height: 28px;
-  margin-top: $spacing-xs;
-  font-size: 11px;
-  letter-spacing: 2px;
-  text-align: center;
-  color: var(--sidebar-menu-group-text);
-  user-select: none;
-  pointer-events: none;
-}
-:deep(.el-menu--collapse) {
-  width: 50px;
-}
-</style>

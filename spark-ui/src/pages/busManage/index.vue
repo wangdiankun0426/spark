@@ -1,22 +1,22 @@
 <template>
   <div>
     <el-container>
-      <el-aside width="50px" class="bus-el-aside">
+      <el-aside :width="railMini ? railWidthMini : railWidth" class="app-sidebar" :class="{ 'app-sidebar--mini': railMini }">
         <el-menu
             :default-active="defaultActive"
             :router='true'
-            :collapse="true"
+            :collapse="railMini"
+            :collapse-transition="false"
             mode="vertical"
-            class="bus-el-menu"
+            class="app-sidebar-menu"
         >
-          <div class="bus-menu-group">流程</div>
+          <div class="app-sidebar__group">流程</div>
           <el-menu-item v-if="hasMenu(MENU_CODES.BUS_FLOW)" index="/bus/flowTemplate">
-            <el-icon style="font-size: 24px;">
-              <flow-application/>
-            </el-icon>
+            <el-icon><FlowApplication/></el-icon>
             <template #title>流程模板</template>
           </el-menu-item>
         </el-menu>
+        <rail-toggle/>
       </el-aside>
 
       <el-main class="affix-container">
@@ -31,8 +31,10 @@
 
 import {computed} from "vue";
 import {useRoute} from "vue-router";
-import FlowApplication from "@/assets/icons/flowApplication.vue";
+import RailToggle from '@/components/RailToggle.vue';
+import {railMini, railWidth, railWidthMini} from '@/utils/railUtil.js';
 import {hasMenu, MENU_CODES} from "@/utils/menuUtil.js";
+import FlowApplication from "@/assets/icons/flowApplication.vue";
 
 const route = useRoute();
 
@@ -44,64 +46,3 @@ const defaultActive = computed(() => {
 })
 
 </script>
-
-<style scoped lang="scss">
-.bus-el-aside {
-  padding: 0;
-  box-sizing: border-box;
-  height: calc(100vh - $nav-height);
-  background: var(--sidebar-bg);
-  color: var(--sidebar-text);
-  box-shadow: var(--sidebar-shadow);
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-.bus-menu-group {
-  height: 30px;
-  line-height: 28px;
-  margin-top: $spacing-xs;
-  font-size: 11px;
-  letter-spacing: 2px;
-  text-align: center;
-  color: var(--sidebar-menu-group-text);
-  user-select: none;
-  pointer-events: none;
-}
-:deep(.el-menu--collapse) {
-  width: 50px;
-}
-.bus-el-menu {
-  border: 0;
-  padding: 0;
-  margin: 0;
-  background: transparent !important;
-}
-.el-menu-item {
-  color: var(--sidebar-text);
-  height: 40px;
-  line-height: 40px;
-  font-size: 13px;
-  font-weight: 400;
-  justify-content: center;
-  width: calc(100% - 10px);
-  margin: 1px 5px;
-  border-radius: $border-radius-md;
-}
-:deep(.el-menu-item) {
-  padding: 0 !important;
-}
-/*悬停一级菜单之后*/
-.el-menu-item:hover {
-  background-color: var(--sidebar-hover-bg);
-}
-/*点击一级菜单之后*/
-.el-menu-item.is-active {
-  background-color: var(--sidebar-active-bg);
-  color: var(--sidebar-active-text);
-  border-bottom: 0;
-}
-:deep(.el-menu-item .el-menu-tooltip__trigger) {
-  padding: 0 !important;
-  justify-content: center;
-}
-</style>

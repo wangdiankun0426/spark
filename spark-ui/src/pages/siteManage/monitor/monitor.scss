@@ -1,3 +1,4 @@
+// 本文件被四个监控页 @use 引入，子模块拿不到 vite 的 variables 全局注入，必须显式引入
 @use "@/styles/variables" as *;
 
 .monitor-page {
@@ -155,13 +156,13 @@
 }
 
 .is-danger-text {
-  color: var(--el-color-danger);
+  color: $el-color-danger;
 }
 
 .is-warning-text {
-  color: var(--el-color-warning);
+  color: $el-color-warning;
 }
 
 .is-success-text {
-  color: var(--el-color-success);
+  color: $el-color-success;
 }

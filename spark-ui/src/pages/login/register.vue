@@ -1,82 +1,98 @@
 <template>
-  <div class="register-container">
-    <div class="register-card">
-      <h2 class="register-title">用户注册</h2>
+  <div class="auth-page">
+    <!-- 左侧：品牌与能力介绍（与登录页共用同一组件） -->
+    <AuthBrandPanel/>
+
+    <!-- 右侧：白色注册区 -->
+    <AuthPanel show-back @back="goLogin">
+      <h2 class="auth-title">创建账号</h2>
+      <p class="auth-subtitle">注册加入星火云AI，开启智能工作之旅</p>
+
       <el-form
           ref="registerRef"
           :model="registerForm"
           :rules="registerFormRules"
+          class="auth-form"
       >
-        <el-form-item prop="loginName">
-          <el-input
-              clearable
-              v-model="registerForm.loginName"
-              type="text"
-              placeholder="登录名"
-              @keyup.enter="submitRegisterForm"
-          >
-            <template #prefix>
-              <el-icon><Avatar /></el-icon>
-            </template>
-          </el-input>
-        </el-form-item>
-        <el-form-item prop="password">
-          <el-input
-              clearable
-              v-model="registerForm.password"
-              type="password"
-              placeholder="密码"
-              show-password
-              @keyup.enter="submitRegisterForm"
-          >
-            <template #prefix>
-              <el-icon><Lock /></el-icon>
-            </template>
-          </el-input>
-        </el-form-item>
-        <el-form-item prop="confirmPassword">
-          <el-input
-              clearable
-              v-model="registerForm.confirmPassword"
-              type="password"
-              placeholder="确认密码"
-              show-password
-              @keyup.enter="submitRegisterForm"
-          >
-            <template #prefix>
-              <el-icon><Lock /></el-icon>
-            </template>
-          </el-input>
-        </el-form-item>
-        <el-form-item prop="sex">
-          <el-select v-model="registerForm.sex" placeholder="请选择性别" style="width: 100%;">
-            <el-option label="男" :value="1" />
-            <el-option label="女" :value="2" />
-          </el-select>
-        </el-form-item>
-        <el-form-item prop="validateValue">
-          <div class="validate-row">
+        <div class="auth-fields">
+          <el-form-item prop="loginName">
             <el-input
-                clearable
+                v-model="registerForm.loginName"
+                type="text"
+                placeholder="登录名"
+                @keyup.enter="submitRegisterForm"
+            >
+              <template #prefix>
+                <el-icon><User /></el-icon>
+              </template>
+            </el-input>
+          </el-form-item>
+
+          <el-form-item prop="password">
+            <el-input
+                v-model="registerForm.password"
+                type="password"
+                placeholder="密码"
+                show-password
+                @keyup.enter="submitRegisterForm"
+            >
+              <template #prefix>
+                <el-icon><Lock /></el-icon>
+              </template>
+            </el-input>
+          </el-form-item>
+
+          <el-form-item prop="confirmPassword">
+            <el-input
+                v-model="registerForm.confirmPassword"
+                type="password"
+                placeholder="确认密码"
+                show-password
+                @keyup.enter="submitRegisterForm"
+            >
+              <template #prefix>
+                <el-icon><Lock /></el-icon>
+              </template>
+            </el-input>
+          </el-form-item>
+
+          <el-form-item prop="sex">
+            <div class="gender-field">
+              <el-icon class="gender-icon"><User /></el-icon>
+              <div class="gender-seg">
+                <span :class="{ on: registerForm.sex === 1 }" @click="registerForm.sex = 1">男</span>
+                <span :class="{ on: registerForm.sex === 2 }" @click="registerForm.sex = 2">女</span>
+              </div>
+            </div>
+          </el-form-item>
+
+          <el-form-item prop="validateValue">
+            <el-input
                 v-model="registerForm.validateValue"
                 auto-complete="off"
                 placeholder="验证码"
+                class="auth-code-input"
                 @keyup.enter="submitRegisterForm"
             >
               <template #prefix>
                 <el-icon><Validate /></el-icon>
               </template>
             </el-input>
-            <img
-                :src="validateImg"
-                class="validate-img"
-                @click="getValidateImg"
-                title="点击刷新验证码"
-                alt=""
-            />
-          </div>
-        </el-form-item>
-        <el-form-item>
+            <div class="auth-code">
+              <img :src="validateImg" class="auth-code-img" @click="getValidateImg" title="点击刷新验证码" alt=""/>
+            </div>
+          </el-form-item>
+        </div>
+
+        <div class="auth-agreement">
+          <el-checkbox v-model="agreed" @change="onAgreeChange">我已阅读并同意</el-checkbox>
+          <el-button type="primary" link @click="openAgreement('service')">用户服务协议</el-button>
+          <span class="agreement-and">和</span>
+          <el-button type="primary" link @click="openAgreement('privacy')">隐私政策</el-button>
+        </div>
+        <div v-if="agreementError" class="auth-agreement-error">请先阅读并同意用户服务协议和隐私政策</div>
+
+        <el-form-item class="auth-submit-item">
           <el-button
               :loading="loading"
               type="primary"
@@ -86,11 +102,12 @@
           </el-button>
         </el-form-item>
       </el-form>
-      <div class="register-footer">
-        <span>已有账号？</span>
+
+      <div class="auth-entry">
+        <span class="auth-entry-tip">已有账号？</span>
         <el-button type="primary" link @click="goLogin">立即登录</el-button>
       </div>
-    </div>
+    </AuthPanel>
   </div>
 </template>
 
@@ -98,10 +115,14 @@
 import { getValidateCodeAPI, getEncryptKeyAPI } from '@/api/manage/auth/login.js';
 import { registerAPI } from '@/api/manage/auth/register.js';
 import { des } from '@/utils/encryptUtil.js';
+import { AGREEMENT_VERSION } from '@/utils/agreementDoc.js';
+import { localStorageKey } from '@/utils/keyUtils.js';
 import Validate from '@/assets/icons/validate.vue';
 import { ref, getCurrentInstance } from "vue";
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import AuthBrandPanel from './components/AuthBrandPanel.vue';
+import AuthPanel from './components/AuthPanel.vue';
 
 const router = useRouter();
 const { proxy } = getCurrentInstance();
@@ -110,7 +131,7 @@ const registerForm = ref({
   loginName: undefined,
   password: undefined,
   confirmPassword: undefined,
-  sex: undefined,
+  sex: 1,
   validateId: undefined,
   validateValue: undefined
 });
@@ -145,6 +166,38 @@ const loading = ref(false);
 const validateImg = ref(undefined);
 
 /**
+ * 读取本地协议同意凭证，与登录页共用同一份记录
+ */
+function getStoredAgreed() {
+  const record = JSON.parse(localStorage.getItem(localStorageKey.AGREEMENT_KEY) || 'null');
+  return !!(record && record.version === AGREEMENT_VERSION);
+}
+
+const agreed = ref(getStoredAgreed());
+const agreementError = ref(false);
+
+/**
+ * 勾选时持久化同意凭证，取消时移除
+ */
+function onAgreeChange(value) {
+  if (value) {
+    localStorage.setItem(localStorageKey.AGREEMENT_KEY, JSON.stringify({version: AGREEMENT_VERSION, time: Date.now()}));
+    agreementError.value = false;
+  } else {
+    localStorage.removeItem(localStorageKey.AGREEMENT_KEY);
+  }
+}
+
+/**
+ * 新标签打开协议文本页
+ * @param type service 用户服务协议 / privacy 隐私政策
+ */
+function openAgreement(type) {
+  const { href } = router.resolve({ path: '/agreement', query: { type } });
+  window.open(href, '_blank');
+}
+
+/**
  * 获取验证码
  */
 function getValidateImg() {
@@ -162,6 +215,10 @@ getValidateImg();
 function submitRegisterForm() {
   proxy.$refs.registerRef.validate(async valid => {
     if (!valid) return;
+    if (!agreed.value) {
+      agreementError.value = true;
+      return;
+    }
     loading.value = true;
     const keyResult = await getEncryptKeyAPI();
     if (keyResult.code !== 200) {
@@ -199,79 +256,98 @@ function goLogin() {
 }
 </script>
 
-<style scoped lang="scss">
-.register-container {
-  width: 100%;
+<style lang="scss" scoped>
+// 左右分栏由页面负责，两侧内容区来自公共组件
+.auth-page {
   height: 100vh;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  background: linear-gradient(160deg, var(--app-bg-page) 0%, var(--app-bg-card) 100%);
+  align-items: stretch;
+  overflow: hidden;
+  background-color: $app-bg-card;
 }
 
-.register-card {
-  width: 400px;
-  padding: 40px;
-  background: var(--app-bg-card);
-  border: 1px solid var(--app-border-light);
-  border-radius: 12px;
-  box-shadow: var(--app-shadow-card);
-}
-
-.register-title {
-  text-align: center;
-  margin-bottom: 30px;
-  font-size: 24px;
-  color: var(--app-text-primary);
-}
-
-.validate-row {
-  display: flex;
-  gap: 12px;
-  width: 100%;
-}
-
-.validate-img {
-  width: 200px;
-  height: 40px;
-  cursor: pointer;
-  border-radius: 4px;
-  border: 1px solid var(--app-border);
-}
-
-.register-footer {
-  margin-top: 16px;
-  font-size: 14px;
-  color: var(--app-text-secondary);
-}
-
-.el-input {
-  height: 44px;
-}
-
-.auth-submit-btn {
-  width: 100%;
-  height: 40px;
-  font-weight: bold;
-  font-size: 18px;
-  background-color: #004fc5 !important;
-  border-color: #004fc5 !important;
-
-  &:hover,
-  &:focus {
-    background-color: #2669cd !important;
-    border-color: #2669cd !important;
+@supports (height: 100dvh) {
+  .auth-page {
+    height: 100dvh;
   }
 }
 
-:deep(.el-input__inner) {
-  &:-webkit-autofill,
-  &:-webkit-autofill:hover,
-  &:-webkit-autofill:focus {
-    -webkit-text-fill-color: var(--app-text-primary);
-    caret-color: var(--app-text-primary);
-    -webkit-box-shadow: 0 0 0 1000px var(--el-fill-color-blank) inset;
-    transition: background-color 9999s ease-in-out 0s;
+// 与输入框同高的性别分段双选
+.gender-field {
+  width: 100%;
+  height: 47px;
+  padding: 0 $spacing-sm 0 14px;
+  display: flex;
+  align-items: center;
+  border-radius: $border-radius-md;
+  background: $ds-surface-2;
+}
+
+.gender-icon {
+  flex: none;
+  margin-right: 9px;
+  font-size: 17px;
+  color: $app-text-placeholder;
+}
+
+.gender-seg {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: $spacing-sm;
+
+  span {
+    flex: 1;
+    height: 33px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid $ds-line;
+    background-color: $app-bg-card;
+    font-size: 12.5px;
+    color: $app-text-secondary;
+    cursor: pointer;
+    user-select: none;
+    transition: color $transition-fast, border-color $transition-fast, background-color $transition-fast;
+
+    &:hover {
+      border-color: $ds-brand;
+    }
+
+    &.on {
+      color: $ds-brand;
+      font-weight: 650;
+      border-color: $ds-brand;
+      background-color: $app-primary-light;
+    }
+  }
+}
+
+html.dark .gender-seg {
+  span {
+    background: $app-bg-sub;
+
+    &.on {
+      color: $ds-brand;
+      background: $app-primary-light;
+    }
+  }
+}
+
+// 验证码输入框与右侧验证码图并排，固定占比
+.auth-code-input {
+  width: 65%;
+}
+
+// 矮屏下与输入框一起压缩
+@media (max-height: 860px) {
+  .gender-field {
+    height: 44px;
+  }
+
+  .gender-seg span {
+    height: 30px;
   }
 }
 </style>

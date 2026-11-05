@@ -3,7 +3,7 @@
     <el-table
         :data="list"
         v-loading="loading"
-        height="calc(100vh - 130px)"
+        height="calc(100vh - 135px)"
     >
       <el-table-column prop="name" label="配置名称" min-width="160" align="center" show-overflow-tooltip/>
       <el-table-column prop="key" label="配置key" min-width="200" align="center" show-overflow-tooltip/>

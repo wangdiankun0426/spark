@@ -234,7 +234,7 @@ function handleModelChange(modelId) {
 .aichat-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 70px);
+  height: calc(100vh - 60px);
 }
 
 .aichat-body {

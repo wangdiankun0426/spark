@@ -54,7 +54,7 @@
         <svg class="cn-lines" :width="canvasW" :height="canvasH">
           <defs>
             <marker :id="markerId" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-              <polygon points="0 0, 10 3.5, 0 7" fill="#666" />
+              <polygon points="0 0, 10 3.5, 0 7" class="cn-arrow" />
             </marker>
           </defs>
 
@@ -104,8 +104,7 @@
           <path
               v-if="connecting"
               :d="getConnectingPath()"
-              stroke="#1890ff"
-              stroke-width="2"
+              class="cn-line-temp"
               fill="none"
               :marker-end="'url(#' + markerId + ')'"
               stroke-dasharray="5,5"
@@ -540,11 +539,13 @@ function handleDrop(event) {
   position: relative;
   overflow: auto;
   flex: 1;
-  background-color: #fafbfc;
+  // 星星点点网格颜色取主题令牌，亮暗主题自动切换
+  background-color: $app-canvas-bg;
   background-image:
-    linear-gradient(90deg, #eee 1px, transparent 1px),
-    linear-gradient(180deg, #eee 1px, transparent 1px);
-  background-size: 20px 20px;
+    radial-gradient(circle, $app-canvas-dot 1.2px, transparent 1.8px),
+    radial-gradient(circle, $app-canvas-dot-soft 1px, transparent 1.6px);
+  background-size: 22px 22px, 22px 22px;
+  background-position: 0 0, 11px 11px;
 }
 
 .canvas-content {
@@ -573,8 +574,8 @@ function handleDrop(event) {
   justify-content: center;
   gap: 2px;
   border-radius: 8px;
-  background: #fff;
-  border: 1.5px solid #d9d9d9;
+  background: $app-bg-card;
+  border: 1.5px solid $app-border;
 }
 
 .cn-node-icon {
@@ -585,7 +586,7 @@ function handleDrop(event) {
   margin-top: 2px;
   font-size: 13px;
   font-weight: 400;
-  color: #172b4d;
+  color: $app-text-primary;
   line-height: 1.2;
   word-break: break-all;
   max-width: 120px;
@@ -596,14 +597,14 @@ function handleDrop(event) {
   position: absolute;
   width: 10px;
   height: 10px;
-  background: #fff;
-  border: 1.5px solid #1890ff;
+  background: $app-bg-card;
+  border: 1.5px solid $el-color-primary;
   border-radius: 50%;
   cursor: crosshair;
   z-index: 100;
   opacity: 0;
   transition: opacity 0.2s;
-  box-shadow: 0 0 4px rgba(24, 144, 255, 0.4);
+  box-shadow: 0 0 4px rgba(47, 123, 255, 0.4);
 }
 .cn-point:hover,
 .cn-node:hover .cn-point { opacity: 0.9; }
@@ -624,7 +625,7 @@ function handleDrop(event) {
   pointer-events: visibleStroke;
 }
 .cn-line {
-  stroke: #666;
+  stroke: $app-text-placeholder;
   stroke-width: 2;
   fill: none;
   stroke-linecap: round;
@@ -632,14 +633,21 @@ function handleDrop(event) {
   cursor: pointer;
 }
 .cn-line--selected {
-  stroke: #1890ff !important;
+  stroke: $el-color-primary !important;
   stroke-width: 2.5;
+}
+.cn-arrow {
+  fill: $app-text-placeholder;
+}
+.cn-line-temp {
+  stroke: $el-color-primary;
+  stroke-width: 2;
 }
 .cn-line-label {
   pointer-events: all;
   cursor: pointer;
   font-size: 11px;
-  fill: #5e6c84;
+  fill: $app-text-secondary;
   text-anchor: middle;
   font-weight: 400;
 }
@@ -647,19 +655,17 @@ function handleDrop(event) {
   pointer-events: all;
   cursor: pointer;
   font-size: 11px;
-  fill: #fa8c16;
+  fill: $app-node-gateway;
   text-anchor: middle;
   font-weight: 400;
-  // 白色描边光晕：保证文字在网格背景/连线交叉处可读
+  // 画布底色描边光晕，保证文字在网格与连线交叉处可读
   paint-order: stroke;
-  stroke: #fff;
+  stroke: $app-canvas-bg;
   stroke-width: 3px;
   stroke-linejoin: round;
 }
-</style>
 
-<style lang="scss">
-/* 非 scoped：确保 ::-webkit-scrollbar 伪元素生效 */
+// 画布滚动条收细并跟随主题滑块色
 .designer-canvas {
   scrollbar-width: thin;
   -ms-overflow-style: auto;
@@ -669,7 +675,7 @@ function handleDrop(event) {
   height: 6px;
 }
 .designer-canvas::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: $app-scrollbar-thumb;
   border-radius: 3px;
 }
 .designer-canvas::-webkit-scrollbar-track {

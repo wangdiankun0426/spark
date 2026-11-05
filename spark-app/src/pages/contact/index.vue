@@ -50,9 +50,7 @@
       <template v-else>
         <view v-if="recentList.length > 0" class="section-block">
           <view class="section-head">
-            <view class="section-head-left">
-              <text class="section-title">最近联系</text>
-            </view>
+            <SectionTitle>最近联系</SectionTitle>
             <view class="section-more">
               <text class="section-more__text">{{ recentList.length }} 人</text>
             </view>
@@ -84,9 +82,7 @@
 
         <view class="section-block">
           <view class="section-head">
-            <view class="section-head-left">
-              <text class="section-title">全部联系人</text>
-            </view>
+            <SectionTitle>全部联系人</SectionTitle>
             <view class="section-more">
               <text class="section-more__text">{{ totalUser }} 人</text>
             </view>
@@ -138,6 +134,7 @@ import {useTheme} from "@/utils/useTheme";
 import {getSearchIconColor, getChevronColor, getPlaceholderColor} from "@/utils/themeUtil";
 import UserAvatar from '@/components/UserAvatar/index.vue'
 import AppTabbar from "@/components/AppTabbar/index.vue";
+import SectionTitle from "@/components/SectionTitle/index.vue";
 
 const {isDark, themeClass} = useTheme();
 
@@ -269,19 +266,19 @@ function handleOnTabChange(index) {
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
-  background-color: var(--app-bg-page);
+  background-color: $app-bg-page;
 }
 
 .contact-header {
   padding: 14px 16px 10px;
-  background-color: $spark-color-header-bg;
+  background-color: $app-header-bg;
 
   .header-title {
     display: block;
     font-size: 24px;
     font-weight: 700;
     letter-spacing: 0.5px;
-    color: var(--app-text-primary);
+    color: $app-text-primary;
   }
 }
 
@@ -294,20 +291,20 @@ function handleOnTabChange(index) {
 
 .sub-text {
   font-size: 11.5px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
 }
 
 .sub-num {
   margin: 0 3px;
   font-size: 11.5px;
   font-weight: 600;
-  color: var(--app-brand);
+  color: $app-brand;
 }
 
 .sub-unread {
   margin-left: 2px;
   font-weight: 600;
-  color: var(--app-brand);
+  color: $app-brand;
 }
 
 .sub-dot {
@@ -315,14 +312,14 @@ function handleOnTabChange(index) {
   height: 3px;
   margin: 0 7px 0 8px;
   border-radius: 50%;
-  background-color: var(--app-text-placeholder);
+  background-color: $app-text-placeholder;
   flex-shrink: 0;
 }
 
 .contact-search {
   flex-shrink: 0;
   padding: 10px 14px 4px;
-  background-color: var(--app-bg-page);
+  background-color: $app-bg-page;
 }
 
 .search-field {
@@ -332,14 +329,14 @@ function handleOnTabChange(index) {
   height: 40px;
   padding: 0 13px;
   border-radius: 14px;
-  background-color: var(--app-bg-card);
+  background-color: $app-bg-card;
   border: 1px solid transparent;
-  box-shadow: var(--app-shadow-card);
+  box-shadow: $app-shadow-card;
   transition: border-color 0.18s ease, background-color 0.18s ease;
 }
 
 .search-field.is-active {
-  border-color: var(--app-brand);
+  border-color: $app-brand;
 }
 
 .search-input {
@@ -347,7 +344,7 @@ function handleOnTabChange(index) {
   min-width: 0;
   height: 100%;
   font-size: 13.5px;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
   background-color: transparent;
 }
 
@@ -378,7 +375,7 @@ function handleOnTabChange(index) {
   padding: 14px 0 28px;
   text-align: center;
   font-size: 11.5px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
 }
 
 .section-block {
@@ -397,33 +394,6 @@ function handleOnTabChange(index) {
   margin: 0 2px 9px;
 }
 
-.section-head-left {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.section-title {
-  position: relative;
-  padding-left: 11px;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-  color: var(--app-text-primary);
-}
-
-.section-title::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 13px;
-  border-radius: 2px;
-  background-image: var(--app-gradient-brand);
-}
-
 .section-more {
   display: flex;
   align-items: center;
@@ -431,7 +401,7 @@ function handleOnTabChange(index) {
 
   .section-more__text {
     font-size: 11px;
-    color: var(--app-text-tertiary);
+    color: $app-text-tertiary;
   }
 }
 
@@ -464,7 +434,7 @@ function handleOnTabChange(index) {
 .recent-name {
   max-width: 100%;
   font-size: 11px;
-  color: var(--app-text-secondary);
+  color: $app-text-secondary;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -478,7 +448,7 @@ function handleOnTabChange(index) {
   height: 16px;
   padding: 0 4px;
   border-radius: 999px;
-  background-color: var(--app-error-solid);
+  background-color: $app-error-solid;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -487,24 +457,24 @@ function handleOnTabChange(index) {
   .badge-text {
     font-size: 9.5px;
     line-height: 1;
-    color: var(--app-fill-tx);
+    color: $app-fill-tx;
     font-weight: 600;
   }
 }
 
 .badge-page {
-  border: 1.5px solid var(--app-bg-page);
+  border: 1.5px solid $app-bg-page;
 }
 
 .badge-card {
-  border: 1.5px solid var(--app-bg-card);
+  border: 1.5px solid $app-bg-card;
 }
 
 .list-card {
-  background-color: var(--app-bg-card);
+  background-color: $app-bg-card;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: var(--app-shadow-card);
+  box-shadow: $app-shadow-card;
 }
 
 .user-row {
@@ -514,7 +484,7 @@ function handleOnTabChange(index) {
   padding: 11px 14px;
 
   &:active {
-    background-color: var(--app-bg-hover);
+    background-color: $app-bg-hover;
   }
 }
 
@@ -535,7 +505,7 @@ function handleOnTabChange(index) {
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.2px;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -544,7 +514,7 @@ function handleOnTabChange(index) {
 .user-dept {
   font-size: 11.5px;
   line-height: 16px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -553,6 +523,6 @@ function handleOnTabChange(index) {
 .row-divider {
   height: 1px;
   margin-left: 68px;
-  background-color: var(--app-border-light);
+  background-color: $app-border-light;
 }
 </style>

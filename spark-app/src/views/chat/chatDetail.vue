@@ -1,29 +1,12 @@
 <template>
   <view class="chat-detail-container safe-area-page" :class="themeClass">
-    <!-- 顶部标题栏：与其他二级页统一「返回 + 居中标题」 -->
-    <view class="page-header" :style="navHeaderStyle()">
-      <view class="page-header-back" @click="goBack">
-        <up-icon name="arrow-left" size="19" :color="backIconColor"></up-icon>
-      </view>
-      <text class="page-header-title">聊天详情</text>
-      <view class="page-header-extra"></view>
-    </view>
+    <PageHeader title="聊天详情" @back="goBack"/>
 
     <scroll-view class="detail-body" scroll-y>
-      <!-- 会话对象：头像 + 名称 + 类型，说明这份记录属于谁 -->
-      <view class="profile-card">
-        <user-avatar :type="avatarType" shape="rounded" show-icon :size="46"/>
-        <view class="profile-main">
-          <text class="profile-name">{{ targetName || '未命名会话' }}</text>
-          <text class="profile-sub">{{ typeLabel }}</text>
-        </view>
-      </view>
-
       <!-- 操作卡：沿用设置页的行样式 -->
       <view class="section-card">
         <view class="section-head">
-          <view class="section-bar"></view>
-          <text class="section-title">会话设置</text>
+          <SectionTitle>会话设置</SectionTitle>
         </view>
         <view class="link-row" @click="openChatRecord">
           <view class="row-icon">
@@ -41,10 +24,10 @@
 <script setup>
 import {ref, computed} from 'vue'
 import {onLoad} from '@dcloudio/uni-app'
-import {navHeaderStyle} from '@/utils/navBarUtil'
 import {useTheme} from '@/utils/useTheme'
 import {getHeaderIconColor, getChevronColor} from '@/utils/themeUtil'
-import UserAvatar from '@/components/UserAvatar/index.vue'
+import PageHeader from '@/components/PageHeader/index.vue'
+import SectionTitle from '@/components/SectionTitle/index.vue'
 
 const {isDark, themeClass} = useTheme()
 
@@ -54,18 +37,8 @@ const targetType = ref('agent')
 const targetName = ref('')
 const recordTitle = ref('聊天记录')
 
-const backIconColor = computed(() => getHeaderIconColor(isDark.value))
 const chevronColor = computed(() => getChevronColor(isDark.value))
 const rowIconColor = computed(() => getHeaderIconColor(isDark.value))
-
-// 头像类型与文案：同事 / 智能体 / 模型
-const avatarType = computed(() => (targetType.value === 'user' ? 'user' : targetType.value))
-const typeLabel = computed(() => {
-  if (targetType.value === 'user') {
-    return '同事会话'
-  }
-  return targetType.value === 'model' ? '模型会话' : '智能体会话'
-})
 
 onLoad((options) => {
   if (!options) {
@@ -104,7 +77,7 @@ function openChatRecord() {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: var(--app-bg-page);
+  background-color: $app-bg-page;
 }
 
 .detail-body {
@@ -114,44 +87,11 @@ function openChatRecord() {
   box-sizing: border-box;
 }
 
-.profile-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  margin-bottom: 10px;
-  border-radius: 16px;
-  background-color: var(--app-bg-card);
-  box-shadow: var(--app-shadow-card);
-}
-
-.profile-main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.profile-name {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--app-text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.profile-sub {
-  font-size: 11.5px;
-  color: var(--app-text-tertiary);
-}
-
 .section-card {
   padding: 13px 14px 4px;
   border-radius: 16px;
-  background-color: var(--app-bg-card);
-  box-shadow: var(--app-shadow-card);
+  background-color: $app-bg-card;
+  box-shadow: $app-shadow-card;
 }
 
 .section-head {
@@ -161,25 +101,12 @@ function openChatRecord() {
   padding-bottom: 6px;
 }
 
-.section-bar {
-  width: 3px;
-  height: 12px;
-  border-radius: 2px;
-  background-image: var(--app-gradient-fill);
-}
-
-.section-title {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--app-text-primary);
-}
-
 .link-row {
   display: flex;
   align-items: center;
   gap: 11px;
   padding: 11px 0;
-  border-top: 1px solid var(--app-divide);
+  border-top: 1px solid $app-divide;
 
   &:active {
     opacity: 0.7;
@@ -194,18 +121,18 @@ function openChatRecord() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--app-primary-soft);
+  background-color: $app-primary-soft;
 }
 
 .row-title {
   flex: 1;
   min-width: 0;
   font-size: 13.5px;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
 }
 
 .row-value {
   font-size: 12px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
 }
 </style>

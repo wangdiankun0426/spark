@@ -1,78 +1,60 @@
 <template>
   <div>
     <el-container>
-      <el-aside width="50px" class="home-el-aside">
+      <el-aside :width="railMini ? railWidthMini : railWidth" class="app-sidebar" :class="{ 'app-sidebar--mini': railMini }">
         <el-menu
             :default-active="defaultActive"
             :router='true'
-            :collapse="true"
+            :collapse="railMini"
+            :collapse-transition="false"
             mode="vertical"
-            class="home-el-menu"
+            class="app-sidebar-menu"
         >
-          <div class="home-menu-group">通用</div>
+          <div class="app-sidebar__group">通用</div>
           <el-menu-item index="/home/dashboard">
-            <el-icon style="font-size: 24px;">
-              <Dashboard/>
-            </el-icon>
+            <el-icon><Dashboard/></el-icon>
             <template #title>工作台</template>
           </el-menu-item>
           <el-menu-item index="/home/contact">
-            <el-icon style="font-size: 24px;">
-              <Chat/>
-            </el-icon>
+            <el-icon><Chat/></el-icon>
             <template #title>通讯录</template>
           </el-menu-item>
-          <div class="home-menu-group">AI</div>
+          <div class="app-sidebar__group">AI</div>
           <el-menu-item index="/home/aichat">
-            <el-icon style="font-size: 24px;">
-              <AiChat/>
-            </el-icon>
+            <el-icon><AiChat/></el-icon>
             <template #title>AI对话</template>
           </el-menu-item>
           <el-menu-item index="/home/agent">
-            <el-icon style="font-size: 24px;">
-              <Agent/>
-            </el-icon>
+            <el-icon><Agent/></el-icon>
             <template #title>智能体</template>
           </el-menu-item>
           <el-menu-item index="/home/workflow">
-            <el-icon style="font-size: 24px;">
-              <Workflow/>
-            </el-icon>
+            <el-icon><Workflow/></el-icon>
             <template #title>工作流</template>
           </el-menu-item>
-          <div class="home-menu-group">流程</div>
+          <div class="app-sidebar__group">流程</div>
           <el-menu-item index="/home/flow/application">
-            <el-icon style="font-size: 24px;">
-              <FlowApplication/>
-            </el-icon>
+            <el-icon><FlowApplication/></el-icon>
             <template #title>流程申请</template>
           </el-menu-item>
           <el-menu-item index="/home/flow/myApplication">
-            <el-icon style="font-size: 24px;">
-              <MyApplication/>
-            </el-icon>
+            <el-icon><MyApplication/></el-icon>
             <template #title>我的申请</template>
           </el-menu-item>
           <el-menu-item index="/home/flow/myTodo">
-            <el-icon style="font-size: 24px;">
-              <MyTodo/>
-            </el-icon>
+            <el-icon><MyTodo/></el-icon>
             <template #title>我的待办</template>
           </el-menu-item>
           <el-menu-item index="/home/flow/myDone">
-            <el-icon style="font-size: 24px;">
-              <MyDone/>
-            </el-icon>
+            <el-icon><MyDone/></el-icon>
             <template #title>我的已办</template>
           </el-menu-item>
           <el-menu-item index="/home/flow/copyMe">
-            <el-icon style="font-size: 24px;">
-              <CopyMe/>
-            </el-icon>
+            <el-icon><CopyMe/></el-icon>
             <template #title>抄送给我</template>
           </el-menu-item>
         </el-menu>
+        <rail-toggle/>
       </el-aside>
 
       <el-main class="affix-container">
@@ -86,16 +68,18 @@
 <script setup>
 import {computed} from "vue";
 import {useRoute} from "vue-router";
-import Agent from "@/assets/icons/agent.vue";
+import RailToggle from '@/components/RailToggle.vue';
+import {railMini, railWidth, railWidthMini} from '@/utils/railUtil.js';
 import Dashboard from "@/assets/icons/dashboard.vue";
+import Chat from "@/assets/icons/chat.vue";
+import AiChat from "@/assets/icons/aichat.vue";
+import Agent from "@/assets/icons/agent.vue";
+import Workflow from "@/assets/icons/workflow.vue";
 import FlowApplication from "@/assets/icons/flowApplication.vue";
 import MyApplication from "@/assets/icons/myApplication.vue";
 import MyTodo from "@/assets/icons/myTodo.vue";
 import MyDone from "@/assets/icons/myDone.vue";
 import CopyMe from "@/assets/icons/copyMe.vue";
-import Chat from "@/assets/icons/chat.vue";
-import AiChat from "@/assets/icons/aichat.vue";
-import Workflow from "@/assets/icons/workflow.vue";
 const route = useRoute();
 
 /**
@@ -106,66 +90,3 @@ const defaultActive = computed(() => {
 })
 
 </script>
-
-<style lang="scss" scoped>
-.home-el-aside {
-  padding: 0;
-  box-sizing: border-box;
-  height: calc(100vh - $nav-height);
-  background: var(--sidebar-bg);
-  color: var(--sidebar-text);
-  box-shadow: var(--sidebar-shadow);
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-.home-el-menu {
-  border: 0;
-  padding: 0;
-  margin: 0;
-  background: transparent !important;
-}
-.home-menu-group {
-  height: 30px;
-  line-height: 28px;
-  margin-top: $spacing-xs;
-  font-size: 11px;
-  letter-spacing: 2px;
-  text-align: center;
-  color: var(--sidebar-menu-group-text);
-  user-select: none;
-  pointer-events: none;
-}
-:deep(.el-menu--collapse) {
-  width: 50px;
-}
-.home-el-menu :deep(.el-menu-item),
-.home-el-menu :deep(.el-sub-menu__title) {
-  color: var(--sidebar-text);
-  height: 40px;
-  line-height: 40px;
-  font-size: 13px;
-  font-weight: 400;
-  justify-content: center;
-  padding: 0 !important;
-  width: calc(100% - 10px);
-  margin: 1px 5px;
-  border-radius: $border-radius-md;
-}
-/*悬停菜单之后*/
-.home-el-menu :deep(.el-menu-item:hover),
-.home-el-menu :deep(.el-sub-menu__title:hover) {
-  background-color: var(--sidebar-hover-bg);
-}
-/*点击菜单之后*/
-.home-el-menu :deep(.el-menu-item.is-active),
-.home-el-menu :deep(.el-sub-menu.is-active > .el-sub-menu__title) {
-  background-color: var(--sidebar-active-bg);
-  color: var(--sidebar-active-text);
-  border-bottom: 0;
-}
-.home-el-menu :deep(.el-menu-item .el-menu-tooltip__trigger),
-.home-el-menu :deep(.el-sub-menu__title .el-menu-tooltip__trigger) {
-  padding: 0 !important;
-  justify-content: center;
-}
-</style>

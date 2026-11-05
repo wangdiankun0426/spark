@@ -153,7 +153,7 @@ function statusOf(row) {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/monitor.scss";
+@use "@/pages/siteManage/monitor/monitor.scss";
 
 .mq-trend-card {
   flex: none;

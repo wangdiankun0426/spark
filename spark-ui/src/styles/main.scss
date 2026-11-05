@@ -16,30 +16,24 @@ body {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-    // 字体渲染优化：抗锯齿 + 启用字距与连字 + 防止移动端字号自动放大
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
     -webkit-text-size-adjust: 100%;
-    // 大屏幕字体清晰度优化
     -webkit-font-kerning: normal;
     font-kerning: normal;
     -webkit-text-stroke: 0.01em transparent;
-    // 防止字体在高DPI屏幕下模糊
     text-shadow: 0 0 1px rgba(0,0,0,0.01);
 }
 
-// 大屏幕（高DPI）字体优化
 @media screen and (min-width: 1600px) and (min-resolution: 1.5dppx),
        screen and (min-width: 1600px) and (-webkit-min-device-pixel-ratio: 1.5) {
     body {
-        // 高DPI屏幕下启用亚像素渲染
         -webkit-font-smoothing: subpixel-antialiased;
     }
 }
 
-// 超大屏幕优化
 @media screen and (min-width: 1920px) {
     :root {
         --el-font-size-extra-large: 18px !important;
@@ -51,7 +45,6 @@ body {
     }
 }
 
-// 4K及以上屏幕优化
 @media screen and (min-width: 2560px) {
     :root {
         --el-font-size-extra-large: 20px !important;
@@ -63,37 +56,119 @@ body {
     }
 }
 
-/* 修改垂直滚动条 */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
 
-/* 修改滚动条轨道背景色 */
 ::-webkit-scrollbar-track {
-    background-color: #f1f1f1;
+    background-color: $app-scrollbar-track;
     border-radius: 3px;
 }
 
-/* 修改滚动条滑块颜色 */
 ::-webkit-scrollbar-thumb {
-    background-color: #c1c1c1;
+    background-color: $app-scrollbar-thumb;
     border-radius: 3px;
     transition: $transition-fast;
 }
 
-/* 修改滚动条滑块悬停时的颜色 */
 ::-webkit-scrollbar-thumb:hover {
-    background-color: #a8a8a8;
+    background-color: $app-scrollbar-thumb-hover;
 }
 
-/**
- * 组件顶层容器，用于控制组件高度等
- */
 .app-container {
     margin: 0;
-    padding: 0;
+    padding: 10px;
     height: calc(100vh - $nav-height);
     overflow: hidden;
     box-sizing: border-box;
+}
+
+html.dark {
+  .v-md-editor {
+    background-color: $app-bg-card;
+    color: $app-text-primary;
+    box-shadow: none;
+  }
+
+  .v-md-editor__toolbar {
+    background-color: $app-bg-overlay;
+    border-color: $app-border-light;
+  }
+
+  .v-md-editor__toolbar-item {
+    color: $app-text-secondary;
+
+    &:hover {
+      background-color: $app-primary-light;
+      color: $app-primary;
+    }
+  }
+
+  .v-md-editor__menu {
+    background-color: $app-bg-overlay;
+    border-color: $app-border-light;
+  }
+
+  .v-md-editor__menu-item:hover {
+    background-color: $app-primary-light;
+  }
+
+  .v-md-editor textarea {
+    color: $app-text-primary;
+  }
+
+  .v-md-editor.v-md-editor--fullscreen {
+    background-color: $app-bg-card;
+  }
+
+  .github-markdown-body {
+    color: $app-text-primary;
+    background: transparent;
+  }
+
+  .github-markdown-body pre,
+  .github-markdown-body div[class*=v-md-pre-wrapper-],
+  .github-markdown-body div[class*=v-md-pre-wrapper-].line-numbers-mode:after {
+    background-color: #0f172a;
+    border-color: $app-border;
+  }
+
+  .github-markdown-body code,
+  .github-markdown-body pre code,
+  .github-markdown-body pre .token {
+    color: $app-text-primary;
+    background: transparent;
+  }
+
+  .github-markdown-body :not(pre) > code {
+    background-color: rgba(148, 166, 192, 0.16);
+  }
+
+  .github-markdown-body table tr,
+  .github-markdown-body table tr:nth-child(2n) {
+    background-color: transparent;
+  }
+
+  .github-markdown-body table th,
+  .github-markdown-body table td {
+    border-color: $app-border;
+  }
+
+  .github-markdown-body .csv-data th {
+    background-color: $app-bg-sub;
+  }
+
+  .github-markdown-body blockquote {
+    color: $app-text-secondary;
+    border-left-color: $app-border;
+  }
+
+  .github-markdown-body a {
+    color: $app-primary;
+  }
+
+  .github-markdown-body hr {
+    background-color: $app-border-light;
+  }
 }

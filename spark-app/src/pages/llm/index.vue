@@ -36,26 +36,18 @@
       </view>
 
       <view v-else-if="agentList.length === 0" class="state-box state-box--empty">
-        <view class="empty-card">
-          <view class="empty-glow"></view>
-          <view class="empty-ring"></view>
-          <view class="empty-icon">
-            <up-icon name="star-fill" size="22" :color="brandColor"/>
-          </view>
-          <text class="empty-title">{{ emptyMeta.title }}</text>
-          <text class="empty-sub">{{ emptyMeta.sub }}</text>
-          <view class="empty-btn" @click="refreshTab">
-            <up-icon name="reload" size="11" :color="brandColor"/>
-            <text class="empty-btn__text" :style="'color:' + brandColor">刷新看看</text>
-          </view>
-        </view>
+        <EmptyState
+            icon="star-fill"
+            :title="emptyMeta.title"
+            :desc="emptyMeta.sub"
+            btn-text="刷新看看"
+            @btn-click="refreshTab"
+        />
       </view>
 
       <template v-else>
         <view class="section-head">
-          <view class="section-head-left">
-            <text class="section-title">全部智能体</text>
-          </view>
+          <SectionTitle>全部智能体</SectionTitle>
           <text class="section-note">共 {{ agentTotal }} 个</text>
         </view>
 
@@ -95,26 +87,18 @@
       </view>
 
       <view v-else-if="instanceList.length === 0" class="state-box state-box--empty">
-        <view class="empty-card">
-          <view class="empty-glow"></view>
-          <view class="empty-ring"></view>
-          <view class="empty-icon">
-            <up-icon name="list-dot" size="22" :color="brandColor"/>
-          </view>
-          <text class="empty-title">{{ emptyMeta.title }}</text>
-          <text class="empty-sub">{{ emptyMeta.sub }}</text>
-          <view class="empty-btn" @click="refreshTab">
-            <up-icon name="reload" size="11" :color="brandColor"/>
-            <text class="empty-btn__text" :style="'color:' + brandColor">刷新看看</text>
-          </view>
-        </view>
+        <EmptyState
+            icon="list-dot"
+            :title="emptyMeta.title"
+            :desc="emptyMeta.sub"
+            btn-text="刷新看看"
+            @btn-click="refreshTab"
+        />
       </view>
 
       <template v-else>
         <view class="section-head">
-          <view class="section-head-left">
-            <text class="section-title">运行记录</text>
-          </view>
+          <SectionTitle>运行记录</SectionTitle>
           <text class="section-note">共 {{ instanceTotal }} 条</text>
         </view>
 
@@ -150,26 +134,18 @@
       </view>
 
       <view v-else-if="modelList.length === 0" class="state-box state-box--empty">
-        <view class="empty-card">
-          <view class="empty-glow"></view>
-          <view class="empty-ring"></view>
-          <view class="empty-icon">
-            <up-icon name="chat" size="22" :color="brandColor"/>
-          </view>
-          <text class="empty-title">{{ emptyMeta.title }}</text>
-          <text class="empty-sub">{{ emptyMeta.sub }}</text>
-          <view class="empty-btn" @click="refreshTab">
-            <up-icon name="reload" size="11" :color="brandColor"/>
-            <text class="empty-btn__text" :style="'color:' + brandColor">刷新看看</text>
-          </view>
-        </view>
+        <EmptyState
+            icon="chat"
+            :title="emptyMeta.title"
+            :desc="emptyMeta.sub"
+            btn-text="刷新看看"
+            @btn-click="refreshTab"
+        />
       </view>
 
       <template v-else>
         <view class="section-head">
-          <view class="section-head-left">
-            <text class="section-title">可用模型</text>
-          </view>
+          <SectionTitle>可用模型</SectionTitle>
           <text class="section-note">共 {{ modelTotal }} 个</text>
         </view>
 
@@ -198,15 +174,7 @@
 
     <!-- 无任何页签权限时展示空态 -->
     <view v-else class="state-box state-box--empty">
-      <view class="empty-card">
-        <view class="empty-glow"></view>
-        <view class="empty-ring"></view>
-        <view class="empty-icon">
-          <up-icon name="grid-fill" size="22" :color="brandColor"/>
-        </view>
-        <text class="empty-title">{{ emptyMeta.title }}</text>
-        <text class="empty-sub">{{ emptyMeta.sub }}</text>
-      </view>
+      <EmptyState icon="grid-fill" :title="emptyMeta.title" :desc="emptyMeta.sub"/>
     </view>
 
     <!-- 弹层宿主：小程序端 picker 内部 popup 的插槽内容会参与 flex 分配顶高底栏 -->
@@ -238,6 +206,8 @@ import AiSessionPicker from "@/components/AiSessionPicker/index.vue"
 import {useAiSessionPicker} from "@/components/AiSessionPicker/aiSessionUtil"
 import {useTheme} from "@/utils/useTheme"
 import AppTabbar from "@/components/AppTabbar/index.vue";
+import SectionTitle from "@/components/SectionTitle/index.vue";
+import EmptyState from "@/components/EmptyState/index.vue";
 import AgentIcon from "@/components/icons/AgentIcon.vue"
 import WorkflowIcon from "@/components/icons/WorkflowIcon.vue"
 import ModelIcon from "@/components/icons/ModelIcon.vue"
@@ -676,12 +646,12 @@ function handleOnTabChange(index) {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: var(--app-bg-page);
+  background-color: $app-bg-page;
 }
 
 .llm-header {
   padding: 14px 16px 10px;
-  background-color: $spark-color-header-bg;
+  background-color: $app-header-bg;
   flex-shrink: 0;
 
   .header-title {
@@ -689,7 +659,7 @@ function handleOnTabChange(index) {
     font-size: 24px;
     font-weight: 700;
     letter-spacing: 0.5px;
-    color: var(--app-text-primary);
+    color: $app-text-primary;
   }
 }
 
@@ -704,18 +674,18 @@ function handleOnTabChange(index) {
 .sub-num {
   font-size: 11.5px;
   font-weight: 600;
-  color: var(--app-brand);
+  color: $app-brand;
 }
 
 .sub-text {
   font-size: 11.5px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
 }
 
 .llm-tabs {
   flex-shrink: 0;
   padding: 2px 14px 10px;
-  background-color: $spark-color-header-bg;
+  background-color: $app-header-bg;
 }
 
 .tabs-track {
@@ -724,7 +694,7 @@ function handleOnTabChange(index) {
   height: 38px;
   padding: 3px;
   border-radius: 12px;
-  background-color: var(--app-tab-track);
+  background-color: $app-tab-track;
 }
 
 .seg-tab {
@@ -739,16 +709,16 @@ function handleOnTabChange(index) {
 
 .seg-tab__text {
   font-size: 13px;
-  color: var(--app-text-secondary);
+  color: $app-text-secondary;
   transition: color 0.22s ease;
 }
 
 .seg-tab.is-active {
-  background-image: var(--app-gradient-fill);
-  box-shadow: var(--app-shadow-brand);
+  background-image: $app-gradient-fill;
+  box-shadow: $app-shadow-brand;
 
   .seg-tab__text {
-    color: var(--app-fill-tx);
+    color: $app-fill-tx;
     font-weight: 600;
   }
 }
@@ -780,43 +750,16 @@ function handleOnTabChange(index) {
   margin: 16px 2px 10px;
 }
 
-.section-head-left {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.section-title {
-  position: relative;
-  padding-left: 11px;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-  color: var(--app-text-primary);
-}
-
-.section-title::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 13px;
-  border-radius: 2px;
-  background-image: var(--app-gradient-brand);
-}
-
 .section-note {
   font-size: 11px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
 }
 
 .list-card {
-  background-color: var(--app-bg-card);
+  background-color: $app-bg-card;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: var(--app-shadow-card);
+  box-shadow: $app-shadow-card;
 }
 
 .row {
@@ -826,7 +769,7 @@ function handleOnTabChange(index) {
   padding: 11px 14px;
 
   &:active {
-    background-color: var(--app-bg-hover);
+    background-color: $app-bg-hover;
   }
 }
 
@@ -838,8 +781,8 @@ function handleOnTabChange(index) {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--app-bg-sub);
-  border: 1px solid var(--app-border-light);
+  background-color: $app-bg-sub;
+  border: 1px solid $app-border-light;
 }
 
 .row-main {
@@ -854,7 +797,7 @@ function handleOnTabChange(index) {
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.2px;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -863,13 +806,13 @@ function handleOnTabChange(index) {
 .row-desc {
   font-size: 11.5px;
   line-height: 16px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 
   &.is-mute {
-    color: var(--app-text-placeholder);
+    color: $app-text-placeholder;
   }
 }
 
@@ -881,7 +824,7 @@ function handleOnTabChange(index) {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--app-bg-sub);
+  background-color: $app-bg-sub;
 }
 
 .row-pill {
@@ -892,24 +835,24 @@ function handleOnTabChange(index) {
   line-height: 17px;
 
   &.pill-1 {
-    color: var(--app-text-info);
-    background-color: var(--app-bg-info);
+    color: $app-text-info;
+    background-color: $app-bg-info;
   }
   &.pill-2 {
-    color: var(--app-text-success);
-    background-color: var(--app-bg-success);
+    color: $app-text-success;
+    background-color: $app-bg-success;
   }
   &.pill-3 {
-    color: var(--app-text-error);
-    background-color: var(--app-bg-error);
+    color: $app-text-error;
+    background-color: $app-bg-error;
   }
   &.pill-4 {
-    color: var(--app-text-warning);
-    background-color: var(--app-bg-warning);
+    color: $app-text-warning;
+    background-color: $app-bg-warning;
   }
   &.pill-5 {
-    color: var(--app-text-tertiary);
-    background-color: var(--app-bg-sub);
+    color: $app-text-tertiary;
+    background-color: $app-bg-sub;
   }
 }
 
@@ -921,7 +864,7 @@ function handleOnTabChange(index) {
   height: 26px;
   padding: 0 9px;
   border-radius: 8px;
-  background-color: var(--app-primary-soft);
+  background-color: $app-primary-soft;
 }
 
 .row-talk__text {
@@ -932,99 +875,14 @@ function handleOnTabChange(index) {
 .row-divider {
   height: 1px;
   margin-left: 67px;
-  background-color: var(--app-border-light);
+  background-color: $app-border-light;
 }
 
 .list-tip {
   padding: 14px 0 26px;
   text-align: center;
   font-size: 11.5px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
 }
 
-.empty-card {
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 22px 18px 20px;
-  border-radius: 18px;
-  background-image: var(--app-gradient-hero);
-  border: 1px solid var(--app-hero-border);
-  box-shadow: var(--app-shadow-card);
-}
-
-.empty-glow {
-  position: absolute;
-  right: -46px;
-  top: -52px;
-  width: 168px;
-  height: 168px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(47, 123, 255, 0.14) 0%, rgba(47, 123, 255, 0) 66%);
-  pointer-events: none;
-}
-
-.empty-ring {
-  position: absolute;
-  right: -14px;
-  top: -20px;
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
-  border: 1px solid var(--app-hero-border);
-  pointer-events: none;
-}
-
-.empty-icon {
-  position: relative;
-  width: 46px;
-  height: 46px;
-  border-radius: 15px;
-  background-color: var(--app-primary-soft);
-  border: 1px solid var(--app-brand-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.empty-title {
-  position: relative;
-  display: block;
-  margin-top: 13px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--app-text-primary);
-}
-
-.empty-sub {
-  position: relative;
-  display: block;
-  margin-top: 6px;
-  font-size: 11.5px;
-  line-height: 1.6;
-  color: var(--app-text-tertiary);
-}
-
-.empty-btn {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  margin-top: 14px;
-  height: 30px;
-  padding: 0 13px;
-  border-radius: 9px;
-  background-color: var(--app-primary-soft);
-  border: 1px solid var(--app-brand-border);
-
-  &:active {
-    opacity: 0.85;
-  }
-}
-
-.empty-btn__text {
-  font-size: 11.5px;
-  font-weight: 600;
-}
 </style>

@@ -1,5 +1,6 @@
 <template>
   <div class="stat-card">
+    <span v-if="badge" class="stat-card__badge">{{ badge }}</span>
     <div v-if="$slots.icon" class="stat-card__icon" :class="`is-${type}`">
       <slot name="icon"/>
     </div>
@@ -20,12 +21,15 @@ defineProps({
   value: { type: [String, Number], default: '--' },
   unit: { type: String, default: '' },
   sub: { type: String, default: '' },
-  type: { type: String, default: 'primary' }
+  type: { type: String, default: 'primary' },
+  // 右上角角标文字
+  badge: { type: String, default: '' }
 })
 </script>
 
 <style scoped lang="scss">
 .stat-card {
+  position: relative;
   display: flex;
   align-items: center;
   gap: $spacing-md;
@@ -34,6 +38,18 @@ defineProps({
   border: 1px solid $border-color-light;
   border-radius: $border-radius-md;
   box-shadow: $shadow-card;
+
+  &__badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: $color-text-white;
+    background: $ds-badge-grad;
+  }
 
   &__icon {
     flex: none;
@@ -44,22 +60,22 @@ defineProps({
     align-items: center;
     justify-content: center;
     font-size: 24px;
-    background-color: rgba(0, 79, 197, 0.1);
+    background-color: $app-primary-light;
     color: $color-primary;
 
     &.is-success {
-      background-color: rgba(52, 199, 89, 0.12);
-      color: var(--el-color-success);
+      background-color: $ds-ok-bg;
+      color: $el-color-success;
     }
 
     &.is-warning {
-      background-color: rgba(255, 149, 0, 0.12);
-      color: var(--el-color-warning);
+      background-color: $ds-warn-bg;
+      color: $el-color-warning;
     }
 
     &.is-danger {
-      background-color: rgba(245, 108, 108, 0.12);
-      color: var(--el-color-danger);
+      background-color: $ds-err-bg;
+      color: $el-color-danger;
     }
   }
 
@@ -81,15 +97,15 @@ defineProps({
     color: $color-primary;
 
     &.is-success {
-      color: var(--el-color-success);
+      color: $el-color-success;
     }
 
     &.is-warning {
-      color: var(--el-color-warning);
+      color: $el-color-warning;
     }
 
     &.is-danger {
-      color: var(--el-color-danger);
+      color: $el-color-danger;
     }
   }
 

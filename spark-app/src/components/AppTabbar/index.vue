@@ -76,8 +76,8 @@ function handleChange(name) {
   height: 54px;
   padding-bottom: constant(safe-area-inset-bottom);
   padding-bottom: env(safe-area-inset-bottom);
-  background-color: var(--app-bg-tabbar);
-  border-top: 1rpx solid var(--app-border-light);
+  background-color: $app-bg-tabbar;
+  border-top: 1rpx solid $app-border-light;
   box-sizing: content-box;
 }
 
@@ -100,7 +100,7 @@ function handleChange(name) {
   width: 36rpx;
   height: 6rpx;
   border-radius: 0 0 6rpx 6rpx;
-  background-image: var(--app-gradient-brand);
+  background-image: $app-gradient-brand;
 }
 
 .app-tabbar__item.is-center {
@@ -117,9 +117,9 @@ function handleChange(name) {
   margin-top: -24px;
   margin-bottom: 3px;
   border-radius: 50%;
-  background-color: var(--app-bg-sub);
-  border: 1px solid var(--app-border-light);
-  box-shadow: 0 0 0 5px var(--app-bg-tabbar);
+  background-color: $app-bg-sub;
+  border: 1px solid $app-border-light;
+  box-shadow: 0 0 0 5px $app-bg-tabbar;
   transition: background-color 0.18s ease, box-shadow 0.18s ease, width 0.18s ease, height 0.18s ease;
 }
 
@@ -128,9 +128,9 @@ function handleChange(name) {
   height: 48px;
   margin-top: -26px;
   background-color: transparent;
-  background-image: var(--app-gradient-fill);
+  background-image: $app-gradient-fill;
   border-color: transparent;
-  box-shadow: var(--app-shadow-center);
+  box-shadow: $app-shadow-center;
 }
 
 .tab-badge {
@@ -141,8 +141,8 @@ function handleChange(name) {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background-color: var(--app-error-solid);
-  box-shadow: 0 0 0 2px var(--app-bg-tabbar);
+  background-color: $app-error-solid;
+  box-shadow: 0 0 0 2px $app-bg-tabbar;
 }
 
 .app-tabbar__text {

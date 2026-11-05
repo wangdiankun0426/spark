@@ -103,7 +103,7 @@ function fallbackCopy(text, done) {
   padding: 8px 10px;
   border: 1px solid $border-color-light;
   border-radius: 4px;
-  background: var(--app-bg-sub);
+  background: $app-bg-sub;
   font-size: 12px;
   color: $color-text-secondary;
   line-height: 1.8;
@@ -117,8 +117,8 @@ function fallbackCopy(text, done) {
     code {
       padding: 0 3px;
       border-radius: 3px;
-      background: var(--app-bg-sub);
-      color: var(--app-primary);
+      background: $app-bg-sub;
+      color: $app-primary;
     }
   }
 }
@@ -137,7 +137,7 @@ function fallbackCopy(text, done) {
   .var-code {
     flex: 1;
     font-size: 14px;
-    color: var(--app-primary);
+    color: $app-primary;
     word-break: break-all;
   }
 }

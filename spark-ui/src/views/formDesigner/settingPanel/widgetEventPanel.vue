@@ -351,7 +351,7 @@ function targetOptions(action) {
       border-bottom: 1px solid $border-color-light;
     }
     &:hover {
-      background: var(--el-fill-color-light);
+      background: $el-fill-color-light;
       color: $color-text-primary;
     }
     .event-count {
@@ -411,7 +411,7 @@ function targetOptions(action) {
   position: sticky;
   top: 0;
   z-index: 2;
-  background: var(--el-fill-color-light);
+  background: $el-fill-color-light;
   font-size: 12px;
   color: $color-text-secondary;
 }

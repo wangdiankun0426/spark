@@ -62,7 +62,7 @@ const emit = defineEmits(['update:nodeKey', 'update:range'])
   align-items: center;
   gap: $spacing-md;
   padding: $spacing-sm 0 $spacing-md;
-  background-color: var(--app-bg-page);
+  background-color: $app-bg-page;
 
   &__node {
     width: 260px;
@@ -76,11 +76,11 @@ const emit = defineEmits(['update:nodeKey', 'update:range'])
     border-radius: 50%;
 
     &.is-online {
-      background-color: var(--el-color-success);
+      background-color: $el-color-success;
     }
 
     &.is-offline {
-      background-color: var(--el-color-info);
+      background-color: $el-color-info;
     }
   }
 

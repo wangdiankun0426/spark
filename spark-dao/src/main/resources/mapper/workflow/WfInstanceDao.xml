@@ -97,12 +97,6 @@
         where ri.delete_flag = 1
           and ri.created_by = #{userId}
           and ri.tenant_id = #{tenantId}
-          <if test="startTime != null and startTime != ''">
-              and ri.created_dt &gt;= #{startTime}
-          </if>
-          <if test="endTime != null and endTime != ''">
-              and ri.created_dt &lt;= #{endTime}
-          </if>
         group by ri.template_id
         order by count desc
         limit #{limit}

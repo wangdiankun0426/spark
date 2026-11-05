@@ -73,10 +73,8 @@ public interface IChatSpaceService {
 
     /**
      * 查询我常用的智能体
-     * @param startTime 开始时间
-     * @param endTime 结束时间
      * @param limit 条数
      * @return 热门智能体列表
      */
-    List<DashboardHotResult> queryMyHotAgents(String startTime, String endTime, int limit);
+    List<DashboardHotResult> queryMyHotAgents(int limit);
 }

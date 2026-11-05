@@ -68,6 +68,19 @@
   --app-tile-success: rgba(82, 196, 26, 0.1);
   --app-tile-error: rgba(255, 77, 79, 0.1);
   --app-tile-warning: rgba(250, 173, 20, 0.12);
+  /* 我的页功能宫格分类色板，实色在两套皮肤下不变，淡底暗色改 rgba */
+  --app-tile-cyan: #13c2c2;
+  --app-tile-cyan-bg: #e6fffb;
+  --app-tile-green: #52c41a;
+  --app-tile-green-bg: #f6ffed;
+  --app-tile-orange: #fa8c16;
+  --app-tile-orange-bg: #fff7e6;
+  --app-tile-blue: #2f7bff;
+  --app-tile-blue-bg: #eaf2ff;
+  --app-tile-purple: #8b5cf6;
+  --app-tile-purple-bg: #f3f0ff;
+  --app-tile-theme: #7c5cff;
+  --app-tile-theme-bg: #f3f0ff;
 }
 
 @mixin theme-dark-vars {
@@ -141,6 +154,19 @@
   --app-tile-success: rgba(111, 207, 91, 0.13);
   --app-tile-error: rgba(255, 140, 140, 0.13);
   --app-tile-warning: rgba(245, 181, 68, 0.14);
+  /* 我的页功能宫格分类色板，实色沿用亮色值，淡底改为同色 rgba */
+  --app-tile-cyan: #13c2c2;
+  --app-tile-cyan-bg: rgba(19, 194, 194, 0.16);
+  --app-tile-green: #52c41a;
+  --app-tile-green-bg: rgba(82, 196, 26, 0.16);
+  --app-tile-orange: #fa8c16;
+  --app-tile-orange-bg: rgba(250, 140, 22, 0.16);
+  --app-tile-blue: #2f7bff;
+  --app-tile-blue-bg: rgba(47, 123, 255, 0.16);
+  --app-tile-purple: #8b5cf6;
+  --app-tile-purple-bg: rgba(139, 92, 246, 0.18);
+  --app-tile-theme: #f5b544;
+  --app-tile-theme-bg: rgba(245, 181, 68, 0.16);
 }
 
 page,
@@ -151,14 +177,4 @@ html,
 
 .theme-dark {
   @include theme-dark-vars;
-}
-
-page,
-html,
-body {
-  background-color: var(--app-page-base);
-}
-
-.input-placeholder {
-  color: var(--app-text-placeholder);
 }

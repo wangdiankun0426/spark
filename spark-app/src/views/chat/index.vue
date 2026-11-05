@@ -1,23 +1,22 @@
 <template>
   <view class="chat-container safe-area-page" :class="themeClass">
-    <!-- 标题栏 -->
-    <view class="chat-header" :style="navHeaderBelowStyle()">
-      <view class="header-back" @click="goBack">
-        <up-icon name="arrow-left" size="20" :color="headerIconColor"></up-icon>
-      </view>
-      <view class="header-title">
-        <text v-if="target && target.id">{{ target.name }}</text>
-        <text v-else class="header-tip">请选择聊天对象</text>
-      </view>
-      <!-- 更多操作 -->
-      <view
-          v-if="target && target.chatSpaceId"
-          class="header-record"
-          @click="openChatDetail"
-      >
-        <up-icon name="more-dot-fill" size="20" :color="headerIconColor"></up-icon>
-      </view>
-    </view>
+    <!-- 标题栏，更多按钮与胶囊挤位走 below 模式 -->
+    <PageHeader
+        :title="target && target.id ? target.name : '请选择聊天对象'"
+        :tip="!(target && target.id)"
+        below
+        :below-gap="4"
+        @back="goBack"
+    >
+      <template #extra>
+        <view
+            v-if="target && target.chatSpaceId"
+            @click="openChatDetail"
+        >
+          <up-icon name="more-dot-fill" size="20" :color="headerIconColor"></up-icon>
+        </view>
+      </template>
+    </PageHeader>
 
     <!-- 消息区 -->
     <scroll-view
@@ -179,8 +178,8 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onUnmounted, getCurrentInstance } from "vue"
 import { onShow } from "@dcloudio/uni-app"
-import { navHeaderBelowStyle } from "@/utils/navBarUtil"
 import { useStore } from "vuex"
+import PageHeader from "@/components/PageHeader/index.vue"
 import { createChatSpaceAPI, createAiChatSpaceAPI } from "@/api/chat/space.js"
 import { renderMarkdown, getMdTagStyle } from "@/utils/markdownUtil.js"
 import { useChatHistory } from "@/views/chat/chatMessage.js"
@@ -871,53 +870,8 @@ function openChatDetail() {
   flex-direction: column;
   height: 100vh;
   box-sizing: border-box;
-  background-color: var(--app-chat-bg);
+  background-color: $app-chat-bg;
   overflow: hidden;
-}
-
-.chat-header {
-  display: flex;
-  align-items: center;
-  height: 48px;
-  padding: 0 14px;
-  background-color: var(--app-bg-card);
-  border-bottom: 1px solid var(--app-border-light);
-  flex-shrink: 0;
-  box-sizing: content-box;
-}
-
-.header-back {
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.header-title {
-  flex: 1;
-  min-width: 0;
-  text-align: center;
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 0.4px;
-  color: var(--app-text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.header-record {
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.header-tip {
-  font-size: 13px;
-  color: var(--app-text-tertiary);
 }
 
 .chat-body {
@@ -943,9 +897,9 @@ function openChatDetail() {
 
 .chat-tip {
   font-size: 12px;
-  color: var(--app-text-secondary);
+  color: $app-text-secondary;
   padding: 4px 12px;
-  background-color: var(--app-bg-sub);
+  background-color: $app-bg-sub;
   border-radius: 100px;
 }
 
@@ -984,7 +938,7 @@ function openChatDetail() {
 
 .chat-time {
   font-size: 10.5px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
   margin-bottom: 4px;
 }
 
@@ -1001,15 +955,15 @@ function openChatDetail() {
 }
 
 .chat-bubble-user {
-  background-image: var(--app-gradient-fill);
-  color: var(--app-fill-tx);
-  box-shadow: var(--app-shadow-brand);
+  background-image: $app-gradient-fill;
+  color: $app-fill-tx;
+  box-shadow: $app-shadow-brand;
 }
 
 .chat-bubble-agent {
-  background-color: var(--app-bubble-agent-bg);
-  color: var(--app-bubble-agent-text);
-  box-shadow: var(--app-shadow-card);
+  background-color: $app-bubble-agent-bg;
+  color: $app-bubble-agent-text;
+  box-shadow: $app-shadow-card;
 }
 
 .thinking-header {
@@ -1020,7 +974,7 @@ function openChatDetail() {
 
 .thinking-label {
   font-size: 12px;
-  color: var(--app-text-regular);
+  color: $app-text-regular;
 }
 
 .thinking-arrow-open {
@@ -1039,16 +993,16 @@ function openChatDetail() {
 .thinking-content {
   margin-top: 6px;
   padding-top: 6px;
-  border-top: 1px dashed var(--app-border-light);
+  border-top: 1px dashed $app-border-light;
   font-size: 12px;
-  color: var(--app-text-regular);
+  color: $app-text-regular;
   line-height: 1.6;
   white-space: pre-line;
 }
 
 .thinking-divider {
   height: 1px;
-  background-color: var(--app-divide);
+  background-color: $app-divide;
   margin: 8px 0;
 }
 
@@ -1057,9 +1011,9 @@ function openChatDetail() {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: var(--app-bg-card);
+  background-color: $app-bg-card;
   padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--app-border-light);
+  border-top: 1px solid $app-border-light;
   z-index: 100;
   box-sizing: border-box;
 }
@@ -1077,7 +1031,7 @@ function openChatDetail() {
   align-items: center;
   height: 40px;
   padding: 0 14px;
-  background-color: var(--app-bg-sub);
+  background-color: $app-bg-sub;
   border-radius: 999px;
 }
 
@@ -1089,8 +1043,8 @@ function openChatDetail() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-image: var(--app-gradient-fill);
-  box-shadow: var(--app-shadow-brand);
+  background-image: $app-gradient-fill;
+  box-shadow: $app-shadow-brand;
   transition: opacity 0.18s ease, transform 0.18s ease;
 
   &:active {
@@ -1104,14 +1058,14 @@ function openChatDetail() {
 }
 
 .input-wrapper-disabled {
-  background-color: var(--app-bg-page);
+  background-color: $app-bg-page;
 }
 
 .chat-input {
   flex: 1;
   height: 24px;
   font-size: 15px;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
   background-color: transparent;
   border: none;
 }
@@ -1131,7 +1085,7 @@ function openChatDetail() {
   position: relative;
   width: 18px;
   height: 18px;
-  border: 1px solid var(--app-text-regular);
+  border: 1px solid $app-text-regular;
   border-radius: 50%;
   box-sizing: border-box;
 }
@@ -1142,7 +1096,7 @@ function openChatDetail() {
   width: 2px;
   height: 2px;
   border-radius: 50%;
-  background-color: var(--app-text-regular);
+  background-color: $app-text-regular;
 }
 
 .emoji-eye-left {
@@ -1160,7 +1114,7 @@ function openChatDetail() {
   width: 8px;
   height: 4px;
   margin-left: -4px;
-  border: 1px solid var(--app-text-regular);
+  border: 1px solid $app-text-regular;
   border-top: none;
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;

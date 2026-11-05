@@ -56,8 +56,8 @@ function getApproveTypeLabel(type) {
   justify-content: center;
   gap: 2px;
   border-radius: 8px;
-  background: #e6f7ff;
-  border: 1.5px solid #1890ff;
+  background: $app-node-task-bg;
+  border: 1.5px solid $app-node-task;
 
   &.selected {
     border-width: 2.5px;
@@ -67,12 +67,12 @@ function getApproveTypeLabel(type) {
 .node-icon {
   font-size: 20px;
   line-height: 1;
-  color: #1890ff;
+  color: $app-node-task;
 }
 .node-name {
   font-size: 13px;
   font-weight: 400;
-  color: #172b4d;
+  color: $app-text-primary;
   line-height: 1.2;
   word-break: break-all;
   max-width: 116px;
@@ -96,15 +96,20 @@ function getApproveTypeLabel(type) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  background: #eaf3ff;
-  color: #1890ff;
+  background: $app-node-task-tag-bg;
+  color: $app-node-task-tag;
 }
 .approve-tag.approve-2 {
-  background: #f0f9eb;
-  color: #67c23a;
+  background: $app-node-approve-ok-bg;
+  color: $app-node-approve-ok;
 }
 .approve-tag.approve-3 {
-  background: #fdf6ec;
-  color: #e6a23c;
+  background: $app-node-approve-warn-bg;
+  color: $app-node-approve-warn;
+}
+
+// 暗色主题节点边框改为同色系半透明，底色与标签色由节点 token 自动翻转
+html.dark .user-task-node {
+  border-color: rgba(120, 170, 255, 0.55);
 }
 </style>

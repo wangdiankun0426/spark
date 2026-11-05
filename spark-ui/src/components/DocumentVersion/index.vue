@@ -10,7 +10,7 @@
     <!-- 版本列表 -->
     <el-table
         :data="versionList"
-        height="calc(100vh - 138px)"
+        height="calc(100vh - 145px)"
     >
       <el-table-column label="版本" width="90" align="center">
         <template #default="scope">

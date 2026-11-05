@@ -93,12 +93,6 @@
           and space_type = 3
           and sender_id = #{userId}
           and tenant_id = #{tenantId}
-          <if test="startTime != null and startTime != ''">
-              and created_dt &gt;= #{startTime}
-          </if>
-          <if test="endTime != null and endTime != ''">
-              and created_dt &lt;= #{endTime}
-          </if>
         group by receiver_id
         order by count desc
         limit #{limit}

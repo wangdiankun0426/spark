@@ -535,7 +535,7 @@ function fillSource(c) {
 <style scoped lang="scss">
 .property-drawer {
   width: 400px;
-  background: var(--app-bg-card);
+  background: $app-bg-card;
   border-left: 1px solid $border-color;
   flex-shrink: 0;
   display: flex;
@@ -580,7 +580,7 @@ function fillSource(c) {
   padding: 8px;
   border: 1px solid $border-color-light;
   border-radius: 4px;
-  background: var(--app-bg-sub);
+  background: $app-bg-sub;
 }
 .condition-row-header {
   display: flex;

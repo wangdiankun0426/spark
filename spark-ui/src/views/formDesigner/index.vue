@@ -22,7 +22,7 @@
               @click="handleOpenJson"
           ><el-icon><Tickets /></el-icon>JSON数据</el-button>
           <el-button
-              plain
+              type="primary"
               @click="handleSaveForm"
           ><el-icon><Select /></el-icon>保存模板</el-button>
         </div>
@@ -252,9 +252,9 @@ function handleApplyJson() {
   &:hover {
     box-shadow: $shadow-card-hover;
   }
-  width: 11%;
-  min-width: 136px;
-  max-width: 152px;
+  width: 15%;
+  min-width: 208px;
+  max-width: 240px;
 }
 .middle-form-widget {
   height: 100%;

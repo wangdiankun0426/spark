@@ -86,12 +86,9 @@ public interface ChatSpaceDao extends BaseDao<ChatSpace> {
      * 统计我常用的智能体（按智能体会话数）
      * @param userId 用户id
      * @param tenantId 租户id
-     * @param startTime 开始时间
-     * @param endTime 结束时间
      * @param limit 条数
      * @return 热门智能体列表
      */
     List<DashboardHotResult> queryMyHotAgents(@Param("userId") Long userId, @Param("tenantId") Long tenantId,
-                                             @Param("startTime") String startTime, @Param("endTime") String endTime,
                                              @Param("limit") int limit);
 }

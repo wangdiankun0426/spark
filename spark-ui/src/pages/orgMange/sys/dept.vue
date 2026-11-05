@@ -19,9 +19,9 @@
         row-key="id"
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
         highlight-current-row
-        height="calc(100vh - 112px)"
+        height="calc(100vh - 120px)"
     >
-      <el-table-column prop="name" label="部门名称" min-width="200" align="left"/>
+      <el-table-column prop="name" label="部门名称" min-width="240" align="left"/>
       <el-table-column prop="headerName" label="部门主管" width="140" align="center"/>
       <el-table-column prop="deptNum" label="部门编码" width="160" align="center"/>
       <el-table-column prop="statusName" label="状态" width="100" align="center"/>
@@ -30,7 +30,7 @@
       <el-table-column prop="createdDt" label="创建时间" width="170" align="center"/>
       <el-table-column prop="updatedByName" label="修改人" width="120" align="center"/>
       <el-table-column prop="updatedDt" label="修改时间" width="170" align="center"/>
-      <el-table-column fixed="right" label="操作" width="240" align="center">
+      <el-table-column fixed="right" label="操作" width="250" align="center">
         <template #default="scope">
           <el-button
               type="primary"

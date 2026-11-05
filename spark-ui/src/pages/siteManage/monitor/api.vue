@@ -338,7 +338,7 @@ function shortDataSourceName(url) {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/monitor.scss";
+@use "@/pages/siteManage/monitor/monitor.scss";
 
 .api-slow-card {
   flex: none;

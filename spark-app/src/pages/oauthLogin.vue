@@ -82,7 +82,7 @@ onLoad((options) => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-image: var(--app-gradient-login);
+  background-image: $app-gradient-login;
 }
 
 .oauth-container {
@@ -97,14 +97,14 @@ onLoad((options) => {
   flex-direction: column;
   align-items: center;
   padding: 60rpx 80rpx;
-  background-color: var(--app-bg-card);
+  background-color: $app-bg-card;
   border-radius: 24rpx;
-  border: 1rpx solid var(--app-border-light);
-  box-shadow: var(--app-shadow-card);
+  border: 1rpx solid $app-border-light;
+  box-shadow: $app-shadow-card;
 }
 
 .oauth-desc {
   font-size: 28rpx;
-  color: var(--app-text-muted);
+  color: $app-text-muted;
 }
 </style>

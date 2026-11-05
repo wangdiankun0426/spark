@@ -1,9 +1,14 @@
 <template>
-  <el-avatar shape="circle" :size="size" :src="avatarUrl" />
+  <el-avatar :shape="shape" :size="size" :src="avatarUrl">
+    <slot>
+      <el-icon><UserFilled /></el-icon>
+    </slot>
+  </el-avatar>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
+import { UserFilled } from '@element-plus/icons-vue'
 
 defineOptions({ name: 'userAvatar' })
 
@@ -11,7 +16,9 @@ const props = defineProps({
   // 用户 ID
   userId: { type: [Number, String], default: undefined },
   // 头像尺寸（px）
-  size: { type: [Number, String], default: 40 }
+  size: { type: [Number, String], default: 40 },
+  // 形状：circle / square
+  shape: { type: String, default: 'circle' }
 })
 
 // 头像时间戳，刷新时更新以避免浏览器缓存

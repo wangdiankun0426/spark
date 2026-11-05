@@ -209,7 +209,7 @@
               :value="item.id"
           >
             <span style="float: left">{{ item.name }}</span>
-            <span style="float: right;color: var(--el-text-color-secondary);font-size: 13px; ">{{ item.dataScopeName }}</span>
+            <span class="role-datascope">{{ item.dataScopeName }}</span>
           </el-option>
         </el-select>
       </el-form-item>
@@ -596,5 +596,11 @@ function pageChangeNo(pageNo) {
 
 .dept_tree_box :deep(.el-tree-node__content:hover) {
   background-color: transparent;
+}
+
+.role-datascope {
+  float: right;
+  font-size: 13px;
+  color: $el-text-color-secondary;
 }
 </style>

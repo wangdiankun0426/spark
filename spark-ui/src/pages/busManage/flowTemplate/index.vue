@@ -426,7 +426,7 @@ function handleDelete(item) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: $spacing-lg;
+  margin-bottom: $spacing-md;
   padding: $spacing-md $spacing-xl;
   background-color: $bg-card;
   border: 1px solid $border-color-light;
@@ -460,7 +460,7 @@ function handleDelete(item) {
 }
 
 .flow-grid {
-  height: calc(100vh - #{$nav-height} - 160px);
+  height: calc(100vh - #{$nav-height} - 175px);
   overflow-y: auto;
   padding-top: 6px;
   display: grid;
@@ -470,7 +470,7 @@ function handleDelete(item) {
 }
 
 .empty-grid {
-  height: calc(100vh - #{$nav-height} - 190px);
+  height: calc(100vh - #{$nav-height} - 175px);
 }
 
 .drawer-footer {

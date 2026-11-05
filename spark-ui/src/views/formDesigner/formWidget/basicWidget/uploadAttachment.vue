@@ -290,7 +290,7 @@ function handleDownload(file) {
   margin-top: 4px;
   margin-bottom: 4px;
   font-size: 12px;
-  color: var(--el-text-color-secondary);
+  color: $el-text-color-secondary;
 }
 .upload-file-table {
   width: 100%;

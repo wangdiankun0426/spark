@@ -26,7 +26,19 @@ const themeTokens = {
     searchBg: '#f5f7fa',
     headerBg: '#ffffff',
     pageBase: '#ffffff',
-    gradientFill: 'linear-gradient(135deg, #2f7bff 0%, #5b94f5 100%)'
+    gradientFill: 'linear-gradient(135deg, #2f7bff 0%, #5b94f5 100%)',
+    tileCyan: '#13c2c2',
+    tileCyanBg: '#e6fffb',
+    tileGreen: '#52c41a',
+    tileGreenBg: '#f6ffed',
+    tileOrange: '#fa8c16',
+    tileOrangeBg: '#fff7e6',
+    tileBlue: '#2f7bff',
+    tileBlueBg: '#eaf2ff',
+    tilePurple: '#8b5cf6',
+    tilePurpleBg: '#f3f0ff',
+    tileTheme: '#7c5cff',
+    tileThemeBg: '#f3f0ff'
   },
   dark: {
     primary: '#4d8dff',
@@ -47,7 +59,19 @@ const themeTokens = {
     searchBg: '#243044',
     headerBg: '#131d2e',
     pageBase: '#0f172a',
-    gradientFill: 'linear-gradient(135deg, #2f63bd 0%, #244d97 100%)'
+    gradientFill: 'linear-gradient(135deg, #2f63bd 0%, #244d97 100%)',
+    tileCyan: '#13c2c2',
+    tileCyanBg: 'rgba(19, 194, 194, 0.16)',
+    tileGreen: '#52c41a',
+    tileGreenBg: 'rgba(82, 196, 26, 0.16)',
+    tileOrange: '#fa8c16',
+    tileOrangeBg: 'rgba(250, 140, 22, 0.16)',
+    tileBlue: '#2f7bff',
+    tileBlueBg: 'rgba(47, 123, 255, 0.16)',
+    tilePurple: '#8b5cf6',
+    tilePurpleBg: 'rgba(139, 92, 246, 0.18)',
+    tileTheme: '#f5b544',
+    tileThemeBg: 'rgba(245, 181, 68, 0.16)'
   }
 };
 
@@ -180,7 +204,7 @@ export function getCardBgColor(isDark) {
 }
 
 /**
- * 品牌渐变填充，组件仅收实色的渐变类 prop 使用，普通样式一律写 var(--app-gradient-fill)
+ * 品牌渐变填充，组件仅收实色的渐变类 prop 使用，普通样式一律写 uni.scss 的 $app-gradient-fill
  * @param isDark 是否暗色
  * @returns {string} 渐变
  */

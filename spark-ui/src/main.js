@@ -9,7 +9,7 @@ import 'element-plus/theme-chalk/dark/css-vars.css';
 import '@/styles/main.scss';
 import '@/styles/theme.scss';
 import '@/styles/element.scss';
-import '@/styles/dark.scss';
+import '@/styles/shell.scss';
 import '@desktop/desktop.scss';
 import * as ElIcon from '@element-plus/icons-vue';
 import router from '@/router/index';

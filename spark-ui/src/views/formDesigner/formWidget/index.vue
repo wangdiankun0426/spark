@@ -31,20 +31,18 @@
           />
           <slot v-if="props.designer.selectedId === index">
             <div class="widget-tool">
-              <el-button
-                  class="widget-tool-btn"
+              <button
+                  class="widget-tool-btn is-ghost"
                   @click.stop="handleDeleteWidget(index)"
-                  type="warning"
               >
-                移除
-              </el-button>
-              <el-button
-                  class="widget-tool-btn"
-                  type="primary"
+                ✕
+              </button>
+              <button
+                  class="widget-tool-btn is-copy"
                   @click.stop="handleCopyWidget(index)"
               >
                 复制
-              </el-button>
+              </button>
             </div>
           </slot>
       </el-col>
@@ -215,63 +213,111 @@ function resetWidgetDrag() {
   dragOverIndex.value = null;
 }
 </script>
-<style scoped>
+<style scoped lang="scss">
 .form-widget-box {
-  padding: 0 20px;
+  padding: 16px 24px;
   height: 100%;
   overflow-y : auto;
   overflow-x: hidden;
+  // 星星点点网格颜色取主题令牌，亮暗主题自动切换
+  background-color: $app-canvas-bg;
   background-image:
-    radial-gradient(circle, rgba(0, 82, 204, 0.18) 1.2px, transparent 1.8px),
-    radial-gradient(circle, rgba(0, 82, 204, 0.08) 1px, transparent 1.6px);
-  background-size: 26px 26px, 26px 26px;
-  background-position: 0 0, 13px 13px;
+    radial-gradient(circle, $app-canvas-dot 1.2px, transparent 1.8px),
+    radial-gradient(circle, $app-canvas-dot-soft 1px, transparent 1.6px);
+  background-size: 22px 22px, 22px 22px;
+  background-position: 0 0, 11px 11px;
 }
 .form-widget-box--dragover {
-  border: 2px dashed #0052cc;
-  background-color: rgba(0, 82, 204, 0.04);
+  border: 2px dashed $el-color-primary;
+  background-color: $app-primary-soft;
 }
 .form-empty {
   padding-top: 40px;
   font-size: 13px;
-  color: #8c939d;
+  color: $app-text-placeholder;
 }
+// 字段间距：紧凑（去卡片化后靠轻量悬停/选中态表达交互）
 :deep(.el-col) {
-  padding-top: 12px;
-  padding-bottom: 12px;
-  margin-top: 12px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  margin-top: 6px;
 }
 :deep(.el-col .el-form-item) {
   margin-bottom: 0;
 }
+// 非选中：无边框透明底，悬停淡蓝虚线感
+.no_select_component {
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: $transition-fast;
+
+  &:hover {
+    border-color: rgba(47, 123, 255, 0.3);
+    background-color: $app-primary-soft;
+  }
+}
+// 选中：细蓝边 + 左侧渐变色条 + 轻投影
 .selected_component {
-  border: 1px dashed #0052cc;
+  border: 1.5px solid $el-color-primary;
+  box-shadow: 0 2px 10px rgba(47, 123, 255, 0.10);
   cursor: pointer;
   position: relative;
-}
-.no_select_component {
-  border: 1px dashed var(--el-border-color-darker);
-  cursor: pointer;
+  border-radius: 8px;
+  background-color: $app-primary-soft;
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: -1.5px;
+    top: 6px;
+    bottom: 6px;
+    width: 3px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, $el-color-primary, $el-color-primary-light-5);
+  }
 }
 .widget-dragging {
   opacity: 0.5;
 }
 .widget-drag-over {
-  border-top: 2px solid #0052cc;
-  background: rgba(0, 82, 204, 0.04);
+  border-top: 2px solid $el-color-primary;
+  background: $app-primary-soft;
 }
+// 悬浮工具：选中字段顶部浮出的胶囊按钮组
 .widget-tool {
   position: absolute;
-  bottom: 0;
-  right: 0;
-  z-index: 1;
-  width: 110px;
-  height: 20px
+  top: -10px;
+  right: 8px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 3px;
 }
 .widget-tool-btn {
-  height: 100%;
-  width: 45px;
-  float: right;
-  color: white;
+  height: 20px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 20px;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  &.is-copy {
+    background: $el-color-primary;
+    color: $color-text-white;
+    box-shadow: 0 2px 8px rgba(47, 123, 255, 0.35);
+
+    &:hover { filter: brightness(1.08); }
+  }
+
+  &.is-ghost {
+    background: $app-bg-card;
+    color: $el-color-danger;
+    box-shadow: 0 2px 6px rgba(23, 43, 77, 0.12);
+
+    &:hover { border-color: $el-color-danger; }
+  }
 }
 </style>

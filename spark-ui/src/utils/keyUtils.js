@@ -6,4 +6,5 @@ export const localStorageKey = {
     AGREEMENT_KEY: 'SPARK_AGREEMENT_AGREE',
     HOT_UPDATE_IGNORE: 'SPARK_HOT_UPDATE_IGNORE',
     DOWNLOAD_DIR: 'sparkDownloadDir',
+    RAIL_MINI: 'SPARK_RAIL_MINI',
 }

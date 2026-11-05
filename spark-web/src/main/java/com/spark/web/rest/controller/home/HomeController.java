@@ -2,11 +2,9 @@ package com.spark.web.rest.controller.home;
 
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.home.query.DashboardQuery;
-import com.spark.common.bean.home.result.DashboardAssetResult;
 import com.spark.common.bean.home.result.DashboardHotResult;
-import com.spark.common.bean.home.result.DashboardUsageSummaryResult;
+import com.spark.common.bean.home.result.DashboardOverviewResult;
 import com.spark.common.bean.home.result.FlowCountResult;
-import com.spark.common.bean.flow.result.FlowInstanceResult;
 import com.spark.common.bean.llm.result.ModelUsageTrendResult;
 import com.spark.home.service.IHomeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +22,7 @@ import java.util.List;
  *
  * @author wangdiankun
  * @since 2026-10-29 19:00:00
- * 我的工作台统计面板，按卡片独立提供数据
+ * 工作台统计服务接口
  */
 @RestController
 @RequestMapping("home")
@@ -34,13 +32,12 @@ public class HomeController {
     private IHomeService homeService;
 
     /**
-     * 我的用量汇总
-     * @param query 查询参数
-     * @return 用量汇总
+     * 工作台总览，模型用量与资产数量合并返回
+     * @return 总览数据
      */
-    @GetMapping("usageSummary")
-    public ResultData<DashboardUsageSummaryResult> usageSummary(DashboardQuery query) {
-        return homeService.queryUsageSummary(query);
+    @GetMapping("overview")
+    public ResultData<DashboardOverviewResult> overview() {
+        return homeService.queryOverview();
     }
 
     /**
@@ -54,24 +51,6 @@ public class HomeController {
     }
 
     /**
-     * 我的待办总数
-     * @return 待办数
-     */
-    @GetMapping("todoTotal")
-    public ResultData<Integer> todoTotal() {
-        return homeService.countTodo();
-    }
-
-    /**
-     * 我的待办列表
-     * @return 待办列表
-     */
-    @GetMapping("todoList")
-    public ResultData<List<FlowInstanceResult>> todoList() {
-        return homeService.queryTodoList();
-    }
-
-    /**
      * 我的流程四项数量，待办、已办、申请、抄送
      * @return 流程数量
      */
@@ -81,30 +60,11 @@ public class HomeController {
     }
 
     /**
-     * 可申请流程模板
-     * @return 模板列表
-     */
-    @GetMapping("applyTemplates")
-    public ResultData<List<DashboardHotResult>> applyTemplates() {
-        return homeService.queryApplyTemplates();
-    }
-
-    /**
      * 综合推荐榜
-     * @param query 查询参数
      * @return 推荐榜
      */
     @GetMapping("recommend")
-    public ResultData<List<DashboardHotResult>> recommend(DashboardQuery query) {
-        return homeService.queryRecommend(query);
-    }
-
-    /**
-     * 我的资产数量
-     * @return 资产数量
-     */
-    @GetMapping("asset")
-    public ResultData<DashboardAssetResult> asset() {
-        return homeService.queryAsset();
+    public ResultData<List<DashboardHotResult>> recommend() {
+        return homeService.queryRecommend();
     }
 }

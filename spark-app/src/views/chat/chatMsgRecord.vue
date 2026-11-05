@@ -1,13 +1,6 @@
 <template>
   <view class="record-container safe-area-page" :class="themeClass">
-    <!-- 标题栏 -->
-    <view class="page-header" :style="navHeaderStyle()">
-      <view class="page-header-back" @click="goBack">
-        <up-icon name="arrow-left" size="19" :color="backIconColor"></up-icon>
-      </view>
-      <text class="page-header-title">{{ title }}</text>
-      <view class="page-header-extra"></view>
-    </view>
+    <PageHeader :title="title" @back="goBack"/>
 
     <!-- 时间范围：快捷胶囊 + 自定义日历入口 -->
     <view class="record-search">
@@ -109,14 +102,14 @@
 <script setup>
 import { ref, computed, onMounted } from "vue"
 import { onLoad } from "@dcloudio/uni-app"
-import { navHeaderStyle } from "@/utils/navBarUtil"
 import { useStore } from "vuex"
 import { renderMarkdown, getMdTagStyle } from "@/utils/markdownUtil.js"
 import { useChatHistory } from "@/views/chat/chatMessage.js"
 import { parseSticker } from "@/views/chat/emojiData.js"
 import { useTheme } from "@/utils/useTheme"
-import { getHeaderIconColor, getOnFillColor, getSearchIconColor } from "@/utils/themeUtil"
+import { getOnFillColor, getSearchIconColor } from "@/utils/themeUtil"
 import UserAvatar from "@/components/UserAvatar/index.vue"
+import PageHeader from "@/components/PageHeader/index.vue"
 
 const store = useStore()
 const userInfo = computed(() => store.getters["user/getUserInfo"] || {})
@@ -125,7 +118,6 @@ const { isDark, themeClass } = useTheme()
 // 富文本内联样式随皮肤切换
 const mdTagStyle = computed(() => getMdTagStyle(isDark.value))
 
-const backIconColor = computed(() => getHeaderIconColor(isDark.value))
 const customIconOff = computed(() => getSearchIconColor(isDark.value))
 const customIconOn = computed(() => getOnFillColor(isDark.value))
 
@@ -305,7 +297,7 @@ function loadChatRecords() {
   flex-direction: column;
   height: 100vh;
   box-sizing: border-box;
-  background-color: var(--app-chat-bg);
+  background-color: $app-chat-bg;
 }
 
 .record-search {
@@ -325,25 +317,25 @@ function loadChatRecords() {
   height: 30px;
   padding: 0 13px;
   border-radius: 999px;
-  background-color: var(--app-bg-card);
-  border: 1px solid var(--app-border-light);
-  box-shadow: var(--app-shadow-card);
+  background-color: $app-bg-card;
+  border: 1px solid $app-border-light;
+  box-shadow: $app-shadow-card;
 }
 
 .range-chip__text {
   font-size: 12.5px;
-  color: var(--app-text-secondary);
+  color: $app-text-secondary;
   font-weight: 500;
 }
 
 .range-chip.is-on {
-  background-image: var(--app-gradient-fill);
+  background-image: $app-gradient-fill;
   border-color: transparent;
-  box-shadow: var(--app-shadow-brand);
+  box-shadow: $app-shadow-brand;
 }
 
 .range-chip.is-on .range-chip__text {
-  color: var(--app-fill-tx);
+  color: $app-fill-tx;
   font-weight: 600;
 }
 
@@ -365,7 +357,7 @@ function loadChatRecords() {
   padding: 14px 0;
   text-align: center;
   font-size: 11.5px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
 }
 
 .record-item {
@@ -382,7 +374,7 @@ function loadChatRecords() {
 
 .record-day__text {
   font-size: 11.5px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
   letter-spacing: 0.4px;
 }
 
@@ -416,7 +408,7 @@ function loadChatRecords() {
 .record-time {
   font-size: 10.5px;
   line-height: 14px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
   margin-bottom: 5px;
 }
 
@@ -424,15 +416,15 @@ function loadChatRecords() {
   max-width: 80%;
   padding: 10px 14px;
   border-radius: 14px;
-  background-color: var(--app-bubble-agent-bg);
-  color: var(--app-bubble-agent-text);
-  box-shadow: var(--app-shadow-card);
+  background-color: $app-bubble-agent-bg;
+  color: $app-bubble-agent-text;
+  box-shadow: $app-shadow-card;
 }
 
 .record-item-self .record-bubble {
-  background-image: var(--app-gradient-fill);
-  color: var(--app-fill-tx);
-  box-shadow: var(--app-shadow-brand);
+  background-image: $app-gradient-fill;
+  color: $app-fill-tx;
+  box-shadow: $app-shadow-brand;
 }
 
 .record-bubble-sticker,

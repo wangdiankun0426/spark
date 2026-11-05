@@ -318,7 +318,7 @@ function roundGb(bytes) {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/monitor.scss";
+@use "@/pages/siteManage/monitor/monitor.scss";
 
 .node-banner {
   flex: none;
@@ -380,11 +380,11 @@ function roundGb(bytes) {
     font-weight: 400;
 
     &.is-online {
-      color: var(--el-color-success);
+      color: $el-color-success;
     }
 
     &.is-offline {
-      color: var(--el-color-info);
+      color: $el-color-info;
     }
   }
 
@@ -484,7 +484,7 @@ function roundGb(bytes) {
     }
 
     .is-danger {
-      color: var(--el-color-danger);
+      color: $el-color-danger;
     }
   }
 

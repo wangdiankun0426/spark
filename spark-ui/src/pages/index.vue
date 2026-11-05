@@ -33,14 +33,15 @@ const font = ref('rgba(0, 0, 0, .15)');
   height: $nav-height;
   font-size: 14px;
   overflow: visible;
-  box-shadow: var(--nav-shadow);
+  box-shadow: $nav-shadow;
   position: relative;
   z-index: 100;
 }
 
 .el-main {
   padding: 0;
-  height: 100vh;
+  height: calc(100vh - #{$nav-height});
   background-color: $bg-page;
+  overflow: hidden;
 }
 </style>

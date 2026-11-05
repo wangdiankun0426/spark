@@ -1,12 +1,6 @@
 <template>
   <view class="agreement-container safe-area-page" :class="themeClass">
-    <view class="page-header" :style="navHeaderStyle()">
-      <view class="page-header-back" @click="onClickBack">
-        <up-icon name="arrow-left" size="19" :color="backIconColor"></up-icon>
-      </view>
-      <text class="page-header-title">{{ doc.title }}</text>
-      <view class="page-header-extra"></view>
-    </view>
+    <PageHeader :title="doc.title" @back="onClickBack"/>
 
     <scroll-view scroll-y class="agreement-body">
       <view class="doc-meta">
@@ -29,14 +23,12 @@
 <script setup>
 import {computed, ref} from 'vue';
 import {onLoad} from '@dcloudio/uni-app';
-import {navHeaderStyle} from '@/utils/navBarUtil';
 import {useTheme} from '@/utils/useTheme';
-import {getHeaderIconColor} from '@/utils/themeUtil';
+import PageHeader from '@/components/PageHeader/index.vue';
 import {agreementMap} from '@/utils/agreementDoc';
 
-const {isDark, themeClass} = useTheme();
+const {themeClass} = useTheme();
 
-const backIconColor = computed(() => getHeaderIconColor(isDark.value));
 const docType = ref('service');
 
 const doc = computed(() => agreementMap[docType.value] || agreementMap.service);
@@ -61,7 +53,7 @@ function onClickBack() {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: var(--app-page-base);
+  background-color: $app-page-base;
 }
 
 .agreement-body {
@@ -82,14 +74,14 @@ function onClickBack() {
   .doc-name {
     font-size: 36rpx;
     font-weight: 700;
-    color: $spark-color-text;
+    color: $app-text-primary;
     letter-spacing: 2rpx;
   }
 
   .doc-desc {
     margin-top: 16rpx;
     font-size: 22rpx;
-    color: $spark-color-text-secondary;
+    color: $app-text-secondary;
   }
 }
 
@@ -101,7 +93,7 @@ function onClickBack() {
     margin-bottom: 16rpx;
     font-size: 30rpx;
     font-weight: 700;
-    color: $spark-color-text;
+    color: $app-text-primary;
     line-height: 1.6;
   }
 
@@ -109,7 +101,7 @@ function onClickBack() {
     display: block;
     margin-bottom: 14rpx;
     font-size: 26rpx;
-    color: $spark-color-text;
+    color: $app-text-primary;
     line-height: 1.8;
     text-align: justify;
   }
@@ -123,7 +115,7 @@ function onClickBack() {
   .footer-text {
     display: block;
     font-size: 24rpx;
-    color: $spark-color-text-secondary;
+    color: $app-text-secondary;
     text-align: center;
   }
 }

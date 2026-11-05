@@ -1,13 +1,6 @@
 <template>
   <view class="wf-instance-detail safe-area-page" :class="themeClass">
-    <!-- 顶部标题栏 -->
-    <view class="page-header" :style="navHeaderStyle()">
-      <view class="page-header-back" @click="goBack">
-        <up-icon name="arrow-left" size="19" :color="backIconColor"></up-icon>
-      </view>
-      <text class="page-header-title">运行详情</text>
-      <view class="page-header-extra"></view>
-    </view>
+    <PageHeader title="运行详情" @back="goBack"/>
 
     <!-- 内容区 -->
     <scroll-view class="detail-content" scroll-y>
@@ -19,7 +12,9 @@
       <view v-else-if="instance">
       <!-- 表单数据 -->
       <view class="detail-section" v-if="formFields.length > 0">
-        <text class="section-title">表单数据</text>
+        <view class="section-head">
+          <SectionTitle>表单数据</SectionTitle>
+        </view>
         <view class="form-data-list">
           <view class="form-data-item" v-for="(item, index) in formFields" :key="index">
             <text class="form-label">{{ item.label }}</text>
@@ -28,7 +23,9 @@
         </view>
       </view>
       <view class="detail-section" v-else-if="formLoaded">
-        <text class="section-title">表单数据</text>
+        <view class="section-head">
+          <SectionTitle>表单数据</SectionTitle>
+        </view>
         <view class="empty-text">
           <text>无表单数据</text>
         </view>
@@ -36,7 +33,9 @@
 
       <!-- 基本信息 -->
       <view class="detail-section">
-        <text class="section-title">实例数据</text>
+        <view class="section-head">
+          <SectionTitle>实例数据</SectionTitle>
+        </view>
         <view class="detail-grid">
           <view class="detail-item">
             <text class="detail-label">工作流</text>
@@ -67,7 +66,9 @@
 
       <!-- 错误信息 -->
       <view class="detail-section error-section" v-if="instance.errorMsg">
-        <text class="section-title error-title">错误信息</text>
+        <view class="section-head">
+          <SectionTitle danger>错误信息</SectionTitle>
+        </view>
         <view class="error-content">
           <text class="error-text">{{ instance.errorMsg }}</text>
         </view>
@@ -75,7 +76,9 @@
 
       <!-- 执行日志 -->
       <view class="detail-section">
-        <text class="section-title">执行日志</text>
+        <view class="section-head">
+          <SectionTitle>执行日志</SectionTitle>
+        </view>
         <view v-if="nodesLoading" class="nodes-loading">
           <up-loading-icon text="加载节点..."/>
         </view>
@@ -143,17 +146,17 @@
 import {ref, computed} from 'vue'
 import {onLoad} from '@dcloudio/uni-app'
 import {useStore} from 'vuex'
-import {navHeaderStyle} from '@/utils/navBarUtil'
 import {useTheme} from '@/utils/useTheme'
-import {getHeaderIconColor, getTertiaryColor} from '@/utils/themeUtil'
+import {getTertiaryColor} from '@/utils/themeUtil'
 import {queryInstanceDetailAPI, queryInstanceNodesAPI} from '@/api/workflow/instance'
 import {detailFormValueAPI} from '@/api/form/formValue'
 import FormFieldValue from '@/components/FormFieldValue/index.vue'
+import PageHeader from '@/components/PageHeader/index.vue'
+import SectionTitle from '@/components/SectionTitle/index.vue'
 
 const store = useStore()
 const {isDark, themeClass} = useTheme();
 
-const backIconColor = computed(() => getHeaderIconColor(isDark.value));
 // 节点展开箭头用次级图标色，暗色下提亮保证对比度
 const nodeArrowColor = computed(() => getTertiaryColor(isDark.value));
 const instanceId = ref(null)
@@ -286,7 +289,7 @@ function goBack() {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: $uni-bg-color-dashboard;
+  background-color: $app-bg-page;
 }
 
 .detail-content {
@@ -312,7 +315,7 @@ function goBack() {
 
 .empty-text text {
   font-size: 13px;
-  color: var(--app-text-secondary);
+  color: $app-text-secondary;
 }
 
 .detail-section {
@@ -322,14 +325,8 @@ function goBack() {
   }
 }
 
-.section-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--app-text-primary);
+.section-head {
   margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--app-divide);
-  display: block;
 }
 
 .detail-grid {
@@ -346,14 +343,14 @@ function goBack() {
 
 .detail-label {
   font-size: 13px;
-  color: var(--app-text-secondary);
+  color: $app-text-secondary;
   flex-shrink: 0;
   width: 80px;
 }
 
 .detail-value {
   font-size: 13px;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
   text-align: right;
   flex: 1;
   overflow: hidden;
@@ -365,41 +362,34 @@ function goBack() {
   font-weight: 500;
 
   &.status-1 {
-    color: var(--app-text-info);
+    color: $app-text-info;
   }
   &.status-2 {
-    color: var(--app-text-success);
+    color: $app-text-success;
   }
   &.status-3 {
-    color: var(--app-text-warning);
+    color: $app-text-warning;
   }
   &.status-4 {
-    color: var(--app-text-error);
-  }
-}
-
-.error-section {
-  .error-title {
-    color: var(--app-text-error);
-    border-bottom-color: var(--app-border);
+    color: $app-text-error;
   }
 }
 
 .error-content {
-  background-color: var(--app-bg-error);
-  border: 1px solid var(--app-border);
+  background-color: $app-bg-error;
+  border: 1px solid $app-border;
   border-radius: 8px;
   padding: 12px;
 }
 
 .error-text {
   font-size: 13px;
-  color: var(--app-text-error);
+  color: $app-text-error;
   word-break: break-all;
 }
 
 .form-data-list {
-  background-color: var(--app-bg-sub);
+  background-color: $app-bg-sub;
   border-radius: 8px;
   padding: 12px;
 }
@@ -409,7 +399,7 @@ function goBack() {
   justify-content: space-between;
   align-items: flex-start;
   padding: 8px 0;
-  border-bottom: 1px solid var(--app-border-light);
+  border-bottom: 1px solid $app-border-light;
 
   &:last-child {
     border-bottom: none;
@@ -418,14 +408,14 @@ function goBack() {
 
 .form-label {
   font-size: 13px;
-  color: var(--app-text-regular);
+  color: $app-text-regular;
   flex-shrink: 0;
   width: 100px;
 }
 
 .form-value {
   font-size: 13px;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
   text-align: right;
   flex: 1;
   word-break: break-all;
@@ -439,7 +429,7 @@ function goBack() {
 
 .nodes-empty text {
   font-size: 13px;
-  color: var(--app-text-secondary);
+  color: $app-text-secondary;
 }
 
 .nodes-list {
@@ -449,7 +439,7 @@ function goBack() {
 }
 
 .node-item {
-  background-color: var(--app-bg-sub);
+  background-color: $app-bg-sub;
   border-radius: 8px;
   overflow: hidden;
 }
@@ -477,16 +467,16 @@ function goBack() {
   margin-top: 4px;
 
   &.node-status-1 {
-    background-color: var(--app-text-info);
+    background-color: $app-text-info;
   }
   &.node-status-2 {
-    background-color: var(--app-text-success);
+    background-color: $app-text-success;
   }
   &.node-status-3 {
-    background-color: var(--app-text-warning);
+    background-color: $app-text-warning;
   }
   &.node-status-4 {
-    background-color: var(--app-text-error);
+    background-color: $app-text-error;
   }
 }
 
@@ -500,7 +490,7 @@ function goBack() {
 
 .node-name {
   font-size: 14px;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
   font-weight: 500;
 }
 
@@ -512,20 +502,20 @@ function goBack() {
 
 .node-type {
   font-size: 11px;
-  color: var(--app-text-purple);
-  background-color: var(--app-bg-purple);
+  color: $app-text-purple;
+  background-color: $app-bg-purple;
   padding: 1px 6px;
   border-radius: 4px;
 }
 
 .node-status-text {
   font-size: 12px;
-  color: var(--app-text-regular);
+  color: $app-text-regular;
 }
 
 .node-params {
   padding: 0 12px 12px;
-  border-top: 1px solid var(--app-border-light);
+  border-top: 1px solid $app-border-light;
 }
 
 .param-block {
@@ -535,23 +525,23 @@ function goBack() {
 .param-title {
   font-size: 12px;
   font-weight: 600;
-  color: var(--app-text-regular);
+  color: $app-text-regular;
   margin-bottom: 6px;
   display: block;
 }
 
 .param-content {
-  background-color: var(--app-bg-card);
+  background-color: $app-bg-card;
   border-radius: 6px;
   padding: 8px;
-  border: 1px solid var(--app-border-light);
+  border: 1px solid $app-border-light;
   max-height: 160px;
   overflow-y: auto;
 }
 
 .param-json {
   font-size: 12px;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
   font-family: monospace;
   word-break: break-all;
   white-space: pre-wrap;

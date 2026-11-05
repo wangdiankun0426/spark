@@ -219,7 +219,7 @@ function roundGb(bytes) {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/monitor.scss";
+@use "@/pages/siteManage/monitor/monitor.scss";
 
 .cache-metric {
   grid-template-rows: repeat(6, 1fr);

@@ -59,10 +59,8 @@ public interface IWorkflowInstanceService {
     /**
      * 查询我常用的工作流
      *
-     * @param startTime 开始时间
-     * @param endTime 结束时间
      * @param limit 条数
      * @return 热门工作流列表
      */
-    List<DashboardHotResult> queryMyHotWorkflows(String startTime, String endTime, int limit);
+    List<DashboardHotResult> queryMyHotWorkflows(int limit);
 }

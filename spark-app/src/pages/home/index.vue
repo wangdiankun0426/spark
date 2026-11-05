@@ -55,9 +55,7 @@
       <!-- 智能推荐 -->
       <view v-if="aiEnabled" class="section-box">
         <view class="section-head" @click="handleRecommendMore">
-          <view class="section-head-left">
-            <text class="section-title">智能推荐</text>
-          </view>
+          <SectionTitle>智能推荐</SectionTitle>
           <view class="section-more" v-if="recommendList.length > 0">
             <text class="section-more__text">更多</text>
             <up-icon name="arrow-right" size="12" :color="moreIconColor"></up-icon>
@@ -66,7 +64,7 @@
         <view class="card-grid" v-if="recommendList.length > 0">
           <view
               class="qcard"
-              v-for="item in recommendTop"
+              v-for="item in recommendList"
               :key="item.hotType + '-' + item.id"
               @click="handleRecommendClick(item)"
           >
@@ -85,27 +83,21 @@
             </view>
           </view>
         </view>
-        <view class="big-empty" v-else>
-          <view class="big-empty__glow"></view>
-          <view class="big-empty__ring"></view>
-          <view class="big-empty__icon">
-            <up-icon name="star-fill" size="22" :color="quickIconColor"/>
-          </view>
-          <text class="big-empty__title">还没有使用记录</text>
-          <text class="big-empty__sub">你用过的智能体、工作流会按使用频次排在这里</text>
-          <view class="big-empty__btn" @click.stop="handleRecommendMore">
-            <text>去 AI 应用看看</text>
-            <up-icon name="arrow-right" size="10" :color="quickIconColor"/>
-          </view>
-        </view>
+        <EmptyState
+            v-else
+            icon="star-fill"
+            title="还没有使用记录"
+            desc="你用过的智能体、工作流会按使用频次排在这里"
+            btn-text="去 AI 应用看看"
+            btn-icon="arrow-right"
+            @btn-click="handleRecommendMore"
+        />
       </view>
 
       <!-- 我的待办 -->
       <view class="section-box">
         <view class="section-head" @click="handleTodoMore">
-          <view class="section-head-left">
-            <text class="section-title">我的待办</text>
-          </view>
+          <SectionTitle>我的待办</SectionTitle>
           <view class="section-more" v-if="todoList.length > 0">
             <text class="section-more__text">更多</text>
             <up-icon name="arrow-right" size="12" :color="moreIconColor"></up-icon>
@@ -128,19 +120,15 @@
             </view>
           </view>
         </view>
-        <view class="big-empty" v-else>
-          <view class="big-empty__glow"></view>
-          <view class="big-empty__ring"></view>
-          <view class="big-empty__icon">
-            <up-icon name="calendar-fill" size="22" :color="quickIconColor"/>
-          </view>
-          <text class="big-empty__title">今天没有待处理</text>
-          <text class="big-empty__sub">分配给你的审批任务会出现在这里</text>
-          <view class="big-empty__btn" @click.stop="handleTodoMore">
-            <text>查看全部待办</text>
-            <up-icon name="arrow-right" size="10" :color="quickIconColor"/>
-          </view>
-        </view>
+        <EmptyState
+            v-else
+            icon="calendar-fill"
+            title="今天没有待处理"
+            desc="分配给你的审批任务会出现在这里"
+            btn-text="查看全部待办"
+            btn-icon="arrow-right"
+            @btn-click="handleTodoMore"
+        />
       </view>
     </view>
 
@@ -157,6 +145,8 @@ import UserAvatar from "@/components/UserAvatar/index.vue"
 import {useTheme} from "@/utils/useTheme"
 import {getHeaderIconColor, getTertiaryColor} from "@/utils/themeUtil"
 import AppTabbar from "@/components/AppTabbar/index.vue";
+import SectionTitle from "@/components/SectionTitle/index.vue";
+import EmptyState from "@/components/EmptyState/index.vue";
 import {getSessionAPI} from "@/api/auth/login";
 import {navBarInfo} from "@/utils/navBarUtil";
 import {pageMyTodoListAPI} from "@/api/flow/instance"
@@ -197,8 +187,6 @@ const quickEntries = computed(() => {
   }
   return allQuickEntries.filter(entry => ['todo', 'message'].includes(entry.key))
 })
-
-const recommendTop = computed(() => recommendList.value.slice(0, 6))
 
 // 小程序端欢迎卡片延伸到状态栏底部，H5 走样式默认内边距
 const welcomeCardStyle = computed(() => {
@@ -250,7 +238,7 @@ function loadUserInfo() {
 }
 
 function loadRecommend() {
-  queryRecommendAPI({rangeDays: 30}).then(res => {
+  queryRecommendAPI().then(res => {
     if (res.code === 200 && res.data) {
       recommendList.value = res.data
     }
@@ -258,7 +246,7 @@ function loadRecommend() {
 }
 
 function loadTodoList() {
-  pageMyTodoListAPI({pageSize: 6}).then(res => {
+  pageMyTodoListAPI({pageNo: 1, pageSize: 8}).then(res => {
     if (res.code !== 200 || !res.data) {
       todoList.value = []
       return
@@ -407,7 +395,7 @@ function handleOnTabChange(index) {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background-color: var(--app-bg-page);
+  background-color: $app-bg-page;
 }
 
 .welcome-card {
@@ -416,11 +404,11 @@ function handleOnTabChange(index) {
   flex-shrink: 0;
   box-sizing: border-box;
   padding: 36px 16px 26px;
-  color: var(--app-fill-tx);
+  color: $app-fill-tx;
   border-radius: 0 0 20px 20px;
-  box-shadow: var(--app-shadow-hero);
-  background-image: var(--app-gradient-welcome);
-  background-color: var(--app-bg-mid);
+  box-shadow: $app-shadow-hero;
+  background-image: $app-gradient-welcome;
+  background-color: $app-bg-mid;
 }
 
 .welcome-card::after {
@@ -453,7 +441,7 @@ function handleOnTabChange(index) {
   font-size: 21px;
   font-weight: 700;
   line-height: 1.35;
-  color: var(--app-fill-tx);
+  color: $app-fill-tx;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -467,7 +455,7 @@ function handleOnTabChange(index) {
   font-size: 12.5px;
   font-weight: 400;
   line-height: 1.5;
-  color: var(--app-fill-tx);
+  color: $app-fill-tx;
   opacity: 0.82;
 }
 
@@ -480,7 +468,7 @@ function handleOnTabChange(index) {
   border-radius: 999px;
   font-size: 11.5px;
   line-height: 18px;
-  color: var(--app-fill-tx);
+  color: $app-fill-tx;
   opacity: 0.92;
   background-color: rgba(255, 255, 255, 0.18);
 }
@@ -499,10 +487,10 @@ function handleOnTabChange(index) {
   box-sizing: border-box;
   padding: 13px 4px 12px;
   margin-bottom: 12px;
-  background-image: var(--app-gradient-card);
-  border: 1px solid var(--app-border-light);
+  background-image: $app-gradient-card;
+  border: 1px solid $app-border-light;
   border-radius: 16px;
-  box-shadow: var(--app-shadow-card);
+  box-shadow: $app-shadow-card;
 }
 
 .quick-cell {
@@ -524,7 +512,7 @@ function handleOnTabChange(index) {
   width: 36px;
   height: 36px;
   border-radius: 11px;
-  background-color: var(--app-primary-soft);
+  background-color: $app-primary-soft;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -538,17 +526,17 @@ function handleOnTabChange(index) {
   height: 15px;
   padding: 0 4px;
   border-radius: 999px;
-  background-color: var(--app-error-solid);
-  color: var(--app-fill-tx);
+  background-color: $app-error-solid;
+  color: $app-fill-tx;
   font-size: 9.5px;
   line-height: 15px;
   text-align: center;
-  box-shadow: 0 0 0 1.5px var(--app-bg-card);
+  box-shadow: 0 0 0 1.5px $app-bg-card;
 }
 
 .quick-text {
   font-size: 12px;
-  color: var(--app-text-secondary);
+  color: $app-text-secondary;
   white-space: nowrap;
 }
 
@@ -559,8 +547,8 @@ function handleOnTabChange(index) {
   padding: 14px 15px;
   margin-bottom: 14px;
   border-radius: 18px;
-  background-image: var(--app-gradient-assistant);
-  box-shadow: var(--app-shadow-brand);
+  background-image: $app-gradient-assistant;
+  box-shadow: $app-shadow-brand;
 
   &:active {
     opacity: 0.92;
@@ -596,7 +584,7 @@ function handleOnTabChange(index) {
   display: block;
   font-size: 17px;
   font-weight: 700;
-  color: var(--app-fill-tx);
+  color: $app-fill-tx;
   letter-spacing: 0.3px;
 }
 
@@ -626,7 +614,7 @@ function handleOnTabChange(index) {
   .assistant-btn__text {
     font-size: 12px;
     font-weight: 600;
-    color: var(--app-fill-tx);
+    color: $app-fill-tx;
   }
 }
 
@@ -647,33 +635,6 @@ function handleOnTabChange(index) {
   margin-bottom: 9px;
 }
 
-.section-head-left {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.section-title {
-  position: relative;
-  padding-left: 11px;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-  color: var(--app-text-primary);
-}
-
-.section-title::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 13px;
-  border-radius: 2px;
-  background-image: var(--app-gradient-brand);
-}
-
 .section-more {
   display: flex;
   align-items: center;
@@ -681,7 +642,7 @@ function handleOnTabChange(index) {
 
   .section-more__text {
     font-size: 11px;
-    color: var(--app-text-tertiary);
+    color: $app-text-tertiary;
   }
 }
 
@@ -698,13 +659,13 @@ function handleOnTabChange(index) {
   display: flex;
   flex-direction: column;
   min-height: 90px;
-  background-image: var(--app-gradient-card);
-  border: 1px solid var(--app-border-light);
+  background-image: $app-gradient-card;
+  border: 1px solid $app-border-light;
   border-radius: 16px;
-  box-shadow: var(--app-shadow-card);
+  box-shadow: $app-shadow-card;
 
   &:active {
-    background-color: var(--app-bg-hover);
+    background-color: $app-bg-hover;
   }
 }
 
@@ -719,7 +680,7 @@ function handleOnTabChange(index) {
   width: 28px;
   height: 28px;
   border-radius: 9px;
-  background-color: var(--app-primary-soft);
+  background-color: $app-primary-soft;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -727,7 +688,7 @@ function handleOnTabChange(index) {
 
 .qcard-count {
   font-size: 11px;
-  color: var(--app-text-placeholder);
+  color: $app-text-placeholder;
 }
 
 .qcard-name {
@@ -735,7 +696,7 @@ function handleOnTabChange(index) {
   font-size: 13px;
   font-weight: 600;
   line-height: 1.32;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -750,7 +711,7 @@ function handleOnTabChange(index) {
   margin-top: auto;
   padding-top: 5px;
   font-size: 11px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -761,7 +722,7 @@ function handleOnTabChange(index) {
   width: 3.5px;
   height: 3.5px;
   border-radius: 50%;
-  background-color: var(--app-text-placeholder);
+  background-color: $app-text-placeholder;
 }
 
 .todo-tag {
@@ -772,107 +733,26 @@ function handleOnTabChange(index) {
   line-height: 16px;
 
   &.todo-tag--primary {
-    color: var(--app-brand);
-    background-color: var(--app-primary-soft);
+    color: $app-brand;
+    background-color: $app-primary-soft;
   }
   &.todo-tag--warn {
-    color: var(--app-text-warning);
-    background-color: var(--app-bg-warning);
+    color: $app-text-warning;
+    background-color: $app-bg-warning;
   }
   &.todo-tag--gray {
-    color: var(--app-text-tertiary);
-    background-color: var(--app-bg-sub);
+    color: $app-text-tertiary;
+    background-color: $app-bg-sub;
   }
 }
 
 .todo-time {
   font-size: 11px;
-  color: var(--app-text-placeholder);
+  color: $app-text-placeholder;
 
   &.todo-time--warn {
-    color: var(--app-text-warning);
+    color: $app-text-warning;
   }
 }
 
-.big-empty {
-  position: relative;
-  overflow: hidden;
-  box-sizing: border-box;
-  padding: 22px 16px 20px;
-  border-radius: 18px;
-  background-image: var(--app-gradient-hero);
-  border: 1px solid var(--app-hero-border);
-  box-shadow: var(--app-shadow-card);
-}
-
-.big-empty__glow {
-  position: absolute;
-  right: -46px;
-  top: -52px;
-  width: 168px;
-  height: 168px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(47, 123, 255, 0.14) 0%, rgba(47, 123, 255, 0) 66%);
-  pointer-events: none;
-}
-
-.big-empty__ring {
-  position: absolute;
-  right: -16px;
-  top: -22px;
-  width: 92px;
-  height: 92px;
-  border-radius: 50%;
-  border: 1px solid var(--app-hero-border);
-  pointer-events: none;
-}
-
-.big-empty__icon {
-  position: relative;
-  width: 44px;
-  height: 44px;
-  border-radius: 15px;
-  background-color: var(--app-primary-soft);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.big-empty__title {
-  position: relative;
-  display: block;
-  margin-top: 12px;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--app-text-primary);
-}
-
-.big-empty__sub {
-  position: relative;
-  display: block;
-  margin-top: 6px;
-  font-size: 11.5px;
-  line-height: 1.5;
-  color: var(--app-text-tertiary);
-}
-
-.big-empty__btn {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  margin-top: 14px;
-  height: 29px;
-  padding: 0 13px;
-  border-radius: 9px;
-  background-color: var(--app-primary-soft);
-  border: 1px solid var(--app-brand-border);
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--app-brand);
-
-  &:active {
-    opacity: 0.85;
-  }
-}
 </style>

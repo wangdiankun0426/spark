@@ -16,10 +16,10 @@
     <view class="login-brand">
       <view class="brand-row">
         <view class="brand-logo">
-          <image class="brand-logo__img" src="/static/icons/logo.png" mode="aspectFit"/>
+          <image class="brand-logo__img" :src="brandLogo" mode="aspectFit"/>
         </view>
         <view class="brand-name">
-          <text class="brand-name__cn">星火云应用平台</text>
+          <text class="brand-name__cn">星火云AI</text>
           <text class="brand-name__en">SPARK CLOUD</text>
         </view>
       </view>
@@ -271,9 +271,9 @@
             :color="agreed ? primaryColor : mutedColor"
         ></up-icon>
         <text class="agreement-text">登录即代表同意</text>
-        <text class="agreement-link" @click.stop="openAgreement('service')">《用户服务协议》</text>
+        <text class="agreement-link" @click.stop="openAgreement('service')">用户服务协议</text>
         <text class="agreement-text">与</text>
-        <text class="agreement-link" @click.stop="openAgreement('privacy')">《隐私政策》</text>
+        <text class="agreement-link" @click.stop="openAgreement('privacy')">隐私政策</text>
       </view>
       <view class="login-copyright">
         <text class="copyright-text">Copyright © 2024-2026 evancloud.top All Rights Reserved.</text>
@@ -331,10 +331,13 @@ const inputStyle = computed(() => ({
 // 登录按钮走品牌渐变填充，暗色为降亮度的深蓝渐变
 const loginBtnColor = computed(() => getGradientFill(isDark.value));
 
+// 品牌 logo 跟随主题色系：浅色用白底淡色磁贴，深色用深蓝渐变磁贴
+const brandLogo = computed(() => (isDark.value ? '/static/icons/logo.png' : '/static/icons/logo-light.png'));
+
 const loginBtnStyle = computed(() => ({
   height: '104rpx',
   borderRadius: '28rpx',
-  boxShadow: 'var(--app-shadow-brand)',
+  boxShadow: '$app-shadow-brand',
   fontSize: '31rpx',
   fontWeight: '700',
   letterSpacing: '6rpx',
@@ -643,6 +646,14 @@ async function submitLoginForm() {
 }
 </script>
 <style scoped lang="scss">
+// 登录页验证码按钮私有色，全站无同值 token，不提升全局
+// stylelint-disable color-no-hex
+$login-light-sms-color: #1b5fe0;
+$login-light-wait-bg: #eef2f8;
+$login-dark-sms-color: #9dc0ff;
+$login-dark-wait-bg: #2b3a52;
+// stylelint-enable color-no-hex
+
 .login-box {
   position: relative;
   box-sizing: border-box;
@@ -653,7 +664,7 @@ async function submitLoginForm() {
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  background-image: var(--app-gradient-login);
+  background-image: $app-gradient-login;
 }
 
 .login-bg {
@@ -712,15 +723,15 @@ async function submitLoginForm() {
 
 .brand-logo {
   flex: none;
-  width: 76rpx;
-  height: 76rpx;
-  border-radius: 24rpx;
-  box-shadow: var(--app-shadow-logo);
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 30rpx;
+  box-shadow: $app-shadow-logo;
 }
 
 .brand-logo__img {
-  width: 76rpx;
-  height: 76rpx;
+  width: 96rpx;
+  height: 96rpx;
 }
 
 .brand-name {
@@ -733,14 +744,14 @@ async function submitLoginForm() {
   font-size: 31rpx;
   font-weight: 700;
   letter-spacing: 0.4rpx;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
 }
 
 .brand-name__en {
   font-size: 19rpx;
   font-weight: 600;
   letter-spacing: 3.2rpx;
-  color: var(--app-text-secondary);
+  color: $app-text-secondary;
   opacity: 0.62;
 }
 
@@ -750,7 +761,7 @@ async function submitLoginForm() {
   font-size: 54rpx;
   font-weight: 800;
   letter-spacing: -0.8rpx;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
 }
 
 .login-tip {
@@ -758,7 +769,7 @@ async function submitLoginForm() {
   margin-top: 18rpx;
   font-size: 25rpx;
   line-height: 1.6;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
   letter-spacing: 0.4rpx;
 }
 
@@ -775,21 +786,19 @@ async function submitLoginForm() {
   height: 100rpx;
   padding: 0 26rpx;
   border-radius: 26rpx;
-  border: 3rpx solid var(--app-field-border);
-  background-color: var(--app-field-bg);
+  border: 3rpx solid $app-field-border;
+  background-color: $app-field-bg;
   box-shadow: 0 12rpx 32rpx -20rpx rgba(23, 43, 77, 0.2);
   margin-bottom: 26rpx;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .field.is-focus {
-  border-color: var(--app-brand);
-  box-shadow: 0 0 0 7rpx rgba(47, 123, 255, 0.13), 0 12rpx 32rpx -20rpx rgba(23, 43, 77, 0.2);
+  border-color: $app-brand;
 }
 
 .field.is-error {
-  border-color: var(--app-text-error);
-  box-shadow: 0 0 0 7rpx rgba(255, 77, 79, 0.11), 0 12rpx 32rpx -20rpx rgba(23, 43, 77, 0.2);
+  border-color: $app-text-error;
 }
 
 .field-icon {
@@ -805,7 +814,7 @@ async function submitLoginForm() {
 .field-err {
   margin: -14rpx 10rpx 20rpx;
   font-size: 23rpx;
-  color: var(--app-text-error);
+  color: $app-text-error;
 }
 
 .code-input-wrap {
@@ -844,12 +853,12 @@ async function submitLoginForm() {
   align-items: center;
   font-size: 24rpx;
   font-weight: 600;
-  color: #1b5fe0;
+  color: $login-light-sms-color;
   background-color: rgba(47, 123, 255, 0.1);
 
   &.is-wait {
-    color: #86909c;
-    background-color: #eef2f8;
+    color: $app-text-tertiary;
+    background-color: $login-light-wait-bg;
   }
 }
 
@@ -863,8 +872,8 @@ async function submitLoginForm() {
   &:-webkit-autofill:hover,
   &:-webkit-autofill:focus,
   &:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 1000px var(--app-autofill-bg) inset !important;
-    box-shadow: 0 0 0 1000px var(--app-autofill-bg) inset !important;
+    -webkit-box-shadow: 0 0 0 1000px $app-autofill-bg inset !important;
+    box-shadow: 0 0 0 1000px $app-autofill-bg inset !important;
   }
 }
 /* #endif */
@@ -895,9 +904,9 @@ async function submitLoginForm() {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background-color: var(--app-bg-card);
-  border: 1rpx solid var(--app-border);
-  box-shadow: var(--app-shadow-card);
+  background-color: $app-bg-card;
+  border: 1rpx solid $app-border;
+  box-shadow: $app-shadow-card;
 }
 
 .login-secure {
@@ -911,7 +920,7 @@ async function submitLoginForm() {
 .secure-text {
   font-size: 22rpx;
   letter-spacing: 0.6rpx;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
 }
 
 .login-foot {
@@ -935,12 +944,12 @@ async function submitLoginForm() {
 
   .agreement-text {
     font-size: 22rpx;
-    color: var(--app-text-tertiary);
+    color: $app-text-tertiary;
   }
 
   .agreement-link {
     font-size: 22rpx;
-    color: var(--app-brand);
+    color: $app-brand;
     font-weight: 600;
   }
 }
@@ -952,7 +961,7 @@ async function submitLoginForm() {
 
 .copyright-text {
   font-size: 20rpx;
-  color: var(--app-text-muted);
+  color: $app-text-muted;
 }
 
 .login-theme-btn {
@@ -966,8 +975,8 @@ async function submitLoginForm() {
   justify-content: center;
   border-radius: 20rpx;
   background-color: rgba(255, 255, 255, 0.72);
-  border: 1rpx solid var(--app-border-light);
-  box-shadow: var(--app-shadow-card);
+  border: 1rpx solid $app-border-light;
+  box-shadow: $app-shadow-card;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -979,7 +988,7 @@ async function submitLoginForm() {
   .login-theme-btn {
     background-color: rgba(255, 255, 255, 0.07);
     border-color: rgba(255, 255, 255, 0.1);
-    box-shadow: var(--app-shadow-card);
+    box-shadow: $app-shadow-card;
   }
 
   .bg-glow {
@@ -999,24 +1008,24 @@ async function submitLoginForm() {
   }
 
   .field.is-focus {
-    box-shadow: 0 0 0 7rpx rgba(77, 141, 255, 0.16), 0 12rpx 32rpx -20rpx rgba(0, 0, 0, 0.6);
+    border-color: $app-brand;
   }
 
   .field.is-error {
-    box-shadow: 0 0 0 7rpx rgba(255, 140, 140, 0.12), 0 12rpx 32rpx -20rpx rgba(0, 0, 0, 0.6);
+    border-color: $app-text-error;
   }
 
   .icon-circle {
-    box-shadow: var(--app-shadow-card);
+    box-shadow: $app-shadow-card;
   }
 
   .sms-btn {
-    color: #9dc0ff;
+    color: $login-dark-sms-color;
     background-color: rgba(77, 141, 255, 0.16);
 
     &.is-wait {
-      color: #8595ad;
-      background-color: #2b3a52;
+      color: $app-text-placeholder;
+      background-color: $login-dark-wait-bg;
     }
   }
 

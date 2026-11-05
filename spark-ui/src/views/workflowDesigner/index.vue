@@ -21,6 +21,7 @@
         ><el-icon><Delete /></el-icon>清空流程
         </el-button>
         <el-button
+            type="primary"
             @click="handleSaveVersion"
             :loading="saving"
         ><el-icon><Document /></el-icon>保存流程
@@ -402,7 +403,7 @@ onBeforeRouteLeave(async (to, from, next) => {
   justify-content: space-between;
   height: 48px;
   padding: 0 16px;
-  background: var(--app-bg-card);
+  background: $app-bg-card;
   border-bottom: 1px solid $border-color;
   flex-shrink: 0;
   .toolbar-left {
@@ -432,7 +433,7 @@ onBeforeRouteLeave(async (to, from, next) => {
   padding: 0 16px;
   display: flex;
   align-items: center;
-  background: var(--app-bg-card);
+  background: $app-bg-card;
   border-top: 1px solid $border-color;
   font-size: 12px;
   color: $color-text-secondary;

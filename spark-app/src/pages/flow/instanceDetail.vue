@@ -1,21 +1,13 @@
 <template>
   <view class="detail-container safe-area-page" :class="themeClass">
-    <!-- 顶部标题栏 -->
-    <view class="page-header" :style="navHeaderStyle()">
-      <view class="page-header-back" @click="handleBack">
-        <up-icon name="arrow-left" size="19" :color="headerIconColor"/>
-      </view>
-      <text class="page-header-title">流程详情</text>
-      <view class="page-header-extra"></view>
-    </view>
+    <PageHeader title="流程详情" @back="handleBack"/>
 
     <!-- 内容区 -->
     <scroll-view class="detail-body" scroll-y>
       <!-- 基本信息：流程标题作为第一行，状态胶囊挂在分组标题右侧 -->
       <view class="section-card">
         <view class="section-head">
-          <view class="section-bar"></view>
-          <text class="section-title">基本信息</text>
+          <SectionTitle>基本信息</SectionTitle>
           <text class="tag section-tag" :class="'is-' + statusTone(instance.status)">
             {{ instance.statusName || '处理中' }}
           </text>
@@ -53,8 +45,7 @@
       <!-- 表单详情 -->
       <view class="section-card">
         <view class="section-head">
-          <view class="section-bar"></view>
-          <text class="section-title">表单详情</text>
+          <SectionTitle>表单详情</SectionTitle>
         </view>
         <template v-if="visibleWidgetList.length">
           <view class="kv-row" v-for="widget in visibleWidgetList" :key="widget.config.code">
@@ -70,8 +61,7 @@
       <!-- 审批记录：时间线 -->
       <view class="section-card">
         <view class="section-head">
-          <view class="section-bar"></view>
-          <text class="section-title">审批记录</text>
+          <SectionTitle>审批记录</SectionTitle>
           <text v-if="nodes.length" class="section-count">{{ nodes.length }} 个节点</text>
         </view>
         <view v-if="nodes.length" class="timeline">
@@ -183,7 +173,6 @@
 <script setup>
 import {computed, ref} from "vue";
 import {onLoad} from "@dcloudio/uni-app";
-import {navHeaderStyle} from "@/utils/navBarUtil";
 import {
   showInstanceDetailAPI,
   approvalFlowInstanceAPI,
@@ -196,6 +185,8 @@ import {
 import {toast} from "uview-plus";
 import UserPicker from '@/components/UserPicker/index.vue'
 import FormFieldValue from '@/components/FormFieldValue/index.vue'
+import PageHeader from '@/components/PageHeader/index.vue'
+import SectionTitle from '@/components/SectionTitle/index.vue'
 import {useTheme} from '@/utils/useTheme'
 import {getHeaderIconColor, getSearchBgColor} from '@/utils/themeUtil'
 import store from "@/store/index.js";
@@ -467,7 +458,7 @@ function statusTone(status) {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: var(--app-bg-page);
+  background-color: $app-bg-page;
 }
 
 
@@ -495,28 +486,28 @@ function statusTone(status) {
 }
 
 .tag.is-neutral {
-  color: var(--app-text-secondary);
-  background-color: var(--app-bg-sub);
+  color: $app-text-secondary;
+  background-color: $app-bg-sub;
 }
 
 .tag.is-info {
-  color: var(--app-text-info);
-  background-color: var(--app-bg-info);
+  color: $app-text-info;
+  background-color: $app-bg-info;
 }
 
 .tag.is-warning {
-  color: var(--app-text-warning);
-  background-color: var(--app-bg-warning);
+  color: $app-text-warning;
+  background-color: $app-bg-warning;
 }
 
 .tag.is-success {
-  color: var(--app-text-success);
-  background-color: var(--app-bg-success);
+  color: $app-text-success;
+  background-color: $app-bg-success;
 }
 
 .tag.is-danger {
-  color: var(--app-text-error);
-  background-color: var(--app-bg-error);
+  color: $app-text-error;
+  background-color: $app-bg-error;
 }
 
 .section-tag {
@@ -527,8 +518,8 @@ function statusTone(status) {
   padding: 13px 14px 4px;
   margin-bottom: 10px;
   border-radius: 16px;
-  background-color: var(--app-bg-card);
-  box-shadow: var(--app-shadow-card);
+  background-color: $app-bg-card;
+  box-shadow: $app-shadow-card;
 }
 
 .section-head {
@@ -538,23 +529,10 @@ function statusTone(status) {
   padding-bottom: 8px;
 }
 
-.section-bar {
-  width: 3px;
-  height: 12px;
-  border-radius: 2px;
-  background-image: var(--app-gradient-fill);
-}
-
-.section-title {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--app-text-primary);
-}
-
 .section-count {
   margin-left: auto;
   font-size: 11px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
 }
 
 .kv-row {
@@ -562,7 +540,7 @@ function statusTone(status) {
   align-items: flex-start;
   gap: 14px;
   padding: 8px 0;
-  border-top: 1px solid var(--app-divide);
+  border-top: 1px solid $app-divide;
   font-size: 12.5px;
 }
 
@@ -570,7 +548,7 @@ function statusTone(status) {
   flex-shrink: 0;
   width: 68px;
   line-height: 18px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
 }
 
 .kv-value {
@@ -578,7 +556,7 @@ function statusTone(status) {
   min-width: 0;
   text-align: right;
   line-height: 18px;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
   word-break: break-all;
 }
 
@@ -588,12 +566,12 @@ function statusTone(status) {
 }
 
 .kv-value.lvl-2 {
-  color: var(--app-text-warning);
+  color: $app-text-warning;
   font-weight: 600;
 }
 
 .kv-value.lvl-3 {
-  color: var(--app-text-error);
+  color: $app-text-error;
   font-weight: 600;
 }
 
@@ -602,7 +580,7 @@ function statusTone(status) {
   justify-content: center;
   padding: 14px 0 16px;
   font-size: 12px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
 }
 
 .timeline {
@@ -627,24 +605,24 @@ function statusTone(status) {
   height: 8px;
   margin-top: 5px;
   border-radius: 50%;
-  background-color: var(--app-border);
-  box-shadow: 0 0 0 3px var(--app-bg-card);
+  background-color: $app-border;
+  box-shadow: 0 0 0 3px $app-bg-card;
 }
 
 .tl-dot.dot-info {
-  background-color: var(--app-text-info);
+  background-color: $app-text-info;
 }
 
 .tl-dot.dot-warning {
-  background-color: var(--app-text-warning);
+  background-color: $app-text-warning;
 }
 
 .tl-dot.dot-success {
-  background-color: var(--app-text-success);
+  background-color: $app-text-success;
 }
 
 .tl-dot.dot-danger {
-  background-color: var(--app-text-error);
+  background-color: $app-text-error;
 }
 
 .tl-line {
@@ -652,7 +630,7 @@ function statusTone(status) {
   width: 2px;
   margin: 3px 0;
   border-radius: 2px;
-  background-color: var(--app-border);
+  background-color: $app-border;
 }
 
 .tl-body {
@@ -673,7 +651,7 @@ function statusTone(status) {
   min-width: 0;
   font-size: 13px;
   font-weight: 600;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -682,14 +660,14 @@ function statusTone(status) {
 .tl-note {
   margin-top: 4px;
   font-size: 11.5px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
 }
 
 .tl-discuss {
   margin-top: 7px;
   padding: 8px 10px;
   border-radius: 10px;
-  background-color: var(--app-bg-sub);
+  background-color: $app-bg-sub;
 }
 
 .tl-discuss-head {
@@ -700,14 +678,14 @@ function statusTone(status) {
 }
 
 .tl-discuss-name {
-  color: var(--app-text-regular);
+  color: $app-text-regular;
   font-weight: 500;
 }
 
 .tl-discuss-time {
   margin-left: auto;
   font-size: 10.5px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
 }
 
 .tl-discuss-content {
@@ -715,7 +693,7 @@ function statusTone(status) {
   margin-top: 5px;
   font-size: 11.5px;
   line-height: 1.6;
-  color: var(--app-text-regular);
+  color: $app-text-regular;
   word-break: break-all;
 }
 
@@ -727,8 +705,8 @@ function statusTone(status) {
   padding: 10px 14px;
   padding-bottom: calc(10px + constant(safe-area-inset-bottom));
   padding-bottom: calc(10px + env(safe-area-inset-bottom));
-  background-color: var(--app-bg-card);
-  border-top: 1px solid var(--app-border-light);
+  background-color: $app-bg-card;
+  border-top: 1px solid $app-border-light;
 }
 
 .footer-extra {
@@ -745,12 +723,12 @@ function statusTone(status) {
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  color: var(--app-text-secondary);
-  background-color: var(--app-bg-sub);
-  border: 1px solid var(--app-border-light);
+  color: $app-text-secondary;
+  background-color: $app-bg-sub;
+  border: 1px solid $app-border-light;
 
   &:active {
-    background-color: var(--app-bg-hover);
+    background-color: $app-bg-hover;
   }
 }
 
@@ -776,19 +754,19 @@ function statusTone(status) {
 }
 
 .action-btn--primary {
-  color: var(--app-fill-tx);
-  background-image: var(--app-gradient-fill);
-  box-shadow: var(--app-shadow-brand);
+  color: $app-fill-tx;
+  background-image: $app-gradient-fill;
+  box-shadow: $app-shadow-brand;
 }
 
 .action-btn--soft {
   gap: 6px;
-  color: var(--app-brand);
-  background-color: var(--app-bg-card);
-  border: 1px solid var(--app-brand-border);
+  color: $app-brand;
+  background-color: $app-bg-card;
+  border: 1px solid $app-brand-border;
 
   &:active {
-    background-color: var(--app-primary-soft);
+    background-color: $app-primary-soft;
   }
 }
 
@@ -799,13 +777,13 @@ function statusTone(status) {
 }
 
 .action-btn--ghost {
-  color: var(--app-text-error);
-  background-color: var(--app-bg-card);
-  border: 1px solid var(--app-error-border);
+  color: $app-text-error;
+  background-color: $app-bg-card;
+  border: 1px solid $app-error-border;
 }
 
 .action-btn--ghost:active {
-  background-color: var(--app-bg-error);
+  background-color: $app-bg-error;
 }
 
 .modal-body {

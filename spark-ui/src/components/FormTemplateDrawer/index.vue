@@ -33,8 +33,8 @@
         @sort-change="handleSortChange"
         :header-cell-style="handleHeaderCellClass"
     >
-      <el-table-column prop="id" label="编号" width="100" align="center"/>
-      <el-table-column prop="name" label="名称" sortable="custom" width="200" align="center">
+      <el-table-column prop="id" label="编号" width="70" align="center"/>
+      <el-table-column prop="name" label="名称" sortable="custom" min-width="170" align="center">
         <template #header>
           名称
           <el-popover
@@ -74,7 +74,7 @@
       <el-table-column prop="createdDt" label="创建时间" width="160" align="center"/>
       <el-table-column prop="updatedByName" label="修改人" align="center"/>
       <el-table-column prop="updatedDt" label="修改时间" width="160" align="center"/>
-      <el-table-column fixed="right" label="操作" width="200">
+      <el-table-column fixed="right" label="操作" width="210">
         <template #default="scope">
           <el-button
               type="primary"
@@ -544,7 +544,7 @@ function handleSortChange({ column, prop, order }) {
 }
 
 .form-tip-warn {
-  color: #e6a23c;
+  color: $el-color-warning;
   margin-top: 4px;
 }
 </style>

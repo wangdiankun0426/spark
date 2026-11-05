@@ -117,7 +117,7 @@ function fallbackCopy(text, done) {
   .var-code {
     flex: 1;
     font-size: 14px;
-    color: var(--app-primary);
+    color: $app-primary;
     word-break: break-all;
   }
 }

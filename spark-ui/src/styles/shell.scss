@@ -1,0 +1,536 @@
+// 应用外壳顶部导航栏与左侧菜单栏全局样式，统一由 --shell-* token 驱动，亮暗自动切换
+// 顶栏由品牌区、胶囊模块坞、工具区、主题开关、用户信息条组成；侧栏为图标栏，可收起为纯图标
+
+// 顶部导航栏
+.app-nav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: $nav-height;
+  padding: 0 18px 0 14px;
+  box-sizing: border-box;
+  background: $shell-nav-bg;
+  border-bottom: 1px solid $shell-nav-border;
+  color: $shell-nav-text;
+}
+
+// 桌面端窗口三键固定在右上角，导航右侧预留空间避免遮挡
+html.desktop-shell .app-nav {
+  padding-right: 200px;
+}
+
+html.desktop-shell .desktop-titlebar {
+  height: $nav-height;
+}
+
+// 品牌区
+.app-nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-right: 6px;
+  cursor: pointer;
+  user-select: none;
+  flex: none;
+}
+
+.app-nav__logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  object-fit: cover;
+  -webkit-user-drag: none;
+
+  html.dark & {
+    box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.6);
+  }
+}
+
+.app-nav__name {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: $shell-nav-text;
+  white-space: nowrap;
+  user-select: none;
+
+  i {
+    font-style: normal;
+    background: $ds-grad;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+.app-nav__version {
+  margin-left: 2px;
+  padding: 3px 9px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: $shell-nav-faint;
+  background: $shell-dock-bg;
+  white-space: nowrap;
+}
+
+// 模块坞胶囊分段
+.app-nav__dock {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 4px;
+  padding: 3px;
+  border-radius: 12px;
+  background: $shell-dock-bg;
+  border: 1px solid $shell-dock-border;
+  flex: none;
+}
+
+.app-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 650;
+  color: $shell-nav-muted;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: background-color 0.16s ease, color 0.16s ease;
+
+  .el-icon,
+  svg {
+    width: 19px;
+    height: 19px;
+    font-size: 19px;
+    opacity: 0.95;
+  }
+
+  &:hover {
+    color: $shell-nav-text;
+  }
+
+  &.is-active {
+    background: $shell-tab-active-bg;
+    color: $shell-nav-active-text;
+    box-shadow: 0 1px 2px rgba(20, 35, 70, 0.05), 0 4px 12px -6px rgba(20, 35, 70, 0.12);
+  }
+}
+
+html.dark .app-tab.is-active {
+  box-shadow: 0 2px 10px -6px rgba(0, 0, 0, 0.5);
+}
+
+.app-nav__spacer {
+  flex: 1 1 auto;
+  min-width: 12px;
+}
+
+// 工具区
+.app-nav__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+
+.app-tool {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: $shell-nav-muted;
+  cursor: pointer;
+  transition: background-color 0.16s ease, color 0.16s ease;
+
+  .el-icon {
+    font-size: 17px;
+  }
+
+  &:hover {
+    background: $shell-nav-hover;
+    color: $shell-nav-text;
+  }
+
+  &--danger:hover {
+    background: rgba(224, 69, 63, 0.1);
+    color: $ds-err-tx;
+  }
+}
+
+.app-tool__badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 16px;
+  height: 15px;
+  padding: 0 3.5px;
+  border-radius: 8px;
+  background: $ds-badge-grad;
+  color: $color-text-white;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 15px;
+  text-align: center;
+  box-sizing: border-box;
+  z-index: 1;
+  box-shadow: 0 0 0 2px $shell-nav-bg;
+}
+
+.app-nav__divider {
+  width: 1px;
+  height: 20px;
+  margin: 0 4px;
+  background: $shell-toggle-border;
+  flex: none;
+}
+
+// 主题开关胶囊滑块
+.app-theme-toggle {
+  position: relative;
+  width: 58px;
+  height: 32px;
+  border-radius: 16px;
+  background: $shell-toggle-bg;
+  border: 1px solid $shell-toggle-border;
+  cursor: pointer;
+  flex: none;
+  box-sizing: border-box;
+
+  .knob {
+    position: absolute;
+    top: 2.5px;
+    left: 2.5px;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: $ds-grad;
+    color: $color-text-white;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 2px 8px -2px rgba(26, 111, 232, 0.6);
+    transition: transform 0.32s cubic-bezier(0.5, 1.5, 0.4, 1);
+
+    .el-icon {
+      font-size: 13px;
+    }
+  }
+
+  .m {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $shell-nav-faint;
+    display: grid;
+
+    .el-icon {
+      font-size: 13px;
+    }
+  }
+
+  .m-sun {
+    left: 7px;
+    opacity: 0;
+  }
+
+  .m-moon {
+    right: 7px;
+  }
+
+  &.is-dark .knob {
+    transform: translateX(26px);
+  }
+}
+
+html.dark .app-theme-toggle {
+  .m-sun {
+    opacity: 0.35;
+  }
+
+  .m-moon {
+    opacity: 0;
+  }
+}
+
+// 用户信息条
+.app-nav__user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 6px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 13px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  flex: none;
+  transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+
+  &:hover {
+    background: $shell-nav-hover;
+    border-color: $shell-sidebar-border;
+    box-shadow: 0 1px 2px rgba(20, 35, 70, 0.05), 0 4px 12px -6px rgba(20, 35, 70, 0.12);
+  }
+}
+
+.app-nav__avatar-wrap {
+  position: relative;
+  flex: none;
+
+  .el-avatar {
+    background: $shell-nav-active-bg;
+  }
+}
+
+.app-nav__online {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: $ds-online;
+  box-shadow: 0 0 0 2px $shell-nav-bg;
+}
+
+.app-nav__uinfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.25;
+  text-align: left;
+  min-width: 0;
+}
+
+.app-nav__uname {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 750;
+  color: $shell-nav-text;
+}
+
+.app-nav__ulogin {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: $shell-nav-faint;
+}
+
+// 左侧菜单栏图标栏
+.app-sidebar {
+  width: $sidebar-width;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 8px 12px;
+  box-sizing: border-box;
+  height: calc(100vh - #{$nav-height});
+  background: $shell-sidebar-bg;
+  border-right: 1px solid $shell-sidebar-border;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: width 0.24s cubic-bezier(0.4, 0.9, 0.3, 1), padding 0.24s ease;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $app-border;
+    border-radius: 2px;
+  }
+}
+
+.app-sidebar--mini {
+  width: $sidebar-width-mini;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.app-sidebar__group {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: $shell-group-text;
+  text-align: center;
+  padding: 10px 0 6px;
+  user-select: none;
+  pointer-events: none;
+
+  &:first-of-type {
+    padding-top: 4px;
+  }
+}
+
+// 收起模式分组标题退化为短分隔线
+.app-sidebar--mini .app-sidebar__group {
+  font-size: 0;
+  padding: 8px 0 4px;
+
+  &::after {
+    content: "";
+    display: block;
+    width: 18px;
+    height: 1px;
+    margin: 0 auto;
+    background: $shell-sidebar-border;
+  }
+}
+
+.app-sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-right: 0;
+  background: transparent;
+  padding: 0;
+
+  .el-menu-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 56px;
+    margin: 0;
+    padding: 0 !important;
+    border-bottom: 0;
+    border-radius: 14px;
+    color: $shell-item-text;
+    font-size: 11px;
+    font-weight: 650;
+    line-height: 1.2;
+    transition: background-color 0.18s ease, color 0.18s ease;
+
+    .el-icon {
+      width: 21px;
+      height: 21px;
+      margin-right: 0;
+      font-size: 21px;
+      color: $shell-icon;
+      opacity: 0.88;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    &:hover {
+      background-color: $shell-item-hover !important;
+      color: $shell-nav-text;
+    }
+
+    &:hover .el-icon {
+      opacity: 1;
+      transform: translateY(-1px);
+    }
+
+    &.is-active {
+      background-color: $shell-item-active-bg !important;
+      color: $shell-item-active-text !important;
+
+      .el-icon {
+        color: $shell-item-active-text !important;
+        opacity: 1;
+      }
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: -8px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3.5px;
+        height: 22px;
+        border-radius: 0 4px 4px 0;
+        background: $ds-grad;
+        box-shadow: 0 0 10px rgba(47, 123, 255, 0.6);
+      }
+    }
+  }
+}
+
+// 收起模式只留图标，标题是文本节点用 font-size:0 隐藏
+.app-sidebar--mini .app-sidebar-menu .el-menu-item {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto;
+  gap: 0;
+  border-radius: 10px;
+  font-size: 0;
+
+  span {
+    display: none;
+  }
+
+  .el-icon {
+    font-size: 22px;
+  }
+
+  // 收起态选中只用浅色圆角方块，不显示左缘色条
+  &.is-active::before {
+    display: none;
+  }
+}
+
+// el-menu 折叠态 Element 默认 64px 宽，这里跟随栏宽
+.app-sidebar-menu.el-menu--collapse {
+  width: 100% !important;
+
+  .el-menu-item {
+    padding: 0 !important;
+  }
+}
+
+// 折叠态 tooltip 触发器默认内边距会把图标推偏，重置为居中
+.app-sidebar-menu .el-menu-tooltip__trigger {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+// 栏底收起展开开关
+.app-sidebar__foot {
+  margin-top: auto;
+  padding-top: 10px;
+  display: flex;
+  justify-content: center;
+  flex: none;
+}
+
+.app-sidebar__mini-btn {
+  width: 44px;
+  height: 32px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  color: $shell-group-text;
+  cursor: pointer;
+  transition: background-color 0.16s ease, color 0.16s ease;
+
+  .el-icon {
+    font-size: 17px;
+  }
+
+  &:hover {
+    background: $shell-item-hover;
+    color: $shell-nav-active-text;
+  }
+}

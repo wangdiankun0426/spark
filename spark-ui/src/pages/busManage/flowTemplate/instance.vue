@@ -57,7 +57,7 @@
       <el-table-column prop="createdByName" label="申请人" width="100" align="center" />
       <el-table-column prop="deptName" label="申请部门" width="120" align="center" />
       <el-table-column prop="createdDt" label="申请时间" width="160" align="center" />
-      <el-table-column label="操作" width="330" align="center" fixed="right">
+      <el-table-column label="操作" width="340" align="center" fixed="right">
         <template #default="{ row }">
           <el-button
               text
@@ -150,7 +150,7 @@
       <el-table
           :data="taskList"
           highlight-current-row
-          height="calc(100vh - 150px)"
+          height="calc(100vh - 160px)"
       >
         <el-table-column prop="id" label="编号" width="80" align="center" />
         <el-table-column prop="taskTypeName" label="任务类型" width="140" align="center" />

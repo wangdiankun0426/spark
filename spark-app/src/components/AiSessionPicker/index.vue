@@ -234,7 +234,7 @@ function handleNew() {
 .picker-title {
   font-size: 16px;
   font-weight: 600;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
 }
 
 .picker-close {
@@ -242,7 +242,7 @@ function handleNew() {
 }
 
 .picker-search {
-  background-color: var(--app-bg-card);
+  background-color: $app-bg-card;
 }
 
 /* 开启新对话 */
@@ -253,13 +253,13 @@ function handleNew() {
   gap: 6px;
   height: 40px;
   border-radius: 8px;
-  background-color: var(--app-primary-light);
+  background-color: $app-primary-light;
 }
 
 .picker-new-text {
   font-size: 14px;
   font-weight: 500;
-  color: var(--app-text-info);
+  color: $app-text-info;
 }
 
 .picker-list {
@@ -276,7 +276,7 @@ function handleNew() {
   padding: 12px 0;
   text-align: center;
   font-size: 12px;
-  color: var(--app-text-secondary);
+  color: $app-text-secondary;
 }
 
 .picker-item {
@@ -287,7 +287,7 @@ function handleNew() {
   border-radius: 6px;
 
   &:active {
-    background-color: var(--app-bg-hover);
+    background-color: $app-bg-hover;
   }
 }
 
@@ -301,7 +301,7 @@ function handleNew() {
 
 .picker-item-title {
   font-size: 14px;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -312,7 +312,7 @@ function handleNew() {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: var(--app-text-secondary);
+  color: $app-text-secondary;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

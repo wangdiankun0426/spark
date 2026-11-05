@@ -381,16 +381,17 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
 
     /**
      * 查询我常用的智能体
-     * @param startTime 开始时间
-     * @param endTime 结束时间
      * @param limit 条数
      * @return 热门智能体列表
      */
     @Override
-    public List<DashboardHotResult> queryMyHotAgents(String startTime, String endTime, int limit) {
+    public List<DashboardHotResult> queryMyHotAgents(int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
         Long userId = SessionHolder.getCurrentUserId();
         Long tenantId = SessionHolder.getCurrentTenantId();
-        List<DashboardHotResult> list = chatSpaceDao.queryMyHotAgents(userId, tenantId, startTime, endTime, limit);
+        List<DashboardHotResult> list = chatSpaceDao.queryMyHotAgents(userId, tenantId, limit);
         if (CollectionUtil.isEmpty(list)) {
             return list;
         }
@@ -399,7 +400,11 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
         agentQuery.setIds(agentIds);
         agentQuery.setPage(false);
         List<AgentResult> agentList = agentDao.queryAgentList(agentQuery);
+        if (CollectionUtil.isEmpty(agentList)) {
+            return list;
+        }
         Map<Long, String> nameMap = agentList.stream()
+                .filter(agent -> agent.getId() != null && agent.getName() != null)
                 .collect(Collectors.toMap(AgentResult::getId, AgentResult::getName));
         for (DashboardHotResult item : list) {
             item.setName(nameMap.get(item.getId()));

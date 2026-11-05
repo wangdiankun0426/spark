@@ -285,7 +285,7 @@ function handleCloseFlowForm() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: $spacing-lg;
+  margin-bottom: $spacing-md;
   padding: $spacing-md $spacing-xl;
   background-color: $bg-card;
   border: 1px solid $border-color-light;
@@ -320,9 +320,9 @@ function handleCloseFlowForm() {
 }
 
 .flow-grid {
-  height: calc(100vh - #{$nav-height} - 178px);
+  height: calc(100vh - #{$nav-height} - 172px);
   overflow-y: auto;
-  padding-top: 6px;
+  padding-top: 3px;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: $spacing-lg;

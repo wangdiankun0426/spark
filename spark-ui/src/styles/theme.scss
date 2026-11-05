@@ -1,18 +1,7 @@
-/**
- * 主题变量文件 - 导航栏 / 左侧菜单栏 皮肤配色
- * 深色主题（默认蓝色）为 :root 默认值；html 根节点挂 theme-light 类即切换为浅色主题（白色）
- * 仅覆盖导航栏与各模块左侧菜单栏的颜色，页面主体样式不受影响
- */
-
 :root {
   --app-primary: #004fc5;
-  --app-primary-hover: #2669cd;
   --app-primary-light: #e8f0fd;
   --app-primary-soft: rgba(26, 111, 232, 0.08);
-  --app-primary-hover-bg: rgba(0, 79, 197, 0.12);
-  --app-row-hover: #f5f8ff;
-  --app-table-head-bg: #e8f0fd;
-  --app-table-row-hover: #f5f8ff;
   --app-text-primary: #172b4d;
   --app-text-secondary: #5e6c84;
   --app-text-placeholder: #a0aec0;
@@ -24,33 +13,58 @@
   --app-border-light: #eef2f8;
   --app-shadow-card: 0 2px 12px 0 rgba(26, 111, 232, 0.08);
   --app-shadow-card-hover: 0 6px 24px 0 rgba(26, 111, 232, 0.14);
-  --app-shadow-nav: 0 2px 8px 0 rgba(23, 43, 77, 0.18);
-  --app-shadow-dialog: 0 8px 32px 0 rgba(26, 111, 232, 0.12);
-}
 
-// 深色主题（默认，蓝色）
-:root {
-  // 卡片/弹窗/抽屉头部
-  --dialog-head-bg: #0140af;
-  --drawer-head-bg: #0140af;
-  --head-text: #ffffff;
+  --app-scrollbar-track: #f1f1f1;
+  --app-scrollbar-thumb: #c1c1c1;
+  --app-scrollbar-thumb-hover: #a8a8a8;
 
-  // 顶部导航栏
+  // 设计器画布网格变量，随主题切换
+  --app-canvas-bg: #f6f8fc;
+  --app-canvas-dot: rgba(47, 123, 255, 0.18);
+  --app-canvas-dot-soft: rgba(47, 123, 255, 0.07);
+
+  // 流程设计器节点配色，按节点类型区分
+  --app-node-start: #52c41a;
+  --app-node-start-bg: #f6ffed;
+  --app-node-end: #ff4d4f;
+  --app-node-end-bg: #fff2f0;
+  --app-node-gateway: #fa8c16;
+  --app-node-gateway-bg: #fffbe6;
+  --app-node-llm: #004fc5;
+  --app-node-llm-bg: #e8f0fd;
+  --app-node-task: #1890ff;
+  --app-node-task-bg: #e6f7ff;
+  --app-node-task-tag: #1890ff;
+  --app-node-task-tag-bg: #eaf3ff;
+  --app-node-approve-ok: #67c23a;
+  --app-node-approve-ok-bg: #f0f9eb;
+  --app-node-approve-warn: #e6a23c;
+  --app-node-approve-warn-bg: #fdf6ec;
+
+  // 工作台英雄区
+  --app-hero-grad: linear-gradient(105deg, #dce8ff 0%, #e7e4ff 48%, #f4ebff 100%);
+  --app-hero-accent: #2f7bff;
+
+  // 全屏舞台页
+  --error-page-bg: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
+  --error-title-grad: linear-gradient(135deg, #1d4ed8 0%, #60a5fa 100%);
+  --error-title-grad-rose: linear-gradient(135deg, #f43f5e 0%, #fb7185 100%);
+  --error-subtitle: #64748b;
+  --auth-oauth-bg: linear-gradient(160deg, #f7faff 0%, #eaf2fe 55%, #e3edfd 100%);
+
+  // 登录品牌区
+  --auth-stage-bg: radial-gradient(circle at 8% 4%, rgba(47, 123, 255, 0.2), transparent 42%),
+    radial-gradient(circle at 92% 96%, rgba(34, 200, 216, 0.2), transparent 46%),
+    radial-gradient(circle at 62% 22%, rgba(120, 160, 255, 0.1), transparent 40%),
+    linear-gradient(135deg, #f3f7fe 0%, #eef4fd 52%, #e9f1fb 100%);
+  --auth-ai-grad: linear-gradient(120deg, #1a6fe8, #22c8d8);
+  --auth-title-grad: linear-gradient(100deg, #0f357f 0%, #1a6fe8 58%, #1899c9 100%);
+
   --nav-bg: linear-gradient(90deg, #204588 0%, #1e3a6e 60%, #204588 100%);
   --nav-shadow: 0 2px 8px 0 rgba(23, 43, 77, 0.18);
   --nav-text: #ffffff;
-  --nav-hover-bg: rgba(255, 255, 255, 0.1);
-  --nav-hover-text: #ffffff;
-  --nav-active-bg: rgba(255, 255, 255, 0.08);
-  --nav-active-border: #ffffff;
-  --nav-active-text: #ffffff;
-  --nav-tool-color: rgba(255, 255, 255, 0.8);
-  --nav-tool-hover-bg: rgba(96, 165, 250, 0.25);
-  --nav-tool-hover-color: #ffffff;
   --nav-avatar-border: rgba(255, 255, 255, 0.6);
-  --nav-dropdown-color: rgba(255, 255, 255, 0.9);
 
-  // 左侧菜单栏
   --sidebar-bg: linear-gradient(180deg, #204588 0%, #204588 100%);
   --sidebar-shadow: 2px 0 8px rgba(23, 43, 77, 0.12);
   --sidebar-text: #ffffff;
@@ -58,89 +72,89 @@
   --sidebar-active-bg: #6086c6;
   --sidebar-active-text: #ffffff;
   --sidebar-icon: #fef0f0;
-  --sidebar-group-bg: rgba(0, 0, 0, 0.15);
-  --sidebar-group-text: rgba(255, 255, 255, 0.9);
-  --sidebar-group-hover-bg: rgba(0, 0, 0, 0.2);
-  --sidebar-item-text: rgba(255, 255, 255, 0.8);
-  --sidebar-item-hover-bg: rgba(255, 255, 255, 0.1);
-  --sidebar-item-hover-text: #ffffff;
-  --sidebar-item-active-bg: rgba(96, 165, 250, 0.2);
-  --sidebar-item-active-text: #ffffff;
-  --sidebar-item-active-border: #ffffff;
-  --sidebar-icon-color: #ffffff;
   --sidebar-menu-group-text: #c8d2e4;
-  --sidebar-menu-group-text-light: #9aa9c4;
+
+  // 应用外壳导航与侧栏变量
+  --shell-nav-bg: #ffffff;
+  --shell-nav-border: #e7ebf4;
+  --shell-nav-text: #1f2b43;
+  --shell-nav-muted: #5a6884;
+  --shell-nav-faint: #98a3ba;
+  --shell-nav-hover: #f2f5fa;
+  --shell-nav-active-bg: #e9f1ff;
+  --shell-nav-active-text: #0b57e8;
+  --shell-tab-active-bg: #ffffff;
+  --shell-dock-bg: #f2f5fa;
+  --shell-dock-border: #e7ebf4;
+  --shell-toggle-bg: #eef1f8;
+  --shell-toggle-border: #d9e0ee;
+  --shell-sidebar-bg: #ffffff;
+  --shell-sidebar-border: #e7ebf4;
+  --shell-group-text: #98a3ba;
+  --shell-item-text: #5a6884;
+  --shell-item-hover: #f2f5fa;
+  --shell-item-active-bg: #e9f1ff;
+  --shell-item-active-text: #0b57e8;
+  --shell-icon: #98a3ba;
 }
 
-// 浅色主题（白色）
 html.theme-light {
-  // 卡片/弹窗/抽屉头部
-  --dialog-head-bg: var(--app-bg-card);
-  --drawer-head-bg: var(--app-bg-card);
-  --head-text: #172b4d;
+  --nav-bg: #ffffff;
+  --nav-shadow: 0 1px 0 rgba(20, 35, 70, 0.05), 0 8px 24px -22px rgba(20, 35, 70, 0.4);
+  --nav-text: #1f2b43;
+  --nav-avatar-border: rgba(23, 43, 77, 0.12);
 
-  // 顶部导航栏
-  --nav-bg: #fbfbfb;
-  --nav-shadow: none;
-  --nav-text: #172b4d;
-  --nav-hover-bg: transparent;
-  --nav-hover-text: #004fc5;
-  --nav-active-bg: transparent;
-  --nav-active-border: transparent;
-  --nav-active-text: #004fc5;
-  --nav-tool-color: #5e6c84;
-  --nav-tool-hover-bg: #e8f0fd;
-  --nav-tool-hover-color: #004fc5;
-  --nav-avatar-border: rgba(23, 43, 77, 0.2);
-  --nav-dropdown-color: #5e6c84;
-
-  // 左侧菜单栏
-  --sidebar-bg: #fbfbfb;
-  --sidebar-shadow: 2px 0 8px rgba(23, 43, 77, 0.06);
-  --sidebar-text: #172b4d;
-  --sidebar-hover-bg: #e8f0fd;
-  --sidebar-active-bg: #e8f0fd;
-  --sidebar-active-text: #004fc5;
-  --sidebar-icon: #004fc5;
-  --sidebar-group-bg: #f5f7fa;
-  --sidebar-group-text: #172b4d;
-  --sidebar-group-hover-bg: #eef2f8;
-  --sidebar-item-text: #5e6c84;
-  --sidebar-item-hover-bg: #e8f0fd;
-  --sidebar-item-hover-text: #004fc5;
-  --sidebar-item-active-bg: #e8f0fd;
-  --sidebar-item-active-text: #004fc5;
-  --sidebar-item-active-border: #004fc5;
-  --sidebar-icon-color: #004fc5;
-  --sidebar-menu-group-text: #8a94a6;
-  --sidebar-menu-group-text-light: #aab2c0;
-
-  .el-menu--horizontal {
-    --el-menu-bg-color: #fbfbfb;
-  }
+  --sidebar-bg: #ffffff;
+  --sidebar-shadow: none;
+  --sidebar-text: #5a6884;
+  --sidebar-hover-bg: #f2f5fa;
+  --sidebar-active-bg: #e9f1ff;
+  --sidebar-active-text: #0b57e8;
+  --sidebar-icon: #98a3ba;
+  --sidebar-menu-group-text: #98a3ba;
 }
 
 html.dark {
   color-scheme: dark;
 
-  --nav-bg: #0f172a;
-  --sidebar-bg: #0f172a;
-
-
-  --sidebar-hover-bg: rgba(77, 141, 255, 0.1);
+  --nav-bg: #0c1220;
+  --nav-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+  --nav-text: #e8eefb;
+  --nav-avatar-border: rgba(255, 255, 255, 0.14);
+  --sidebar-bg: #0e1523;
+  --sidebar-shadow: none;
+  --sidebar-text: #94a2bf;
+  --sidebar-hover-bg: #19233a;
   --sidebar-active-bg: rgba(77, 141, 255, 0.14);
-  --sidebar-active-text: #4d8dff;
-  --sidebar-item-active-bg: rgba(77, 141, 255, 0.14);
-  --sidebar-item-active-text: #4d8dff;
+  --sidebar-active-text: #a5c4ff;
+  --sidebar-icon: #677694;
+  --sidebar-menu-group-text: #677694;
+
+  --shell-nav-bg: #0c1220;
+  --shell-nav-border: #222e48;
+  --shell-nav-text: #e8eefb;
+  --shell-nav-muted: #94a2bf;
+  --shell-nav-faint: #677694;
+  --shell-nav-hover: #19233a;
+  --shell-nav-active-bg: rgba(77, 141, 255, 0.15);
+  --shell-nav-active-text: #a5c4ff;
+  --shell-tab-active-bg: #1e2a44;
+  --shell-dock-bg: #151e30;
+  --shell-dock-border: #222e48;
+  --shell-toggle-bg: #1e2a44;
+  --shell-toggle-border: #2c3a5a;
+  --shell-sidebar-bg: #0e1523;
+  --shell-sidebar-border: #222e48;
+  --shell-group-text: #677694;
+  --shell-item-text: #94a2bf;
+  --shell-item-hover: #19233a;
+  --shell-item-active-bg: rgba(77, 141, 255, 0.14);
+  --shell-item-active-text: #a5c4ff;
+  --shell-icon: #677694;
 
   --app-primary: #4d8dff;
-  --app-primary-hover: #679eff;
   --app-primary-light: rgba(77, 141, 255, 0.14);
   --app-primary-soft: rgba(77, 141, 255, 0.12);
-  --app-primary-hover-bg: rgba(77, 141, 255, 0.18);
-  --app-row-hover: rgba(77, 141, 255, 0.08);
-  --app-table-head-bg: #243756;
-  --app-table-row-hover: #22314b;
   --app-text-primary: #e5edf7;
   --app-text-secondary: #94a6c0;
   --app-text-placeholder: #6b7c95;
@@ -152,38 +166,46 @@ html.dark {
   --app-border-light: #2b3a52;
   --app-shadow-card: 0 2px 12px rgba(0, 0, 0, 0.4);
   --app-shadow-card-hover: 0 6px 24px rgba(0, 0, 0, 0.5);
-  --app-shadow-nav: 0 2px 8px rgba(0, 0, 0, 0.5);
-  --app-shadow-dialog: 0 8px 32px rgba(0, 0, 0, 0.55);
 
-  --dialog-head-bg: var(--app-bg-card);
-  --drawer-head-bg: var(--app-bg-card);
-  --head-text: #e5edf7;
+  --app-scrollbar-track: #1b273b;
+  --app-scrollbar-thumb: #475569;
+  --app-scrollbar-thumb-hover: #64748b;
 
-  --el-color-primary: #4d8dff;
-  --el-color-primary-light-3: rgba(77, 141, 255, 0.7);
-  --el-color-primary-light-5: rgba(77, 141, 255, 0.5);
-  --el-color-primary-light-7: rgba(77, 141, 255, 0.32);
-  --el-color-primary-light-8: rgba(77, 141, 255, 0.22);
-  --el-color-primary-light-9: rgba(77, 141, 255, 0.14);
-  --el-color-primary-dark-2: #3a7bef;
+  // 设计器画布暗色网格
+  --app-canvas-bg: #0d1526;
+  --app-canvas-dot: rgba(143, 182, 255, 0.16);
+  --app-canvas-dot-soft: rgba(143, 182, 255, 0.06);
 
-  --el-bg-color-page: #0f172a;
-  --el-bg-color: #1e293b;
-  --el-bg-color-overlay: #243044;
-  --el-fill-color-blank: #1e293b;
-  --el-fill-color: #263549;
-  --el-fill-color-light: #22304a;
-  --el-fill-color-lighter: #1e293b;
-  --el-fill-color-extra-light: #1a2436;
-  --el-border-color: #334155;
-  --el-border-color-light: #2b3a52;
-  --el-border-color-lighter: #263449;
-  --el-border-color-extra-light: #222f43;
-  --el-border-color-dark: #3d4d6a;
-  --el-mask-color: rgba(0, 0, 0, 0.7);
+  // 流程设计器节点暗色取同色系浅值
+  --app-node-start: #73d13d;
+  --app-node-start-bg: rgba(82, 196, 26, 0.12);
+  --app-node-end: #ff7875;
+  --app-node-end-bg: rgba(255, 77, 79, 0.12);
+  --app-node-gateway: #ffc069;
+  --app-node-gateway-bg: rgba(250, 140, 22, 0.12);
+  --app-node-llm: #8fb6ff;
+  --app-node-llm-bg: rgba(77, 141, 255, 0.14);
+  --app-node-task: #69a6ff;
+  --app-node-task-bg: rgba(77, 141, 255, 0.14);
+  --app-node-task-tag: #8fb6ff;
+  --app-node-task-tag-bg: rgba(255, 255, 255, 0.08);
+  --app-node-approve-ok: #85ce61;
+  --app-node-approve-ok-bg: rgba(103, 194, 58, 0.14);
+  --app-node-approve-warn: #eebe77;
+  --app-node-approve-warn-bg: rgba(230, 162, 60, 0.14);
 
-  --el-text-color-primary: #e5edf7 !important;
-  --el-text-color-regular: #c6d3e6 !important;
-  --el-text-color-secondary: #94a6c0 !important;
-  --el-text-color-placeholder: #6b7c95 !important;
+  // 工作台英雄区暗色
+  --app-hero-grad: linear-gradient(105deg, rgba(47, 123, 255, 0.12) 0%, rgba(120, 119, 255, 0.10) 48%, rgba(168, 85, 247, 0.10) 100%);
+  --app-hero-accent: #8fb6ff;
+
+  // 全屏舞台页暗色
+  --error-page-bg: linear-gradient(135deg, #131c2e 0%, #0f172a 100%);
+  --error-subtitle: #94a3b8;
+  --auth-oauth-bg: linear-gradient(160deg, #131c2e 0%, #0f172a 55%, #0c1424 100%);
+
+  // 登录品牌区暗色
+  --auth-stage-bg: radial-gradient(circle at 8% 4%, rgba(47, 123, 255, 0.2), transparent 44%),
+    radial-gradient(circle at 92% 96%, rgba(34, 200, 216, 0.14), transparent 46%),
+    linear-gradient(135deg, #1b2740 0%, #16203a 55%, #111a30 100%);
+  --auth-title-grad: linear-gradient(100deg, #cfe0ff 0%, #93c5fd 58%, #7dd3fc 100%);
 }

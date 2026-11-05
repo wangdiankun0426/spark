@@ -325,6 +325,20 @@ fn main() {
             hot_update::serve(ctx.app_handle(), request.uri().path())
         })
         .setup(|app| {
+            // 主窗口按环境选择加载地址：开发模式走 Vite devUrl 并支持 HMR，正式包走 app 协议承接热更资源
+            // 静态配置无法按环境切换 URL，故与 open_app_window 一样在代码中分支
+            let main_url = if tauri::is_dev() {
+                WebviewUrl::App("index.html".into())
+            } else {
+                WebviewUrl::External(app_webview_url(""))
+            };
+            WebviewWindowBuilder::new(app, "main", main_url)
+                .title("星火云")
+                .inner_size(1400.0, 900.0)
+                .min_inner_size(1200.0, 800.0)
+                .center()
+                .decorations(false)
+                .build()?;
             // 安装包升级后清理已失效的旧热更资源
             hot_update::cleanup_outdated(app.handle());
             // 系统托盘右键菜单提供桌面宠物开关和退出，左键点击托盘图标显示主窗口

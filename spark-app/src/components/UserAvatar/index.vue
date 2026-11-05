@@ -180,7 +180,7 @@ const avatarStyle = computed(() => ({
 
 .avatar-initial {
   font-weight: 600;
-  color: var(--app-fill-tx);
+  color: $app-fill-tx;
   line-height: 1;
 }
 
@@ -189,7 +189,7 @@ const avatarStyle = computed(() => ({
 }
 
 .avatar-user.avatar-shape-rounded {
-  background-image: var(--app-avatar-bg);
+  background-image: $app-avatar-bg;
 }
 
 .avatar-agent {

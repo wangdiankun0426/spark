@@ -16,7 +16,7 @@
           <text class="my-name-text">{{userInfo.name}}</text>
           <text class="my-dept-text">{{userInfo.deptPath}}</text>
           <view class="my-tenant-chip">
-            <up-icon name="home-fill" size="10" color="#ffffff"/>
+            <up-icon name="home-fill" size="10" :color="getOnFillColor(isDark)"/>
             <text class="my-tenant-text">{{userInfo.tenantName || '未分配租户'}}</text>
           </view>
         </div>
@@ -27,8 +27,7 @@
     <scroll-view class="my-content" scroll-y>
       <view class="section-card" v-for="section in funcSections" :key="section.key">
         <view class="section-head">
-          <view class="section-bar"></view>
-          <text class="section-title">{{ section.title }}</text>
+          <SectionTitle>{{ section.title }}</SectionTitle>
         </view>
 
         <view
@@ -100,12 +99,13 @@ import {onShow} from "@dcloudio/uni-app";
 import {useStore} from "vuex";
 import {navBarInfo} from "@/utils/navBarUtil";
 import {useTheme} from "@/utils/useTheme";
-import {getPrimaryColor, getChevronColor} from "@/utils/themeUtil";
+import {getPrimaryColor, getChevronColor, getThemeToken, getOnFillColor} from "@/utils/themeUtil";
 import {getSessionAPI, logoutAPI} from "@/api/auth/login";
 import UserAvatar from "@/components/UserAvatar/index.vue"
 import ThemeGlyph from "@/components/ThemeGlyph/index.vue"
 import TenantSwitch from "@/components/TenantSwitch/index.vue"
 import AppTabbar from "@/components/AppTabbar/index.vue"
+import SectionTitle from "@/components/SectionTitle/index.vue"
 
 const store = useStore();
 const active = ref("my");
@@ -155,10 +155,10 @@ const funcSections = computed(() => [
     key: 'account',
     title: '账号与安全',
     list: [
-      {label: '个人信息', icon: 'account-fill', color: '#13c2c2', bgColor: isDark.value ? 'rgba(19, 194, 194, 0.16)' : '#e6fffb', url: '/pages/my/information'},
-      {label: '修改密码', icon: 'lock-fill', color: '#52c41a', bgColor: isDark.value ? 'rgba(82, 196, 26, 0.16)' : '#f6ffed', url: '/pages/my/updatePwd'},
-      {label: '修改头像', icon: 'photo-fill', color: '#fa8c16', bgColor: isDark.value ? 'rgba(250, 140, 22, 0.16)' : '#fff7e6', url: '/pages/my/updateAvatar'},
-      {key: 'tenant', action: 'tenant', label: '当前租户', icon: 'home-fill', color: '#2f7bff', bgColor: isDark.value ? 'rgba(47, 123, 255, 0.16)' : '#eaf2ff'}
+      {label: '个人信息', icon: 'account-fill', color: getThemeToken('tileCyan', isDark.value), bgColor: getThemeToken('tileCyanBg', isDark.value), url: '/pages/my/information'},
+      {label: '修改密码', icon: 'lock-fill', color: getThemeToken('tileGreen', isDark.value), bgColor: getThemeToken('tileGreenBg', isDark.value), url: '/pages/my/updatePwd'},
+      {label: '修改头像', icon: 'photo-fill', color: getThemeToken('tileOrange', isDark.value), bgColor: getThemeToken('tileOrangeBg', isDark.value), url: '/pages/my/updateAvatar'},
+      {key: 'tenant', action: 'tenant', label: '当前租户', icon: 'home-fill', color: getThemeToken('tileBlue', isDark.value), bgColor: getThemeToken('tileBlueBg', isDark.value)}
     ]
   },
   {
@@ -170,8 +170,8 @@ const funcSections = computed(() => [
         action: 'theme',
         label: '深色模式',
         glyph: true,
-        color: isDark.value ? '#f5b544' : '#7c5cff',
-        bgColor: isDark.value ? 'rgba(245, 181, 68, 0.16)' : '#f3f0ff'
+        color: getThemeToken('tileTheme', isDark.value),
+        bgColor: getThemeToken('tileThemeBg', isDark.value)
       }
     ]
   },
@@ -179,8 +179,8 @@ const funcSections = computed(() => [
     key: 'about',
     title: '关于',
     list: [
-      {key: 'service', action: 'agreement', type: 'service', label: '用户服务协议', icon: 'file-text-fill', color: '#2f7bff', bgColor: isDark.value ? 'rgba(47, 123, 255, 0.16)' : '#eaf2ff'},
-      {key: 'privacy', action: 'agreement', type: 'privacy', label: '隐私政策', icon: 'info-circle-fill', color: '#8b5cf6', bgColor: isDark.value ? 'rgba(139, 92, 246, 0.18)' : '#f3f0ff'}
+      {key: 'service', action: 'agreement', type: 'service', label: '用户服务协议', icon: 'file-text-fill', color: getThemeToken('tileBlue', isDark.value), bgColor: getThemeToken('tileBlueBg', isDark.value)},
+      {key: 'privacy', action: 'agreement', type: 'privacy', label: '隐私政策', icon: 'info-circle-fill', color: getThemeToken('tilePurple', isDark.value), bgColor: getThemeToken('tilePurpleBg', isDark.value)}
     ]
   }
 ]);
@@ -238,7 +238,7 @@ function handleOnTabChange(index) {
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
-  background-color: var(--app-bg-page);
+  background-color: $app-bg-page;
 }
 
 .my-header {
@@ -248,9 +248,9 @@ function handleOnTabChange(index) {
   padding-bottom: 18px;
   overflow: hidden;
   border-radius: 0 0 22px 22px;
-  box-shadow: var(--app-shadow-hero);
-  background-image: var(--app-gradient-profile);
-  background-color: var(--app-bg-mid);
+  box-shadow: $app-shadow-hero;
+  background-image: $app-gradient-profile;
+  background-color: $app-bg-mid;
 }
 
 .my-header::after {
@@ -314,7 +314,7 @@ function handleOnTabChange(index) {
   font-size: 19px;
   line-height: 1.3;
   letter-spacing: 0.4px;
-  color: var(--app-fill-tx);
+  color: $app-fill-tx;
   font-weight: 700;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -330,7 +330,7 @@ function handleOnTabChange(index) {
   line-height: 1.5;
   letter-spacing: 0.2px;
   font-weight: 400;
-  color: var(--app-fill-tx);
+  color: $app-fill-tx;
   opacity: 0.82;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -356,7 +356,7 @@ function handleOnTabChange(index) {
   font-size: 11px;
   line-height: 1.5;
   letter-spacing: 0.2px;
-  color: var(--app-fill-tx);
+  color: $app-fill-tx;
   opacity: 0.92;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -376,9 +376,9 @@ function handleOnTabChange(index) {
 .section-card {
   padding: 13px 14px 2px;
   border-radius: 16px;
-  background-color: var(--app-bg-card);
-  border: 1px solid var(--app-border-light);
-  box-shadow: var(--app-shadow-card);
+  background-color: $app-bg-card;
+  border: 1px solid $app-border-light;
+  box-shadow: $app-shadow-card;
 }
 
 .section-card + .section-card {
@@ -392,26 +392,12 @@ function handleOnTabChange(index) {
   padding-bottom: 2px;
 }
 
-.section-bar {
-  width: 3px;
-  height: 12px;
-  border-radius: 2px;
-  background-image: var(--app-gradient-fill);
-}
-
-.section-title {
-  font-size: 13.5px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-  color: var(--app-text-primary);
-}
-
 .setting-row {
   display: flex;
   align-items: center;
   gap: 11px;
   padding: 10px 0;
-  border-top: 1px solid var(--app-divide);
+  border-top: 1px solid $app-divide;
 
   &:active {
     opacity: 0.72;
@@ -433,7 +419,7 @@ function handleOnTabChange(index) {
   min-width: 0;
   font-size: 13.5px;
   font-weight: 500;
-  color: var(--app-text-primary);
+  color: $app-text-primary;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -443,7 +429,7 @@ function handleOnTabChange(index) {
   flex: none;
   max-width: 45%;
   font-size: 12px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -461,12 +447,12 @@ function handleOnTabChange(index) {
   gap: 6px;
   height: 52px;
   border-radius: 15px;
-  background-color: var(--app-bg-card);
-  border: 1px solid var(--app-border-light);
-  box-shadow: var(--app-shadow-card);
+  background-color: $app-bg-card;
+  border: 1px solid $app-border-light;
+  box-shadow: $app-shadow-card;
 
   &:active {
-    background-color: var(--app-bg-hover);
+    background-color: $app-bg-hover;
   }
 }
 
@@ -474,7 +460,7 @@ function handleOnTabChange(index) {
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 1px;
-  color: var(--app-text-error);
+  color: $app-text-error;
 }
 
 .version-text {
@@ -483,6 +469,6 @@ function handleOnTabChange(index) {
   text-align: center;
   font-size: 11px;
   letter-spacing: 0.4px;
-  color: var(--app-text-tertiary);
+  color: $app-text-tertiary;
 }
 </style>

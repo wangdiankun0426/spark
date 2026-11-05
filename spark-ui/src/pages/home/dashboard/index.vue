@@ -1,89 +1,135 @@
 <template>
-  <div class="app-container dashboard" v-loading="loading">
-    <div class="dashboard__bar">
-      <div class="greeting">
-        <div class="greeting__title">{{ greetingText }}，{{ userName }}</div>
-        <div class="greeting__sub">欢迎使用星火云应用平台，聚微光成智，燃无限可能！ · {{ todayText }}，这是您近 {{ rangeDays }} 天的工作台概览</div>
+  <div class="dashboard" v-loading="loading">
+    <!-- 顶部渐变横幅（通铺到顶、左右不留白） -->
+    <div class="dash-hero">
+      <div class="dash-hero__left">
+        <div class="dash-hero__date">
+          <el-icon><Calendar/></el-icon>
+          <span>{{ todayText }}</span>
+        </div>
+        <div class="dash-hero__title">{{ greetingText }}，<em>{{ userName || '朋友' }}</em></div>
+        <div class="dash-hero__sub">
+          欢迎使用星火云应用平台，聚微光成智，燃无限可能！
+          <template v-if="todoCount > 0"> 今天有 <b>{{ todoCount }}</b> 件待办 等待处理。</template>
+        </div>
       </div>
-      <el-radio-group v-model="rangeDays" @change="loadRanged">
-        <el-radio-button :label="7">近7天</el-radio-button>
-        <el-radio-button :label="30">近30天</el-radio-button>
-        <el-radio-button :label="90">近90天</el-radio-button>
-      </el-radio-group>
+      <div class="dash-hero__right">
+        <el-button class="dash-hero__ai" @click="goModel">
+          <el-icon><ChatDotRound/></el-icon>
+          开始 AI 对话
+        </el-button>
+      </div>
     </div>
 
-    <div class="dashboard__body">
-      <div class="dashboard__kpi">
-        <StatCard label="模型调用总次数" :value="formatNumber(usageSummary?.callCount)" unit="次"
-                  :sub="`近${rangeDays}天`" type="primary">
+    <div class="dash-body">
+      <!-- 数据概览 -->
+      <div class="dash-kpi">
+        <StatCard label="模型调用总次数" :value="formatNumber(overview?.callCount)" unit="次"
+                  sub="累计">
           <template #icon><el-icon><Promotion/></el-icon></template>
         </StatCard>
-        <StatCard label="Token 总消耗" :value="formatNumber(usageSummary?.totalTokens)" unit="tokens"
-                  :sub="`输入 ${formatNumber(usageSummary?.inputTokens)} · 输出 ${formatNumber(usageSummary?.outputTokens)}`"
-                  type="success">
+        <StatCard label="Token 总消耗" :value="formatNumber(overview?.totalTokens)" unit=""
+                  :sub="`输入 ${formatNumber(overview?.inputTokens)} · 输出 ${formatNumber(overview?.outputTokens)}`">
           <template #icon><el-icon><Coin/></el-icon></template>
         </StatCard>
-        <StatCard label="模型" :value="asset?.modelCount ?? 0" unit="个" sub="点击使用"
-                  type="primary" class="kpi-clickable" @click="goModel">
+        <StatCard label="模型" :value="overview?.modelCount ?? 0" unit="个" sub="点击使用"
+                  class="kpi-clickable" @click="goModel">
           <template #icon><el-icon><Cpu/></el-icon></template>
         </StatCard>
-        <StatCard label="智能体" :value="asset?.agentCount ?? 0" unit="个" sub="点击使用"
-                  type="success" class="kpi-clickable" @click="goAgent">
-          <template #icon><AgentIcon/></template>
+        <StatCard label="智能体" :value="overview?.agentCount ?? 0" unit="个" sub="点击使用"
+                  class="kpi-clickable" @click="goAgent">
+          <template #icon><el-icon><MagicStick/></el-icon></template>
         </StatCard>
-        <StatCard label="工作流" :value="asset?.workflowCount ?? 0" unit="个" sub="点击使用"
-                  type="warning" class="kpi-clickable" @click="goWorkflow">
-          <template #icon><WorkflowIcon/></template>
+        <StatCard label="工作流" :value="overview?.workflowCount ?? 0" unit="个" sub="点击使用"
+                  class="kpi-clickable" @click="goWorkflow">
+          <template #icon><el-icon><Share/></el-icon></template>
         </StatCard>
-        <StatCard label="我的待办" :value="todoTotal" unit="件"
-                  sub="点击查看处理" type="danger" class="kpi-clickable" @click="goTodo">
-          <template #icon><el-icon><BellFilled/></el-icon></template>
+        <StatCard label="我的待办" :value="todoCount" unit="件"
+                  sub="点击查看处理" badge="待处理" class="kpi-clickable" @click="goTodo">
+          <template #icon><el-icon><Bell/></el-icon></template>
         </StatCard>
       </div>
 
-      <div class="dashboard__row dashboard__row--chart">
+      <!-- 趋势 + 智能推荐 -->
+      <div class="dash-row dash-row--chart">
         <div class="panel trend-panel">
           <div class="panel__head">
-            <div class="panel__title"><el-icon><Histogram/></el-icon><span>用量趋势</span></div>
+            <div class="panel__title">
+              <span class="panel__icon panel__icon--blue"><el-icon><Histogram/></el-icon></span>
+              <span>用量趋势</span>
+              <span class="trend-legend">
+                <i class="trend-legend__dot" :style="{ background: chartPalette.blue }"></i>调用次数
+                <i class="trend-legend__line" :style="{ background: chartPalette.cyan }"></i>Token 消耗
+              </span>
+            </div>
+            <el-select v-model="trendDays" size="small" class="range-select" @change="loadTrend">
+              <el-option :value="7" label="近一周" />
+              <el-option :value="30" label="近一月" />
+              <el-option :value="90" label="近三月" />
+            </el-select>
           </div>
           <div ref="trendChartRef" class="trend-chart"/>
         </div>
-        <RankCard title="热门推荐" :list="hotRecommend" unit="次" show-type-tag>
+        <RankCard title="智能推荐" :list="hotRecommend" unit="次" show-type-tag>
           <template #icon><StarFilled/></template>
         </RankCard>
       </div>
 
-      <div class="dashboard__row dashboard__row--bottom">
+      <!-- 底部三块 -->
+      <div class="dash-row dash-row--bottom">
         <div class="panel">
           <div class="panel__head">
-            <div class="panel__title"><el-icon><BellFilled/></el-icon><span>我的流程</span></div>
+            <div class="panel__title">
+              <span class="panel__icon panel__icon--blue"><el-icon><BellFilled/></el-icon></span>
+              <span>我的流程</span>
+            </div>
+            <el-button text type="primary" @click="goApply">全部</el-button>
           </div>
-          <div ref="todoChartRef" class="todo-chart"/>
+          <div class="flow-wrap">
+            <div ref="todoChartRef" class="todo-chart"/>
+            <div class="flow-legend">
+              <div v-for="item in flowLegend" :key="item.name" class="flow-legend__row">
+                <i :style="{ background: item.color }"></i>
+                <span class="flow-legend__name">{{ item.name }}</span>
+                <b>{{ item.value }}</b>
+              </div>
+            </div>
+          </div>
         </div>
+
         <div class="panel apply-panel">
           <div class="panel__head">
-            <div class="panel__title"><el-icon><CirclePlusFilled/></el-icon><span>可申请流程</span></div>
+            <div class="panel__title">
+              <span class="panel__icon panel__icon--blue"><el-icon><CirclePlusFilled/></el-icon></span>
+              <span>可申请流程</span>
+            </div>
             <el-button text type="primary" @click="goApply">全部</el-button>
           </div>
           <div v-if="applyTemplates.length" class="apply-list">
-            <div v-for="item in applyTemplates" :key="item.id" class="apply-item" @click="goApply">
-              <el-icon class="apply-item__icon"><CirclePlusFilled/></el-icon>
-              <span class="apply-item__name" :title="item.name">{{ item.name }}</span>
-            </div>
+            <button v-for="item in applyTemplates" :key="item.id" class="apply-chip" @click="goApply">
+              <el-icon><Plus/></el-icon>
+              <span class="apply-chip__name" :title="item.name">{{ item.name }}</span>
+            </button>
           </div>
           <el-empty v-else :image-size="80" description="暂无可申请流程" class="panel__empty"/>
         </div>
+
         <div class="panel todo-panel">
           <div class="panel__head">
-            <div class="panel__title"><el-icon><BellFilled/></el-icon><span>我的待办</span></div>
-            <el-badge :value="todoTotal">
+            <div class="panel__title">
+              <span class="panel__icon panel__icon--blue"><el-icon><BellFilled/></el-icon></span>
+              <span>我的待办</span>
+            </div>
+            <el-badge :value="todoCount" :max="99" :hidden="!todoCount">
               <el-button text type="primary" @click="goTodo">全部</el-button>
             </el-badge>
           </div>
           <div v-if="todoList.length" class="todo-list">
             <div v-for="item in todoList" :key="item.id" class="todo-item" @click="goTodo">
-              <div class="todo-item__name" :title="item.name">{{ item.name }}</div>
-              <el-tag size="small" :type="levelTagType(item.level)" effect="plain">{{ item.levelName || '一般' }}</el-tag>
+              <span class="todo-item__icon"><el-icon><Tickets/></el-icon></span>
+              <span class="todo-item__name" :title="item.name">{{ item.name }}</span>
+              <el-tag size="small" :type="levelTagType(item.level)" effect="light" class="todo-item__tag">{{ item.levelName || '一般' }}</el-tag>
+              <span v-if="todoTime(item)" class="todo-item__time">{{ todoTime(item) }}</span>
             </div>
           </div>
           <el-empty v-else :image-size="80" description="暂无待办" class="panel__empty"/>
@@ -98,14 +144,14 @@ import { onMounted, onBeforeUnmount, ref, nextTick, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import {
-  Promotion, Coin, BellFilled, Cpu, Histogram, StarFilled, CirclePlusFilled
+  Bell, BellFilled, Calendar, ChatDotRound, CirclePlusFilled, Coin, Cpu,
+  Histogram, MagicStick, Plus, Promotion, Share, StarFilled, Tickets
 } from '@element-plus/icons-vue'
-import AgentIcon from '@/assets/icons/agent.vue'
-import WorkflowIcon from '@/assets/icons/workflow.vue'
 import {
-  queryUsageSummaryAPI, queryUsageTrendAPI, queryTodoTotalAPI, queryTodoListAPI,
-  queryFlowCountAPI, queryApplyTemplatesAPI, queryRecommendAPI, queryAssetAPI
+  queryUsageTrendAPI, queryFlowCountAPI, queryRecommendAPI, queryOverviewAPI
 } from '@/api/home/home'
+import {pageMyTodoListAPI} from '@/api/flow/instance'
+import {pageTemplateListAPI} from '@/api/flow/template'
 import { useChart } from '@/utils/useChart'
 import { chartTokens } from '@/utils/chartTheme'
 import StatCard from '@/components/Dashboard/StatCard.vue'
@@ -114,7 +160,8 @@ import RankCard from '@/components/Dashboard/RankCard.vue'
 const router = useRouter()
 const store = useStore()
 const loading = ref(false)
-const rangeDays = ref(7)
+// 用量趋势独立时间范围，默认近一周
+const trendDays = ref(7)
 
 const userName = computed(() => store.getters['user/getUserInfo']?.name || '')
 
@@ -134,57 +181,73 @@ const todayText = computed(() => {
   return `${now.getMonth() + 1}月${now.getDate()}日 星期${week[now.getDay()]}`
 })
 
-const usageSummary = ref(null)
+const overview = ref(null)
 const usageTrend = ref([])
-const todoTotal = ref(0)
 const todoList = ref([])
 const flowCount = ref({ todoCount: 0, doneCount: 0, applicationCount: 0, copyCount: 0 })
+// 待办数取流程四项统计的 todoCount，全页单一数据源
+const todoCount = computed(() => flowCount.value.todoCount || 0)
 const applyTemplates = ref([])
 const hotRecommend = ref([])
-const asset = ref(null)
 
 const { elRef: trendChartRef, setOption: setTrendOption } = useChart()
 const { elRef: todoChartRef, setOption: setTodoOption } = useChart()
 
-function rangeParams() {
-  return { rangeDays: rangeDays.value }
+// 仪表盘图表色板，环形图与趋势图共用，canvas 不识别 CSS 变量故集中管理
+const chartPalette = {
+  blue: '#2f7bff',
+  cyan: '#22c8d8',
+  red: '#ff7875',
+  purple: '#9a7bf7',
+  white: '#ffffff',
+  blueAreaTop: 'rgba(47,123,255,0.18)',
+  blueAreaBottom: 'rgba(47,123,255,0)',
+  cyanAreaTop: 'rgba(34,200,216,0.14)',
+  cyanAreaBottom: 'rgba(34,200,216,0)'
+}
+
+// 图例与环形图同源共用色板
+const flowLegend = computed(() => {
+  const c = flowCount.value
+  return [
+    { name: '我的待办', value: c.todoCount || 0, color: chartPalette.red },
+    { name: '我的已办', value: c.doneCount || 0, color: chartPalette.blue },
+    { name: '我的申请', value: c.applicationCount || 0, color: chartPalette.cyan },
+    { name: '抄送给我', value: c.copyCount || 0, color: chartPalette.purple }
+  ]
+})
+
+/**
+ * 加载用量趋势，时间范围由趋势卡选择器控制
+ */
+function loadTrend() {
+  return queryUsageTrendAPI({ rangeDays: trendDays.value }).then(res => {
+    usageTrend.value = res.data || []
+    nextTick(() => renderTrend())
+  })
 }
 
 function formatNumber(value) {
   const num = Number(value || 0)
   if (num >= 100000000) return `${(num / 100000000).toFixed(1)}亿`
   if (num >= 10000) return `${(num / 10000).toFixed(1)}万`
-  return num
+  return num.toLocaleString()
 }
 
 /**
- * 加载随时间范围变化的卡片
- */
-function loadRanged() {
-  const tasks = [
-    queryUsageSummaryAPI(rangeParams()).then(res => { usageSummary.value = res.data }),
-    queryRecommendAPI(rangeParams()).then(res => { hotRecommend.value = res.data || [] }),
-    queryUsageTrendAPI(rangeParams()).then(res => {
-      usageTrend.value = res.data || []
-      nextTick(() => renderTrend())
-    })
-  ]
-  return Promise.allSettled(tasks)
-}
-
-/**
- * 加载与时间范围无关的卡片
+ * 加载工作台全部卡片，统计与推荐不限时间范围，趋势时间窗由 loadTrend 独立控制
  */
 function loadFixed() {
   const tasks = [
-    queryTodoTotalAPI().then(res => { todoTotal.value = res.data ?? 0 }),
-    queryTodoListAPI().then(res => { todoList.value = res.data || [] }),
+    queryOverviewAPI().then(res => { overview.value = res.data }),
+    loadTrend(),
+    pageMyTodoListAPI({pageNo: 1, pageSize: 8}).then(res => { todoList.value = res.data?.rows || [] }),
     queryFlowCountAPI().then(res => {
       flowCount.value = res.data || flowCount.value
       nextTick(() => renderTodoChart())
     }),
-    queryApplyTemplatesAPI().then(res => { applyTemplates.value = res.data || [] }),
-    queryAssetAPI().then(res => { asset.value = res.data })
+    pageTemplateListAPI({pageNo: 1, pageSize: 8}).then(res => { applyTemplates.value = res.data?.rows || [] }),
+    queryRecommendAPI().then(res => { hotRecommend.value = res.data || [] })
   ]
   return Promise.allSettled(tasks)
 }
@@ -194,7 +257,7 @@ function buildDateLabels() {
   const fullLabels = []
   const map = {}
   const now = new Date()
-  for (let i = rangeDays.value - 1; i >= 0; i--) {
+  for (let i = trendDays.value - 1; i >= 0; i--) {
     const d = new Date(now.getTime() - i * 24 * 3600 * 1000)
     const full = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     fullLabels.push(full)
@@ -221,33 +284,44 @@ function renderTrend() {
   const tokens = chartTokens()
   setTrendOption({
     tooltip: { trigger: 'axis' },
-    legend: { data: ['调用次数', 'Token消耗'], right: 0, top: 0, textStyle: { color: tokens.text } },
-    grid: { left: 48, right: 56, top: 40, bottom: 32 },
+    grid: { left: 52, right: 20, top: 24, bottom: 30 },
     xAxis: {
       type: 'category',
       data: labels,
       axisLine: { lineStyle: { color: tokens.split } },
+      axisTick: { show: false },
       axisLabel: { color: tokens.text }
     },
     yAxis: [
       {
         type: 'value',
-        name: '次数',
         splitLine: { lineStyle: { color: tokens.split } },
         axisLabel: { color: tokens.text }
       },
       {
         type: 'value',
         splitLine: { show: false },
-        axisLabel: { color: tokens.text }
+        axisLabel: { show: false }
       }
     ],
     series: [
       {
         name: '调用次数',
-        type: 'bar',
-        barMaxWidth: 18,
-        itemStyle: { color: tokens.primary, borderRadius: [3, 3, 0, 0] },
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 7,
+        lineStyle: { color: chartPalette.blue, width: 2.5 },
+        itemStyle: { color: chartPalette.blue, borderColor: chartPalette.white, borderWidth: 1.5 },
+        areaStyle: {
+          color: {
+            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: chartPalette.blueAreaTop },
+              { offset: 1, color: chartPalette.blueAreaBottom }
+            ]
+          }
+        },
         data: calls
       },
       {
@@ -257,9 +331,17 @@ function renderTrend() {
         smooth: true,
         symbol: 'circle',
         symbolSize: 6,
-        lineStyle: { color: '#34c759', width: 2 },
-        itemStyle: { color: '#34c759' },
-        areaStyle: { color: 'rgba(52,199,89,0.08)' },
+        lineStyle: { color: chartPalette.cyan, width: 2, type: 'dashed' },
+        itemStyle: { color: chartPalette.cyan, borderColor: chartPalette.white, borderWidth: 1.5 },
+        areaStyle: {
+          color: {
+            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: chartPalette.cyanAreaTop },
+              { offset: 1, color: chartPalette.cyanAreaBottom }
+            ]
+          }
+        },
         data: tokensData
       }
     ]
@@ -268,8 +350,25 @@ function renderTrend() {
 
 function levelTagType(level) {
   if (level === 3) return 'danger'
-  if (level === 2) return 'warning'
+  if (level === 2) return 'primary'
   return 'info'
+}
+
+/**
+ * 待办时间：今天显示「今天 HH:mm」，其余显示「MM-DD HH:mm」
+ */
+function todoTime(item) {
+  const raw = item.createTime || item.updateTime
+  if (!raw) return ''
+  const d = new Date(String(raw).replace(/-/g, '/'))
+  if (isNaN(d.getTime())) return ''
+  const pad = n => String(n).padStart(2, '0')
+  const hm = `${pad(d.getHours())}:${pad(d.getMinutes())}`
+  const now = new Date()
+  if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()) {
+    return `今天 ${hm}`
+  }
+  return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${hm}`
 }
 
 function renderTodoChart() {
@@ -278,29 +377,24 @@ function renderTodoChart() {
   const tokens = chartTokens()
   setTodoOption({
     tooltip: { trigger: 'item' },
-    legend: { bottom: 0, textStyle: { color: tokens.text } },
     title: {
       text: String(total),
       subtext: '流程总数',
       left: 'center',
-      top: '34%',
-      textStyle: { fontSize: 26, fontWeight: 600, color: tokens.primary },
+      top: '32%',
+      textStyle: { fontSize: 26, fontWeight: 700, color: tokens.primary },
       subtextStyle: { fontSize: 12, color: tokens.text }
     },
     series: [
       {
         name: '我的流程',
         type: 'pie',
-        radius: ['50%', '70%'],
-        center: ['50%', '44%'],
+        radius: ['56%', '76%'],
+        center: ['50%', '46%'],
         avoidLabelOverlap: false,
         label: { show: false },
-        data: [
-          { value: c.todoCount || 0, name: '待办', itemStyle: { color: '#f56c6c' } },
-          { value: c.doneCount || 0, name: '已办', itemStyle: { color: '#34c759' } },
-          { value: c.applicationCount || 0, name: '我的申请', itemStyle: { color: tokens.primary } },
-          { value: c.copyCount || 0, name: '抄送给我', itemStyle: { color: '#ff9500' } }
-        ]
+        itemStyle: { borderColor: tokens.split, borderWidth: 2 },
+        data: flowLegend.value.map(item => ({ value: item.value, name: item.name, itemStyle: { color: item.color } }))
       }
     ]
   })
@@ -326,7 +420,7 @@ function goWorkflow() {
   router.push('/home/workflow')
 }
 
-// 主题切换后重建 option（option 中的颜色是构建期读取的计算值，需重新渲染）
+// option 颜色是构建期读取的计算值，主题切换后需重建
 function handleThemeChange() {
   nextTick(() => {
     renderTrend()
@@ -337,7 +431,7 @@ function handleThemeChange() {
 onMounted(() => {
   loading.value = true
   window.addEventListener('app-theme-change', handleThemeChange)
-  Promise.all([loadRanged(), loadFixed()]).finally(() => {
+  loadFixed().finally(() => {
     loading.value = false
   })
 })
@@ -351,105 +445,170 @@ onBeforeUnmount(() => {
 .dashboard {
   display: flex;
   flex-direction: column;
-  gap: $spacing-md;
-  height: calc(100vh - 70px);
+  height: calc(100vh - $nav-height);
   overflow: hidden;
+}
 
-  &__bar {
-    flex: none;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: $spacing-md $spacing-lg;
-    background-color: $bg-card;
-    border: 1px solid $border-color-light;
-    border-radius: $border-radius-md;
-    box-shadow: $shadow-card;
-  }
+// 顶部渐变横幅，通铺到顶左右不留白
+.dash-hero {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 24px 24px;
+  overflow: hidden;
+  background:
+    radial-gradient(460px 200px at 86% -30%, rgba(120, 119, 255, 0.18), transparent 60%),
+    radial-gradient(380px 180px at 14% -40%, rgba(47, 123, 255, 0.20), transparent 55%),
+    $app-hero-grad;
 
-  &__body {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-md;
-  }
-
-  &__kpi {
-    flex: none;
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: $spacing-sm;
-  }
-
-  &__row {
-    flex: none;
-    display: grid;
-    gap: $spacing-md;
-    align-items: stretch;
-  }
-
-  &__row--chart {
-    grid-template-columns: 1.7fr 1fr;
-  }
-
-  &__row--bottom {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  // 右侧装饰圆环
+  &::after {
+    content: "";
+    position: absolute;
+    right: -60px;
+    top: -90px;
+    width: 230px;
+    height: 230px;
+    border-radius: 50%;
+    border: 30px solid rgba(255, 255, 255, 0.4);
+    pointer-events: none;
   }
 }
 
-.todo-chart {
-  flex: 1;
-  min-height: 0;
-  width: 100%;
+html.dark .dash-hero {
+  background:
+    radial-gradient(460px 200px at 86% -30%, rgba(120, 119, 255, 0.14), transparent 60%),
+    radial-gradient(380px 180px at 14% -40%, rgba(47, 123, 255, 0.16), transparent 55%),
+    $app-hero-grad;
+
+  &::after {
+    border-color: rgba(255, 255, 255, 0.05);
+  }
 }
 
-.apply-list {
+.dash-hero__left {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.dash-hero__date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $el-text-color-regular;
+
+  .el-icon {
+    font-size: 14px;
+    color: $ds-brand;
+  }
+}
+
+html.dark .dash-hero__date {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dash-hero__title {
+  margin-top: 10px;
+  font-size: 24px;
+  font-weight: 800;
+  color: $el-text-color-primary;
+
+  em {
+    font-style: normal;
+    background: $ds-grad;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+.dash-hero__sub {
+  margin-top: 6px;
+  font-size: 13px;
+  color: $el-text-color-regular;
+
+  b {
+    color: $app-hero-accent;
+    font-weight: 800;
+    margin: 0 1px;
+  }
+}
+
+.dash-hero__right {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dash-hero__ai {
+  height: 36px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  color: $color-text-white;
+  background: $ds-grad;
+  box-shadow: 0 6px 16px -6px rgba(26, 111, 232, 0.5);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  &:hover {
+    color: $color-text-white;
+    opacity: 0.92;
+  }
+}
+
+// 主体
+.dash-body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding-top: $spacing-sm;
-}
-
-.apply-item {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: $spacing-md;
+  padding: $spacing-md 16px 16px;
+}
+
+.dash-kpi {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: $spacing-sm;
-  height: 40px;
-  padding: 0 $spacing-sm;
-  border-radius: $border-radius-sm;
+}
+
+.kpi-clickable {
   cursor: pointer;
-  transition: background-color $transition-normal;
-
-  &:hover {
-    background-color: $color-primary-light;
-  }
-
-  &__icon {
-    flex: none;
-    color: $color-primary;
-  }
-
-  &__name {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 13px;
-    color: $color-text-primary;
-  }
 }
 
-.todo-panel {
-  .todo-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: $spacing-sm;
-    align-content: start;
-  }
+.dash-row {
+  flex: none;
+  display: grid;
+  gap: $spacing-md;
+  align-items: stretch;
 }
 
+.dash-row--chart {
+  grid-template-columns: 1.7fr 1fr;
+}
+
+.dash-row--bottom {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+// 面板
 .panel {
   display: flex;
   flex-direction: column;
@@ -478,10 +637,23 @@ onBeforeUnmount(() => {
     font-size: 15px;
     font-weight: 600;
     color: $color-text-primary;
+  }
+
+  &__icon {
+    flex: none;
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
 
     .el-icon {
-      color: $color-primary;
-      font-size: 18px;
+      font-size: 14px;
+    }
+
+    &--blue {
+      color: $ds-brand;
+      background: $app-primary-light;
     }
   }
 
@@ -494,22 +666,32 @@ onBeforeUnmount(() => {
   }
 }
 
-.greeting {
-  &__title {
-    font-size: 18px;
-    font-weight: 600;
-    color: $color-text-primary;
+.trend-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  color: $color-text-secondary;
+
+  .trend-legend__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
   }
 
-  &__sub {
-    margin-top: 4px;
-    font-size: 12px;
-    color: $color-text-secondary;
+  .trend-legend__line {
+    width: 14px;
+    height: 0;
+    border-top: 2px dashed;
+    border-radius: 1px;
   }
 }
 
-.kpi-clickable {
-  cursor: pointer;
+.range-select {
+  width: 104px;
+  flex: none;
 }
 
 .trend-chart {
@@ -518,27 +700,140 @@ onBeforeUnmount(() => {
   width: 100%;
 }
 
+// 我的流程环形图与自定义图例
+.flow-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.todo-chart {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+
+.flow-legend {
+  flex: none;
+  width: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    i {
+      flex: none;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+    .flow-legend__name {
+      flex: 1;
+      font-size: 12.5px;
+      color: $color-text-secondary;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    b {
+      font-size: 14px;
+      font-weight: 700;
+      color: $el-text-color-primary;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+}
+
+// 可申请流程
+.apply-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-top: $spacing-sm;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 10px;
+}
+
+.apply-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border: 1px solid $border-color-light;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 12.5px;
+  color: $el-text-color-regular;
+  cursor: pointer;
+  transition: $transition-fast;
+  max-width: 100%;
+
+  .el-icon {
+    font-size: 12px;
+    color: $color-primary;
+  }
+
+  &__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &:hover {
+    border-color: $ds-brand;
+    color: $ds-brand;
+    background: $app-primary-soft;
+  }
+}
+
+// 我的待办
 .todo-list {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   padding-top: $spacing-sm;
+  display: flex;
+  flex-direction: column;
 }
 
 .todo-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: $spacing-sm;
+  gap: 10px;
   min-width: 0;
-  height: 48px;
-  padding: 0 $spacing-md;
+  height: 44px;
+  padding: 0 $spacing-sm;
   border-radius: $border-radius-sm;
   cursor: pointer;
   transition: background-color $transition-normal;
 
   &:hover {
     background-color: $color-primary-light;
+  }
+
+  &__icon {
+    flex: none;
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    color: $ds-brand;
+    background: $app-primary-soft;
+
+    .el-icon {
+      font-size: 13px;
+    }
   }
 
   &__name {
@@ -549,6 +844,17 @@ onBeforeUnmount(() => {
     font-size: 13px;
     color: $color-text-primary;
   }
-}
 
+  &__tag {
+    flex: none;
+    font-size: 11px;
+  }
+
+  &__time {
+    flex: none;
+    font-size: 11.5px;
+    color: $color-text-placeholder;
+    font-variant-numeric: tabular-nums;
+  }
+}
 </style>

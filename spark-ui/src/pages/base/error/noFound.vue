@@ -24,13 +24,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
+  background: $error-page-bg;
   overflow: hidden;
   position: relative;
-}
-
-html.dark .error-page-container {
-  background: linear-gradient(135deg, #131c2e 0%, #0f172a 100%);
 }
 
 .error-content {
@@ -48,13 +44,13 @@ html.dark .error-page-container {
   .el-result__title p {
     font-size: 80px;
     font-weight: 800;
-    background: linear-gradient(135deg, #1d4ed8 0%, #60a5fa 100%);
+    background: $error-title-grad;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 20px;
   }
   .el-result__sub-title p {
-    color: #64748b;
+    color: $error-subtitle;
     font-size: 16px;
     font-weight: 400;
   }
@@ -65,11 +61,6 @@ html.dark .error-content {
   border-color: rgba(96, 165, 250, 0.2);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
 }
-
-html.dark :deep(.el-result__sub-title p) {
-  color: #94a3b8;
-}
-
 
 .background-decor {
   position: absolute;

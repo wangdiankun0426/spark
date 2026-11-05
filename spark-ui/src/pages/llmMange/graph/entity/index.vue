@@ -28,7 +28,7 @@
     <div>
       <el-table
           ref="tableRef"
-          height="calc(100vh - 206px)"
+          height="calc(100vh - 215px)"
           :data="entityList"
           highlight-current-row
           @sort-change="handleSortChange"
@@ -122,7 +122,7 @@
         </el-table-column>
         <el-table-column prop="createdByName" label="创建人" width="110" align="center"/>
         <el-table-column prop="createdDt" label="创建时间" width="160" align="center"/>
-        <el-table-column fixed="right" label="操作" width="140" align="center">
+        <el-table-column fixed="right" label="操作" width="150" align="center">
           <template #default="scope">
             <el-button
                 type="success"

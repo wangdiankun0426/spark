@@ -470,10 +470,6 @@ function formatNumber(value) {
   border: 1px solid $border-color-light;
   border-radius: $border-radius-md;
   box-shadow: $shadow-card;
-
-  .panel__head {
-    margin-bottom: $spacing-sm;
-  }
 }
 
 .usage-table-fill {

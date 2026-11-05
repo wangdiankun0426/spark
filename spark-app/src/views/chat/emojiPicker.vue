@@ -69,7 +69,7 @@ function selectSticker(sticker) {
   display: flex;
   flex-direction: column;
   margin-top: 16rpx;
-  border-top: 1px solid var(--app-border-light);
+  border-top: 1px solid $app-border-light;
 }
 
 .emoji-picker-body {
@@ -110,19 +110,19 @@ function selectSticker(sticker) {
   display: flex;
   gap: 16rpx;
   padding: 12rpx 20rpx;
-  border-top: 1px solid var(--app-border-light);
+  border-top: 1px solid $app-border-light;
 }
 
 .emoji-tab {
   padding: 6rpx 20rpx;
   border-radius: 8rpx;
   font-size: 26rpx;
-  color: var(--app-text-regular);
+  color: $app-text-regular;
 }
 
 .emoji-tab-active {
-  color: var(--app-text-info);
-  background-color: var(--app-primary-light);
+  color: $app-text-info;
+  background-color: $app-primary-light;
   font-weight: 600;
 }
 

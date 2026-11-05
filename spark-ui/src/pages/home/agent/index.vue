@@ -225,7 +225,7 @@ function handleAgentChange(agentId) {
 .agent-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 70px);
+  height: calc(100vh - 60px);
 }
 
 .agent-body {

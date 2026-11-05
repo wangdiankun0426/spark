@@ -1,84 +1,103 @@
 <template>
-  <div class="nav-bar" data-tauri-drag-region>
-    <div class="nav-left" data-tauri-drag-region="false">
-      <img class="logo-lockup" :src="currentTheme === 'light' ? logoLockupDark : logoLockupLight" @click="$router.push('/home')"/>
-      <span class="logo-version">v{{ appVersion }}</span>
+  <div class="app-nav" data-tauri-drag-region>
+    <div class="app-nav__brand" @click="goHome">
+      <img class="app-nav__logo" :src="brandLogo" alt="星火云"/>
+      <span class="app-nav__name">星火云<i>AI</i></span>
+      <span class="app-nav__version">v{{ appVersion }}</span>
+    </div>
+
+    <nav v-if="hasModuleMenu" class="app-nav__dock">
       <div
-          class="user-avatar-trigger"
-          data-tauri-drag-region="false"
-          @click="userInfoVisible = true"
+          v-if="hasMenu(MODULE_CODES.LLM)"
+          class="app-tab"
+          :class="{ 'is-active': defaultActive === '/llm' }"
+          @click="switchModule('/llm')"
       >
-        <user-avatar :user-id="userInfo.id" :size="36" />
+        <el-icon><NavAi/></el-icon>
+        <span>AI</span>
       </div>
-      <div v-if="hasModuleMenu" class="dock-group">
-        <div
-            v-if="hasMenu(MODULE_CODES.LLM)"
-            class="dock-btn"
-            :class="{ 'is-active': defaultActive === '/llm' }"
-            @click="switchModule('/llm')"
-        >
-          <NavAi class="dock-nav-icon"/>
-          <span>AI</span>
-        </div>
-        <div
-            v-if="hasMenu(MODULE_CODES.BUS)"
-            class="dock-btn"
-            :class="{ 'is-active': defaultActive === '/bus' }"
-            @click="switchModule('/bus')"
-        >
-          <NavBus class="dock-nav-icon"/>
-          <span>业务</span>
-        </div>
-        <div
-            v-if="isOrgAdmin()"
-            class="dock-btn"
-            :class="{ 'is-active': defaultActive === '/org' }"
-            @click="switchModule('/org')"
-        >
-          <NavOrg class="dock-nav-icon"/>
-          <span>组织</span>
-        </div>
-        <div
-            v-if="isSysAdmin()"
-            class="dock-btn"
-            :class="{ 'is-active': defaultActive === '/site' }"
-            @click="switchModule('/site')"
-        >
-          <NavSite class="dock-nav-icon"/>
-          <span>站点</span>
-        </div>
+      <div
+          v-if="hasMenu(MODULE_CODES.BUS)"
+          class="app-tab"
+          :class="{ 'is-active': defaultActive === '/bus' }"
+          @click="switchModule('/bus')"
+      >
+        <el-icon><NavBus/></el-icon>
+        <span>业务</span>
       </div>
-      <div v-if="hasModuleMenu" class="dock-divider"></div>
-      <div class="dock-group">
-        <div class="dock-btn" @click="messageVisible = true">
-          <el-icon><Bell /></el-icon>
-          <span>消息</span>
-        </div>
-        <div class="dock-btn" @click="tenantSwitchVisible = true">
-          <el-icon><OfficeBuilding /></el-icon>
-          <span>租户</span>
-        </div>
-        <div class="dock-btn" @click="mcpTokenVisible = true">
-          <el-icon><Key /></el-icon>
-          <span>MCP</span>
-        </div>
-        <div class="dock-btn" @click="toggleTheme">
-          <el-icon><Moon v-if="currentTheme === 'light'" /><Sunny v-else /></el-icon>
-          <span>主题</span>
-        </div>
-        <div class="dock-btn" @click="handleLocaleChange">
-          <el-icon><Globe /></el-icon>
-          <span>语言</span>
-        </div>
-        <div class="dock-btn dock-btn--danger" @click="handleLogout">
-          <el-icon><SwitchButton /></el-icon>
-          <span>退出</span>
-        </div>
+      <div
+          v-if="isOrgAdmin()"
+          class="app-tab"
+          :class="{ 'is-active': defaultActive === '/org' }"
+          @click="switchModule('/org')"
+      >
+        <el-icon><NavOrg/></el-icon>
+        <span>组织</span>
       </div>
+      <div
+          v-if="isSysAdmin()"
+          class="app-tab"
+          :class="{ 'is-active': defaultActive === '/site' }"
+          @click="switchModule('/site')"
+      >
+        <el-icon><NavSite/></el-icon>
+        <span>站点</span>
+      </div>
+    </nav>
+
+    <div class="app-nav__spacer"></div>
+
+    <div class="app-nav__actions">
+      <el-tooltip content="消息通知" placement="bottom" :show-after="300">
+        <div class="app-tool" @click="messageVisible = true">
+          <el-icon><Bell/></el-icon>
+          <span v-if="unreadTotal > 0" class="app-tool__badge">{{ unreadTotal > 99 ? '99+' : unreadTotal }}</span>
+        </div>
+      </el-tooltip>
+      <el-tooltip content="切换租户" placement="bottom" :show-after="300">
+        <div class="app-tool" @click="tenantSwitchVisible = true">
+          <el-icon><OfficeBuilding/></el-icon>
+        </div>
+      </el-tooltip>
+      <el-tooltip content="MCP 令牌" placement="bottom" :show-after="300">
+        <div class="app-tool" @click="mcpTokenVisible = true">
+          <el-icon><Key/></el-icon>
+        </div>
+      </el-tooltip>
+    </div>
+
+    <span class="app-nav__divider"></span>
+
+    <div
+        class="app-theme-toggle"
+        :class="{ 'is-dark': currentTheme === 'dark' }"
+        title="切换亮 / 深色主题"
+        @click="toggleTheme"
+    >
+      <span class="m m-sun"><el-icon><Sunny/></el-icon></span>
+      <span class="m m-moon"><el-icon><Moon/></el-icon></span>
+      <span class="knob"><el-icon><Moon v-if="currentTheme === 'light'"/><Sunny v-else/></el-icon></span>
+    </div>
+
+    <el-tooltip content="退出登录" placement="bottom" :show-after="300">
+      <div class="app-tool app-tool--danger" @click="handleLogout">
+        <el-icon><SwitchButton/></el-icon>
+      </div>
+    </el-tooltip>
+
+    <div class="app-nav__user" @click="userInfoVisible = true">
+      <span class="app-nav__avatar-wrap">
+        <user-avatar :user-id="userInfo.id" :size="32"/>
+        <span class="app-nav__online"></span>
+      </span>
+      <span class="app-nav__uinfo">
+        <span class="app-nav__uname">{{ userInfo.name || '用户' }}</span>
+        <span class="app-nav__ulogin">{{ userInfo.loginName || userInfo.account || '' }}</span>
+      </span>
     </div>
   </div>
 
-  <user-profile v-model="userInfoVisible" />
+  <user-profile v-model="userInfoVisible" @logout="handleLogout" />
   <tenant-switch v-model="tenantSwitchVisible" :current-tenant-id="userInfo.currentTenantId" />
   <mcp-token v-model="mcpTokenVisible" />
 
@@ -90,31 +109,55 @@
       class="nav-message-dialog"
       @open="loadNavMessageData"
   >
-    <div class="nav-message-body" ref="messageBodyRef">
-      <el-timeline v-if="messageList.length">
-        <el-timeline-item
-            v-for="(item, i) in messageList"
-            :key="i"
-            :timestamp="item.createdDt"
-            placement="top"
+    <div class="nav-message-panel">
+      <div class="nav-message-tabs">
+        <button
+            v-for="tab in messageTabs"
+            :key="tab.key"
+            type="button"
+            class="nav-message-tab"
+            :class="{ 'is-active': messageTab === tab.key, 'is-read': tab.key === 'read' }"
+            @click="switchMessageTab(tab.key)"
         >
-          <div
-              class="nav-message-item"
-              :class="{ 'is-link': isClickableMessage(item.refId) }"
-              @click="handleMessageClick(item)"
+          <span>{{ tab.label }}</span>
+          <span v-if="tab.count > 0" class="nav-message-tab__count">{{ tab.count }}</span>
+        </button>
+      </div>
+      <div class="nav-message-body" ref="messageBodyRef">
+        <el-timeline v-if="messageList.length">
+          <el-timeline-item
+              v-for="(item, i) in messageList"
+              :key="item.id || i"
+              :timestamp="item.createdDt"
+              placement="top"
           >
-            <el-tag type="info" size="small">
-              {{ item.title }}
-            </el-tag>
-            <p class="nav-message-content">{{ item.content }}</p>
-            <div v-if="isClickableMessage(item.refId)" class="nav-message-detail">
-              <span>详情</span>
-              <el-icon><Right /></el-icon>
+            <div
+                class="nav-message-item"
+                :class="{ 'is-link': isClickableMessage(item.refId), 'is-unread': item.readFlag === 0 }"
+                @click="handleMessageClick(item)"
+            >
+              <div class="nav-message-head">
+                <span v-if="item.readFlag === 0" class="nav-message-dot"></span>
+                <el-tag type="info" size="small">
+                  {{ item.title }}
+                </el-tag>
+                <el-tooltip v-if="item.readFlag === 0" content="标为已读" placement="top" :show-after="200">
+                  <button type="button" class="nav-message-read-btn" aria-label="标为已读" @click.stop="handleReadMessage(item)">
+                    <el-icon v-if="readingId === item.id" class="is-loading"><Loading/></el-icon>
+                    <el-icon v-else><Select/></el-icon>
+                  </button>
+                </el-tooltip>
+              </div>
+              <p class="nav-message-content">{{ item.content }}</p>
+              <div v-if="isClickableMessage(item.refId)" class="nav-message-detail">
+                <span>详情</span>
+                <el-icon><Right /></el-icon>
+              </div>
             </div>
-          </div>
-        </el-timeline-item>
-      </el-timeline>
-      <el-empty v-else description="暂无消息" :image-size="60"/>
+          </el-timeline-item>
+        </el-timeline>
+        <el-empty v-else :description="emptyMessageText" :image-size="60"/>
+      </div>
     </div>
     <template #footer>
       <el-pagination
@@ -133,10 +176,24 @@
 
 <script setup>
 import {logoutAPI} from "@/api/manage/auth/login.js";
-import {pageMyMessageListAPI} from "@/api/manage/sys/message.js";
-import {ElMessage, ElMessageBox} from "element-plus";
-import {ref, computed} from "vue";
-import {Moon, Sunny, Right, OfficeBuilding, SwitchButton, Key} from "@element-plus/icons-vue";
+import {pageMyMessageListAPI, queryMyMessageCountAPI, readMessageAPI} from "@/api/manage/sys/message.js";
+import {ElMessageBox} from "element-plus";
+import {ref, computed, onMounted} from "vue";
+import {
+  Bell,
+  Key,
+  Loading,
+  Moon,
+  OfficeBuilding,
+  Right,
+  Select,
+  Sunny,
+  SwitchButton
+} from "@element-plus/icons-vue";
+import NavAi from "@/assets/icons/navAi.vue";
+import NavBus from "@/assets/icons/navBus.vue";
+import NavOrg from "@/assets/icons/navOrg.vue";
+import NavSite from "@/assets/icons/navSite.vue";
 import { useRouter, useRoute } from 'vue-router';
 import {useStore} from "vuex";
 import {getTheme, applyTheme, setTheme} from '@/utils/themeUtil';
@@ -145,29 +202,35 @@ import UserAvatar from '@/components/UserAvatar';
 import UserProfile from '@/components/UserProfile';
 import TenantSwitch from '@/components/TenantSwitch';
 import McpToken from '@/components/McpToken';
-import Bell from "@/assets/icons/bell.vue";
-import Globe from "@/assets/icons/globe.vue";
-import NavAi from "@/assets/icons/navAi.vue";
-import NavBus from "@/assets/icons/navBus.vue";
-import NavOrg from "@/assets/icons/navOrg.vue";
-import NavSite from "@/assets/icons/navSite.vue";
-import logoLockupDark from '@/assets/images/logo-lockup-dark.png';
-import logoLockupLight from '@/assets/images/logo-lockup-light.png';
+import brandLogoLight from '@/assets/images/logo-light.png';
+import brandLogoDark from '@/assets/images/logo.png';
 import {isOrgAdmin, isSysAdmin} from "@/utils/permissionUtil.js";
+import { isDesktop } from '@desktop/env.js';
 const router = useRouter();
 const route = useRoute();
 const store = useStore()
 
 const userInfo = computed(() => store.getters['user/getUserInfo'] || { id: undefined })
 
+// 桌面客户端面向普通用户，不提供 AI 业务组织站点等管理模块入口，整个模块坞不渲染
 const hasModuleMenu = computed(() =>
-    hasMenu(MODULE_CODES.LLM) || hasMenu(MODULE_CODES.BUS) || isOrgAdmin() || isSysAdmin()
+    !isDesktop && (hasMenu(MODULE_CODES.LLM) || hasMenu(MODULE_CODES.BUS) || isOrgAdmin() || isSysAdmin())
 )
 
 const appVersion = __APP_VERSION__
 
 const currentTheme = ref(getTheme());
 applyTheme(currentTheme.value);
+
+// 品牌图标跟随主题色系，与登录页保持一致：浅色用浅底淡色图标，深色用深蓝渐变图标
+const brandLogo = computed(() => (currentTheme.value === 'light' ? brandLogoLight : brandLogoDark));
+
+/**
+ * 点击品牌区回到工作台
+ */
+function goHome() {
+  router.push('/home').catch(() => {});
+}
 
 /**
  * 点击按钮在深色/浅色主题间切换并持久化
@@ -177,16 +240,26 @@ function toggleTheme() {
   setTheme(currentTheme.value);
 }
 
-/**
- * 切换语言，语言包尚未接入
- */
-function handleLocaleChange() {
-  ElMessage.info('功能开发中');
-}
-
 const userInfoVisible = ref(false);
 const tenantSwitchVisible = ref(false);
 const mcpTokenVisible = ref(false);
+
+// 顶部「消息」角标：进入应用时拉一次未读总数
+const unreadTotal = ref(0);
+
+/**
+ * 拉取我的消息分类计数，用于顶部角标与弹窗页签
+ */
+function loadMessageCount() {
+  queryMyMessageCountAPI().then(res => {
+    if (res.code === 200 && res.data) {
+      unreadTotal.value = res.data.unread || 0;
+      messageCount.value = { unread: res.data.unread || 0, readCount: res.data.readCount || 0 };
+    }
+  }).catch(() => {});
+}
+
+onMounted(loadMessageCount);
 
 /**
  * 切换模块
@@ -226,10 +299,22 @@ const defaultActive = computed(() => {
 
 const messageVisible = ref(false);
 const messageList = ref([]);
-const messageQuery = ref({ pageNo: 1, pageSize: 8 });
+// 弹窗默认展示未读，按服务端 filterType 过滤
+const messageTab = ref('unread');
+const messageCount = ref({ unread: 0, readCount: 0 });
+const messageQuery = ref({ pageNo: 1, pageSize: 8, filterType: 'unread' });
 const messageTotal = ref(0);
 const messageBodyRef = ref(null);
+// 正在标记已读的消息 id，防止重复提交
+const readingId = ref(null);
 let messageRequestMark = 0;
+
+const messageTabs = computed(() => [
+  { key: 'unread', label: '未读', count: messageCount.value.unread || 0 },
+  { key: 'read', label: '已读', count: messageCount.value.readCount || 0 }
+]);
+
+const emptyMessageText = computed(() => (messageTab.value === 'unread' ? '暂无未读消息' : '暂无已读消息'));
 
 /**
  * 按分页参数加载我的消息
@@ -263,11 +348,84 @@ function handleMessagePageChange(pageNo) {
 }
 
 /**
- * 弹窗展开时加载消息
+ * 切换消息页签，未读与已读分别向服务端按状态分页查询
+ * @param key 页签标识
+ */
+function switchMessageTab(key) {
+  if (messageTab.value === key) {
+    return;
+  }
+  messageTab.value = key;
+  messageQuery.value.pageNo = 1;
+  messageQuery.value.filterType = key;
+  loadMessageList();
+  if (messageBodyRef.value) {
+    messageBodyRef.value.scrollTop = 0;
+  }
+}
+
+/**
+ * 弹窗展开时加载消息，默认回到未读页签
  */
 function loadNavMessageData() {
+  messageTab.value = 'unread';
   messageQuery.value.pageNo = 1;
+  messageQuery.value.filterType = 'unread';
+  loadMessageCount();
   loadMessageList();
+}
+
+/**
+ * 从当前未读列表移除已读消息，并同步分页总数
+ * @param item 消息
+ */
+function removeUnreadRow(item) {
+  const index = messageList.value.findIndex(row => row.id === item.id);
+  if (index === -1) {
+    return;
+  }
+  messageList.value.splice(index, 1);
+  messageTotal.value = Math.max(messageTotal.value - 1, 0);
+  // 当前页被移空但仍有余量时回补，避免停留在空列表
+  if (!messageList.value.length && messageTotal.value > 0) {
+    messageQuery.value.pageNo = Math.max(messageQuery.value.pageNo - 1, 1);
+    loadMessageList();
+  }
+}
+
+/**
+ * 标记单条消息已读，成功后同步列表与未读计数
+ * @param item 消息
+ * @returns {Promise}
+ */
+function markMessageRead(item) {
+  if (item.readFlag !== 0 || !item.id) {
+    return Promise.resolve();
+  }
+  return readMessageAPI({id: item.id}).then(res => {
+    if (res.code !== 200) {
+      return;
+    }
+    item.readFlag = 1;
+    loadMessageCount();
+    if (messageTab.value === 'unread') {
+      removeUnreadRow(item);
+    }
+  });
+}
+
+/**
+ * 点击已读按钮标记消息已读
+ * @param item 消息
+ */
+function handleReadMessage(item) {
+  if (item.readFlag !== 0 || readingId.value !== null) {
+    return;
+  }
+  readingId.value = item.id;
+  markMessageRead(item).finally(() => {
+    readingId.value = null;
+  });
 }
 
 /**
@@ -284,6 +442,7 @@ function isClickableMessage(refId) {
  * @param item 消息
  */
 function handleMessageClick(item) {
+  markMessageRead(item);
   const refId = item.refId;
   if (refId === undefined || refId === null) {
     return;
@@ -308,112 +467,7 @@ function handleMessageClick(item) {
 </script>
 
 <style lang="scss" scoped>
-.nav-bar {
-  position: relative;
-  display: flex;
-  align-items: center;
-  height: $nav-height;
-  background: var(--nav-bg);
-}
-.nav-left {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding-left: 5px;
-}
-.logo-lockup {
-  display: block;
-  height: 32px;
-  width: auto;
-  cursor: pointer;
-}
-.logo-version {
-  align-self: flex-end;
-  margin-left: 8px;
-  margin-bottom: 15px;
-  font-size: 13px;
-  line-height: 1;
-  color: var(--nav-text);
-  opacity: 0.7;
-}
-.user-avatar-trigger {
-  flex: none;
-  width: 44px;
-  height: 44px;
-  margin-left: 14px;
-  margin-right: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-
-  :deep(.el-avatar) {
-    border: 1px dashed var(--nav-avatar-border);
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    transition: transform 0.18s ease;
-  }
-
-  &:hover :deep(.el-avatar) {
-    transform: scale(1.12);
-  }
-}
-
-.dock-group {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.dock-divider {
-  width: 1px;
-  height: 22px;
-  margin: 0 8px;
-  background: var(--app-border);
-}
-
-.dock-btn {
-  width: 44px;
-  height: 48px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  border-radius: 8px;
-  color: var(--sidebar-text);
-  cursor: pointer;
-  transition: all 0.18s ease;
-
-  .dock-nav-icon {
-    width: 22px;
-    height: 22px;
-  }
-
-  .el-icon {
-    font-size: 21px;
-  }
-
-  span {
-    font-size: 11px;
-    line-height: 1;
-  }
-
-  &:hover {
-    background: var(--app-primary-light);
-    color: var(--app-primary);
-  }
-
-  &.is-active {
-    background: var(--app-primary-light);
-    color: var(--app-primary);
-  }
-
-  &--danger:hover {
-    color: var(--el-color-danger);
-  }
-}
-
+// 导航栏与菜单栏的通用样式统一维护在 shell.scss
 .nav-message-dialog {
   .nav-message-body {
     height: 480px;
@@ -427,11 +481,94 @@ function handleMessageClick(item) {
       margin-bottom: $spacing-sm;
     }
   }
+  .nav-message-tabs {
+    display: inline-flex;
+    align-self: flex-start;
+    gap: 2px;
+    padding: 3px;
+    margin-bottom: $spacing-sm;
+    border-radius: 999px;
+    background-color: $app-bg-sub;
+  }
+  .nav-message-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 14px;
+    border: none;
+    border-radius: 999px;
+    background-color: transparent;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: $color-text-secondary;
+    cursor: pointer;
+    transition: $transition-fast;
+    &.is-active {
+      background-color: $bg-card;
+      color: $color-primary;
+      box-shadow: $shadow-card;
+    }
+  }
+  .nav-message-tab__count {
+    min-width: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background-color: $ds-err-bg;
+    color: $ds-err-tx;
+    font-size: 11px;
+    line-height: 18px;
+    text-align: center;
+  }
+  .nav-message-tab.is-read .nav-message-tab__count {
+    background-color: $app-bg-sub;
+    color: $color-text-placeholder;
+  }
+  .nav-message-head {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+  }
+  .nav-message-dot {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: $color-primary;
+    box-shadow: 0 0 0 3px $app-primary-soft;
+  }
   .nav-message-content {
     margin: 6px 0 0 0;
     font-size: 13px;
     color: $color-text-secondary;
     line-height: 18px;
+  }
+  .nav-message-read-btn {
+    flex: none;
+    margin-left: auto;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background-color: $app-primary-soft;
+    color: $color-primary;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateX(4px);
+    transition: $transition-fast;
+    &:hover {
+      background-color: $color-primary;
+      color: $color-text-white;
+    }
+  }
+  .nav-message-item:hover .nav-message-read-btn,
+  .nav-message-read-btn:focus-visible {
+    opacity: 1;
+    transform: none;
   }
   .nav-message-item {
     padding: 4px;
@@ -440,6 +577,10 @@ function handleMessageClick(item) {
     transition: $transition-fast;
     &.is-link:hover {
       background-color: $color-primary-soft;
+    }
+    &.is-unread .nav-message-content {
+      color: $color-text-primary;
+      font-weight: 600;
     }
   }
   .nav-message-detail {

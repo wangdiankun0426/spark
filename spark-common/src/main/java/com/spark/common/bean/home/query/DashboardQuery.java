@@ -16,7 +16,7 @@ import lombok.Data;
 public class DashboardQuery {
 
     /**
-     * 统计天数（近N天）
+     * 统计天数，为空表示不限时间范围查全部
      */
-    private Integer rangeDays = 7;
+    private Integer rangeDays;
 }

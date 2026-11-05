@@ -78,12 +78,9 @@ public interface WfInstanceDao extends BaseDao<WfInstance> {
      * 统计我触发的热门工作流
      * @param userId 用户id
      * @param tenantId 租户id
-     * @param startTime 开始时间
-     * @param endTime 结束时间
      * @param limit 条数
      * @return 热门工作流列表
      */
     List<DashboardHotResult> queryMyHotWorkflows(@Param("userId") Long userId, @Param("tenantId") Long tenantId,
-                                                @Param("startTime") String startTime, @Param("endTime") String endTime,
                                                 @Param("limit") int limit);
 }

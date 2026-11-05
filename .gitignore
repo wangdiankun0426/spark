@@ -4,3 +4,4 @@ docs
 spark.iml
 application-local.yml
 sql/alert.sql
+.vite

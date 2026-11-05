@@ -235,7 +235,7 @@ function handleClose() {
   gap: 10px;
 
   .picker-search {
-    background-color: var(--app-bg-card);
+    background-color: $app-bg-card;
   }
 
   .picker-list {
@@ -263,11 +263,11 @@ function handleClose() {
 
     .picker-name {
       font-size: 14px;
-      color: var(--app-text-primary);
+      color: $app-text-primary;
     }
 
     &.picker-item--active {
-      background-color: var(--app-primary-light);
+      background-color: $app-primary-light;
     }
   }
 }

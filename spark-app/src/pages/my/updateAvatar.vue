@@ -1,13 +1,6 @@
 <template>
   <view class="safe-area-page" :class="themeClass">
-    <!-- 顶部标题栏 -->
-    <view class="page-header" :style="navHeaderStyle()">
-      <view class="page-header-back" @click="onClickLeft">
-        <up-icon name="arrow-left" size="19" :color="backIconColor"></up-icon>
-      </view>
-      <text class="page-header-title">修改头像</text>
-      <view class="page-header-extra"></view>
-    </view>
+    <PageHeader title="修改头像" @back="onClickLeft"/>
 
     <view class="update-avatar-form">
       <up-form>
@@ -37,14 +30,12 @@ import {uploadAvatarAPI} from "@/api/sys/user";
 import {computed} from "vue";
 import {useStore} from "vuex";
 import {toast} from "uview-plus";
-import {navHeaderStyle} from "@/utils/navBarUtil";
 import {useTheme} from "@/utils/useTheme";
-import {getHeaderIconColor} from "@/utils/themeUtil";
 import UserAvatar from "@/components/UserAvatar/index.vue"
+import PageHeader from "@/components/PageHeader/index.vue";
 
-const {isDark, themeClass} = useTheme();
+const {themeClass} = useTheme();
 
-const backIconColor = computed(() => getHeaderIconColor(isDark.value));
 const store = useStore();
 const userInfo = computed(() => store.getters["user/getUserInfo"] || {});
 

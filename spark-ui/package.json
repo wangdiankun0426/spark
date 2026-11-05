@@ -10,7 +10,8 @@
     "build:web": "vite build --mode prod",
     "dev:win": "tauri dev",
     "pack:win": "node src-tauri/scripts/sync-version.cjs && tauri build && node src-tauri/scripts/rename-installer.cjs",
-    "pack:update": "node src-tauri/scripts/pack-hot-update.cjs"
+    "pack:update": "node src-tauri/scripts/pack-hot-update.cjs",
+    "lint:style": "stylelint \"src/**/*.{vue,scss}\" \"src-tauri/**/*.vue\""
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.2.1",
@@ -38,7 +39,10 @@
     "@tauri-apps/cli": "^2",
     "@types/node": "^17.0.0",
     "@vitejs/plugin-vue": "^4.6.2",
+    "postcss-html": "^2.0.0",
+    "postcss-scss": "^4.0.9",
     "sass": "^1.66.1",
+    "stylelint": "^17.16.0",
     "vite": "^4.4.5"
   }
 }

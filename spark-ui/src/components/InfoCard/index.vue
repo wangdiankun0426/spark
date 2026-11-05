@@ -201,7 +201,7 @@ function handleAction(act) {
   align-items: center;
   margin-top: $spacing-md;
   padding: $spacing-md $spacing-md;
-  background-color: var(--app-bg-sub);
+  background-color: $app-bg-sub;
   overflow: hidden;
   flex-shrink: 0;
 }

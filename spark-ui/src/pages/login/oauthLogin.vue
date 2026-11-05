@@ -80,11 +80,7 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(160deg, #f7faff 0%, #eaf2fe 55%, #e3edfd 100%);
-}
-
-html.dark .oauth-login {
-  background: linear-gradient(160deg, #131c2e 0%, #0f172a 55%, #0c1424 100%);
+  background: $auth-oauth-bg;
 }
 
 .oauth-container {
@@ -99,15 +95,15 @@ html.dark .oauth-login {
   flex-direction: column;
   align-items: center;
   padding: 60px 80px;
-  background: var(--app-bg-card);
-  border: 1px solid var(--app-border-light);
+  background: $app-bg-card;
+  border: 1px solid $app-border-light;
   border-radius: 12px;
-  box-shadow: var(--app-shadow-card);
+  box-shadow: $app-shadow-card;
 }
 
 .oauth-desc {
   font-size: 14px;
-  color: var(--app-text-secondary);
+  color: $app-text-secondary;
   margin: 0;
 }
 </style>

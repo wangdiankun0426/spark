@@ -1,86 +1,126 @@
-/**
- * uni-app内置的常用样式变量
- */
+// SCSS 侧唯一变量入口，uni-app 插件自动注入每个编译单元，本文件只准放变量，禁止写样式规则
+// 运行时主题色定义在 styles/theme.scss，本文件做同名 $app-* 映射，消费层只准写 $ 变量禁止裸 var()
 
-/* 行为相关颜色 */
-$uni-color-primary: #007aff;
-$uni-color-success: #4cd964;
-$uni-color-warning: #f0ad4e;
-$uni-color-error: #dd524d;
+// 间距刻度，按全站高频值归并，孤值迁移时就近归档
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 10px;
+$spacing-lg: 14px;
+$spacing-xl: 16px;
+$spacing-2xl: 24px;
 
-/* 文字基本颜色 */
-$uni-text-color:#333;//基本色
-$uni-text-color-inverse:#fff;//反色
-$uni-text-color-grey:#999;//辅助灰色，如加载更多的提示信息
-$uni-text-color-placeholder: #808080;
-$uni-text-color-disable:#c0c0c0;
+// 圆角刻度，按消费场景区分，页面容器与控件不合并
+$radius-bar: 2px;
+$radius-xs: 6px;
+$radius-sm: 8px;
+$radius-md: 9px;
+$radius-icon: 12px;
+$radius-lg: 14px;
+$radius-xl: 16px;
+$radius-2xl: 20px;
+$radius-pill: 999px;
 
-/* 背景颜色 */
-$uni-bg-color:#ffffff;
-$uni-bg-color-grey:#f8f8f8;
-$uni-bg-color-dashboard: var(--app-bg-page);
-$uni-bg-color-hover:#f1f1f1;//点击状态颜色
-$uni-bg-color-mask:rgba(0, 0, 0, 0.4);//遮罩颜色
+// 字号刻度，标题两档对应两级头部定版规格
+$font-size-caption: 11px;
+$font-size-xs: 11.5px;
+$font-size-sm: 12px;
+$font-size-md: 13px;
+$font-size-base: 14px;
+$font-size-lg: 15px;
+$font-size-title: 18px;
+$font-size-title-lg: 24px;
 
-/* 边框颜色 */
-$uni-border-color:#e5e5e5;
+// 过渡刻度
+$transition-fast: all 0.18s ease;
+$transition-base: all 0.22s ease;
+$transition-slow: all 0.25s ease;
 
-/* 尺寸变量 */
+// 浮层层级，页面内相邻叠放的 0/1 属局部 stacking 不入档
+$z-sticky: 100;
+$z-popup: 10090;
 
-/* 文字尺寸 */
-$uni-font-size-sm:12px;
-$uni-font-size-base:14px;
-$uni-font-size-lg:16px;
+// 运行时主题变量同名映射，定义在 styles/theme.scss，消费层只准写 $app-* 禁止裸 var()
+$app-primary: var(--app-primary);
+$app-primary-hover: var(--app-primary-hover);
+$app-primary-light: var(--app-primary-light);
+$app-primary-soft: var(--app-primary-soft);
+$app-brand: var(--app-brand);
+$app-brand-light: var(--app-brand-light);
+$app-gradient-brand: var(--app-gradient-brand);
+$app-gradient-fill: var(--app-gradient-fill);
+$app-fill-tx: var(--app-fill-tx);
+$app-gradient-card: var(--app-gradient-card);
+$app-gradient-login: var(--app-gradient-login);
+$app-field-bg: var(--app-field-bg);
+$app-field-border: var(--app-field-border);
+$app-text-primary: var(--app-text-primary);
+$app-text-regular: var(--app-text-regular);
+$app-text-secondary: var(--app-text-secondary);
+$app-text-tertiary: var(--app-text-tertiary);
+$app-text-placeholder: var(--app-text-placeholder);
+$app-text-muted: var(--app-text-muted);
+$app-bg-page: var(--app-bg-page);
+$app-page-base: var(--app-page-base);
+$app-bg-card: var(--app-bg-card);
+$app-bg-overlay: var(--app-bg-overlay);
+$app-bg-sub: var(--app-bg-sub);
+$app-bg-hover: var(--app-bg-hover);
+$app-tab-track: var(--app-tab-track);
+$app-header-bg: var(--app-header-bg);
+$app-bg-tabbar: var(--app-bg-tabbar);
+$app-border: var(--app-border);
+$app-border-light: var(--app-border-light);
+$app-divide: var(--app-divide);
+$app-shadow-card: var(--app-shadow-card);
+$app-shadow-brand: var(--app-shadow-brand);
+$app-shadow-center: var(--app-shadow-center);
+$app-shadow-hero: var(--app-shadow-hero);
+$app-shadow-logo: var(--app-shadow-logo);
+$app-error-solid: var(--app-error-solid);
+$app-brand-border: var(--app-brand-border);
+$app-error-border: var(--app-error-border);
+$app-bg-start: var(--app-bg-start);
+$app-bg-mid: var(--app-bg-mid);
+$app-bg-end: var(--app-bg-end);
+$app-autofill-bg: var(--app-autofill-bg);
+$app-bg-texture: var(--app-bg-texture);
+$app-gradient-welcome: var(--app-gradient-welcome);
+$app-gradient-assistant: var(--app-gradient-assistant);
+$app-gradient-profile: var(--app-gradient-profile);
+$app-gradient-hero: var(--app-gradient-hero);
+$app-hero-border: var(--app-hero-border);
+$app-chat-bg: var(--app-chat-bg);
+$app-avatar-bg: var(--app-avatar-bg);
+$app-bubble-agent-bg: var(--app-bubble-agent-bg);
+$app-bubble-agent-text: var(--app-bubble-agent-text);
+$app-bg-info: var(--app-bg-info);
+$app-text-info: var(--app-text-info);
+$app-bg-success: var(--app-bg-success);
+$app-text-success: var(--app-text-success);
+$app-bg-warning: var(--app-bg-warning);
+$app-text-warning: var(--app-text-warning);
+$app-bg-error: var(--app-bg-error);
+$app-text-error: var(--app-text-error);
+$app-bg-purple: var(--app-bg-purple);
+$app-text-purple: var(--app-text-purple);
+$app-tile-info: var(--app-tile-info);
+$app-tile-success: var(--app-tile-success);
+$app-tile-error: var(--app-tile-error);
+$app-tile-warning: var(--app-tile-warning);
+$app-tile-cyan: var(--app-tile-cyan);
+$app-tile-cyan-bg: var(--app-tile-cyan-bg);
+$app-tile-green: var(--app-tile-green);
+$app-tile-green-bg: var(--app-tile-green-bg);
+$app-tile-orange: var(--app-tile-orange);
+$app-tile-orange-bg: var(--app-tile-orange-bg);
+$app-tile-blue: var(--app-tile-blue);
+$app-tile-blue-bg: var(--app-tile-blue-bg);
+$app-tile-purple: var(--app-tile-purple);
+$app-tile-purple-bg: var(--app-tile-purple-bg);
+$app-tile-theme: var(--app-tile-theme);
+$app-tile-theme-bg: var(--app-tile-theme-bg);
 
-/* 图片尺寸 */
-$uni-img-size-sm:20px;
-$uni-img-size-base:26px;
-$uni-img-size-lg:40px;
-
-/* Border Radius */
-$uni-border-radius-sm: 2px;
-$uni-border-radius-base: 3px;
-$uni-border-radius-lg: 6px;
-$uni-border-radius-circle: 50%;
-
-/* 水平间距 */
-$uni-spacing-row-sm: 5px;
-$uni-spacing-row-base: 10px;
-$uni-spacing-row-lg: 15px;
-
-/* 垂直间距 */
-$uni-spacing-col-sm: 4px;
-$uni-spacing-col-base: 8px;
-$uni-spacing-col-lg: 12px;
-
-/* 透明度 */
-$uni-opacity-disabled: 0.3;
-
-$uni-color-title: #2C405A;
-$uni-font-size-title:20px;
-$uni-color-subtitle: #555555;
-$uni-font-size-subtitle:26px;
-$uni-color-paragraph: #3F536E;
-$uni-font-size-paragraph:15px;
-
-$spark-color-primary: var(--app-primary);
-$spark-color-primary-light: var(--app-primary-hover);
-$spark-color-text: var(--app-text-primary);
-$spark-color-text-secondary: var(--app-text-secondary);
-$spark-color-bg-start: var(--app-bg-start);
-$spark-color-bg-mid: var(--app-bg-mid);
-$spark-color-bg-end: var(--app-bg-end);
-$spark-color-header-bg: var(--app-header-bg);
-$spark-color-brand: var(--app-brand);
-$spark-color-brand-light: var(--app-brand-light);
-$spark-color-page-bg: var(--app-bg-page);
-$spark-color-card-bg: var(--app-bg-card);
-$spark-color-sub-bg: var(--app-bg-sub);
-$spark-color-border: var(--app-border);
-$spark-color-divide: var(--app-divide);
-$spark-color-text-tertiary: var(--app-text-tertiary);
-
-/* uview-plus 颜色变量 */
+// uview-plus 颜色变量，必须在其主题文件之后赋值才能覆盖
 @import 'node_modules/uview-plus/theme.scss';
 
 $u-primary: var(--app-brand);
@@ -94,6 +134,16 @@ $u-light-color: var(--app-text-tertiary);
 $u-border-color: var(--app-border);
 $u-bg-color: var(--app-bg-sub);
 $u-disabled-color: var(--app-text-placeholder);
+
+// 语义四色，主色档取 text 实色、light 档取 bg 淡底
+$u-warning: var(--app-text-warning);
+$u-warning-light: var(--app-bg-warning);
+$u-success: var(--app-text-success);
+$u-success-light: var(--app-bg-success);
+$u-error: var(--app-text-error);
+$u-error-light: var(--app-bg-error);
+$u-info: var(--app-text-info);
+$u-info-light: var(--app-bg-info);
 
 $u-popup-content-background-color: var(--app-bg-overlay);
 $u-button-plain-background-color: var(--app-bg-card);

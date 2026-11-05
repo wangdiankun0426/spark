@@ -19,7 +19,7 @@
     <div>
       <el-table
           ref="tableRef"
-          height="calc(100vh - 155px)"
+          height="calc(100vh - 160px)"
           :data="instanceList"
           highlight-current-row
           @row-click="handleRowClick"
@@ -288,6 +288,7 @@ function handleOpenInstance(id) {
       formJson.value = JSON.parse(res.data.formJson);
       bpmJson.value = JSON.parse(res.data.bpmJson);
       nodes.value = res.data.nodes;
+      instanceName.value = res.data.name || '';
       instanceId.value = res.data.id;
       nodeId.value = res.data.nodeId;
       nodePermission.value = res.data.permission;
