@@ -14,7 +14,6 @@ public enum WorkflowTemplateTypeEnum {
     START_EVENT("startEvent", "开始事件"),
     END_EVENT("endEvent", "结束事件"),
     EXCLUSIVE_GATEWAY("exclusiveGateway", "排他网关"),
-    PARALLEL_GATEWAY("parallelGateway", "并行网关"),
     LLM_TASK("llmTask", "LLM模型"),
     AGENT_TASK("agentTask", "Agent任务"),
     KB_SEARCH("kbSearch", "知识库检索"),

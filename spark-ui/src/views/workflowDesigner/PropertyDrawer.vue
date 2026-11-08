@@ -1,22 +1,37 @@
 <template>
-  <!--连线配置-->
-  <div class="property-drawer" v-if="edge">
-    <div class="drawer-header">
-      <span class="drawer-title">连线配置</span>
-      <el-button link @click="$emit('close')"><el-icon><Close /></el-icon></el-button>
-    </div>
-    <div class="drawer-body">
-      <el-form :model="edge" label-width="auto">
-        <el-form-item label="连线ID">
-          <el-input :model-value="edge.id" readonly />
-        </el-form-item>
-        <el-form-item label="源节点">
-          <el-input :value="getNodeName(edge.source)" readonly />
-        </el-form-item>
-        <el-form-item label="目标节点">
-          <el-input :value="getNodeName(edge.target)" readonly />
-        </el-form-item>
-        <el-form-item v-if="isConditionBranch(edge)" label="分支条件">
+  <div class="property-drawer" @mousedown.stop>
+    <!--分支条件配置-->
+    <template v-if="edge">
+      <div class="drawer-header">
+        <span class="drawer-head">
+          <span class="drawer-ico drawer-ico--edge">
+            <el-icon :size="14"><Share /></el-icon>
+          </span>
+          <span class="drawer-title">分支配置</span>
+        </span>
+        <span class="drawer-actions">
+          <span class="header-btn" @click="$emit('close')"><el-icon><Close /></el-icon></span>
+        </span>
+      </div>
+      <div class="drawer-body">
+        <div class="sec-card">
+          <div class="sec-title">分支信息</div>
+          <el-form label-position="top">
+            <div class="info-row">
+              <el-form-item label="所属分支" class="info-col">
+                <div class="readonly-field" :title="getNodeName(edge.source)">{{ getNodeName(edge.source) }}</div>
+              </el-form-item>
+              <el-form-item label="汇合到" class="info-col">
+                <div class="readonly-field" :title="joinName">{{ joinName }}</div>
+              </el-form-item>
+            </div>
+            <el-form-item label="分支名称">
+              <el-input v-model="edge.name" placeholder="选填，用于在画布上标注该分支" maxlength="20" />
+            </el-form-item>
+          </el-form>
+        </div>
+        <div class="sec-card">
+          <div class="sec-title">分支条件</div>
           <div class="condition-builder">
             <div v-for="(cond, idx) in conditions" :key="idx" class="condition-row">
               <div class="condition-row-header">
@@ -87,202 +102,241 @@
               当前表达式为高级写法，无法可视化解析；修改条件后将覆盖原表达式
             </div>
             <div v-if="edge.conditionExpression" class="condition-preview">{{ edge.conditionExpression }}</div>
+            <div v-if="!edge.conditionExpression" class="condition-tip">
+              未设置条件时该分支按默认路径流转；多条件用「且 / 或」组合。
+            </div>
           </div>
-        </el-form-item>
-      </el-form>
-    </div>
-    <div class="drawer-footer">
-      <el-button
-          type="danger"
-          size="small"
-          style="width:100%"
-          @click="$emit('delete-edge')">
-        <el-icon><Delete /></el-icon>删除连线
-      </el-button>
-    </div>
-  </div>
+        </div>
+      </div>
+      <div class="drawer-footer">
+        <el-button
+            type="danger"
+            size="small"
+            style="width:100%"
+            @click="$emit('delete-edge')">
+          <el-icon><Delete /></el-icon>删除连线
+        </el-button>
+      </div>
+    </template>
 
-  <!--节点配置-->
-  <div class="property-drawer" v-else-if="node">
-    <div class="drawer-header">
-      <span class="drawer-title">节点配置</span>
-      <el-button link @click="$emit('close')"><el-icon><Close /></el-icon></el-button>
-    </div>
-    <div class="drawer-body">
-      <el-form
-          :model="form"
-          label-width="auto"
-      >
-        <el-form-item label="节点ID">
-          <div class="readonly-field readonly-field--code" :title="node.id">{{ node.id }}</div>
-        </el-form-item>
-        <el-form-item label="节点名称">
-          <el-input
-              v-model="form.name"
-              @change="emitUpdate"
-          />
-        </el-form-item>
-        <!--按节点类型拆分配置组件-->
-        <el-empty
-            v-if="['startEvent', 'endEvent', 'exclusiveGateway', 'parallelGateway'].includes(node.type)"
-            description="该节点无需配置"
-            :image-size="40"
-        />
-        <doc-parse-config
-            v-if="node.type === 'docParse'"
-            :form="form"
-            @update="emitUpdate"
-        />
-        <notify-config
-            v-if="node.type === 'notify'"
-            :form="form"
-            @update="emitUpdate"
-        />
-        <kb-archive-config
-            v-if="node.type === 'kbArchive'"
-            :form="form"
-            @update="emitUpdate"
-        />
-        <llm-task-config
-            v-if="node.type === 'llmTask'"
-            :form="form"
-            @update="emitUpdate"
-        />
-        <agent-task-config
-            v-if="node.type === 'agentTask'"
-            :form="form"
-            @update="emitUpdate"
-        />
-        <kb-search-config
-            v-if="node.type === 'knowledgeSearch'"
-            :form="form"
-            @update="emitUpdate"
-        />
-        <kg-search-config
-            v-if="node.type === 'knowledgeGraphSearch'"
-            :form="form"
-            @update="emitUpdate"
-        />
-        <variable-op-config
-            v-if="node.type === 'variableOp'"
-            :form="form"
-            @update="emitUpdate"
-        />
-        <code-execute-config
-            v-if="node.type === 'codeExecute'"
-            :form="form"
-            @update="emitUpdate"
-        />
-        <http-request-config
-            v-if="node.type === 'httpRequest'"
-            :form="form"
-            @update="emitUpdate"
-        />
-        <human-review-config
-            v-if="node.type === 'humanReview'"
-            :form="form"
-            @update="emitUpdate"
-        />
-        <!--执行策略配置-->
-        <template v-if="!['startEvent', 'endEvent', 'exclusiveGateway', 'parallelGateway'].includes(node.type)">
-          <el-divider>执行策略</el-divider>
-          <el-form-item label="超时时间">
-            <el-input-number
-                v-model="form.config.timeoutMs"
-                :min="1000"
-                :max="3600000"
-                :step="1000"
-                :step-strictly="true"
-                placeholder="毫秒"
-                @change="emitUpdate"
+    <!--节点配置-->
+    <template v-else-if="node">
+      <div class="drawer-header">
+        <span class="drawer-head">
+          <span class="drawer-ico" :style="{ background: nodeMeta.bgColor, color: nodeMeta.color }">
+            <el-icon :size="14"><component :is="nodeMeta.icon" /></el-icon>
+          </span>
+          <span class="drawer-title">{{ nodeMeta.name || '节点配置' }}</span>
+        </span>
+        <span class="drawer-actions">
+          <span class="header-btn" @click="$emit('close')"><el-icon><Close /></el-icon></span>
+        </span>
+      </div>
+      <div class="drawer-body">
+        <div class="sec-card">
+          <div class="sec-title">基础信息</div>
+          <el-form label-position="top">
+            <el-form-item label="节点名称">
+              <el-input v-model="form.name" @input="handleNameInput" />
+            </el-form-item>
+            <el-form-item label="节点 ID">
+              <div class="readonly-field readonly-field--code" :title="node.id">{{ node.id }}</div>
+            </el-form-item>
+          </el-form>
+        </div>
+
+        <div v-if="needConfig(node.type)" class="sec-card">
+          <div class="sec-title">节点配置</div>
+          <el-form label-position="top">
+            <doc-parse-config
+                v-if="node.type === 'docParse'"
+                :form="form"
+                @update="emitUpdate"
             />
-            <div class="form-tips">节点执行超时时间，默认5分钟（300000ms）</div>
-          </el-form-item>
-          <el-form-item label="重试次数">
-            <el-input-number
-                v-model="form.config.maxRetries"
-                :min="0"
-                :max="10"
-                :step="1"
-                placeholder="次"
-                @change="emitUpdate"
+            <notify-config
+                v-if="node.type === 'notify'"
+                :form="form"
+                @update="emitUpdate"
             />
-            <div class="form-tips">执行失败时的重试次数，0表示不重试</div>
-          </el-form-item>
-          <el-form-item label="重试间隔">
-            <el-input-number
-                v-model="form.config.retryInitialInterval"
-                :min="100"
-                :max="60000"
-                :step="100"
-                :step-strictly="true"
-                placeholder="毫秒"
-                @change="emitUpdate"
+            <kb-archive-config
+                v-if="node.type === 'kbArchive'"
+                :form="form"
+                @update="emitUpdate"
             />
-            <div class="form-tips">首次重试等待时间，默认1000ms</div>
-          </el-form-item>
-          <el-form-item label="间隔倍数">
-            <el-input-number
-                v-model="form.config.retryMultiplier"
-                :min="1"
-                :max="10"
-                :step="0.1"
-                :precision="1"
-                placeholder="倍"
-                @change="emitUpdate"
+            <llm-task-config
+                v-if="node.type === 'llmTask'"
+                :form="form"
+                @update="emitUpdate"
             />
-            <div class="form-tips">每次重试间隔的递增倍数，默认2.0</div>
-          </el-form-item>
-          <el-form-item label="最大间隔">
-            <el-input-number
-                v-model="form.config.retryMaxInterval"
-                :min="1000"
-                :max="300000"
-                :step="1000"
-                :step-strictly="true"
-                placeholder="毫秒"
-                @change="emitUpdate"
+            <agent-task-config
+                v-if="node.type === 'agentTask'"
+                :form="form"
+                @update="emitUpdate"
             />
-            <div class="form-tips">重试间隔上限，默认30000ms</div>
-          </el-form-item>
-        </template>
-      </el-form>
-    </div>
-    <div class="drawer-footer">
-      <el-button
-          type="danger"
-          size="small"
-          style="width:100%"
-          @click="$emit('delete-node', node.id)">
-        <el-icon><Delete /></el-icon>删除节点
-      </el-button>
-    </div>
+            <kb-search-config
+                v-if="node.type === 'kbSearch'"
+                :form="form"
+                @update="emitUpdate"
+            />
+            <kg-search-config
+                v-if="node.type === 'kgSearch'"
+                :form="form"
+                @update="emitUpdate"
+            />
+            <variable-op-config
+                v-if="node.type === 'variableOp'"
+                :form="form"
+                @update="emitUpdate"
+            />
+            <code-execute-config
+                v-if="node.type === 'codeExecute'"
+                :form="form"
+                @update="emitUpdate"
+            />
+            <http-request-config
+                v-if="node.type === 'httpRequest'"
+                :form="form"
+                @update="emitUpdate"
+            />
+            <human-review-config
+                v-if="node.type === 'humanReview'"
+                :form="form"
+                @update="emitUpdate"
+            />
+            <el-empty
+                v-if="!hasConfigComponent(node.type)"
+                description="该节点无需配置"
+                :image-size="40"
+            />
+          </el-form>
+        </div>
+
+        <div v-if="needRetryTimeout(node.type)" class="sec-card">
+          <div class="sec-title">执行策略</div>
+          <el-form label-position="top">
+            <el-form-item label="超时时间">
+              <el-input-number
+                  v-model="form.config.timeoutMs"
+                  :min="1000"
+                  :max="3600000"
+                  :step="1000"
+                  :step-strictly="true"
+                  placeholder="毫秒"
+                  @change="emitUpdate"
+              />
+              <div class="form-tips">节点执行超时时间，默认5分钟（300000ms）</div>
+            </el-form-item>
+            <el-form-item label="重试次数">
+              <el-input-number
+                  v-model="form.config.maxRetries"
+                  :min="0"
+                  :max="10"
+                  :step="1"
+                  placeholder="次"
+                  @change="emitUpdate"
+              />
+              <div class="form-tips">执行失败时的重试次数，0表示不重试</div>
+            </el-form-item>
+            <el-form-item label="重试间隔">
+              <el-input-number
+                  v-model="form.config.retryInitialInterval"
+                  :min="100"
+                  :max="60000"
+                  :step="100"
+                  :step-strictly="true"
+                  placeholder="毫秒"
+                  @change="emitUpdate"
+              />
+              <div class="form-tips">首次重试等待时间，默认1000ms</div>
+            </el-form-item>
+            <el-form-item label="间隔倍数">
+              <el-input-number
+                  v-model="form.config.retryMultiplier"
+                  :min="1"
+                  :max="10"
+                  :step="0.1"
+                  :precision="1"
+                  placeholder="倍"
+                  @change="emitUpdate"
+              />
+              <div class="form-tips">每次重试间隔的递增倍数，默认2.0</div>
+            </el-form-item>
+            <el-form-item label="最大间隔">
+              <el-input-number
+                  v-model="form.config.retryMaxInterval"
+                  :min="1000"
+                  :max="300000"
+                  :step="1000"
+                  :step-strictly="true"
+                  placeholder="毫秒"
+                  @change="emitUpdate"
+              />
+              <div class="form-tips">重试间隔上限，默认30000ms</div>
+            </el-form-item>
+          </el-form>
+        </div>
+      </div>
+      <!-- 开始/结束节点不可删除，连入口都不显示 -->
+      <div class="drawer-footer" v-if="!isEndpoint">
+        <el-button
+            type="danger"
+            size="small"
+            style="width:100%"
+            @click="$emit('delete-node', node.id)">
+          <el-icon><Delete /></el-icon>删除节点
+        </el-button>
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
-import DocParseConfig from './propertyPanel/DocParseConfig.vue';
-import NotifyConfig from './propertyPanel/NotifyConfig.vue';
-import KbArchiveConfig from './propertyPanel/KbArchiveConfig.vue';
-import LlmTaskConfig from './propertyPanel/LlmTaskConfig.vue';
-import AgentTaskConfig from './propertyPanel/AgentTaskConfig.vue';
-import KbSearchConfig from './propertyPanel/KbSearchConfig.vue';
-import KgSearchConfig from './propertyPanel/KgSearchConfig.vue';
-import VariableOpConfig from './propertyPanel/VariableOpConfig.vue';
-import CodeExecuteConfig from './propertyPanel/CodeExecuteConfig.vue';
-import HttpRequestConfig from './propertyPanel/HttpRequestConfig.vue';
-import HumanReviewConfig from './propertyPanel/HumanReviewConfig.vue';
+import { ref, computed, watch, nextTick } from 'vue'
+import { NODE_META } from './nodes/index.js'
+import DocParseConfig from './propertyPanel/DocParseConfig.vue'
+import NotifyConfig from './propertyPanel/NotifyConfig.vue'
+import KbArchiveConfig from './propertyPanel/KbArchiveConfig.vue'
+import LlmTaskConfig from './propertyPanel/LlmTaskConfig.vue'
+import AgentTaskConfig from './propertyPanel/AgentTaskConfig.vue'
+import KbSearchConfig from './propertyPanel/KbSearchConfig.vue'
+import KgSearchConfig from './propertyPanel/KgSearchConfig.vue'
+import VariableOpConfig from './propertyPanel/VariableOpConfig.vue'
+import CodeExecuteConfig from './propertyPanel/CodeExecuteConfig.vue'
+import HttpRequestConfig from './propertyPanel/HttpRequestConfig.vue'
+import HumanReviewConfig from './propertyPanel/HumanReviewConfig.vue'
 
 const props = defineProps({
   node: { type: Object, default: null },
   edge: { type: Object, default: null },
   nodes: { type: Array, default: () => [] },
-  formFields: { type: Array, default: () => [] }
-});
-const emit = defineEmits(['update', 'close', 'delete-node', 'delete-edge']);
+  sequences: { type: Array, default: () => [] },
+  formFields: { type: Array, default: () => [] },
+})
+const emit = defineEmits(['update', 'close', 'delete-node', 'delete-edge'])
 
-const form = ref({});
+const form = ref({})
+
+const nodeMeta = computed(() => (props.node ? NODE_META[props.node.type] || {} : {}))
+
+const isEndpoint = computed(() =>
+  !!props.node && ['startEvent', 'endEvent'].includes(props.node.type)
+)
+
+/** 无配置组件的网关与端点类型不渲染配置分节 */
+const NO_CONFIG_TYPES = ['startEvent', 'endEvent', 'exclusiveGateway', 'parallelGateway', 'placeholder', 'userTask']
+
+const CONFIG_COMPONENT_TYPES = [
+  'docParse', 'notify', 'kbArchive', 'llmTask', 'agentTask', 'kbSearch', 'kgSearch',
+  'variableOp', 'codeExecute', 'httpRequest', 'humanReview'
+]
+
+function needConfig(type) {
+  return !NO_CONFIG_TYPES.includes(type)
+}
+
+function hasConfigComponent(type) {
+  return CONFIG_COMPONENT_TYPES.includes(type)
+}
 
 /** 执行策略默认值 */
 const retryTimeoutDefaults = {
@@ -291,14 +345,20 @@ const retryTimeoutDefaults = {
   retryInitialInterval: 1000,
   retryMultiplier: 2.0,
   retryMaxInterval: 30000
-};
+}
 
-/** 需要执行策略的节点类型 */
 const needRetryTimeout = (type) => {
-  return !['startEvent', 'endEvent', 'exclusiveGateway', 'parallelGateway'].includes(type);
-};
+  return !NO_CONFIG_TYPES.includes(type) && type !== 'userTask'
+}
 
 watch(() => props.node, (newNode) => {
+  // 名称是实时回写的：父组件换了新节点对象、但除名称外与表单一致时不再回灌表单，避免打断输入
+  const f = form.value;
+  if (newNode && f.id === newNode.id && f.type === newNode.type && f.x === newNode.x && f.y === newNode.y
+      && f.name === newNode.name
+      && JSON.stringify(f.config || {}) === JSON.stringify(newNode.config || {})) {
+    return;
+  }
   if (newNode) {
     const data = JSON.parse(JSON.stringify(newNode));
     // 确保 config 对象存在
@@ -323,16 +383,63 @@ function emitUpdate() {
   emit('update', form.value);
 }
 
+/** 节点名称：边输边同步到画布 */
+function handleNameInput(val) {
+  form.value.name = val;
+  emitUpdate();
+}
+
 /** 表单字段选项（label/value），用于条件构建器的字段下拉选择 */
 const fieldOptions = computed(() =>
   props.formFields.map(f => ({ label: f.label, value: f.code }))
 );
 
-/** 获取节点名称用于连线信息展示 */
+/** 获取节点名称用于分支信息展示 */
 function getNodeName(nodeId) {
   const n = props.nodes.find(n => n.id === nodeId);
   return n ? n.name : '未知节点';
 }
+
+/**
+ * 从某节点出发的广度优先可达节点序列（含起点，按层序排列）
+ * @param startId 起点节点 id
+ * @returns {string[]} 可达节点 id 列表
+ */
+function reachOrder(startId) {
+  const order = [];
+  const seen = new Set();
+  const queue = [startId];
+  while (queue.length) {
+    const id = queue.shift();
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    order.push(id);
+    props.sequences.forEach(e => {
+      if (e.source === id) queue.push(e.target);
+    });
+  }
+  return order;
+}
+
+/**
+ * 汇合到：本分支与兄弟分支最先走到一起的节点
+ * 单出口连线没有兄弟分支，直接显示它的目标节点；分支各自收尾时显示本分支的结束节点
+ */
+const joinName = computed(() => {
+  const edge = props.edge;
+  if (!edge) return '';
+  const siblings = props.sequences.filter(e => e.source === edge.source && e.id !== edge.id);
+  if (!siblings.length) return getNodeName(edge.target);
+  const others = new Set();
+  siblings.forEach(s => reachOrder(s.target).forEach(id => others.add(id)));
+  const mine = reachOrder(edge.target);
+  const joinId = mine.find(id => others.has(id));
+  if (joinId) return getNodeName(joinId);
+  const endNode = mine
+    .map(id => props.nodes.find(n => n.id === id))
+    .find(n => n && n.type === 'endEvent');
+  return endNode ? endNode.name : '流程结束';
+});
 
 /**
  * 新建一行条件
@@ -359,12 +466,6 @@ watch(() => props.edge, (edge) => {
     parseFailed.value = true;
   }
 }, { immediate: true });
-
-/** 判断连线源节点是否为排他网关（条件分支） */
-function isConditionBranch(edge) {
-  const source = props.nodes.find(el => el.id === edge.source);
-  return !!source && source.type === 'exclusiveGateway';
-}
 
 /** 添加一行条件 */
 function addCondition() {
@@ -459,7 +560,7 @@ function parseCondition(expr) {
 /**
  * 在顶层按 && / || 拆分表达式（引号内的连接符不拆分）
  * @param s 表达式（不含 ${} 包裹）
- * @returns {{parts: string[], logics: string[]}} 片段列表与各片段前的连接符（logics[i] 位于 parts[i] 与 parts[i+1] 之间）
+ * @returns {{parts: string[], logics: string[]}} 片段列表与各片段前的连接符
  */
 function splitFragments(s) {
   const parts = [];
@@ -530,28 +631,116 @@ function fillSource(c) {
 </script>
 
 <style scoped lang="scss">
+@use './styles/vars.scss' as *;
 .property-drawer {
-  width: 400px;
-  background: $app-bg-card;
-  border-left: 1px solid $border-color;
-  flex-shrink: 0;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  width: $wf-panel-width;
   display: flex;
   flex-direction: column;
+  background: $wf-panel-bg;
+  border: 1px solid $wf-panel-border;
+  border-radius: 14px;
+  box-shadow: $wf-panel-shadow;
   overflow: hidden;
+  z-index: 70;
 }
+
 .drawer-header {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid $border-color-light;
+  padding: 12px 14px;
+  border-bottom: 1px solid $wf-panel-border;
 }
+
+.drawer-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drawer-ico {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+/* 连线面板：分支图标固定用告警色，与条件分支节点同色系 */
+.drawer-ico--edge {
+  background: $el-color-warning-light-9;
+  color: $el-color-warning;
+}
+
 .drawer-title {
   font-weight: 600;
   font-size: 14px;
-  color: $color-text-primary;
+  color: $app-text-primary;
 }
-// 只读信息行：与输入框等高但无焦点/无边框交互，明确表达「只能看、不能改」
+
+.drawer-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.header-btn {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  cursor: pointer;
+  color: $app-text-secondary;
+
+  &:hover {
+    background: $wf-sec-bg;
+    color: $wf-line-active;
+  }
+}
+
+.drawer-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.sec-card {
+  background: $wf-sec-bg;
+  border: 1px solid $wf-panel-border;
+  border-radius: 10px;
+  padding: 10px 11px;
+}
+
+.sec-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: $app-text-primary;
+  margin-bottom: 9px;
+}
+
+/* 分支信息首行两列：所属分支 / 汇合到，省一行竖向空间 */
+.info-row {
+  display: flex;
+  gap: 10px;
+
+  .info-col {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
 .readonly-field {
   box-sizing: border-box;
   width: 100%;
@@ -559,9 +748,9 @@ function fillSource(c) {
   padding: 0 11px;
   display: flex;
   align-items: center;
-  border: 1px solid $border-color-light;
-  border-radius: 4px;
-  background: $app-bg-sub;
+  border: 1px solid $wf-panel-border;
+  border-radius: 7px;
+  background: $wf-panel-bg;
   color: $app-text-secondary;
   font-size: 13px;
   line-height: 20px;
@@ -571,39 +760,35 @@ function fillSource(c) {
   cursor: default;
   user-select: text;
 }
-// 节点ID 等技术标识用等宽字体，位数对齐更易比较
+
 .readonly-field--code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   letter-spacing: 0.2px;
 }
-.drawer-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px 16px;
-}
+
 .drawer-footer {
   flex-shrink: 0;
-  padding: 12px 16px;
-  border-top: 1px solid $border-color-light;
+  padding: 10px 12px;
+  border-top: 1px solid $wf-panel-border;
 }
-.edge-condition-config {
-  width: 100%;
-}
+
 .condition-builder {
   display: flex;
   flex-direction: column;
   gap: 8px;
   width: 100%;
 }
+
 .condition-row {
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding: 8px;
-  border: 1px solid $border-color-light;
-  border-radius: 4px;
-  background: $app-bg-sub;
+  border: 1px solid $wf-panel-border;
+  border-radius: 7px;
+  background: $wf-panel-bg;
 }
+
 .condition-row-header {
   display: flex;
   align-items: center;
@@ -615,13 +800,36 @@ function fillSource(c) {
 
   .logic-label {
     font-size: 12px;
-    color: $color-text-secondary;
+    color: $app-text-secondary;
   }
+}
+
+.condition-warning {
+  font-size: 12px;
+  color: $el-color-warning;
+  line-height: 1.5;
+}
+
+.condition-preview {
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: $app-text-secondary;
+  background: $wf-panel-bg;
+  border: 1px solid $wf-panel-border;
+  border-radius: 6px;
+  padding: 6px 8px;
+  word-break: break-all;
+}
+
+.condition-tip {
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: $app-text-placeholder;
 }
 
 .form-tips {
   font-size: 12px;
-  color: $color-text-secondary;
+  color: $app-text-secondary;
   line-height: 1.5;
   margin-top: 4px;
 }

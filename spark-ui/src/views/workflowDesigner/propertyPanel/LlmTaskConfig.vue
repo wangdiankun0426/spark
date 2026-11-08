@@ -54,15 +54,21 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { pageModelListAPI } from '@/api/llm/model.js'
+import { ElMessage } from 'element-plus'
 
 const props = defineProps({ form: { type: Object, required: true } })
 const emit = defineEmits(['update'])
 
 const modelList = ref([])
 onMounted(async () => {
-  const res = await pageModelListAPI({ page: false, type: 1 })
-  if (res.code === 200 && res.data?.rows) {
-    modelList.value = res.data.rows
+  // 字典接口失败（未登录 / 网络异常）时保持空候选，不能阻断面板挂载
+  try {
+    const res = await pageModelListAPI({ page: false, type: 1 })
+    if (res && res.code === 200 && res.data?.rows) {
+      modelList.value = res.data.rows
+    }
+  } catch (e) {
+    modelList.value = []
   }
 })
 

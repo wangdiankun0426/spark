@@ -95,3 +95,53 @@ export function formatConditionLines(expression, fieldOptions = []) {
   }
   return lines;
 }
+
+/** 条件标签单行文案的最大宽度（px）：超出后折行，不截断 */
+export const CONDITION_LINE_MAX_WIDTH = 208
+
+/** 估算单个字符宽度：中日韩文字按整字宽，西文按半字宽 */
+function estimateCharWidth(ch) {
+  return /[\u2e80-\u9fff\u3000-\u303f\uff00-\uffef]/.test(ch) ? 11 : 6.2
+}
+
+/**
+ * 文案按宽度折行：优先在空格处断行，避免把词语拆开
+ * @param text 文案
+ * @param maxWidth 单行最大宽度
+ * @returns {string[]} 折行后的行
+ */
+export function wrapConditionText(text, maxWidth = CONDITION_LINE_MAX_WIDTH) {
+  const lines = []
+  let current = ''
+  let width = 0
+  for (const ch of String(text)) {
+    const chWidth = estimateCharWidth(ch)
+    if (current && width + chWidth > maxWidth) {
+      const space = current.lastIndexOf(' ')
+      if (space > 0) {
+        lines.push(current.slice(0, space).trim())
+        current = current.slice(space + 1)
+        width = [...current].reduce((sum, c) => sum + estimateCharWidth(c), 0)
+      } else {
+        lines.push(current.trim())
+        current = ''
+        width = 0
+      }
+    }
+    current += ch
+    width += chWidth
+  }
+  if (current.trim()) lines.push(current.trim())
+  return lines
+}
+
+/**
+ * 条件标签的完整展示行：先按「且 / 或」拆成多条件，再各自折行，全部展示不省略
+ * @param expression 条件表达式
+ * @param fieldOptions 表单字段选项（label/value）
+ * @returns {string[]} 展示行列表，无表达式返回空数组
+ */
+export function buildConditionChipLines(expression, fieldOptions = []) {
+  return formatConditionLines(expression, fieldOptions)
+      .flatMap(line => wrapConditionText(line))
+}

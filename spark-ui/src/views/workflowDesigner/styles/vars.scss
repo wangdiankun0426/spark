@@ -1,0 +1,37 @@
+/**
+ * workflowDesigner 令牌消费层：组件内统一引用 $wf-*
+ * 画布底色/点阵与连线选中色直接映射主题变量，保证与流程设计器一致
+ */
+$wf-canvas-bg: var(--app-canvas-bg);
+$wf-canvas-dot: var(--app-canvas-dot);
+$wf-canvas-dot-soft: var(--app-canvas-dot-soft);
+$wf-line: var(--wf-line);
+$wf-line-active: var(--el-color-primary);
+$wf-node-radius: 12px;
+$wf-node-summary: var(--wf-node-summary);
+$wf-panel-bg: var(--app-bg-card);
+$wf-panel-border: var(--app-border-light);
+$wf-panel-width: 340px;
+$wf-panel-shadow: var(--wf-panel-shadow);
+$wf-picker-width: 620px;
+$wf-code-bg: #0f1b2d;
+$wf-sec-bg: var(--app-bg-sub);
+$wf-node-ico-bg: var(--nc-bg);
+$wf-node-ico-color: var(--nc);
+$wf-node-color: var(--nc);
+$wf-node-glow: color-mix(in srgb, var(--nc) 35%, transparent);
+// 暗色卡片上原色偏深，选中描边先往白色提亮，避免出现一圈发黑的蓝边
+$wf-node-color-dark: color-mix(in srgb, var(--nc) 55%, #fff);
+$wf-node-border: color-mix(in srgb, var(--nc) 60%, #fff);
+$wf-node-border-dark: color-mix(in srgb, var(--nc) 45%, #1d2939);
+$wf-plus-ico: #fff;
+$wf-cat-active-bg: #1f2d4a;
+$wf-cat-active-text: #fff;
+$wf-code-text: #c9d4e5;
+$wf-code-key: #7ab8ff;
+$wf-code-string: #9ad1a4;
+$wf-code-number: #f2b96e;
+$wf-code-bool: #d38aea;
+$wf-code-punct: #64748f;
+$wf-code-lineno: rgba(255, 255, 255, 0.28);
+$wf-code-mark: rgba(47, 123, 255, 0.18);

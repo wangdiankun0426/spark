@@ -60,9 +60,14 @@ const emit = defineEmits(['update'])
 
 const kbList = ref([])
 onMounted(async () => {
-  const res = await pageKnowledgeListAPI({ page: false })
-  if (res.code === 200 && res.data?.rows) {
-    kbList.value = res.data.rows
+  // 字典接口失败（未登录 / 网络异常）时保持空候选，不能阻断面板挂载
+  try {
+    const res = await pageKnowledgeListAPI({ page: false })
+    if (res && res.code === 200 && res.data?.rows) {
+      kbList.value = res.data.rows
+    }
+  } catch (e) {
+    kbList.value = []
   }
 })
 

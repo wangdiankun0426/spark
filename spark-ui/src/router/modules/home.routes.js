@@ -9,6 +9,7 @@ import contact from '@/pages/home/contact/index.vue'
 import aichat from '@/pages/home/aichat/index.vue'
 import homeAgent from '@/pages/home/agent/index.vue'
 import homeWorkflow from '@/pages/home/workflow/index.vue'
+import homeWorkflowInstance from '@/pages/home/workflow/instance.vue'
 
 export default [
     {
@@ -58,6 +59,14 @@ export default [
                 component: homeWorkflow,
                 meta: {
                     title: '工作流',
+                }
+            },
+            {
+                path: '/home/workflow/instance',
+                name: 'homeWorkflowInstance',
+                component: homeWorkflowInstance,
+                meta: {
+                    title: '运行实例',
                 }
             },
 

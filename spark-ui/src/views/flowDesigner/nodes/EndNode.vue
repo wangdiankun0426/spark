@@ -1,7 +1,11 @@
 <template>
   <div class="end-node" :class="{ selected }">
-    <el-icon class="node-icon"><CircleClose /></el-icon>
-    <span class="node-name">{{ node.name || '结束' }}</span>
+    <span class="node-ico">
+      <el-icon :size="16"><CircleClose /></el-icon>
+    </span>
+    <span class="node-text">
+      <b :title="node.name || '结束'">{{ node.name || '结束' }}</b>
+    </span>
   </div>
 </template>
 
@@ -14,35 +18,55 @@ defineProps({
 
 <style scoped lang="scss">
 .end-node {
+  box-sizing: border-box;
   width: 100%;
   height: 100%;
-  box-sizing: border-box;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 2px;
-  border-radius: 8px;
-  background: $app-node-end-bg;
-  border: 1.5px solid $app-node-end;
+  gap: 10px;
+  padding: 0 12px;
+  border-radius: 12px;
+  // 白底卡片，与 workflow 设计器的节点一致：类型色只落在描边与图标上
+  background: $app-bg-card;
+  border: 1.5px solid color-mix(in srgb, $app-node-end 60%, $app-bg-card);
+  box-shadow: 0 1px 4px rgba(31, 45, 74, 0.06);
+  transition: box-shadow 0.15s;
 
   &.selected {
     border-width: 2.5px;
+    border-color: $app-node-end;
     box-shadow: 0 0 8px rgba(255, 77, 79, 0.35);
   }
 }
-.node-icon {
-  font-size: 20px;
-  line-height: 1;
+
+// 图标块：32px 圆角底 + 类型色图标，与 workflow 节点卡一致
+.node-ico {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: $app-node-end-bg;
   color: $app-node-end;
 }
-.node-name {
-  font-size: 13px;
-  font-weight: 400;
-  color: $app-text-primary;
-  line-height: 1.2;
-  word-break: break-all;
-  max-width: 120px;
+
+.node-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+
+  b {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 18px;
+    color: $app-text-primary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 // 暗色主题节点边框改为同色系半透明，底色与图标由节点 token 自动翻转

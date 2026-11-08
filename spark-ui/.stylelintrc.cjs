@@ -13,6 +13,14 @@ module.exports = {
         'function-disallowed-list': null
       }
     },
+    // workflowDesigner 令牌定义层与消费层映射，同 src/styles 的放行口径
+    {
+      files: ['src/views/workflowDesigner/styles/**'],
+      rules: {
+        'color-no-hex': null,
+        'function-disallowed-list': null
+      }
+    },
     // SVG 图标文件的 fill/stroke 是矢量资源固有颜色，不参与主题体系
     {
       files: ['src/assets/icons/**'],

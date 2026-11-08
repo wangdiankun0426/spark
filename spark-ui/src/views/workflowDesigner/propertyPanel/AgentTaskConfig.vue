@@ -58,9 +58,14 @@ const emit = defineEmits(['update'])
 
 const agentList = ref([])
 onMounted(async () => {
-  const res = await pageAgentListAPI({ page: false })
-  if (res.code === 200 && res.data?.rows) {
-    agentList.value = res.data.rows
+  // 字典接口失败（未登录 / 网络异常）时保持空候选，不能阻断面板挂载
+  try {
+    const res = await pageAgentListAPI({ page: false })
+    if (res && res.code === 200 && res.data?.rows) {
+      agentList.value = res.data.rows
+    }
+  } catch (e) {
+    agentList.value = []
   }
 })
 

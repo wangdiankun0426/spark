@@ -38,6 +38,23 @@
             <el-icon class="wf-pane-icon"><Connection /></el-icon>
             <span class="wf-pane-title">{{ currentWorkflow.name }}</span>
             <span v-if="currentWorkflow.revNum" class="wf-pane-version">v{{ currentWorkflow.revNum }}</span>
+            <div class="wf-pane-actions">
+              <el-tooltip content="查看流程图" placement="top" :show-after="200">
+                <el-button
+                    class="wf-icon-btn"
+                    text
+                    :loading="previewLoading"
+                    @click="handlePreview"
+                >
+                  <el-icon v-if="!previewLoading"><View /></el-icon>
+                </el-button>
+              </el-tooltip>
+              <el-tooltip content="运行实例" placement="top" :show-after="200">
+                <el-button class="wf-icon-btn" text @click="handleOpenInstances">
+                  <el-icon><List /></el-icon>
+                </el-button>
+              </el-tooltip>
+            </div>
           </div>
           <el-scrollbar class="wf-form-body">
             <form-view
@@ -67,20 +84,44 @@
         v-model="resultVisible"
         :instance-id="resultInstanceId"
     />
+
+    <!-- 流程图预览：只读，复用工作流设计器的预览组件 -->
+    <el-dialog
+        v-model="previewVisible"
+        title="流程图"
+        width="900px"
+        top="8vh"
+        append-to-body
+        destroy-on-close
+    >
+      <workflow-preview
+          v-if="previewVisible"
+          :nodes="dagNodes"
+          :sequences="dagSequences"
+          :field-options="previewFieldOptions"
+          :height="520"
+      />
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Connection, VideoPlay } from '@element-plus/icons-vue'
+import { Connection, VideoPlay, View, List } from '@element-plus/icons-vue'
 import { pageWorkflowListAPI, queryWorkflowDetailAPI } from '@/api/workflow/template.js'
+import { queryVersionDetailAPI } from '@/api/workflow/version.js'
 import { runWorkflowAPI, queryInstanceDetailAPI } from '@/api/workflow/instance.js'
 import FormView from '@/components/FormView'
+import WorkflowPreview from '@/components/WorkflowPreview/index.vue'
 import WfInstanceDetailDrawer from '@/components/WfInstanceDetailDrawer/index.vue'
 
 // 运行结果轮询次数，每次间隔 1 秒
 const RUN_POLL_RETRIES = 30
+
+const router = useRouter()
+const route = useRoute()
 
 const workflowList = ref([])
 const currentWorkflow = ref({})
@@ -90,12 +131,31 @@ const running = ref(false)
 const resultVisible = ref(false)
 const resultInstanceId = ref(null)
 
+/** 流程图预览：弹窗开关 / 加载态 / 当前版本的节点与连线 */
+const previewVisible = ref(false)
+const previewLoading = ref(false)
+const dagNodes = ref([])
+const dagSequences = ref([])
+/** 当前工作流的版本 id：详情接口返回，预览按它取 dagJson */
+const currentRevId = ref(null)
+
+/** 分支条件文案翻译用：输入表单的字段 label/code */
+const previewFieldOptions = computed(() => {
+  const widgetList = (formJson.value && formJson.value.widgetList) || []
+  return widgetList
+      .map(widget => ({
+        label: (widget.config && widget.config.label) || '',
+        value: (widget.config && widget.config.code) || ''
+      }))
+      .filter(option => option.value)
+})
+
 onMounted(() => {
   loadWorkflows()
 })
 
 /**
- * 加载可用工作流，默认选中第一个
+ * 加载可用工作流，优先选中路由上指定的 id（从运行实例页返回时保持原工作流）
  */
 function loadWorkflows() {
   const query = { status: 1, page: false }
@@ -107,7 +167,9 @@ function loadWorkflows() {
     if (!workflowList.value.length) {
       return
     }
-    handleSelect(workflowList.value[0])
+    const backId = route.query.id ? Number(route.query.id) : null
+    const matched = backId ? workflowList.value.find(item => item.id === backId) : null
+    handleSelect(matched || workflowList.value[0])
   })
 }
 
@@ -118,6 +180,9 @@ function handleSelect(item) {
   currentWorkflow.value = item
   formJson.value = null
   formId.value = null
+  currentRevId.value = null
+  dagNodes.value = []
+  dagSequences.value = []
   loadFormJson(item.id)
 }
 
@@ -126,7 +191,12 @@ function handleSelect(item) {
  */
 function loadFormJson(id) {
   queryWorkflowDetailAPI({ id }).then(res => {
-    if (res.code !== 200 || !res.data || !res.data.formJson) {
+    if (res.code !== 200 || !res.data) {
+      return
+    }
+    // 版本 id 先存下来：没有输入表单的工作流也要能看流程图
+    currentRevId.value = res.data.revId || null
+    if (!res.data.formJson) {
       return
     }
     formId.value = res.data.formId
@@ -134,6 +204,54 @@ function loadFormJson(id) {
       formJson.value = JSON.parse(res.data.formJson)
     } catch (e) {
       formJson.value = null
+    }
+  })
+}
+
+/**
+ * 查看流程图：按当前版本 id 取 dagJson，交给只读预览组件渲染
+ */
+async function handlePreview() {
+  if (!currentWorkflow.value.id || previewLoading.value) {
+    return
+  }
+  if (!currentRevId.value) {
+    ElMessage.warning('该工作流暂无可预览的流程图')
+    return
+  }
+  previewLoading.value = true
+  try {
+    const res = await queryVersionDetailAPI({ id: currentRevId.value })
+    if (res.code !== 200 || !res.data || !res.data.dagJson) {
+      ElMessage.warning('该工作流暂无可预览的流程图')
+      return
+    }
+    let dag = null
+    try {
+      dag = JSON.parse(res.data.dagJson)
+    } catch (e) {
+      ElMessage.error('流程图数据解析失败')
+      return
+    }
+    dagNodes.value = dag.nodes || []
+    dagSequences.value = dag.sequences || []
+    previewVisible.value = true
+  } finally {
+    previewLoading.value = false
+  }
+}
+
+/**
+ * 运行实例：跳转到当前工作流的实例列表页（带返回按钮）
+ */
+function handleOpenInstances() {
+  if (!currentWorkflow.value.id) {
+    return
+  }
+  router.push({
+    path: '/home/workflow/instance',
+    query: {
+      templateId: currentWorkflow.value.id
     }
   })
 }
@@ -362,6 +480,30 @@ async function waitInstanceFinished(instanceId) {
 .wf-pane-version {
   font-size: 12px;
   color: $color-text-placeholder;
+}
+
+.wf-pane-actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+// 顶栏图标按钮：无边框，只留图标
+.wf-icon-btn {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  color: $color-text-secondary;
+
+  &:hover {
+    color: $color-primary;
+  }
+
+  & + & {
+    margin-left: 0;
+  }
 }
 
 .wf-form-body {

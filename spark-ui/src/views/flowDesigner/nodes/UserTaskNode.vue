@@ -1,11 +1,15 @@
 <template>
   <div class="user-task-node" :class="{ selected }">
-    <el-icon class="node-icon"><User /></el-icon>
-    <span class="node-name">{{ node.name || '用户任务' }}</span>
-    <div class="node-info">
-      <span class="node-tag">{{ node.assigneeLabel || getAssigneeTypeLabel(node.assigneeType) }}</span>
-      <span class="node-tag approve-tag" :class="`approve-${node.approveType || '1'}`">{{ getApproveTypeLabel(node.approveType) }}</span>
-    </div>
+    <span class="node-ico">
+      <el-icon :size="16"><User /></el-icon>
+    </span>
+    <span class="node-text">
+      <b :title="node.name || '用户任务'">{{ node.name || '用户任务' }}</b>
+      <span class="node-tags">
+        <span class="node-tag">{{ node.assigneeLabel || getAssigneeTypeLabel(node.assigneeType) }}</span>
+        <span class="node-tag approve-tag" :class="`approve-${node.approveType || '1'}`">{{ getApproveTypeLabel(node.approveType) }}</span>
+      </span>
+    </span>
   </div>
 </template>
 
@@ -47,57 +51,82 @@ function getApproveTypeLabel(type) {
 
 <style scoped lang="scss">
 .user-task-node {
+  box-sizing: border-box;
   width: 100%;
   height: 100%;
-  box-sizing: border-box;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 2px;
-  border-radius: 8px;
-  background: $app-node-task-bg;
-  border: 1.5px solid $app-node-task;
+  gap: 10px;
+  padding: 0 12px;
+  border-radius: 12px;
+  // 白底卡片，与 workflow 设计器的节点一致：类型色只落在描边与图标上
+  background: $app-bg-card;
+  border: 1.5px solid color-mix(in srgb, $app-node-task 60%, $app-bg-card);
+  box-shadow: 0 1px 4px rgba(31, 45, 74, 0.06);
+  transition: box-shadow 0.15s;
 
   &.selected {
     border-width: 2.5px;
+    border-color: $app-node-task;
     box-shadow: 0 0 8px rgba(24, 144, 255, 0.35);
   }
 }
-.node-icon {
-  font-size: 20px;
-  line-height: 1;
+
+// 图标块：32px 圆角底 + 类型色图标，与 workflow 节点卡一致
+.node-ico {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: $app-node-task-bg;
   color: $app-node-task;
 }
-.node-name {
-  font-size: 13px;
-  font-weight: 400;
-  color: $app-text-primary;
-  line-height: 1.2;
-  word-break: break-all;
-  max-width: 116px;
-}
-.node-info {
-  margin-top: 1px;
-  max-width: 120px;
+
+.node-text {
+  min-width: 0;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 2px;
+  flex-direction: column;
+  gap: 1px;
+
+  b {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 18px;
+    color: $app-text-primary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
+
+// 审批人/审批方式标签：与名称同列，单行放不下时逐个省略
+.node-tags {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  overflow: hidden;
+}
+
 .node-tag {
-  display: inline-block;
-  max-width: 100%;
-  padding: 0 8px;
+  flex: 0 1 auto;
+  min-width: 0;
+  padding: 0 6px;
   border-radius: 10px;
   font-size: 10px;
-  line-height: 1.7;
-  vertical-align: middle;
+  line-height: 17px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   background: $app-node-task-tag-bg;
   color: $app-node-task-tag;
+}
+// 审批方式标签很短，固定不压缩，保证「会签 / 依次审批」始终完整可见
+.node-tags .approve-tag {
+  flex: 0 0 auto;
 }
 .approve-tag.approve-2 {
   background: $app-node-approve-ok-bg;

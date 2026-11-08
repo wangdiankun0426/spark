@@ -3,12 +3,10 @@
     <!--顶部工具栏-->
     <div class="designer-toolbar">
       <div class="toolbar-left">
+         <span class="toolbar-logo">
+          <el-icon :size="22"><FlowApplication /></el-icon>
+        </span>
         <span class="toolbar-title">{{ basicInfo.name || '新建流程' }}</span>
-        <el-tag v-if="revNum" size="small" type="warning">{{ revNum }}</el-tag>
-        <el-button text size="small" type="primary" @click="varHelpVisible = true">
-          <el-icon><QuestionFilled /></el-icon>
-          <span style="font-size:14px">变量帮助</span>
-        </el-button>
       </div>
       <div class="toolbar-right">
         <el-button @click="previewVisible = true">
@@ -16,6 +14,9 @@
         </el-button>
         <el-button @click="notificationConfigRef.open()">
           <el-icon><Bell /></el-icon>流程通知
+        </el-button>
+        <el-button @click="varHelpVisible = true">
+          <el-icon><QuestionFilled /></el-icon>变量帮助
         </el-button>
         <el-button @click="showClearConfirm = true">
           <el-icon><Delete /></el-icon>清空流程
@@ -35,6 +36,7 @@
 
       <div class="canvas-wrap" ref="canvasWrapRef">
         <canvas-index
+            ref="canvasRef"
             :nodes="nodes"
             :sequences="sequences"
             source-key="sourceRef"
@@ -52,7 +54,19 @@
             @node-contextmenu="handleNodeContextMenu"
             @add-after="handleAddAfter"
             @add-branch="handleAddBranch"
+            @zoom-change="handleZoomChange"
         />
+
+        <!--左下角缩放条：与 workflow 设计器一致-->
+        <div class="canvas-zoombar" @mousedown.stop>
+          <span class="zoom-btn" title="缩小" @click="canvasRef?.zoomOut()">
+            <el-icon :size="12"><Minus /></el-icon>
+          </span>
+          <span class="zoom-value" title="恢复 100%" @click="canvasRef?.resetZoom()">{{ zoomPercent }}%</span>
+          <span class="zoom-btn" title="放大" @click="canvasRef?.zoomIn()">
+            <el-icon :size="12"><Plus /></el-icon>
+          </span>
+        </div>
 
         <!--右侧属性面板：选中节点/分支才滑出，不挤压画布-->
         <property-drawer
@@ -70,8 +84,18 @@
     </div>
 
     <!--底部状态栏-->
-    <div class="designer-footer">
-      <span>版本: {{ revNum || '新流程模板' }} | 节点数: {{ nodes.length }} | 连线数: {{ sequences.length }}</span>
+    <div class="designer-statusbar">
+      <span>节点 {{ nodes.length }}</span>
+      <i class="status-divider"></i>
+      <span>连线 {{ sequences.length }}</span>
+      <i class="status-divider"></i>
+      <el-tooltip :disabled="!dagCheck.issues.length" placement="top">
+        <template #content>
+          <div v-for="(item, index) in dagCheck.issues" :key="index" class="dag-check-tip-line">· {{ item }}</div>
+        </template>
+        <span class="status-check" :class="`status-${dagCheck.level}`">{{ dagCheck.text }}</span>
+      </el-tooltip>
+      <span class="status-right">版本 {{ revNum ? 'v' + revNum : '新流程模板' }}</span>
     </div>
 
     <!--节点右键菜单-->
@@ -161,6 +185,8 @@ import FlowPreview from '@/components/FlowPreview/index.vue'
 import VariableHelp from '@/components/FlowVariableHelp/index.vue'
 import { NODE_COMPONENTS, NODE_META } from '@/views/flowDesigner/nodes/index.js'
 import { layoutFlow, applyPositions } from '@/views/flowDesigner/utils/flowLayout.js'
+import { validateFlowDag } from '@/views/flowDesigner/utils/flowValidate.js'
+import FlowApplication from "@/assets/icons/flowApplication.vue";
 
 const templateId = ref(0);
 const revId = ref(0);
@@ -205,6 +231,9 @@ const previewVisible = ref(false)
 const jsonVisible = ref(false)
 const jsonText = ref('')
 
+/** 底部状态栏 DAG 校验：结构错误优先，其次是空分支这类编辑过程中的待配置项 */
+const dagCheck = computed(() => validateFlowDag(nodes.value, sequences.value, { lanes: lanes.value }))
+
 const notificationConfigRef = ref(null)
 const noticeConfig = ref([
   { type: 2, label: '待办通知', enabled: true, content: '#{base:appUserName}# 申请的 #{base:flowName}#，请及时审批！', recipient: '#{base:appAssignee}#' },
@@ -219,6 +248,15 @@ const nodeTaskConfig = ref([])
 
 /** 画布可视区宽度：作为布局最小宽度，保证内容始终水平居中 */
 const canvasWrapRef = ref(null)
+/** 画布组件实例：左下角缩放条调用其 zoomIn / zoomOut / resetZoom */
+const canvasRef = ref(null)
+/** 当前缩放百分比，由画布 zoom-change 回传 */
+const zoomPercent = ref(100)
+
+/** 缩放比例变化：同步左下角百分比文案 */
+function handleZoomChange(value) {
+  zoomPercent.value = Math.round(value * 100)
+}
 const wrapWidth = ref(0)
 let wrapObserver = null
 
@@ -329,7 +367,7 @@ const closePanel = () => {
 /* ---------------- 右键菜单：在节点后添加 ---------------- */
 
 /** 可插入的节点类型 */
-const insertableNodes = ['userTask', 'exclusiveGateway', 'notify'].map(type => ({
+const insertableNodes = ['userTask', 'exclusiveGateway'].map(type => ({
   type,
   name: NODE_META[type]?.name || type,
   icon: NODE_META[type]?.icon,
@@ -798,18 +836,34 @@ const confirmClear = () => {
   .toolbar-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    min-width: 0;
+  }
 
-    .toolbar-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: $color-text-primary;
-    }
+  .toolbar-logo {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: $el-color-primary-light-8;
+    color: $el-color-primary;
+  }
+
+  .toolbar-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: $app-text-primary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .toolbar-right {
     display: flex;
-    gap: $spacing-sm;
+    align-items: center;
+    gap: 4px;
   }
 }
 
@@ -828,16 +882,100 @@ const confirmClear = () => {
   overflow: hidden;
 }
 
-.designer-footer {
-  height: 28px;
-  padding: 0 $spacing-md;
+/* 左下角缩放条：与 workflow 设计器的观感保持一致 */
+.canvas-zoombar {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
   display: flex;
   align-items: center;
+  gap: 2px;
+  padding: 3px;
   background: $app-bg-card;
-  border-top: 1px solid $border-color;
+  border: 1px solid $app-border;
+  border-radius: 9px;
+  box-shadow: 0 4px 16px rgba(31, 45, 74, 0.12);
+  z-index: 50;
+}
+
+.zoom-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+  color: $app-text-secondary;
+
+  &:hover {
+    background: $app-bg-sub;
+    color: $el-color-primary;
+  }
+}
+
+.zoom-value {
+  min-width: 44px;
+  text-align: center;
   font-size: 12px;
-  color: $color-text-secondary;
+  color: $app-text-secondary;
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    color: $el-color-primary;
+  }
+}
+
+.designer-statusbar {
+  height: 30px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: $app-bg-card;
+  border-top: 1px solid $app-border-light;
+  font-size: 12px;
+  color: $app-text-secondary;
   flex-shrink: 0;
+
+  .status-divider {
+    width: 1px;
+    height: 10px;
+    background: $app-border-light;
+  }
+
+  /* DAG 校验结果：文案可能带节点名，过长省略，全量问题在 tooltip 里 */
+  .status-check {
+    max-width: 460px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    cursor: default;
+
+    &.status-ok {
+      color: $el-color-success;
+    }
+
+    &.status-warn {
+      color: $el-color-warning;
+    }
+
+    &.status-error {
+      color: $el-color-danger;
+    }
+  }
+
+  .status-right {
+    margin-left: auto;
+    color: $app-text-placeholder;
+  }
+}
+
+/* 校验问题清单（挂到 body，不能用 scoped 选择器） */
+.dag-check-tip-line {
+  line-height: 18px;
+  font-size: 12px;
 }
 
 /* 预览画布：给只读流程图一个确定高度，弹窗内不撑破 */

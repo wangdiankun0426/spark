@@ -6,11 +6,13 @@
       @drop="handleDrop"
       @dragover="handleDragOver"
       @mousedown="handleCanvasMouseDown"
+      @wheel.ctrl.prevent="handleWheelZoom"
   >
-    <div
-        class="canvas-content"
-        :style="{ width: canvasW + 'px', height: canvasH + 'px' }"
-    >
+    <div class="canvas-sizer" :style="{ width: sizerW + 'px', height: sizerH + 'px' }">
+      <div
+          class="canvas-content"
+          :style="{ width: canvasW + 'px', height: canvasH + 'px', transform: 'scale(' + scale + ')' }"
+      >
         <!-- 分支泳道：条件标签（自动布局模式下替代连线上的条件文字）+ 空分支占位卡 -->
         <template v-for="lane in visibleLanes" :key="lane.key">
           <div
@@ -67,7 +69,7 @@
           />
           <!-- 未配置类型组件时的兜底渲染 -->
           <div v-else class="cn-node-fallback">
-            <el-icon class="cn-node-icon" :size="20" :color="getNodeMeta(node.type).color || '#999'">
+            <el-icon class="cn-node-icon" :size="16" :color="getNodeMeta(node.type).color || '#999'">
               <component :is="getNodeIcon(node.type)" />
             </el-icon>
             <span class="cn-node-name">{{ node.name || getNodeMeta(node.type).name || node.type }}</span>
@@ -171,6 +173,7 @@
           />
         </svg>
       </div>
+    </div>
   </div>
 </template>
 
@@ -218,7 +221,9 @@ const props = defineProps({
 const emit = defineEmits([
   'select-node', 'select-edge', 'select-branch',
   'move-node', 'connect', 'delete-edge', 'drop-node',
-  'node-contextmenu', 'add-after', 'add-branch'
+  'node-contextmenu', 'add-after', 'add-branch',
+  /** 缩放比例变化（父级状态栏/缩放条展示用） */
+  'zoom-change'
 ])
 
 const canvasRef = ref(null)
@@ -227,13 +232,20 @@ const dragging = ref(null)
 // 连线拖拽状态
 const connecting = ref(null)
 
+/** 画布缩放比例，范围 0.4 ~ 2 */
+const scale = ref(1)
+
 // 画布可视区尺寸：内容尺寸至少填满可视区，避免出现多余空白滚动区
 const containerWidth = ref(0)
 const containerHeight = ref(0)
 
-/** 画布内容尺寸 = max(父级指定尺寸, 可视区尺寸) */
-const canvasW = computed(() => Math.max(props.canvasWidth, containerWidth.value))
-const canvasH = computed(() => Math.max(props.canvasHeight, containerHeight.value))
+/** 画布内容尺寸 = max(父级指定尺寸, 可视区尺寸 / 缩放比例) */
+const canvasW = computed(() => Math.max(props.canvasWidth, containerWidth.value / scale.value))
+const canvasH = computed(() => Math.max(props.canvasHeight, containerHeight.value / scale.value))
+
+/** 缩放后的占位尺寸：滚动容器按此撑开，保证缩放后仍可滚动到画布边缘 */
+const sizerW = computed(() => Math.round(canvasW.value * scale.value))
+const sizerH = computed(() => Math.round(canvasH.value * scale.value))
 
 /** 自动布局下的分支条件标签（未配置条件时保留占位，便于在画布上定位） */
 const visibleLanes = computed(() => (props.autoLayout ? props.lanes : []))
@@ -301,14 +313,65 @@ onMounted(() => {
 // 箭头 marker id 唯一化，避免多实例冲突
 const markerId = 'cn-arrow-' + (++canvasUid)
 
-/** 鼠标事件坐标换算为内容坐标（含滚动偏移） */
+/** 鼠标事件坐标换算为内容坐标（含滚动偏移与缩放） */
 function getCanvasPoint(event) {
   const rect = canvasRef.value.getBoundingClientRect()
   return {
-    x: event.clientX - rect.left + canvasRef.value.scrollLeft,
-    y: event.clientY - rect.top + canvasRef.value.scrollTop
+    x: (event.clientX - rect.left + canvasRef.value.scrollLeft) / scale.value,
+    y: (event.clientY - rect.top + canvasRef.value.scrollTop) / scale.value
   }
 }
+
+/* ---------------- 画布缩放（左下角缩放条 / Ctrl + 滚轮） ---------------- */
+
+/** 缩放上下限 */
+const ZOOM_MIN = 0.4
+const ZOOM_MAX = 2
+
+/**
+ * 应用缩放
+ * @param next 目标比例
+ * @param anchorX 缩放锚点（相对画布左上角，缺省时以内容左上角为锚点）
+ * @param anchorY 缩放锚点纵坐标
+ */
+function applyZoom(next, anchorX, anchorY) {
+  const clamped = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(next * 100) / 100))
+  const el = canvasRef.value
+  if (el && anchorX !== undefined && anchorY !== undefined) {
+    // 先记录锚点对应的内容坐标，缩放后把同一内容点滚回锚点位置
+    const contentX = (el.scrollLeft + anchorX) / scale.value
+    const contentY = (el.scrollTop + anchorY) / scale.value
+    scale.value = clamped
+    el.scrollLeft = contentX * clamped - anchorX
+    el.scrollTop = contentY * clamped - anchorY
+  } else {
+    scale.value = clamped
+  }
+  emit('zoom-change', clamped)
+}
+
+/** Ctrl + 滚轮：以鼠标位置为锚点缩放（只读预览由外层容器负责缩放，不在这里处理） */
+function handleWheelZoom(event) {
+  if (props.readonly || props.bare) return
+  const rect = canvasRef.value.getBoundingClientRect()
+  const factor = event.deltaY < 0 ? 1.1 : 1 / 1.1
+  applyZoom(scale.value * factor, event.clientX - rect.left, event.clientY - rect.top)
+}
+
+function zoomIn() {
+  applyZoom(scale.value + 0.1)
+}
+
+function zoomOut() {
+  applyZoom(scale.value - 0.1)
+}
+
+function resetZoom() {
+  applyZoom(1)
+}
+
+// 供父级左下角缩放条调用
+defineExpose({ zoomIn, zoomOut, resetZoom, scale })
 
 /** 节点类型元数据（名称/尺寸/图标/配色），样式由节点类型组件负责 */
 function getNodeMeta(type) {
@@ -645,8 +708,14 @@ function handleDrop(event) {
   background-position: 0 0, 11px 11px;
 }
 
+/* 缩放占位层：宽高 = 内容尺寸 × 缩放比例，滚动条范围随之变化 */
+.canvas-sizer {
+  position: relative;
+}
+
 .canvas-content {
   position: relative;
+  transform-origin: 0 0;
 }
 
 // 裸画布：由父级给定尺寸，自身不滚动（只读预览按缩放比例整体变换）
@@ -784,33 +853,43 @@ function handleDrop(event) {
   }
 }
 
-// 未配置类型组件时的兜底节点样式
+// 未配置类型组件时的兜底节点样式（横向：左侧图标块 + 右侧名称，与其它节点一致）
 .cn-node-fallback {
   width: 100%;
   height: 100%;
   box-sizing: border-box;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 2px;
-  border-radius: 8px;
+  gap: 10px;
+  padding: 0 12px;
+  border-radius: 12px;
   background: $app-bg-card;
   border: 1.5px solid $app-border;
+  // 与白底节点卡保持同样的层次，避免兜底节点看起来比其它节点“平”
+  box-shadow: 0 1px 4px rgba(31, 45, 74, 0.06);
 }
 
 .cn-node-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: $app-bg-sub;
   line-height: 1;
 }
 
 .cn-node-name {
-  margin-top: 2px;
+  min-width: 0;
   font-size: 13px;
-  font-weight: 400;
+  font-weight: 600;
   color: $app-text-primary;
-  line-height: 1.2;
-  word-break: break-all;
-  max-width: 120px;
+  line-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 // 四向连接点

@@ -191,36 +191,6 @@ public class DagExecutor {
                         executed.add(nodeId);
                         continue;
                     }
-                    // 并行分支网关：将所有出边节点加入队列并行执行
-                    if (WorkflowTemplateTypeEnum.PARALLEL_GATEWAY.getValue().equals(nodeType)) {
-                        List<String> outgoing = this.getOutgoingNodes(nodeId, sequences);
-                        if (outgoing.size() > 1) {
-                            // 分支网关：将所有出边节点加入队列
-                            logger.info("parallel fork, nodeId={}, branches={}", nodeId, outgoing);
-                            queue.addAll(outgoing);
-                            executed.add(nodeId);
-                            continue;
-                        }
-                        // 合并网关：检查是否所有入边分支都已完成
-                        List<String> incoming = this.getIncomingNodes(nodeId, sequences);
-                        if (incoming.size() > 1) {
-                            boolean allCompleted = true;
-                            for (String prevNodeId : incoming) {
-                                if (!executed.contains(prevNodeId)) {
-                                    allCompleted = false;
-                                    break;
-                                }
-                            }
-                            if (!allCompleted) {
-                                // 还有分支未完成，跳过本次执行，等待后续轮次
-                                logger.info("parallel join waiting, nodeId={}, completed={}", nodeId, executed);
-                                // 重新加入队列
-                                queue.add(nodeId);
-                                continue;
-                            }
-                            logger.info("parallel join completed, nodeId={}", nodeId);
-                        }
-                    }
                 } catch (HumanReviewRequiredException e) {
                     // 人工审核节点需要暂停
                     logger.info("human review required, nodeId={}, prompt={}", e.getNodeId(), e.getPrompt());

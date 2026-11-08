@@ -1,0 +1,16 @@
+/**
+ * workflowDesigner 运行时令牌定义层：只声明 CSS 变量与字面值
+ * 消费层一律使用 vars.scss 的 $wf-* 映射，组件内不直接写 var() 与 hex
+ * 声明在 :root 上：只读预览会被 teleport 到 body，脱离 .workflow-designer 作用域后仍需取到
+ */
+:root {
+  --wf-line: #c2cee0;
+  --wf-node-summary: #8f9bb3;
+  --wf-panel-shadow: -10px 16px 48px rgba(31, 45, 74, 0.18);
+}
+
+html.dark {
+  --wf-line: #3d4d66;
+  --wf-node-summary: #7c89a3;
+  --wf-panel-shadow: -10px 16px 48px rgba(0, 0, 0, 0.5);
+}

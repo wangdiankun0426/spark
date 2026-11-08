@@ -127,7 +127,8 @@
         />
       </el-form>
     </div>
-    <div class="panel-footer">
+    <!-- 开始/结束节点不可删除，连入口都不显示 -->
+    <div class="panel-footer" v-if="!isEndpoint">
       <el-button
           type="danger"
           style="width:100%"
@@ -157,6 +158,11 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['delete-node', 'delete-branch', 'close'])
+
+/** 开始/结束节点：流程端点，不允许删除，面板不展示删除按钮 */
+const isEndpoint = computed(() =>
+  !!props.node && ['startEvent', 'endEvent'].includes(props.node.type)
+)
 
 /**
  * 新建一行条件
