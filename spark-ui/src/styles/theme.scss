@@ -46,10 +46,40 @@
   --app-hero-accent: #2f7bff;
 
   // 全屏舞台页
-  --error-page-bg: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
+  --error-page-bg: radial-gradient(circle at 86% 6%, rgba(0, 79, 197, 0.07), transparent 46%),
+    radial-gradient(circle at 4% 96%, rgba(34, 200, 216, 0.08), transparent 42%),
+    #fbfbfb;
   --error-title-grad: linear-gradient(135deg, #1d4ed8 0%, #60a5fa 100%);
   --error-title-grad-rose: linear-gradient(135deg, #f43f5e 0%, #fb7185 100%);
   --error-subtitle: #64748b;
+
+  // 错误页（404 / 无权限）文字与标点
+  --error-ink: #172b4d;
+  --error-ink-2: #5e6c84;
+  --error-ink-3: #93a1b5;
+  --error-line: #e4eaf4;
+  --error-line-2: #eef2f8;
+  --error-brand-soft: #e8f0fd;
+  --error-mark: rgba(0, 79, 197, 0.15);
+  --error-mark-end: rgba(0, 79, 197, 0);
+  --error-warn: #e6a23c;
+  --error-warn-soft: #fdf6ec;
+  --error-warn-ink: #a8681a;
+  --error-warn-mark: rgba(230, 162, 60, 0.18);
+  --error-warn-mark-end: rgba(230, 162, 60, 0);
+
+  // 错误页插画
+  --error-art-1: #004fc5;
+  --error-art-2: #38b6e0;
+  --error-art-line: #c2d3ea;
+  --error-art-line-2: #e3ebf7;
+  --error-art-line-strong: #b3c7e0;
+  --error-art-dot: #c9d8ea;
+  --error-art-card: #ffffff;
+  --error-art-shield: rgba(0, 79, 197, 0.07);
+  --error-art-glow: rgba(0, 79, 197, 0.17);
+  --error-art-glow-end: rgba(0, 79, 197, 0);
+  --error-art-shadow: 0 10px 18px rgba(0, 79, 197, 0.13);
   --auth-oauth-bg: linear-gradient(160deg, #f7faff 0%, #eaf2fe 55%, #e3edfd 100%);
 
   // 登录品牌区
@@ -199,8 +229,36 @@ html.dark {
   --app-hero-accent: #8fb6ff;
 
   // 全屏舞台页暗色
-  --error-page-bg: linear-gradient(135deg, #131c2e 0%, #0f172a 100%);
+  --error-page-bg: radial-gradient(circle at 84% 6%, rgba(47, 123, 255, 0.16), transparent 48%),
+    radial-gradient(circle at 6% 96%, rgba(53, 208, 224, 0.12), transparent 44%),
+    #0e1622;
   --error-subtitle: #94a3b8;
+
+  --error-ink: #e8eef8;
+  --error-ink-2: #94a3b8;
+  --error-ink-3: #68798f;
+  --error-line: #243247;
+  --error-line-2: #1a2534;
+  --error-brand-soft: rgba(77, 141, 255, 0.14);
+  --error-mark: rgba(77, 141, 255, 0.22);
+  --error-mark-end: rgba(77, 141, 255, 0);
+  --error-warn: #e8b04b;
+  --error-warn-soft: rgba(232, 176, 75, 0.14);
+  --error-warn-ink: #e8b04b;
+  --error-warn-mark: rgba(232, 176, 75, 0.15);
+  --error-warn-mark-end: rgba(232, 176, 75, 0);
+
+  --error-art-1: #4f9bff;
+  --error-art-2: #35d0e0;
+  --error-art-line: #3b5070;
+  --error-art-line-2: #243449;
+  --error-art-line-strong: #7d9ac4;
+  --error-art-dot: #33476a;
+  --error-art-card: #2d4469;
+  --error-art-shield: rgba(47, 123, 255, 0.1);
+  --error-art-glow: rgba(47, 123, 255, 0.26);
+  --error-art-glow-end: rgba(47, 123, 255, 0);
+  --error-art-shadow: 0 10px 18px rgba(0, 0, 0, 0.35);
   --auth-oauth-bg: linear-gradient(160deg, #131c2e 0%, #0f172a 55%, #0c1424 100%);
 
   // 登录品牌区暗色

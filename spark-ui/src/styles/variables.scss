@@ -111,6 +111,32 @@ $error-subtitle: var(--error-subtitle);
 $error-title-grad: var(--error-title-grad);
 $error-title-grad-rose: var(--error-title-grad-rose);
 
+// 错误页（404 / 无权限）文字与插画，定义在 theme.scss
+$error-ink: var(--error-ink);
+$error-ink-2: var(--error-ink-2);
+$error-ink-3: var(--error-ink-3);
+$error-line: var(--error-line);
+$error-line-2: var(--error-line-2);
+$error-brand-soft: var(--error-brand-soft);
+$error-mark: var(--error-mark);
+$error-mark-end: var(--error-mark-end);
+$error-warn: var(--error-warn);
+$error-warn-soft: var(--error-warn-soft);
+$error-warn-ink: var(--error-warn-ink);
+$error-warn-mark: var(--error-warn-mark);
+$error-warn-mark-end: var(--error-warn-mark-end);
+$error-art-1: var(--error-art-1);
+$error-art-2: var(--error-art-2);
+$error-art-line: var(--error-art-line);
+$error-art-line-2: var(--error-art-line-2);
+$error-art-line-strong: var(--error-art-line-strong);
+$error-art-dot: var(--error-art-dot);
+$error-art-card: var(--error-art-card);
+$error-art-shield: var(--error-art-shield);
+$error-art-glow: var(--error-art-glow);
+$error-art-glow-end: var(--error-art-glow-end);
+$error-art-shadow: var(--error-art-shadow);
+
 // ds 皮肤令牌同名映射，定义在 element.scss
 $ds-badge-grad: var(--ds-badge-grad);
 $ds-brand: var(--ds-brand);
