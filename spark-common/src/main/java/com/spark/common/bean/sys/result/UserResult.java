@@ -72,11 +72,6 @@ public class UserResult extends BaseResult {
     private List<String> menuCodes;
 
     /**
-     * 移动端AI应用入口开关
-     */
-    private Boolean appAiEnabled;
-
-    /**
      * 手机号
      */
     private String phone;

@@ -40,7 +40,7 @@
       </view>
 
       <!-- 星火助手卡：一键打开 AI 应用 -->
-      <view v-if="aiEnabled" class="assistant-card" @click="handleAssistant">
+      <view class="assistant-card" @click="handleAssistant">
         <view class="assistant-ring assistant-ring--lg"></view>
         <view class="assistant-ring assistant-ring--md"></view>
         <view class="assistant-ring assistant-ring--sm"></view>
@@ -53,7 +53,7 @@
       </view>
 
       <!-- 智能推荐 -->
-      <view v-if="aiEnabled" class="section-box">
+      <view class="section-box">
         <view class="section-head" @click="handleRecommendMore">
           <SectionTitle>智能推荐</SectionTitle>
           <view class="section-more" v-if="recommendList.length > 0">
@@ -171,22 +171,13 @@ const userInfo = computed(() => store.getters["user/getUserInfo"] || {
   name: undefined,
 })
 
-// 移动端AI应用开关
-const aiEnabled = computed(() => userInfo.value && userInfo.value.appAiEnabled === true)
-
-const allQuickEntries = [
+const quickEntries = [
   {key: 'todo', icon: 'file-text-fill', text: '待办'},
   {key: 'chat', icon: 'chat-fill', text: 'AI 对话'},
   {key: 'agent', icon: 'star-fill', text: '智能体'},
   {key: 'workflow', icon: 'share-fill', text: '工作流'},
   {key: 'message', icon: 'bell-fill', text: '消息'}
 ]
-const quickEntries = computed(() => {
-  if (aiEnabled.value) {
-    return allQuickEntries
-  }
-  return allQuickEntries.filter(entry => ['todo', 'message'].includes(entry.key))
-})
 
 // 小程序端欢迎卡片延伸到状态栏底部，H5 走样式默认内边距
 const welcomeCardStyle = computed(() => {
@@ -215,9 +206,7 @@ const todayText = computed(() => {
 
 onShow(() => {
   loadUserInfo()
-  if (aiEnabled.value) {
-    loadRecommend()
-  }
+  loadRecommend()
   loadTodoList()
   loadUnread()
 })
@@ -225,12 +214,7 @@ onShow(() => {
 function loadUserInfo() {
   getSessionAPI().then(res => {
     if (res.code === 200) {
-      const wasEnabled = aiEnabled.value
       store.dispatch("user/setUserInfo", { userInfo: res.data })
-      // 开关由关变开时补加载推荐数据
-      if (!wasEnabled && res.data.appAiEnabled === true) {
-        loadRecommend()
-      }
     }
   }).catch(err => {
     console.error("loadUserInfo error", err)

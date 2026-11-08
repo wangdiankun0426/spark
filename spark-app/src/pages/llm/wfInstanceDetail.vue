@@ -145,7 +145,6 @@
 <script setup>
 import {ref, computed} from 'vue'
 import {onLoad} from '@dcloudio/uni-app'
-import {useStore} from 'vuex'
 import {useTheme} from '@/utils/useTheme'
 import {getTertiaryColor} from '@/utils/themeUtil'
 import {queryInstanceDetailAPI, queryInstanceNodesAPI} from '@/api/workflow/instance'
@@ -154,7 +153,6 @@ import FormFieldValue from '@/components/FormFieldValue/index.vue'
 import PageHeader from '@/components/PageHeader/index.vue'
 import SectionTitle from '@/components/SectionTitle/index.vue'
 
-const store = useStore()
 const {isDark, themeClass} = useTheme();
 
 // 节点展开箭头用次级图标色，暗色下提亮保证对比度
@@ -168,12 +166,6 @@ const formFields = ref([])
 const formLoaded = ref(false)
 
 onLoad((options) => {
-  // AI应用开关关闭时禁止直达AI工作流详情
-  const userInfo = store.getters['user/getUserInfo']
-  if (!userInfo || userInfo.appAiEnabled !== true) {
-    uni.reLaunch({url: '/pages/error/noPermission'})
-    return
-  }
   if (options && options.id) {
     instanceId.value = options.id
     loadData(options.id)

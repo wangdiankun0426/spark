@@ -196,7 +196,6 @@
 <script setup>
 import {ref, computed} from "vue"
 import {onLoad, onShow} from "@dcloudio/uni-app"
-import {useStore} from "vuex"
 import {navHeaderStyle} from "@/utils/navBarUtil";
 import {getHeaderIconColor, getChevronColor} from "@/utils/themeUtil"
 import {agentPageListAPI} from "@/api/llm/agent"
@@ -212,7 +211,6 @@ import AgentIcon from "@/components/icons/AgentIcon.vue"
 import WorkflowIcon from "@/components/icons/WorkflowIcon.vue"
 import ModelIcon from "@/components/icons/ModelIcon.vue"
 
-const store = useStore()
 const active = ref("llm")
 const {isDark, themeClass} = useTheme()
 
@@ -375,12 +373,7 @@ onLoad(options => {
 })
 
 // 页面显示时懒加载当前可见页签
-onShow(async () => {
-  const userInfo = store.getters['user/getUserInfo']
-  if (!userInfo || userInfo.appAiEnabled !== true) {
-    uni.reLaunch({url: '/pages/error/noPermission'})
-    return
-  }
+onShow(() => {
   loadTab(activeTabKey.value)
 })
 

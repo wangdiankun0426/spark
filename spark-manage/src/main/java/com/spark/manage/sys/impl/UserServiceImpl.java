@@ -97,12 +97,6 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
     private String userAvatarPath;
 
     /**
-     * 移动端AI应用入口开关
-     */
-    @Value("${app.ai-enabled:false}")
-    private Boolean appAiEnabled;
-
-    /**
      * 创建用户
      * @param userVO 用户参数
      * @return 创建结果
@@ -294,7 +288,6 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         this.supplyUserDeptInfo(userResult);
         this.supplyUserRoleInfo(userResult);
         this.supplyUserMenu(userResult);
-        userResult.setAppAiEnabled(appAiEnabled);
         result.setData(userResult);
         result.setObjId(query.getId());
         result.setCode(ResultData.OK);
