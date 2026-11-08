@@ -43,7 +43,6 @@
           :selected-edge-id="selectedEdgeId"
           :canvas-width="canvasWidth"
           :canvas-height="canvasHeight"
-          :node-components="NODE_COMPONENTS"
           :field-options="fieldOptionsForCanvas"
           @select-node="handleSelectNode"
           @select-edge="handleSelectEdge"
@@ -91,9 +90,9 @@ import { ElMessage } from 'element-plus';
 import { queryWorkflowDetailAPI } from '@/api/workflow/template.js';
 import { queryFormFieldListAPI } from '@/api/form/formField.js';
 import { saveVersionAPI, queryVersionDetailAPI } from '@/api/workflow/version.js';
-import NodePanel from '@/views/flowDesigner/nodePanel/index.vue';
-import CanvasIndex from '@/views/flowDesigner/canvas/index.vue';
-import { NODE_COMPONENTS, NODE_META } from '@/views/flowDesigner/nodes/index.js';
+import NodePanel from '@/views/workflowDesigner/nodePanel/index.vue';
+import CanvasIndex from '@/views/workflowDesigner/canvas/index.vue';
+import { NODE_META } from '@/views/workflowDesigner/nodes/index.js';
 import PropertyDrawer from '@/views/workflowDesigner/PropertyDrawer.vue';
 import VariableHelp from '@/components/FlowVariableHelp/index.vue';
 

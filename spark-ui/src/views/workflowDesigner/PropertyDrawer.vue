@@ -114,10 +114,7 @@
           label-width="auto"
       >
         <el-form-item label="节点ID">
-          <el-input
-              :model-value="node.id"
-              readonly
-          />
+          <div class="readonly-field readonly-field--code" :title="node.id">{{ node.id }}</div>
         </el-form-item>
         <el-form-item label="节点名称">
           <el-input
@@ -553,6 +550,31 @@ function fillSource(c) {
   font-weight: 600;
   font-size: 14px;
   color: $color-text-primary;
+}
+// 只读信息行：与输入框等高但无焦点/无边框交互，明确表达「只能看、不能改」
+.readonly-field {
+  box-sizing: border-box;
+  width: 100%;
+  height: 32px;
+  padding: 0 11px;
+  display: flex;
+  align-items: center;
+  border: 1px solid $border-color-light;
+  border-radius: 4px;
+  background: $app-bg-sub;
+  color: $app-text-secondary;
+  font-size: 13px;
+  line-height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+  user-select: text;
+}
+// 节点ID 等技术标识用等宽字体，位数对齐更易比较
+.readonly-field--code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.2px;
 }
 .drawer-body {
   flex: 1;

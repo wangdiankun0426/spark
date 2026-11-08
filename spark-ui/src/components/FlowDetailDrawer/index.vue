@@ -130,7 +130,7 @@
             </div>
           </div>
           <div class="fd-canvas">
-            <flow-view :bpmJson="bpmJson" :field-options="fieldOptions" v-if="visible && tabActive === 'flow'" />
+            <flow-preview :bpm-json="bpmJson" :field-options="fieldOptions" v-if="visible && tabActive === 'flow'" />
           </div>
         </div>
       </el-tab-pane>
@@ -151,7 +151,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { Close, Document, Share } from '@element-plus/icons-vue'
 import FormView from '@/components/FormView'
-import FlowView from '@/components/FlowView'
+import FlowPreview from '@/components/FlowPreview'
 import FlowApplication from '@/assets/icons/flowApplication.vue'
 
 const props = defineProps({

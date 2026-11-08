@@ -24,7 +24,7 @@
         </view>
       </view>
       <text class="login-title">欢迎回来</text>
-      <text class="login-tip">登录后开启你的 AI 辅助工作之旅</text>
+      <text class="login-tip">登录后开启您的AI辅助工作之旅</text>
     </view>
 
     <!-- 表单区：三个白色胶囊输入框直接落在浅蓝背景上，无外层卡片 -->

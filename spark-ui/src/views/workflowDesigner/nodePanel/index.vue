@@ -27,18 +27,19 @@
 <script setup>
 defineOptions({ name: 'NodePanel' })
 
-const props = defineProps({
+/** 拖拽时写入的 dataTransfer key，与 DesignerCanvas 的 drop 解析保持一致 */
+const DRAG_KEY = 'nodeType'
+
+defineProps({
   /** 节点分组配置：{ name, title, nodes: [{ type, name, icon, color, bgColor }] } */
   groups: { type: Array, default: () => [] },
   /** 默认展开的分组 name 数组 */
-  expanded: { type: Array, default: () => [] },
-  /** 拖拽时写入的 dataTransfer key（Flow: node-type / Workflow: nodeType） */
-  dataKey: { type: String, default: 'nodeType' }
+  expanded: { type: Array, default: () => [] }
 })
 
 /** 拖拽节点：写入节点类型，供 DesignerCanvas drop 解析 */
 function onDragStart(event, nodeType) {
-  event.dataTransfer.setData(props.dataKey, nodeType)
+  event.dataTransfer.setData(DRAG_KEY, nodeType)
   event.dataTransfer.effectAllowed = 'copy'
 }
 </script>

@@ -6,7 +6,7 @@
     <!-- 右侧：白色登录区（组件化外壳，表单内容由页面提供） -->
     <AuthPanel>
       <h2 class="auth-title">欢迎回来</h2>
-      <p class="auth-subtitle">登录之后开启您的AI辅助工作之旅吧</p>
+      <p class="auth-subtitle">登录后开启您的AI辅助工作之旅</p>
 
       <el-form ref="loginRef" :model="loginForm" :rules="loginFormRules" class="auth-form">
         <div class="auth-fields">

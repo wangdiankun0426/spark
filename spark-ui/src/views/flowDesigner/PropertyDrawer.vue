@@ -1,22 +1,22 @@
 <template>
-  <!--连线配置-->
-  <div class="attr-panel" v-if="sequence">
+  <!--分支配置-->
+  <div class="attr-panel" v-if="branch">
     <div class="panel-header">
-      <span class="panel-title">连线配置</span>
+      <span class="panel-title">分支配置</span>
       <el-button link @click="$emit('close')"><el-icon><Close /></el-icon></el-button>
     </div>
     <div class="panel-body">
-      <el-form :model="sequence" label-width="auto">
-        <el-form-item label="连线ID">
-          <el-input :model-value="sequence.id" readonly />
+      <el-form :model="branch.edge" label-width="auto">
+        <el-form-item label="所属分支">
+          <div class="readonly-field" :title="gatewayName">{{ gatewayName }}</div>
         </el-form-item>
-        <el-form-item label="源节点">
-          <el-input :value="getNodeName(sequence.sourceRef)" readonly />
+        <el-form-item label="汇合到">
+          <div class="readonly-field" :title="joinName">{{ joinName }}</div>
         </el-form-item>
-        <el-form-item label="目标节点">
-          <el-input :value="getNodeName(sequence.targetRef)" readonly />
+        <el-form-item label="分支名称">
+          <el-input v-model="branch.edge.name" placeholder="选填，用于在画布上标注该分支" />
         </el-form-item>
-        <el-form-item v-if="isConditionBranch(sequence)" label="分支条件">
+        <el-form-item label="分支条件">
           <div class="condition-builder">
             <div v-for="(cond, idx) in conditions" :key="idx" class="condition-row">
               <div class="condition-row-header">
@@ -78,7 +78,7 @@
             <div v-if="parseFailed" class="condition-warning">
               当前表达式为高级写法，无法可视化解析；修改条件后将覆盖原表达式
             </div>
-            <div v-if="sequence.conditionExpression" class="condition-preview">{{ sequence.conditionExpression }}</div>
+            <div v-if="branch.edge.conditionExpression" class="condition-preview">{{ branch.edge.conditionExpression }}</div>
           </div>
         </el-form-item>
       </el-form>
@@ -87,9 +87,9 @@
       <el-button
           type="danger"
           style="width:100%"
-          @click="$emit('delete-sequence', sequence.id)"
+          @click="$emit('delete-branch')"
       >
-        <el-icon><Delete /></el-icon>删除连线
+        <el-icon><Delete /></el-icon>删除分支
       </el-button>
     </div>
   </div>
@@ -103,7 +103,7 @@
     <div class="panel-body">
       <el-form :model="node" label-width="auto">
         <el-form-item label="节点ID">
-          <el-input :model-value="node.id" readonly />
+          <div class="readonly-field readonly-field--code" :title="node.id">{{ node.id }}</div>
         </el-form-item>
         <el-form-item label="节点名称">
           <el-input v-model="node.name" />
@@ -141,7 +141,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import AssigneeSelector from './propertyPanel/AssigneeSelector.vue'
 import PermissionConfig from './propertyPanel/PermissionConfig.vue'
 import UrgeConfig from './propertyPanel/UrgeConfig.vue'
@@ -149,13 +149,14 @@ import TaskConfig from './propertyPanel/TaskConfig.vue'
 
 const props = defineProps({
   node: { type: Object, default: null },
-  sequence: { type: Object, default: null },
+  /** 选中的分支：{ edge, gatewayId, joinId }，edge 为分支所在的真实连线对象 */
+  branch: { type: Object, default: null },
   nodes: { type: Array, default: () => [] },
   fieldOptions: { type: Array, default: () => [] },
   nodeTasks: { type: Array, default: () => [] }
 })
 
-const emit = defineEmits(['delete-node', 'delete-sequence', 'close'])
+const emit = defineEmits(['delete-node', 'delete-branch', 'close'])
 
 /**
  * 新建一行条件
@@ -178,10 +179,10 @@ const conditions = ref([newCondition()])
 const parseFailed = ref(false)
 
 /**
- * 选中连线变化时，解析已有条件表达式回填
+ * 选中分支变化时，解析已有条件表达式回填
  */
-watch(() => props.sequence, (seq) => {
-  const rows = parseCondition(seq ? seq.conditionExpression : '')
+watch(() => props.branch?.edge, (edge) => {
+  const rows = parseCondition(edge ? edge.conditionExpression : '')
   if (rows) {
     conditions.value = rows
     parseFailed.value = false
@@ -191,16 +192,16 @@ watch(() => props.sequence, (seq) => {
   }
 }, { immediate: true })
 
-/** 获取节点名称用于连线信息展示 */
+/** 所属分支节点名称 */
+const gatewayName = computed(() => getNodeName(props.branch?.gatewayId) || '条件分支')
+
+/** 汇合节点名称（分支走完回到的节点） */
+const joinName = computed(() => getNodeName(props.branch?.joinId) || '流程结束')
+
+/** 获取节点名称用于分支信息展示 */
 function getNodeName(refId) {
   const n = props.nodes.find(el => el.id === refId)
-  return n ? n.name : '未知节点'
-}
-
-/** 判断连线源节点是否为条件分支 */
-function isConditionBranch(seq) {
-  const source = props.nodes.find(el => el.id === seq.sourceRef)
-  return !!source && source.type === 'exclusiveGateway'
+  return n ? n.name : ''
 }
 
 /** 添加一行条件 */
@@ -216,9 +217,9 @@ function removeCondition(idx) {
   }
 }
 
-/** 根据构建器状态生成条件表达式，并写回连线 */
+/** 根据构建器状态生成条件表达式，并写回分支连线 */
 function syncCondition() {
-  if (!props.sequence) {
+  if (!props.branch?.edge) {
     return;
   }
   const expr = buildCondition(conditions.value);
@@ -226,7 +227,7 @@ function syncCondition() {
   if (!expr && parseFailed.value) {
     return;
   }
-  props.sequence.conditionExpression = expr;
+  props.branch.edge.conditionExpression = expr;
 }
 
 /**
@@ -358,13 +359,21 @@ function parseFragment(frag) {
 
 <style scoped lang="scss">
 .attr-panel {
-  width: 400px;
+  // 画布上的浮层：覆盖在画布右侧，不挤压画布、不触发节点重新布局
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  width: 310px;
+  z-index: 80;
   background: $app-bg-card;
-  border-left: 1px solid $border-color;
-  flex-shrink: 0;
+  border: 1px solid $border-color;
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(15, 34, 66, 0.14);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  animation: attr-panel-in 0.18s ease;
 
   .panel-header {
     display: flex;
@@ -392,6 +401,44 @@ function parseFragment(frag) {
     font-weight: 600;
     color: $color-text-primary;
   }
+}
+
+@keyframes attr-panel-in {
+  from {
+    transform: translateX(14px);
+    opacity: 0.4;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+// 只读信息行：与输入框等高但无焦点/无边框交互，明确表达「只能看、不能改」
+.readonly-field {
+  box-sizing: border-box;
+  width: 100%;
+  height: 32px;
+  padding: 0 11px;
+  display: flex;
+  align-items: center;
+  border: 1px solid $border-color-light;
+  border-radius: 4px;
+  background: $app-bg-sub;
+  color: $app-text-secondary;
+  font-size: 13px;
+  line-height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+  user-select: text;
+}
+
+// 节点ID 等技术标识用等宽字体，位数对齐更易比较
+.readonly-field--code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.2px;
 }
 
 .condition-builder {
