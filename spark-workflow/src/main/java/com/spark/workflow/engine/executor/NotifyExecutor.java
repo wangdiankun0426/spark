@@ -1,6 +1,7 @@
 package com.spark.workflow.engine.executor;
 
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.sys.vo.MessageVO;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.WorkflowTemplateTypeEnum;
@@ -79,6 +80,7 @@ public class NotifyExecutor extends BaseService implements IWfNodeExecutor {
         } else {
             refIds.add(0L);
         }
+        Long tenantId = SessionHolder.getCurrentTenantId();
         for (Long refId : refIds) {
             MessageVO messageVO = new MessageVO();
             messageVO.setType(MessageTypeEnum.MANUAL.getType());
@@ -86,6 +88,7 @@ public class NotifyExecutor extends BaseService implements IWfNodeExecutor {
             messageVO.setContent(content);
             messageVO.setUserIds(userIds);
             messageVO.setRefId(refId);
+            messageVO.setTenantId(tenantId);
             ResultData<Void> messageResult = messageService.createMessage(messageVO);
             if (messageResult.getCode() != ResultData.OK) {
                 throw new IllegalArgumentException("发送通知失败: " + messageResult.getMessage());

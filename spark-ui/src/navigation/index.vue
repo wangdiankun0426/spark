@@ -434,7 +434,7 @@ function handleReadMessage(item) {
  * @returns {boolean}
  */
 function isClickableMessage(refId) {
-  return Number(refId) % 100 === 7 || Number(refId) % 100 === 9 || Number(refId) % 100 === 12;
+  return Number(refId) % 100 === 7 || Number(refId) % 100 === 9 || Number(refId) % 100 === 12 || Number(refId) % 100 === 18;
 }
 
 /**
@@ -462,6 +462,10 @@ function handleMessageClick(item) {
       router.push({ path: '/home/flow/myApplication', query: { id: refId } }).catch(() => {});
       messageVisible.value = false;
     }
+  }
+  if (refType === 18) {
+    router.push({ path: '/home/workflow/review', query: { id: refId } }).catch(() => {});
+    messageVisible.value = false;
   }
 }
 </script>

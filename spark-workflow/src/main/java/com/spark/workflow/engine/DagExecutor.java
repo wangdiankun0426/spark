@@ -1,18 +1,25 @@
 package com.spark.workflow.engine;
 
 import com.spark.common.bean.base.BaseContext;
+import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
+import com.spark.common.bean.sys.vo.MessageVO;
 import com.spark.common.bean.workflow.config.RetryConfig;
 import com.spark.common.bean.workflow.entity.WfInstance;
 import com.spark.common.bean.workflow.entity.WfInstanceNode;
 import com.spark.common.bean.workflow.exception.HumanReviewRequiredException;
+import com.spark.common.bean.workflow.query.WfInstanceNodeQuery;
+import com.spark.common.bean.workflow.result.WfInstanceNodeResult;
 import com.spark.dao.workflow.WfInstanceDao;
 import com.spark.dao.workflow.WfInstanceNodeDao;
+import com.spark.common.enums.MessageTypeEnum;
 import com.spark.common.enums.WorkflowTemplateTypeEnum;
 import com.spark.common.enums.WorkflowInstanceStatusEnum;
 import com.spark.common.enums.WorkflowNodeStatusEnum;
 import com.spark.common.utils.JsonUtil;
 import com.spark.common.utils.MapUtil;
 import com.spark.common.utils.StringUtil;
+import com.spark.manage.sys.IMessageService;
 import com.spark.workflow.engine.executor.IWfNodeExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +36,7 @@ import org.springframework.stereotype.Component;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 /**
  * +++/\_/\
@@ -53,6 +61,8 @@ public class DagExecutor {
     private RetryStrategy retryStrategy;
     @Autowired
     private TimeoutStrategy timeoutStrategy;
+    @Autowired
+    private IMessageService messageService;
     private final SpelExpressionParser parser = new SpelExpressionParser();
 
     /**
@@ -78,6 +88,39 @@ public class DagExecutor {
      * @return
      */
     public void execute(BaseContext context, String dagJson) {
+        Map<String, WfInstanceNodeResult> replayRows = new HashMap<>();
+        this.runDag(context, dagJson, replayRows);
+    }
+
+    /**
+     * 异步恢复执行DAG，人工审核通过后按已完成节点记录重放续跑，登录会话由workflowExecutor线程池装饰器传播
+     *
+     * @param context
+     * @param dagJson
+     */
+    @Async("workflowExecutor")
+    public void resumeAsync(BaseContext context, String dagJson) {
+        try {
+            WfInstance wfInstance = context.getVal(WfInstance.class);
+            if (wfInstance == null) {
+                logger.error("resumeAsync skip, wfInstance is null");
+                return;
+            }
+            Map<String, WfInstanceNodeResult> replayRows = this.loadReplayRows(wfInstance.getId());
+            this.runDag(context, dagJson, replayRows);
+        } catch (Exception e) {
+            logger.error("resumeAsync error, errMsg={}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 执行DAG核心循环，replayRows中存在完成记录的节点只重建变量空间与拓扑记账不重复执行
+     *
+     * @param context 执行上下文
+     * @param dagJson DAG定义
+     * @param replayRows 各节点最新一条运行记录
+     */
+    private void runDag(BaseContext context, String dagJson, Map<String, WfInstanceNodeResult> replayRows) {
         if (StringUtil.isBlank(dagJson)) {
             logger.error("dagJson is null");
             return;
@@ -154,6 +197,39 @@ public class DagExecutor {
                 if (config == null) {
                     config = new LinkedHashMap<>();
                 }
+                // 重放恢复：已成功节点直接重建变量空间与拓扑记账，网关走向按持久化的后继行状态恢复不重新求值
+                WfInstanceNodeResult replayRow = replayRows.get(nodeId);
+                if (replayRow != null && WorkflowNodeStatusEnum.SUCCESS.getValue().equals(replayRow.getStatus())) {
+                    Map<String, String> replayOutput = JsonUtil.parseMap(replayRow.getOutputJson());
+                    if (replayOutput == null) {
+                        replayOutput = new HashMap<>();
+                    }
+                    variableSpace.setNodeOutput(nodeId, replayOutput);
+                    executed.add(nodeId);
+                    if (WorkflowTemplateTypeEnum.EXCLUSIVE_GATEWAY.getValue().equals(nodeType)) {
+                        for (Map<String, Object> sequence : sequences) {
+                            if (nodeId.equals(MapUtil.getStringVal(sequence, "source"))) {
+                                String targetId = MapUtil.getStringVal(sequence, "target");
+                                WfInstanceNodeResult targetRow = replayRows.get(targetId);
+                                boolean live = targetRow == null || !WorkflowNodeStatusEnum.SKIPPED.getValue().equals(targetRow.getStatus());
+                                this.releaseNode(targetId, live, instanceId, nodeMap, sequences, remainingInDegree, executed, skipped, liveMarked, queue, replayRows);
+                            }
+                        }
+                    } else {
+                        for (String neighbor : adjacency.get(nodeId)) {
+                            this.releaseNode(neighbor, true, instanceId, nodeMap, sequences, remainingInDegree, executed, skipped, liveMarked, queue, replayRows);
+                        }
+                    }
+                    continue;
+                }
+                // 重放恢复：已跳过节点只向后继传播死路，不再插记录行
+                if (replayRow != null && WorkflowNodeStatusEnum.SKIPPED.getValue().equals(replayRow.getStatus())) {
+                    skipped.add(nodeId);
+                    for (String neighbor : adjacency.get(nodeId)) {
+                        this.releaseNode(neighbor, false, instanceId, nodeMap, sequences, remainingInDegree, executed, skipped, liveMarked, queue, replayRows);
+                    }
+                    continue;
+                }
                 // 节点输入，从变量空间获取前置节点输出
                 Map<String, String> nodeInput = new HashMap<>();
                 for (Map<String, Object> sequence : sequences) {
@@ -172,7 +248,10 @@ public class DagExecutor {
                 Map<String, String> nodeOutput = new HashMap<>();
                 try {
                     IWfNodeExecutor executor = executorMap.get(nodeType);
-                    if (executor != null) {
+                    if (executor != null && WorkflowTemplateTypeEnum.HUMAN_REVIEW.getValue().equals(nodeType)) {
+                        // 人工审核以异常作为挂起信号，必须绕过超时与重试壳，否则异常被包装后类型丢失、无法进入挂起分支
+                        nodeOutput = executor.execute(nodeId, config, nodeInput, valueMap, showValueMap);
+                    } else if (executor != null) {
                         nodeOutput = this.executeWithTimeoutRetry(nodeId, nodeName, executor, config, nodeInput, valueMap, showValueMap);
                     } else {
                         // 网关/起止等无执行器节点：输入直传输出，保证变量跨节点传递
@@ -187,7 +266,7 @@ public class DagExecutor {
                     this.updateInstanceNode(runNodeId, WorkflowNodeStatusEnum.SUCCESS.getValue(), JsonUtil.toString(nodeOutput), null, nodeDuration);
                     // 排他网关：按出边配置的走向条件求值，确定生效分支放行，无命中抛异常
                     if (WorkflowTemplateTypeEnum.EXCLUSIVE_GATEWAY.getValue().equals(nodeType)) {
-                        this.routeExclusiveGateway(nodeId, sequences, nodeInput, valueMap, showValueMap, instanceId, nodeMap, remainingInDegree, executed, skipped, liveMarked, queue);
+                        this.routeExclusiveGateway(nodeId, sequences, nodeInput, valueMap, showValueMap, instanceId, nodeMap, remainingInDegree, executed, skipped, liveMarked, queue, replayRows);
                         executed.add(nodeId);
                         continue;
                     }
@@ -199,11 +278,12 @@ public class DagExecutor {
                     Map<String, String> reviewInfo = new HashMap<>();
                     reviewInfo.put("prompt", e.getPrompt());
                     reviewInfo.put("reviewerIds", e.getReviewerIds() != null ? e.getReviewerIds() : "");
-                    reviewInfo.put("reviewType", e.getReviewType());
-                    reviewInfo.put("requireComment", String.valueOf(e.isRequireComment()));
                     this.updateInstanceNode(runNodeId, WorkflowNodeStatusEnum.WAITING.getValue(), JsonUtil.toString(reviewInfo), null, nodeDuration);
                     // 暂停实例，等待人工审核
                     this.updateInstance(instanceId, WorkflowInstanceStatusEnum.PAUSED.getValue(), null, System.currentTimeMillis() - startTime);
+                    String reviewPrompt = e.getPrompt();
+                    String reviewerIds = e.getReviewerIds();
+                    this.notifyReviewers(context, instanceId, reviewPrompt, reviewerIds);
                     return;
                 } catch (Exception e) {
                     logger.error("node execution failed, nodeName={}, nodeType={}", nodeName, nodeType, e);
@@ -214,7 +294,7 @@ public class DagExecutor {
                 }
                 // 减少后继节点入度
                 for (String neighbor : adjacency.get(nodeId)) {
-                    this.releaseNode(neighbor, true, instanceId, nodeMap, sequences, remainingInDegree, executed, skipped, liveMarked, queue);
+                    this.releaseNode(neighbor, true, instanceId, nodeMap, sequences, remainingInDegree, executed, skipped, liveMarked, queue, replayRows);
                 }
                 executed.add(nodeId);
             }
@@ -241,11 +321,13 @@ public class DagExecutor {
      * @param skipped 已跳过集合
      * @param liveMarked 收到过活跃路径放行的节点集合
      * @param queue 执行队列
+     * @param replayRows 各节点最新一条运行记录
      */
     private void routeExclusiveGateway(String nodeId, List<Map<String, Object>> sequences, Map<String, String> nodeInput,
                                        Map<String, String> valueMap, Map<String, String> showValueMap, Long instanceId,
                                        Map<String, Map<String, Object>> nodeMap, Map<String, Integer> remainingInDegree,
-                                       Set<String> executed, Set<String> skipped, Set<String> liveMarked, Queue<String> queue) {
+                                       Set<String> executed, Set<String> skipped, Set<String> liveMarked, Queue<String> queue,
+                                       Map<String, WfInstanceNodeResult> replayRows) {
         List<Map<String, Object>> outgoing = new ArrayList<>();
         for (Map<String, Object> sequence : sequences) {
             if (nodeId.equals(MapUtil.getStringVal(sequence, "source"))) {
@@ -268,7 +350,7 @@ public class DagExecutor {
         // 命中边活跃放行，其余出边按死路处理
         for (Map<String, Object> sequence : outgoing) {
             boolean live = MapUtil.getStringVal(sequence, "target").equals(activeTarget);
-            this.releaseNode(MapUtil.getStringVal(sequence, "target"), live, instanceId, nodeMap, sequences, remainingInDegree, executed, skipped, liveMarked, queue);
+            this.releaseNode(MapUtil.getStringVal(sequence, "target"), live, instanceId, nodeMap, sequences, remainingInDegree, executed, skipped, liveMarked, queue, replayRows);
         }
     }
 
@@ -284,11 +366,13 @@ public class DagExecutor {
      * @param skipped 已跳过集合
      * @param liveMarked 收到过活跃路径放行的节点集合
      * @param queue 执行队列
+     * @param replayRows 各节点最新一条运行记录
      */
     private void releaseNode(String targetId, boolean live, Long instanceId,
                              Map<String, Map<String, Object>> nodeMap, List<Map<String, Object>> sequences,
                              Map<String, Integer> remainingInDegree, Set<String> executed,
-                             Set<String> skipped, Set<String> liveMarked, Queue<String> queue) {
+                             Set<String> skipped, Set<String> liveMarked, Queue<String> queue,
+                             Map<String, WfInstanceNodeResult> replayRows) {
         Integer degree = remainingInDegree.get(targetId);
         if (degree == null) {
             return;
@@ -304,7 +388,7 @@ public class DagExecutor {
         if (liveMarked.contains(targetId)) {
             queue.add(targetId);
         } else {
-            this.skipNode(targetId, instanceId, nodeMap, sequences, remainingInDegree, executed, skipped, liveMarked, queue);
+            this.skipNode(targetId, instanceId, nodeMap, sequences, remainingInDegree, executed, skipped, liveMarked, queue, replayRows);
         }
     }
 
@@ -319,21 +403,25 @@ public class DagExecutor {
      * @param skipped 已跳过集合
      * @param liveMarked 收到过活跃路径放行的节点集合
      * @param queue 执行队列
+     * @param replayRows 各节点最新一条运行记录
      */
     private void skipNode(String targetId, Long instanceId,
                           Map<String, Map<String, Object>> nodeMap, List<Map<String, Object>> sequences,
                           Map<String, Integer> remainingInDegree, Set<String> executed,
-                          Set<String> skipped, Set<String> liveMarked, Queue<String> queue) {
+                          Set<String> skipped, Set<String> liveMarked, Queue<String> queue,
+                          Map<String, WfInstanceNodeResult> replayRows) {
         skipped.add(targetId);
         Map<String, Object> node = nodeMap.get(targetId);
         String nodeName = node != null ? MapUtil.getStringVal(node, "name") : targetId;
         String nodeType = node != null ? MapUtil.getStringVal(node, "type") : "";
-        // 写一条跳过状态的节点记录，供运行日志展示
-        this.insertInstanceNode(instanceId, targetId, nodeName, nodeType, WorkflowNodeStatusEnum.SKIPPED.getValue(), null);
+        // 写一条跳过状态的节点记录，供运行日志展示；重放恢复时已有记录不再重复插入
+        if (!replayRows.containsKey(targetId)) {
+            this.insertInstanceNode(instanceId, targetId, nodeName, nodeType, WorkflowNodeStatusEnum.SKIPPED.getValue(), null);
+        }
         // 向后继传递死路：后继入度归零且无活跃路径到达时同样跳过
         for (Map<String, Object> sequence : sequences) {
             if (targetId.equals(MapUtil.getStringVal(sequence, "source"))) {
-                this.releaseNode(MapUtil.getStringVal(sequence, "target"), false, instanceId, nodeMap, sequences, remainingInDegree, executed, skipped, liveMarked, queue);
+                this.releaseNode(MapUtil.getStringVal(sequence, "target"), false, instanceId, nodeMap, sequences, remainingInDegree, executed, skipped, liveMarked, queue, replayRows);
             }
         }
     }
@@ -478,6 +566,63 @@ public class DagExecutor {
         instance.setDurationMs(durationMs);
         instance.setFinishedDt(new Timestamp(System.currentTimeMillis()));
         instanceDao.updateDBById(instance);
+    }
+
+    /**
+     * 加载实例各节点最新一条运行记录，用于审核挂起后的重放恢复，同节点多行取id最大者以容忍崩溃残留行
+     * @param instanceId 实例ID
+     * @return 节点ID到运行记录的映射
+     */
+    private Map<String, WfInstanceNodeResult> loadReplayRows(Long instanceId) {
+        WfInstanceNodeQuery query = new WfInstanceNodeQuery();
+        query.setInstanceId(instanceId);
+        query.setPage(false);
+        List<WfInstanceNodeResult> rows = instanceNodeDao.queryInstanceNodeList(query);
+        Map<String, WfInstanceNodeResult> replayRows = new HashMap<>();
+        if (rows == null) {
+            return replayRows;
+        }
+        // 默认按id升序返回，逐条覆盖后保留的即为各节点最新行
+        for (WfInstanceNodeResult row : rows) {
+            replayRows.put(row.getNodeId(), row);
+        }
+        return replayRows;
+    }
+
+    /**
+     * 挂起时给审核人发待办消息，尽力而为，失败仅记日志不影响挂起落库
+     * @param context 执行上下文
+     * @param instanceId 实例ID
+     * @param prompt 审核提示
+     * @param reviewerIds 审核人ID串
+     */
+    private void notifyReviewers(BaseContext context, Long instanceId, String prompt, String reviewerIds) {
+        try {
+            if (StringUtil.isBlank(reviewerIds)) {
+                logger.warn("skip review notify, reviewerIds empty, instanceId={}", instanceId);
+                return;
+            }
+            List<Long> userIds = Arrays.stream(reviewerIds.split(",")).filter(StringUtil::isNumeric).map(Long::parseLong).collect(Collectors.toList());
+            if (userIds.isEmpty()) {
+                logger.warn("skip review notify, no valid reviewer, instanceId={}", instanceId);
+                return;
+            }
+            String templateName = (String) context.getOrDefault("templateName", "");
+            MessageVO messageVO = new MessageVO();
+            messageVO.setType(MessageTypeEnum.FLOW_TODO.getType());
+            messageVO.setTitle("工作流待审核：" + templateName);
+            messageVO.setContent(prompt);
+            messageVO.setUserIds(userIds);
+            messageVO.setRefId(instanceId);
+            Long tenantId = SessionHolder.getCurrentTenantId();
+            messageVO.setTenantId(tenantId);
+            ResultData<Void> messageResult = messageService.createMessage(messageVO);
+            if (messageResult.getCode() != ResultData.OK) {
+                logger.warn("create review todo message failed, instanceId={}, code={}", instanceId, messageResult.getCode());
+            }
+        } catch (Exception e) {
+            logger.error("notify reviewers error, instanceId={}, errMsg={}", instanceId, e.getMessage(), e);
+        }
     }
 
     /**

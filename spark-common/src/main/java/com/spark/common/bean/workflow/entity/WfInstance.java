@@ -34,7 +34,7 @@ public class WfInstance extends BaseEntity {
     private String revNum;
 
     /**
-     * 运行状态：1运行中/2成功/3失败/4超时/5已取消
+     * 运行状态：1运行中/2成功/3失败/4超时/5已取消/6已暂停/7已驳回
      */
     private Integer status;
 

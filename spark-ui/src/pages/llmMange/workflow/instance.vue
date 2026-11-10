@@ -18,6 +18,9 @@
           <el-option label="成功" :value="2" />
           <el-option label="失败" :value="3" />
           <el-option label="超时" :value="4" />
+          <el-option label="已取消" :value="5" />
+          <el-option label="已暂停" :value="6" />
+          <el-option label="已驳回" :value="7" />
         </el-select>
         <el-button type="info" @click="loadList">
           <el-icon><Search /></el-icon>查询
@@ -30,8 +33,9 @@
         border
         highlight-current-row
         height="calc(100vh - 207px)"
+        @row-click="handleOpenDetail"
     >
-      <el-table-column prop="templateName" label="工作流" min-width="160" align="center" />
+      <el-table-column prop="templateName" label="工作流" min-width="160" align="center" show-overflow-tooltip />
       <el-table-column prop="revNum" label="版本" width="80" align="center" />
       <el-table-column prop="statusName" label="状态" width="100" align="center" />
       <el-table-column prop="durationMs" label="耗时" width="100" align="center">
@@ -39,19 +43,6 @@
       </el-table-column>
       <el-table-column prop="createdByName" label="触发人" align="center" width="120"/>
       <el-table-column prop="createdDt" label="触发时间" width="160" align="center" />
-      <el-table-column label="操作" width="80" align="center" fixed="right">
-        <template #default="{ row }">
-          <el-button
-              text
-              @click="handleOpenDetail(row)"
-          >
-            <el-icon><View /></el-icon>
-            <span style="font-size: 12px; font-weight: 500">
-               详情
-            </span>
-          </el-button>
-        </template>
-      </el-table-column>
     </el-table>
 
     <el-pagination
@@ -65,8 +56,8 @@
         @current-change="p => { query.pageNo = p; loadList(); }"
     />
 
-    <!--运行详情抽屉-->
-    <instance-detail-drawer
+    <!--运行详情弹窗-->
+    <instance-detail-dialog
         v-model="detailVisible"
         :instance-id="detailInstanceId"
     />
@@ -78,7 +69,7 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { Search } from '@element-plus/icons-vue';
 import { pageInstanceHistoryAPI } from '@/api/workflow/instance.js';
-import InstanceDetailDrawer from '@/components/WfInstanceDetailDrawer/index.vue';
+import InstanceDetailDialog from '@/components/WfInstanceDetailDialog/index.vue';
 
 const route = useRoute();
 const query = ref({
@@ -112,6 +103,10 @@ onMounted(() => { loadList(); });
 </script>
 
 <style scoped lang="scss">
+:deep(.el-table__row) {
+  cursor: pointer;
+}
+
 .instance-header {
   display: flex;
   justify-content: space-between;
@@ -135,4 +130,5 @@ onMounted(() => { loadList(); });
   align-items: center;
   gap: $spacing-sm;
 }
+
 </style>

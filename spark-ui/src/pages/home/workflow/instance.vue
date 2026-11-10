@@ -18,6 +18,8 @@
           <el-option label="失败" :value="3" />
           <el-option label="超时" :value="4" />
           <el-option label="已取消" :value="5" />
+          <el-option label="已暂停" :value="6" />
+          <el-option label="已驳回" :value="7" />
         </el-select>
         <el-button type="info" @click="handleSearch">
           <el-icon><Search /></el-icon>查询
@@ -35,6 +37,7 @@
           highlight-current-row
           height="100%"
           empty-text="暂无运行实例"
+          @row-click="handleOpenDetail"
       >
         <el-table-column prop="templateName" label="工作流" min-width="180" align="center" show-overflow-tooltip />
         <el-table-column label="版本" width="90" align="center">
@@ -46,14 +49,6 @@
         </el-table-column>
         <el-table-column prop="createdByName" label="触发人" width="140" align="center" />
         <el-table-column prop="createdDt" label="触发时间" width="180" align="center" />
-        <el-table-column label="操作" width="100" align="center" fixed="right">
-          <template #default="{ row }">
-            <el-button text @click="handleOpenDetail(row)">
-              <el-icon><View /></el-icon>
-              <span class="wfi-op-text">详情</span>
-            </el-button>
-          </template>
-        </el-table-column>
       </el-table>
 
       <div class="wfi-footer">
@@ -70,8 +65,8 @@
       </div>
     </div>
 
-    <!-- 运行详情抽屉 -->
-    <wf-instance-detail-drawer
+    <!-- 运行详情弹窗 -->
+    <wf-instance-detail-dialog
         v-model="detailVisible"
         :instance-id="detailInstanceId"
     />
@@ -81,9 +76,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, Search, View } from '@element-plus/icons-vue'
+import { ArrowLeft, Search } from '@element-plus/icons-vue'
 import { pageInstanceHistoryAPI } from '@/api/workflow/instance.js'
-import WfInstanceDetailDrawer from '@/components/WfInstanceDetailDrawer/index.vue'
+import WfInstanceDetailDialog from '@/components/WfInstanceDetailDialog/index.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -161,6 +156,10 @@ function handleBack() {
 </script>
 
 <style scoped lang="scss">
+:deep(.el-table__row) {
+  cursor: pointer;
+}
+
 .wfi-container {
   display: flex;
   flex-direction: column;
@@ -220,8 +219,4 @@ function handleBack() {
   justify-content: flex-end;
 }
 
-.wfi-op-text {
-  font-size: 12px;
-  font-weight: 500;
-}
 </style>

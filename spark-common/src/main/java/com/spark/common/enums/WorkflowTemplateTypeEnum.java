@@ -21,9 +21,7 @@ public enum WorkflowTemplateTypeEnum {
     DOC_PARSE("docParse", "文档解析"),
     NOTIFY("notify", "发送通知"),
     KB_ARCHIVE("kbArchive", "知识库归档"),
-    VARIABLE_OP("variableOp", "变量操作"),
     CODE_EXECUTE("codeExecute", "代码执行"),
-    HTTP_REQUEST("httpRequest", "HTTP请求"),
     HUMAN_REVIEW("humanReview", "人工审核"),
     ;
 

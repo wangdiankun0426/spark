@@ -31,6 +31,10 @@
               <span class="fd-sep">·</span>
               <span>申请于 {{ applyTime }}</span>
             </template>
+            <template v-if="revNum">
+              <span class="fd-sep">·</span>
+              <span>版本 v{{ revNum }}</span>
+            </template>
             <template v-if="currentNodeName">
               <span class="fd-sep">·</span>
               <span>当前环节：<b>{{ currentNodeName }}</b></span>
@@ -164,6 +168,8 @@ const props = defineProps({
   createdByName: { type: String, default: '' },
   deptName: { type: String, default: '' },
   level: { type: Number, default: 1 },
+  // 流程模板版本号，发起场景无实例版本时为空不展示
+  revNum: { type: String, default: '' },
   // 弹窗标题：发起场景可传「发起流程」
   title: { type: String, default: '流程详情' },
   // 1 流程申请 2 我的申请 3 我的待办 4 我的已办

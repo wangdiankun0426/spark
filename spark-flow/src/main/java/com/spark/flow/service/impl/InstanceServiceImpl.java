@@ -164,6 +164,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
             result.setErrorCode(ErrorCodeEnum.FLOW_TEMPLATE_VERSION_NOT_EXIST);
             return result;
         }
+        instanceResult.setRevNum(templateVersionResult.getRevNum());
         String bpmPath = templateVersionResult.getBpmPath();
         if (StringUtil.isNotBlank(bpmPath)) {
             ResultData<String> fromText = TextUtil.getFromText(bpmPath, false);
@@ -951,6 +952,15 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         templateQuery.setPage(false);
         List<FlowTemplateResult> templateList = templateDao.queryTemplateList(templateQuery);
         Map<Long, String> flowTypeMap = templateList.stream().collect(Collectors.toMap(FlowTemplateResult::getId, v -> FlowTypeEnum.indexOf(v.getType()).getDesc()));
+        List<Long> revIds = list.stream().map(FlowInstanceResult::getTemplateRevId).filter(Objects::nonNull).distinct().toList();
+        Map<Long, String> revNumMap = new HashMap<>();
+        if (CollectionUtil.isNotEmpty(revIds)) {
+            FlowTemplateVersionQuery versionQuery = new FlowTemplateVersionQuery();
+            versionQuery.setIds(revIds);
+            versionQuery.setPage(false);
+            List<FlowTemplateVersionResult> versionList = templateVersionDao.queryTemplateVersionList(versionQuery);
+            versionList.forEach(v -> revNumMap.put(v.getId(), v.getRevNum()));
+        }
         list.forEach(item -> {
             item.setStatusName(FlowInstanceStatusEnum.indexOf(item.getStatus()).getDesc());
             item.setLevelName(FlowInstanceLevelEnum.indexOf(item.getLevel()).getDesc());
@@ -958,6 +968,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
                 item.setDeptName(this.getObjName(item.getDeptId()));
             }
             item.setTypeName(flowTypeMap.get(item.getTemplateId()));
+            item.setRevNum(revNumMap.get(item.getTemplateRevId()));
         });
     }
 

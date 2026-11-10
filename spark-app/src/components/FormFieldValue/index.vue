@@ -78,7 +78,9 @@ const fieldValueText = computed(() => {
 });
 </script>
 <style scoped lang="scss">
+// 小程序自定义组件样式隔离，页面传入的类穿透不进，文字颜色在组件内收口并跟随主题
 .field-value-text {
+  color: $app-text-primary;
   word-break: break-all;
 }
 

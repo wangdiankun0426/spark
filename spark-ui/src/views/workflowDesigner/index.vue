@@ -339,14 +339,10 @@ function getDefaultConfig(type) {
       return { titleCode: '', contentCode: '', userCode: '', refCode: '' };
     case 'kbArchive':
       return { knowledgeId: null, fileCode: '' };
-    case 'variableOp':
-      return { operation: 'set', variables: [], sources: [], separator: ',', template: '', source: '', format: '', targetType: '' };
     case 'codeExecute':
       return { codeType: 'spel', code: '' };
-    case 'httpRequest':
-      return { url: '', method: 'GET', headers: '', body: '', timeoutMs: 30000 };
     case 'humanReview':
-      return { prompt: '', reviewerIds: '', reviewType: 'approve', requireComment: false };
+      return { prompt: '', reviewerIds: '' };
     default: return {};
   }
 }

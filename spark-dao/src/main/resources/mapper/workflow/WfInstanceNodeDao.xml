@@ -62,4 +62,24 @@
             limit #{startRow}, #{pageSize}
         </if>
     </select>
+
+    <select id="queryPendingReviewNodeList" resultType="com.spark.common.bean.workflow.result.WfInstanceNodeResult">
+        select n.id , n.instance_id , n.node_id , n.node_name , n.node_type , n.status , n.output_json , n.started_dt , n.delete_flag , n.created_by , n.created_dt , n.updated_by , n.updated_dt
+        from wf_instance_node n
+        inner join wf_instance ri on n.instance_id = ri.id and ri.delete_flag = 1
+        where n.delete_flag = 1
+        <if test="nodeType != null and nodeType != ''">
+            and n.node_type = #{nodeType}
+        </if>
+        <if test="status != null">
+            and n.status = #{status}
+        </if>
+        <if test="instanceStatus != null">
+            and ri.status = #{instanceStatus}
+        </if>
+        <if test="tenantId != null">
+            and ri.tenant_id = #{tenantId}
+        </if>
+        order by n.id desc
+    </select>
 </mapper>

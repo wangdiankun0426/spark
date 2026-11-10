@@ -68,6 +68,17 @@ public interface WfInstanceDao extends BaseDao<WfInstance> {
     WfInstanceResult queryInstance(WfInstanceQuery query);
 
     /**
+     * 按期望状态原子更新实例状态，仅当前状态等于期望状态时生效，用于审核提交防止并发重复处理
+     * @param id 实例id
+     * @param fromStatus 期望的当前状态
+     * @param toStatus 目标状态
+     * @param updatedBy 操作人
+     * @return 影响行数，0表示状态已被变更
+     */
+    int updateInstanceStatusCas(@Param("id") Long id, @Param("fromStatus") Integer fromStatus,
+                                @Param("toStatus") Integer toStatus, @Param("updatedBy") Long updatedBy);
+
+    /**
      * 查询最大id
      * @return
      */

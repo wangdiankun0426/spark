@@ -2,6 +2,7 @@
   <div>
     <el-container>
       <el-aside :width="railMini ? railWidthMini : railWidth" class="app-sidebar" :class="{ 'app-sidebar--mini': railMini }">
+        <rail-toggle/>
         <el-menu
             :default-active="defaultActive"
             :router='true'
@@ -32,6 +33,10 @@
             <el-icon><Workflow/></el-icon>
             <template #title>工作流</template>
           </el-menu-item>
+          <el-menu-item index="/home/workflow/review">
+            <el-icon><MyTodo/></el-icon>
+            <template #title>待审核</template>
+          </el-menu-item>
           <div class="app-sidebar__group">流程</div>
           <el-menu-item index="/home/flow/application">
             <el-icon><FlowApplication/></el-icon>
@@ -54,7 +59,6 @@
             <template #title>抄送给我</template>
           </el-menu-item>
         </el-menu>
-        <rail-toggle/>
       </el-aside>
 
       <el-main class="affix-container">

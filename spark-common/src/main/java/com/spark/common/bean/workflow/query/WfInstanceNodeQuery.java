@@ -21,4 +21,19 @@ public class WfInstanceNodeQuery extends BaseQuery {
      */
     private Long instanceId;
 
+    /**
+     * 节点类型 WorkflowTemplateTypeEnum
+     */
+    private String nodeType;
+
+    /**
+     * 节点状态 WorkflowNodeStatusEnum
+     */
+    private Integer status;
+
+    /**
+     * 所属实例运行状态，待审核候选查询联表过滤
+     */
+    private Integer instanceStatus;
+
 }

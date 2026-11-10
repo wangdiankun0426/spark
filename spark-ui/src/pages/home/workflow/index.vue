@@ -79,8 +79,8 @@
       </div>
     </div>
 
-    <!-- 运行结果抽屉，从左侧滑出 -->
-    <wf-instance-detail-drawer
+    <!-- 运行详情弹窗 -->
+    <wf-instance-detail-dialog
         v-model="resultVisible"
         :instance-id="resultInstanceId"
     />
@@ -115,7 +115,7 @@ import { queryVersionDetailAPI } from '@/api/workflow/version.js'
 import { runWorkflowAPI, queryInstanceDetailAPI } from '@/api/workflow/instance.js'
 import FormView from '@/components/FormView'
 import WorkflowPreview from '@/components/WorkflowPreview/index.vue'
-import WfInstanceDetailDrawer from '@/components/WfInstanceDetailDrawer/index.vue'
+import WfInstanceDetailDialog from '@/components/WfInstanceDetailDialog/index.vue'
 
 // 运行结果轮询次数，每次间隔 1 秒
 const RUN_POLL_RETRIES = 30

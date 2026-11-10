@@ -2,6 +2,7 @@
   <div>
     <el-container>
       <el-aside :width="railMini ? railWidthMini : railWidth" class="app-sidebar" :class="{ 'app-sidebar--mini': railMini }">
+        <rail-toggle/>
         <el-menu
             :default-active="defaultActive"
             :router='true'
@@ -56,7 +57,6 @@
             <template #title>系统配置</template>
           </el-menu-item>
         </el-menu>
-        <rail-toggle/>
       </el-aside>
 
       <el-main class="affix-container">

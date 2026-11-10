@@ -23,19 +23,6 @@
         <el-option v-for="u in userList" :key="u.id" :label="u.name" :value="u.id" />
       </el-select>
     </el-form-item>
-    <el-form-item label="审核类型">
-      <el-radio-group v-model="form.config.reviewType" @change="emit('update')">
-        <el-radio value="approve">审批通过</el-radio>
-        <el-radio value="reject">审批拒绝</el-radio>
-        <el-radio value="both">通过或拒绝</el-radio>
-      </el-radio-group>
-    </el-form-item>
-    <el-form-item label="必须填写意见">
-      <el-switch
-          v-model="form.config.requireComment"
-          @change="emit('update')"
-      />
-    </el-form-item>
     <el-divider>输出数据</el-divider>
     <div
         v-for="b in outputVar"

@@ -7,6 +7,8 @@ import com.spark.common.bean.workflow.query.WfInstanceNodeQuery;
 import com.spark.common.bean.workflow.query.WfInstanceQuery;
 import com.spark.common.bean.workflow.result.WfInstanceNodeResult;
 import com.spark.common.bean.workflow.result.WfInstanceResult;
+import com.spark.common.bean.workflow.result.WfInstanceReviewResult;
+import com.spark.common.bean.workflow.vo.WfReviewVO;
 import com.spark.common.bean.workflow.vo.WfRunVO;
 import com.spark.workflow.service.IWorkflowInstanceService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,5 +79,27 @@ public class WorkflowInstanceController {
     @PostMapping("run")
     public ResultData<WfInstance> runWorkflow(@RequestBody WfRunVO runVO) {
         return instanceService.runWorkflow(runVO);
+    }
+
+    /**
+     * 分页查询待我审核的运行实例
+     *
+     * @param query 查询参数
+     * @return 分页结果
+     */
+    @GetMapping("pageMyReview")
+    public ResultData<PageResult<WfInstanceReviewResult>> pageMyReviewList(WfInstanceQuery query) {
+        return instanceService.pageMyReviewList(query);
+    }
+
+    /**
+     * 提交人工审核
+     *
+     * @param reviewVO 审核入参
+     * @return 审核结果
+     */
+    @PostMapping("review")
+    public ResultData<Void> reviewInstance(WfReviewVO reviewVO) {
+        return instanceService.reviewInstance(reviewVO);
     }
 }

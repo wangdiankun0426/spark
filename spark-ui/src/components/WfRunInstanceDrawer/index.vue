@@ -24,9 +24,11 @@
       <!--运行结果及详情-->
       <div v-if="runDetail" style="margin-top:16px">
         <el-divider />
-        <el-alert :type="runStatus === 2 ? 'success' : 'error'" :closable="false" show-icon>
+        <el-alert :type="runStatus === 2 ? 'success' : runStatus === 6 ? 'warning' : 'error'" :closable="false" show-icon>
           <template #title>
             <span v-if="runStatus === 2">运行成功 (耗时 {{ runDetail.durationMs != null ? runDetail.durationMs + 'ms' : '-' }})</span>
+            <span v-else-if="runStatus === 6">已暂停：等待人工审核，可在「待审核」页处理</span>
+            <span v-else-if="runStatus === 7">已驳回</span>
             <span v-else>运行失败</span>
           </template>
         </el-alert>
@@ -65,7 +67,7 @@
               v-for="n in nodes"
               :key="n.id"
               :timestamp="n.statusName"
-              :type="n.status === 3 ? 'success' : n.status === 4 ? 'danger' : 'info'"
+              :type="n.status === 3 ? 'success' : n.status === 4 ? 'danger' : n.status === 1 ? 'warning' : 'info'"
           >
             <div class="node-status">{{n.nodeName}} ( {{n.nodeType}} )</div>
             <div v-if="getNodeText(n.inputJson)">

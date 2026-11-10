@@ -18,6 +18,7 @@ public enum WorkflowInstanceStatusEnum {
     TIMEOUT(4, "超时"),
     CANCELLED(5, "已取消"),
     PAUSED(6, "已暂停"),
+    REJECTED(7, "已驳回"),
     ;
 
     private Integer value;

@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <!--操作按钮-->
-    <div>
+    <div class="action-bar">
       <el-button
           type="warning"
           @click="handleResetInstanceQuery"
@@ -26,6 +26,7 @@
       >
         <el-table-column prop="name" label="流程标题"  align="center"/>
         <el-table-column prop="typeName" label="流程类型" align="center" width="180px"/>
+        <el-table-column prop="revNum" label="版本" align="center" width="120px"/>
         <el-table-column prop="levelName" label="紧急程度" align="center" width="180px"/>
         <el-table-column prop="statusName" label="状态"  align="center" width="180px"/>
         <el-table-column prop="createdByName" label="申请人" align="center" width="180px"/>
@@ -55,6 +56,7 @@
         :created-by-name="instanceApplicant"
         :dept-name="instanceDeptName"
         :level="instanceLevel"
+        :rev-num="instanceRevNum"
         :formJson="formJson"
         :bpmJson="bpmJson"
         :nodes="nodes"
@@ -157,6 +159,7 @@ function handleCloseFlowDetail() {
   instanceApplicant.value = '';
   instanceDeptName.value = '';
   instanceLevel.value = 1;
+  instanceRevNum.value = '';
   instanceTemplateId.value = undefined;
   instanceTemplateRevId.value = undefined;
   instanceFormId.value = undefined;
@@ -269,6 +272,7 @@ const instanceDescription = ref('');
 const instanceApplicant = ref('');
 const instanceDeptName = ref('');
 const instanceLevel = ref(1);
+const instanceRevNum = ref('');
 const instanceTemplateId = ref(undefined);
 const instanceTemplateRevId = ref(undefined);
 const instanceFormId = ref(undefined);
@@ -298,6 +302,7 @@ function handleOpenInstance(id) {
       instanceApplicant.value = res.data.createdByName || '';
       instanceDeptName.value = res.data.deptName || '';
       instanceLevel.value = res.data.level;
+      instanceRevNum.value = res.data.revNum || '';
       instanceTemplateId.value = res.data.templateId;
       instanceTemplateRevId.value = res.data.templateRevId;
       instanceFormId.value = res.data.formId;
@@ -329,5 +334,10 @@ function handleOpenInstance(id) {
 <style scoped lang="scss">
 :deep(.el-table__row) {
   cursor: pointer;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: flex-end;
 }
 </style>

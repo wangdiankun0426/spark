@@ -26,23 +26,11 @@ public class HumanReviewRequiredException extends RuntimeException {
      */
     private final String reviewerIds;
 
-    /**
-     * 审核类型
-     */
-    private final String reviewType;
-
-    /**
-     * 是否需要填写意见
-     */
-    private final boolean requireComment;
-
-    public HumanReviewRequiredException(String nodeId, String prompt, String reviewerIds, String reviewType, boolean requireComment) {
+    public HumanReviewRequiredException(String nodeId, String prompt, String reviewerIds) {
         super("需要人工审核: " + prompt);
         this.nodeId = nodeId;
         this.prompt = prompt;
         this.reviewerIds = reviewerIds;
-        this.reviewType = reviewType;
-        this.requireComment = requireComment;
     }
 
     public String getNodeId() {
@@ -55,13 +43,5 @@ public class HumanReviewRequiredException extends RuntimeException {
 
     public String getReviewerIds() {
         return reviewerIds;
-    }
-
-    public String getReviewType() {
-        return reviewType;
-    }
-
-    public boolean isRequireComment() {
-        return requireComment;
     }
 }

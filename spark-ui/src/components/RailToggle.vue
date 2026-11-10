@@ -1,5 +1,5 @@
 <template>
-  <div class="app-sidebar__foot">
+  <div class="app-sidebar__toggle">
     <div
         class="app-sidebar__mini-btn"
         :title="railMini ? '展开菜单' : '收起菜单'"

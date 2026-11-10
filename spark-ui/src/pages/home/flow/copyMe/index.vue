@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <!--操作按钮-->
-    <div>
+    <div class="action-bar">
       <el-button
           type="warning"
           @click="handleResetQuery"
@@ -26,6 +26,7 @@
       >
         <el-table-column prop="name" label="流程标题" align="center"/>
         <el-table-column prop="typeName" label="流程类型" align="center" width="180px"/>
+        <el-table-column prop="revNum" label="版本" align="center" width="120px"/>
         <el-table-column prop="levelName" label="紧急程度" align="center" width="180px"/>
         <el-table-column prop="statusName" label="状态" align="center" width="180px"/>
         <el-table-column prop="createdByName" label="抄送人" align="center" width="180px"/>
@@ -56,6 +57,7 @@
         :created-by-name="instanceApplicant"
         :dept-name="instanceDeptName"
         :level="instanceLevel"
+        :rev-num="instanceRevNum"
         :formJson="formJson"
         :bpmJson="bpmJson"
         :nodes="nodes"
@@ -106,6 +108,7 @@ function handleCloseFlowDetail() {
   instanceApplicant.value = '';
   instanceDeptName.value = '';
   instanceLevel.value = 1;
+  instanceRevNum.value = '';
 }
 
 /**
@@ -155,6 +158,7 @@ const instanceDescription = ref('');
 const instanceApplicant = ref('');
 const instanceDeptName = ref('');
 const instanceLevel = ref(1);
+const instanceRevNum = ref('');
 
 /**
  * 打开流程详情
@@ -171,6 +175,7 @@ function handleOpenInstance(id) {
       instanceApplicant.value = res.data.createdByName || '';
       instanceDeptName.value = res.data.deptName || '';
       instanceLevel.value = res.data.level;
+      instanceRevNum.value = res.data.revNum || '';
       const values = res.data.values;
       if (values.length === 0) {
         flowDetailVisible.value = true;
@@ -197,5 +202,10 @@ function handleOpenInstance(id) {
 <style scoped lang="scss">
 :deep(.el-table__row) {
   cursor: pointer;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: flex-end;
 }
 </style>

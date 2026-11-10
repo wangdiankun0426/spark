@@ -46,7 +46,6 @@ public class HumanReviewExecutor extends BaseService implements IWfNodeExecutor 
      */
     @Override
     public Map<String, String> execute(String nodeId, Map<String, Object> config, Map<String, String> input, Map<String, String> valueMap, Map<String, String> showValueMap) {
-        Map<String, String> output = new HashMap<>();
         if (config == null) {
             throw new IllegalArgumentException(ErrorCodeEnum.INVALID_PARAM.getDesc());
         }
@@ -63,14 +62,6 @@ public class HumanReviewExecutor extends BaseService implements IWfNodeExecutor 
         if (StringUtil.isNotBlank(reviewerIdsCode)) {
             reviewerIds = super.generateFlowValue(reviewerIdsCode, null, valueMap, showValueMap, input);
         }
-        String reviewType = MapUtil.getStringVal(config, "reviewType", "approve");
-        boolean requireComment = MapUtil.getBooleanVal(config, "requireComment", false);
-        output.put(nodeId + "prompt", prompt);
-        output.put(nodeId + "reviewType", reviewType);
-        output.put(nodeId + "requireComment", String.valueOf(requireComment));
-        if (StringUtil.isNotBlank(reviewerIds)) {
-            output.put(nodeId + "reviewerIds", reviewerIds);
-        }
-        throw new HumanReviewRequiredException(nodeId, prompt, reviewerIds, reviewType, requireComment);
+        throw new HumanReviewRequiredException(nodeId, prompt, reviewerIds);
     }
 }

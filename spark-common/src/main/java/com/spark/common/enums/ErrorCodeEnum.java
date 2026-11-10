@@ -130,6 +130,7 @@ public enum ErrorCodeEnum {
     WORKFLOW_ALREADY_PUBLISHED(2410, "WorkFlow已发布"),
     WORKFLOW_HAS_RUN_HISTORY(2411, "存在运行记录不允许删除"),
     WORKFLOW_CATEGORY_INVALID(2412, "分类标签无效"),
+    WORKFLOW_REVIEW_INVALID(2413, "无待审核节点或审核状态已变更"),
     // 技能相关状态码
     SKILL_NOT_EXIST(2501, "技能不存在"),
     SKILL_NAME_EXIST(2502, "同名技能已存在"),

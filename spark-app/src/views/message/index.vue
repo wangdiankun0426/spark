@@ -253,6 +253,13 @@ function handleMsgClick(item) {
   if (!isFlowMessage(item)) {
     return;
   }
+  // 工作流实例 id 尾段是 18，与 flowable 流程实例区分跳转
+  if (Number(item.refId) % 100 === 18) {
+    uni.navigateTo({
+      url: '/pages/llm/wfInstanceDetail?id=' + item.refId
+    });
+    return;
+  }
   uni.navigateTo({
     url: '/pages/flow/instanceDetail?id=' + item.refId + '&type=' + flowDetailTypeMap[item.type]
   });

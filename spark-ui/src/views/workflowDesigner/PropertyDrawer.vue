@@ -183,18 +183,8 @@
                 :form="form"
                 @update="emitUpdate"
             />
-            <variable-op-config
-                v-if="node.type === 'variableOp'"
-                :form="form"
-                @update="emitUpdate"
-            />
             <code-execute-config
                 v-if="node.type === 'codeExecute'"
-                :form="form"
-                @update="emitUpdate"
-            />
-            <http-request-config
-                v-if="node.type === 'httpRequest'"
                 :form="form"
                 @update="emitUpdate"
             />
@@ -300,9 +290,7 @@ import LlmTaskConfig from './propertyPanel/LlmTaskConfig.vue'
 import AgentTaskConfig from './propertyPanel/AgentTaskConfig.vue'
 import KbSearchConfig from './propertyPanel/KbSearchConfig.vue'
 import KgSearchConfig from './propertyPanel/KgSearchConfig.vue'
-import VariableOpConfig from './propertyPanel/VariableOpConfig.vue'
 import CodeExecuteConfig from './propertyPanel/CodeExecuteConfig.vue'
-import HttpRequestConfig from './propertyPanel/HttpRequestConfig.vue'
 import HumanReviewConfig from './propertyPanel/HumanReviewConfig.vue'
 
 const props = defineProps({
@@ -327,7 +315,7 @@ const NO_CONFIG_TYPES = ['startEvent', 'endEvent', 'exclusiveGateway', 'parallel
 
 const CONFIG_COMPONENT_TYPES = [
   'docParse', 'notify', 'kbArchive', 'llmTask', 'agentTask', 'kbSearch', 'kgSearch',
-  'variableOp', 'codeExecute', 'httpRequest', 'humanReview'
+  'codeExecute', 'humanReview'
 ]
 
 function needConfig(type) {

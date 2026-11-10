@@ -2,12 +2,28 @@
   <view class="detail-container safe-area-page" :class="themeClass">
     <PageHeader title="流程详情" @back="handleBack"/>
 
+    <!-- 分类页签：与工作流详情同口径分两页 -->
+    <view class="detail-tabs">
+      <view class="tabs-track">
+        <view
+            v-for="(tab, index) in detailTabs"
+            :key="index"
+            class="seg-tab"
+            :class="{ 'is-active': index === detailTab }"
+            @click="detailTab = index"
+        >
+          <text class="seg-tab__text">{{ tab }}</text>
+        </view>
+      </view>
+    </view>
+
     <!-- 内容区 -->
     <scroll-view class="detail-body" scroll-y>
-      <!-- 基本信息：流程标题作为第一行，状态胶囊挂在分组标题右侧 -->
+      <template v-if="detailTab === 0">
+      <!-- 流程信息：流程标题作为第一行，状态胶囊挂在分组标题右侧 -->
       <view class="section-card">
         <view class="section-head">
-          <SectionTitle>基本信息</SectionTitle>
+          <SectionTitle>流程信息</SectionTitle>
           <text class="tag section-tag" :class="'is-' + statusTone(instance.status)">
             {{ instance.statusName || '处理中' }}
           </text>
@@ -42,15 +58,17 @@
         </view>
       </view>
 
-      <!-- 表单详情 -->
+      <!-- 表单信息 -->
       <view class="section-card">
         <view class="section-head">
-          <SectionTitle>表单详情</SectionTitle>
+          <SectionTitle>表单信息</SectionTitle>
         </view>
         <template v-if="visibleWidgetList.length">
           <view class="kv-row" v-for="widget in visibleWidgetList" :key="widget.config.code">
             <text class="kv-key">{{ widget.config.label }}</text>
-            <form-field-value class="kv-value" :widget="widget"/>
+            <view class="kv-value">
+              <form-field-value :widget="widget"/>
+            </view>
           </view>
         </template>
         <view v-else class="empty-row">
@@ -58,6 +76,9 @@
         </view>
       </view>
 
+      </template>
+
+      <template v-else>
       <!-- 审批记录：时间线 -->
       <view class="section-card">
         <view class="section-head">
@@ -93,6 +114,7 @@
           <text>暂无审批记录</text>
         </view>
       </view>
+      </template>
     </scroll-view>
 
     <!-- 底部操作栏 -->
@@ -122,7 +144,7 @@
             v-if="type === 3 && hasPermission(1)"
             class="action-btn action-btn--primary"
             @click="openApprovalDialog(3)"
-        >同意</view>
+        >通过</view>
         <!-- 申请页签：发起人在审批中可撤回 -->
         <view
             v-if="canRecall"
@@ -201,6 +223,10 @@ const instanceId = ref(undefined);
 // 详情类型：1 我的申请 3 我的待办 4 我的已办 5 抄送给我
 const type = ref(0);
 const instance = ref({});
+
+// 页签：实例详情与审批记录两页
+const detailTabs = ['实例详情', '审批记录']
+const detailTab = ref(0);
 const widgetList = ref([]);
 const nodes = ref([]);
 const nodeId = ref(undefined);
@@ -461,6 +487,49 @@ function statusTone(status) {
   background-color: $app-bg-page;
 }
 
+.detail-tabs {
+  flex-shrink: 0;
+  padding: 0 14px 12px;
+  background-color: $app-bg-card;
+}
+
+.tabs-track {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 38px;
+  padding: 3px;
+  border-radius: 12px;
+  background-color: $app-tab-track;
+}
+
+.seg-tab {
+  flex: 1;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.seg-tab__text {
+  font-size: 12.5px;
+  color: $app-text-secondary;
+  white-space: nowrap;
+  transition: color 0.25s ease;
+}
+
+.seg-tab.is-active {
+  background-image: $app-gradient-fill;
+  box-shadow: $app-shadow-brand;
+}
+
+.seg-tab.is-active .seg-tab__text {
+  color: $app-fill-tx;
+  font-weight: 600;
+}
+
 
 .detail-body {
   flex: 1;
@@ -636,7 +705,7 @@ function statusTone(status) {
 .tl-body {
   flex: 1;
   min-width: 0;
-  padding-bottom: 12px;
+  padding-bottom: 22px;
 }
 
 .tl-head {

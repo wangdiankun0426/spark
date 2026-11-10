@@ -506,13 +506,16 @@ html.dark .app-theme-toggle {
   box-sizing: border-box;
 }
 
-// 栏底收起展开开关
-.app-sidebar__foot {
-  margin-top: auto;
-  padding-top: 10px;
+// 收起展开开关置顶并吸附：侧栏整体滚动，菜单过长时按钮不能被滚出视野
+.app-sidebar__toggle {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  flex: none;
+  padding-bottom: 8px;
   display: flex;
   justify-content: center;
-  flex: none;
+  background: $shell-sidebar-bg;
 }
 
 .app-sidebar__mini-btn {

@@ -58,6 +58,12 @@
         where id = #{id}
     </update>
 
+    <update id="updateInstanceStatusCas">
+        update wf_instance
+        set status = #{toStatus} , updated_by = #{updatedBy} , updated_dt = now()
+        where id = #{id} and status = #{fromStatus} and delete_flag = 1
+    </update>
+
     <select id="queryInstanceCount" resultType="java.lang.Integer">
         select count(1)
         from wf_instance ri

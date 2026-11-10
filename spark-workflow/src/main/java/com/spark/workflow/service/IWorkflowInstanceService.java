@@ -8,6 +8,8 @@ import com.spark.common.bean.workflow.query.WfInstanceQuery;
 import com.spark.common.bean.workflow.query.WfInstanceNodeQuery;
 import com.spark.common.bean.workflow.result.WfInstanceResult;
 import com.spark.common.bean.workflow.result.WfInstanceNodeResult;
+import com.spark.common.bean.workflow.result.WfInstanceReviewResult;
+import com.spark.common.bean.workflow.vo.WfReviewVO;
 import com.spark.common.bean.workflow.vo.WfRunVO;
 
 import java.util.List;
@@ -63,4 +65,20 @@ public interface IWorkflowInstanceService {
      * @return 热门工作流列表
      */
     List<DashboardHotResult> queryMyHotWorkflows(int limit);
+
+    /**
+     * 提交人工审核，通过恢复执行，驳回终止实例
+     *
+     * @param reviewVO 审核入参
+     * @return 审核结果
+     */
+    ResultData<Void> reviewInstance(WfReviewVO reviewVO);
+
+    /**
+     * 分页查询待我审核的运行实例
+     *
+     * @param query 查询参数
+     * @return 分页结果
+     */
+    ResultData<PageResult<WfInstanceReviewResult>> pageMyReviewList(WfInstanceQuery query);
 }

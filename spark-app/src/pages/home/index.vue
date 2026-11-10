@@ -274,11 +274,11 @@ function handleQuickClick(key) {
   if (key === 'todo') {
     uni.reLaunch({url: '/pages/flow/index?tab=1'})
   } else if (key === 'chat') {
-    uni.reLaunch({url: '/pages/llm/index?tab=2'})
-  } else if (key === 'agent') {
     uni.reLaunch({url: '/pages/llm/index?tab=0'})
-  } else if (key === 'workflow') {
+  } else if (key === 'agent') {
     uni.reLaunch({url: '/pages/llm/index?tab=1'})
+  } else if (key === 'workflow') {
+    uni.reLaunch({url: '/pages/llm/index?tab=2'})
   } else if (key === 'message') {
     uni.navigateTo({url: '/views/message/index'})
   }
@@ -288,7 +288,7 @@ function handleQuickClick(key) {
  * 星火助手卡：进入 AI 应用「AI 对话」页签
  */
 function handleAssistant() {
-  uni.reLaunch({url: '/pages/llm/index?tab=2'})
+  uni.reLaunch({url: '/pages/llm/index?tab=0'})
 }
 
 /**
@@ -296,7 +296,7 @@ function handleAssistant() {
  * @param item 推荐数据
  */
 function handleRecommendClick(item) {
-  const tabMap = {model: 2, agent: 0, workflow: 1}
+  const tabMap = {model: 0, agent: 1, workflow: 2}
   const tab = tabMap[item.hotType]
   if (tab === undefined) {
     return
@@ -305,7 +305,7 @@ function handleRecommendClick(item) {
 }
 
 function handleRecommendMore() {
-  uni.reLaunch({url: '/pages/llm/index?tab=0'})
+  uni.reLaunch({url: '/pages/llm/index?tab=1'})
 }
 
 function handleTodoClick(item) {

@@ -102,8 +102,8 @@ public class FileUtil {
         if (StringUtil.isBlank(fileExt)) {
             return null;
         }
-        if ("md".equals(fileExt)) {
-            return this.getFileNameWithoutExt(filePath)+".md";
+        if ("md".equals(fileExt) || "yml".equals(fileExt) || "sql".equals(fileExt)) {
+            return this.getFileNameWithoutExt(filePath)+"."+fileExt;
         }
         return this.getFileNameWithoutExt(filePath)+".txt";
     }

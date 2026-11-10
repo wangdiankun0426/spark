@@ -39,6 +39,7 @@
         </template>
       </el-table-column>
       <el-table-column prop="levelName" label="紧急程度" width="120" align="center" />
+      <el-table-column prop="revNum" label="版本" width="110" align="center" />
       <el-table-column prop="statusName" label="状态" width="120" align="center">
         <template #header>
           状态
@@ -133,6 +134,7 @@
         :created-by-name="instanceApplicant"
         :dept-name="instanceDeptName"
         :level="instanceLevel"
+        :rev-num="instanceRevNum"
         :formJson="formJson"
         :bpmJson="bpmJson"
         :nodes="nodes"
@@ -338,6 +340,7 @@ const instanceDescription = ref('');
 const instanceApplicant = ref('');
 const instanceDeptName = ref('');
 const instanceLevel = ref(1);
+const instanceRevNum = ref('');
 
 /**
  * 打开流程实例详情
@@ -354,6 +357,7 @@ function handleOpenDetail(row) {
       instanceApplicant.value = res.data.createdByName || '';
       instanceDeptName.value = res.data.deptName || '';
       instanceLevel.value = res.data.level;
+      instanceRevNum.value = res.data.revNum || '';
       const values = res.data.values;
       if (values.length === 0) {
         detailVisible.value = true;

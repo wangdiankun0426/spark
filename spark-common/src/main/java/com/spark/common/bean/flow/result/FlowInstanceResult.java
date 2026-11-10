@@ -29,6 +29,11 @@ public class FlowInstanceResult extends BaseResult {
     private Long templateRevId;
 
     /**
+     * 流程模板版本号
+     **/
+    private String revNum;
+
+    /**
      * 表单id
      **/
     private Long formId;

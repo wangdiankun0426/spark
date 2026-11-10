@@ -172,6 +172,53 @@
       </template>
     </scroll-view>
 
+    <!-- 待审核：挂起在人工审核节点的实例，点击进入详情审核 -->
+    <scroll-view
+        v-else-if="activeTabKey === 'review'"
+        class="llm-list"
+        scroll-y
+        @scrolltolower="loadMoreReviews"
+    >
+      <view v-if="reviewLoading && reviewList.length === 0" class="state-box">
+        <up-loading-icon text="加载中..."/>
+      </view>
+
+      <view v-else-if="reviewList.length === 0" class="state-box state-box--empty">
+        <EmptyState
+            icon="list-dot"
+            :title="emptyMeta.title"
+            :desc="emptyMeta.sub"
+            btn-text="刷新看看"
+            @btn-click="refreshTab"
+        />
+      </view>
+
+      <template v-else>
+        <view class="section-head">
+          <SectionTitle>待审核记录</SectionTitle>
+          <text class="section-note">共 {{ reviewTotal }} 条</text>
+        </view>
+
+        <view class="list-card">
+          <template v-for="(item, index) in reviewList" :key="item.nodeRunId">
+            <view class="row" @click="showReviewDetail(item)">
+              <view class="row-icon">
+                <WorkflowIcon :size="26"/>
+              </view>
+              <view class="row-main">
+                <text class="row-name">{{ item.templateName || '未命名工作流' }}</text>
+                <text class="row-desc">{{ reviewMeta(item) }}</text>
+              </view>
+              <text class="row-pill" :class="'pill-' + item.status">{{ item.statusName }}</text>
+            </view>
+            <view v-if="index < reviewList.length - 1" class="row-divider"></view>
+          </template>
+        </view>
+
+        <view class="list-tip">{{ tipText(reviewLoadStatus) }}</view>
+      </template>
+    </scroll-view>
+
     <!-- 无任何页签权限时展示空态 -->
     <view v-else class="state-box state-box--empty">
       <EmptyState icon="grid-fill" :title="emptyMeta.title" :desc="emptyMeta.sub"/>
@@ -199,7 +246,7 @@ import {onLoad, onShow} from "@dcloudio/uni-app"
 import {navHeaderStyle} from "@/utils/navBarUtil";
 import {getHeaderIconColor, getChevronColor} from "@/utils/themeUtil"
 import {agentPageListAPI} from "@/api/llm/agent"
-import {pageInstanceListAPI} from "@/api/workflow/instance"
+import {pageInstanceListAPI, pageMyReviewListAPI} from "@/api/workflow/instance"
 import {pageModelListAPI} from "@/api/llm/model"
 import AiSessionPicker from "@/components/AiSessionPicker/index.vue"
 import {useAiSessionPicker} from "@/components/AiSessionPicker/aiSessionUtil"
@@ -230,11 +277,12 @@ const {
 } = useAiSessionPicker()
 
 
-// AI应用页签配置：智能体放第一位，是平台最常用的入口
+// AI应用页签配置：AI对话放首位，是平台最常用的入口
 const allowedTabs = [
+  {key: 'chat', name: 'AI对话'},
   {key: 'agent', name: '智能体'},
   {key: 'workflow', name: '工作流'},
-  {key: 'chat', name: 'AI对话'}
+  {key: 'review', name: '待审核'}
 ]
 
 const tabList = computed(() => allowedTabs.map(tab => ({name: tab.name})))
@@ -274,6 +322,17 @@ const instanceTotal = ref(0)
 // 列表底部加载提示状态
 const instanceLoadStatus = ref('loadmore')
 
+// 待审核实例相关
+const reviewList = ref([])
+const reviewLoading = ref(false)
+const reviewLoaded = ref(false)
+const reviewQuery = ref({
+  pageNo: 1,
+  pageSize: PAGE_SIZE
+})
+const reviewTotal = ref(0)
+const reviewLoadStatus = ref('loadmore')
+
 // AIChat 模型列表相关
 const modelList = ref([])
 const modelLoading = ref(false)
@@ -301,11 +360,14 @@ const headCount = computed(() => {
   if (activeTabKey.value === 'chat') {
     return modelLoaded.value && modelTotal.value > 0 ? modelTotal.value : null
   }
+  if (activeTabKey.value === 'review') {
+    return reviewLoaded.value && reviewTotal.value > 0 ? reviewTotal.value : null
+  }
   return null
 })
 
 const headTail = computed(() => {
-  const loaded = {agent: agentLoaded.value, workflow: instanceLoaded.value, chat: modelLoaded.value}
+  const loaded = {agent: agentLoaded.value, workflow: instanceLoaded.value, chat: modelLoaded.value, review: reviewLoaded.value}
   if (activeTabKey.value === 'agent') {
     if (!loaded.agent) return '正在加载智能体…'
     return agentTotal.value > 0 ? '个可用智能体' : '还没有可用的智能体'
@@ -318,6 +380,10 @@ const headTail = computed(() => {
     if (!loaded.chat) return '正在加载模型…'
     return modelTotal.value > 0 ? '个可用模型' : '还没有可用的模型'
   }
+  if (activeTabKey.value === 'review') {
+    if (!loaded.review) return '正在加载待审核…'
+    return reviewTotal.value > 0 ? '条待审核' : '没有待审核的实例'
+  }
   return ''
 })
 
@@ -329,12 +395,15 @@ const emptyMeta = computed(() => {
   if (activeTabKey.value === 'chat') {
     return {title: '还没有可用的模型', sub: '管理员启用语言模型后，就能在这里开始对话'}
   }
+  if (activeTabKey.value === 'review') {
+    return {title: '没有待审核的实例', sub: '工作流走到人工审核节点挂起后，会出现在这里'}
+  }
   return {title: '还没有可用的智能体', sub: '管理员为你开通智能体后，就能在这里和它对话了'}
 })
 
 /**
  * 按页签key懒加载对应列表
- * @param key 页签key，取 chat、agent、workflow
+ * @param key 页签key，取 chat、agent、workflow、review
  */
 function loadTab(key) {
   if (key === 'agent' && !agentLoading.value && !agentLoaded.value) {
@@ -343,6 +412,8 @@ function loadTab(key) {
     loadInstances()
   } else if (key === 'chat' && !modelLoading.value && !modelLoaded.value) {
     loadModels()
+  } else if (key === 'review' && !reviewLoading.value && !reviewLoaded.value) {
+    loadReviews()
   }
 }
 
@@ -362,7 +433,7 @@ function handleTabChange(index) {
 }
 
 /**
- * 页面加载：支持从首页带 tab 参数直达指定页签，下标 0 智能体、1 工作流、2 AI对话
+ * 页面加载：支持从首页带 tab 参数直达指定页签，下标 0 AI对话、1 智能体、2 工作流、3 待审核
  * @param options 页面参数
  */
 onLoad(options => {
@@ -553,6 +624,78 @@ function showInstanceDetail(item) {
 }
 
 /**
+ * 待审核行的副标题：审核提示优先，缺提示时退回提交人与时间
+ * @param item 待审核行
+ * @returns {string} 副标题
+ */
+function reviewMeta(item) {
+  if (item.prompt) {
+    return item.prompt
+  }
+  const parts = []
+  if (item.createdByName) {
+    parts.push(item.createdByName)
+  }
+  const dt = formatDt(item.createdDt)
+  if (dt) {
+    parts.push(dt)
+  }
+  return parts.length > 0 ? parts.join(' · ') : '等待审核'
+}
+
+/**
+ * 加载待我审核实例列表
+ */
+function loadReviews() {
+  reviewLoading.value = true
+  reviewLoadStatus.value = 'loading'
+  reviewQuery.value.pageNo = 1
+  pageMyReviewListAPI(reviewQuery.value).then(res => {
+    if (res.code === 200 && res.data) {
+      reviewList.value = (res.data.rows || []).map(row => ({...row}))
+      reviewTotal.value = res.data.total || 0
+      reviewLoaded.value = true
+      reviewLoadStatus.value = reviewList.value.length >= reviewTotal.value ? 'nomore' : 'loadmore'
+    } else {
+      reviewLoadStatus.value = 'nomore'
+      reviewLoaded.value = true
+    }
+  }).finally(() => {
+    reviewLoading.value = false
+  })
+}
+
+/**
+ * 加载更多待审核实例
+ */
+function loadMoreReviews() {
+  if (reviewLoading.value || reviewLoadStatus.value === 'nomore') return
+  reviewQuery.value.pageNo++
+  reviewLoading.value = true
+  reviewLoadStatus.value = 'loading'
+  pageMyReviewListAPI(reviewQuery.value).then(res => {
+    if (res.code === 200 && res.data) {
+      const rows = (res.data.rows || []).map(row => ({...row}))
+      reviewList.value = reviewList.value.concat(rows)
+      reviewLoadStatus.value = reviewList.value.length >= reviewTotal.value ? 'nomore' : 'loadmore'
+    } else {
+      reviewLoadStatus.value = 'nomore'
+    }
+  }).finally(() => {
+    reviewLoading.value = false
+  })
+}
+
+/**
+ * 打开待审核实例详情
+ */
+function showReviewDetail(item) {
+  uni.navigateTo({
+    url: '/pages/llm/wfInstanceDetail?id=' + item.instanceId
+  })
+}
+
+/**
  * 加载模型列表
  */
 function loadModels() {
@@ -619,6 +762,9 @@ function refreshTab() {
   } else if (key === 'chat' && !modelLoading.value) {
     modelLoaded.value = false
     loadModels()
+  } else if (key === 'review' && !reviewLoading.value) {
+    reviewLoaded.value = false
+    loadReviews()
   }
 }
 
@@ -846,6 +992,14 @@ function handleOnTabChange(index) {
   &.pill-5 {
     color: $app-text-tertiary;
     background-color: $app-bg-sub;
+  }
+  &.pill-6 {
+    color: $app-text-warning;
+    background-color: $app-bg-warning;
+  }
+  &.pill-7 {
+    color: $app-text-error;
+    background-color: $app-bg-error;
   }
 }
 

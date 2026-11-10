@@ -10,6 +10,7 @@ import aichat from '@/pages/home/aichat/index.vue'
 import homeAgent from '@/pages/home/agent/index.vue'
 import homeWorkflow from '@/pages/home/workflow/index.vue'
 import homeWorkflowInstance from '@/pages/home/workflow/instance.vue'
+import homeWorkflowReview from '@/pages/home/workflow/review.vue'
 
 export default [
     {
@@ -67,6 +68,14 @@ export default [
                 component: homeWorkflowInstance,
                 meta: {
                     title: '运行实例',
+                }
+            },
+            {
+                path: '/home/workflow/review',
+                name: 'homeWorkflowReview',
+                component: homeWorkflowReview,
+                meta: {
+                    title: '待审核工作流',
                 }
             },
 
