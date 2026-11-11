@@ -21,7 +21,7 @@
       <var-field
           clearable
           v-model="form.config.fileCode"
-          placeholder="支持变量，点击 {x} 插入"
+          placeholder="点击选择变量"
           @change="emit('update')"
       />
     </el-form-item>

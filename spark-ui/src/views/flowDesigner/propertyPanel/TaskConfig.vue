@@ -25,13 +25,13 @@
           </el-icon>
         </el-button>
       </div>
-      <el-form-item label="执行时机" label-width="90px">
+      <el-form-item label="执行时机" label-width="66px">
         <el-select v-model="task.executeType">
           <el-option label="节点开始执行" :value="1" />
           <el-option label="节点结束执行" :value="2" />
         </el-select>
       </el-form-item>
-      <el-form-item label="任务模板" label-width="90px">
+      <el-form-item label="任务模板" label-width="66px">
         <el-select
             v-model="task.taskTemplateId"
             placeholder="请选择任务模板"
@@ -45,10 +45,21 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item v-for="param in task.params" :key="param.code" :label="param.name" label-width="90px">
-        <el-input
+      <el-form-item
+          v-for="param in task.params"
+          :key="param.code"
+          :label="param.name"
+          label-width="66px">
+        <var-field
+            clearable
+            v-if="param.type === 2"
             v-model="param.value"
-            :placeholder="param.type === 2 ? '支持变量，详见变量帮助' : '请输入' + param.name"
+            placeholder="点击选择变量"
+        />
+        <el-input
+            v-else
+            v-model="param.value"
+            :placeholder="'请输入' + param.name"
         />
       </el-form-item>
     </div>
@@ -59,6 +70,7 @@
 import { ref, computed } from 'vue'
 import { pageTaskTemplateListAPI, listTaskTemplateParamAPI } from '@/api/task/template.js'
 import {Delete} from "@element-plus/icons-vue";
+import VarField from '../var/VarField.vue'
 
 defineOptions({ name: 'TaskConfig' })
 

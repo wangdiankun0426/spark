@@ -370,7 +370,7 @@ function parseFragment(frag) {
   top: 12px;
   right: 12px;
   bottom: 12px;
-  width: 310px;
+  width: 340px;
   z-index: 80;
   background: $app-bg-card;
   border: 1px solid $border-color;

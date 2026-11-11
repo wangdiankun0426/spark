@@ -36,10 +36,14 @@
               v-for="item in g.items"
               :key="item.value"
               class="var-item"
+              :class="{ 'is-selected': isSelected(item) }"
               @click="emit('select', item)"
           >
-            <span class="var-item__label">{{ item.label }}</span>
-            <code class="var-item__value" v-text="item.value"></code>
+            <div class="var-item__main">
+              <span class="var-item__label">{{ item.label }}</span>
+              <code class="var-item__value" v-text="item.value"></code>
+            </div>
+            <el-icon v-if="isSelected(item)" class="var-item__check"><Check /></el-icon>
           </div>
         </div>
       </template>
@@ -57,7 +61,8 @@ import { ref, computed, onMounted, nextTick } from 'vue'
 defineOptions({ name: 'VarPickerPanel' })
 
 const props = defineProps({
-  groups: { type: Array, default: () => [] }
+  groups: { type: Array, default: () => [] },
+  selected: { type: Array, default: () => [] }
 })
 const emit = defineEmits(['select'])
 
@@ -101,6 +106,10 @@ const firstMatch = computed(() => {
 
 function insertFirst() {
   if (firstMatch.value) emit('select', firstMatch.value)
+}
+
+function isSelected(item) {
+  return props.selected.includes(item.value)
 }
 </script>
 
@@ -176,8 +185,8 @@ function insertFirst() {
 
 .var-item {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 8px;
   padding: 6px 8px;
   border-radius: $border-radius-sm;
   cursor: pointer;
@@ -186,12 +195,35 @@ function insertFirst() {
   &:hover {
     background: $app-bg-sub;
   }
+
+  &.is-selected {
+    background: $app-primary-light;
+  }
+}
+
+.var-item__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
 }
 
 .var-item__label {
   font-size: 13px;
   color: $app-text-primary;
   line-height: 18px;
+}
+
+.var-item.is-selected .var-item__label {
+  color: $app-primary;
+  font-weight: 600;
+}
+
+.var-item__check {
+  flex-shrink: 0;
+  font-size: 16px;
+  color: $app-primary;
 }
 
 .var-item__value {

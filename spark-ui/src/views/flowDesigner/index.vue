@@ -15,9 +15,6 @@
         <el-button @click="notificationConfigRef.open()">
           <el-icon><Bell /></el-icon>流程通知
         </el-button>
-        <el-button @click="varHelpVisible = true">
-          <el-icon><QuestionFilled /></el-icon>变量帮助
-        </el-button>
         <el-button @click="showClearConfirm = true">
           <el-icon><Delete /></el-icon>清空流程
         </el-button>
@@ -163,13 +160,11 @@
       </template>
     </el-drawer>
 
-    <!--变量帮助-->
-    <variable-help v-model="varHelpVisible" :form-fields="helpFormFields" :base-vars="helpBaseVars" />
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, watch, provide, onMounted, onBeforeUnmount } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRoute } from "vue-router";
 import { createTemplateVersionAPI, queryTemplateVersionDetailAPI } from "@/api/flow/templateVersion.js";
@@ -182,8 +177,8 @@ import PropertyDrawer from './PropertyDrawer.vue'
 import BasicInfoPanel from './BasicInfoPanel.vue'
 import NodeContextMenu from './NodeContextMenu.vue'
 import FlowPreview from '@/components/FlowPreview/index.vue'
-import VariableHelp from '@/components/FlowVariableHelp/index.vue'
 import { NODE_COMPONENTS, NODE_META } from '@/views/flowDesigner/nodes/index.js'
+import { FLOW_VARS_KEY, buildVarGroups } from './var/flowVariables.js'
 import { layoutFlow, applyPositions } from '@/views/flowDesigner/utils/flowLayout.js'
 import { validateFlowDag } from '@/views/flowDesigner/utils/flowValidate.js'
 import FlowApplication from "@/assets/icons/flowApplication.vue";
@@ -205,15 +200,9 @@ const basicInfo = reactive({
 /** 流程表单下拉项 */
 const formOptions = ref([]);
 
-/** 变量帮助 */
-const varHelpVisible = ref(false);
-const helpFormFields = computed(() => fieldOptions.value.map(f => ({ label: f.label, code: f.value })));
-const helpBaseVars = [
-  { label: '申请人', value: '#{base:appUserName}#' },
-  { label: '流程名称', value: '#{base:flowName}#' },
-  { label: '发起人', value: '#{base:appUser}#' },
-  { label: '当前审批人', value: '#{base:appAssignee}#' }
-];
+/** 变量下拉分组：基础变量恒在，表单值随绑定表单变化，下发给任务参数与流程通知 */
+const varGroups = computed(() => buildVarGroups(fieldOptions.value));
+provide(FLOW_VARS_KEY, varGroups);
 
 const nodes = ref([])
 const sequences = ref([])

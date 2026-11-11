@@ -27,7 +27,7 @@
           <var-field
               v-model="item.value"
               class="map-value"
-              placeholder="值，可引用变量如 #{form:xxx}#"
+              placeholder="点击选择变量"
               clearable
               @change="emit('update')"
           />

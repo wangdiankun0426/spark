@@ -44,8 +44,6 @@ export const NODE_GROUPS = [
 export const PICKER_TYPES = Object.keys(NODE_META)
   .filter(type => NODE_META[type].group && type !== 'startEvent' && type !== 'endEvent')
 
-// 无执行器的直传类型：输出等于输入，向上追溯变量来源时需穿过它们继续上溯
-export const PASSTHROUGH_TYPES = ['startEvent', 'endEvent', 'exclusiveGateway', 'parallelGateway', 'placeholder', 'userTask']
 
 // 各执行器节点的输出键注册表，与后端 Executor 的 buildOutput 对齐，作为输出变量的单一事实来源
 export const NODE_OUTPUTS = {
@@ -82,16 +80,31 @@ export const NODE_OUTPUTS = {
 
 /**
  * 节点可供下游引用的输出变量
- * codeExecute 由 config.outputs 声明动态决定，其余类型查注册表
+ * codeExecute 由 config.outputs 声明动态决定，llmTask 在固定 text 外叠加声明的响应键，其余类型查注册表
  * @param node 节点数据
  * @returns {Array<{key: string, label: string, value: string}>} value 形如 #{node:节点id键名}#
  */
 export function getNodeOutputs(node) {
   if (!node) return []
-  const entries = node.type === 'codeExecute'
-    ? (node.config?.outputs || []).filter(item => item.key).map(item => ({ key: item.key, label: item.name || item.key }))
-    : (NODE_OUTPUTS[node.type] || [])
-  return entries.map(item => ({
+  const declared = (node.config?.outputs || [])
+    .filter(item => item.key)
+    .map(item => ({ key: item.key, label: item.name || item.key }))
+  let entries
+  if (node.type === 'codeExecute') {
+    entries = declared
+  } else if (node.type === 'llmTask') {
+    entries = [...(NODE_OUTPUTS.llmTask || []), ...declared]
+  } else {
+    entries = NODE_OUTPUTS[node.type] || []
+  }
+  const seen = new Set()
+  const unique = []
+  entries.forEach(item => {
+    if (seen.has(item.key)) return
+    seen.add(item.key)
+    unique.push(item)
+  })
+  return unique.map(item => ({
     key: item.key,
     label: item.label,
     value: `#{node:${node.id}${item.key}}#`

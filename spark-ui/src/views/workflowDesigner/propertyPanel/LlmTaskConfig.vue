@@ -23,7 +23,29 @@
           @change="emit('update')"
       />
       <div class="llm-tips">
-        如需模型响应参数，在提示词中规范模型的响应数据即可在下游节点中使用
+        在提示词中约定模型以 JSON 响应，下方声明响应 JSON 的键，即可在下游节点引用对应字段
+      </div>
+    </el-form-item>
+    <el-form-item label="输出声明">
+      <div class="map-list">
+        <el-button type="primary" link size="small" class="map-add" @click="addOutput">添加输出</el-button>
+        <div v-for="(item, index) in form.config.outputs" :key="index" class="map-row">
+          <el-input
+              v-model="item.name"
+              class="map-name"
+              placeholder="参数名"
+              clearable
+              @change="emit('update')"
+          />
+          <el-input
+              v-model="item.key"
+              class="map-value"
+              placeholder="参数，对应模型响应JSON的键"
+              clearable
+              @change="emit('update')"
+          />
+          <el-button type="danger" link size="small" @click="removeOutput(index)">删除</el-button>
+        </div>
       </div>
     </el-form-item>
     <el-divider>输出数据</el-divider>
@@ -47,6 +69,10 @@ import { getNodeOutputs } from '../nodes/index.js'
 const props = defineProps({ form: { type: Object, required: true } })
 const emit = defineEmits(['update'])
 
+if (!Array.isArray(props.form.config.outputs)) {
+  props.form.config.outputs = []
+}
+
 const modelList = ref([])
 onMounted(async () => {
   // 字典接口失败时保持空候选，不阻断面板挂载
@@ -61,6 +87,16 @@ onMounted(async () => {
 })
 
 const outputVar = computed(() => getNodeOutputs(props.form))
+
+function addOutput() {
+  props.form.config.outputs.push({ name: '', key: '' })
+  emit('update')
+}
+
+function removeOutput(index) {
+  props.form.config.outputs.splice(index, 1)
+  emit('update')
+}
 </script>
 
 <style scoped lang="scss">
@@ -74,6 +110,32 @@ const outputVar = computed(() => getNodeOutputs(props.form))
   font-size: 12px;
   color: $color-text-secondary;
   line-height: 1.8;
+}
+
+.map-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.map-add {
+  align-self: flex-end;
+}
+
+.map-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.map-name {
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.map-value {
+  flex: 1;
 }
 
 .var-row {

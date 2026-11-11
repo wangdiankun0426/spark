@@ -2,7 +2,7 @@
  * 工作流画布几何计算：纯函数，编辑画布与只读预览共用
  * 输入节点统一带绝对坐标 { x, y }，连线统一带 { source, target }
  */
-import { NODE_SIZE } from '../nodes/index.js'
+import { NODE_SIZE, getNodeOutputs } from '../nodes/index.js'
 import { buildConditionChipLines, CONDITION_LINE_MAX_WIDTH } from './flowCondition.js'
 
 /** 条件 chip 排版常量：行高、上下内边距、横向内边距、圆角 */
@@ -21,7 +21,7 @@ export function findNodeById(nodes, id) {
   return (nodes || []).find(n => n.id === id) || null
 }
 
-/** 连线锚点：固定从源节点右端口出发，接入目标节点左端口（目标留 7px 给箭头） */
+/** 连线锚点：固定从源节点右端口出发，接入目标节点左端口，目标侧预留 7px 给箭头 */
 export function getEdgeAnchors(nodes, edge) {
   const source = findNodeById(nodes, edge?.source)
   const target = findNodeById(nodes, edge?.target)
@@ -79,7 +79,7 @@ export function hasCondition(edge) {
   return !!String(edge?.conditionExpression || '').trim()
 }
 
-/** 估算单行文案宽度（px），与折行估算口径一致 */
+/** 估算单行文案宽度，单位 px，与折行估算口径一致 */
 export function measureText(text) {
   let w = 0
   for (const ch of String(text)) {
@@ -88,24 +88,32 @@ export function measureText(text) {
   return w
 }
 
-/** 条件分支（排他网关）的出线 */
+/** 排他网关条件分支的出线 */
 export function isBranchEdge(nodes, edge) {
   const source = findNodeById(nodes, edge?.source)
   return !!source && source.type === 'exclusiveGateway'
 }
 
-/**
- * 连线上的分支条件标签
- * - configured：已配条件，多条件按「且 / 或」拆行并折行，全部展示
- * - blank：分支出线尚未配条件，给出可点的空态入口（只读预览传 blankEntry: false 关掉）
- */
+/** 条件文案的字段名映射：表单字段叠加全部节点输出的扁平直拼键，连线标签据此显示参数名 */
+function buildLabelOptions(nodes, fieldOptions) {
+  const options = [...(fieldOptions || [])]
+  ;(nodes || []).forEach(node => {
+    getNodeOutputs(node).forEach(out => {
+      const key = out.value.replace(/^#\{node:/, '').replace(/\}#$/, '')
+      options.push({ label: out.label, value: key })
+    })
+  })
+  return options
+}
+
 /**
  * 连线上的分支标签
  * - configured：已配条件，多条件按「且 / 或」拆行并折行，全部展示
- * - blank：分支出线尚未配条件，给出可点的空态入口（只读预览传 blankEntry: false 关掉）
+ * - blank：分支出线尚未配条件，给出可点的空态入口，只读预览传 blankEntry: false 关掉
  * - mergeName：分支名称并入标签首行，避免名称与条件框各占一块互相压字
  */
 export function buildConditionChips({ nodes, sequences, fieldOptions = [], blankEntry = true, mergeName = true }) {
+  const labelOptions = buildLabelOptions(nodes, fieldOptions)
   const chips = []
   ;(sequences || []).forEach(edge => {
     const configured = hasCondition(edge)
@@ -116,7 +124,7 @@ export function buildConditionChips({ nodes, sequences, fieldOptions = [], blank
     const hasName = mergeName && !!String(edge.name || '').trim()
     let labelLines
     if (configured) {
-      const lines = buildConditionChipLines(edge.conditionExpression, fieldOptions)
+      const lines = buildConditionChipLines(edge.conditionExpression, labelOptions)
       labelLines = lines.length ? lines : [String(edge.conditionExpression || '')]
     } else {
       labelLines = [CHIP_BLANK_TEXT]

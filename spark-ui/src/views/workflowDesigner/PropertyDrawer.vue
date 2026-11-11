@@ -75,7 +75,7 @@
               <el-select
                   v-else
                   v-model="cond.field"
-                  placeholder="选择上游节点输出"
+                  placeholder="选择节点输出"
                   filterable
                   @change="syncCondition"
               >
@@ -295,7 +295,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick, provide } from 'vue'
+import { ref, computed, watch, provide } from 'vue'
 import { NODE_META } from './nodes/index.js'
 import { WF_VARS_KEY, buildVarGroups, buildNodeFieldOptions } from './var/flowVariables.js'
 import DocParseConfig from './propertyPanel/DocParseConfig.vue'
@@ -399,9 +399,9 @@ const fieldOptions = computed(() =>
 const varGroups = computed(() => buildVarGroups(props.node, props.nodes, props.formFields));
 provide(WF_VARS_KEY, varGroups);
 
-/** 分支条件「节点数据」字段下拉，value 为 SpEL 扁平直拼键，锚点是网关自身 */
+/** 分支条件「节点数据」字段下拉，展示全部节点输出，value 为 SpEL 扁平直拼键 */
 const nodeFieldOptions = computed(() =>
-  props.edge ? buildNodeFieldOptions(props.edge.source, props.nodes, props.sequences) : []
+  props.edge ? buildNodeFieldOptions(props.nodes) : []
 );
 
 function getNodeName(nodeId) {
