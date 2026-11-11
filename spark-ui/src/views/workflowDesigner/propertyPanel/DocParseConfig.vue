@@ -2,9 +2,10 @@
   <div class="doc-parse-config">
     <el-divider>文档解析配置</el-divider>
     <el-form-item label="文档ID">
-      <el-input
+      <var-field
+          clearable
           v-model="form.config.fileCode"
-          placeholder="支持变量，详见变量帮助"
+          placeholder="支持变量，点击 {x} 插入"
           @change="emit('update')"
       />
     </el-form-item>
@@ -15,70 +16,41 @@
         class="var-row"
     >
       <span class="var-label">{{ b.label }}</span>
-      <code class="var-code" v-text="b.value"></code>
-      <el-button
-          type="primary"
-          link
-          @click="copyVar(b.value)"
-      >复制</el-button>
+      <code class="var-code" :title="b.value" v-text="b.value"></code>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ElMessage } from 'element-plus'
+import { computed } from 'vue'
+import VarField from '../var/VarField.vue'
+import { getNodeOutputs } from '../nodes/index.js'
 
 const props = defineProps({ form: { type: Object, required: true } })
 const emit = defineEmits(['update'])
 
-/** 节点输出变量 */
-const outputVar = [
-  { label: '处理结果', value: `#{node:${props.form.id}result}#` },
-  { label: '文档ID', value: `#{node:${props.form.id}attId}#` },
-];
-
-/** 复制变量到剪贴板*/
-function copyVar(text) {
-  const done = () => ElMessage.success('已复制: ' + text)
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done))
-  } else {
-    fallbackCopy(text, done)
-  }
-}
-function fallbackCopy(text, done) {
-  const ta = document.createElement('textarea')
-  ta.value = text
-  ta.style.position = 'fixed'
-  ta.style.opacity = '0'
-  document.body.appendChild(ta)
-  ta.select()
-  try {
-    document.execCommand('copy')
-    done()
-  } finally {
-    document.body.removeChild(ta)
-  }
-}
+const outputVar = computed(() => getNodeOutputs(props.form))
 </script>
 
 <style scoped lang="scss">
 .var-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 6px 4px;
+  gap: 8px;
+  padding: 4px;
   .var-label {
-    width: 60px;
     flex-shrink: 0;
     font-size: 13px;
     color: $color-text-primary;
   }
   .var-code {
     flex: 1;
-    font-size: 14px;
+    min-width: 0;
+    font-size: 12px;
     color: $app-primary;
-    word-break: break-all;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 </style>

@@ -8,8 +8,8 @@ MAINTAINER wangdiankun
 RUN /bin/cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone
 
-# 安装字体
-RUN microdnf install -y fontconfig dejavu-sans-fonts && \
+# 安装字体与python运行时
+RUN microdnf install -y fontconfig dejavu-sans-fonts python3 && \
     fc-cache -f && \
     microdnf clean all
 

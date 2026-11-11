@@ -2,35 +2,36 @@
   <div class="notify-config">
     <el-divider>通知配置</el-divider>
     <el-form-item label="标题">
-      <el-input
+      <var-field
           clearable
           v-model="form.config.titleCode"
-          placeholder="支持变量，详见变量帮助"
+          placeholder="支持变量，点击 {x} 插入"
           @change="emit('update')"
       />
     </el-form-item>
     <el-form-item label="内容">
-      <el-input
+      <var-field
+          clearable
           v-model="form.config.contentCode"
-          type="textarea"
+          textarea
           :rows="10"
-          placeholder="支持变量，详见变量帮助"
+          placeholder="支持变量，点击 {x} 插入"
           @change="emit('update')"
       />
     </el-form-item>
     <el-form-item label="接收人">
-      <el-input
+      <var-field
           clearable
           v-model="form.config.userCode"
-          placeholder="支持变量，详见变量帮助"
+          placeholder="支持变量，点击 {x} 插入"
           @change="emit('update')"
       />
     </el-form-item>
     <el-form-item label="所属对象">
-      <el-input
+      <var-field
           clearable
           v-model="form.config.refCode"
-          placeholder="支持变量，详见变量帮助"
+          placeholder="支持变量，点击 {x} 插入"
           @change="emit('update')"
       />
     </el-form-item>
@@ -38,6 +39,8 @@
 </template>
 
 <script setup>
+import VarField from '../var/VarField.vue'
+
 const props = defineProps({ form: { type: Object, required: true } })
 const emit = defineEmits(['update'])
 </script>

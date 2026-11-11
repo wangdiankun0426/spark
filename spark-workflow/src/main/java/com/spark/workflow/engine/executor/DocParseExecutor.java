@@ -17,7 +17,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * +++/\_/\
@@ -54,7 +57,7 @@ public class DocParseExecutor extends BaseService implements IWfNodeExecutor {
      * @return
      */
     @Override
-    public Map<String, String> execute(String nodeId, Map<String, Object> config, Map<String, String> input, Map<String, String> valueMap , Map<String, String> showValueMap) {
+    public Map<String, String> execute(String nodeId, Map<String, Object> config, Map<String, String> input, Map<String, String> valueMap, Map<String, String> showValueMap) {
         Map<String, String> output = new HashMap<>();
         if (config == null) {
             throw new IllegalArgumentException(ErrorCodeEnum.INVALID_PARAM.getDesc());
@@ -64,7 +67,9 @@ public class DocParseExecutor extends BaseService implements IWfNodeExecutor {
         if (StringUtil.isBlank(attIdStr)) {
             throw new IllegalArgumentException("文档解析节点文件ID解析失败");
         }
-        List<Long> attIds = Arrays.stream(attIdStr.split(",")).filter(StringUtil::isNumeric).map(Long::parseLong).toList();
+        String[] attIdArr = attIdStr.split(",");
+        List<Long> attIds = Arrays.stream(attIdArr).filter(StringUtil::isNumeric).map(Long::parseLong).toList();
+        StringBuilder contentBuilder = new StringBuilder();
         for (Long attId : attIds) {
             AttachmentQuery attachmentQuery = new AttachmentQuery();
             attachmentQuery.setId(attId);
@@ -72,15 +77,25 @@ public class DocParseExecutor extends BaseService implements IWfNodeExecutor {
             if (attachmentResult == null) {
                 throw new IllegalArgumentException(ErrorCodeEnum.ATTACHMENT_NOT_EXIST+": " + attId);
             }
-            String txtPath = fileUtil.convertToTxt(attachmentResult.getPath());
+            String filePath = attachmentResult.getPath();
+            String txtPath = fileUtil.convertToTxt(filePath);
             ResultData<String> fromText = TextUtil.getFromText(txtPath, true);
             if (fromText.getCode() != ResultData.OK || fromText.getData() == null) {
-                throw new IllegalArgumentException("文档内容解析失败: " + attachmentResult.getName());
+                String fileName = attachmentResult.getName();
+                throw new IllegalArgumentException("文档内容解析失败: " + fileName);
             }
+            String text = fromText.getData();
+            if (contentBuilder.length() > 0) {
+                contentBuilder.append("\n");
+            }
+            contentBuilder.append(text);
         }
+        String content = contentBuilder.toString();
         logger.info("docParse node executed, fileCount={}", attIds.size());
         output.put(nodeId+"result", "true");
-        output.put(nodeId+TaskParamCode.ATT_ID, StringUtil.join(attIds, ","));
+        output.put(nodeId+"content", content);
+        String attIdJoined = StringUtil.join(attIds, ",");
+        output.put(nodeId+TaskParamCode.ATT_ID, attIdJoined);
         return output;
     }
 }

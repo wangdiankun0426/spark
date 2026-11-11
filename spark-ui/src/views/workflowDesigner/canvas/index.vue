@@ -663,7 +663,7 @@ function resetZoom() {
   }
 
   &:hover {
-    box-shadow: 0 0 0 4px $wf-code-mark;
+    box-shadow: 0 0 0 4px $code-mark;
   }
 }
 

@@ -7,6 +7,8 @@
 
 export const NODE_SIZE = { width: 196, height: 62 }
 
+export const DEFAULT_PYTHON_CODE = 'def main(params):\n    # params 为入参字典，按需取用\n    text = params.get("text", "")\n    return {\n        "result": text,\n    }\n'
+
 export const NODE_META = {
   // 流程控制
   startEvent: { name: '开始', icon: 'VideoPlay', color: '#52c41a', bgColor: '#f6ffed', group: 'flow', desc: '流程起点，接收表单输入' },
@@ -23,7 +25,7 @@ export const NODE_META = {
   notify: { name: '发送通知', icon: 'Bell', color: '#722ed1', bgColor: '#f9f0ff', group: 'system', desc: '站内消息通知指定用户' },
   humanReview: { name: '人工审核', icon: 'UserFilled', color: '#fa8c16', bgColor: '#fffbe6', group: 'system', desc: '挂起等待人工审核' },
   // 工具
-  codeExecute: { name: '代码执行', icon: 'Monitor', color: '#1890ff', bgColor: '#e6f7ff', group: 'tool', desc: 'SpEL / Groovy 脚本处理' },
+  codeExecute: { name: '代码执行', icon: 'Monitor', color: '#1890ff', bgColor: '#e6f7ff', group: 'tool', desc: '执行 Python 脚本' },
   // 历史数据兼容，不在选择器中提供
   userTask: { name: '用户任务', icon: 'User', color: '#1890ff', bgColor: '#e6f7ff', group: null, desc: '挂起等待用户处理' },
   parallelGateway: { name: '并行网关', icon: 'CopyDocument', color: '#13c2c2', bgColor: '#e6fffb', group: null, desc: '历史并行分支节点，已不再提供新建' },
@@ -41,6 +43,60 @@ export const NODE_GROUPS = [
 /** 节点选择器可选类型：分组存在且非开始/结束端点 */
 export const PICKER_TYPES = Object.keys(NODE_META)
   .filter(type => NODE_META[type].group && type !== 'startEvent' && type !== 'endEvent')
+
+// 无执行器的直传类型：输出等于输入，向上追溯变量来源时需穿过它们继续上溯
+export const PASSTHROUGH_TYPES = ['startEvent', 'endEvent', 'exclusiveGateway', 'parallelGateway', 'placeholder', 'userTask']
+
+// 各执行器节点的输出键注册表，与后端 Executor 的 buildOutput 对齐，作为输出变量的单一事实来源
+export const NODE_OUTPUTS = {
+  llmTask: [{ key: 'text', label: '模型响应' }],
+  agentTask: [{ key: 'text', label: 'Agent响应' }],
+  kbSearch: [
+    { key: 'result', label: '检索结果' },
+    { key: 'content', label: '检索内容' },
+    { key: 'count', label: '命中条数' },
+    { key: 'references', label: '引用来源' },
+    { key: 'json', label: '原始JSON' }
+  ],
+  kgSearch: [
+    { key: 'result', label: '查询结果' },
+    { key: 'content', label: '图谱内容' },
+    { key: 'count', label: '三元组数' },
+    { key: 'json', label: '原始JSON' }
+  ],
+  docParse: [
+    { key: 'result', label: '处理结果' },
+    { key: 'content', label: '文档内容' },
+    { key: 'attId', label: '文档ID' }
+  ],
+  kbArchive: [
+    { key: 'kbId', label: '知识库ID' },
+    { key: 'fileId', label: '归档后文档ID' }
+  ],
+  humanReview: [
+    { key: 'approved', label: '审核结果' },
+    { key: 'comment', label: '审核意见' }
+  ],
+  notify: []
+}
+
+/**
+ * 节点可供下游引用的输出变量
+ * codeExecute 由 config.outputs 声明动态决定，其余类型查注册表
+ * @param node 节点数据
+ * @returns {Array<{key: string, label: string, value: string}>} value 形如 #{node:节点id键名}#
+ */
+export function getNodeOutputs(node) {
+  if (!node) return []
+  const entries = node.type === 'codeExecute'
+    ? (node.config?.outputs || []).filter(item => item.key).map(item => ({ key: item.key, label: item.name || item.key }))
+    : (NODE_OUTPUTS[node.type] || [])
+  return entries.map(item => ({
+    key: item.key,
+    label: item.label,
+    value: `#{node:${node.id}${item.key}}#`
+  }))
+}
 
 function getNodeConfig(node) {
   return node.config || {}
@@ -73,11 +129,7 @@ const SUMMARY_BUILDERS = {
   docParse: (node) => (getNodeConfig(node).fileCode ? '已绑定文件字段' : '待绑定文件'),
   kbArchive: (node) => (getNodeConfig(node).knowledgeId ? '归档目标已配置' : '待配置归档目标'),
   notify: (node) => (getNodeConfig(node).userCode ? '通知对象已配置' : '待配置通知对象'),
-  codeExecute: (node) => {
-    const config = getNodeConfig(node)
-    if (!config.code) return '待编写脚本'
-    return config.codeType === 'groovy' ? 'Groovy 脚本已编写' : 'SpEL 脚本已编写'
-  },
+  codeExecute: (node) => (getNodeConfig(node).code ? 'Python 脚本已编写' : '待编写脚本'),
   humanReview: (node) => (getNodeConfig(node).reviewerIds ? '审核人已配置' : '待配置审核人')
 }
 

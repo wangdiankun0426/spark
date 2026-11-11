@@ -61,6 +61,17 @@ $agent-theme-pink-soft:   #ffe8f0;
 $agent-theme-indigo:      #5e72e4;
 $agent-theme-indigo-soft: #eaedff;
 
+// 代码编辑器固定深色配色，不随亮暗主题切换
+$code-bg:     #0f1b2d;
+$code-text:   #c9d4e5;
+$code-key:    #7ab8ff;
+$code-string: #9ad1a4;
+$code-number: #f2b96e;
+$code-bool:   #d38aea;
+$code-punct:  #64748f;
+$code-lineno: rgba(255, 255, 255, 0.28);
+$code-mark:   rgba(47, 123, 255, 0.18);
+
 // app 运行时主题变量同名映射，定义在 theme.scss
 $app-bg-card: var(--app-bg-card);
 $app-bg-overlay: var(--app-bg-overlay);

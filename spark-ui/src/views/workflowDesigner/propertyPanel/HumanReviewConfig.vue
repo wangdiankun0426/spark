@@ -2,9 +2,10 @@
   <div class="human-review-config">
     <el-divider>人工审核配置</el-divider>
     <el-form-item label="审核提示">
-      <el-input
+      <var-field
+          clearable
           v-model="form.config.prompt"
-          type="textarea"
+          textarea
           :rows="4"
           placeholder="输入审核提示信息"
           @change="emit('update')"
@@ -30,27 +31,23 @@
         class="var-row"
     >
       <span class="var-label">{{ b.label }}</span>
-      <code class="var-code" v-text="b.value"></code>
-      <el-button
-          type="primary"
-          link
-          @click="copyVar(b.value)"
-      >复制</el-button>
+      <code class="var-code" :title="b.value" v-text="b.value"></code>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, computed, onMounted } from 'vue'
 import { pageUserListAPI } from '@/api/manage/sys/user.js'
+import VarField from '../var/VarField.vue'
+import { getNodeOutputs } from '../nodes/index.js'
 
 const props = defineProps({ form: { type: Object, required: true } })
 const emit = defineEmits(['update'])
 
 const userList = ref([])
 onMounted(async () => {
-  // 字典接口失败（未登录 / 网络异常）时保持空候选，不能阻断面板挂载
+  // 字典接口失败时保持空候选，不阻断面板挂载
   try {
     const res = await pageUserListAPI({ page: false })
     if (res && res.code === 200 && res.data?.rows) {
@@ -61,54 +58,28 @@ onMounted(async () => {
   }
 })
 
-/** 节点输出变量 */
-const outputVar = [
-  { label: '审核结果', value: `#{node:${props.form.id}approved}#` },
-  { label: '审核意见', value: `#{node:${props.form.id}comment}#` },
-]
-
-/** 复制变量到剪贴板*/
-function copyVar(text) {
-  const done = () => ElMessage.success('已复制: ' + text)
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done))
-  } else {
-    fallbackCopy(text, done)
-  }
-}
-function fallbackCopy(text, done) {
-  const ta = document.createElement('textarea')
-  ta.value = text
-  ta.style.position = 'fixed'
-  ta.style.opacity = '0'
-  document.body.appendChild(ta)
-  ta.select()
-  try {
-    document.execCommand('copy')
-    done()
-  } finally {
-    document.body.removeChild(ta)
-  }
-}
+const outputVar = computed(() => getNodeOutputs(props.form))
 </script>
 
 <style scoped lang="scss">
 .var-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 6px 4px;
+  gap: 8px;
+  padding: 4px;
   .var-label {
-    width: 60px;
     flex-shrink: 0;
     font-size: 13px;
     color: $color-text-primary;
   }
   .var-code {
     flex: 1;
-    font-size: 14px;
+    min-width: 0;
+    font-size: 12px;
     color: $app-primary;
-    word-break: break-all;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 </style>

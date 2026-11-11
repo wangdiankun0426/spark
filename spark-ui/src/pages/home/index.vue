@@ -72,7 +72,7 @@
 <script setup>
 import {computed} from "vue";
 import {useRoute} from "vue-router";
-import RailToggle from '@/components/RailToggle.vue';
+import RailToggle from '@/components/RailToggle/index.vue';
 import {railMini, railWidth, railWidthMini} from '@/utils/railUtil.js';
 import Dashboard from "@/assets/icons/dashboard.vue";
 import Chat from "@/assets/icons/chat.vue";

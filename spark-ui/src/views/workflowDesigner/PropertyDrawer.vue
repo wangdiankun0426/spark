@@ -72,12 +72,26 @@
                     :value="f.value"
                 />
               </el-select>
-              <el-input
+              <el-select
                   v-else
                   v-model="cond.field"
-                  placeholder="输入上游节点输出数据，如 nodeId.result"
-                  @input="syncCondition"
-              />
+                  placeholder="选择上游节点输出"
+                  filterable
+                  @change="syncCondition"
+              >
+                <el-option-group
+                    v-for="g in nodeFieldOptions"
+                    :key="g.nodeId"
+                    :label="g.name"
+                >
+                  <el-option
+                      v-for="opt in g.options"
+                      :key="opt.value"
+                      :label="opt.label"
+                      :value="opt.value"
+                  />
+                </el-option-group>
+              </el-select>
               <el-select
                   v-model="cond.relation"
                   placeholder="选择关系"
@@ -281,8 +295,9 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, provide } from 'vue'
 import { NODE_META } from './nodes/index.js'
+import { WF_VARS_KEY, buildVarGroups, buildNodeFieldOptions } from './var/flowVariables.js'
 import DocParseConfig from './propertyPanel/DocParseConfig.vue'
 import NotifyConfig from './propertyPanel/NotifyConfig.vue'
 import KbArchiveConfig from './propertyPanel/KbArchiveConfig.vue'
@@ -326,7 +341,6 @@ function hasConfigComponent(type) {
   return CONFIG_COMPONENT_TYPES.includes(type)
 }
 
-/** 执行策略默认值 */
 const retryTimeoutDefaults = {
   timeoutMs: 300000,
   maxRetries: 3,
@@ -349,7 +363,6 @@ watch(() => props.node, (newNode) => {
   }
   if (newNode) {
     const data = JSON.parse(JSON.stringify(newNode));
-    // 确保 config 对象存在
     if (!data.config) {
       data.config = {};
     }
@@ -377,19 +390,27 @@ function handleNameInput(val) {
   emitUpdate();
 }
 
-/** 表单字段选项（label/value），用于条件构建器的字段下拉选择 */
+/** 表单字段选项，用于条件构建器的字段下拉选择 */
 const fieldOptions = computed(() =>
   props.formFields.map(f => ({ label: f.label, value: f.code }))
 );
 
-/** 获取节点名称用于分支信息展示 */
+/** 配置面板变量下拉的分组选项，经 provide 下发给各 VarField */
+const varGroups = computed(() => buildVarGroups(props.node, props.nodes, props.formFields));
+provide(WF_VARS_KEY, varGroups);
+
+/** 分支条件「节点数据」字段下拉，value 为 SpEL 扁平直拼键，锚点是网关自身 */
+const nodeFieldOptions = computed(() =>
+  props.edge ? buildNodeFieldOptions(props.edge.source, props.nodes, props.sequences) : []
+);
+
 function getNodeName(nodeId) {
   const n = props.nodes.find(n => n.id === nodeId);
   return n ? n.name : '未知节点';
 }
 
 /**
- * 从某节点出发的广度优先可达节点序列（含起点，按层序排列）
+ * 从某节点出发的广度优先可达节点序列，含起点按层序排列
  * @param startId 起点节点 id
  * @returns {string[]} 可达节点 id 列表
  */
@@ -437,7 +458,6 @@ function newCondition() {
   return { source: 'form', field: '', relation: '', value: '', logic: '&&' };
 }
 
-/** 条件构建器状态：多条件列表 */
 const conditions = ref([newCondition()]);
 
 /** 原表达式无法可视化解析时为 true，此时保留原表达式不被空条件覆盖 */
@@ -455,12 +475,11 @@ watch(() => props.edge, (edge) => {
   }
 }, { immediate: true });
 
-/** 添加一行条件 */
 function addCondition() {
   conditions.value.push(newCondition());
 }
 
-/** 删除一行条件（至少保留一行） */
+/** 删除一行条件，至少保留一行 */
 function removeCondition(idx) {
   if (conditions.value.length > 1) {
     conditions.value.splice(idx, 1);
@@ -482,7 +501,7 @@ function syncCondition() {
 }
 
 /**
- * 生成 el 表达式（多条件以 且/或 连接）
+ * 生成 el 表达式，多条件以 且/或 连接
  * @param rows 条件列表 [{ field, relation, value, logic }]
  * @returns {string} 如 ${amount > 80 && status == '1'}，无完整条件时返回空串
  */
@@ -501,7 +520,7 @@ function buildCondition(rows) {
 }
 
 /**
- * 生成单个条件片段（不带 ${} 包裹）
+ * 生成单个条件片段，不带 ${} 包裹
  * @param c 条件 { field, relation, value }
  * @returns {string} 如 amount > 80 / status == '1'，不完整时返回空串
  */
@@ -513,7 +532,7 @@ function buildFragment(c) {
   if (c.relation === 'contains') {
     return `${code}.contains('${c.value}')`;
   }
-  // 纯数字值不加引号（数值比较），否则加单引号（字符串比较）
+  // 纯数字值不加引号按数值比较，否则加单引号按字符串比较
   const isNumeric = /^-?\d+(\.\d+)?$/.test(c.value);
   const val = isNumeric ? c.value : `'${c.value}'`;
   return `${code} ${c.relation} ${val}`;
@@ -522,7 +541,7 @@ function buildFragment(c) {
 /**
  * 解析条件表达式回填构建器
  * @param expr 条件表达式
- * @returns {Array|null} 条件列表（每行含 logic），无法解析时返回 null
+ * @returns {Array|null} 条件列表，每行含 logic，无法解析时返回 null
  */
 function parseCondition(expr) {
   if (!expr) {
@@ -546,8 +565,8 @@ function parseCondition(expr) {
 }
 
 /**
- * 在顶层按 && / || 拆分表达式（引号内的连接符不拆分）
- * @param s 表达式（不含 ${} 包裹）
+ * 在顶层按 && / || 拆分表达式，引号内的连接符不拆分
+ * @param s 表达式，不含 ${} 包裹
  * @returns {{parts: string[], logics: string[]}} 片段列表与各片段前的连接符
  */
 function splitFragments(s) {
@@ -575,12 +594,12 @@ function splitFragments(s) {
 
 /**
  * 解析单个条件片段
- * @param frag 片段（如 amount > 80）
+ * @param frag 片段，如 amount > 80
  * @returns {{field: string, relation: string, value: string}|null} 无法解析时返回 null
  */
 function parseFragment(frag) {
   const c = { source: 'form', field: '', relation: '', value: '', logic: '&&' };
-  // 包含：field.contains('value')（字段支持节点ID前缀，如 nodeId.answer）
+  // 包含：field.contains('value')，字段支持节点ID前缀
   let m = frag.match(/^([\w.]+)\.contains\(['"](.*)['"]\)$/);
   if (m) {
     c.field = m[1];
@@ -709,6 +728,10 @@ function fillSource(c) {
   border: 1px solid $wf-panel-border;
   border-radius: 10px;
   padding: 10px 11px;
+}
+
+.sec-card :deep(.el-divider__text) {
+  background-color: $wf-sec-bg;
 }
 
 .sec-title {

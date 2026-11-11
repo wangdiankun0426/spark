@@ -1,14 +1,12 @@
 package com.spark.workflow.engine.executor;
 
-import com.spark.common.bean.base.ResultData;
-import com.spark.common.bean.sys.query.AttachmentQuery;
-import com.spark.common.bean.sys.result.AttachmentResult;
-import com.spark.common.utils.*;
-import com.spark.common.llm.ModelUsageSceneHolder;
-import com.spark.dao.dms.AttachmentDao;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.ModelUsageSceneEnum;
 import com.spark.common.enums.WorkflowTemplateTypeEnum;
+import com.spark.common.llm.ModelUsageSceneHolder;
+import com.spark.common.utils.JsonUtil;
+import com.spark.common.utils.MapUtil;
+import com.spark.common.utils.StringUtil;
 import com.spark.llm.model.ModelFactory;
 import com.spark.manage.BaseService;
 import dev.langchain4j.model.chat.ChatModel;
@@ -17,7 +15,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * +++/\_/\
@@ -27,18 +26,14 @@ import java.util.*;
  *
  * @author wangdiankun
  * @since 2026-08-11 15:00:00
- * LLM节点执行器：提示词支持 #{doc:来源}# 变量引用文档分片内容
- * 来源支持 form:表单字段 / node:节点输出 / 固定文档ID，多个文档ID以逗号分隔
+ * LLM节点执行器：提示词支持 form/formTxt/node 三类 #{type:键}# 变量引用
+ * 文档内容经前置文档解析节点输出，由 node 变量引入提示词
  */
 @Component
 public class LlmTaskExecutor extends BaseService implements IWfNodeExecutor {
     private static final Logger logger = LoggerFactory.getLogger(LlmTaskExecutor.class);
     @Autowired
     private ModelFactory modelFactory;
-    @Autowired
-    private AttachmentDao attachmentDao;
-    @Autowired
-    private FileUtil fileUtil;
 
     /**
      * 节点类型
@@ -57,7 +52,7 @@ public class LlmTaskExecutor extends BaseService implements IWfNodeExecutor {
      * @return
      */
     @Override
-    public Map<String, String> execute(String nodeId, Map<String, Object> config, Map<String, String> input, Map<String, String> valueMap , Map<String, String> showValueMap) {
+    public Map<String, String> execute(String nodeId, Map<String, Object> config, Map<String, String> input, Map<String, String> valueMap, Map<String, String> showValueMap) {
         Map<String, String> output = new HashMap<>();
         if (config == null) {
             throw new IllegalArgumentException(ErrorCodeEnum.INVALID_PARAM.getDesc());
@@ -66,23 +61,8 @@ public class LlmTaskExecutor extends BaseService implements IWfNodeExecutor {
         if (modelId == null) {
             throw new IllegalArgumentException("LLM节点未配置大模型");
         }
-        Map<String, String> defParamMap = new HashMap<>();
-        String fileCode = MapUtil.getStringVal(config, "fileCode");
-        String attIdStr = super.generateFlowValue(fileCode, null, valueMap, showValueMap, input);
-        if (StringUtil.isNotBlank(attIdStr)) {
-            List<Long> attIds = Arrays.stream(attIdStr.split(",")).filter(StringUtil::isNumeric).map(Long::parseLong).toList();
-            AttachmentQuery attachmentQuery = new AttachmentQuery();
-            attachmentQuery.setId(attIds.get(0));
-            AttachmentResult attachmentResult = attachmentDao.queryAttachment(attachmentQuery);
-            String filePath = attachmentResult.getPath();
-            String txtPath = fileUtil.generateTxtFile(filePath);
-            ResultData<String> txtData = TextUtil.getFromText(txtPath, true);
-            if (txtData.getCode() == ResultData.OK) {
-                defParamMap.put("content", txtData.getData());
-            }
-        }
         String promptStr = MapUtil.getStringVal(config, "prompt");
-        String prompt = super.generateFlowValue(promptStr, defParamMap, valueMap, showValueMap, input);
+        String prompt = super.generateFlowValue(promptStr, null, valueMap, showValueMap, input);
         if (StringUtil.isBlank(prompt)) {
             throw new IllegalArgumentException("LLM节点系统提示词参数解析失败");
         }
@@ -97,7 +77,8 @@ public class LlmTaskExecutor extends BaseService implements IWfNodeExecutor {
                 for (Map.Entry<String, Object> entry : map.entrySet()) {
                     String key = entry.getKey();
                     Object value = entry.getValue();
-                    output.put(nodeId+key, String.valueOf(value));
+                    String text = String.valueOf(value);
+                    output.put(nodeId+key, text);
                 }
             }
             logger.info("llm node executed");

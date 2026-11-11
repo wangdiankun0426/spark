@@ -31,7 +31,7 @@
 
 import {computed} from "vue";
 import {useRoute} from "vue-router";
-import RailToggle from '@/components/RailToggle.vue';
+import RailToggle from '@/components/RailToggle/index.vue';
 import {railMini, railWidth, railWidthMini} from '@/utils/railUtil.js';
 import {hasMenu, MENU_CODES} from "@/utils/menuUtil.js";
 import FlowApplication from "@/assets/icons/flowApplication.vue";

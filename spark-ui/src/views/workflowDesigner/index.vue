@@ -12,9 +12,6 @@
         <el-button @click="previewVisible = true">
           <el-icon><View /></el-icon>流程图预览
         </el-button>
-        <el-button @click="varHelpVisible = true">
-          <el-icon><QuestionFilled /></el-icon>变量帮助
-        </el-button>
         <el-button @click="showClearConfirm = true">
           <el-icon><Delete /></el-icon>清空流程
         </el-button>
@@ -75,9 +72,6 @@
       <span class="status-right">{{ workflowId ? `版本 ${revNum ? 'v' + revNum : '新'}` : '未保存到模板' }}</span>
     </div>
 
-    <!--变量帮助对话框-->
-    <variable-help v-model="varHelpVisible" :form-fields="formFields" :base-vars="baseVars" />
-
     <!--JSON 数据：可复制给他人，也可粘贴其他流程的 JSON 后应用到当前画布-->
     <el-drawer
         v-model="jsonVisible"
@@ -137,9 +131,8 @@ import { queryWorkflowDetailAPI } from '@/api/workflow/template.js';
 import { queryFormFieldListAPI } from '@/api/form/formField.js';
 import { saveVersionAPI, queryVersionDetailAPI } from '@/api/workflow/version.js';
 import CanvasIndex from '@/views/workflowDesigner/canvas/index.vue';
-import { NODE_META, NODE_SIZE } from '@/views/workflowDesigner/nodes/index.js';
+import { NODE_META, NODE_SIZE, DEFAULT_PYTHON_CODE } from '@/views/workflowDesigner/nodes/index.js';
 import PropertyDrawer from '@/views/workflowDesigner/PropertyDrawer.vue';
-import VariableHelp from '@/components/FlowVariableHelp/index.vue';
 import WorkflowPreview from '@/components/WorkflowPreview/index.vue';
 import Workflow from "@/assets/icons/workflow.vue";
 
@@ -322,7 +315,7 @@ function getDefaultConfig(type) {
     case 'endEvent':
       return { outputs: [] };
     case 'llmTask':
-      return { modelId: null, prompt: '', fileCode: '' };
+      return { modelId: null, prompt: '' };
     case 'exclusiveGateway':
       return {};
     case 'placeholder':
@@ -340,7 +333,7 @@ function getDefaultConfig(type) {
     case 'kbArchive':
       return { knowledgeId: null, fileCode: '' };
     case 'codeExecute':
-      return { codeType: 'spel', code: '' };
+      return { code: DEFAULT_PYTHON_CODE, inputs: [], outputs: [{ name: '结果', key: 'result' }] };
     case 'humanReview':
       return { prompt: '', reviewerIds: '' };
     default: return {};
@@ -825,12 +818,6 @@ function handleDeleteSelectedEdge() {
 }
 
 const showClearConfirm = ref(false);
-
-/** 变量帮助对话框 */
-const varHelpVisible = ref(false);
-const baseVars = [
-
-];
 
 function confirmClear() {
   nodes.value = [];
