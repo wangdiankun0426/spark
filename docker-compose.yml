@@ -174,7 +174,7 @@ services:
     restart: always
 
   spark-server:
-    image: spark-server:0.0.1
+    image: spark-server:1.0.0
     container_name: spark-server
     privileged: true
     depends_on:
@@ -194,7 +194,7 @@ services:
     volumes:
       - /opt/spark/docs:/opt/spark/docs
       - /opt/spark/logs:/opt/spark/logs
-      - /opt/spark/app/spark.server.com/spark-0.0.1-SNAPSHOT.jar:/opt/spark/app/spark.server.com/spark-0.0.1-SNAPSHOT.jar:ro
+      - /opt/spark/app/spark.server.com/spark-1.0.0-SNAPSHOT.jar:/opt/spark/app/spark.server.com/spark-1.0.0-SNAPSHOT.jar:ro
       - /opt/spark/app/spark.server.com/lib:/opt/spark/app/spark.server.com/lib:ro
       - /opt/spark/app/spark.server.com/application-prod.yml:/opt/spark/app/spark.server.com/application-prod.yml:ro
       - /opt/spark/app/spark.server.com/logback.xml:/opt/spark/app/spark.server.com/logback.xml:ro

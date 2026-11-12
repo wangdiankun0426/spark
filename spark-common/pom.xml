@@ -7,13 +7,13 @@
     <parent>
         <groupId>com.spark</groupId>
         <artifactId>spark</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
 
     <name>spark-common</name>
     <description>spark-common 该模块用于存放公共类</description>
     <artifactId>spark-common</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <dependencies>

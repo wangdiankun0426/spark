@@ -199,7 +199,7 @@ function goFunc(item) {
     return;
   }
   if (item.action === 'agreement') {
-    uni.navigateTo({url: `/pages/agreement/index?type=${item.type}`});
+    uni.navigateTo({url: `/pages/base/agreement/index?type=${item.type}`});
     return;
   }
   uni.navigateTo({

@@ -14,9 +14,9 @@ onLaunch(() => {
 // 打开不存在的页面时 兜底跳转 404
 onPageNotFound(() => {
   uni.redirectTo({
-    url: '/pages/error/notFound',
+    url: '/pages/base/error/notFound',
     fail: () => {
-      uni.reLaunch({url: '/pages/error/notFound'});
+      uni.reLaunch({url: '/pages/base/error/notFound'});
     }
   });
 });

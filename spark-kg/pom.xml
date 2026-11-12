@@ -6,30 +6,30 @@
     <parent>
         <groupId>com.spark</groupId>
         <artifactId>spark</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
 
     <name>spark-kg</name>
     <description>spark-kg 知识图谱模块</description>
     <artifactId>spark-kg</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
             <groupId>com.spark</groupId>
             <artifactId>spark-config</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.spark</groupId>
             <artifactId>spark-llm</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.spark</groupId>
             <artifactId>spark-manage</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
         <!-- Neo4j Java Driver -->
         <dependency>

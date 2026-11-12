@@ -6,25 +6,25 @@
     <parent>
         <groupId>com.spark</groupId>
         <artifactId>spark</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
 
     <name>spark-llm</name>
     <description>spark-llm 大模型模块</description>
     <artifactId>spark-llm</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
             <groupId>com.spark</groupId>
             <artifactId>spark-config</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.spark</groupId>
             <artifactId>spark-dao</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
         <!--整合elasticsearch的启动器-->
         <dependency>
@@ -53,7 +53,7 @@
         <dependency>
             <groupId>com.spark</groupId>
             <artifactId>spark-manage</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 

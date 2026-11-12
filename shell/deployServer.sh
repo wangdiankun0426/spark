@@ -1,12 +1,12 @@
 #!/bin/bash
 # 星火云服务端自动更新脚本
-# 用法：将新包 spark-0.0.1-SNAPSHOT.jar 放到 /root 下，执行 sh deployServer.sh
+# 用法：将新包 spark-1.0.0-SNAPSHOT.jar 放到 /root 下，执行 sh deployServer.sh
 # 流程：整个部署目录备份为 spark.server.com_日期.序号 → 新包覆盖 → 重启容器 → 跟踪日志
 
 set -e
 
 # 新包路径
-SRC_JAR="/root/spark-0.0.1-SNAPSHOT.jar"
+SRC_JAR="/root/spark-1.0.0-SNAPSHOT.jar"
 # 部署目录与容器名
 APP_DIR="/opt/spark/app"
 DEPLOY_DIR="${APP_DIR}/spark.server.com"
@@ -42,15 +42,15 @@ fi
 
 # 新包覆盖部署目录内的 jar，配置文件保持线上原样不动
 mkdir -p "${DEPLOY_DIR}"
-mv "${SRC_JAR}" "${DEPLOY_DIR}/spark-0.0.1-SNAPSHOT.jar"
+mv "${SRC_JAR}" "${DEPLOY_DIR}/spark-1.0.0-SNAPSHOT.jar"
 
 # 部署目录内文件时间统一刷新为当前时间
-for item in "spark-0.0.1-SNAPSHOT.jar" "application-prod.yml" "logback.xml" "lib"; do
+for item in "spark-1.0.0-SNAPSHOT.jar" "application-prod.yml" "logback.xml" "lib"; do
     if [ -e "${DEPLOY_DIR}/${item}" ]; then
         touch "${DEPLOY_DIR}/${item}"
     fi
 done
-echo "新包已部署: ${DEPLOY_DIR}/spark-0.0.1-SNAPSHOT.jar"
+echo "新包已部署: ${DEPLOY_DIR}/spark-1.0.0-SNAPSHOT.jar"
 
 # 重启容器
 docker restart "${CONTAINER_NAME}"

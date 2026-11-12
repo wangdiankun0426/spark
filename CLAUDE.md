@@ -16,7 +16,7 @@
 - 同理，不要自动执行前端构建（`npm run build` 等）或启动服务。
 
 ## Tech Stack
-- JDK 17 / SpringBoot 3.4.0 / Maven 3.9.9
+- JDK 21 / SpringBoot 3.4.0 / Maven 3.9.9
 - MySQL 8.0.31 / Redis / RabbitMQ / Elasticsearch (8.x)
 - MyBatis 3.0.4 + Druid 1.2.20 / Fastjson2 / Hutool 5.8.40
 - LangChain4j 1.4.0 / Flowable 7.2.0 / Neo4j Java Driver 5.27.0

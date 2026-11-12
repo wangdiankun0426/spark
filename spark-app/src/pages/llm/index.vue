@@ -872,6 +872,8 @@ function handleOnTabChange(index) {
 }
 
 .state-box {
+  width: 100%;
+  box-sizing: border-box;
   padding-top: 90px;
   display: flex;
   justify-content: center;
@@ -879,6 +881,7 @@ function handleOnTabChange(index) {
 
 .state-box--empty {
   padding-top: 18px;
+  display: block;
 }
 
 .section-head {

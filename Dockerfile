@@ -1,5 +1,5 @@
 # 基础镜像
-FROM openjdk:17
+FROM eclipse-temurin:21-jdk
 
 # author
 MAINTAINER wangdiankun
@@ -9,9 +9,10 @@ RUN /bin/cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone
 
 # 安装字体与python运行时
-RUN microdnf install -y fontconfig dejavu-sans-fonts python3 && \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends fontconfig fonts-dejavu-core python3 tzdata && \
     fc-cache -f && \
-    microdnf clean all
+    rm -rf /var/lib/apt/lists/*
 
 # 创建目录
 RUN mkdir -p /opt/spark/app/spark.server.com
@@ -29,7 +30,6 @@ ENV JAVA_OPTS="\
     -Xms1024m \
     -Xmx1024m \
     -XX:MaxMetaspaceSize=128m \
-    -XX:+UnlockExperimentalVMOptions \
     -XX:+UseZGC \
     -Djava.awt.headless=true \
     -Dsun.net.client.defaultConnectTimeout=60000 \
@@ -44,4 +44,4 @@ ENTRYPOINT java ${JAVA_OPTS} \
     -Dspring.config.location=file:./application-prod.yml \
     -Dlogging.config=file:./logback.xml \
     -Dloader.path=./lib \
-    -jar ./spark-0.0.1-SNAPSHOT.jar
+    -jar ./spark-1.0.0-SNAPSHOT.jar

@@ -15,7 +15,7 @@ description: Spark 项目后端（Java）编码规范。创建/修改 Java 类�
 
 ## 2. 项目背景
 
-- **版本**：JDK 17 / SpringBoot 3.4.0 / Maven 3.9.9；MyBatis 3.0.4 + Druid 1.2.20；Fastjson2 / Hutool 5.8.40。
+- **版本**：JDK 21 / SpringBoot 3.4.0 / Maven 3.9.9；MyBatis 3.0.4 + Druid 1.2.20；Fastjson2 / Hutool 5.8.40。
 - **无 `spark-service` 模块**；`BaseService` 位于 `spark-manage`。业务 Service 分布在领域模块（chat/flow/form/kb/kg/llm/manage/task），依赖 `spark-manage` 继承 `BaseService`。
 - **分层严格**：`Controller → Service → DAO → Database`，禁止跨层或反向调用。
 - **返回格式**：所有 Service 方法返回 `ResultData<T>`；成功 `ResultData.OK`（200），失败 `result.setErrorCode(ErrorCodeEnum.XXX)`。

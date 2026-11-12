@@ -453,7 +453,7 @@ function toggleAgree() {
  * 打开协议文本页
  */
 function openAgreement(type) {
-  uni.navigateTo({url: `/pages/agreement/index?type=${type}`});
+  uni.navigateTo({url: `/pages//base/agreement/index?type=${type}`});
 }
 
 // #ifdef MP-WEIXIN

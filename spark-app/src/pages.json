@@ -107,19 +107,19 @@
       }
     },
     {
-      "path": "pages/agreement/index",
+      "path": "pages/base/agreement/index",
       "style": {
         "navigationStyle": "custom"
       }
     },
     {
-      "path": "pages/error/notFound",
+      "path": "pages/base/error/notFound",
       "style": {
         "navigationStyle": "custom"
       }
     },
     {
-      "path": "pages/error/noPermission",
+      "path": "pages/base/error/noPermission",
       "style": {
         "navigationStyle": "custom"
       }

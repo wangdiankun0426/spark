@@ -6,20 +6,20 @@
     <parent>
         <groupId>com.spark</groupId>
         <artifactId>spark</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
 
     <name>spark-config</name>
     <description>spark-config 该模块用于存放配置类</description>
     <artifactId>spark-config</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
             <groupId>com.spark</groupId>
             <artifactId>spark-common</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
         <!--图形验证码-->
         <dependency>
