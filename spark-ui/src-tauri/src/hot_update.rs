@@ -250,7 +250,7 @@ pub async fn hot_update_install(
 /// 重新加载所有应用窗口，让新版本资源立即生效
 #[tauri::command]
 pub fn hot_update_reload(app: AppHandle) {
-    // 只刷新主窗口与应用窗口，宠物窗口是独立页面，不跟随热更资源
+    // 只刷新主窗口与应用窗口
     for (label, window) in app.webview_windows() {
         if label == "main" || label.starts_with("window-") {
             let _ = window.eval("window.location.reload()");

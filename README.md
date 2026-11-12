@@ -276,7 +276,7 @@ npm run pack:win
 
 ### 6.3 桌面端热更新
 
-前端资源支持在线热更新，改 `src/**` 或 `src-tauri/desktop/**` 无需重装客户端；`desktopPet/`、Rust 代码与 `tauri.conf.json` 仍需重新打包。
+前端资源支持在线热更新，改 `src/**` 或 `src-tauri/desktop/**` 无需重装客户端；Rust 代码与 `tauri.conf.json` 仍需重新打包。
 
 ```bash
 cd spark-ui
