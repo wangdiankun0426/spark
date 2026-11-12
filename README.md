@@ -1,6 +1,31 @@
-# 星火云应用平台
+<p align="center">
+  <img src="https://spark.evancloud.top:7101/bundle/sysImg/logo.png" alt="星火云应用平台" width="128">
+</p>
 
-> 企业级 AI 应用平台 · 低代码平台
+<h1 align="center">星火云应用平台</h1>
+
+<p align="center">
+  ✨ <b>企业级 AI 应用平台 · 低代码平台</b> ✨
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Version-v1.0.0-4C82F7?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/JDK-21-ED8B00?style=flat-square&logo=openjdk&logoColor=white" alt="JDK 21">
+  <img src="https://img.shields.io/badge/Spring%20Boot-3.4.0-6DB33F?style=flat-square&logo=springboot&logoColor=white" alt="Spring Boot">
+  <img src="https://img.shields.io/badge/Vue-3.3.4-4FC08D?style=flat-square&logo=vuedotjs&logoColor=white" alt="Vue 3">
+  <img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="License">
+</p>
+
+<p align="center">
+  <a href="#demo">🖥️ 系统体验</a> •
+  <a href="#features">✨ 核心能力</a> •
+  <a href="#modules">📦 功能模块</a> •
+  <a href="#stack">🛠️ 技术栈</a> •
+  <a href="#quickstart">🚀 快速开始</a> •
+  <a href="#donate">☕ 打赏</a>
+</p>
+
+---
 
 星火云应用平台是一套**企业级 AI 协同办公平台**，以「即时通信、自定义表单、自定义流程、AI Agent、AI 工作流（Workflow）」五大能力为核心，融合 RAG 知识库、知识图谱、大模型接入等 AI 基础设施，帮助企业**低代码、可视化**地快速构建和落地各类业务系统。
 
@@ -8,14 +33,18 @@
 
 ---
 
-## 系统体验
+<a id="demo"></a>
 
-| 端           | 地址                                                              |
-|-------------|-----------------------------------------------------------------|
-| PC 端        | https://spark.evancloud.top:7101                                |
-| Windows 桌面端 | https://spark.evancloud.top:7101/bundle/sparkcloud_0.0.11_x64-setup.exe |
-| H5 移动端      | https://spark.evancloud.top:7102                                |
+## 🖥️ 系统体验
+
+| 终端类型        | 地址                                                                                                    |
+|-------------|-------------------------------------------------------------------------------------------------------|
+| PC 端        | https://spark.evancloud.top:7101                                                                      |
+| Windows 桌面端 | https://spark.evancloud.top:7101/bundle/sparkcloud_1.0.0_x64-setup.exe                                |
+| H5 移动端      | https://spark.evancloud.top:7102                                                                      |
 | 微信小程序       | <img src="https://spark.evancloud.top:7101/bundle/wechatUrl.png" alt="微信小程序" width="160" height="160"> |
+
+> 💡 **Windows 安装提示**：桌面端安装包暂未进行代码签名，首次打开若弹出「Windows 已保护你的电脑」提示，点击 **更多信息** → **仍要运行** 即可正常安装。
 
 **测试账号**
 
@@ -26,7 +55,7 @@
 
 ---
 
-## 系统预览
+## 📸 系统预览
 
 ### PC 浏览器端
 
@@ -77,7 +106,9 @@
 
 ---
 
-## 1. 平台定位
+<a id="position"></a>
+
+## 🎯 平台定位
 
 **双平台定位：**
 
@@ -86,7 +117,9 @@
 
 ---
 
-## 2. 核心能力
+<a id="features"></a>
+
+## ✨ 核心能力
 
 | 能力 | 说明 |
 |------|------|
@@ -103,7 +136,9 @@
 
 ---
 
-## 3. 项目结构
+<a id="structure"></a>
+
+## 📁 项目结构
 
 ```
 spark/
@@ -131,7 +166,9 @@ spark/
 
 ---
 
-## 4. 技术栈
+<a id="stack"></a>
+
+## 🛠️ 技术栈
 
 ### 后端
 
@@ -169,42 +206,44 @@ spark/
 
 | 技术           | 版本      | 说明              |
 |--------------|---------|-----------------|
-| uniapp        | 3.0.0   | 跨平台框架           |
-| Vue           | 3.4.23  | 前端框架            |
-| Vite          | 4.3.5   | 构建工具            |
-| uViewPlus     | 3.3.21  | UI 组件库          |
-| Vuex          | 4.1.0   | 状态管理            |
+| uniapp       | 3.0.0   | 跨平台框架           |
+| Vue          | 3.4.23  | 前端框架            |
+| Vite         | 4.3.5   | 构建工具            |
+| uViewPlus    | 3.3.21  | UI 组件库          |
+| Vuex         | 4.1.0   | 状态管理            |
 
 ---
 
-## 5. 功能模块
+<a id="modules"></a>
 
-### 5.1 即时通信（spark-chat）
+## 📦 功能模块
+
+### 💬 即时通信（spark-chat）
 基于 WebSocket 的实时通讯能力：会话空间管理、一对一/群组消息收发、消息状态、用户关系维护。沟通数据安全可控，适用于企业内部协同场景。
 
-### 5.2 自定义表单（spark-form）
+### 📝 自定义表单（spark-form）
 提供可视化**表单设计器**：拖拽表单字段、配置校验与布局、版本管理；表单模板即建即用，提交的数据统一沉淀为结构化对象与取值，可被流程/工作流引用。
 
-### 5.3 自定义流程（spark-flow）
+### 🔄 自定义流程（spark-flow）
 提供可视化**流程设计器**，基于 Flowable 流程引擎：节点编排、审批人配置（发起人/指定用户/部门/角色/表单字段）、分支条件、通知提醒、流程实例跟踪与历史监控，覆盖请假、报销等典型审批场景。
 
-### 5.4 AI Agent 与大模型生态（spark-llm）
+### 🤖 AI Agent 与大模型生态（spark-llm）
 - **模型管理 / 模型市场**：多厂商大模型统一接入与配置
 - **智能体（Agent）**：绑定大模型、挂载知识库/知识图谱与 MCP 工具，设定系统提示词，可被对话、问答场景复用
 - **技能库（Skill）**：技能文件包（LLM Skill）管理，版本化沉淀可复用提示能力
 - **MCP 服务**：MCP Server 配置与个人令牌维护，为 Agent/工作流提供外部工具
 - **模型用量**：按模型、业务场景、日期统计调用次数与 Token 消耗（输入/输出），趋势图表支撑成本观测
 
-### 5.5 AI 工作流 Workflow（spark-workflow）
+### 🧩 AI 工作流 Workflow（spark-workflow）
 可视化 **DAG 工作流设计器**：拖拽节点、连线编排 AI 能力链，支持版本管理、开启/关闭、运行实例与节点级执行记录。节点类型覆盖：LLM 对话、知识库检索、图谱检索、文档解析、HTTP 请求、代码执行、变量操作、人工审核、Agent 任务、子流程等；节点编辑画布保持类 IDE 的浅色工作区，属性面板随主题适配。
 
-### 5.6 知识库（spark-kb）· RAG
+### 📚 知识库（spark-kb）· RAG
 企业级文档管理中心：文件上传/下载、在线预览（Word/Excel/PPT/PDF）、全文检索；基于 RAG 实现文档分块、向量化存储、多链路召回，为 AI 助手与 Agent 提供企业知识支撑。
 
-### 5.7 知识图谱（spark-kg）
+### 🕸️ 知识图谱（spark-kg）
 基于 Neo4j 构建企业知识图谱：实体关系抽取、图谱可视化展示，帮助发现知识间的关联，支持语义化智能检索。
 
-### 5.8 站点监控（spark-monitor）
+### 📊 站点监控（spark-monitor）
 自研轻量内嵌监控，分钟级定时采集、快照自动过期清理，无需引入 Prometheus/Grafana，仅系统管理员可见：
 
 - **服务器监控**：多节点在线状态、CPU、物理内存/JVM 堆与非堆、线程（阻塞/死锁）、已加载类、磁盘分区、网络吞吐、JVM 运行时长，主机/Druid 慢 SQL 快照
@@ -212,15 +251,15 @@ spark/
 - **缓存监控**：Redis 内存与 RSS、命中率趋势、命令统计
 - **消息队列**：RabbitMQ 队列消息积压量、消费者数、无消费者/堆积异常告警
 
-### 5.9 多租户（spark-manage）
+### 🏢 多租户（spark-manage）
 - 租户开通、账号配额、有效期（截止时间）管理
 - 租户下用户加入/移除、设置/取消租户管理员
 - 用户可加入多个租户，左下角一键切换默认租户，切换后菜单、数据权限整体生效
 
-### 5.10 数据看板（spark-home）
+### 📈 数据看板（spark-home）
 工作台聚合展示：模型调用量与 Token 趋势、流程待办/已办/申请分布、通知公告、员工工作日历、待办事项、快捷入口及知识库/知识图谱统计卡片，图表随主题自适应。
 
-### 5.11 后台管理
+### 🗂️ 后台管理
 按职能划分四个管理域：
 
 - **工作台**：待办/已办/我的申请/抄送、AI 对话、智能体、AI 工作流、通讯录、流程发起
@@ -229,7 +268,7 @@ spark/
 - **AI 管理**：模型/模型市场、技能库、MCP 服务、知识库、知识图谱、AI 工作流、模型用量
 - **站点管理**：租户管理、租户配置、服务器监控、缓存监控、消息队列、接口请求
 
-### 5.12 界面与交互体验
+### 🎨 界面与交互体验
 - **全局双主题**：浅色与品牌深蓝灰深色主题一键切换，覆盖页面、卡片、表格、表单、抽屉、弹窗、下拉、分页、滚动条；ECharts 图表与 v-md-editor 编辑器/预览同步适配；登录/注册/错误等独立页保持浅色
 - **品牌化设计**：品牌 Lockup 标识、登录页六大能力展示、圆角胶囊菜单选中态、统一卡片描边与投影体系
 - **全局弹窗拖拽**：el-dialog 与 ElMessageBox 标题栏按住可拖动、双击复位
@@ -237,9 +276,11 @@ spark/
 
 ---
 
-## 6. 快速开始
+<a id="quickstart"></a>
 
-### 6.1 后端
+## 🚀 快速开始
+
+### 后端
 
 ```bash
 # 1. 初始化数据库（执行 sql/ 目录下的脚本）
@@ -253,7 +294,7 @@ cd spark-web
 mvn spring-boot:run
 ```
 
-### 6.2 PC 前端
+### PC 前端
 
 ```bash
 cd spark-ui
@@ -274,7 +315,7 @@ npm run dev:win
 npm run pack:win
 ```
 
-### 6.3 桌面端热更新
+### 桌面端热更新
 
 前端资源支持在线热更新，改 `src/**` 或 `src-tauri/desktop/**` 无需重装客户端；Rust 代码与 `tauri.conf.json` 仍需重新打包。
 
@@ -294,7 +335,7 @@ npm run pack:update -- "本次更新说明"
 
 清单地址由 `.env.prod` 的 `VITE_HOT_UPDATE_URL` 指定，服务器需直接返回 `latest.json` 本体（不可回落到 `index.html`）。升级到首个热更版本后会掉一次登录态（窗口源由 `tauri://localhost` 变为 `http://app.localhost`）。
 
-### 6.4 移动端
+### 移动端
 
 ```bash
 cd spark-app
@@ -314,3 +355,23 @@ npm run dev:mp-weixin
 # 微信小程序构建
 npm run build:mp-weixin
 ```
+
+---
+
+<a id="donate"></a>
+
+## ☕ 打赏
+
+如果本项目对你有帮助，欢迎请作者喝杯咖啡 ☕ 你的支持是持续更新的最大动力。
+
+| 微信                                                                                         | 支付宝                                                                                      |
+|--------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
+| <img src="https://spark.evancloud.top:7101/bundle/sysImg/wechatPay.png" alt="微信收款码" width="240"> | <img src="https://spark.evancloud.top:7101/bundle/sysImg/aliPay.png" alt="支付宝收款码" width="240"> |
+
+---
+
+<p align="center">
+  <img src="https://spark.evancloud.top:7101/bundle/sysImg/logo.png" alt="星火云应用平台" width="36"><br><br>
+  <b>星火云应用平台</b> · 让 AI 融入企业日常业务<br>
+  Made with ❤️ by wangdiankun · <a href="LICENSE">MIT License</a>
+</p>
