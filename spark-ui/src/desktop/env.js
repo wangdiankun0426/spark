@@ -1,13 +1,13 @@
 /**
- * 桌面端环境适配
- *
- * 本目录（src-tauri/desktop）存放仅在 Tauri 壳内生效的前端代码，
- * 浏览器环境下 isDesktop 为 false，下面的能力全部不注册。
- *
- * Tauri 会在页面脚本执行前注入 window.__TAURI_INTERNALS__ / window.__TAURI__，
- * 以此作为桌面端环境标识。
+ * 桌面端环境适配，浏览器环境下 isDesktop 为 false，下面的能力全部不注册；
+ * Tauri 会在页面脚本执行前注入 window.__TAURI_INTERNALS__ / window.__TAURI__，以此作为环境标识
  */
-export const isDesktop = typeof window !== 'undefined' && window.__TAURI_INTERNALS__ !== undefined
+export const isDesktop = typeof window !== 'undefined' && (
+    window.__TAURI_INTERNALS__ !== undefined ||
+    // 开发模式下允许在浏览器里用 ?__desktop=1 强制进入客户端形态，便于单独调试客户端外壳样式；
+    // 该分支依赖 import.meta.env.DEV，打包后会被整体移除
+    (import.meta.env.DEV && new URLSearchParams(window.location.search).has('__desktop'))
+)
 
 /**
  * 将任意内部地址规范化为 Hash 路由
@@ -51,6 +51,10 @@ export function setupDesktop() {
   const rawOpen = window.open.bind(window)
   window.open = (url) => {
     if (url === undefined || url === null || url === '') {
+      return rawOpen(url)
+    }
+    // 浏览器调试态没有 Tauri API，交回原生实现
+    if (!window.__TAURI__) {
       return rawOpen(url)
     }
     const invoke = window.__TAURI__.core.invoke

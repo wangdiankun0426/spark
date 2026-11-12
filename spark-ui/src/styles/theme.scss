@@ -267,3 +267,30 @@ html.dark {
     linear-gradient(135deg, #1b2740 0%, #16203a 55%, #111a30 100%);
   --auth-title-grad: linear-gradient(100deg, #cfe0ff 0%, #93c5fd 58%, #7dd3fc 100%);
 }
+
+// 客户端外壳令牌映射自 Web 主题变量，描边/hover 取 shell 系与 Web 顶栏同色，弹层菜单 hover 取比卡片亮一档方向避免深色凹陷感
+html.desktop-shell {
+  --dsk-bg: var(--app-bg-page);
+  --dsk-topbar: var(--shell-nav-bg);
+  --dsk-sidebar: var(--shell-sidebar-bg);
+  --dsk-line: var(--shell-sidebar-border);
+  --dsk-text: var(--app-text-primary);
+  --dsk-text-muted: var(--app-text-secondary);
+  --dsk-text-faint: var(--shell-nav-faint);
+  --dsk-hover: var(--shell-nav-hover);
+  --dsk-menu-hover: var(--app-bg-sub);
+  --dsk-danger: var(--ds-err-tx);
+  --dsk-danger-bg: var(--ds-err-bg);
+  --dsk-avatar-ring: var(--shell-sidebar-bg);
+  --dsk-avatar-bg: var(--shell-nav-active-bg);
+  --dsk-group-text: var(--shell-group-text);
+  --dsk-item-text: var(--shell-item-text);
+  --dsk-item-hover: var(--shell-item-hover);
+  --dsk-item-active-bg: var(--shell-item-active-bg);
+  --dsk-item-active-text: var(--shell-item-active-text);
+  --dsk-chip-bg: var(--shell-dock-bg);
+  --dsk-brand-grad: var(--ds-grad);
+  --dsk-badge-grad: var(--ds-badge-grad);
+  --dsk-online: var(--ds-online);
+  --dsk-card-shadow: 0 1px 2px rgba(20, 35, 70, 0.05), 0 4px 12px -6px rgba(20, 35, 70, 0.12);
+}

@@ -36,8 +36,11 @@ description: Spark 项目前端 Web（spark-ui，Vue3 PC 端）编码规范。�
 | Vuex 模块 | `src/store/modules/<name>.js` | camelCase.js |
 | 工具函数 | `src/utils/<name>.js` | camelCase.js |
 | 样式 | `src/styles/<name>.scss` | camelCase.scss |
+| 桌面端代码 | `src/desktop/<分层>/<name>` | camelCase，别名 `@desktop` |
 
 业务模块：`home` / `chat` / `kb` / `kg` / `llm` / `flow` / `manage`（`manage` 下含 `system` / `log` / `form` / `kb` / `kg` / `llm` / `workflow` / `chat` 等后台管理子页）。
+
+桌面端分层：`src/desktop/` 根放环境引导与 Tauri 能力桥接（env / useDesktopWindow / download / hotUpdate）及浮层控制条 titlebar.vue，`components/` 放两套形态共享小部件，`shell/` 放客户端独立外壳（index / topbar / sidebar），`pages/` 放路由适配容器。桌面代码与 Web 同树同 bundle，样式一律走 `--dsk-*` 语义令牌的 `$dsk-*` 映射，类名前缀统一 `dsk-` 且类名根对齐文件名；`src-tauri/` 只放 Rust 与打包脚本，禁止再放前端代码。
 
 ## 4. 禁止项（硬性）
 
@@ -107,8 +110,11 @@ description: Spark 项目前端 Web（spark-ui，Vue3 PC 端）编码规范。�
 | 存储 key | `@/utils/keyUtils.js#localStorageKey` | `SPARK_USER_TOKEN`、`SPARK_USER_INFO` |
 | 文档类型 | `@/utils/documentUtil.js` | `getDocumentCategory`、文件后缀映射 |
 | 管理员判断 | `@/utils/utils.js#isAdmin()` | `userInfo.id === 101` |
-| 设计 token | `@/styles/variables.scss` | SCSS 侧唯一变量入口：编译期参数（颜色字面值、圆角、阴影、间距、过渡、侧栏宽度）+ 全部运行时主题变量的同名 `$` 映射（`$app-*` / `$ds-*` / `$shell-*` / `$el-*`），消费层只准引用本文件 |
-| 主题变量 | `@/styles/theme.scss` | `--app-*` / `--shell-*` / `--nav-*` / `--sidebar-*` 的唯一定义处，亮/暗两套与公共主题底座（`html.dark` / `html.theme-light`），只放定义不放消费 |
+| 设计 token | `@/styles/variables.scss` | SCSS 侧唯一变量入口：编译期参数（颜色字面值、圆角、阴影、间距、过渡、侧栏宽度）+ 全部运行时主题变量的同名 `$` 映射（`$app-*` / `$ds-*` / `$shell-*` / `$dsk-*` / `$el-*`），消费层只准引用本文件 |
+| 主题变量 | `@/styles/theme.scss` | `--app-*` / `--shell-*` / `--nav-*` / `--sidebar-*` 的唯一定义处，亮/暗两套与公共主题底座（`html.dark` / `html.theme-light`）；客户端外壳令牌 `--dsk-*` 定义在 `html.desktop-shell` 下，值映射自 Web 主题变量；只放定义不放消费 |
+| 退出登录 | `@/utils/useLogout.js#useLogout()` | Web 导航栏与客户端顶栏、账号卡共用的登出确认流程 |
+| 首页菜单 | `@/utils/homeMenu.js#HOME_MENU_GROUPS` | Web 图标侧栏与客户端常驻导航共用的菜单单一事实来源 |
+| 桌面端环境 | `@desktop/env.js#isDesktop / setupDesktop` | Tauri 壳判定与 window.open 接管，浏览器端全部降级 |
 | Element 覆盖 | `@/styles/element.scss` | `--el-*` / `--ds-*` 的唯一定义处与 EP 组件选择器覆盖（亮暗两套），el-* 覆盖只准放这里；选择器内消费一律用 `$` 变量 |
 | 应用外壳 | `@/styles/shell.scss` | 顶部导航栏与左侧菜单栏（`.app-nav` / `.app-sidebar`）全局结构样式，由 `--shell-*` token 驱动 |
 | 全局基础样式 | `@/styles/main.scss` | reset/排版、滚动条、`app-container`、第三方组件（v-md-editor 等）的 `html.dark` 深色覆盖 |

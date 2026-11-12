@@ -1,5 +1,7 @@
 <template>
-  <div>
+  <!-- 桌面客户端：使用独立外壳，与 Web 端 el-container 结构完全分开 -->
+  <desktop-shell v-if="isDesktop"/>
+  <div v-else>
     <el-container>
       <el-header class="el-header">
         <navigation/>
@@ -17,6 +19,8 @@
 <script setup>
 import navigation from '@/navigation';
 import {ref} from "vue";
+import {isDesktop} from '@desktop/env.js';
+import DesktopShell from '@desktop/shell/index.vue';
 
 const font = ref('rgba(0, 0, 0, .15)');
 

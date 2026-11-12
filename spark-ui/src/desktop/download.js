@@ -5,7 +5,7 @@ import {localStorageKey} from '@/utils/keyUtils.js'
 const DEFAULT_DIR_NAME = '星火云'
 
 /**
- * 获取桌面端下载目录（用户设置优先，否则为「文档/星火云」）
+ * 获取桌面端下载目录，用户设置优先，否则落在「文档/星火云」
  * @returns {Promise<string>}
  */
 export async function getDownloadDir() {
@@ -35,7 +35,7 @@ export function saveDownloadDir(dir) {
 }
 
 /**
- * 生成不冲突的文件名（a.pdf -> a(1).pdf）
+ * 生成不冲突的文件名，同名自动追加序号
  */
 async function resolveUniquePath(fs, pathApi, dir, filename) {
   const dot = filename.lastIndexOf('.')

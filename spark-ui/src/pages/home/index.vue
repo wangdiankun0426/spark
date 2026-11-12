@@ -11,53 +11,13 @@
             mode="vertical"
             class="app-sidebar-menu"
         >
-          <div class="app-sidebar__group">通用</div>
-          <el-menu-item index="/home/dashboard">
-            <el-icon><Dashboard/></el-icon>
-            <template #title>工作台</template>
-          </el-menu-item>
-          <el-menu-item index="/home/contact">
-            <el-icon><Chat/></el-icon>
-            <template #title>通讯录</template>
-          </el-menu-item>
-          <div class="app-sidebar__group">AI</div>
-          <el-menu-item index="/home/aichat">
-            <el-icon><AiChat/></el-icon>
-            <template #title>AI对话</template>
-          </el-menu-item>
-          <el-menu-item index="/home/agent">
-            <el-icon><Agent/></el-icon>
-            <template #title>智能体</template>
-          </el-menu-item>
-          <el-menu-item index="/home/workflow">
-            <el-icon><Workflow/></el-icon>
-            <template #title>工作流</template>
-          </el-menu-item>
-          <el-menu-item index="/home/workflow/review">
-            <el-icon><MyTodo/></el-icon>
-            <template #title>待审核</template>
-          </el-menu-item>
-          <div class="app-sidebar__group">流程</div>
-          <el-menu-item index="/home/flow/application">
-            <el-icon><FlowApplication/></el-icon>
-            <template #title>流程申请</template>
-          </el-menu-item>
-          <el-menu-item index="/home/flow/myApplication">
-            <el-icon><MyApplication/></el-icon>
-            <template #title>我的申请</template>
-          </el-menu-item>
-          <el-menu-item index="/home/flow/myTodo">
-            <el-icon><MyTodo/></el-icon>
-            <template #title>我的待办</template>
-          </el-menu-item>
-          <el-menu-item index="/home/flow/myDone">
-            <el-icon><MyDone/></el-icon>
-            <template #title>我的已办</template>
-          </el-menu-item>
-          <el-menu-item index="/home/flow/copyMe">
-            <el-icon><CopyMe/></el-icon>
-            <template #title>抄送给我</template>
-          </el-menu-item>
+          <template v-for="group in HOME_MENU_GROUPS" :key="group.title">
+            <div class="app-sidebar__group">{{ group.title }}</div>
+            <el-menu-item v-for="item in group.items" :key="item.path" :index="item.path">
+              <el-icon><component :is="item.icon"/></el-icon>
+              <template #title>{{ item.label }}</template>
+            </el-menu-item>
+          </template>
         </el-menu>
       </el-aside>
 
@@ -74,16 +34,7 @@ import {computed} from "vue";
 import {useRoute} from "vue-router";
 import RailToggle from '@/components/RailToggle/index.vue';
 import {railMini, railWidth, railWidthMini} from '@/utils/railUtil.js';
-import Dashboard from "@/assets/icons/dashboard.vue";
-import Chat from "@/assets/icons/chat.vue";
-import AiChat from "@/assets/icons/aichat.vue";
-import Agent from "@/assets/icons/agent.vue";
-import Workflow from "@/assets/icons/workflow.vue";
-import FlowApplication from "@/assets/icons/flowApplication.vue";
-import MyApplication from "@/assets/icons/myApplication.vue";
-import MyTodo from "@/assets/icons/myTodo.vue";
-import MyDone from "@/assets/icons/myDone.vue";
-import CopyMe from "@/assets/icons/copyMe.vue";
+import {HOME_MENU_GROUPS} from '@/utils/homeMenu.js';
 const route = useRoute();
 
 /**

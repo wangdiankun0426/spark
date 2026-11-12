@@ -1,0 +1,35 @@
+// 客户端专属样式总入口，由 main.js 引入，全部规则限定在 html.desktop-shell 下，
+// 语义令牌 --dsk-* 定义在 theme.scss，此处只放布局适配
+html.desktop-shell {
+  // 窗口最窄 1200，Web 为浏览器排版写死的 min-width 会裁切右侧
+  body {
+    min-width: 0;
+  }
+
+  // 非外壳页的窗口控制条浮在 Web 导航右上角，右侧预留空间避免遮挡
+  .app-nav {
+    padding-right: 200px;
+  }
+
+  // 浮层控制条与 Web 导航同高
+  .dsk-titlebar {
+    height: $nav-height;
+  }
+
+  // 工作台按 Web 58px 导航写死高度，客户端外壳标题栏 48px，统一改为撑满内容区
+  .dsk-shell__main .dashboard {
+    height: 100%;
+  }
+
+  // 内容区沿用 Web 细滚动条保留滚动感知，仅侧栏菜单不会溢出，单独收掉滚动条
+  .dsk-sidebar__nav {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+      display: none;
+    }
+  }
+}

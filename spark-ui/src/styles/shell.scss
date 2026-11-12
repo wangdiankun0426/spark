@@ -15,15 +15,6 @@
   color: $shell-nav-text;
 }
 
-// 桌面端窗口三键固定在右上角，导航右侧预留空间避免遮挡
-html.desktop-shell .app-nav {
-  padding-right: 200px;
-}
-
-html.desktop-shell .desktop-titlebar {
-  height: $nav-height;
-}
-
 // 品牌区
 .app-nav__brand {
   display: flex;

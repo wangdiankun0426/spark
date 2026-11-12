@@ -8,7 +8,7 @@
 <script setup>
 import {onMounted} from 'vue';
 import DesktopTitlebar from '@desktop/titlebar.vue';
-import {checkHotUpdate} from '@desktop/update.js';
+import {checkHotUpdate} from '@desktop/hotUpdate.js';
 
 onMounted(() => {
   // 只有主窗口负责检查更新，子窗口不重复请求、不重复弹窗

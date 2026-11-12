@@ -41,8 +41,8 @@ async fn open_app_window(app: tauri::AppHandle, route: String) {
     };
     let result = WebviewWindowBuilder::new(&app, label, url)
         .title("星火云")
-        .inner_size(1400.0, 900.0)
-        .min_inner_size(1200.0, 800.0)
+        .inner_size(1400.0, 800.0)
+        .min_inner_size(1400.0, 800.0)
         .center()
         .build();
     if let Err(e) = result {
@@ -103,8 +103,8 @@ fn main() {
             };
             WebviewWindowBuilder::new(app, "main", main_url)
                 .title("星火云")
-                .inner_size(1400.0, 900.0)
-                .min_inner_size(1200.0, 800.0)
+                .inner_size(1400.0, 800.0)
+                .min_inner_size(1400.0, 800.0)
                 .center()
                 .decorations(false)
                 .build()?;

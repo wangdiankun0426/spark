@@ -200,6 +200,31 @@ $shell-tab-active-bg: var(--shell-tab-active-bg);
 $shell-toggle-bg: var(--shell-toggle-bg);
 $shell-toggle-border: var(--shell-toggle-border);
 
+// dsk 客户端外壳语义令牌同名映射，定义在 theme.scss 的 html.desktop-shell 下
+$dsk-avatar-bg: var(--dsk-avatar-bg);
+$dsk-avatar-ring: var(--dsk-avatar-ring);
+$dsk-badge-grad: var(--dsk-badge-grad);
+$dsk-bg: var(--dsk-bg);
+$dsk-brand-grad: var(--dsk-brand-grad);
+$dsk-card-shadow: var(--dsk-card-shadow);
+$dsk-chip-bg: var(--dsk-chip-bg);
+$dsk-danger: var(--dsk-danger);
+$dsk-danger-bg: var(--dsk-danger-bg);
+$dsk-group-text: var(--dsk-group-text);
+$dsk-hover: var(--dsk-hover);
+$dsk-item-active-bg: var(--dsk-item-active-bg);
+$dsk-item-active-text: var(--dsk-item-active-text);
+$dsk-item-hover: var(--dsk-item-hover);
+$dsk-item-text: var(--dsk-item-text);
+$dsk-line: var(--dsk-line);
+$dsk-menu-hover: var(--dsk-menu-hover);
+$dsk-online: var(--dsk-online);
+$dsk-sidebar: var(--dsk-sidebar);
+$dsk-text: var(--dsk-text);
+$dsk-text-faint: var(--dsk-text-faint);
+$dsk-text-muted: var(--dsk-text-muted);
+$dsk-topbar: var(--dsk-topbar);
+
 // el 框架变量同名映射，EP 内置或 element.scss 覆盖
 $el-border-color: var(--el-border-color);
 $el-border-color-darker: var(--el-border-color-darker);

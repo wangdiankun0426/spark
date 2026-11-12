@@ -11,7 +11,7 @@
     "dev:win": "tauri dev",
     "pack:win": "node src-tauri/scripts/sync-version.cjs && tauri build && node src-tauri/scripts/rename-installer.cjs",
     "pack:update": "node src-tauri/scripts/pack-hot-update.cjs",
-    "lint:style": "stylelint \"src/**/*.{vue,scss}\" \"src-tauri/**/*.vue\""
+    "lint:style": "stylelint \"src/**/*.{vue,scss}\""
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.2.1",

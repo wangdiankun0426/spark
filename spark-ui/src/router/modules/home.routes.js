@@ -1,4 +1,5 @@
 import home from '@/pages/home/index.vue'
+import {isDesktop} from '@desktop/env.js'
 import dashboard from '@/pages/home/dashboard/index.vue'
 import flowApplication from '@/pages/home/flow/application/index.vue'
 import flowMyApplication from '@/pages/home/flow/myApplication/index.vue'
@@ -17,7 +18,9 @@ export default [
         path: '/home',
         name: 'home',
         redirect: '/home/dashboard',
-        component: home,
+        // 客户端侧栏由独立外壳承担，这里只保留子路由出口，避免出现双份导航；
+        // 浏览器端仍使用带 82px 图标栏的原组件
+        component: isDesktop ? () => import('@desktop/pages/homeContainer.vue') : home,
         meta: {
             title: '工作台'
         },
