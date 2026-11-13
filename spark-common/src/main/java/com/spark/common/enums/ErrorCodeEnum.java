@@ -45,14 +45,20 @@ public enum ErrorCodeEnum {
     USER_NOT_EXIST(702, "用户不存在"),
     USER_NOT_JOIN_NORMAL_TENANT(703, "用户未加入可用租户"),
     USER_PASSWORD_LENGTH_INVALID(704, "密码长度不符合要求"),
+    USER_DISABLED(705, "用户已停用"),
     // 部门相关状态码
     DEPT_NOT_EXIST(801,"部门不存在"),
     DEPT_SAME_NAME_ALREADY_EXIST(802,"相同名称的部门已存在"),
     // 角色相关状态码
+    ROLE_NOT_EXIST(900, "角色不存在"),
     ROLE_SAME_NAME_EXIST(901, "相同名称的角色已存在"),
     // 菜单相关状态码
     MENU_NOT_EXIST(1001, "菜单不存在"),
     SECOND_MENU_NOT_CREATE_SUB_MENU(1002, "二级菜单禁止创建子菜单"),
+    MENU_CODE_EXIST(1003, "相同标识码的菜单已存在"),
+    MENU_CHILD_EXIST(1004, "存在子菜单，不允许删除"),
+    MENU_ROLE_ASSIGNED(1005, "菜单已分配角色，不允许删除"),
+    MENU_ORG_ASSIGNED(1006, "菜单已分配组织管理员，不允许删除"),
     // 租户相关状态码
     TENANT_SAME_NAME_EXIST(1101,"相同名称的租户已存在"),
     TENANT_UNAVAILABLE(1102,"租户不可用或未加入"),

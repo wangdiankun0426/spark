@@ -15,6 +15,7 @@ public enum DataScopeEnum {
     ONLY_DEPART(2, "仅本部门数据"),
     DEPART_AND_SUB_DEPART(3, "本部门及以下部门数据"),
     ALL_ACCESS(4, "所有数据"),
+    CUSTOM(5, "自定义数据"),
     ;
     private Integer value;
 

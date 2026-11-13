@@ -115,6 +115,7 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        super.scopeTenant(query);
         WfInstanceResult instanceResult = instanceDao.queryInstance(query);
         if (instanceResult == null) {
             result.setErrorCode(ErrorCodeEnum.WORKFLOW_RUN_NOT_FOUND);
@@ -138,6 +139,14 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
         ResultData<List<WfInstanceNodeResult>> result = new ResultData<>();
         if (query == null || query.getInstanceId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        WfInstanceQuery instanceQuery = new WfInstanceQuery();
+        instanceQuery.setId(query.getInstanceId());
+        super.scopeTenant(instanceQuery);
+        WfInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
+        if (instanceResult == null) {
+            result.setErrorCode(ErrorCodeEnum.WORKFLOW_RUN_NOT_FOUND);
             return result;
         }
         query.setPage(false);
@@ -174,6 +183,7 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
         Long templateId = runVO.getTemplateId();
         WfTemplateQuery templateQuery = new WfTemplateQuery();
         templateQuery.setId(templateId);
+        super.scopeTenant(templateQuery);
         WfTemplateResult template = templateDao.queryTemplate(templateQuery);
         if (template == null) {
             result.setErrorCode(ErrorCodeEnum.WORKFLOW_NOT_FOUND);

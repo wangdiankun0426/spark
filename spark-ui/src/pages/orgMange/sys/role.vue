@@ -4,6 +4,7 @@
     <div class="role_box" style="float: left; width: 66%">
       <el-button
           type="primary"
+          v-hasPermi="['sys:role:create']"
           @click="openCreateRoleForm"
       >
         <el-icon><Plus /></el-icon>新建角色
@@ -25,6 +26,7 @@
             <el-button
                 type="success"
                 text
+                v-hasPermi="['sys:role:update']"
                 @click="openUpdateRoleForm(scope.row)"
             >
               <el-icon><Edit /></el-icon>
@@ -34,6 +36,7 @@
             </el-button>
             <el-button
                 type="danger"
+                v-hasPermi="['sys:role:delete']"
                 @click="deleteRole(scope.row.id)"
                 text
             >
@@ -66,6 +69,7 @@
           multiple
           :disabled="currentRoleId == null"
           placeholder="请选择要添加的用户"
+          v-hasPermi="['sys:roleUser:add']"
           @change="submitAddUser"
           style="width: 100%;"
       />
@@ -85,6 +89,7 @@
             <el-button
                 type="warning"
                 text
+                v-hasPermi="['sys:roleUser:remove']"
                 @click="removeUser(scope.row.userId)"
             >
               <el-icon><TurnOff /></el-icon>
@@ -138,6 +143,14 @@
           />
         </el-select>
       </el-form-item>
+      <el-form-item v-if="roleForm.dataScope === 5" label="数据部门">
+        <select-dept
+            v-model="roleForm.deptIds"
+            multiple
+            :check-strictly="true"
+            placeholder="请选择自定义数据范围的部门"
+        />
+      </el-form-item>
       <el-form-item label="状态">
         <el-switch
             v-model="roleForm.status"
@@ -151,32 +164,33 @@
       <el-form-item label="菜单权限">
         <div class="menu-perm-box">
           <div class="menu-perm-toolbar">
-            <el-button link type="primary" size="small" @click="toggleAll(true)">全部勾选</el-button>
-            <el-button link type="info" size="small" @click="toggleAll(false)">全部清空</el-button>
+            <el-button link type="primary" size="small" @click="checkAllMenu(true)">全部勾选</el-button>
+            <el-button link type="info" size="small" @click="checkAllMenu(false)">全部清空</el-button>
           </div>
           <div class="menu-module-list">
             <el-tree
+                ref="menuTreeRef"
                 :data="menuTree"
-                node-key="code"
+                node-key="id"
                 :props="menuTreeProps"
+                show-checkbox
+                :check-strictly="roleForm.menuCheckStrictly !== 1"
                 :indent="16"
                 default-expand-all
                 :expand-on-click-node="false"
-            >
-              <template #default="{ node, data }">
-                <el-checkbox
-                    :class="{ 'menu-perm-root': node.level === 1 }"
-                    :model-value="nodeStateOf(data).checked"
-                    :indeterminate="nodeStateOf(data).indeterminate"
-                    :disabled="nodeStateOf(data).disabled"
-                    @change="(checked) => toggleNode(data, checked)"
-                >
-                  {{ data.name }}
-                </el-checkbox>
-              </template>
-            </el-tree>
+            />
           </div>
         </div>
+      </el-form-item>
+      <el-form-item label="父子联动">
+        <el-switch
+            v-model="roleForm.menuCheckStrictly"
+            :active-value="1"
+            :inactive-value="0"
+            active-text="联动"
+            inactive-text="独立"
+            inline-prompt
+        />
       </el-form-item>
       <!--必填字段填写提示-->
       <el-alert
@@ -188,8 +202,9 @@
           <div class="form-tip">
             <div>角色名称为必填项，建议体现职责范围，如"系统管理员"、"本部门员工"；</div>
             <div>数据权限决定该角色下用户可查看的数据范围，请按业务需要谨慎选择；</div>
-            <div>菜单权限按模块勾选，决定该角色下用户可进入的功能菜单；其中"工作台"为常驻菜单，默认选中且不可取消勾选；</div>
-            <div>"本部门及以下部门权限"包含本部门及其所有子部门的数据；</div>
+            <div>选择"自定义数据"时需勾选具体部门，用户仅可见所选部门的数据；</div>
+            <div>菜单权限按模块勾选，决定该角色下用户可进入的功能菜单；</div>
+            <div>父子联动开启时勾选父菜单会同步勾选子菜单，关闭后可独立勾选；</div>
             <div>角色创建后可在右侧用户列表中为该角色添加用户；</div>
             <div>删除角色前请先移除该角色下的所有用户；</div>
             <div>状态关闭后该角色将无法使用，已绑定该角色的用户将失去对应权限。</div>
@@ -205,17 +220,16 @@
     </template>
   </el-drawer>
 
-  <!--选择用户组件-->
-
 </template>
 
 <script setup>
-import {createRoleAPI, pageRoleListAPI, updateRoleAPI, deleteRoleAPI} from '@/api/manage/sys/role.js';
+import {createRoleAPI, pageRoleListAPI, updateRoleAPI, deleteRoleAPI, detailRoleAPI} from '@/api/manage/sys/role.js';
 import {pageRoleUserListAPI, addUserAPI, removeUserAPI} from '@/api/manage/sys/roleUser.js';
-import {treeMenuAPI} from '@/api/manage/sys/menu.js';
+import {roleMenuTreeAPI} from '@/api/manage/sys/menu.js';
 import {ElMessage, ElMessageBox} from "element-plus";
 import SelectUser from '@/components/SelectUser/index.vue';
-import {reactive, ref} from 'vue';
+import SelectDept from '@/components/SelectDept/index.vue';
+import {nextTick, ref} from 'vue';
 import UserAvatar from "@/components/UserAvatar/index.vue";
 
 const dataScopeOptions = [
@@ -223,6 +237,7 @@ const dataScopeOptions = [
   {value: 2, label: '仅本部门数据'},
   {value: 3, label: '本部门及以下部门数据'},
   {value: 4, label: '所有数据'},
+  {value: 5, label: '自定义数据'},
 ];
 const roleList = ref([]);
 const roleForm = ref({
@@ -230,6 +245,8 @@ const roleForm = ref({
   name: undefined,
   dataScope: undefined,
   status: undefined,
+  menuCheckStrictly: 1,
+  deptIds: [],
 });
 const roleFormVisible = ref(false);
 const roleFormTitle = ref('');
@@ -254,12 +271,12 @@ const roleUserPageSizes = [30,50,100];
 const currentRoleId = ref(null);
 // 已选待添加用户 ID 数组
 const selectedUserIds = ref([]);
-// 菜单树（由接口直接返回，前端直接渲染）
+// 角色授权菜单树，仅租户业务平台菜单
 const menuTree = ref([]);
-// 菜单清单（由菜单树拍平，便于按标识码查找节点及其祖先）
-const menuOptionList = ref([]);
-// 勾选的菜单标识码映射
-const menuCheckedMap = reactive({});
+const menuTreeRef = ref();
+// 菜单树全部节点 id 与叶子节点 id，用于全选与联动加载
+const menuAllIds = ref([]);
+const menuLeafIds = ref([]);
 // el-tree 节点字段映射
 const menuTreeProps = {label: 'name', children: 'children'};
 
@@ -296,174 +313,88 @@ function getRoleList() {
 }
 
 /**
- * 查询菜单树
+ * 查询角色授权菜单树
  */
 function getMenuList() {
-  treeMenuAPI().then(res => {
+  roleMenuTreeAPI().then(res => {
     menuTree.value = res.data || [];
-    menuOptionList.value = flattenMenuTree(menuTree.value);
+    const ids = collectMenuIds(menuTree.value);
+    menuAllIds.value = ids.allIds;
+    menuLeafIds.value = ids.leafIds;
   })
 }
 
 /**
- * 拍平菜单树，便于按标识码查找节点
+ * 收集菜单树全部节点 id 与叶子节点 id
  * @param nodes 菜单树
- * @returns {Array}
+ * @returns {{allIds: Array, leafIds: Array}}
  */
-function flattenMenuTree(nodes) {
-  const list = [];
+function collectMenuIds(nodes) {
+  const allIds = [];
+  const leafIds = [];
   const walk = (items) => items.forEach(item => {
-    list.push(item);
+    allIds.push(item.id);
     if (item.children && item.children.length) {
       walk(item.children);
+    } else {
+      leafIds.push(item.id);
     }
   });
   walk(nodes || []);
-  return list;
-}
-
-// 显式点选的菜单集合
-const explicitChecked = reactive({});
-
-/**
- * 查询菜单节点
- * @param menuCode 菜单标识码
- * @returns {object|undefined}
- */
-function findMenuByCode(menuCode) {
-  return menuOptionList.value.find(item => item.code === menuCode);
+  return { allIds, leafIds };
 }
 
 /**
- * 判断ancestorCode是否为nodeCode的祖先
- * @param ancestorCode 祖先菜单标识码
- * @param nodeCode 节点菜单标识码
- * @returns {boolean}
- */
-function isAncestorOf(ancestorCode, nodeCode) {
-  let current = findMenuByCode(nodeCode);
-  while (current) {
-    if (current.code === ancestorCode) {
-      return true;
-    }
-    current = current.parentCode ? findMenuByCode(current.parentCode) : null;
-  }
-  return false;
-}
-
-/**
- * 收集节点及其所有子孙菜单标识码
- * @param node 菜单节点
- * @returns {string[]}
- */
-function collectSubtreeCodes(node) {
-  const codes = [node.code];
-  (node.children || []).forEach(child => {
-    codes.push(...collectSubtreeCodes(child));
-  });
-  return codes;
-}
-
-/**
- * 重算有效勾选
- */
-function recomputeEffective() {
-  clearMenuChecked();
-  Object.keys(explicitChecked).forEach(menuCode => {
-    if (!explicitChecked[menuCode]) {
-      return;
-    }
-    let current = findMenuByCode(menuCode);
-    if (!current) {
-      menuCheckedMap[menuCode] = true;
-      return;
-    }
-    while (current) {
-      menuCheckedMap[current.code] = true;
-      current = current.parentCode ? findMenuByCode(current.parentCode) : null;
-    }
-  });
-}
-
-/**
- * 节点的勾选展示状态
- * @param node 菜单节点
- * @returns {{checked: boolean, indeterminate: boolean, disabled: boolean}}
- */
-function nodeStateOf(node) {
-  const codes = collectSubtreeCodes(node);
-  const descendantCodes = codes.filter(code => code !== node.code);
-  const descendantChecked = descendantCodes.filter(code => menuCheckedMap[code]).length;
-  return {
-    checked: !!menuCheckedMap[node.code],
-    indeterminate: descendantChecked > 0 && descendantChecked < descendantCodes.length,
-    disabled: false,
-  };
-}
-
-/**
- * 勾选或取消单个节点
- * @param node 菜单节点
+ * 全部勾选或全部清空菜单
  * @param checked 是否勾选
  */
-function toggleNode(node, checked) {
-  if (checked) {
-    explicitChecked[node.code] = true;
-  } else {
-    delete explicitChecked[node.code];
+function checkAllMenu(checked) {
+  if (!menuTreeRef.value) {
+    return;
   }
-  recomputeEffective();
-}
-
-/**
- * 全部勾选或全部清空
- * @param checked 是否勾选
- */
-function toggleAll(checked) {
-  if (checked) {
-    menuOptionList.value.forEach(item => {
-      explicitChecked[item.code] = true;
-    });
-  } else {
-    Object.keys(explicitChecked).forEach(code => {
-      delete explicitChecked[code];
-    });
+  if (!checked) {
+    menuTreeRef.value.setCheckedKeys([]);
+    return;
   }
-  recomputeEffective();
+  // 联动模式只设叶子节点，父节点由 el-tree 自动推导，避免半选父被全选
+  if (roleForm.value.menuCheckStrictly === 1) {
+    menuTreeRef.value.setCheckedKeys(menuLeafIds.value);
+  } else {
+    menuTreeRef.value.setCheckedKeys(menuAllIds.value);
+  }
 }
 
 /**
- * 清空有效勾选
+ * 按角色已授权菜单 id 回填勾选
+ * @param menuIds 菜单 id 列表
  */
-function clearMenuChecked() {
-  Object.keys(menuCheckedMap).forEach(code => {
-    delete menuCheckedMap[code];
-  });
+function applyMenuChecked(menuIds) {
+  if (!menuTreeRef.value) {
+    return;
+  }
+  if (roleForm.value.menuCheckStrictly === 1) {
+    const leafIdSet = new Set(menuLeafIds.value);
+    const leafChecked = menuIds.filter(id => leafIdSet.has(id));
+    menuTreeRef.value.setCheckedKeys(leafChecked);
+  } else {
+    menuTreeRef.value.setCheckedKeys(menuIds);
+  }
 }
 
 /**
- * 清空显式勾选
+ * 读取当前勾选的菜单 id，联动模式含半选父节点
+ * @returns {Array}
  */
-function clearExplicitChecked() {
-  Object.keys(explicitChecked).forEach(code => {
-    delete explicitChecked[code];
-  });
-}
-
-/**
- * 按勾选标识码填充
- * @param codes 勾选标识码列表
- */
-function setMenuChecked(codes) {
-  clearMenuChecked();
-  clearExplicitChecked();
-  codes.forEach(code => {
-    const carried = codes.some(other => other !== code && isAncestorOf(code, other));
-    if (!carried) {
-      explicitChecked[code] = true;
-    }
-  });
-  recomputeEffective();
+function collectCheckedMenuIds() {
+  if (!menuTreeRef.value) {
+    return [];
+  }
+  const checkedKeys = menuTreeRef.value.getCheckedKeys();
+  if (roleForm.value.menuCheckStrictly === 1) {
+    const halfCheckedKeys = menuTreeRef.value.getHalfCheckedKeys();
+    return [...checkedKeys, ...halfCheckedKeys];
+  }
+  return checkedKeys;
 }
 
 /**
@@ -474,25 +405,38 @@ function openCreateRoleForm() {
   roleForm.value.name = undefined;
   roleForm.value.dataScope = 1;
   roleForm.value.status = 1;
-  clearMenuChecked();
-  clearExplicitChecked();
-  recomputeEffective();
+  roleForm.value.menuCheckStrictly = 1;
+  roleForm.value.deptIds = [];
   roleFormTitle.value = "创建角色";
   roleFormVisible.value = true;
+  nextTick(() => {
+    if (menuTreeRef.value) {
+      menuTreeRef.value.setCheckedKeys([]);
+    }
+  });
 }
 
 /**
  * 打开修改角色表单
  */
-function openUpdateRoleForm(data) {
-  roleForm.value.id = data.id;
-  roleForm.value.name = data.name;
-  roleForm.value.dataScope = data.dataScope;
-  roleForm.value.status = data.status;
-  const menuCodeList = data.menuCodes ? data.menuCodes.split(',').filter(Boolean) : [];
-  setMenuChecked(menuCodeList);
-  roleFormTitle.value = "修改角色";
-  roleFormVisible.value = true;
+function openUpdateRoleForm(row) {
+  detailRoleAPI({ id: row.id }).then(res => {
+    if (res.code !== 200) {
+      return;
+    }
+    const detail = res.data;
+    roleForm.value.id = detail.id;
+    roleForm.value.name = detail.name;
+    roleForm.value.dataScope = detail.dataScope;
+    roleForm.value.status = detail.status;
+    roleForm.value.menuCheckStrictly = detail.menuCheckStrictly == null ? 1 : detail.menuCheckStrictly;
+    roleForm.value.deptIds = detail.deptIds || [];
+    roleFormTitle.value = "修改角色";
+    roleFormVisible.value = true;
+    nextTick(() => {
+      applyMenuChecked(detail.menuIds || []);
+    });
+  });
 }
 
 /**
@@ -501,8 +445,10 @@ function openUpdateRoleForm(data) {
 function closeRoleForm() {
   roleForm.value.name = undefined;
   roleForm.value.status = undefined;
-  clearMenuChecked();
-  clearExplicitChecked();
+  roleForm.value.deptIds = [];
+  if (menuTreeRef.value) {
+    menuTreeRef.value.setCheckedKeys([]);
+  }
   roleFormTitle.value = undefined;
   roleFormVisible.value = false;
 }
@@ -515,34 +461,27 @@ function submitRoleForm() {
     if (!valid) {
       return;
     }
-    const selectedCodes = Object.keys(menuCheckedMap).filter(code => menuCheckedMap[code]);
-    const menuCodes = selectedCodes.sort().join(',');
-    if (!roleForm.value.id) {
-      const data = {
-        name: roleForm.value.name,
-        dataScope: roleForm.value.dataScope,
-        status: roleForm.value.status,
-        menuCodes: menuCodes,
-      };
-      createRoleAPI(data).then(res => {
-        ElMessage.success("角色创建成功");
-        closeRoleForm();
-        getRoleList();
-      })
-    } else {
-      const data = {
-        id: roleForm.value.id,
-        name: roleForm.value.name,
-        dataScope: roleForm.value.dataScope,
-        status: roleForm.value.status,
-        menuCodes: menuCodes,
-      };
-      updateRoleAPI(data).then(res => {
-        ElMessage.success("角色修改成功");
-        closeRoleForm();
-        getRoleList();
-      })
-    }
+    const menuIds = collectCheckedMenuIds();
+    const deptIds = roleForm.value.dataScope === 5 ? (roleForm.value.deptIds || []) : [];
+    // 菜单与部门 id 以逗号串传递，后端绑定为 List<Long>
+    const data = {
+      id: roleForm.value.id,
+      name: roleForm.value.name,
+      dataScope: roleForm.value.dataScope,
+      status: roleForm.value.status,
+      menuCheckStrictly: roleForm.value.menuCheckStrictly,
+      menuIds: menuIds.join(','),
+      deptIds: deptIds.join(','),
+    };
+    const api = data.id ? updateRoleAPI : createRoleAPI;
+    api(data).then(res => {
+      if (res.code !== 200) {
+        return;
+      }
+      ElMessage.success(data.id ? "角色修改成功" : "角色创建成功");
+      closeRoleForm();
+      getRoleList();
+    })
   });
 }
 
@@ -686,9 +625,6 @@ function roleUserPageChangeNo(pageNo) {
     overflow-x: hidden;
     overflow-y: auto;
     padding-left: 20px;
-    .menu-perm-root :deep(.el-checkbox__label) {
-      font-weight: 600;
-    }
   }
 }
 </style>

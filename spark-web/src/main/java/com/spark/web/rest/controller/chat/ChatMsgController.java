@@ -5,6 +5,7 @@ import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.chat.query.ChatMsgQuery;
 import com.spark.common.bean.chat.result.ChatMsgResult;
 import com.spark.chat.service.IChatMsgService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +34,7 @@ public class ChatMsgController {
      * @param query 查询参数
      * @return 列表
      */
+    @RequiresPermi("chat:msg:query")
     @GetMapping("noReadList")
     public ResultData<List<ChatMsgResult>> queryNoReadChatMsgList(ChatMsgQuery query) {
         return chatMsgService.queryNoReadChatMsgList(query);
@@ -43,6 +45,7 @@ public class ChatMsgController {
      * @param query 查询参数
      * @return 列表
      */
+    @RequiresPermi("chat:msg:query")
     @GetMapping("pageList")
     public ResultData<PageResult<ChatMsgResult>> pageChatMsgList(ChatMsgQuery query) {
         return chatMsgService.pageChatMsgList(query);

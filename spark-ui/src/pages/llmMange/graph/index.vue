@@ -16,7 +16,7 @@
             :prefix-icon="Search"
             style="width: 300px"
         />
-        <el-button type="primary" @click="handleOpenCreateForm">
+        <el-button v-hasPermi="['kg:graph:create']" type="primary" @click="handleOpenCreateForm">
           <el-icon><Plus /></el-icon>新增知识图谱
         </el-button>
       </div>
@@ -387,8 +387,8 @@ function cardActions(item) {
     { key: 'entity', label: '实体', icon: 'Ticket',onClick: () => handleOpenEntity(item) },
     { key: 'relation', label: '关系', icon: 'List',onClick: () => handleOpenRelation(item) },
     { key: 'graph', label: '图谱', icon: 'Discount',onClick: () => handleOpenGraphDetail(item) },
-    { key: 'edit', label: '修改', icon: 'Edit',onClick: () => handleOpenUpdateForm(item) },
-    { key: 'delete', label: '删除', icon: 'Delete',onClick: () => handleDelete(item) }
+    { key: 'edit', label: '修改', icon: 'Edit',perms: ['kg:graph:update'],onClick: () => handleOpenUpdateForm(item) },
+    { key: 'delete', label: '删除', icon: 'Delete',perms: ['kg:graph:delete'],onClick: () => handleDelete(item) }
   ]
 }
 

@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.sys.MenuDao" >
     <sql id="Base_Column_List" >
-        id , name , parent_code , code , type , delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , name , parent_code , code , type , perms , path , component , icon , order_num , visible , status , platform , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <select id="queryMenuList" resultType="com.spark.common.bean.sys.entity.Menu">
@@ -11,4 +11,106 @@
         where delete_flag = 1
         order by id asc
     </select>
+
+    <select id="queryMenuListByPlatform" resultType="com.spark.common.bean.sys.entity.Menu">
+        select <include refid="Base_Column_List"/>
+        from sys_menu
+        where delete_flag = 1
+          and status = 1
+          and platform in
+        <foreach collection="platformList" item="platform" open="(" separator="," close=")">
+            #{platform}
+        </foreach>
+        order by order_num asc, id asc
+    </select>
+
+    <select id="queryUserMenuList" resultType="com.spark.common.bean.sys.entity.Menu">
+        select <include refid="Base_Column_List"/>
+        from sys_menu
+        where delete_flag = 1
+          and status = 1
+          and (
+            platform = 2
+            or (
+              platform = 0
+              and id in (
+                  select rm.menu_id
+                  from sys_role_menu rm
+                  join sys_role r on r.id = rm.role_id and r.delete_flag = 1 and r.status = 1
+                  join sys_role_user ru on ru.role_id = r.id and ru.delete_flag = 1 and ru.tenant_id = #{tenantId}
+                  where rm.delete_flag = 1
+                    and ru.user_id = #{userId}
+                    and r.tenant_id = #{tenantId}
+              )
+            )
+          )
+        order by order_num asc, id asc
+    </select>
+
+    <select id="querySysAdminMenuList" resultType="com.spark.common.bean.sys.entity.Menu">
+        select <include refid="Base_Column_List"/>
+        from sys_menu
+        where delete_flag = 1
+          and status = 1
+          and platform = 1
+        order by order_num asc, id asc
+    </select>
+
+    <select id="queryOrgAdminMenuList" resultType="com.spark.common.bean.sys.entity.Menu">
+        select <include refid="Base_Column_List"/>
+        from sys_menu
+        where delete_flag = 1
+          and status = 1
+          and platform = 3
+          and id in (
+              select tum.menu_id
+              from sys_tenant_user_menu tum
+              join sys_tenant_user tu on tu.id = tum.tenant_user_id and tu.delete_flag = 1
+              where tum.delete_flag = 1
+                and tu.tenant_id = #{tenantId}
+                and tu.user_id = #{userId}
+          )
+        order by order_num asc, id asc
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_menu (name, parent_code, code, type, perms, path, component, icon, order_num,
+                              visible, status, platform, delete_flag, created_by, created_dt, updated_by, updated_dt)
+        values (#{name}, #{parentCode}, #{code}, #{type}, #{perms}, #{path}, #{component}, #{icon}, #{orderNum},
+                #{visible}, #{status}, #{platform}, 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+    </insert>
+
+    <update id="updateById">
+        update sys_menu
+        set updated_by = #{updatedBy}, updated_dt = #{updatedDt},
+            name = #{name}, parent_code = #{parentCode}, code = #{code}, type = #{type},
+            perms = #{perms}, path = #{path}, component = #{component}, icon = #{icon},
+            order_num = #{orderNum}, visible = #{visible}, status = #{status},
+            platform = #{platform}
+        where id = #{id}
+    </update>
+
+    <select id="queryMenu" resultType="com.spark.common.bean.sys.entity.Menu">
+        select <include refid="Base_Column_List"/>
+        from sys_menu
+        where delete_flag = 1 and id = #{id}
+        limit 1
+    </select>
+
+    <select id="queryMenuByCode" resultType="com.spark.common.bean.sys.entity.Menu">
+        select <include refid="Base_Column_List"/>
+        from sys_menu
+        where delete_flag = 1 and code = #{code}
+        limit 1
+    </select>
+
+    <select id="queryMenuCountByParentCode" resultType="java.lang.Integer">
+        select count(1)
+        from sys_menu
+        where delete_flag = 1 and parent_code = #{parentCode}
+    </select>
+
+    <delete id="deleteMenuById">
+        delete from sys_menu where id = #{id}
+    </delete>
 </mapper>

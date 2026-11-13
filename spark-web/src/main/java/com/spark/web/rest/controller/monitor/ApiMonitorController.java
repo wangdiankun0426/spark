@@ -36,7 +36,7 @@ public class ApiMonitorController {
      * @return 汇总
      */
     @GetMapping("summary")
-    private ResultData<MonitorApiTrendResult> queryApiSummary(MonitorSnapshotQuery query) {
+    public ResultData<MonitorApiTrendResult> queryApiSummary(MonitorSnapshotQuery query) {
         return monitorService.queryApiSummary(query);
     }
 
@@ -46,7 +46,7 @@ public class ApiMonitorController {
      * @return 分钟趋势
      */
     @GetMapping("trend")
-    private ResultData<List<MonitorApiTrendResult>> queryApiTrend(MonitorSnapshotQuery query) {
+    public ResultData<List<MonitorApiTrendResult>> queryApiTrend(MonitorSnapshotQuery query) {
         return monitorService.queryApiTrend(query);
     }
 
@@ -56,7 +56,7 @@ public class ApiMonitorController {
      * @return URI统计分页
      */
     @GetMapping("uriStats")
-    private ResultData<PageResult<MonitorUriStatResult>> queryUriStats(MonitorSnapshotQuery query) {
+    public ResultData<PageResult<MonitorUriStatResult>> queryUriStats(MonitorSnapshotQuery query) {
         return monitorService.queryUriStats(query);
     }
 }

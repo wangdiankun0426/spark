@@ -4,6 +4,7 @@ import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.sys.entity.Tenant;
 import com.spark.common.bean.sys.query.TenantQuery;
 import com.spark.common.bean.sys.result.TenantResult;
@@ -15,6 +16,7 @@ import com.spark.common.enums.RoleTypeEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.StringUtil;
+import com.spark.config.redis.RedisService;
 import com.spark.dao.sys.*;
 import com.spark.manage.BaseService;
 import com.spark.manage.sys.ITenantConfigService;
@@ -43,6 +45,8 @@ public class TenantServiceImpl extends BaseService<TenantQuery, TenantResult> im
     private TenantDao tenantDao;
     @Autowired
     private ITenantConfigService tenantConfigService;
+    @Autowired
+    private RedisService redisService;
 
     /**
      * 创建租户
@@ -55,6 +59,10 @@ public class TenantServiceImpl extends BaseService<TenantQuery, TenantResult> im
         ResultData<Void> result = new ResultData<>();
         if (tenantVO == null || StringUtil.isBlank(tenantVO.getName())) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (!SessionHolder.isSysAdmin()) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
         TenantResult tenantResult = tenantDao.querySameNameTenant(tenantVO.getName());
@@ -124,6 +132,10 @@ public class TenantServiceImpl extends BaseService<TenantQuery, TenantResult> im
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        if (!SessionHolder.isSysAdmin()) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
         TenantResult tenantResult = tenantDao.querySameNameTenant(tenantVO.getName());
         if (tenantResult != null && !tenantResult.getId().equals(tenantVO.getId())) {
             result.setErrorCode(ErrorCodeEnum.TENANT_SAME_NAME_EXIST);
@@ -145,6 +157,11 @@ public class TenantServiceImpl extends BaseService<TenantQuery, TenantResult> im
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
+        // 租户停用后强制成员重新登录
+        Integer status = tenantVO.getStatus();
+        if (status != null && !StatusEnum.NORMAL.getValue().equals(status)) {
+            redisService.deleteLoginSessionByTenantId(tenantVO.getId());
+        }
         result.setObjId(tenantVO.getId());
         result.setCode(ResultData.OK);
         return result;
@@ -163,6 +180,10 @@ public class TenantServiceImpl extends BaseService<TenantQuery, TenantResult> im
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        if (!SessionHolder.isSysAdmin()) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
         Tenant tenant = new Tenant();
         tenant.setId(tenantVO.getId());
         int count = tenantDao.deleteDBById(tenant);
@@ -170,6 +191,7 @@ public class TenantServiceImpl extends BaseService<TenantQuery, TenantResult> im
             result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
+        redisService.deleteLoginSessionByTenantId(tenantVO.getId());
         result.setObjId(tenantVO.getId());
         result.setCode(ResultData.OK);
         return result;
@@ -183,7 +205,14 @@ public class TenantServiceImpl extends BaseService<TenantQuery, TenantResult> im
     @Override
     public ResultData<Integer> closeExpiredTenant() {
         ResultData<Integer> result = new ResultData<>();
+        List<Long> expiredTenantIds = tenantDao.queryExpiredTenantIds();
         int count = tenantDao.closeExpiredTenant();
+        // 超期租户停用后强制成员重新登录
+        if (CollectionUtil.isNotEmpty(expiredTenantIds)) {
+            for (Long tenantId : expiredTenantIds) {
+                redisService.deleteLoginSessionByTenantId(tenantId);
+            }
+        }
         result.setData(count);
         result.setCode(ResultData.OK);
         return result;

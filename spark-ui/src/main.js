@@ -17,6 +17,7 @@ import store from '@/store/index';
 import locale from 'element-plus/es/locale/lang/zh-cn';
 // 自定义指令
 import { installDebounceDirectives } from '@/directive/debounce.js';
+import { installPermissionDirectives } from '@/directive/hasPermi.js';
 // 自定义组件
 import CustomInput from '@/views/formDesigner/formWidget/basicWidget/input.vue';
 import CustomTextarea from '@/views/formDesigner/formWidget/basicWidget/textarea.vue';
@@ -103,5 +104,7 @@ components.forEach((Component) => {
 });
 // 注册防抖指令
 installDebounceDirectives(app);
+// 注册权限指令
+installPermissionDirectives(app);
 
 app.mount('#app')

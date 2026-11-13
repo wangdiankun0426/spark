@@ -109,7 +109,7 @@ public class FlowMessageServiceImpl extends BaseFlowService implements FlowMessa
         messageVO.setContent(content);
         messageVO.setUserIds(userIds);
         messageVO.setRefId(instanceResult.getId());
-        messageVO.setTenantId(103L);
+        messageVO.setTenantId(instanceResult.getTenantId());
         mqProducer.sendSystemMessageMq(JsonUtil.toString(messageVO));
         logger.info("sendFlowNotice success, noticeType={}, userIds={}", messageType, userIds);
         result.setCode(ResultData.OK);

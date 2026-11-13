@@ -2,6 +2,7 @@ package com.spark.kg.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.ScopeResolver;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.kg.entity.KgEntity;
 import com.spark.common.bean.kg.entity.KgGraph;
@@ -18,7 +19,6 @@ import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.kg.KgEntityDao;
 import com.spark.dao.kg.KgGraphDao;
 import com.spark.dao.llm.ModelDao;
-import com.spark.common.enums.DataScopeEnum;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.ModelUsageSceneEnum;
 import com.spark.common.enums.ObjectTypeEnum;
@@ -95,6 +95,10 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
         }
         KgGraph kgGraph = new KgGraph();
         BeanUtil.copyProperties(kgGraphVO, kgGraph);
+        // 非站点管理员强制归属当前租户
+        if (!SessionHolder.isSysAdmin()) {
+            kgGraph.setTenantId(SessionHolder.getCurrentTenantId());
+        }
         if (kgGraph.getStatus() == null) {
             kgGraph.setStatus(StatusEnum.NORMAL.getValue());
         }
@@ -125,6 +129,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
         }
         KgGraphQuery query = new KgGraphQuery();
         query.setId(kgGraphVO.getId());
+        super.scopeTenant(query);
         KgGraphResult kgGraphResult = kgGraphDao.queryKgGraph(query);
         if (kgGraphResult == null) {
             result.setErrorCode(ErrorCodeEnum.KG_GRAPH_NOT_EXIST);
@@ -157,6 +162,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
         }
         KgGraphQuery query = new KgGraphQuery();
         query.setId(kgGraphVO.getId());
+        super.scopeTenant(query);
         KgGraphResult kgGraphResult = kgGraphDao.queryKgGraph(query);
         if (kgGraphResult == null) {
             result.setCode(ResultData.OK);
@@ -217,6 +223,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        super.scopeTenant(query);
         KgGraphResult kgGraphResult = kgGraphDao.queryKgGraph(query);
         if (kgGraphResult == null) {
             result.setErrorCode(ErrorCodeEnum.KG_GRAPH_NOT_EXIST);
@@ -370,6 +377,7 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
         }
         KgGraphQuery query = new KgGraphQuery();
         query.setId(graphId);
+        super.scopeTenant(query);
         KgGraphResult graph = kgGraphDao.queryKgGraph(query);
         if (graph == null) {
             return false;
@@ -378,29 +386,9 @@ public class KgGraphServiceImpl extends BaseService<KgGraphQuery, KgGraphResult>
         if (userId == null) {
             return false;
         }
-        if (SessionHolder.isSysAdmin() || SessionHolder.isOrgAdmin()) {
-            return true;
-        }
-        DataScopeEnum scope = DataScopeEnum.indexOf(SessionHolder.getCurrentDataScop());
-        if (scope == DataScopeEnum.ALL_ACCESS) {
-            return true;
-        }
-        if (scope == DataScopeEnum.ONLY_DEPART) {
-            return Objects.equals(graph.getDeptId(), SessionHolder.getCurrentDeptId());
-        }
-        if (scope == DataScopeEnum.DEPART_AND_SUB_DEPART) {
-            String deptIds = SessionHolder.getCurrentDeptIds();
-            if (StringUtil.isBlank(deptIds) || graph.getDeptId() == null) {
-                return false;
-            }
-            for (String deptId : deptIds.split(",")) {
-                if (String.valueOf(graph.getDeptId()).equals(deptId.trim())) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        return Objects.equals(graph.getCreatedBy(), userId);
+        Long graphDeptId = graph.getDeptId();
+        Long graphCreatedBy = graph.getCreatedBy();
+        return ScopeResolver.matches(graphDeptId, graphCreatedBy);
     }
 
     /**

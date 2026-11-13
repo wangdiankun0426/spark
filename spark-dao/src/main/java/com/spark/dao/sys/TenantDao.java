@@ -19,6 +19,7 @@ import java.util.List;
  * @author wangdiankun
  * @since 2026-09-08 10:00:00
  * 租户
+ * 查询条件tenantId映射为主键id，sys_tenant无tenant_id列，配合分页租户隔离兜底
  */
 public interface TenantDao extends BaseDao<Tenant> {
 
@@ -80,6 +81,14 @@ public interface TenantDao extends BaseDao<Tenant> {
      */
     @Select("select max(id) from sys_tenant")
     Long queryTenantMaxId();
+
+    /**
+     * 查询待关闭的超期租户id集合
+     * 状态为启用且截止时间已过的有效租户
+     * @return 租户id集合
+     */
+    @Select("select id from sys_tenant where delete_flag = 1 and status = 1 and deadline is not null and deadline <= now()")
+    List<Long> queryExpiredTenantIds();
 
     /**
      * 批量关闭超期租户

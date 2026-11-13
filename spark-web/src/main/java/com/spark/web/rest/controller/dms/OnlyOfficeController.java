@@ -48,7 +48,7 @@ public class OnlyOfficeController {
      * @return 编辑器配置
      */
     @GetMapping("config")
-    private ResultData<Map<String, Object>> queryEditorConfig(@RequestParam("id") Long id) {
+    public ResultData<Map<String, Object>> queryEditorConfig(@RequestParam("id") Long id) {
         return onlyOfficeService.queryEditorConfig(id);
     }
 
@@ -61,7 +61,7 @@ public class OnlyOfficeController {
      * @return 回调响应
      */
     @PostMapping("callback")
-    private Map<String, Object> handleCallback(@RequestParam("id") Long id, @RequestParam("ext") String ext, @RequestParam("token") String token, @RequestBody Map<String, Object> body) {
+    public Map<String, Object> handleCallback(@RequestParam("id") Long id, @RequestParam("ext") String ext, @RequestParam("token") String token, @RequestBody Map<String, Object> body) {
         return onlyOfficeService.handleCallback(id, ext, token, body);
     }
 
@@ -73,7 +73,7 @@ public class OnlyOfficeController {
      * @param token 下载凭证
      */
     @GetMapping("download")
-    private void downloadFile(HttpServletRequest request, HttpServletResponse response, @RequestParam("id") Long id, @RequestParam("ext") String ext, @RequestParam("token") String token) {
+    public void downloadFile(HttpServletRequest request, HttpServletResponse response, @RequestParam("id") Long id, @RequestParam("ext") String ext, @RequestParam("token") String token) {
         ResultData<Map<String, Object>> result = onlyOfficeService.downloadFile(id, ext, token);
         if (result.getCode() != ResultData.OK) {
             return;

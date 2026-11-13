@@ -4,6 +4,7 @@
     <div>
       <el-button
           type="primary"
+          v-hasPermi="['sys:message:send']"
           @click="handleOpenSendMessageForm"
       >
         <el-icon><Promotion /></el-icon>发送消息
@@ -101,6 +102,7 @@
           <el-button
               text
               type="danger"
+              v-hasPermi="['sys:message:delete']"
               @click="handleDeleteMessage(scope.row)"
           >
             <el-icon><Delete /></el-icon>

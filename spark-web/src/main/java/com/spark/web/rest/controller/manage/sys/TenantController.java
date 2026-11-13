@@ -36,7 +36,7 @@ public class TenantController {
      * @return 创建结果
      */
     @PostMapping("create")
-    private ResultData<Void> createTenant(TenantVO tenantVO) {
+    public ResultData<Void> createTenant(TenantVO tenantVO) {
         return tenantService.createTenant(tenantVO);
     }
 
@@ -46,7 +46,7 @@ public class TenantController {
      * @return 分页结果
      */
     @GetMapping("pageList")
-    private ResultData<PageResult<TenantResult>> pageTenantList(TenantQuery query) {
+    public ResultData<PageResult<TenantResult>> pageTenantList(TenantQuery query) {
         return tenantService.pageTenantList(query);
     }
 
@@ -56,7 +56,7 @@ public class TenantController {
      * @return 修改结果
      */
     @PostMapping("update")
-    private ResultData<Void> updateTenant(TenantVO tenantVO) {
+    public ResultData<Void> updateTenant(TenantVO tenantVO) {
         return tenantService.updateTenant(tenantVO);
     }
 
@@ -66,7 +66,7 @@ public class TenantController {
      * @return 删除结果
      */
     @PostMapping("delete")
-    private ResultData<Void> deleteTenant(TenantVO tenantVO) {
+    public ResultData<Void> deleteTenant(TenantVO tenantVO) {
         return tenantService.deleteTenant(tenantVO);
     }
 

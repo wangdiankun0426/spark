@@ -6,6 +6,7 @@ import com.spark.common.bean.kg.query.KgRelationQuery;
 import com.spark.common.bean.kg.result.KgRelationResult;
 import com.spark.common.bean.kg.vo.KgRelationVO;
 import com.spark.kg.service.IKgRelationService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,6 +34,7 @@ public class KgRelationController {
      * @param kgRelationVO 关系参数
      * @return 响应结果
      */
+    @RequiresPermi("kg:relation:create")
     @PostMapping("create")
     public ResultData<Void> createKgRelation(KgRelationVO kgRelationVO) {
         return kgRelationService.createKgRelation(kgRelationVO);
@@ -43,6 +45,7 @@ public class KgRelationController {
      * @param kgRelationVO 关系参数
      * @return 响应结果
      */
+    @RequiresPermi("kg:relation:update")
     @PostMapping("update")
     public ResultData<Void> updateKgRelation(KgRelationVO kgRelationVO) {
         return kgRelationService.updateKgRelation(kgRelationVO);
@@ -53,6 +56,7 @@ public class KgRelationController {
      * @param kgRelationVO 关系参数
      * @return 响应结果
      */
+    @RequiresPermi("kg:relation:delete")
     @PostMapping("delete")
     public ResultData<Void> deleteKgRelation(KgRelationVO kgRelationVO) {
         return kgRelationService.deleteKgRelation(kgRelationVO);
@@ -63,6 +67,7 @@ public class KgRelationController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("kg:relation:query")
     @GetMapping("pageList")
     public ResultData<PageResult<KgRelationResult>> pageKgRelationList(KgRelationQuery query) {
         return kgRelationService.pageKgRelationList(query);
@@ -73,6 +78,7 @@ public class KgRelationController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("kg:relation:detail")
     @GetMapping("detail")
     public ResultData<KgRelationResult> queryKgRelationDetail(KgRelationQuery query) {
         return kgRelationService.queryKgRelationDetail(query);

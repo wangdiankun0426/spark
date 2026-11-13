@@ -42,4 +42,9 @@ public class TenantUserVO extends BaseVO {
      * 所属部门
      */
     private Long deptId;
+
+    /**
+     * 组织菜单id列表，组织管理员勾选的组织菜单与按钮
+     */
+    private List<Long> orgMenuIds;
 }

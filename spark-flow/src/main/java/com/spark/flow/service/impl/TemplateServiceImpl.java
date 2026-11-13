@@ -3,6 +3,7 @@ package com.spark.flow.service.impl;
 import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.flow.entity.FlowTemplate;
 import com.spark.common.bean.flow.entity.FlowTemplateVersion;
 import com.spark.common.bean.flow.query.FlowTemplateQuery;
@@ -82,6 +83,10 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
         }
         FlowTemplate template = new FlowTemplate();
         BeanUtil.copyProperties(templateVO, template);
+        // 非站点管理员强制归属当前租户
+        if (!SessionHolder.isSysAdmin()) {
+            template.setTenantId(SessionHolder.getCurrentTenantId());
+        }
         template.setProcessId(processId);
         template.setStatus(StatusEnum.ABNORMAL.getValue());
         template.setType(templateVO.getType() == null ? FlowTypeEnum.NORMAL.getValue() : templateVO.getType());
@@ -111,6 +116,7 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
         }
         FlowTemplateQuery templateQuery = new FlowTemplateQuery();
         templateQuery.setId(templateVO.getId());
+        super.scopeTenant(templateQuery);
         FlowTemplateResult templateResult = templateDao.queryTemplate(templateQuery);
         if (templateResult == null) {
             result.setErrorCode(ErrorCodeEnum.FLOW_TEMPLATE_NOT_EXIST);
@@ -141,6 +147,7 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
         }
         FlowTemplateQuery templateQuery = new FlowTemplateQuery();
         templateQuery.setId(templateVO.getId());
+        super.scopeTenant(templateQuery);
         FlowTemplateResult templateResult = templateDao.queryTemplate(templateQuery);
         if (templateResult == null) {
             result.setCode(ResultData.OK);
@@ -187,6 +194,7 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        super.scopeTenant(query);
         FlowTemplateResult templateResult = templateDao.queryTemplate(query);
         if (templateResult == null) {
             result.setErrorCode(ErrorCodeEnum.FLOW_TEMPLATE_NOT_EXIST);
@@ -209,6 +217,7 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        super.scopeTenant(query);
         FlowTemplateResult templateResult = templateDao.queryTemplate(query);
         if (templateResult == null) {
             result.setErrorCode(ErrorCodeEnum.FLOW_TEMPLATE_NOT_EXIST);

@@ -5,6 +5,7 @@ import com.spark.common.bean.log.result.LogLoginResult;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.manage.log.ILogLoginService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,6 +31,7 @@ public class LogLoginController {
      * @param query 查询参数
      * @return 列表
      */
+    @RequiresPermi("log:login:query")
     @GetMapping("pageList")
     public ResultData<PageResult<LogLoginResult>> pageLogLoginList(LogLoginQuery query) {
         return logLoginService.pageLogLoginList(query);

@@ -7,6 +7,7 @@ import com.spark.common.bean.home.result.DashboardOverviewResult;
 import com.spark.common.bean.home.result.FlowCountResult;
 import com.spark.common.bean.llm.result.ModelUsageTrendResult;
 import com.spark.home.service.IHomeService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,6 +36,7 @@ public class HomeController {
      * 工作台总览，模型用量与资产数量合并返回
      * @return 总览数据
      */
+    @RequiresPermi("home:dashboard:query")
     @GetMapping("overview")
     public ResultData<DashboardOverviewResult> overview() {
         return homeService.queryOverview();
@@ -45,6 +47,7 @@ public class HomeController {
      * @param query 查询参数
      * @return 趋势列表
      */
+    @RequiresPermi("home:dashboard:query")
     @GetMapping("usageTrend")
     public ResultData<List<ModelUsageTrendResult>> usageTrend(DashboardQuery query) {
         return homeService.queryUsageTrend(query);
@@ -54,6 +57,7 @@ public class HomeController {
      * 我的流程四项数量，待办、已办、申请、抄送
      * @return 流程数量
      */
+    @RequiresPermi("home:dashboard:query")
     @GetMapping("flowCount")
     public ResultData<FlowCountResult> flowCount() {
         return homeService.queryFlowCount();
@@ -63,6 +67,7 @@ public class HomeController {
      * 综合推荐榜
      * @return 推荐榜
      */
+    @RequiresPermi("home:dashboard:query")
     @GetMapping("recommend")
     public ResultData<List<DashboardHotResult>> recommend() {
         return homeService.queryRecommend();

@@ -5,9 +5,11 @@ import com.spark.common.enums.AccountTypeEnum;
 import com.spark.common.enums.RoleTypeEnum;
 import com.spark.common.enums.SexEnum;
 import com.spark.common.enums.StatusEnum;
+import com.spark.common.bean.sys.vo.RouterVO;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * +++/\_/\
@@ -65,11 +67,6 @@ public class UserResult extends BaseResult {
      * 角色名称
      */
     private String roleNames;
-
-    /**
-     * 具有权限的菜单标识码
-     */
-    private List<String> menuCodes;
 
     /**
      * 手机号
@@ -130,6 +127,16 @@ public class UserResult extends BaseResult {
      * 角色类型
      */
     private Integer roleType;
+
+    /**
+     * 权限串集合
+     */
+    private Set<String> permissions;
+
+    /**
+     * 动态路由树
+     */
+    private List<RouterVO> routers;
 
     public String getRoleTypeName() {
         if (this.roleType == null) {

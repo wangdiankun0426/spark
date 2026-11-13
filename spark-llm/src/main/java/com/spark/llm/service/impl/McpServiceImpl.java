@@ -2,6 +2,7 @@ package com.spark.llm.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.llm.entity.Mcp;
 import com.spark.common.bean.llm.query.McpQuery;
 import com.spark.common.bean.llm.query.ProviderQuery;
@@ -75,6 +76,10 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
         }
         Mcp mcp = new Mcp();
         BeanUtil.copyProperties(mcpVO, mcp);
+        // 非站点管理员强制归属当前租户
+        if (!SessionHolder.isSysAdmin()) {
+            mcp.setTenantId(SessionHolder.getCurrentTenantId());
+        }
         if (mcp.getStatus() == null) {
             mcp.setStatus(StatusEnum.NORMAL.getValue());
         }
@@ -103,6 +108,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
         }
         McpQuery query = new McpQuery();
         query.setId(mcpVO.getId());
+        super.scopeTenant(query);
         McpResult existResult = mcpDao.queryMcp(query);
         if (existResult == null) {
             result.setErrorCode(ErrorCodeEnum.MCP_NOT_EXIST);
@@ -141,6 +147,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
         }
         McpQuery query = new McpQuery();
         query.setId(mcpVO.getId());
+        super.scopeTenant(query);
         McpResult existResult = mcpDao.queryMcp(query);
         if (existResult == null) {
             result.setCode(ResultData.OK);
@@ -191,6 +198,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        super.scopeTenant(query);
         McpResult mcpResult = mcpDao.queryMcp(query);
         if (mcpResult == null) {
             result.setErrorCode(ErrorCodeEnum.MCP_NOT_EXIST);
@@ -218,6 +226,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
         }
         McpQuery mcpQuery = new McpQuery();
         mcpQuery.setId(mcpVO.getId());
+        super.scopeTenant(mcpQuery);
         McpResult mcpResult = mcpDao.queryMcp(mcpQuery);
         if (mcpResult == null) {
             result.setErrorCode(ErrorCodeEnum.MCP_NOT_EXIST);
@@ -253,12 +262,13 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
      * @return 工具列表
      */
     @Override
-    public ResultData<List<McpToolResult>> listMcpTools(McpQuery query) {
+    public ResultData<List<McpToolResult>> queryMcpToolList(McpQuery query) {
         ResultData<List<McpToolResult>> result = new ResultData<>();
         if (query == null || query.getId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        super.scopeTenant(query);
         McpResult mcpResult = mcpDao.queryMcp(query);
         if (mcpResult == null) {
             result.setErrorCode(ErrorCodeEnum.MCP_NOT_EXIST);
@@ -281,12 +291,12 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
                 toolResult.setDescription(tool.description());
                 return toolResult;
             }).collect(Collectors.toList());
-            logger.info("listMcpTools success, id={}, size={}", query.getId(), toolList.size());
+            logger.info("queryMcpToolList success, id={}, size={}", query.getId(), toolList.size());
             result.setData(toolList);
             result.setCode(ResultData.OK);
             return result;
         } catch (Exception e) {
-            logger.error("listMcpTools fail, name={}", mcpResult.getName(), e);
+            logger.error("queryMcpToolList fail, name={}", mcpResult.getName(), e);
             result.setErrorCode(ErrorCodeEnum.MCP_CONNECT_FAIL);
             return result;
         }

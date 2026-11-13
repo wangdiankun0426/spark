@@ -5,6 +5,7 @@ import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.form.query.FormVersionQuery;
 import com.spark.common.bean.form.result.FormVersionResult;
 import com.spark.form.service.IFormVersionService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,8 +31,9 @@ public class FormVersionController {
      * @param query 查询参数
      * @return 结果
      */
+    @RequiresPermi("form:version:query")
     @GetMapping("pageList")
-    private ResultData<PageResult<FormVersionResult>> pageFormVersionList(FormVersionQuery query) {
+    public ResultData<PageResult<FormVersionResult>> pageFormVersionList(FormVersionQuery query) {
         return formVersionService.pageFormVersionList(query);
     }
 }

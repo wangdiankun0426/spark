@@ -12,7 +12,9 @@ package com.spark.common.enums;
 public enum MenuTypeEnum {
     UNKNOWN(0, "未知类型"),
     MODULE(1, "模块"),
-    MENU(2, "菜单"),
+    GROUP(2, "分组"),
+    MENU(3, "菜单"),
+    BUTTON(4, "按钮"),
 
     ;
 

@@ -131,7 +131,7 @@ public class AttachmentServiceImpl extends BaseService<AttachmentQuery, Attachme
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
+        super.scopeTenant(query);
         AttachmentResult attachmentResult = attachmentDao.queryAttachment(query);
         if (attachmentResult == null) {
             result.setErrorCode(ErrorCodeEnum.ATTACHMENT_NOT_EXIST);
@@ -162,6 +162,7 @@ public class AttachmentServiceImpl extends BaseService<AttachmentQuery, Attachme
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        super.scopeTenant(query);
         AttachmentResult attachmentResult = attachmentDao.queryAttachment(query);
         if (attachmentResult == null) {
             result.setErrorCode(ErrorCodeEnum.ATTACHMENT_NOT_EXIST);

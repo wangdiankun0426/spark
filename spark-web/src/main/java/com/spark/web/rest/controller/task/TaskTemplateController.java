@@ -6,6 +6,7 @@ import com.spark.common.bean.task.query.TaskTemplateQuery;
 import com.spark.common.bean.task.result.TaskTemplateResult;
 import com.spark.common.bean.task.vo.TaskTemplateVO;
 import com.spark.task.service.ITaskTemplateService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,8 +34,9 @@ public class TaskTemplateController {
      * @param taskTemplateVO 任务模板数据
      * @return 创建结果
      */
+    @RequiresPermi("task:template:create")
     @PostMapping("create")
-    private ResultData<Void> createTaskTemplate(TaskTemplateVO taskTemplateVO) {
+    public ResultData<Void> createTaskTemplate(TaskTemplateVO taskTemplateVO) {
         return taskTemplateService.createTaskTemplate(taskTemplateVO);
     }
 
@@ -43,8 +45,9 @@ public class TaskTemplateController {
      * @param taskTemplateVO 任务模板数据
      * @return 修改结果
      */
+    @RequiresPermi("task:template:update")
     @PostMapping("update")
-    private ResultData<Void> updateTaskTemplate(TaskTemplateVO taskTemplateVO) {
+    public ResultData<Void> updateTaskTemplate(TaskTemplateVO taskTemplateVO) {
         return taskTemplateService.updateTaskTemplate(taskTemplateVO);
     }
 
@@ -53,8 +56,9 @@ public class TaskTemplateController {
      * @param taskTemplateVO 任务模板数据
      * @return 删除结果
      */
+    @RequiresPermi("task:template:delete")
     @PostMapping("delete")
-    private ResultData<Void> deleteTaskTemplate(TaskTemplateVO taskTemplateVO) {
+    public ResultData<Void> deleteTaskTemplate(TaskTemplateVO taskTemplateVO) {
         return taskTemplateService.deleteTaskTemplate(taskTemplateVO);
     }
 
@@ -63,8 +67,9 @@ public class TaskTemplateController {
      * @param query 查询参数
      * @return 任务模板分页结果
      */
+    @RequiresPermi("task:template:query")
     @GetMapping("pageList")
-    private ResultData<PageResult<TaskTemplateResult>> pageTaskTemplateList(TaskTemplateQuery query) {
+    public ResultData<PageResult<TaskTemplateResult>> pageTaskTemplateList(TaskTemplateQuery query) {
         return taskTemplateService.pageTaskTemplateList(query);
     }
 
@@ -73,8 +78,9 @@ public class TaskTemplateController {
      * @param query 查询参数
      * @return 任务模板
      */
+    @RequiresPermi("task:template:detail")
     @GetMapping("detail")
-    private ResultData<TaskTemplateResult> detailTaskTemplate(TaskTemplateQuery query) {
+    public ResultData<TaskTemplateResult> detailTaskTemplate(TaskTemplateQuery query) {
         return taskTemplateService.detailTaskTemplate(query);
     }
 }

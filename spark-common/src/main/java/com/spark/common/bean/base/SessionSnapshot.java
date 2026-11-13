@@ -3,7 +3,9 @@ package com.spark.common.bean.base;
 import com.spark.common.enums.ModelUsageSceneEnum;
 import lombok.Data;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * +++/\_/\
@@ -39,11 +41,6 @@ public class SessionSnapshot {
     private final String deptIds;
 
     /**
-     * 数据权限
-     */
-    private final Integer dataScope;
-
-    /**
      * 角色类型
      */
     private final Integer roleType;
@@ -72,4 +69,19 @@ public class SessionSnapshot {
      * 日志MDC上下文
      */
     private final Map<String, String> mdcMap;
+
+    /**
+     * 权限串集合
+     */
+    private final Set<String> permissions;
+
+    /**
+     * 数据范围档位集合
+     */
+    private final List<Integer> dataScopeList;
+
+    /**
+     * 自定义数据范围部门ids
+     */
+    private final String customDeptIds;
 }

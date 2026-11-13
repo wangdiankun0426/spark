@@ -36,7 +36,7 @@ public class TenantConfigController {
      * @return 创建结果
      */
     @PostMapping("create")
-    private ResultData<Void> createTenantConfig(TenantConfigVO tenantConfigVO) {
+    public ResultData<Void> createTenantConfig(TenantConfigVO tenantConfigVO) {
         return tenantConfigService.createTenantConfig(tenantConfigVO);
     }
 
@@ -46,7 +46,7 @@ public class TenantConfigController {
      * @return 分页结果
      */
     @GetMapping("pageList")
-    private ResultData<PageResult<TenantConfigResult>> pageTenantConfigList(TenantConfigQuery query) {
+    public ResultData<PageResult<TenantConfigResult>> pageTenantConfigList(TenantConfigQuery query) {
         return tenantConfigService.pageTenantConfigList(query);
     }
 
@@ -56,7 +56,7 @@ public class TenantConfigController {
      * @return 修改结果
      */
     @PostMapping("update")
-    private ResultData<Void> updateTenantConfig(TenantConfigVO tenantConfigVO) {
+    public ResultData<Void> updateTenantConfig(TenantConfigVO tenantConfigVO) {
         return tenantConfigService.updateTenantConfig(tenantConfigVO);
     }
 
@@ -66,7 +66,7 @@ public class TenantConfigController {
      * @return 删除结果
      */
     @PostMapping("delete")
-    private ResultData<Void> deleteTenantConfig(TenantConfigVO tenantConfigVO) {
+    public ResultData<Void> deleteTenantConfig(TenantConfigVO tenantConfigVO) {
         return tenantConfigService.deleteTenantConfig(tenantConfigVO);
     }
 
@@ -75,7 +75,7 @@ public class TenantConfigController {
      * @return 密码长度规则
      */
     @GetMapping("passwordRule")
-    private ResultData<PasswordRuleResult> queryPasswordRule() {
+    public ResultData<PasswordRuleResult> queryPasswordRule() {
         Long tenantId = SessionHolder.getCurrentTenantId();
         return tenantConfigService.queryPasswordRule(tenantId);
     }

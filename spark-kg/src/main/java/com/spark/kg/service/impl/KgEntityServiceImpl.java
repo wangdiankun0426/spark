@@ -76,6 +76,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
         }
         KgGraphQuery graphQuery = new KgGraphQuery();
         graphQuery.setId(kgEntityVO.getGraphId());
+        super.scopeTenant(graphQuery);
         KgGraphResult kgGraphResult = kgGraphDao.queryKgGraph(graphQuery);
         if (kgGraphResult == null) {
             result.setErrorCode(ErrorCodeEnum.KG_GRAPH_NOT_EXIST);
@@ -83,6 +84,10 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
         }
         KgEntity kgEntity = new KgEntity();
         BeanUtil.copyProperties(kgEntityVO, kgEntity);
+        // 非站点管理员强制归属当前租户
+        if (!SessionHolder.isSysAdmin()) {
+            kgEntity.setTenantId(SessionHolder.getCurrentTenantId());
+        }
         if (kgEntity.getStatus() == null) {
             kgEntity.setStatus(StatusEnum.NORMAL.getValue());
         }
@@ -133,6 +138,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
         }
         KgEntityQuery query = new KgEntityQuery();
         query.setId(kgEntityVO.getId());
+        super.scopeTenant(query);
         KgEntityResult kgEntityResult = kgEntityDao.queryKgEntity(query);
         if (kgEntityResult == null) {
             result.setErrorCode(ErrorCodeEnum.KG_ENTITY_NOT_EXIST);
@@ -195,6 +201,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
         }
         KgEntityQuery query = new KgEntityQuery();
         query.setId(kgEntityVO.getId());
+        super.scopeTenant(query);
         KgEntityResult kgEntityResult = kgEntityDao.queryKgEntity(query);
         if (kgEntityResult == null) {
             result.setCode(ResultData.OK);
@@ -254,6 +261,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        super.scopeTenant(query);
         KgEntityResult kgEntityResult = kgEntityDao.queryKgEntity(query);
         if (kgEntityResult == null) {
             result.setErrorCode(ErrorCodeEnum.KG_ENTITY_NOT_EXIST);
@@ -281,6 +289,7 @@ public class KgEntityServiceImpl extends BaseService<KgEntityQuery, KgEntityResu
         }
         KgEntityQuery mainQuery = new KgEntityQuery();
         mainQuery.setId(mainEntityId);
+        super.scopeTenant(mainQuery);
         KgEntityResult mainEntity = kgEntityDao.queryKgEntity(mainQuery);
         if (mainEntity == null) {
             result.setErrorCode(ErrorCodeEnum.KG_ENTITY_NOT_EXIST);

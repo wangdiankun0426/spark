@@ -26,6 +26,11 @@ public class ObjectCacheKey {
     public final static String LOGIN_SESSION = "l_s_";
 
     /**
+     * 登录会话结构版本，旧版本会话强制重登
+     */
+    public final static int SESSION_VERSION = 1;
+
+    /**
      * 验证码值前缀
      */
     public final static String VALIDATE_CODE_KEY = "v_c_k_";

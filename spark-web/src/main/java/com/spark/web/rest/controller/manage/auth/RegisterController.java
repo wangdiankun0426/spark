@@ -31,7 +31,7 @@ public class RegisterController extends BaseController {
      * @return 注册结果
      */
     @PostMapping("register")
-    private ResultData<Void> register(RegisterVO registerVO) {
+    public ResultData<Void> register(RegisterVO registerVO) {
         return registerService.register(registerVO);
     }
 }

@@ -59,6 +59,11 @@ function handleOAuthLogin() {
   store.dispatch('user/login', { loginForm }).then(res => {
     if (res.code === 200) {
       getSessionAPI().then(res => {
+        if (!res || res.code !== 200 || !res.data) {
+          statusText.value = '登录失败：' + ((res && res.message) || '会话获取失败')
+          return
+        }
+        store.dispatch('user/setUserInfo', { userInfo: res.data })
         statusText.value = '登录成功，正在跳转...'
         ElMessage.success('登录成功')
         router.push({ path: '/' })
@@ -70,6 +75,8 @@ function handleOAuthLogin() {
 }
 
 onMounted(() => {
+  store.dispatch('user/logout')
+  store.dispatch('permission/reset')
   handleOAuthLogin()
 })
 </script>

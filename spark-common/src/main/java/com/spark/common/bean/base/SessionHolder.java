@@ -5,7 +5,9 @@ import com.spark.common.enums.AccountTypeEnum;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.RoleTypeEnum;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * +++/\_/\
@@ -32,11 +34,6 @@ public class SessionHolder {
      * 部门id
      */
     private static final ThreadLocal<Long> currentDeptId = new ThreadLocal<>();
-
-    /**
-     * 数据权限
-     */
-    private static final ThreadLocal<Integer> currentDataScop = new ThreadLocal<>();
 
     /**
      * 部门ids
@@ -68,6 +65,21 @@ public class SessionHolder {
      */
     private static final ThreadLocal<Integer> currentLoginPlatform = new ThreadLocal<>();
 
+    /**
+     * 权限串集合
+     */
+    private static final ThreadLocal<Set<String>> currentPermissions = new ThreadLocal<>();
+
+    /**
+     * 数据范围档位集合
+     */
+    private static final ThreadLocal<List<Integer>> currentDataScopeList = new ThreadLocal<>();
+
+    /**
+     * 自定义数据范围部门ids
+     */
+    private static final ThreadLocal<String> currentCustomDeptIds = new ThreadLocal<>();
+
     public static void setAccountType(Integer accountType_) {
         accountType.set(accountType_);
     }
@@ -82,6 +94,30 @@ public class SessionHolder {
 
     public static Integer getCurrentLoginPlatform() {
         return currentLoginPlatform.get();
+    }
+
+    public static void setCurrentPermissions(Set<String> permissions) {
+        currentPermissions.set(permissions);
+    }
+
+    public static Set<String> getCurrentPermissions() {
+        return currentPermissions.get();
+    }
+
+    public static void setCurrentDataScopeList(List<Integer> dataScopeList) {
+        currentDataScopeList.set(dataScopeList);
+    }
+
+    public static List<Integer> getCurrentDataScopeList() {
+        return currentDataScopeList.get();
+    }
+
+    public static void setCurrentCustomDeptIds(String customDeptIds) {
+        currentCustomDeptIds.set(customDeptIds);
+    }
+
+    public static String getCurrentCustomDeptIds() {
+        return currentCustomDeptIds.get();
     }
 
     public static void setCurrentTenantId(Long tenantId) {
@@ -114,14 +150,6 @@ public class SessionHolder {
 
     public static String getCurrentSessionId() {
         return currentSessionId.get();
-    }
-
-    public static void setCurrentDataScop(Integer dataScope) {
-        currentDataScop.set(dataScope);
-    }
-
-    public static Integer getCurrentDataScop() {
-        return currentDataScop.get();
     }
 
     public static void setCurrentDeptIds(String deptIds) {
@@ -165,12 +193,14 @@ public class SessionHolder {
         setCurrentSessionId(session.getSessionId());
         setCurrentUserId(session.getUserId());
         setCurrentDeptId(session.getDeptId());
-        setCurrentDataScop(session.getDataScope());
         setCurrentDeptIds(session.getDeptIds());
         setCurrentRoleType(session.getRoleType());
         setCurrentTenantId(session.getTenantId());
         setAccountType(session.getAccountType());
         setCurrentLoginPlatform(session.getLoginPlatform());
+        setCurrentPermissions(session.getPermissions());
+        setCurrentDataScopeList(session.getDataScopeList());
+        setCurrentCustomDeptIds(session.getCustomDeptIds());
     }
 
     /**
@@ -180,13 +210,15 @@ public class SessionHolder {
         currentUserId.remove();
         currentSessionId.remove();
         currentDeptId.remove();
-        currentDataScop.remove();
         currentDeptIds.remove();
         currentRoleType.remove();
         context.remove();
         currentTenantId.remove();
         accountType.remove();
         currentLoginPlatform.remove();
+        currentPermissions.remove();
+        currentDataScopeList.remove();
+        currentCustomDeptIds.remove();
     }
 
     /**

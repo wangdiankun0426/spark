@@ -26,3 +26,13 @@ export function isSysAdmin() {
     }
     return userInfo.accountType === 2;
 }
+
+/**
+ * 判断当前用户是否拥有指定操作权限
+ * @param perm 权限串
+ * @returns {boolean}
+ */
+export function checkPermi(perm) {
+    const permissions = store.getters['permission/permissions'] || [];
+    return permissions.includes('*:*:*') || permissions.includes(perm);
+}

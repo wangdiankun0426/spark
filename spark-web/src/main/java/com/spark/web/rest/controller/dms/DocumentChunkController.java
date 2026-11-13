@@ -4,6 +4,7 @@ import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.dms.query.DocumentQuery;
 import com.spark.dms.service.IDocumentChunkService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +33,7 @@ public class DocumentChunkController {
      * @param query 查询参数
      * @return 文档分片信息
      */
+    @RequiresPermi("dms:chunk:query")
     @GetMapping("pageList")
     public ResultData<PageResult<Map>> pageDocumentChunkList(DocumentQuery query) {
         return documentChunkService.pageDocumentChunkList(query);
@@ -42,6 +44,7 @@ public class DocumentChunkController {
      * @param query 查询参数
      * @return 文档分片qa
      */
+    @RequiresPermi("dms:chunk:query")
     @GetMapping("pageQAList")
     public ResultData<PageResult<Map>> pageDocumentChunksQAList(DocumentQuery query) {
         return documentChunkService.pageDocumentChunksQAList(query);
@@ -52,6 +55,7 @@ public class DocumentChunkController {
      * @param docId 文档ID
      * @return 统计信息
      */
+    @RequiresPermi("dms:chunk:stats")
     @GetMapping("stats")
     public ResultData<Map<String, Object>> getDocumentChunkStats(Long docId) {
         return documentChunkService.getDocumentChunkStats(docId);
@@ -62,6 +66,7 @@ public class DocumentChunkController {
      * @param docId 文档ID
      * @return 操作结果
      */
+    @RequiresPermi("dms:chunk:rechunk")
     @GetMapping("rechunk")
     public ResultData<Void> rechunkDocument(Long docId) {
         return documentChunkService.rechunkDocument(docId);
@@ -74,6 +79,7 @@ public class DocumentChunkController {
      * @param content 分块内容
      * @return 操作结果
      */
+    @RequiresPermi("dms:chunk:update")
     @PostMapping("update")
     public ResultData<Void> updateChunk(Long docId, Integer chunkIndex, String content) {
         return documentChunkService.updateChunk(docId, chunkIndex, content);

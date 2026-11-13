@@ -4,6 +4,7 @@ import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.form.query.FormFieldQuery;
 import com.spark.common.bean.form.result.FormFieldResult;
 import com.spark.form.service.IFormFieldService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,6 +33,7 @@ public class FormFieldController {
      * @param query 查询参数
      * @return 表单字段列表
      */
+    @RequiresPermi("form:field:query")
     @GetMapping("list")
     public ResultData<List<FormFieldResult>> queryFormFieldList(FormFieldQuery query) {
         return formFieldService.queryFormFieldList(query);

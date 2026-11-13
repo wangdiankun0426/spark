@@ -8,40 +8,14 @@
 
     <nav v-if="hasModuleMenu" class="app-nav__dock">
       <div
-          v-if="hasMenu(MODULE_CODES.LLM)"
+          v-for="mod in dockModules"
+          :key="mod.code"
           class="app-tab"
-          :class="{ 'is-active': defaultActive === '/llm' }"
-          @click="switchModule('/llm')"
+          :class="{ 'is-active': defaultActive === mod.path }"
+          @click="switchModule(mod.path)"
       >
-        <el-icon><NavAi/></el-icon>
-        <span>AI</span>
-      </div>
-      <div
-          v-if="hasMenu(MODULE_CODES.BUS)"
-          class="app-tab"
-          :class="{ 'is-active': defaultActive === '/bus' }"
-          @click="switchModule('/bus')"
-      >
-        <el-icon><NavBus/></el-icon>
-        <span>业务</span>
-      </div>
-      <div
-          v-if="isOrgAdmin()"
-          class="app-tab"
-          :class="{ 'is-active': defaultActive === '/org' }"
-          @click="switchModule('/org')"
-      >
-        <el-icon><NavOrg/></el-icon>
-        <span>组织</span>
-      </div>
-      <div
-          v-if="isSysAdmin()"
-          class="app-tab"
-          :class="{ 'is-active': defaultActive === '/site' }"
-          @click="switchModule('/site')"
-      >
-        <el-icon><NavSite/></el-icon>
-        <span>站点</span>
+        <el-icon><component :is="mod.icon"/></el-icon>
+        <span>{{ mod.title }}</span>
       </div>
     </nav>
 
@@ -59,7 +33,7 @@
           <el-icon><OfficeBuilding/></el-icon>
         </div>
       </el-tooltip>
-      <el-tooltip content="MCP 令牌" placement="bottom" :show-after="300">
+      <el-tooltip v-if="checkPermi('llm:mcpKey:query')" content="MCP 令牌" placement="bottom" :show-after="300">
         <div class="app-tool" @click="mcpTokenVisible = true">
           <el-icon><Key/></el-icon>
         </div>
@@ -115,15 +89,12 @@ import {
   Sunny,
   SwitchButton
 } from "@element-plus/icons-vue";
-import NavAi from "@/assets/icons/navAi.vue";
-import NavBus from "@/assets/icons/navBus.vue";
-import NavOrg from "@/assets/icons/navOrg.vue";
-import NavSite from "@/assets/icons/navSite.vue";
 import { useRouter, useRoute } from 'vue-router';
 import {useStore} from "vuex";
 import {getTheme, applyTheme, setTheme} from '@/utils/themeUtil';
-import {hasMenu, MODULE_CODES} from '@/utils/menuUtil.js';
+import {resolveIcon} from '@/utils/iconRegistry.js';
 import {useLogout} from '@/utils/useLogout.js';
+import {checkPermi} from '@/utils/permissionUtil';
 import UserAvatar from '@/components/UserAvatar';
 import UserProfile from '@/components/UserProfile';
 import TenantSwitch from '@/components/TenantSwitch';
@@ -131,7 +102,6 @@ import McpToken from '@/components/McpToken';
 import MessageCenter from '@/components/MessageCenter';
 import brandLogoLight from '@/assets/images/logo-light.png';
 import brandLogoDark from '@/assets/images/logo.png';
-import {isOrgAdmin, isSysAdmin} from "@/utils/permissionUtil.js";
 import { isDesktop } from '@desktop/env.js';
 const router = useRouter();
 const route = useRoute();
@@ -139,10 +109,16 @@ const store = useStore()
 
 const userInfo = computed(() => store.getters['user/getUserInfo'] || { id: undefined })
 
-// 桌面客户端面向普通用户，不提供 AI 业务组织站点等管理模块入口，整个模块坞不渲染
-const hasModuleMenu = computed(() =>
-    !isDesktop && (hasMenu(MODULE_CODES.LLM) || hasMenu(MODULE_CODES.BUS) || isOrgAdmin() || isSysAdmin())
-)
+// 模块坞由后端菜单树驱动，首页之外的模块即坞入口
+const dockModules = computed(() => {
+  const menuTree = store.getters['permission/menuTree'] || []
+  return menuTree
+      .filter(node => node.path && node.code !== 'module.home')
+      .map(node => ({ code: node.code, path: node.path, title: node.title, icon: resolveIcon(node.icon) }))
+})
+
+// 桌面客户端面向普通用户，不提供管理模块入口，整个模块坞不渲染
+const hasModuleMenu = computed(() => !isDesktop && dockModules.value.length > 0)
 
 const appVersion = __APP_VERSION__
 
@@ -153,10 +129,13 @@ applyTheme(currentTheme.value);
 const brandLogo = computed(() => (currentTheme.value === 'light' ? brandLogoLight : brandLogoDark));
 
 /**
- * 点击品牌区回到工作台
+ * 点击品牌区回到默认落地页，站点管理员无首页时落到站点管理
  */
 function goHome() {
-  router.push('/home').catch(() => {});
+  const defaultPath = store.getters['permission/defaultPath'];
+  if (defaultPath) {
+    router.push(defaultPath).catch(() => {});
+  }
 }
 
 /**

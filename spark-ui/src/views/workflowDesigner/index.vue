@@ -18,7 +18,7 @@
         <el-button @click="handleOpenJson">
           <el-icon><Document /></el-icon>JSON 数据
         </el-button>
-        <el-button type="primary" :loading="saving" @click="handleSaveVersion()">
+        <el-button v-hasPermi="['workflow:version:save']" type="primary" :loading="saving" @click="handleSaveVersion()">
           <el-icon><DocumentChecked /></el-icon>保存流程
         </el-button>
       </div>

@@ -2,7 +2,6 @@ package com.spark.dms.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
-import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.dms.entity.Document;
 import com.spark.common.bean.dms.entity.DocumentEvent;
 import com.spark.common.bean.dms.entity.DocumentVersion;
@@ -203,7 +202,11 @@ public class DocumentVersionServiceImpl extends BaseService<DocumentVersionQuery
         }
         // 当前版本不允许删除
         DocumentResult documentResult = this.queryDocument(versionResult.getDocId());
-        if (documentResult != null && versionResult.getVersionNo() != null && this.currentVersionNo(documentResult) == versionResult.getVersionNo()) {
+        if (documentResult == null) {
+            result.setErrorCode(ErrorCodeEnum.DOCUMENT_NOT_EXIST);
+            return result;
+        }
+        if (versionResult.getVersionNo() != null && this.currentVersionNo(documentResult) == versionResult.getVersionNo()) {
             result.setErrorCode(ErrorCodeEnum.DOCUMENT_VERSION_CURRENT_NOT_ALLOW);
             return result;
         }
@@ -231,10 +234,14 @@ public class DocumentVersionServiceImpl extends BaseService<DocumentVersionQuery
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        DocumentResult documentResult = this.queryDocument(query.getDocId());
+        if (documentResult == null) {
+            result.setErrorCode(ErrorCodeEnum.DOCUMENT_NOT_EXIST);
+            return result;
+        }
         PageResult<DocumentVersionResult> pageResult = super.pageList(query);
         // 标记当前版本
-        DocumentResult documentResult = this.queryDocument(query.getDocId());
-        if (documentResult != null && pageResult.getRows() != null) {
+        if (pageResult.getRows() != null) {
             Integer versionNo = this.currentVersionNo(documentResult);
             for (DocumentVersionResult item : pageResult.getRows()) {
                 item.setCurrentFlag(versionNo.equals(item.getVersionNo()));
@@ -263,10 +270,7 @@ public class DocumentVersionServiceImpl extends BaseService<DocumentVersionQuery
             return result;
         }
         // 版本表无租户列，通过父文档归属防止跨租户下载
-        DocumentQuery documentQuery = new DocumentQuery();
-        documentQuery.setId(versionResult.getDocId());
-        documentQuery.setTenantId(SessionHolder.getCurrentTenantId());
-        DocumentResult documentResult = documentDao.queryDocument(documentQuery);
+        DocumentResult documentResult = this.queryDocument(versionResult.getDocId());
         if (documentResult == null) {
             result.setErrorCode(ErrorCodeEnum.DOCUMENT_VERSION_NOT_EXIST);
             return result;
@@ -327,6 +331,7 @@ public class DocumentVersionServiceImpl extends BaseService<DocumentVersionQuery
     private DocumentResult queryDocument(Long docId) {
         DocumentQuery documentQuery = new DocumentQuery();
         documentQuery.setId(docId);
+        super.scopeTenant(documentQuery);
         return documentDao.queryDocument(documentQuery);
     }
 

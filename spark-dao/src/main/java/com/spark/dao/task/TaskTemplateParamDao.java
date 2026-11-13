@@ -28,6 +28,13 @@ public interface TaskTemplateParamDao extends BaseDao<TaskTemplateParam> {
     List<TaskTemplateParamResult> queryTaskTemplateParamList(TaskTemplateParamQuery query);
 
     /**
+     * 查询任务模板参数
+     * @param query 查询参数
+     * @return 参数
+     */
+    TaskTemplateParamResult queryTaskTemplateParam(TaskTemplateParamQuery query);
+
+    /**
      * 根据模板id逻辑删除参数
      * @param templateId 模板id
      * @param userId 操作人id

@@ -1,2 +1,3 @@
 table.sql中放的是数据库初始表语句
 init.sql中放的是数据库初始数据语句
+全新初始化按 database.sql、table.sql、init.sql 顺序执行

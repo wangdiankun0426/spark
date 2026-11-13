@@ -6,6 +6,7 @@ import com.spark.common.bean.workflow.query.WfTemplateQuery;
 import com.spark.common.bean.workflow.result.WfTemplateResult;
 import com.spark.common.bean.workflow.vo.WfTemplateVO;
 import com.spark.workflow.service.IWorkflowService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +33,7 @@ public class WorkflowController {
     /**
      * 创建workFlow
      */
+    @RequiresPermi("workflow:def:create")
     @PostMapping("create")
     public ResultData<Void> createWorkflow(WfTemplateVO templateVO) {
         return workflowService.createWorkflow(templateVO);
@@ -40,6 +42,7 @@ public class WorkflowController {
     /**
      * 修改workFlow基本信息
      */
+    @RequiresPermi("workflow:def:update")
     @PostMapping("update")
     public ResultData<Void> updateWorkflow(WfTemplateVO templateVO) {
         return workflowService.updateWorkflow(templateVO);
@@ -48,6 +51,7 @@ public class WorkflowController {
     /**
      * 删除workFlow
      */
+    @RequiresPermi("workflow:def:delete")
     @PostMapping("delete")
     public ResultData<Void> deleteWorkflow(WfTemplateVO templateVO) {
         return workflowService.deleteWorkflow(templateVO);
@@ -56,6 +60,7 @@ public class WorkflowController {
     /**
      * 分页查询workFlow列表
      */
+    @RequiresPermi("workflow:def:query")
     @GetMapping("pageList")
     public ResultData<PageResult<WfTemplateResult>> pageWorkflowList(WfTemplateQuery query) {
         return workflowService.pageWorkflowList(query);
@@ -64,6 +69,7 @@ public class WorkflowController {
     /**
      * 查询workFlow详情
      */
+    @RequiresPermi("workflow:def:detail")
     @GetMapping("detail")
     public ResultData<WfTemplateResult> queryWorkflowDetail(WfTemplateQuery query) {
         return workflowService.queryWorkflowDetail(query);

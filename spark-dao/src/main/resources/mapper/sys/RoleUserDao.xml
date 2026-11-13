@@ -78,4 +78,11 @@
         </foreach>
         )
     </delete>
+
+    <select id="queryUserIdsByRoleId" resultType="java.lang.Long">
+        select distinct user_id
+        from sys_role_user
+        where delete_flag = 1
+          and role_id = #{roleId}
+    </select>
 </mapper>

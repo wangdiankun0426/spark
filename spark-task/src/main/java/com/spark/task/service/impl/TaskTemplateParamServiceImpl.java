@@ -1,10 +1,14 @@
 package com.spark.task.service.impl;
 
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.task.entity.TaskTemplateParam;
 import com.spark.common.bean.task.query.TaskTemplateParamQuery;
+import com.spark.common.bean.task.query.TaskTemplateQuery;
 import com.spark.common.bean.task.result.TaskTemplateParamResult;
+import com.spark.common.bean.task.result.TaskTemplateResult;
 import com.spark.common.bean.task.vo.TaskTemplateParamVO;
+import com.spark.dao.task.TaskTemplateDao;
 import com.spark.dao.task.TaskTemplateParamDao;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.TaskParamTypeEnum;
@@ -33,6 +37,8 @@ import java.util.List;
 public class TaskTemplateParamServiceImpl extends BaseService<TaskTemplateParamQuery, TaskTemplateParamResult> implements ITaskTemplateParamService {
     private final static Logger logger = LoggerFactory.getLogger(TaskTemplateParamServiceImpl.class);
     @Autowired
+    private TaskTemplateDao taskTemplateDao;
+    @Autowired
     private TaskTemplateParamDao taskTemplateParamDao;
 
     /**
@@ -45,6 +51,11 @@ public class TaskTemplateParamServiceImpl extends BaseService<TaskTemplateParamQ
         ResultData<List<TaskTemplateParamResult>> result = new ResultData<>();
         if (query == null || query.getTemplateId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        Long templateId = query.getTemplateId();
+        if (!this.isTemplateInTenant(templateId)) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
         query.setPage(false);
@@ -68,6 +79,11 @@ public class TaskTemplateParamServiceImpl extends BaseService<TaskTemplateParamQ
                 || StringUtil.isBlank(taskTemplateParamVO.getCode())
                 || taskTemplateParamVO.getType() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        Long templateId = taskTemplateParamVO.getTemplateId();
+        if (!this.isTemplateInTenant(templateId)) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
         TaskTemplateParam taskTemplateParam = new TaskTemplateParam();
@@ -94,6 +110,12 @@ public class TaskTemplateParamServiceImpl extends BaseService<TaskTemplateParamQ
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        Long paramId = taskTemplateParamVO.getId();
+        TaskTemplateParamResult paramResult = this.queryParamInTenant(paramId);
+        if (paramResult == null) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
         TaskTemplateParam taskTemplateParam = new TaskTemplateParam();
         BeanUtil.copyProperties(taskTemplateParamVO, taskTemplateParam);
         int count = taskTemplateParamDao.updateDBById(taskTemplateParam);
@@ -116,6 +138,12 @@ public class TaskTemplateParamServiceImpl extends BaseService<TaskTemplateParamQ
         ResultData<Void> result = new ResultData<>();
         if (taskTemplateParamVO == null || taskTemplateParamVO.getId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        Long paramId = taskTemplateParamVO.getId();
+        TaskTemplateParamResult paramResult = this.queryParamInTenant(paramId);
+        if (paramResult == null) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
         TaskTemplateParam taskTemplateParam = new TaskTemplateParam();
@@ -145,5 +173,43 @@ public class TaskTemplateParamServiceImpl extends BaseService<TaskTemplateParamQ
                 item.setTypeName(paramTypeEnum.getDesc());
             }
         });
+    }
+
+    /**
+     * 校验模板归属当前租户，参数子表经父模板收口
+     * @param templateId 模板id
+     * @return true归属当前租户
+     */
+    private boolean isTemplateInTenant(Long templateId) {
+        if (SessionHolder.isSysAdmin()) {
+            return true;
+        }
+        if (templateId == null) {
+            return false;
+        }
+        TaskTemplateQuery templateQuery = new TaskTemplateQuery();
+        templateQuery.setId(templateId);
+        super.scopeTenant(templateQuery);
+        TaskTemplateResult templateResult = taskTemplateDao.queryTaskTemplate(templateQuery);
+        return templateResult != null;
+    }
+
+    /**
+     * 查询归属当前租户的参数，不存在或跨租户返回null
+     * @param paramId 参数id
+     * @return 参数
+     */
+    private TaskTemplateParamResult queryParamInTenant(Long paramId) {
+        TaskTemplateParamQuery paramQuery = new TaskTemplateParamQuery();
+        paramQuery.setId(paramId);
+        TaskTemplateParamResult paramResult = taskTemplateParamDao.queryTaskTemplateParam(paramQuery);
+        if (paramResult == null) {
+            return null;
+        }
+        Long templateId = paramResult.getTemplateId();
+        if (!this.isTemplateInTenant(templateId)) {
+            return null;
+        }
+        return paramResult;
     }
 }

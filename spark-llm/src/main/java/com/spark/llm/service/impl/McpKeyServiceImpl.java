@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -115,6 +116,12 @@ public class McpKeyServiceImpl extends BaseService<McpKeyQuery, McpKeyResult> im
         McpKeyResult existResult = mcpKeyDao.queryMcpKey(query);
         if (existResult == null) {
             result.setCode(ResultData.OK);
+            return result;
+        }
+        // 非站点管理员仅允许删除本人密钥
+        Long currentUserId = SessionHolder.getCurrentUserId();
+        if (!SessionHolder.isSysAdmin() && !Objects.equals(existResult.getUserId(), currentUserId)) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
         McpKey mcpKey = new McpKey();

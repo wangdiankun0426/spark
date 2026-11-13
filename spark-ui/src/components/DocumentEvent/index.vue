@@ -19,7 +19,7 @@
         <template #extra>
           <div class="event-extra">
             <el-tag type="primary" size="large">{{ documentEvent.contentStatusName }}</el-tag>
-            <el-button type="warning" size="small" :loading="resetting.content" @click="handleReset('content')">
+            <el-button v-hasPermi="['dms:event:update']" type="warning" size="small" :loading="resetting.content" @click="handleReset('content')">
               重置
             </el-button>
           </div>
@@ -34,7 +34,7 @@
         <template #extra>
           <div class="event-extra">
             <el-tag type="primary" size="large">{{ documentEvent.chunkStatusName }}</el-tag>
-            <el-button type="warning" size="small" :loading="resetting.chunk" @click="handleReset('chunk')">
+            <el-button v-hasPermi="['dms:event:update']" type="warning" size="small" :loading="resetting.chunk" @click="handleReset('chunk')">
               重置
             </el-button>
           </div>
@@ -49,7 +49,7 @@
         <template #extra>
           <div class="event-extra">
             <el-tag type="primary" size="large">{{ documentEvent.indexStatusName }}</el-tag>
-            <el-button type="warning" size="small" :loading="resetting.index" @click="handleReset('index')">
+            <el-button v-hasPermi="['dms:event:update']" type="warning" size="small" :loading="resetting.index" @click="handleReset('index')">
               重置
             </el-button>
           </div>
@@ -64,7 +64,7 @@
         <template #extra>
           <div class="event-extra">
             <el-tag type="primary" size="large">{{ documentEvent.vectorStatusName }}</el-tag>
-            <el-button type="warning" size="small" :loading="resetting.vector" @click="handleReset('vector')">
+            <el-button v-hasPermi="['dms:event:update']" type="warning" size="small" :loading="resetting.vector" @click="handleReset('vector')">
               重置
             </el-button>
           </div>
@@ -79,7 +79,7 @@
         <template #extra>
           <div class="event-extra">
             <el-tag type="primary" size="large">{{ documentEvent.graphStatusName }}</el-tag>
-            <el-button type="warning" size="small" :loading="resetting.graph" @click="handleReset('graph')">
+            <el-button v-hasPermi="['dms:event:update']" type="warning" size="small" :loading="resetting.graph" @click="handleReset('graph')">
               重置
             </el-button>
           </div>

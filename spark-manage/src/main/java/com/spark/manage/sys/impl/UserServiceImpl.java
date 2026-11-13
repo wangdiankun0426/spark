@@ -22,6 +22,7 @@ import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.LogIgnore;
 import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.LogOperate;
+import com.spark.config.redis.RedisService;
 import com.spark.common.bean.sys.entity.User;
 import com.spark.common.bean.sys.entity.UserProfile;
 import com.spark.common.bean.sys.vo.UserVO;
@@ -52,9 +53,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -80,8 +80,6 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
     @Autowired
     private RoleUserDao roleUserDao;
     @Autowired
-    private RoleDao roleDao;
-    @Autowired
     private IDepartmentService departmentService;
     @Autowired
     private ITenantUserService tenantUserService;
@@ -93,6 +91,8 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
     private ITenantConfigService tenantConfigService;
     @Autowired
     private IEncryptKeyService encryptKeyService;
+    @Autowired
+    private RedisService redisService;
     @Value("${user.avatar.path}")
     private String userAvatarPath;
 
@@ -135,8 +135,10 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         if (user.getStatus() == null) {
             user.setStatus(StatusEnum.NORMAL.getValue());
         }
-        user.setAccountType(userVO.getAccountType());
-        if (user.getAccountType() == null) {
+        // 非站点管理员禁止创建站点管理员账号
+        if (SessionHolder.isSysAdmin() && userVO.getAccountType() != null) {
+            user.setAccountType(userVO.getAccountType());
+        } else {
             user.setAccountType(AccountTypeEnum.COMMON.getValue());
         }
         int count = userDao.insertDB(user);
@@ -200,6 +202,10 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         ResultData<Void> result = this.validateUpdateUserParam(userVO);
         BaseAssert.assertTrue(result);
         Long userId = userVO.getId();
+        if (!this.checkUserManage(userId)) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
         // 更新主表数据
         User user = new User();
         user.setId(userId);
@@ -210,7 +216,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         user.setSex(userVO.getSex());
         user.setStatus(userVO.getStatus());
         int count = userDao.updateDBById(user);
-        if (count < 0) {
+        if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
@@ -251,15 +257,21 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        Long userId = userVO.getId();
+        if (!this.checkUserManage(userId)) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
         User user = new User();
-        user.setId(userVO.getId());
+        user.setId(userId);
         int count = userDao.deleteDBById(user);
-        if (count < 0) {
+        if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
         // 删除用户所属租户信息
         tenantUserDao.deleteTenantUserV2(userVO.getId(), SessionHolder.getCurrentUserId());
+        redisService.deleteLoginSessionByUserId(userId);
         result.setObjId(userVO.getId());
         result.setCode(ResultData.OK);
         return result;
@@ -278,6 +290,13 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        Long targetUserId = query.getId();
+        Long currentUserId = SessionHolder.getCurrentUserId();
+        boolean isSelf = Objects.equals(targetUserId, currentUserId);
+        if (!isSelf && !this.checkUserManage(targetUserId)) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
         UserResult userResult = userDao.queryUser(query);
         if (userResult == null) {
             result.setErrorCode(ErrorCodeEnum.USER_NOT_EXIST);
@@ -287,7 +306,6 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         this.supplyUserTenantInfo(userResult);
         this.supplyUserDeptInfo(userResult);
         this.supplyUserRoleInfo(userResult);
-        this.supplyUserMenu(userResult);
         result.setData(userResult);
         result.setObjId(query.getId());
         result.setCode(ResultData.OK);
@@ -353,11 +371,12 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         User user = new User();
         user.setId(userId);
         user.setPassword(newMd5);
-        int count = userDao.updateById(user);
+        int count = userDao.updateDBById(user);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
+        redisService.deleteLoginSessionByUserId(userId);
         result.setObjId(userId);
         result.setCode(ResultData.OK);
         return result;
@@ -424,7 +443,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         User user = new User();
         user.setId(userId);
         user.setAvatar(uuid);
-        int count = userDao.updateById(user);
+        int count = userDao.updateDBById(user);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
@@ -525,31 +544,6 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
     }
 
     /**
-     * 补充用户菜单权限
-     * @param userResult 用户
-     */
-    private void supplyUserMenu(UserResult userResult) {
-        Long userId = userResult.getId();
-        if (userId == null) {
-            return;
-        }
-        List<String> menuCodesList = roleDao.queryUserMenuCodes(SessionHolder.getCurrentTenantId(), userId);
-        if (CollectionUtil.isEmpty(menuCodesList)) {
-            return;
-        }
-        Set<String> menuCodeSet = new HashSet<>();
-        for (String menuCodes : menuCodesList) {
-            String[] codeArray = menuCodes.split(",");
-            for (String code : codeArray) {
-                if (StringUtil.isNotBlank(code)) {
-                    menuCodeSet.add(code.trim());
-                }
-            }
-        }
-        userResult.setMenuCodes(new ArrayList<>(menuCodeSet));
-    }
-
-    /**
      * 验证创建用户参数
      * @param userVO 创建用户参数
      * @return 验证结果
@@ -603,6 +597,36 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         }
         result.setCode(ResultData.OK);
         return result;
+    }
+
+    /**
+     * 校验用户管理权限与用户归属，站点管理员可跨租户，组织管理员限本租户成员
+     * @param userId 目标用户id
+     * @return true 有权限，false 无权限或用户不在本租户
+     */
+    private boolean checkUserManage(Long userId) {
+        if (SessionHolder.isSysAdmin()) {
+            return true;
+        }
+        if (!SessionHolder.isOrgAdmin()) {
+            return false;
+        }
+        // 组织管理员禁止管理站点管理员账号
+        UserQuery userQuery = new UserQuery();
+        userQuery.setId(userId);
+        UserResult targetUser = userDao.queryUser(userQuery);
+        if (targetUser == null) {
+            return false;
+        }
+        if (AccountTypeEnum.SITE_ADMIN.getValue().equals(targetUser.getAccountType())) {
+            return false;
+        }
+        Long tenantId = SessionHolder.getCurrentTenantId();
+        TenantUserQuery tenantUserQuery = new TenantUserQuery();
+        tenantUserQuery.setTenantId(tenantId);
+        tenantUserQuery.setUserId(userId);
+        TenantUserResult tenantUserResult = tenantUserDao.queryTenantUser(tenantUserQuery);
+        return tenantUserResult != null;
     }
 
     /**

@@ -32,7 +32,7 @@ public class NodeController {
      * @return 节点清单
      */
     @GetMapping("list")
-    private ResultData<List<MonitorNodeResult>> queryNodeList() {
+    public ResultData<List<MonitorNodeResult>> queryNodeList() {
         return monitorService.queryNodeList();
     }
 }

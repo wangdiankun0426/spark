@@ -7,6 +7,7 @@ import com.spark.common.bean.sys.result.MessageCountResult;
 import com.spark.common.bean.sys.result.MessageResult;
 import com.spark.common.bean.sys.vo.MessageVO;
 import com.spark.manage.sys.IMessageService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -62,8 +63,9 @@ public class MessageController {
      * @param query 查询参数
      * @return 分页结果
      */
+    @RequiresPermi("sys:message:query")
     @GetMapping("pageList")
-    private ResultData<PageResult<MessageResult>> pageMessageList(MessageQuery query) {
+    public ResultData<PageResult<MessageResult>> pageMessageList(MessageQuery query) {
         return messageService.pageMessageList(query);
     }
 
@@ -72,8 +74,9 @@ public class MessageController {
      * @param messageVO 消息参数
      * @return 发送结果
      */
+    @RequiresPermi("sys:message:send")
     @PostMapping("send")
-    private ResultData<Void> sendMessage(MessageVO messageVO) {
+    public ResultData<Void> sendMessage(MessageVO messageVO) {
         return messageService.sendMessage(messageVO);
     }
 
@@ -82,8 +85,9 @@ public class MessageController {
      * @param messageVO 删除参数
      * @return 删除结果
      */
+    @RequiresPermi("sys:message:delete")
     @PostMapping("delete")
-    private ResultData<Void> deleteMessage(MessageVO messageVO) {
+    public ResultData<Void> deleteMessage(MessageVO messageVO) {
         return messageService.deleteMessage(messageVO);
     }
 

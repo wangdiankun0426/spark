@@ -5,6 +5,7 @@ import com.spark.common.bean.workflow.query.WfTemplateVersionQuery;
 import com.spark.common.bean.workflow.result.WfTemplateVersionResult;
 import com.spark.common.bean.workflow.vo.WfTemplateVersionVO;
 import com.spark.workflow.service.IWorkflowVersionService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +33,7 @@ public class WorkflowVersionController {
     /**
      * 保存版本
      */
+    @RequiresPermi("workflow:version:save")
     @PostMapping("saveVersion")
     public ResultData<Void> saveVersion(@RequestBody WfTemplateVersionVO versionVO) {
         return workflowVersionService.saveVersion(versionVO);
@@ -40,6 +42,7 @@ public class WorkflowVersionController {
     /**
      * 查询版本详情
      */
+    @RequiresPermi("workflow:version:detail")
     @GetMapping("detail")
     public ResultData<WfTemplateVersionResult> queryVersionDetail(WfTemplateVersionQuery query) {
         return workflowVersionService.queryVersionDetail(query);

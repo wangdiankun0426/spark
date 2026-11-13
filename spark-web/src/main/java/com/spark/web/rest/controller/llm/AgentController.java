@@ -6,6 +6,7 @@ import com.spark.common.bean.llm.vo.AgentVO;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.llm.service.IAgentService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,6 +34,7 @@ public class AgentController {
      * @param agentVO  创建智能体参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:agent:create")
     @PostMapping("create")
     public ResultData<Void> createAgent(AgentVO agentVO) {
         return agentService.createAgent(agentVO);
@@ -43,6 +45,7 @@ public class AgentController {
      * @param agentVO 修改智能体参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:agent:update")
     @PostMapping("update")
     public ResultData<Void> updateAgent(AgentVO agentVO) {
         return agentService.updateAgent(agentVO);
@@ -53,6 +56,7 @@ public class AgentController {
      * @param agentVO 删除智能体参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:agent:delete")
     @PostMapping("delete")
     public ResultData<Void> deleteAgent(AgentVO agentVO) {
         return agentService.deleteAgent(agentVO);
@@ -63,6 +67,7 @@ public class AgentController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:agent:query")
     @GetMapping("pageList")
     public ResultData<PageResult<AgentResult>> pageAgentList(AgentQuery query) {
         return agentService.pageAgentList(query);
@@ -73,6 +78,7 @@ public class AgentController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:agent:detail")
     @GetMapping("detail")
     public ResultData<AgentResult> queryAgentDetail(AgentQuery query) {
         return agentService.queryAgentDetail(query);

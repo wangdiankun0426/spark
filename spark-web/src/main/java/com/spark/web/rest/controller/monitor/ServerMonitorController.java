@@ -35,7 +35,7 @@ public class ServerMonitorController {
      * @return 主机快照
      */
     @GetMapping("latest")
-    private ResultData<MonitorHostSnapshot> queryLatestHost(MonitorSnapshotQuery query) {
+    public ResultData<MonitorHostSnapshot> queryLatestHost(MonitorSnapshotQuery query) {
         return monitorService.queryLatestHost(query);
     }
 
@@ -45,7 +45,7 @@ public class ServerMonitorController {
      * @return 快照序列
      */
     @GetMapping("series")
-    private ResultData<List<MonitorHostSnapshot>> queryHostSeries(MonitorSnapshotQuery query) {
+    public ResultData<List<MonitorHostSnapshot>> queryHostSeries(MonitorSnapshotQuery query) {
         return monitorService.queryHostSeries(query);
     }
 
@@ -55,7 +55,7 @@ public class ServerMonitorController {
      * @return 慢SQL快照
      */
     @GetMapping("druid")
-    private ResultData<MonitorDruidSnapshot> queryLatestDruid(MonitorSnapshotQuery query) {
+    public ResultData<MonitorDruidSnapshot> queryLatestDruid(MonitorSnapshotQuery query) {
         return monitorService.queryLatestDruid(query);
     }
 }

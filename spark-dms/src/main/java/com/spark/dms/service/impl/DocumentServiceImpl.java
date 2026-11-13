@@ -89,6 +89,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         }
         AttachmentQuery attachmentQuery = new AttachmentQuery();
         attachmentQuery.setId(attId);
+        super.scopeTenant(attachmentQuery);
         AttachmentResult attachment = attachmentDao.queryAttachment(attachmentQuery);
         if (attachment == null) {
             result.setErrorCode(ErrorCodeEnum.FILE_NOT_EXIST);
@@ -232,6 +233,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         }
         DocumentQuery documentQuery = new DocumentQuery();
         documentQuery.setId(documentVO.getId());
+        super.scopeTenant(documentQuery);
         DocumentResult documentResult = documentDao.queryDocument(documentQuery);
         if (documentResult == null) {
             result.setErrorCode(ErrorCodeEnum.DOCUMENT_NOT_EXIST);
@@ -267,6 +269,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         }
         DocumentQuery documentQuery = new DocumentQuery();
         documentQuery.setId(documentVO.getId());
+        super.scopeTenant(documentQuery);
         DocumentResult documentResult = documentDao.queryDocument(documentQuery);
         if (documentResult == null) {
             result.setCode(ResultData.OK);
@@ -315,6 +318,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        super.scopeTenant(query);
         DocumentResult documentResult = documentDao.queryDocument(query);
         if (documentResult == null) {
             result.setErrorCode(ErrorCodeEnum.DOCUMENT_NOT_EXIST);
@@ -346,7 +350,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        query.setTenantId(SessionHolder.getCurrentTenantId());
+        super.scopeTenant(query);
         DocumentResult documentResult = documentDao.queryDocument(query);
         if (documentResult == null) {
             result.setErrorCode(ErrorCodeEnum.DOCUMENT_NOT_EXIST);
@@ -380,6 +384,13 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         }
         for (Long id : ids) {
             try {
+                DocumentQuery documentQuery = new DocumentQuery();
+                documentQuery.setId(id);
+                super.scopeTenant(documentQuery);
+                DocumentResult documentResult = documentDao.queryDocument(documentQuery);
+                if (documentResult == null) {
+                    continue;
+                }
                 Document document = new Document();
                 document.setId(id);
                 documentDao.deleteDBById(document);
@@ -406,6 +417,13 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         }
         for (Long id : ids) {
             try {
+                DocumentQuery documentQuery = new DocumentQuery();
+                documentQuery.setId(id);
+                super.scopeTenant(documentQuery);
+                DocumentResult documentResult = documentDao.queryDocument(documentQuery);
+                if (documentResult == null) {
+                    continue;
+                }
                 DocumentEventQuery eventQuery = new DocumentEventQuery();
                 eventQuery.setDocId(id);
                 DocumentEventResult eventResult = documentEventDao.queryDocumentEvent(eventQuery);

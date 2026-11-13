@@ -7,6 +7,7 @@ import com.spark.common.bean.llm.result.McpResult;
 import com.spark.common.bean.llm.result.McpToolResult;
 import com.spark.common.bean.llm.vo.McpVO;
 import com.spark.llm.service.IMcpService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,6 +37,7 @@ public class McpController {
      * @param mcpVO 创建参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:mcp:create")
     @PostMapping("create")
     public ResultData<Void> createMcp(McpVO mcpVO) {
         return mcpService.createMcp(mcpVO);
@@ -46,6 +48,7 @@ public class McpController {
      * @param mcpVO 修改参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:mcp:update")
     @PostMapping("update")
     public ResultData<Void> updateMcp(McpVO mcpVO) {
         return mcpService.updateMcp(mcpVO);
@@ -56,6 +59,7 @@ public class McpController {
      * @param mcpVO 删除参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:mcp:delete")
     @PostMapping("delete")
     public ResultData<Void> deleteMcp(McpVO mcpVO) {
         return mcpService.deleteMcp(mcpVO);
@@ -66,6 +70,7 @@ public class McpController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:mcp:query")
     @GetMapping("pageList")
     public ResultData<PageResult<McpResult>> pageMcpList(McpQuery query) {
         return mcpService.pageMcpList(query);
@@ -76,6 +81,7 @@ public class McpController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:mcp:detail")
     @GetMapping("detail")
     public ResultData<McpResult> queryMcpDetail(McpQuery query) {
         return mcpService.queryMcpDetail(query);
@@ -86,6 +92,7 @@ public class McpController {
      * @param mcpVO 测试参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:mcp:test")
     @PostMapping("test")
     public ResultData<Void> test(McpVO mcpVO) {
         return mcpService.test(mcpVO);
@@ -96,9 +103,10 @@ public class McpController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:mcp:listTools")
     @GetMapping("listTools")
-    public ResultData<List<McpToolResult>> listMcpTools(McpQuery query) {
-        return mcpService.listMcpTools(query);
+    public ResultData<List<McpToolResult>> queryMcpToolList(McpQuery query) {
+        return mcpService.queryMcpToolList(query);
     }
 
 }

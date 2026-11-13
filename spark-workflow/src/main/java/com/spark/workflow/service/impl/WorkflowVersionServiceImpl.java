@@ -58,6 +58,7 @@ public class WorkflowVersionServiceImpl extends BaseService<WfTemplateVersionQue
         }
         WfTemplateQuery templateQuery = new WfTemplateQuery();
         templateQuery.setId(versionVO.getTemplateId());
+        super.scopeTenant(templateQuery);
         WfTemplateResult templateResult = templateDao.queryTemplate(templateQuery);
         if (templateResult == null) {
             result.setErrorCode(ErrorCodeEnum.WORKFLOW_NOT_FOUND);
@@ -106,6 +107,14 @@ public class WorkflowVersionServiceImpl extends BaseService<WfTemplateVersionQue
         }
         WfTemplateVersionResult versionResult = templateVersionDao.queryVersion(query);
         if (versionResult == null) {
+            result.setErrorCode(ErrorCodeEnum.WORKFLOW_VERSION_NOT_FOUND);
+            return result;
+        }
+        WfTemplateQuery templateQuery = new WfTemplateQuery();
+        templateQuery.setId(versionResult.getTemplateId());
+        super.scopeTenant(templateQuery);
+        WfTemplateResult templateResult = templateDao.queryTemplate(templateQuery);
+        if (templateResult == null) {
             result.setErrorCode(ErrorCodeEnum.WORKFLOW_VERSION_NOT_FOUND);
             return result;
         }

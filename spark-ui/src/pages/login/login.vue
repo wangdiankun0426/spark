@@ -178,7 +178,7 @@ import { des } from '@/utils/encryptUtil.js';
 import { AGREEMENT_VERSION } from '@/utils/agreementDoc.js';
 import { localStorageKey } from '@/utils/keyUtils.js';
 import Validate from '@/assets/icons/validate.vue';
-import { ref, getCurrentInstance } from "vue";
+import { ref, getCurrentInstance, onMounted } from "vue";
 import { useRouter } from 'vue-router';
 import { useStore } from "vuex";
 import { isDesktop } from '@desktop/env.js';
@@ -317,6 +317,12 @@ function getValidateImg() {
 
 const store = useStore();
 
+// 到达登录页即清残留凭证，避免 601 跳登录后被守卫误判已登录而循环跳转
+onMounted(() => {
+  store.dispatch('user/logout');
+  store.dispatch('permission/reset');
+});
+
 /**
  * 提交登录表单
  */
@@ -359,6 +365,10 @@ function submitLoginForm() {
       store.dispatch('user/login', {loginForm: data}).then(res => {
         if (res.code === 200) {
           getSessionAPI().then(res => {
+            if (!res || res.code !== 200 || !res.data) {
+              loading.value = false
+              return
+            }
             store.dispatch('user/setUserInfo', { userInfo: res.data })
             router.push({ path: '/' })
           })

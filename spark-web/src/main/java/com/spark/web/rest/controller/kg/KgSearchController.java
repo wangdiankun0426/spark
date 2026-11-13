@@ -2,6 +2,7 @@ package com.spark.web.rest.controller.kg;
 
 import com.spark.common.bean.base.ResultData;
 import com.spark.kg.service.IKgGraphService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +34,7 @@ public class KgSearchController {
      * @param graphIds 图谱 id 列表
      * @return 推理结论
      */
+    @RequiresPermi("kg:search:reason")
     @GetMapping("reason")
     public ResultData<String> reason(@RequestParam String question, @RequestParam List<Long> graphIds) {
         return kgGraphService.reason(question, graphIds);
@@ -44,6 +46,7 @@ public class KgSearchController {
      * @param toEntityId 目标实体 id
      * @return 路径子图数据
      */
+    @RequiresPermi("kg:search:path")
     @GetMapping("path")
     public ResultData<Map<String, Object>> findShortestPath(@RequestParam Long fromEntityId, @RequestParam Long toEntityId) {
         return kgGraphService.findShortestPath(fromEntityId, toEntityId);

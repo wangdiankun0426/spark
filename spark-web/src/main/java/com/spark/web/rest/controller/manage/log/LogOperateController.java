@@ -5,6 +5,7 @@ import com.spark.common.bean.log.result.LogOperateResult;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.manage.log.ILogOperateService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +34,7 @@ public class LogOperateController {
      * @param query 查询参数
      * @return  查询结果
      */
+    @RequiresPermi("log:operate:query")
     @GetMapping("pageList")
     public ResultData<PageResult<LogOperateResult>> pageLogOperateList(LogOperateQuery query) {
         return logOperateService.pageLogOperateList(query);
@@ -42,6 +44,7 @@ public class LogOperateController {
      * 查询操作类型列表
      * @return 列表
      */
+    @RequiresPermi("log:operate:query")
     @GetMapping("typeList")
     public ResultData<List<Map<String, Object>>> queryLogOperateTypeList() {
         return logOperateService.queryLogOperateTypeList();

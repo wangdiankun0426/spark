@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.sys.TenantUserMenuDao" >
+    <insert id="batchInsertByTenantUserId">
+        insert into sys_tenant_user_menu (tenant_id, tenant_user_id, menu_id, delete_flag, created_by, created_dt, updated_by, updated_dt)
+        values
+        <foreach collection="menuIds" item="menuId" separator=",">
+            (#{tenantId}, #{tenantUserId}, #{menuId}, 1, #{createdBy}, now(), #{createdBy}, now())
+        </foreach>
+    </insert>
+
+    <delete id="deleteByTenantUserId">
+        delete from sys_tenant_user_menu where tenant_user_id = #{tenantUserId}
+    </delete>
+
+    <select id="queryMenuIdsByTenantUserId" resultType="java.lang.Long">
+        select menu_id
+        from sys_tenant_user_menu
+        where delete_flag = 1 and tenant_user_id = #{tenantUserId}
+    </select>
+
+    <select id="countByMenuId" resultType="java.lang.Integer">
+        select count(1)
+        from sys_tenant_user_menu tum
+        join sys_tenant_user tu on tu.id = tum.tenant_user_id and tu.delete_flag = 1
+        where tum.delete_flag = 1 and tum.menu_id = #{menuId}
+    </select>
+</mapper>

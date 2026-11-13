@@ -1,16 +1,14 @@
 package com.spark.web.rest.controller.manage.auth;
 
-import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.sys.entity.Session;
-import com.spark.common.bean.sys.query.UserQuery;
 import com.spark.common.bean.sys.result.UserResult;
 import com.spark.common.bean.sys.vo.LoginVO;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.sys.entity.ValidateCode;
 import com.spark.common.bean.sys.entity.EncryptKey;
 import com.spark.manage.auth.IEncryptKeyService;
-import com.spark.manage.sys.IUserService;
 import com.spark.web.rest.controller.BaseController;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import com.spark.manage.auth.ILoginValidateService;
 import com.spark.manage.auth.ILoginService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,8 +34,6 @@ public class LoginController extends BaseController {
     private ILoginService loginService;
     @Autowired
     private ILoginValidateService loginValidateService;
-    @Autowired
-    private IUserService userService;
     @Autowired
     private IEncryptKeyService encryptKeyService;
 
@@ -104,6 +100,7 @@ public class LoginController extends BaseController {
      * @param loginVO 退出的参数
      * @return 退出结果
      */
+    @RequiresPermi("log:login:forceLogout")
     @PostMapping("forceLogout")
     public ResultData<Void> forceLogout(LoginVO loginVO) {
         return loginService.forceLogout(loginVO);
@@ -115,8 +112,6 @@ public class LoginController extends BaseController {
      */
     @GetMapping("session")
     public ResultData<UserResult> session() {
-        UserQuery query = new UserQuery();
-        query.setId(SessionHolder.getCurrentUserId());
-        return userService.queryUserDetail(query);
+        return loginService.queryLoginSession();
     }
 }

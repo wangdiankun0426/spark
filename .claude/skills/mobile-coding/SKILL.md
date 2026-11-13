@@ -19,7 +19,7 @@ description: Spark 项目前端移动端（spark-app，uni-app H5 / 微信小程
 - **技术栈**：Vue 3 + uni-app + Vite + **uViewPlus**（easycom 自动引入，`up-` 前缀，无需手动 import）。
 - **SSR 模式**：`main.js` 使用 `createSSRApp` 创建应用。
 - **响应约定**：后端返回 `{ code, message, data }`；`code===200` 成功，`code===601` 自动 `uni.reLaunch` 到 `/pages/login`。
-- **登录平台标识**：移动端登录请求带 `loginPlatform = 2`。
+- **登录平台标识**：H5 登录 `loginPlatform = 2`，微信小程序 `loginPlatform = 6`，企微 OAuth 移动端 `loginPlatform = 5`；微信小程序免密登录 `loginType = 5`。会话与鉴权详则见 `references/templates.md` 第 7 节。
 - **主题**：内置亮/暗两套皮肤（与 Web 端一致），由 `styles/theme.scss` 的 `--app-*` CSS 变量驱动，页面根节点绑 `themeClass` 跟随；细则见 `references/templates.md` 3.2。
 - **样式架构（对标 PC 三层变量）**：`styles/theme.scss` 是运行时主题色唯一定义处（亮/暗两套，只放定义）；`uni.scss` 是 SCSS 侧唯一变量入口（uni-app 插件自动注入每个编译单元，只准放变量），承载全部 `$app-*` 同名映射（右值为 `var(--app-*)`）、静态刻度（`$spacing-*`/`$radius-*`/`$font-size-*`/`$transition-*`/`$z-*`）与 `$u-*` 覆盖；`styles/base.scss` 放字体/滚动条/页面底色/`.safe-area-page`/autofill 底座，`styles/shell.scss` 放 `.sheet-host`/tabbar 宿主等全局结构类，二者由 `App.vue` 全局引入。消费层只准写 `$app-*`，禁止裸 `var()`。
 
@@ -29,6 +29,7 @@ description: Spark 项目前端移动端（spark-app，uni-app H5 / 微信小程
 - 命名 `功能+API`；GET/POST 都用 `params`（文件上传等明确 body 场景除外）；每个函数加中文 JSDoc
 - `code===200` 成功取数据；`601` 自动跳登录；其他 code 由 request.js 统一 toast，业务代码不重复提示
 - 密码等敏感字段提交前用 `@/utils/encryptUtil` 的 `des()` 加密，密钥来自 `import.meta.env.VITE_ENCRYPT_PRIVATE_KEY`
+- 会话鉴权：token 即后端 sessionId，`user/login` 成功后存入；`/auth/session` 取会话，601 自动 `uni.reLaunch` 到 `/pages/login`；密码登录走 des 一次性密钥（`getEncryptKeyAPI` 返回 keyId + key）；详则见 `references/templates.md` 第 7 节
 
 ## 4. 页面与平台适配（要点）
 
@@ -37,7 +38,7 @@ description: Spark 项目前端移动端（spark-app，uni-app H5 / 微信小程
 - 每个页面根节点必须同时挂 `safe-area-page` 与 `:class="themeClass"`（`const {themeClass} = useTheme()`），漏一个该页切主题就不跟随
 - 颜色一律走 `uni.scss` 的 `$app-*` 变量，禁止硬编码、禁止裸写 `var(--app-*)`；渐变整段用 `$app-gradient-*`，不在 `linear-gradient()` 里嵌变量
 - 底部导航统一用自绘 `@/components/AppTabbar`，禁止 `up-tabbar`（uview 的 tabbar 底色写死 `#fff` 且组件样式隔离，小程序暗色下必然露白）；中间「AI应用」为凸起圆钮（`star-fill` + `center:true`），配置在 `menuUtil.js#visibleTabs()`
-- 流程/AI 应用首页的页签统一用自绘分段控件（`.seg-tab`），不再新增 `up-tabs`；两级头部（tab 主页 / 二级页）与标题字号、欢迎卡白字体系以 templates.md 3.1 为准
+- 流程/AI 应用首页的页签统一用自绘分段控件（`.seg-tab`），不新增 `up-tabs`；两级头部（tab 主页 / 二级页）与标题字号、欢迎卡白字体系以 templates.md 3.1 为准
 - 新增页面必须注册到 `pages.json` 的 `pages` 数组，统一 `"navigationStyle": "custom"`
 - H5 与微信小程序差异用条件编译 `#ifdef H5` / `#ifdef MP-WEIXIN` 处理
 - 注释在代码上方，只写一眼看不出来的核心信息，禁止用括号补充细化说明；禁止 `// ===== 标题 =====` 装饰性分隔线，分组标题直接写 `// 标题`；`<style>` / `.scss` 注释只写在选择器（类）顶部一行核心信息（为什么/适配意图），`{}` 规则块内部、声明行之间及行尾一律不写

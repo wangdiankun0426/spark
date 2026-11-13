@@ -93,6 +93,10 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
         }
         WfTemplate template = new WfTemplate();
         BeanUtil.copyProperties(templateVO, template);
+        // 非站点管理员强制归属当前租户
+        if (!SessionHolder.isSysAdmin()) {
+            template.setTenantId(SessionHolder.getCurrentTenantId());
+        }
         template.setId(templateId);
         template.setStatus(templateVO.getStatus() == null ? StatusEnum.ABNORMAL.getValue() : templateVO.getStatus());
         template.setRevId(version.getId());
@@ -123,6 +127,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
         }
         WfTemplateQuery query = new WfTemplateQuery();
         query.setId(templateVO.getId());
+        super.scopeTenant(query);
         WfTemplateResult templateResult = templateDao.queryTemplate(query);
         if (templateResult == null) {
             result.setErrorCode(ErrorCodeEnum.WORKFLOW_NOT_FOUND);
@@ -160,6 +165,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
         }
         WfTemplateQuery query = new WfTemplateQuery();
         query.setId(templateVO.getId());
+        super.scopeTenant(query);
         WfTemplateResult templateResult = templateDao.queryTemplate(query);
         if (templateResult == null) {
             result.setCode(ResultData.OK);
@@ -214,6 +220,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        super.scopeTenant(query);
         WfTemplateResult templateResult = templateDao.queryTemplate(query);
         if (templateResult == null) {
             result.setErrorCode(ErrorCodeEnum.WORKFLOW_NOT_FOUND);
@@ -256,6 +263,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
     private boolean checkFormExist(Long formId) {
         FormQuery formQuery = new FormQuery();
         formQuery.setId(formId);
+        super.scopeTenant(formQuery);
         return formDao.queryForm(formQuery) != null;
     }
 

@@ -11,7 +11,7 @@ description: Spark 项目后端（Java）编码规范。创建/修改 Java 类�
 
 **不适用**：纯文档、git 操作、前端目录、`sql/` 脚本本身（但字段/表变更需按 SQL 变更规则同步 SQL）。
 
-**强制加载规则（最高优先级）**：本文件只含规则摘要，**代码模板不在本文件内**。命中第 11 节导航表的任何场景时，必须先 Read 对应 references 文件，再动手生成代码；禁止凭本文件摘要或记忆编造模板代码（如 Controller/Service/Mapper XML 的结构、注解、字段），违者按红线处理——返工。
+**强制加载规则（最高优先级）**：本文件只含规则摘要，**代码模板不在本文件内**。命中第 12 节导航表的任何场景时，必须先 Read 对应 references 文件，再动手生成代码；禁止凭本文件摘要或记忆编造模板代码（如 Controller/Service/Mapper XML 的结构、注解、字段），违者按红线处理——返工。
 
 ## 2. 项目背景
 
@@ -95,8 +95,9 @@ logger.info("readSkill name={}, skillIds={}", name, skillIds);
 | 常量 | UPPER_SNAKE_CASE | `MAX_RETRY_COUNT` |
 | 包 | 小写 | `com.spark.service.system` |
 
-- Controller 方法：`createXxx` / `updateXxx` / `deleteXxx` / `pageXxxList` / `queryXxxDetail` / `queryXxxTree`
-- DAO 数据方法：`insertDB` / `updateDBById` / `deleteDBById`（BaseDao 提供，自动填充审计字段）；查询 `queryXxxCount` / `queryXxxList` / `queryXxx` / `queryXxxMaxId` / `queryXxxTree`
+- Controller 方法：`createXxx` / `updateXxx` / `deleteXxx` / `pageXxxList` / `queryXxxDetail` / `queryXxxTreeList`
+- DAO 数据方法：`insertDB` / `updateDBById` / `deleteDBById`（BaseDao 提供，自动填充审计字段）；查询 `queryXxxCount` / `queryXxxList` / `queryXxx` / `queryXxxMaxId` / `queryXxxTreeList`
+- 列表查询统一 `queryXxxList`、树列表 `queryXxxTreeList`，禁止 `listXxx` 前缀命名
 
 ## 7. 代码风格
 
@@ -172,12 +173,24 @@ taskInstanceResult.setDataList(dataList);
 - 方法入口缺少守护式参数校验（入参可能为 null / 越界却不提前拦截，直接进入业务逻辑导致 NPE 或脏数据入库）
 - 对 `ResultData.getCode()` 判空或用 `.equals()` 比较（code 与 OK 均为 int 原生类型，直接 `!=`/`==` 比较）
 
-## 11. 参考文件导航（命中场景必须先 Read，再动手）
+## 11. 鉴权与权限体系（摘要）
+
+完整鉴权逻辑见 `references/permission.md`，涉及身份判定、操作权限、数据权限、租户隔离、登录会话的编码必须先 Read。要点：
+
+- **三身份**：sysAdmin（`SessionHolder.isSysAdmin()`，accountType=2，通配 `*:*:*`，绕过一切校验）；orgAdmin（`SessionHolder.isOrgAdmin()`，`sys_tenant_user.role_type` 位掩码非 sys_role，数据豁免但限本租户）；普通用户。身份判定走 SessionHolder，禁手写魔数位运算。
+- **会话**：Redis 键 `l_s_`+sessionId，TTL 3600 每请求续期；`Authorization` 即 sessionId；`SESSION_VERSION` 版本校验失败返回 601；`SessionHolder` ThreadLocal 注入/清空，跨线程用 `SessionSnapshot`+`SessionContextUtil`。
+- **操作权限**：`@RequiresPermi("模块:实体:操作")` 标 Controller public 方法，`RequiresPermiAspect` 无权限直接拦截；权限串与按钮种子逐字一致；自助端点不标注，站点域靠服务层 sysAdmin 守卫。
+- **数据权限**：`@DataScope(tableAlias)` 标 Service 查询方法（首参 BaseQuery），`DataScopeAspect` 经 `ScopeResolver.buildSql` 回填，Mapper 用 `${dataScopeSQL}`；sysAdmin/orgAdmin 豁免；无 tenant_id/dept_id 的子表不挂注解、经父对象收口。
+- **租户隔离**：`scopeTenant(BaseQuery)` 强制非 sysAdmin 查询归属当前租户；`assertTenant(Long)` 单对象跨租户抛 506；分页由 `pageList` 收口、方法内禁重复 setTenantId；create 非 sysAdmin 强制归属当前租户。
+- **错误码**：NO_PERMISSION(506) / NOT_LOGIN(601) / USER_DISABLED(705)。
+
+## 12. 参考文件导航（命中场景必须先 Read，再动手）
 
 | 场景 | 动手前必须先 Read |
 |------|----------|
 | 生成/修改 Controller、Service、DAO、Mapper XML（即几乎一切后端编码任务） | `references/templates.md` |
 | 新增完整业务功能（Entity→Controller 全链路） | `references/templates.md` + `references/checklist.md` |
 | 编写方法参数校验、判断 try-catch 使用边界 | `references/guard-clauses.md` |
+| 涉及身份判定、操作权限、数据权限、租户隔离、登录会话 | `references/permission.md` |
 
 判断依据：拿不准是否命中时，一律按命中处理——先 Read 再写。

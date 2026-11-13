@@ -7,6 +7,7 @@ import com.spark.common.bean.chat.query.ChatSpaceQuery;
 import com.spark.common.bean.chat.result.ChatSpaceResult;
 import com.spark.common.bean.chat.vo.ChatSpaceVO;
 import com.spark.chat.service.IChatSpaceService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,6 +35,7 @@ public class ChatSpaceController {
      * @param chatSpaceVO 聊天空间信息
      * @return 创建结果
      */
+    @RequiresPermi("chat:space:create")
     @PostMapping("create")
     public ResultData<ChatSpace> createChatSpace(ChatSpaceVO chatSpaceVO) {
         return chatSpaceService.createChatSpace(chatSpaceVO);
@@ -44,6 +46,7 @@ public class ChatSpaceController {
      * @param chatSpaceVO 会话参数
      * @return 创建结果
      */
+    @RequiresPermi("chat:space:aiCreate")
     @PostMapping("aiCreate")
     public ResultData<ChatSpace> createAiChatSpace(ChatSpaceVO chatSpaceVO) {
         return chatSpaceService.createAiChatSpace(chatSpaceVO);
@@ -64,6 +67,7 @@ public class ChatSpaceController {
      * @param chatSpaceVO 会话参数
      * @return 修改结果
      */
+    @RequiresPermi("chat:space:update")
     @PostMapping("rename")
     public ResultData<Void> updateChatSpaceTitle(ChatSpaceVO chatSpaceVO) {
         return chatSpaceService.updateChatSpaceTitle(chatSpaceVO);
@@ -74,6 +78,7 @@ public class ChatSpaceController {
      * @param chatSpaceVO 会话参数
      * @return 删除结果
      */
+    @RequiresPermi("chat:space:delete")
     @PostMapping("delete")
     public ResultData<Void> deleteChatSpace(ChatSpaceVO chatSpaceVO) {
         return chatSpaceService.deleteChatSpace(chatSpaceVO);

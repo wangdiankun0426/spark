@@ -7,6 +7,7 @@ import com.spark.common.bean.sys.result.TenantResult;
 import com.spark.common.bean.sys.result.TenantUserResult;
 import com.spark.common.bean.sys.vo.TenantUserVO;
 import com.spark.common.bean.sys.vo.TenantVO;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import com.spark.manage.sys.ITenantUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,7 +39,7 @@ public class TenantUserController {
      * @return 添加结果
      */
     @PostMapping("add")
-    private ResultData<Long> addUser(TenantUserVO tenantUserVO) {
+    public ResultData<Long> addUser(TenantUserVO tenantUserVO) {
         return tenantUserService.addUser(tenantUserVO);
     }
 
@@ -47,8 +48,9 @@ public class TenantUserController {
      * @param tenantUserVO 移除用户参数
      * @return 移除结果
      */
+    @RequiresPermi("sys:tenantUser:remove")
     @PostMapping("remove")
-    private ResultData<Void> removeUser(TenantUserVO tenantUserVO) {
+    public ResultData<Void> removeUser(TenantUserVO tenantUserVO) {
         return tenantUserService.removeUser(tenantUserVO);
     }
 
@@ -58,8 +60,18 @@ public class TenantUserController {
      * @return 修改结果
      */
     @PostMapping("update")
-    private ResultData<Void> updateTenantUser(TenantUserVO tenantUserVO) {
+    public ResultData<Void> updateTenantUser(TenantUserVO tenantUserVO) {
         return tenantUserService.updateTenantUser(tenantUserVO);
+    }
+
+    /**
+     * 查询租户用户已勾选的组织菜单id集合
+     * @param query 查询参数
+     * @return 菜单id集合
+     */
+    @GetMapping("orgMenus")
+    public ResultData<List<Long>> queryOrgMenuIds(TenantUserQuery query) {
+        return tenantUserService.queryOrgMenuIds(query);
     }
 
     /**
@@ -68,7 +80,7 @@ public class TenantUserController {
      * @return 分页结果
      */
     @GetMapping("pageList")
-    private ResultData<PageResult<TenantUserResult>> pageTenantUserList(TenantUserQuery query) {
+    public ResultData<PageResult<TenantUserResult>> pageTenantUserList(TenantUserQuery query) {
         return tenantUserService.pageTenantUserList(query);
     }
 
@@ -77,7 +89,7 @@ public class TenantUserController {
      * @return 租户列表
      */
     @GetMapping("myList")
-    private ResultData<List<TenantResult>> queryMyTenantList() {
+    public ResultData<List<TenantResult>> queryMyTenantList() {
         return tenantUserService.queryMyTenantList();
     }
 
@@ -87,7 +99,7 @@ public class TenantUserController {
      * @return 切换结果
      */
     @PostMapping("switch")
-    private ResultData<Void> switchTenant(TenantVO tenantVO) {
+    public ResultData<Void> switchTenant(TenantVO tenantVO) {
         return tenantUserService.switchTenant(tenantVO);
     }
 }

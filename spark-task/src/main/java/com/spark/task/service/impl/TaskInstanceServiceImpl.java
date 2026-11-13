@@ -2,10 +2,14 @@ package com.spark.task.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
+import com.spark.common.bean.flow.query.FlowInstanceQuery;
+import com.spark.common.bean.flow.result.FlowInstanceResult;
 import com.spark.common.bean.task.entity.TaskInstance;
 import com.spark.common.bean.task.query.TaskInstanceQuery;
 import com.spark.common.bean.task.result.TaskInstanceResult;
 import com.spark.common.utils.*;
+import com.spark.dao.flow.FlowInstanceDao;
 import com.spark.dao.task.TaskInstanceDao;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.ObjectTypeEnum;
@@ -36,6 +40,8 @@ public class TaskInstanceServiceImpl extends BaseService<TaskInstanceQuery, Task
     private final static Logger logger = LoggerFactory.getLogger(TaskInstanceServiceImpl.class);
     @Autowired
     private TaskInstanceDao taskInstanceDao;
+    @Autowired
+    private FlowInstanceDao flowInstanceDao;
     @Autowired
     private List<ITaskTypeHandler> taskTypeHandlers;
 
@@ -131,6 +137,11 @@ public class TaskInstanceServiceImpl extends BaseService<TaskInstanceQuery, Task
         if (query == null) {
             query = new TaskInstanceQuery();
         }
+        Long objId = query.getObjId();
+        if (!this.isFlowInstanceInTenant(objId)) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
         PageResult<TaskInstanceResult> list = super.pageList(query);
         result.setData(list);
         result.setCode(ResultData.OK);
@@ -151,6 +162,10 @@ public class TaskInstanceServiceImpl extends BaseService<TaskInstanceQuery, Task
         }
         TaskInstanceResult taskInstanceResult = taskInstanceDao.queryTaskInstance(query);
         if (taskInstanceResult == null) {
+            result.setErrorCode(ErrorCodeEnum.TASK_INSTANCE_NOT_EXIST);
+            return result;
+        }
+        if (!this.isTaskInTenant(taskInstanceResult)) {
             result.setErrorCode(ErrorCodeEnum.TASK_INSTANCE_NOT_EXIST);
             return result;
         }
@@ -229,5 +244,44 @@ public class TaskInstanceServiceImpl extends BaseService<TaskInstanceQuery, Task
             }
         }
         return params;
+    }
+
+    /**
+     * 校验任务实例归属当前租户，经父对象收口
+     * @param taskInstance 任务实例
+     * @return true归属当前租户
+     */
+    private boolean isTaskInTenant(TaskInstanceResult taskInstance) {
+        if (SessionHolder.isSysAdmin()) {
+            return true;
+        }
+        Integer objType = taskInstance.getObjType();
+        Long objId = taskInstance.getObjId();
+        if (objId == null || objType == null) {
+            return false;
+        }
+        if (ObjectTypeEnum.FLOW_INSTANCE.getValue().equals(objType)) {
+            return this.isFlowInstanceInTenant(objId);
+        }
+        return false;
+    }
+
+    /**
+     * 校验流程实例归属当前租户，任务实例经父流程实例收口
+     * @param flowInstanceId 流程实例id
+     * @return true归属当前租户
+     */
+    private boolean isFlowInstanceInTenant(Long flowInstanceId) {
+        if (SessionHolder.isSysAdmin()) {
+            return true;
+        }
+        if (flowInstanceId == null) {
+            return false;
+        }
+        FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
+        instanceQuery.setId(flowInstanceId);
+        super.scopeTenant(instanceQuery);
+        FlowInstanceResult instanceResult = flowInstanceDao.queryInstance(instanceQuery);
+        return instanceResult != null;
     }
 }

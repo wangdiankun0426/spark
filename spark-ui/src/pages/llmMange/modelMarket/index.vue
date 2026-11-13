@@ -20,6 +20,7 @@
             @clear="handleSearch"
         />
         <el-button
+            v-hasPermi="['llm:model:create']"
             type="primary"
             @click="handleOpenCreateModel">
           <el-icon><Plus /></el-icon>新增模型
@@ -33,7 +34,7 @@
       <div class="provider-pane">
         <div class="provider-pane-title-row">
           <div class="provider-pane-title">厂商列表</div>
-          <el-button type="primary" size="small" @click="handleOpenCreateProvider">
+          <el-button v-hasPermi="['llm:provider:create']" type="primary" size="small" @click="handleOpenCreateProvider">
             <el-icon><Plus /></el-icon>新增厂商
           </el-button>
         </div>
@@ -79,6 +80,7 @@
             </div>
             <div class="provider-item-actions">
               <el-dropdown
+                  v-if="hasProviderOps"
                   trigger="hover"
                   @command="command => handleProviderCommand(command, provider)"
               >
@@ -87,10 +89,10 @@
                 </span>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item command="edit">
+                    <el-dropdown-item v-if="checkPermi('llm:provider:update')" command="edit">
                       <el-icon><Edit /></el-icon>修改
                     </el-dropdown-item>
-                    <el-dropdown-item command="delete" divided>
+                    <el-dropdown-item v-if="checkPermi('llm:provider:delete')" command="delete" :divided="checkPermi('llm:provider:update')">
                       <el-icon><Delete /></el-icon>删除
                     </el-dropdown-item>
                   </el-dropdown-menu>
@@ -413,6 +415,7 @@ import {
   queryProviderDetailAPI
 } from '@/api/llm/provider.js'
 import InfoCard from '@/components/InfoCard/index.vue'
+import { checkPermi } from '@/utils/permissionUtil'
 import {Search, Grid, Collection, Plus, MoreFilled, Delete} from '@element-plus/icons-vue'
 import ModelLanguage from "@/assets/icons/modelLanguage.vue";
 import ModelVector from "@/assets/icons/modelVector.vue";
@@ -476,6 +479,11 @@ const currentProviderName = computed(() => {
   const matched = providerList.value.find(p => p.id === activeProviderId.value)
   return matched ? matched.name : '全部厂商'
 })
+
+/**
+ * 厂商操作入口开关，无修改与删除权限时隐藏更多气泡
+ */
+const hasProviderOps = computed(() => checkPermi('llm:provider:update') || checkPermi('llm:provider:delete'))
 
 /**
  * 空状态文案
@@ -810,8 +818,8 @@ function handleDeleteModel(model) {
  */
 function cardActions(model) {
   return [
-    { key: 'edit', label: '修改', icon: 'Edit', onClick: () => handleOpenUpdateModel(model) },
-    { key: 'delete', label: '删除', icon: 'Delete',onClick: () => handleDeleteModel(model) }
+    { key: 'edit', label: '修改', icon: 'Edit', perms: ['llm:model:update'], onClick: () => handleOpenUpdateModel(model) },
+    { key: 'delete', label: '删除', icon: 'Delete', perms: ['llm:model:delete'], onClick: () => handleDeleteModel(model) }
   ]
 }
 

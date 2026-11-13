@@ -39,6 +39,7 @@
           <el-button
               text
               type="danger"
+              v-hasPermi="['log:login:forceLogout']"
               @click="forceLogoutForm(scope.row.sessionId)"
               v-if="scope.row.status === 1"
           >

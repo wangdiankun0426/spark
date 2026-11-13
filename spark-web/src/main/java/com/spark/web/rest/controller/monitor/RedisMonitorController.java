@@ -33,7 +33,7 @@ public class RedisMonitorController {
      * @return Redis快照
      */
     @GetMapping("latest")
-    private ResultData<MonitorRedisSnapshot> queryLatestRedis() {
+    public ResultData<MonitorRedisSnapshot> queryLatestRedis() {
         return monitorService.queryLatestRedis();
     }
 
@@ -43,7 +43,7 @@ public class RedisMonitorController {
      * @return 快照序列
      */
     @GetMapping("series")
-    private ResultData<List<MonitorRedisSnapshot>> queryRedisSeries(MonitorSnapshotQuery query) {
+    public ResultData<List<MonitorRedisSnapshot>> queryRedisSeries(MonitorSnapshotQuery query) {
         return monitorService.queryRedisSeries(query);
     }
 }

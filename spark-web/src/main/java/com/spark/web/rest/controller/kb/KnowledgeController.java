@@ -6,6 +6,7 @@ import com.spark.common.bean.kb.query.KnowledgeQuery;
 import com.spark.common.bean.kb.result.KnowledgeResult;
 import com.spark.common.bean.kb.vo.KnowledgeVO;
 import com.spark.kb.service.IKbService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +33,7 @@ public class KnowledgeController {
      * @param knowledgeVO 知识库参数
      * @return 响应结果
      */
+    @RequiresPermi("kb:knowledge:create")
     @PostMapping("create")
     public ResultData<Void> createKnowledge(KnowledgeVO knowledgeVO) {
         return knowledgeService.createKnowledge(knowledgeVO);
@@ -42,6 +44,7 @@ public class KnowledgeController {
      * @param knowledgeVO 知识库参数
      * @return 响应结果
      */
+    @RequiresPermi("kb:knowledge:update")
     @PostMapping("update")
     public ResultData<Void> updateKnowledge(KnowledgeVO knowledgeVO) {
         return knowledgeService.updateKnowledge(knowledgeVO);
@@ -52,6 +55,7 @@ public class KnowledgeController {
      * @param knowledgeVO 知识库参数
      * @return 响应结果
      */
+    @RequiresPermi("kb:knowledge:delete")
     @PostMapping("delete")
     public ResultData<Void> deleteKnowledge(KnowledgeVO knowledgeVO) {
         return knowledgeService.deleteKnowledge(knowledgeVO);
@@ -62,6 +66,7 @@ public class KnowledgeController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("kb:knowledge:query")
     @GetMapping("pageList")
     public ResultData<PageResult<KnowledgeResult>> pageKnowledgeList(KnowledgeQuery query) {
         return knowledgeService.pageKnowledgeList(query);
@@ -72,6 +77,7 @@ public class KnowledgeController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("kb:knowledge:detail")
     @GetMapping("detail")
     public ResultData<KnowledgeResult> queryKnowledgeDetail(KnowledgeQuery query) {
         return knowledgeService.queryKnowledgeDetail(query);

@@ -33,7 +33,7 @@ public class MqMonitorController {
      * @return 队列快照列表
      */
     @GetMapping("latest")
-    private ResultData<List<MonitorMqSnapshot>> queryLatestMqList() {
+    public ResultData<List<MonitorMqSnapshot>> queryLatestMqList() {
         return monitorService.queryLatestMqList();
     }
 
@@ -43,7 +43,7 @@ public class MqMonitorController {
      * @return 快照序列
      */
     @GetMapping("series")
-    private ResultData<List<MonitorMqSnapshot>> queryMqSeries(MonitorSnapshotQuery query) {
+    public ResultData<List<MonitorMqSnapshot>> queryMqSeries(MonitorSnapshotQuery query) {
         return monitorService.queryMqSeries(query);
     }
 }

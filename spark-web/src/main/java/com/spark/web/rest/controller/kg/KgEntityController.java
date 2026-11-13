@@ -6,6 +6,7 @@ import com.spark.common.bean.kg.query.KgEntityQuery;
 import com.spark.common.bean.kg.result.KgEntityResult;
 import com.spark.common.bean.kg.vo.KgEntityVO;
 import com.spark.kg.service.IKgEntityService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,6 +37,7 @@ public class KgEntityController {
      * @param kgEntityVO 实体参数
      * @return 响应结果
      */
+    @RequiresPermi("kg:entity:create")
     @PostMapping("create")
     public ResultData<Void> createKgEntity(KgEntityVO kgEntityVO) {
         return kgEntityService.createKgEntity(kgEntityVO);
@@ -46,6 +48,7 @@ public class KgEntityController {
      * @param kgEntityVO 实体参数
      * @return 响应结果
      */
+    @RequiresPermi("kg:entity:update")
     @PostMapping("update")
     public ResultData<Void> updateKgEntity(KgEntityVO kgEntityVO) {
         return kgEntityService.updateKgEntity(kgEntityVO);
@@ -56,6 +59,7 @@ public class KgEntityController {
      * @param kgEntityVO 实体参数
      * @return 响应结果
      */
+    @RequiresPermi("kg:entity:delete")
     @PostMapping("delete")
     public ResultData<Void> deleteKgEntity(KgEntityVO kgEntityVO) {
         return kgEntityService.deleteKgEntity(kgEntityVO);
@@ -66,6 +70,7 @@ public class KgEntityController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("kg:entity:query")
     @GetMapping("pageList")
     public ResultData<PageResult<KgEntityResult>> pageKgEntityList(KgEntityQuery query) {
         return kgEntityService.pageKgEntityList(query);
@@ -76,6 +81,7 @@ public class KgEntityController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("kg:entity:detail")
     @GetMapping("detail")
     public ResultData<KgEntityResult> queryKgEntityDetail(KgEntityQuery query) {
         return kgEntityService.queryKgEntityDetail(query);
@@ -87,6 +93,7 @@ public class KgEntityController {
      * @param mergedEntityIds 被合并的实体 id 列表
      * @return 响应结果
      */
+    @RequiresPermi("kg:entity:merge")
     @PostMapping("merge")
     public ResultData<Void> mergeKgEntity(@RequestParam Long mainEntityId, @RequestParam List<Long> mergedEntityIds) {
         return kgEntityService.mergeKgEntity(mainEntityId, mergedEntityIds);

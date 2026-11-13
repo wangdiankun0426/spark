@@ -21,11 +21,12 @@ import java.util.List;
 public interface RoleDao extends BaseDao<Role> {
 
     /**
-     * 查询相同名称的角色
-     * @param name
-     * @return
+     * 查询本租户内相同名称的有效角色
+     * @param name 角色名称
+     * @param tenantId 租户id
+     * @return 角色
      */
-    RoleResult querySameNameRole(@Param("name") String name);
+    RoleResult querySameNameRole(@Param("name") String name, @Param("tenantId") Long tenantId);
 
     /**
      * 插入数据
@@ -73,20 +74,20 @@ public interface RoleDao extends BaseDao<Role> {
     int queryRoleCount(RoleQuery query);
 
     /**
-     * 查询当前用户最大数据权限
-     * @param tenantId
-     * @param userId
-     * @return
+     * 查询用户启用角色的数据范围档位去重集合
+     * @param tenantId 租户id
+     * @param userId 用户id
+     * @return 数据范围档位集合
      */
-    int queryUserMaxDataScope(@Param("tenantId")Long tenantId, @Param("userId") Long userId);
+    List<Integer> queryUserDataScopeList(@Param("tenantId") Long tenantId, @Param("userId") Long userId);
 
     /**
-     * 查询用户启用角色的菜单标识码列表
-     * @param tenantId
-     * @param userId
-     * @return
+     * 查询用户自定义数据范围角色的部门id并集
+     * @param tenantId 租户id
+     * @param userId 用户id
+     * @return 部门id集合
      */
-    List<String> queryUserMenuCodes(@Param("tenantId")Long tenantId, @Param("userId") Long userId);
+    List<Long> queryUserCustomDeptIds(@Param("tenantId") Long tenantId, @Param("userId") Long userId);
 
     /**
      * 查询最大id

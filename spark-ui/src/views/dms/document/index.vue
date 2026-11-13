@@ -27,14 +27,14 @@
         <el-button type="info" @click="handleGetDocumentList">
           <el-icon><Search /></el-icon>查询
         </el-button>
-        <el-button type="primary" @click="handleUploadDocument">
+        <el-button v-hasPermi="['dms:upload:create']" type="primary" @click="handleUploadDocument">
           <el-icon style="margin-right: 4px"><DocumentAdd /></el-icon>上传文档
         </el-button>
-        <el-button type="danger" @click="handleBatchDelete" :disabled="selectedIds.length === 0">
+        <el-button v-hasPermi="['dms:document:delete']" type="danger" @click="handleBatchDelete" :disabled="selectedIds.length === 0">
           <el-icon style="margin-right: 4px"><Delete /></el-icon>删除
           <span v-if="selectedIds.length > 0">({{ selectedIds.length }})</span>
         </el-button>
-        <el-button type="warning" @click="handleBatchEvent" :disabled="selectedIds.length === 0">
+        <el-button v-hasPermi="['dms:document:resetEvent']" type="warning" @click="handleBatchEvent" :disabled="selectedIds.length === 0">
           <el-icon style="margin-right: 4px"><Refresh /></el-icon>重置事件
           <span v-if="selectedIds.length > 0">({{ selectedIds.length }})</span>
         </el-button>
@@ -95,7 +95,7 @@
         <el-table-column prop="createdDt" label="创建时间" width="160" align="center"/>
         <el-table-column fixed="right" label="操作" width="300" align="center">
           <template #default="scope">
-            <el-button type="primary" text @click="handleUploadNewVersion(scope.row)">
+            <el-button v-hasPermi="['dms:upload:create']" type="primary" text @click="handleUploadNewVersion(scope.row)">
               <el-icon><Upload /></el-icon>
               <span style="font-size: 12px; font-weight: 400">上传</span>
             </el-button>
@@ -103,11 +103,11 @@
               <el-icon><EditPen /></el-icon>
               <span style="font-size: 12px; font-weight: 400">编辑</span>
             </el-button>
-            <el-button type="success" text @click="handleOpenUpdateDocumentForm(scope.row)">
+            <el-button v-hasPermi="['dms:document:update']" type="success" text @click="handleOpenUpdateDocumentForm(scope.row)">
               <el-icon><Edit /></el-icon>
               <span style="font-size: 12px; font-weight: 400">修改</span>
             </el-button>
-            <el-button type="danger" text @click="handleDeleteDocument(scope.row.id)">
+            <el-button v-hasPermi="['dms:document:delete']" type="danger" text @click="handleDeleteDocument(scope.row.id)">
               <el-icon><Delete /></el-icon>
               <span style="font-size: 12px; font-weight: 400">删除</span>
             </el-button>

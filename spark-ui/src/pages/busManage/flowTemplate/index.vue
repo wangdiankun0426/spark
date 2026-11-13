@@ -16,15 +16,17 @@
             :prefix-icon="Search"
             style="width: 300px"
         />
-        <el-button type="primary" @click="handleOpenCreateForm">
+        <el-button v-hasPermi="['flow:template:create']" type="primary" @click="handleOpenCreateForm">
           <el-icon><Plus /></el-icon>新增流程模板
         </el-button>
         <el-button
+            v-hasPermi="['form:form:create', 'form:form:update', 'form:form:delete']"
             @click="formTemplateVisible = true"
         >
           <el-icon><Document /></el-icon>表单模板
         </el-button>
         <el-button
+            v-hasPermi="['task:template:create', 'task:template:update', 'task:template:delete', 'task:templateParam:create', 'task:templateParam:update', 'task:templateParam:delete']"
             @click="taskTemplateVisible = true"
         >
           <el-icon><List /></el-icon>任务模板
@@ -287,8 +289,8 @@ function cardActions(item) {
   return [
     { key: 'instance', label: '流程实例', icon: 'Files', onClick: () => handleOpenInstance(item) },
     { key: 'designer', label: '设计流程', icon: 'SetUp',onClick: () => handleOpenDesigner(item) },
-    { key: 'edit', label: '修改', icon: 'Edit',onClick: () => handleOpenUpdateForm(item) },
-    { key: 'delete', label: '删除', icon: 'Delete',onClick: () => handleDelete(item) }
+    { key: 'edit', label: '修改', icon: 'Edit',perms: ['flow:template:update'],onClick: () => handleOpenUpdateForm(item) },
+    { key: 'delete', label: '删除', icon: 'Delete',perms: ['flow:template:delete'],onClick: () => handleDelete(item) }
   ];
 }
 

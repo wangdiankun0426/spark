@@ -33,7 +33,17 @@ public class RoleVO extends BaseVO {
     private Integer status;
 
     /**
-     * 菜单标识码列表
+     * 菜单id列表，角色授权勾选的菜单与按钮
      */
-    private List<String> menuCodes;
+    private List<Long> menuIds;
+
+    /**
+     * 部门id列表，自定义数据范围勾选的部门
+     */
+    private List<Long> deptIds;
+
+    /**
+     * 菜单父子联动 1联动0独立
+     */
+    private Integer menuCheckStrictly;
 }

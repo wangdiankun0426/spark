@@ -46,13 +46,15 @@ public class SessionContextUtil {
                 SessionHolder.getCurrentUserId(),
                 SessionHolder.getCurrentDeptId(),
                 SessionHolder.getCurrentDeptIds(),
-                SessionHolder.getCurrentDataScop(),
                 SessionHolder.getCurrentRoleType(),
                 SessionHolder.getCurrentTenantId(),
                 SessionHolder.getAccountType(),
                 SessionHolder.getCurrentLoginPlatform(),
                 scene,
-                mdcMap);
+                mdcMap,
+                SessionHolder.getCurrentPermissions(),
+                SessionHolder.getCurrentDataScopeList(),
+                SessionHolder.getCurrentCustomDeptIds());
     }
 
     /**
@@ -63,7 +65,7 @@ public class SessionContextUtil {
      * @return 会话快照
      */
     public static SessionSnapshot basic(Long tenantId, Long userId, Long deptId) {
-        return new SessionSnapshot(null, userId, deptId, null, null, null, tenantId, null, null, null, null);
+        return new SessionSnapshot(null, userId, deptId, null, null, tenantId, null, null, null, null, null, null, null);
     }
 
     /**
@@ -86,11 +88,13 @@ public class SessionContextUtil {
         SessionHolder.setCurrentUserId(snapshot.getUserId());
         SessionHolder.setCurrentDeptId(snapshot.getDeptId());
         SessionHolder.setCurrentDeptIds(snapshot.getDeptIds());
-        SessionHolder.setCurrentDataScop(snapshot.getDataScope());
         SessionHolder.setCurrentRoleType(snapshot.getRoleType());
         SessionHolder.setCurrentTenantId(snapshot.getTenantId());
         SessionHolder.setAccountType(snapshot.getAccountType());
         SessionHolder.setCurrentLoginPlatform(snapshot.getLoginPlatform());
+        SessionHolder.setCurrentPermissions(snapshot.getPermissions());
+        SessionHolder.setCurrentDataScopeList(snapshot.getDataScopeList());
+        SessionHolder.setCurrentCustomDeptIds(snapshot.getCustomDeptIds());
         ModelUsageSceneHolder.clear();
         if (snapshot.getScene() != null) {
             ModelUsageSceneHolder.push(snapshot.getScene());

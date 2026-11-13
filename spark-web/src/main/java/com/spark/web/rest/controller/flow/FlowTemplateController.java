@@ -6,6 +6,7 @@ import com.spark.common.bean.flow.vo.FlowTemplateVO;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.flow.service.IFlowTemplateService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,6 +34,7 @@ public class FlowTemplateController {
      * @param templateVO 流程模板数据
      * @return 创建结果
      */
+    @RequiresPermi("flow:template:create")
     @PostMapping("create")
     public ResultData<Void> createTemplate(FlowTemplateVO templateVO) {
         return templateService.createTemplate(templateVO);
@@ -43,6 +45,7 @@ public class FlowTemplateController {
      * @param templateVO 流程模板数据
      * @return 修改结果
      */
+    @RequiresPermi("flow:template:update")
     @PostMapping("update")
     public ResultData<Void> updateTemplate(FlowTemplateVO templateVO) {
         return templateService.updateTemplate(templateVO);
@@ -53,6 +56,7 @@ public class FlowTemplateController {
      * @param templateVO 删除流程模板数据
      * @return 删除结果
      */
+    @RequiresPermi("flow:template:delete")
     @PostMapping("delete")
     public ResultData<Void> deleteTemplate(FlowTemplateVO templateVO) {
         return templateService.deleteTemplate(templateVO);
@@ -63,6 +67,7 @@ public class FlowTemplateController {
      * @param query 查询参数
      * @return 查询结果
      */
+    @RequiresPermi("flow:template:query")
     @GetMapping("pageList")
     public ResultData<PageResult<FlowTemplateResult>> pageTemplateList(FlowTemplateQuery query) {
         return templateService.pageTemplateList(query);
@@ -73,6 +78,7 @@ public class FlowTemplateController {
      * @param query 查询参数
      * @return 查询结果
      */
+    @RequiresPermi("flow:template:detail")
     @GetMapping("detail")
     public ResultData<FlowTemplateResult> queryTemplateDetail(FlowTemplateQuery query) {
         return templateService.queryTemplateDetail(query);
@@ -83,6 +89,7 @@ public class FlowTemplateController {
      * @param query 显示流程模板详情参数
      * @return 显示结果
      */
+    @RequiresPermi("flow:template:detail")
     @GetMapping("showDetail")
     public ResultData<FlowTemplateResult> showTemplateDetail(FlowTemplateQuery query) {
         return templateService.showTemplateDetail(query);

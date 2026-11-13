@@ -19,6 +19,11 @@ import java.util.List;
 public class FlowInstanceResult extends BaseResult {
 
     /**
+     * 租户id
+     **/
+    private Long tenantId;
+
+    /**
      * 流程模板id
      **/
     private Long templateId;

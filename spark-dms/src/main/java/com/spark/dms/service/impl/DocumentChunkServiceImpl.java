@@ -23,6 +23,7 @@ import com.spark.dao.kb.KnowledgeDao;
 import com.spark.common.enums.DocumentEventStatusEnum;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.dms.service.IDocumentChunkService;
+import com.spark.manage.BaseService;
 import com.spark.common.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +58,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @LogPrint
-public class DocumentChunkServiceImpl implements IDocumentChunkService {
+public class DocumentChunkServiceImpl extends BaseService<DocumentQuery, DocumentResult> implements IDocumentChunkService {
     private final static Logger logger = LoggerFactory.getLogger(DocumentChunkServiceImpl.class);
     @Autowired
     private ElasticsearchOperations elasticsearchOperations;
@@ -236,6 +237,7 @@ public class DocumentChunkServiceImpl implements IDocumentChunkService {
             // 查询文档信息获取分块策略
             DocumentQuery documentQuery = new DocumentQuery();
             documentQuery.setId(docId);
+            super.scopeTenant(documentQuery);
             DocumentResult document = documentDao.queryDocument(documentQuery);
             String chunkStrategy = "paragraph";
             if (document != null && document.getPrtId() != null) {
@@ -276,6 +278,7 @@ public class DocumentChunkServiceImpl implements IDocumentChunkService {
             // 查询文档信息
             DocumentQuery documentQuery = new DocumentQuery();
             documentQuery.setId(docId);
+            super.scopeTenant(documentQuery);
             DocumentResult document = documentDao.queryDocument(documentQuery);
             if (document == null) {
                 result.setErrorCode(ErrorCodeEnum.DOCUMENT_NOT_EXIST);
@@ -389,6 +392,7 @@ public class DocumentChunkServiceImpl implements IDocumentChunkService {
     private void resetEventStatus(Long docId) {
         DocumentQuery documentQuery = new DocumentQuery();
         documentQuery.setId(docId);
+        super.scopeTenant(documentQuery);
         DocumentResult document = documentDao.queryDocument(documentQuery);
         if (document == null) {
             return;

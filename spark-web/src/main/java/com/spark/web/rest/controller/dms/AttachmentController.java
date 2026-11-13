@@ -4,6 +4,7 @@ import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.sys.query.AttachmentQuery;
 import com.spark.common.bean.sys.result.AttachmentResult;
 import com.spark.dms.service.IAttachmentService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -45,8 +46,9 @@ public class AttachmentController {
      * @param query 查询参数
      * @return 附件详情
      */
+    @RequiresPermi("dms:attachment:detail")
     @GetMapping("detail")
-    private ResultData<AttachmentResult> queryAttachmentDetail(AttachmentQuery query) {
+    public ResultData<AttachmentResult> queryAttachmentDetail(AttachmentQuery query) {
         return attachmentService.queryAttachmentDetail(query);
     }
 
@@ -55,8 +57,9 @@ public class AttachmentController {
      * @param response 响应
      * @param query 查询参数
      */
+    @RequiresPermi("dms:attachment:download")
     @GetMapping("download")
-    private void downloadAttachment(HttpServletRequest request, HttpServletResponse response, AttachmentQuery query) {
+    public void downloadAttachment(HttpServletRequest request, HttpServletResponse response, AttachmentQuery query) {
         ResultData<AttachmentResult> result = attachmentService.downloadAttachment(query);
         if (result.getCode() != ResultData.OK) {
             return;

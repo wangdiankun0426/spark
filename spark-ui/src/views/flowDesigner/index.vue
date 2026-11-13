@@ -21,7 +21,7 @@
         <el-button @click="handleOpenJson">
           <el-icon><Tickets /></el-icon>JSON数据
         </el-button>
-        <el-button type="primary" @click="saveProcess">
+        <el-button v-hasPermi="['flow:templateVersion:create']" type="primary" @click="saveProcess">
           <el-icon><Folder /></el-icon>保存流程
         </el-button>
       </div>

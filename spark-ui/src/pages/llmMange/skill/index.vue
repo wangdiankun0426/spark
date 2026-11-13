@@ -17,6 +17,7 @@
             style="width: 300px"
         />
         <el-button
+            v-hasPermi="['llm:skill:create']"
             type="primary"
             @click="handleOpenCreateForm"
         ><el-icon><Plus /></el-icon>新增技能
@@ -354,8 +355,8 @@ function handleCurrentChange(pageNo) {
  */
 function cardActions(skill) {
   return [
-    { key: 'edit', label: '修改', icon: 'Edit', onClick: () => handleOpenUpdateForm(skill) },
-    { key: 'delete', label: '删除', icon: 'Delete', onClick: () => handleDelete(skill) }
+    { key: 'edit', label: '修改', icon: 'Edit', perms: ['llm:skill:update'], onClick: () => handleOpenUpdateForm(skill) },
+    { key: 'delete', label: '删除', icon: 'Delete', perms: ['llm:skill:delete'], onClick: () => handleDelete(skill) }
   ]
 }
 

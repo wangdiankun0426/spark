@@ -32,6 +32,13 @@ public interface IRoleService {
     ResultData<PageResult<RoleResult>> pageRoleList(RoleQuery query);
 
     /**
+     * 查询角色详情，含授权菜单与自定义部门勾选
+     * @param query 查询参数
+     * @return 角色详情
+     */
+    ResultData<RoleResult> queryRoleDetail(RoleQuery query);
+
+    /**
      * 修改角色
      * @param roleVO 修改的参数
      * @return 修改结果

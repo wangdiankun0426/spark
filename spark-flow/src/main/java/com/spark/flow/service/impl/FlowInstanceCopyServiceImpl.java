@@ -63,6 +63,7 @@ public class FlowInstanceCopyServiceImpl extends BaseService<FlowInstanceCopyQue
         // 校验实例存在
         FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
         instanceQuery.setId(copyVO.getInstanceId());
+        super.scopeTenant(instanceQuery);
         FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
         if (instanceResult == null) {
             result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_EXIST);

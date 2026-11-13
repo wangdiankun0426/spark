@@ -17,6 +17,7 @@
             style="width: 300px"
         />
         <el-button
+            v-hasPermi="['llm:agent:create']"
             type="primary"
             @click="handleOpenCreateForm"
         ><el-icon><Plus /></el-icon>新增Agent
@@ -387,8 +388,8 @@ function handleCurrentChange(pageNo) {
  */
 function cardActions(agent) {
   return [
-    { key: 'edit', label: '修改', icon: 'Edit',  onClick: () => handleOpenUpdateForm(agent) },
-    { key: 'delete', label: '删除', icon: 'Delete', onClick: () => handleDelete(agent) }
+    { key: 'edit', label: '修改', icon: 'Edit', perms: ['llm:agent:update'], onClick: () => handleOpenUpdateForm(agent) },
+    { key: 'delete', label: '删除', icon: 'Delete', perms: ['llm:agent:delete'], onClick: () => handleDelete(agent) }
   ]
 }
 

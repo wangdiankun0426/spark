@@ -6,6 +6,7 @@ import com.spark.common.bean.dms.vo.DocumentVO;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.dms.service.IDocumentService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -49,6 +50,7 @@ public class DocumentController {
      * @param documentVO 修改的文档
      * @return 修改结果
      */
+    @RequiresPermi("dms:document:update")
     @PostMapping("update")
     public ResultData<Void> updateDocument(DocumentVO documentVO) {
         return documentService.updateDocument(documentVO);
@@ -59,6 +61,7 @@ public class DocumentController {
      * @param documentVO 删除的文档
      * @return 删除结果
      */
+    @RequiresPermi("dms:document:delete")
     @PostMapping("delete")
     public ResultData<Void> deleteDocument(DocumentVO documentVO) {
         return documentService.deleteDocument(documentVO);
@@ -69,6 +72,7 @@ public class DocumentController {
      * @param query 查询参数
      * @return 文档列表
      */
+    @RequiresPermi("dms:document:query")
     @GetMapping("pageList")
     public ResultData<PageResult<DocumentResult>> pageDocumentList(DocumentQuery query) {
         return documentService.pageDocumentList(query);
@@ -79,6 +83,7 @@ public class DocumentController {
      * @param query 查询参数
      * @return 文档详情
      */
+    @RequiresPermi("dms:document:detail")
     @GetMapping("detail")
     public ResultData<DocumentResult> queryDocumentDetail(DocumentQuery query) {
         return documentService.queryDocumentDetail(query);
@@ -89,6 +94,7 @@ public class DocumentController {
      * @param response 响应
      * @param query 查询参数
      */
+    @RequiresPermi("dms:document:download")
     @GetMapping("download")
     public void downloadDocument(HttpServletRequest request, HttpServletResponse response, DocumentQuery query) {
         ResultData<DocumentResult> result = documentService.downloadDocument(query);
@@ -121,6 +127,7 @@ public class DocumentController {
      * @param ids 文档ID列表
      * @return 删除结果
      */
+    @RequiresPermi("dms:document:delete")
     @PostMapping("batchDelete")
     public ResultData<Void> batchDelDocument(@RequestParam List<Long> ids) {
         return documentService.batchDelDocument(ids);
@@ -131,6 +138,7 @@ public class DocumentController {
      * @param ids 文档ID列表
      * @return 处理结果
      */
+    @RequiresPermi("dms:document:resetEvent")
     @PostMapping("batchResetEvent")
     public ResultData<Void> batchResetEvent(@RequestParam List<Long> ids) {
         return documentService.batchResetEvent(ids);

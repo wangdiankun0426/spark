@@ -5,6 +5,7 @@ import com.spark.common.bean.task.query.TaskTemplateParamQuery;
 import com.spark.common.bean.task.result.TaskTemplateParamResult;
 import com.spark.common.bean.task.vo.TaskTemplateParamVO;
 import com.spark.task.service.ITaskTemplateParamService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,8 +34,9 @@ public class TaskTemplateParamController {
      * @param query 查询参数
      * @return 参数列表
      */
+    @RequiresPermi("task:templateParam:query")
     @GetMapping("list")
-    private ResultData<List<TaskTemplateParamResult>> queryTaskTemplateParamList(TaskTemplateParamQuery query) {
+    public ResultData<List<TaskTemplateParamResult>> queryTaskTemplateParamList(TaskTemplateParamQuery query) {
         return taskTemplateParamService.queryTaskTemplateParamList(query);
     }
 
@@ -43,8 +45,9 @@ public class TaskTemplateParamController {
      * @param taskTemplateParamVO 参数数据
      * @return 创建结果
      */
+    @RequiresPermi("task:templateParam:create")
     @PostMapping("create")
-    private ResultData<Void> createTaskTemplateParam(TaskTemplateParamVO taskTemplateParamVO) {
+    public ResultData<Void> createTaskTemplateParam(TaskTemplateParamVO taskTemplateParamVO) {
         return taskTemplateParamService.createTaskTemplateParam(taskTemplateParamVO);
     }
 
@@ -53,8 +56,9 @@ public class TaskTemplateParamController {
      * @param taskTemplateParamVO 参数数据
      * @return 修改结果
      */
+    @RequiresPermi("task:templateParam:update")
     @PostMapping("update")
-    private ResultData<Void> updateTaskTemplateParam(TaskTemplateParamVO taskTemplateParamVO) {
+    public ResultData<Void> updateTaskTemplateParam(TaskTemplateParamVO taskTemplateParamVO) {
         return taskTemplateParamService.updateTaskTemplateParam(taskTemplateParamVO);
     }
 
@@ -63,8 +67,9 @@ public class TaskTemplateParamController {
      * @param taskTemplateParamVO 参数数据
      * @return 删除结果
      */
+    @RequiresPermi("task:templateParam:delete")
     @PostMapping("delete")
-    private ResultData<Void> deleteTaskTemplateParam(TaskTemplateParamVO taskTemplateParamVO) {
+    public ResultData<Void> deleteTaskTemplateParam(TaskTemplateParamVO taskTemplateParamVO) {
         return taskTemplateParamService.deleteTaskTemplateParam(taskTemplateParamVO);
     }
 }

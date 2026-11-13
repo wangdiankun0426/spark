@@ -91,6 +91,10 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
         }
         Agent agent = new Agent();
         BeanUtil.copyProperties(agentVO, agent);
+        // 非站点管理员强制归属当前租户
+        if (!SessionHolder.isSysAdmin()) {
+            agent.setTenantId(SessionHolder.getCurrentTenantId());
+        }
         Long id = super.genObjectId(ObjectTypeEnum.AGENT);
         agent.setId(id);
         int count = agentDao.insertDB(agent);
@@ -118,6 +122,7 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
         }
         AgentQuery agentQuery = new AgentQuery();
         agentQuery.setId(agentVO.getId());
+        super.scopeTenant(agentQuery);
         AgentResult agentResult = agentDao.queryAgent(agentQuery);
         if (agentResult == null) {
             result.setErrorCode(ErrorCodeEnum.AGENT_NOT_EXIST);
@@ -152,6 +157,7 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
         }
         AgentQuery agentQuery = new AgentQuery();
         agentQuery.setId(agentVO.getId());
+        super.scopeTenant(agentQuery);
         AgentResult agentResult = agentDao.queryAgent(agentQuery);
         if (agentResult == null) {
             result.setCode(ResultData.OK);
@@ -202,6 +208,7 @@ public class AgentServiceImpl extends BaseService<AgentQuery, AgentResult> imple
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        super.scopeTenant(query);
         AgentResult agentResult = agentDao.queryAgent(query);
         if (agentResult == null) {
             result.setErrorCode(ErrorCodeEnum.AGENT_NOT_EXIST);

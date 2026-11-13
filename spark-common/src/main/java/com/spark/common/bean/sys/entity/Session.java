@@ -2,6 +2,9 @@ package com.spark.common.bean.sys.entity;
 
 import lombok.Data;
 
+import java.util.List;
+import java.util.Set;
+
 /**
  * +++/\_/\
  * + ( °w° )=
@@ -35,11 +38,6 @@ public class Session {
     private String deptIds;
 
     /**
-     * 数据权限
-     */
-    private Integer dataScope;
-
-    /**
      * 角色类型
      */
     private Integer roleType;
@@ -58,4 +56,24 @@ public class Session {
      * 登录平台
      */
     private Integer loginPlatform;
+
+    /**
+     * 权限串集合
+     */
+    private Set<String> permissions;
+
+    /**
+     * 数据范围档位集合
+     */
+    private List<Integer> dataScopeList;
+
+    /**
+     * 自定义数据范围部门ids
+     */
+    private String customDeptIds;
+
+    /**
+     * 会话版本
+     */
+    private Integer sessionVersion;
 }

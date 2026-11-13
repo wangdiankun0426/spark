@@ -2,6 +2,7 @@ package com.spark.config.es;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import com.spark.common.bean.base.ScopeResolver;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.enums.DataScopeEnum;
 import com.spark.common.utils.StringUtil;
@@ -48,43 +49,67 @@ public final class ESDataScope {
      * @return 权限条件；管理员或全部数据权限返回 null；身份缺失返回永不命中条件
      */
     private static Query dataScopeQuery() {
-        if (SessionHolder.isSysAdmin() || SessionHolder.isOrgAdmin()) {
+        if (ScopeResolver.isBypass() || ScopeResolver.hasFullAccess()) {
             return null;
         }
-        DataScopeEnum scope = DataScopeEnum.indexOf(SessionHolder.getCurrentDataScop());
-        if (scope == DataScopeEnum.ALL_ACCESS) {
-            return null;
-        }
-        if (scope == DataScopeEnum.ONLY_DEPART) {
-            Long deptId = SessionHolder.getCurrentDeptId();
-            if (deptId == null) {
-                return noneQuery();
-            }
-            return Query.of(q -> q.term(t -> t.field("deptId").value(deptId)));
-        }
-        if (scope == DataScopeEnum.DEPART_AND_SUB_DEPART) {
-            String deptIds = SessionHolder.getCurrentDeptIds();
-            if (StringUtil.isBlank(deptIds)) {
-                return noneQuery();
-            }
-            List<FieldValue> values = new ArrayList<>();
-            for (String deptId : deptIds.split(",")) {
-                String trimDeptId = deptId.trim();
-                if (StringUtil.isNotBlank(trimDeptId)) {
-                    values.add(FieldValue.of(Long.parseLong(trimDeptId)));
-                }
-            }
-            if (values.isEmpty()) {
-                return noneQuery();
-            }
-            return Query.of(q -> q.terms(t -> t.field("deptId").terms(tv -> tv.value(values))));
-        }
-        // 仅本人与未知权限按创建人过滤
         Long userId = SessionHolder.getCurrentUserId();
-        if (userId == null) {
+        Long deptId = SessionHolder.getCurrentDeptId();
+        String deptIds = SessionHolder.getCurrentDeptIds();
+        String customDeptIds = SessionHolder.getCurrentCustomDeptIds();
+        List<Query> shouldList = new ArrayList<>();
+        List<Integer> scopeList = ScopeResolver.effectiveScopeList();
+        for (Integer scope : scopeList) {
+            DataScopeEnum scopeEnum = DataScopeEnum.indexOf(scope);
+            switch (scopeEnum) {
+                case CUSTOM:
+                    addDeptTerms(shouldList, customDeptIds);
+                    break;
+                case DEPART_AND_SUB_DEPART:
+                    addDeptTerms(shouldList, deptIds);
+                    break;
+                case ONLY_DEPART:
+                    if (deptId != null) {
+                        Query deptQuery = Query.of(q -> q.term(t -> t.field("deptId").value(deptId)));
+                        shouldList.add(deptQuery);
+                    }
+                    break;
+                default:
+                    if (userId != null) {
+                        Query userQuery = Query.of(q -> q.term(t -> t.field("createdBy").value(userId)));
+                        shouldList.add(userQuery);
+                    }
+                    break;
+            }
+        }
+        if (shouldList.isEmpty()) {
             return noneQuery();
         }
-        return Query.of(q -> q.term(t -> t.field("createdBy").value(userId)));
+        return Query.of(q -> q.bool(b -> b.should(shouldList).minimumShouldMatch("1")));
+    }
+
+    /**
+     * 按逗号分隔部门ids追加部门terms条件
+     * @param shouldList 条件集合
+     * @param deptIdsCsv 逗号分隔部门ids
+     */
+    private static void addDeptTerms(List<Query> shouldList, String deptIdsCsv) {
+        if (StringUtil.isBlank(deptIdsCsv)) {
+            return;
+        }
+        List<FieldValue> values = new ArrayList<>();
+        for (String item : deptIdsCsv.split(",")) {
+            String trimItem = item.trim();
+            if (StringUtil.isNotBlank(trimItem)) {
+                Long deptIdValue = Long.parseLong(trimItem);
+                FieldValue fieldValue = FieldValue.of(deptIdValue);
+                values.add(fieldValue);
+            }
+        }
+        if (values.isEmpty()) {
+            return;
+        }
+        Query termsQuery = Query.of(q -> q.terms(t -> t.field("deptId").terms(tv -> tv.value(values))));
+        shouldList.add(termsQuery);
     }
 
     /**

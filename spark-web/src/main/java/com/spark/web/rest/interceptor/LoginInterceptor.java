@@ -74,7 +74,6 @@ public class LoginInterceptor implements HandlerInterceptor {
      */
     private boolean checkLogin(HttpServletRequest request) {
         String sessionId = request.getHeader("Authorization");
-        logger.info("authorization sessionId={}",sessionId);
         if (StringUtil.isBlank(sessionId)) {
             logger.error("sessionId is null");
             return false;
@@ -85,6 +84,12 @@ public class LoginInterceptor implements HandlerInterceptor {
             return false;
         }
         Session session = JsonUtil.toObject(loginUserJson, Session.class);
+        if (session == null || session.getSessionVersion() == null
+                || session.getSessionVersion() != ObjectCacheKey.SESSION_VERSION) {
+            logger.warn("legacy or invalid session, force relogin");
+            redisService.del(sessionIdKey);
+            return false;
+        }
         try {
             SessionHolder.initLocalSession(session);
             TraceLogUtil.cacheTrackUserId(session.getUserId());
@@ -98,7 +103,7 @@ public class LoginInterceptor implements HandlerInterceptor {
             TraceLogUtil.removeUserId();
             TraceLogUtil.removeTenantId();
             TraceLogUtil.removeLoginPlatform();
-            logger.error("init login session error, sessionId={}", sessionId, e);
+            logger.error("init login session error", e);
             return false;
         }
         return true;

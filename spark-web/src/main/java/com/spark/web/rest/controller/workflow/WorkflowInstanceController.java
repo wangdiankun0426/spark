@@ -11,6 +11,7 @@ import com.spark.common.bean.workflow.result.WfInstanceReviewResult;
 import com.spark.common.bean.workflow.vo.WfReviewVO;
 import com.spark.common.bean.workflow.vo.WfRunVO;
 import com.spark.workflow.service.IWorkflowInstanceService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,6 +44,7 @@ public class WorkflowInstanceController {
      * @param query 查询参数
      * @return 分页结果
      */
+    @RequiresPermi("workflow:instance:query")
     @GetMapping("pageList")
     public ResultData<PageResult<WfInstanceResult>> pageInstanceHistory(WfInstanceQuery query) {
         return instanceService.pageInstanceHistory(query);
@@ -54,6 +56,7 @@ public class WorkflowInstanceController {
      * @param query 查询参数
      * @return 实例详情
      */
+    @RequiresPermi("workflow:instance:detail")
     @GetMapping("detail")
     public ResultData<WfInstanceResult> queryInstanceDetail(WfInstanceQuery query) {
         return instanceService.queryInstanceDetail(query);
@@ -65,6 +68,7 @@ public class WorkflowInstanceController {
      * @param query 查询参数
      * @return 节点执行记录列表
      */
+    @RequiresPermi("workflow:instance:detail")
     @GetMapping("nodes")
     public ResultData<List<WfInstanceNodeResult>> queryInstanceNodes(WfInstanceNodeQuery query) {
         return instanceService.queryInstanceNodes(query);
@@ -76,6 +80,7 @@ public class WorkflowInstanceController {
      * @param runVO 运行入参
      * @return 运行实例
      */
+    @RequiresPermi("workflow:instance:run")
     @PostMapping("run")
     public ResultData<WfInstance> runWorkflow(@RequestBody WfRunVO runVO) {
         return instanceService.runWorkflow(runVO);
@@ -98,6 +103,7 @@ public class WorkflowInstanceController {
      * @param reviewVO 审核入参
      * @return 审核结果
      */
+    @RequiresPermi("workflow:instance:review")
     @PostMapping("review")
     public ResultData<Void> reviewInstance(WfReviewVO reviewVO) {
         return instanceService.reviewInstance(reviewVO);

@@ -12,7 +12,7 @@
       <!--左侧任务模板列表-->
       <div class="template-left">
         <div class="panel-header">
-          <el-button type="primary" @click="handleOpenCreateTemplate">
+          <el-button v-hasPermi="['task:template:create']" type="primary" @click="handleOpenCreateTemplate">
             <el-icon><Plus /></el-icon>新建任务模板
           </el-button>
           <el-input
@@ -52,6 +52,7 @@
           <el-table-column fixed="right" label="操作" width="150" align="center">
             <template #default="scope">
               <el-button
+                  v-hasPermi="['task:template:update']"
                   type="success"
                   text
                   @click.stop="handleOpenUpdateTemplate(scope.row)"
@@ -60,6 +61,7 @@
                 <span style="font-size: 12px; font-weight: 500">修改</span>
               </el-button>
               <el-button
+                  v-hasPermi="['task:template:delete']"
                   type="danger"
                   text
                   @click.stop="handleDeleteTemplate(scope.row.id)"
@@ -87,6 +89,7 @@
       <div class="template-right">
         <div class="panel-header">
           <el-button
+              v-hasPermi="['task:templateParam:create']"
               type="primary"
               :disabled="!selectedTemplate"
               @click="handleOpenCreateParam">
@@ -104,6 +107,7 @@
           <el-table-column fixed="right" label="操作" width="150" align="center">
             <template #default="scope">
               <el-button
+                  v-hasPermi="['task:templateParam:update']"
                   type="success"
                   text
                   @click="handleOpenUpdateParam(scope.row)"
@@ -112,6 +116,7 @@
                 <span style="font-size: 12px; font-weight: 500">修改</span>
               </el-button>
               <el-button
+                  v-hasPermi="['task:templateParam:delete']"
                   type="danger"
                   text
                   @click="handleDeleteParam(scope.row.id)"

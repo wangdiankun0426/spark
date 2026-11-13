@@ -2,6 +2,7 @@
   <div class="app-container">
     <el-button
         type="primary"
+        v-hasPermi="['sys:dept:create']"
         @click="openCreateDeptForm(0)"
     >
       <el-icon><Plus /></el-icon>新建部门
@@ -35,6 +36,7 @@
           <el-button
               type="primary"
               text
+              v-hasPermi="['sys:dept:create']"
               @click="openCreateDeptForm(scope.row.id)"
           >
             <el-icon><Plus /></el-icon>
@@ -45,6 +47,7 @@
           <el-button
               type="success"
               text
+              v-hasPermi="['sys:dept:update']"
               @click="openUpdateDeptForm(scope.row)"
           >
             <el-icon><Edit /></el-icon>
@@ -55,6 +58,7 @@
           <el-button
               type="danger"
               text
+              v-hasPermi="['sys:dept:delete']"
               @click="deleteDept(scope.row.id)"
           >
             <el-icon><Delete /></el-icon>

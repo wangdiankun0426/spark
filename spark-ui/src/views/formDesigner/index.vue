@@ -22,6 +22,7 @@
               @click="handleOpenJson"
           ><el-icon><Tickets /></el-icon>JSON数据</el-button>
           <el-button
+              v-hasPermi="['form:form:saveJson']"
               type="primary"
               @click="handleSaveForm"
           ><el-icon><Select /></el-icon>保存模板</el-button>

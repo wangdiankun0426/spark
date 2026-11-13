@@ -6,6 +6,7 @@ import com.spark.common.bean.sys.vo.RoleUserVO;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.manage.sys.IRoleUserService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,8 +34,9 @@ public class RoleUserController {
      * @param roleUserVO 添加用户参数
      * @return 验证结果
      */
+    @RequiresPermi("sys:roleUser:add")
     @PostMapping("add")
-    private ResultData<Void> addUser(RoleUserVO roleUserVO) {
+    public ResultData<Void> addUser(RoleUserVO roleUserVO) {
         return roleUserService.addUser(roleUserVO);
     }
 
@@ -44,8 +46,9 @@ public class RoleUserController {
      * @param roleUserVO 移除用户参数
      * @return 验证结果
      */
+    @RequiresPermi("sys:roleUser:remove")
     @PostMapping("remove")
-    private ResultData<Void> removeUser(RoleUserVO roleUserVO) {
+    public ResultData<Void> removeUser(RoleUserVO roleUserVO) {
         return roleUserService.removeUser(roleUserVO);
     }
 
@@ -55,8 +58,9 @@ public class RoleUserController {
      * @param query 查询参数
      * @return 结果
      */
+    @RequiresPermi("sys:roleUser:query")
     @GetMapping("pageList")
-    private ResultData<PageResult<RoleUserResult>> pageRoleUserList(RoleUserQuery query) {
+    public ResultData<PageResult<RoleUserResult>> pageRoleUserList(RoleUserQuery query) {
         return roleUserService.pageRoleUserList(query);
     }
 

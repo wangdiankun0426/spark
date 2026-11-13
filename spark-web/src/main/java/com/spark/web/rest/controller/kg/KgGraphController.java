@@ -6,6 +6,7 @@ import com.spark.common.bean.kg.query.KgGraphQuery;
 import com.spark.common.bean.kg.result.KgGraphResult;
 import com.spark.common.bean.kg.vo.KgGraphVO;
 import com.spark.kg.service.IKgGraphService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,6 +37,7 @@ public class KgGraphController {
      * @param kgGraphVO 图谱参数
      * @return 响应结果
      */
+    @RequiresPermi("kg:graph:create")
     @PostMapping("create")
     public ResultData<Void> createKgGraph(KgGraphVO kgGraphVO) {
         return kgGraphService.createKgGraph(kgGraphVO);
@@ -46,6 +48,7 @@ public class KgGraphController {
      * @param kgGraphVO 图谱参数
      * @return 响应结果
      */
+    @RequiresPermi("kg:graph:update")
     @PostMapping("update")
     public ResultData<Void> updateKgGraph(KgGraphVO kgGraphVO) {
         return kgGraphService.updateKgGraph(kgGraphVO);
@@ -56,6 +59,7 @@ public class KgGraphController {
      * @param kgGraphVO 图谱参数
      * @return 响应结果
      */
+    @RequiresPermi("kg:graph:delete")
     @PostMapping("delete")
     public ResultData<Void> deleteKgGraph(KgGraphVO kgGraphVO) {
         return kgGraphService.deleteKgGraph(kgGraphVO);
@@ -66,6 +70,7 @@ public class KgGraphController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("kg:graph:query")
     @GetMapping("pageList")
     public ResultData<PageResult<KgGraphResult>> pageKgGraphList(KgGraphQuery query) {
         return kgGraphService.pageKgGraphList(query);
@@ -76,6 +81,7 @@ public class KgGraphController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("kg:graph:detail")
     @GetMapping("detail")
     public ResultData<KgGraphResult> queryKgGraphDetail(KgGraphQuery query) {
         return kgGraphService.queryKgGraphDetail(query);
@@ -87,6 +93,7 @@ public class KgGraphController {
      * @param depth 扩展深度
      * @return 子图数据
      */
+    @RequiresPermi("kg:graph:expand")
     @GetMapping("visual/expand")
     public ResultData<Map<String, Object>> expandNodeVisual(@RequestParam Long nodeId, @RequestParam(defaultValue = "1") int depth) {
         return kgGraphService.expandNodeVisual(nodeId, depth);
@@ -97,6 +104,7 @@ public class KgGraphController {
      * @param graphId 图谱 id
      * @return 统计信息
      */
+    @RequiresPermi("kg:graph:stats")
     @GetMapping("visual/stats")
     public ResultData<Map<String, Object>> queryGraphStats(@RequestParam Long graphId) {
         return kgGraphService.queryGraphStats(graphId);

@@ -12,7 +12,7 @@
         <el-tag v-if="chunkStats.chunkCount !== undefined" type="success" size="large">
           分块数: {{ chunkStats.chunkCount }}
         </el-tag>
-        <el-button type="primary" @click="handleRechunk" :loading="rechunkLoading">
+        <el-button v-hasPermi="['dms:chunk:rechunk']" type="primary" @click="handleRechunk" :loading="rechunkLoading">
           <el-icon><RefreshRight /></el-icon>
           重新分块
         </el-button>
@@ -43,7 +43,7 @@
               <div class="chunk-card__head">
                 <el-tag>#{{ item.chunkIndex }}</el-tag>
                 <span class="chunk-card__hint">点击查看 QA</span>
-                <el-button type="primary" link size="small" @click.stop="handleEditChunk(item)">编辑</el-button>
+                <el-button v-hasPermi="['dms:chunk:update']" type="primary" link size="small" @click.stop="handleEditChunk(item)">编辑</el-button>
               </div>
               <div class="chunk-card__content">{{ item.content }}</div>
             </div>

@@ -8,7 +8,7 @@
   >
     <div class="mcp-token-body">
       <div class="mcp-token-toolbar">
-        <el-button type="primary" @click="openCreateForm">
+        <el-button v-hasPermi="['llm:mcpKey:create']" type="primary" @click="openCreateForm">
           <el-icon><Plus /></el-icon>新增 MCP 令牌
         </el-button>
       </div>
@@ -34,7 +34,7 @@
               <el-icon><View /></el-icon>
               <span style="font-size: 12px; font-weight: 500">详情</span>
             </el-button>
-            <el-button type="danger" text @click="handleDelete(scope.row)">
+            <el-button v-hasPermi="['llm:mcpKey:delete']" type="danger" text @click="handleDelete(scope.row)">
               <el-icon><Delete /></el-icon>
               <span style="font-size: 12px; font-weight: 500">删除</span>
             </el-button>

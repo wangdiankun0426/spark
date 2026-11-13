@@ -24,6 +24,7 @@ import com.spark.common.bean.sys.entity.Session;
 import com.spark.common.bean.sys.query.UserQuery;
 import com.spark.common.bean.sys.result.UserResult;
 import com.spark.common.bean.sys.vo.LoginVO;
+import com.spark.common.bean.sys.vo.RouterVO;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.dao.sys.*;
@@ -34,6 +35,7 @@ import com.spark.manage.auth.IEncryptKeyService;
 import com.spark.config.wecom.WeComUtil;
 import com.spark.config.wechat.WeChatUtil;
 import com.spark.manage.sys.ITenantConfigService;
+import com.spark.manage.sys.IPermissionService;
 import com.spark.manage.sys.IUserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +45,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -71,8 +74,6 @@ public class LoginServiceImpl implements ILoginService {
     @Autowired
     private MqProducer mqProducer;
     @Autowired
-    private RoleDao roleDao;
-    @Autowired
     private DepartmentDao departmentDao;
     @Autowired
     private WeComUtil weComUtil;
@@ -88,6 +89,8 @@ public class LoginServiceImpl implements ILoginService {
     private IUserService userService;
     @Autowired
     private ITenantConfigService tenantConfigService;
+    @Autowired
+    private IPermissionService permissionService;
 
     /**
      * 登录
@@ -112,6 +115,11 @@ public class LoginServiceImpl implements ILoginService {
             return result;
         }
         UserResult userResult = validateLoginTypeResult.getData();
+        // 停用账号禁止登录
+        if (!StatusEnum.NORMAL.getValue().equals(userResult.getStatus())) {
+            result.setErrorCode(ErrorCodeEnum.USER_DISABLED);
+            return result;
+        }
         // 验证用户租户
         ResultData<Void> validateUserTenantData = this.validateUserTenant(userResult);
         if (validateUserTenantData.getCode() != ResultData.OK) {
@@ -182,10 +190,58 @@ public class LoginServiceImpl implements ILoginService {
             return result;
         }
         String sessionIdKey = ObjectCacheKey.LOGIN_SESSION + loginVO.getSessionId();
+        // 组织管理员仅允许强制退出本租户的在线会话，会话无法解析时拒绝
+        if (!SessionHolder.isSysAdmin()) {
+            String sessionJson = redisService.getValue(sessionIdKey);
+            if (StringUtil.isBlank(sessionJson)) {
+                result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+                return result;
+            }
+            Session session = JsonUtil.toObject(sessionJson, Session.class);
+            if (session == null) {
+                result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+                return result;
+            }
+            Long currentTenantId = SessionHolder.getCurrentTenantId();
+            Long sessionTenantId = session.getTenantId();
+            if (!Objects.equals(currentTenantId, sessionTenantId)) {
+                result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+                return result;
+            }
+        }
         boolean bo = redisService.del(sessionIdKey);
         if (!bo)  {
             return result;
         }
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 查询当前登录会话信息，含权限串集合与动态路由
+     * @return 用户会话信息
+     */
+    @Override
+    public ResultData<UserResult> queryLoginSession() {
+        ResultData<UserResult> result = new ResultData<>();
+        Long userId = SessionHolder.getCurrentUserId();
+        if (userId == null) {
+            result.setErrorCode(ErrorCodeEnum.NOT_LOGIN);
+            return result;
+        }
+        UserQuery query = new UserQuery();
+        query.setId(userId);
+        ResultData<UserResult> detailResult = userService.queryUserDetail(query);
+        if (detailResult.getCode() != ResultData.OK) {
+            return detailResult;
+        }
+        UserResult userResult = detailResult.getData();
+        Set<String> permissions = SessionHolder.getCurrentPermissions();
+        userResult.setPermissions(permissions);
+        ResultData<List<RouterVO>> routerResult = permissionService.buildRouters();
+        List<RouterVO> routers = routerResult.getData();
+        userResult.setRouters(routers);
+        result.setData(userResult);
         result.setCode(ResultData.OK);
         return result;
     }
@@ -411,8 +467,7 @@ public class LoginServiceImpl implements ILoginService {
         session.setAccountType(userResult.getAccountType());
         session.setLoginPlatform(loginPlatform);
         session.setRoleType(userResult.getRoleType());
-        int dataScope = roleDao.queryUserMaxDataScope(tenantId, userResult.getId());
-        session.setDataScope(dataScope);
+        permissionService.loadPermission(session);
         DepartmentQuery departmentQuery = new DepartmentQuery();
         departmentQuery.setTenantId(tenantId);
         departmentQuery.setId(userResult.getDeptId());

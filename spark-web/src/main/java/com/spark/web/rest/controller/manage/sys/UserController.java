@@ -7,6 +7,7 @@ import com.spark.common.bean.sys.vo.UserVO;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.manage.sys.IUserService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +40,7 @@ public class UserController {
      * @param userVO 用户参数
      * @return 创建结果
      */
+    @RequiresPermi("sys:user:create")
     @PostMapping("create")
     public ResultData<Long> createUser(UserVO userVO) {
         return userService.createUser(userVO);
@@ -49,8 +51,9 @@ public class UserController {
      * @param query 查询参数
      * @return 结果
      */
+    @RequiresPermi("sys:user:query")
     @GetMapping("pageList")
-    private ResultData<PageResult<UserResult>> pageUserList(UserQuery query) {
+    public ResultData<PageResult<UserResult>> pageUserList(UserQuery query) {
         return userService.pageUserList(query);
     }
 
@@ -59,6 +62,7 @@ public class UserController {
      * @param userVO 修改用户参数
      * @return 修改结果
      */
+    @RequiresPermi("sys:user:update")
     @PostMapping("update")
     public ResultData<Void> updateUser(UserVO userVO) {
         return userService.updateUser(userVO);
@@ -69,6 +73,7 @@ public class UserController {
      * @param userVO 删除用户参数
      * @return 删除结果
      */
+    @RequiresPermi("sys:user:delete")
     @PostMapping("delete")
     public ResultData<Void> deleteUser(UserVO userVO) {
         return userService.deleteUser(userVO);
@@ -79,6 +84,7 @@ public class UserController {
      * @param query 查询参数
      * @return 查询结果
      */
+    @RequiresPermi("sys:user:detail")
     @GetMapping("detail")
     public ResultData<UserResult> queryUserDetail(UserQuery query) {
         return userService.queryUserDetail(query);

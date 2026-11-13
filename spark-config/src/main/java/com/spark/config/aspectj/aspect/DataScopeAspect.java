@@ -4,8 +4,8 @@ import com.spark.common.bean.base.BaseException;
 import com.spark.common.constant.AspectOrder;
 import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.common.bean.base.BaseQuery;
+import com.spark.common.bean.base.ScopeResolver;
 import com.spark.common.bean.base.SessionHolder;
-import com.spark.common.enums.DataScopeEnum;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.utils.StringUtil;
 import org.aspectj.lang.JoinPoint;
@@ -57,6 +57,13 @@ public class DataScopeAspect {
      */
     @Before(value = ("pointcut()"))
     public void doBefore(JoinPoint joinPoint) {
+        // 入口无条件清空入参数据权限片段，防止请求注入
+        Object[] args = joinPoint.getArgs();
+        BaseQuery baseQuery = null;
+        if (args.length > 0 && args[0] instanceof BaseQuery) {
+            baseQuery = (BaseQuery) args[0];
+            baseQuery.setDataScopeSQL("");
+        }
         // 管理员不过滤权限
         if (SessionHolder.isSysAdmin() || SessionHolder.isOrgAdmin()) {
             return;
@@ -68,46 +75,16 @@ public class DataScopeAspect {
             return;
         }
         String tableAlias = annotation.tableAlias();
-        // 查询当前用户的最大数据权限
+        // 未登录快速失败
         Long userId = SessionHolder.getCurrentUserId();
         if (userId == null) {
             throw new BaseException(ErrorCodeEnum.NOT_LOGIN);
         }
-        Integer dataScope = SessionHolder.getCurrentDataScop();
-        logger.info("dataScope={}", dataScope);
-        StringBuilder sql = new StringBuilder();
-        switch (DataScopeEnum.indexOf(dataScope)) {
-            case UNKNOWN:
-            case ONLY_ONESELF:
-                sql.append("and ");
-                if (StringUtil.isNotBlank(tableAlias)) {
-                    sql.append(tableAlias).append(".");
-                }
-                sql.append("created_by = ").append(userId);
-                break;
-            case ONLY_DEPART:
-                sql.append("and ");
-                if (StringUtil.isNotBlank(tableAlias)) {
-                    sql.append(tableAlias).append(".");
-                }
-                Long deptId = SessionHolder.getCurrentDeptId();
-                sql.append("dept_id = ").append(deptId);
-                break;
-            case DEPART_AND_SUB_DEPART:
-                sql.append("and ");
-                if (StringUtil.isNotBlank(tableAlias)) {
-                    sql.append(tableAlias).append(".");
-                }
-                String deptIds = SessionHolder.getCurrentDeptIds();
-                sql.append("dept_id in (").append(deptIds).append(")");
-                break;
-            default:
-                break;
-        }
-        if (StringUtil.isNotBlank(sql.toString())) {
-            BaseQuery baseQuery = (BaseQuery) joinPoint.getArgs()[0];
-            baseQuery.setDataScopeSQL(sql.toString());
-            logger.info("scope sql={}", sql);
+        // 按多角色档位 OR 合并构造数据权限片段
+        String scopeSql = ScopeResolver.buildSql(tableAlias);
+        if (StringUtil.isNotBlank(scopeSql) && baseQuery != null) {
+            baseQuery.setDataScopeSQL(scopeSql);
+            logger.info("scope sql={}", scopeSql);
         }
     }
 

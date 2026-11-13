@@ -6,6 +6,9 @@
     </sql>
 
     <sql id="searchCondition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
         <if test="templateId != null">
             and template_id = #{templateId}
         </if>
@@ -55,6 +58,14 @@
         <if test="page == true">
             limit #{startRow}, #{pageSize}
         </if>
+    </select>
+
+    <select id="queryTaskTemplateParam" resultType="com.spark.common.bean.task.result.TaskTemplateParamResult">
+        select <include refid="allColumnList" />
+        from task_template_param
+        where 1=1
+        <include refid="searchCondition" />
+        limit 1
     </select>
 
 </mapper>

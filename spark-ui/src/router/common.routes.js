@@ -4,7 +4,7 @@ import register from '@/pages/login/register.vue'
 import agreement from '@/pages/base/agreement/index.vue'
 import formDesigner from '@/views/formDesigner/index.vue'
 import flowDesigner from '@/views/flowDesigner/index.vue'
-import workflowIndex from "@/views/workflowDesigner/index.vue";
+import workflowDesigner from "@/views/workflowDesigner/index.vue";
 
 export default [
     {
@@ -74,7 +74,7 @@ export default [
     {
         path: '/workflow/designer/:id?/:revId?',
         name: 'workflowDesigner',
-        component: workflowIndex,
+        component: workflowDesigner,
         meta: {
             title: '工作流设计器',
         }

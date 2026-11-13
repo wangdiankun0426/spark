@@ -14,7 +14,7 @@
     >{{ description }}</div>
     <div
         class="info-card-bar"
-        v-if="actions.length"
+        v-if="permittedActions.length"
     >
       <template
           v-for="(act, i) in visibleActions"
@@ -76,6 +76,7 @@
 <script setup>
 import { computed } from 'vue'
 import { Loading } from '@element-plus/icons-vue'
+import { checkPermi } from '@/utils/permissionUtil'
 
 const MAX_BAR_ACTIONS = 3
 
@@ -106,11 +107,14 @@ const props = defineProps({
 
 const emit = defineEmits(['action'])
 
+// 当前用户可见的动作，未配置权限串的默认放行
+const permittedActions = computed(() => props.actions.filter(act => !act.perms || !act.perms.length || act.perms.some(perm => checkPermi(perm))))
+
 // 工具栏直接展示的按钮
-const visibleActions = computed(() => props.actions.slice(0, MAX_BAR_ACTIONS))
+const visibleActions = computed(() => permittedActions.value.slice(0, MAX_BAR_ACTIONS))
 
 // 收进「···」气泡的按钮
-const hiddenActions = computed(() => props.actions.slice(MAX_BAR_ACTIONS))
+const hiddenActions = computed(() => permittedActions.value.slice(MAX_BAR_ACTIONS))
 
 /**
  * 触发工具栏按钮

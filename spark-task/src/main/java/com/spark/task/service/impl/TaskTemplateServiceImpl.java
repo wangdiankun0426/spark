@@ -66,6 +66,10 @@ public class TaskTemplateServiceImpl extends BaseService<TaskTemplateQuery, Task
         }
         TaskTemplate taskTemplate = new TaskTemplate();
         BeanUtil.copyProperties(taskTemplateVO, taskTemplate);
+        // 非站点管理员强制归属当前租户
+        if (!SessionHolder.isSysAdmin()) {
+            taskTemplate.setTenantId(SessionHolder.getCurrentTenantId());
+        }
         int count = taskTemplateDao.insertDB(taskTemplate);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
@@ -101,6 +105,7 @@ public class TaskTemplateServiceImpl extends BaseService<TaskTemplateQuery, Task
         }
         TaskTemplateQuery query = new TaskTemplateQuery();
         query.setId(taskTemplateVO.getId());
+        super.scopeTenant(query);
         TaskTemplateResult taskTemplateResult = taskTemplateDao.queryTaskTemplate(query);
         if (taskTemplateResult == null) {
             result.setErrorCode(ErrorCodeEnum.TASK_TEMPLATE_NOT_EXIST);
@@ -133,6 +138,7 @@ public class TaskTemplateServiceImpl extends BaseService<TaskTemplateQuery, Task
         Long userId = SessionHolder.getCurrentUserId();
         TaskTemplateQuery query = new TaskTemplateQuery();
         query.setId(taskTemplateVO.getId());
+        super.scopeTenant(query);
         TaskTemplateResult taskTemplateResult = taskTemplateDao.queryTaskTemplate(query);
         if (taskTemplateResult == null) {
             result.setErrorCode(ErrorCodeEnum.TASK_TEMPLATE_NOT_EXIST);
@@ -184,6 +190,7 @@ public class TaskTemplateServiceImpl extends BaseService<TaskTemplateQuery, Task
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        super.scopeTenant(query);
         TaskTemplateResult taskTemplateResult = taskTemplateDao.queryTaskTemplate(query);
         if (taskTemplateResult == null) {
             result.setErrorCode(ErrorCodeEnum.TASK_TEMPLATE_NOT_EXIST);

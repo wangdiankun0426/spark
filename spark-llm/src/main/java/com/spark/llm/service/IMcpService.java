@@ -67,6 +67,6 @@ public interface IMcpService {
      * @param query 查询条件
      * @return 工具列表
      */
-    ResultData<List<McpToolResult>> listMcpTools(McpQuery query);
+    ResultData<List<McpToolResult>> queryMcpToolList(McpQuery query);
 
 }

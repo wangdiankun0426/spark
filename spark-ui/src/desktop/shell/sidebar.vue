@@ -1,23 +1,22 @@
 <!--
-  客户端专属侧边导航，菜单与 Web 图标栏共用 homeMenu.js；
+  客户端专属侧边导航，菜单由后端菜单树驱动；
   区别只在形态：Web 是纯图标栏，客户端是带文字的常驻导航，底部承载账号卡
 -->
 <template>
   <aside class="dsk-sidebar">
     <nav class="dsk-sidebar__nav">
-      <template v-for="group in HOME_MENU_GROUPS" :key="group.title">
-        <div class="dsk-sidebar__group">{{ group.title }}</div>
+      <template v-for="entry in sidebarItems" :key="entry.key">
+        <div v-if="entry.type === 'group'" class="dsk-sidebar__group">{{ entry.title }}</div>
         <div
-            v-for="item in group.items"
-            :key="item.path"
+            v-else
             class="dsk-sidebar__item"
-            :class="{ 'is-active': activePath === item.path }"
-            @click="go(item.path)"
+            :class="{ 'is-active': activePath === entry.path }"
+            @click="go(entry.path)"
         >
           <el-icon class="dsk-sidebar__icon">
-            <component :is="item.icon"/>
+            <component :is="entry.icon"/>
           </el-icon>
-          <span class="dsk-sidebar__label">{{ item.label }}</span>
+          <span class="dsk-sidebar__label">{{ entry.label }}</span>
         </div>
       </template>
     </nav>
@@ -29,22 +28,24 @@
 <script setup>
 import {computed} from 'vue';
 import {useRoute, useRouter} from 'vue-router';
-import {HOME_MENU_GROUPS} from '@/utils/homeMenu.js';
+import {useModuleMenus} from '@/utils/useModuleMenus.js';
 import AccountCard from '../components/accountCard.vue';
 
 const router = useRouter();
 const route = useRoute();
+const {sidebarItems} = useModuleMenus();
 
 // 子页面归属到最长前缀匹配的菜单项
 const activePath = computed(() => {
   const path = route.path;
   let matched = '';
-  HOME_MENU_GROUPS.forEach(group => {
-    group.items.forEach(item => {
-      if ((path === item.path || path.startsWith(item.path + '/')) && item.path.length > matched.length) {
-        matched = item.path;
-      }
-    });
+  sidebarItems.value.forEach(entry => {
+    if (entry.type !== 'item') {
+      return;
+    }
+    if ((path === entry.path || path.startsWith(entry.path + '/')) && entry.path.length > matched.length) {
+      matched = entry.path;
+    }
   });
   return matched;
 });

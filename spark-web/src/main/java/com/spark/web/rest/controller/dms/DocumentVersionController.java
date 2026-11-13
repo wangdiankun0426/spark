@@ -6,6 +6,7 @@ import com.spark.common.bean.dms.query.DocumentVersionQuery;
 import com.spark.common.bean.dms.result.DocumentVersionResult;
 import com.spark.common.bean.dms.vo.DocumentVersionVO;
 import com.spark.dms.service.IDocumentVersionService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -47,6 +48,7 @@ public class DocumentVersionController {
      * @param documentVersionVO 版本参数
      * @return 处理结果
      */
+    @RequiresPermi("dms:version:rollback")
     @PostMapping("rollback")
     public ResultData<Void> rollbackVersion(DocumentVersionVO documentVersionVO) {
         return documentVersionService.rollbackVersion(documentVersionVO);
@@ -57,6 +59,7 @@ public class DocumentVersionController {
      * @param documentVersionVO 版本参数
      * @return 删除结果
      */
+    @RequiresPermi("dms:version:delete")
     @PostMapping("delete")
     public ResultData<Void> deleteVersion(DocumentVersionVO documentVersionVO) {
         return documentVersionService.deleteVersion(documentVersionVO);
@@ -67,6 +70,7 @@ public class DocumentVersionController {
      * @param query 查询参数
      * @return 版本列表
      */
+    @RequiresPermi("dms:version:query")
     @GetMapping("pageList")
     public ResultData<PageResult<DocumentVersionResult>> pageVersionList(DocumentVersionQuery query) {
         return documentVersionService.pageVersionList(query);
@@ -77,6 +81,7 @@ public class DocumentVersionController {
      * @param response 响应
      * @param query 查询参数
      */
+    @RequiresPermi("dms:version:download")
     @GetMapping("download")
     public void downloadVersion(HttpServletRequest request, HttpServletResponse response, DocumentVersionQuery query) {
         ResultData<DocumentVersionResult> result = documentVersionService.downloadVersion(query);

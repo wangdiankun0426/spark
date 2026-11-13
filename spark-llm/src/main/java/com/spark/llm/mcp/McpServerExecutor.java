@@ -10,6 +10,7 @@ import com.spark.common.bean.kg.query.KgGraphQuery;
 import com.spark.common.bean.kg.result.KgGraphResult;
 import com.spark.common.bean.llm.result.McpKeyResult;
 import com.spark.common.bean.llm.result.RetrieveResult;
+import com.spark.common.bean.sys.entity.Session;
 import com.spark.common.bean.sys.query.DepartmentQuery;
 import com.spark.common.bean.sys.query.TenantUserQuery;
 import com.spark.common.bean.sys.result.DepartmentResult;
@@ -23,11 +24,11 @@ import com.spark.dao.kb.KnowledgeDao;
 import com.spark.dao.kg.KgGraphDao;
 import com.spark.dao.llm.McpKeyDao;
 import com.spark.dao.sys.DepartmentDao;
-import com.spark.dao.sys.RoleDao;
 import com.spark.dao.sys.TenantUserDao;
 import com.spark.common.kb.IKbRetriever;
 import com.spark.common.kg.IKgRetriever;
 import com.spark.llm.service.IMcpKeyService;
+import com.spark.manage.sys.IPermissionService;
 import io.modelcontextprotocol.json.McpJsonMapper;
 import io.modelcontextprotocol.server.McpServerFeatures;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
@@ -82,9 +83,9 @@ public class McpServerExecutor {
     @Autowired
     private TenantUserDao tenantUserDao;
     @Autowired
-    private RoleDao roleDao;
-    @Autowired
     private DepartmentDao departmentDao;
+    @Autowired
+    private IPermissionService permissionService;
     /**
      * 自注入走代理调用，同类内直接调用会使@DataScope切面失效
      */
@@ -296,37 +297,42 @@ public class McpServerExecutor {
      * @param mcpKey 密钥信息
      */
     private void initSessionContext(McpKeyResult mcpKey) {
-        SessionHolder.setCurrentTenantId(mcpKey.getTenantId());
-        SessionHolder.setCurrentUserId(mcpKey.getUserId());
+        Long tenantId = mcpKey.getTenantId();
+        Long userId = mcpKey.getUserId();
+        Session session = new Session();
+        session.setTenantId(tenantId);
+        session.setUserId(userId);
         TenantUserQuery tenantUserQuery = new TenantUserQuery();
-        tenantUserQuery.setTenantId(mcpKey.getTenantId());
-        tenantUserQuery.setUserId(mcpKey.getUserId());
+        tenantUserQuery.setTenantId(tenantId);
+        tenantUserQuery.setUserId(userId);
         tenantUserQuery.setPage(false);
         List<TenantUserResult> tenantUserList = tenantUserDao.queryTenantUserList(tenantUserQuery);
         if (CollectionUtil.isNotEmpty(tenantUserList)) {
             TenantUserResult tenantUser = tenantUserList.get(0);
-            SessionHolder.setCurrentDeptId(tenantUser.getDeptId());
-            SessionHolder.setCurrentRoleType(tenantUser.getRoleType());
+            Long userDeptId = tenantUser.getDeptId();
+            Integer userRoleType = tenantUser.getRoleType();
+            session.setDeptId(userDeptId);
+            session.setRoleType(userRoleType);
         }
-        int dataScope = roleDao.queryUserMaxDataScope(mcpKey.getTenantId(), mcpKey.getUserId());
-        SessionHolder.setCurrentDataScop(dataScope);
-        Long deptId = SessionHolder.getCurrentDeptId();
-        if (deptId == null) {
-            return;
+        Long deptId = session.getDeptId();
+        if (deptId != null) {
+            DepartmentQuery departmentQuery = new DepartmentQuery();
+            departmentQuery.setTenantId(tenantId);
+            departmentQuery.setId(deptId);
+            DepartmentResult department = departmentDao.queryDepartment(departmentQuery);
+            if (department != null) {
+                // 按部门编码前缀取其下级部门
+                departmentQuery.setId(null);
+                String deptCode = department.getCode();
+                departmentQuery.setCode(deptCode);
+                List<DepartmentResult> departmentList = departmentDao.queryDepartmentList(departmentQuery);
+                List<Long> deptIdList = departmentList.stream().map(DepartmentResult::getId).toList();
+                String deptIds = StringUtil.join(deptIdList, ",");
+                session.setDeptIds(deptIds);
+            }
         }
-        DepartmentQuery departmentQuery = new DepartmentQuery();
-        departmentQuery.setTenantId(mcpKey.getTenantId());
-        departmentQuery.setId(deptId);
-        DepartmentResult department = departmentDao.queryDepartment(departmentQuery);
-        if (department == null) {
-            return;
-        }
-        // 按部门编码前缀取其下级部门
-        departmentQuery.setId(null);
-        departmentQuery.setCode(department.getCode());
-        List<DepartmentResult> departmentList = departmentDao.queryDepartmentList(departmentQuery);
-        String deptIds = StringUtil.join(departmentList.stream().map(DepartmentResult::getId).toList(), ",");
-        SessionHolder.setCurrentDeptIds(deptIds);
+        permissionService.loadPermission(session);
+        SessionHolder.initLocalSession(session);
     }
 
     /**

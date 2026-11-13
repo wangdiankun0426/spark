@@ -7,6 +7,7 @@ import com.spark.common.bean.llm.result.ModelUsageResult;
 import com.spark.common.bean.llm.result.ModelUsageSummaryResult;
 import com.spark.common.bean.llm.result.ModelUsageTrendResult;
 import com.spark.llm.service.IModelUsageService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,6 +36,7 @@ public class ModelUsageController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:modelUsage:query")
     @GetMapping("pageList")
     public ResultData<PageResult<ModelUsageResult>> pageUsageList(ModelUsageQuery query) {
         return modelUsageService.pageUsageList(query);
@@ -45,6 +47,7 @@ public class ModelUsageController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:modelUsage:query")
     @GetMapping("summary")
     public ResultData<List<ModelUsageSummaryResult>> queryUsageSummary(ModelUsageQuery query) {
         return modelUsageService.queryUsageSummary(query);
@@ -55,6 +58,7 @@ public class ModelUsageController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:modelUsage:query")
     @GetMapping("trend")
     public ResultData<List<ModelUsageTrendResult>> queryUsageTrend(ModelUsageQuery query) {
         return modelUsageService.queryUsageTrend(query);

@@ -4,6 +4,8 @@ import com.spark.common.bean.base.BaseResult;
 import com.spark.common.enums.StatusEnum;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * +++/\_/\
  * + ( °w° )=
@@ -32,9 +34,19 @@ public class RoleResult extends BaseResult {
     private String dataScopeName;
 
     /**
-     * 菜单标识码列表，逗号分隔
+     * 菜单父子联动 1联动0独立
      */
-    private String menuCodes;
+    private Integer menuCheckStrictly;
+
+    /**
+     * 菜单id列表，角色详情返回授权勾选
+     */
+    private List<Long> menuIds;
+
+    /**
+     * 部门id列表，角色详情返回自定义数据范围勾选
+     */
+    private List<Long> deptIds;
 
     /**
      * 状态 StatusEnum

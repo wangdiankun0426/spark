@@ -9,12 +9,15 @@ import com.spark.common.bean.form.query.FormObjValueQuery;
 import com.spark.common.bean.form.query.FormQuery;
 import com.spark.common.bean.form.result.FormObjResult;
 import com.spark.common.bean.form.result.FormObjValueResult;
+import com.spark.common.bean.form.result.FormResult;
 import com.spark.common.bean.form.vo.FormObjValueVO;
+import com.spark.dao.form.FormDao;
 import com.spark.dao.form.FormObjDao;
 import com.spark.dao.form.FormObjValueDao;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.form.service.IFormObjValueService;
 import com.spark.form.service.IFormService;
+import com.spark.manage.BaseService;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.StringUtil;
 import org.slf4j.Logger;
@@ -35,12 +38,14 @@ import java.util.List;
  * @since 2024/7/28 20:52
  */
 @Service
-public class FormObjValueServiceImpl implements IFormObjValueService {
+public class FormObjValueServiceImpl extends BaseService<FormObjQuery, FormObjResult> implements IFormObjValueService {
     private final static Logger logger = LoggerFactory.getLogger(FormObjValueServiceImpl.class);
     @Autowired
     private FormObjValueDao formObjValueDao;
     @Autowired
     private FormObjDao formObjDao;
+    @Autowired
+    private FormDao formDao;
     @Autowired
     private IFormService formService;
 
@@ -60,6 +65,10 @@ public class FormObjValueServiceImpl implements IFormObjValueService {
         if (valueVO == null || valueVO.getObjId() == null || valueVO.getFormId() == null
                 || CollectionUtil.isEmpty(valueVO.getValues())) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (!this.isFormInTenant(valueVO.getFormId())) {
+            result.setErrorCode(ErrorCodeEnum.FORM_NOT_EXIST);
             return result;
         }
         FormObjQuery formObjQuery = new FormObjQuery();
@@ -114,6 +123,19 @@ public class FormObjValueServiceImpl implements IFormObjValueService {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        Long formId = query.getFormId();
+        if (formId == null && query.getObjId() != null) {
+            FormObjQuery formObjQuery = new FormObjQuery();
+            formObjQuery.setObjId(query.getObjId());
+            FormObjResult formObjResult = formObjDao.queryFormObj(formObjQuery);
+            if (formObjResult != null) {
+                formId = formObjResult.getFormId();
+            }
+        }
+        if (!this.isFormInTenant(formId)) {
+            result.setErrorCode(ErrorCodeEnum.FORM_NOT_EXIST);
+            return result;
+        }
         List<FormObjValueResult> list = formObjValueDao.queryFormObjValueList(query);
         result.setData(list);
         result.setCode(ResultData.OK);
@@ -137,6 +159,10 @@ public class FormObjValueServiceImpl implements IFormObjValueService {
             result.setCode(ResultData.OK);
             return result;
         }
+        if (!this.isFormInTenant(formObjResult.getFormId())) {
+            result.setErrorCode(ErrorCodeEnum.FORM_NOT_EXIST);
+            return result;
+        }
         Long objId = formObjResult.getObjId();
         Long formId = formObjResult.getFormId();
         FormQuery formQuery = new FormQuery();
@@ -151,5 +177,21 @@ public class FormObjValueServiceImpl implements IFormObjValueService {
         result.setData(formObjResult);
         result.setCode(ResultData.OK);
         return result;
+    }
+
+    /**
+     * 校验表单归属当前租户
+     * @param formId 表单id
+     * @return true归属当前租户
+     */
+    private boolean isFormInTenant(Long formId) {
+        if (formId == null) {
+            return false;
+        }
+        FormQuery formQuery = new FormQuery();
+        formQuery.setId(formId);
+        super.scopeTenant(formQuery);
+        FormResult formResult = formDao.queryForm(formQuery);
+        return formResult != null;
     }
 }

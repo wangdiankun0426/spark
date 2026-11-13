@@ -4,6 +4,7 @@ import com.spark.common.bean.sys.vo.DepartmentVO;
 import com.spark.common.bean.sys.tree.DepartmentTree;
 import com.spark.common.bean.base.ResultData;
 import com.spark.manage.sys.IDepartmentService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,8 +33,9 @@ public class DepartmentController {
      * @param departmentVO 部门信息
      * @return 创建结果
      */
+    @RequiresPermi("sys:dept:create")
     @PostMapping("create")
-    private ResultData<Void> createDepartment(DepartmentVO departmentVO) {
+    public ResultData<Void> createDepartment(DepartmentVO departmentVO) {
         return departmentService.createDepartment(departmentVO);
     }
 
@@ -41,8 +43,9 @@ public class DepartmentController {
      * 查询部门树
      * @return 部门树
      */
+    @RequiresPermi("sys:dept:query")
     @GetMapping("tree")
-    private ResultData<List<DepartmentTree>> queryDepartmentTree() {
+    public ResultData<List<DepartmentTree>> queryDepartmentTree() {
         return departmentService.queryDepartmentTree();
     }
 
@@ -51,8 +54,9 @@ public class DepartmentController {
      * @param departmentVO 部门信息
      * @return 修改结果
      */
+    @RequiresPermi("sys:dept:update")
     @PostMapping("update")
-    private ResultData<Void> updateDepartment(DepartmentVO departmentVO) {
+    public ResultData<Void> updateDepartment(DepartmentVO departmentVO) {
         return departmentService.updateDepartment(departmentVO);
     }
 
@@ -61,8 +65,9 @@ public class DepartmentController {
      * @param departmentVO 部门信息
      * @return 删除结果
      */
+    @RequiresPermi("sys:dept:delete")
     @PostMapping("delete")
-    private ResultData<Void> deleteDepartment(DepartmentVO departmentVO) {
+    public ResultData<Void> deleteDepartment(DepartmentVO departmentVO) {
         return departmentService.deleteDepartment(departmentVO);
     }
 

@@ -66,6 +66,10 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
         }
         Model model = new Model();
         BeanUtil.copyProperties(modelVO, model);
+        // 非站点管理员强制归属当前租户
+        if (!SessionHolder.isSysAdmin()) {
+            model.setTenantId(SessionHolder.getCurrentTenantId());
+        }
         Long id = super.genObjectId(ObjectTypeEnum.MODEL);
         model.setId(id);
         int count = modelDao.insertDB(model);
@@ -94,6 +98,7 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
         }
         ModelQuery modelQuery = new ModelQuery();
         modelQuery.setId(modelVO.getId());
+        super.scopeTenant(modelQuery);
         ModelResult modelResult = modelDao.queryModel(modelQuery);
         if (modelResult == null) {
             result.setErrorCode(ErrorCodeEnum.MODEL_NOT_EXIST);
@@ -129,6 +134,7 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
         }
         ModelQuery modelQuery = new ModelQuery();
         modelQuery.setId(modelVO.getId());
+        super.scopeTenant(modelQuery);
         ModelResult modelResult = modelDao.queryModel(modelQuery);
         if (modelResult == null) {
             result.setCode(ResultData.OK);
@@ -180,6 +186,7 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        super.scopeTenant(query);
         ModelResult modelResult = modelDao.queryModel(query);
         if (modelResult == null) {
             result.setErrorCode(ErrorCodeEnum.MODEL_NOT_EXIST);

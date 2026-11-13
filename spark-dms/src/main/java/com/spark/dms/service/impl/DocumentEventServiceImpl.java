@@ -3,14 +3,18 @@ package com.spark.dms.service.impl;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.dms.entity.DocumentEvent;
 import com.spark.common.bean.dms.query.DocumentEventQuery;
+import com.spark.common.bean.dms.query.DocumentQuery;
 import com.spark.common.bean.dms.result.DocumentEventResult;
+import com.spark.common.bean.dms.result.DocumentResult;
 import com.spark.common.bean.dms.vo.DocumentEventVO;
 import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.LogOperate;
+import com.spark.dao.dms.DocumentDao;
 import com.spark.dao.dms.DocumentEventDao;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.dms.service.IDocumentEventService;
+import com.spark.manage.BaseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.spark.common.utils.BeanUtil;
@@ -28,10 +32,12 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @LogPrint
-public class DocumentEventServiceImpl implements IDocumentEventService {
+public class DocumentEventServiceImpl extends BaseService<DocumentEventQuery, DocumentEventResult> implements IDocumentEventService {
     private final static Logger logger = LoggerFactory.getLogger(DocumentEventServiceImpl.class);
     @Autowired
     private DocumentEventDao documentEventDao;
+    @Autowired
+    private DocumentDao documentDao;
 
     /**
      * 查询文档事件详情
@@ -44,6 +50,11 @@ public class DocumentEventServiceImpl implements IDocumentEventService {
         ResultData<DocumentEventResult> result = new ResultData<>();
         if (query == null || query.getDocId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        DocumentResult documentResult = this.queryDocument(query.getDocId());
+        if (documentResult == null) {
+            result.setErrorCode(ErrorCodeEnum.DOCUMENT_NOT_EXIST);
             return result;
         }
         DocumentEventResult documentEventResult = documentEventDao.queryDocumentEvent(query);
@@ -77,6 +88,11 @@ public class DocumentEventServiceImpl implements IDocumentEventService {
             result.setErrorCode(ErrorCodeEnum.DOCUMENT_EVENT_NOT_EXIST);
             return result;
         }
+        DocumentResult documentResult = this.queryDocument(documentEventResult.getDocId());
+        if (documentResult == null) {
+            result.setErrorCode(ErrorCodeEnum.DOCUMENT_NOT_EXIST);
+            return result;
+        }
         DocumentEvent documentEvent = new DocumentEvent();
         BeanUtil.copyProperties(documentEventVO, documentEvent);
         int count = documentEventDao.updateDBById(documentEvent);
@@ -87,5 +103,17 @@ public class DocumentEventServiceImpl implements IDocumentEventService {
         result.setObjId(documentEventVO.getId());
         result.setCode(ResultData.OK);
         return result;
+    }
+
+    /**
+     * 查询文档并收口租户
+     * @param docId 文档id
+     * @return 文档
+     */
+    private DocumentResult queryDocument(Long docId) {
+        DocumentQuery documentQuery = new DocumentQuery();
+        documentQuery.setId(docId);
+        super.scopeTenant(documentQuery);
+        return documentDao.queryDocument(documentQuery);
     }
 }

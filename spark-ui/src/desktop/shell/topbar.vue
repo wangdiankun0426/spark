@@ -26,7 +26,7 @@
         </div>
       </el-tooltip>
 
-      <el-tooltip content="MCP 令牌" placement="bottom" :show-after="300">
+      <el-tooltip v-if="checkPermi('llm:mcpKey:query')" content="MCP 令牌" placement="bottom" :show-after="300">
         <div class="dsk-tool" @click="mcpTokenVisible = true">
           <el-icon><Key/></el-icon>
         </div>
@@ -81,6 +81,7 @@ import {Bell, Key, Moon, OfficeBuilding, Sunny, SwitchButton} from '@element-plu
 import {queryMyMessageCountAPI} from '@/api/manage/sys/message.js';
 import {getTheme, setTheme} from '@/utils/themeUtil';
 import {useLogout} from '@/utils/useLogout.js';
+import {checkPermi} from '@/utils/permissionUtil';
 import TenantSwitch from '@/components/TenantSwitch';
 import McpToken from '@/components/McpToken';
 import MessageCenter from '@/components/MessageCenter';
@@ -135,7 +136,10 @@ function loadMessageCount() {
 }
 
 function goHome() {
-  router.push('/home').catch(() => {});
+  const defaultPath = store.getters['permission/defaultPath'];
+  if (defaultPath) {
+    router.push(defaultPath).catch(() => {});
+  }
 }
 </script>
 

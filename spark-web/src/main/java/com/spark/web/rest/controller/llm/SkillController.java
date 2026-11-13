@@ -6,6 +6,7 @@ import com.spark.common.bean.llm.query.SkillQuery;
 import com.spark.common.bean.llm.result.SkillResult;
 import com.spark.common.bean.llm.vo.SkillVO;
 import com.spark.llm.service.ISkillService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,6 +35,7 @@ public class SkillController {
      * @param skillVO 创建参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:skill:create")
     @PostMapping("create")
     public ResultData<Void> createSkill(@RequestBody SkillVO skillVO) {
         return skillService.createSkill(skillVO);
@@ -44,6 +46,7 @@ public class SkillController {
      * @param skillVO 修改参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:skill:update")
     @PostMapping("update")
     public ResultData<Void> updateSkill(@RequestBody SkillVO skillVO) {
         return skillService.updateSkill(skillVO);
@@ -54,6 +57,7 @@ public class SkillController {
      * @param skillVO 删除参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:skill:delete")
     @PostMapping("delete")
     public ResultData<Void> deleteSkill(SkillVO skillVO) {
         return skillService.deleteSkill(skillVO);
@@ -64,6 +68,7 @@ public class SkillController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:skill:query")
     @GetMapping("pageList")
     public ResultData<PageResult<SkillResult>> pageSkillList(SkillQuery query) {
         return skillService.pageSkillList(query);
@@ -74,6 +79,7 @@ public class SkillController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:skill:detail")
     @GetMapping("detail")
     public ResultData<SkillResult> querySkillDetail(SkillQuery query) {
         return skillService.querySkillDetail(query);

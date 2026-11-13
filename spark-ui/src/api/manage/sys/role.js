@@ -18,6 +18,15 @@ export function pageRoleListAPI(query) {
     })
 }
 
+// 查询角色详情
+export function detailRoleAPI(query) {
+    return request({
+        url: '/sys/role/detail',
+        method: 'get',
+        params: query
+    })
+}
+
 // 修改角色
 export function updateRoleAPI(data) {
     return request({

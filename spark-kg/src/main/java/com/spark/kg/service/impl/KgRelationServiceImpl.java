@@ -79,6 +79,7 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
         }
         KgGraphQuery graphQuery = new KgGraphQuery();
         graphQuery.setId(kgRelationVO.getGraphId());
+        super.scopeTenant(graphQuery);
         KgGraphResult kgGraphResult = kgGraphDao.queryKgGraph(graphQuery);
         if (kgGraphResult == null) {
             result.setErrorCode(ErrorCodeEnum.KG_GRAPH_NOT_EXIST);
@@ -105,6 +106,10 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
         }
         KgRelation relation = new KgRelation();
         BeanUtil.copyProperties(kgRelationVO, relation);
+        // 非站点管理员强制归属当前租户
+        if (!SessionHolder.isSysAdmin()) {
+            relation.setTenantId(SessionHolder.getCurrentTenantId());
+        }
         if (relation.getWeight() == null) {
             relation.setWeight(1.0);
         }
@@ -153,6 +158,7 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
         }
         KgRelationQuery query = new KgRelationQuery();
         query.setId(kgRelationVO.getId());
+        super.scopeTenant(query);
         KgRelationResult kgRelationResult = kgRelationDao.queryKgRelation(query);
         if (kgRelationResult == null) {
             result.setErrorCode(ErrorCodeEnum.KG_RELATION_NOT_EXIST);
@@ -207,6 +213,7 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
         }
         KgRelationQuery query = new KgRelationQuery();
         query.setId(kgRelationVO.getId());
+        super.scopeTenant(query);
         KgRelationResult kgRelationResult = kgRelationDao.queryKgRelation(query);
         if (kgRelationResult == null) {
             result.setCode(ResultData.OK);
@@ -260,6 +267,7 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        super.scopeTenant(query);
         KgRelationResult kgRelationResult = kgRelationDao.queryKgRelation(query);
         if (kgRelationResult == null) {
             result.setErrorCode(ErrorCodeEnum.KG_RELATION_NOT_EXIST);
@@ -340,9 +348,11 @@ public class KgRelationServiceImpl extends BaseService<KgRelationQuery, KgRelati
         }
         KgEntityQuery headQuery = new KgEntityQuery();
         headQuery.setId(headEntityId);
+        super.scopeTenant(headQuery);
         KgEntityResult headEntity = kgEntityDao.queryKgEntity(headQuery);
         KgEntityQuery tailQuery = new KgEntityQuery();
         tailQuery.setId(tailEntityId);
+        super.scopeTenant(tailQuery);
         KgEntityResult tailEntity = kgEntityDao.queryKgEntity(tailQuery);
         return headEntity != null && tailEntity != null
                 && Objects.equals(headEntity.getGraphId(), graphId)

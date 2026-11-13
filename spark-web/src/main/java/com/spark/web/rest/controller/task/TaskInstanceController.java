@@ -5,6 +5,7 @@ import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.task.query.TaskInstanceQuery;
 import com.spark.common.bean.task.result.TaskInstanceResult;
 import com.spark.task.service.ITaskInstanceService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,8 +32,9 @@ public class TaskInstanceController {
      * @param query
      * @return 任务实例分页结果
      */
+    @RequiresPermi("task:instance:query")
     @GetMapping("pageList")
-    private ResultData<PageResult<TaskInstanceResult>> pageTaskInstanceList(TaskInstanceQuery query) {
+    public ResultData<PageResult<TaskInstanceResult>> pageTaskInstanceList(TaskInstanceQuery query) {
         return taskInstanceService.pageTaskInstanceList(query);
     }
 
@@ -41,8 +43,9 @@ public class TaskInstanceController {
      * @param query 查询参数
      * @return 任务实例详情
      */
+    @RequiresPermi("task:instance:detail")
     @GetMapping("detail")
-    private ResultData<TaskInstanceResult> queryTaskInstanceDetail(TaskInstanceQuery query) {
+    public ResultData<TaskInstanceResult> queryTaskInstanceDetail(TaskInstanceQuery query) {
         return taskInstanceService.queryTaskInstanceDetail(query);
     }
 }

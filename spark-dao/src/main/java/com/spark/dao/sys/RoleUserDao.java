@@ -65,4 +65,11 @@ public interface RoleUserDao {
     int deleteRoleUser(@Param("tenantId") Long tenantId, @Param("roleIds")List<Long> roleIds,
                        @Param("userId") Long userId, @Param("updatedBy") Long updatedBy);
 
+    /**
+     * 查询角色关联的用户id集合，用于角色变更后定向失效会话
+     * @param roleId 角色id
+     * @return 用户id集合
+     */
+    List<Long> queryUserIdsByRoleId(@Param("roleId") Long roleId);
+
 }

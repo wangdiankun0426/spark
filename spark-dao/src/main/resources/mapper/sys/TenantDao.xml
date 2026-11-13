@@ -16,6 +16,9 @@
             </foreach>
             )
         </if>
+        <if test="tenantId != null">
+            and id = #{tenantId}
+        </if>
         <if test="name != null">
             and name like concat('%', #{name}, '%')
         </if>

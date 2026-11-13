@@ -86,6 +86,7 @@
       <div style="margin-top: 10px">
         <el-button
             type="primary"
+            v-hasPermi="['sys:user:create']"
             @click="openCreateUserForm"
         >
           <el-icon><Plus /></el-icon>新建用户
@@ -137,6 +138,7 @@
             <el-button
                 type="success"
                 text
+                v-hasPermi="['sys:user:update']"
                 @click="openUpdateUserForm(scope.row)"
             >
               <el-icon><Edit /></el-icon>
@@ -146,6 +148,7 @@
             </el-button>
             <el-button
                 type="danger"
+                v-hasPermi="['sys:tenantUser:remove']"
                 @click="removeUser(scope.row.id)"
                 text
             >

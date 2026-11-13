@@ -11,6 +11,7 @@ import com.spark.common.bean.flow.vo.FlowInstanceVO;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.config.aspectj.annotation.Debounce;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import com.spark.flow.service.IFlowInstanceCopyService;
 import com.spark.flow.service.IFlowInstanceService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +41,7 @@ public class FlowInstanceController {
      * @param instanceVO 流程实例数据
      * @return 创建结果
      */
+    @RequiresPermi("flow:instance:create")
     @Debounce
     @PostMapping("create")
     public ResultData<Void> createInstance(@RequestBody FlowInstanceVO instanceVO) {
@@ -81,6 +83,7 @@ public class FlowInstanceController {
      * @param query 查询参数
      * @return 列表
      */
+    @RequiresPermi("flow:instance:query")
     @GetMapping("pageList")
     public ResultData<PageResult<FlowInstanceResult>> pageInstanceList(FlowInstanceQuery query) {
         return instanceService.pageInstanceList(query);
@@ -91,6 +94,7 @@ public class FlowInstanceController {
      * @param query 查询参数
      * @return 详情
      */
+    @RequiresPermi("flow:instance:detail")
     @GetMapping("showDetail")
     public ResultData<FlowInstanceResult> showInstanceDetail(FlowInstanceQuery query) {
         return instanceService.showInstanceDetail(query);
@@ -101,6 +105,7 @@ public class FlowInstanceController {
      * @param instanceVO 审批参数
      * @return 响应
      */
+    @RequiresPermi("flow:instance:approve")
     @Debounce
     @PostMapping("approval")
     public ResultData<Void> approveInstance(FlowInstanceVO instanceVO) {
@@ -112,6 +117,7 @@ public class FlowInstanceController {
      * @param instanceVO 审批参数
      * @return 响应
      */
+    @RequiresPermi("flow:instance:adminApproval")
     @Debounce
     @PostMapping("adminApproval")
     public ResultData<Void> adminApprovalInstance(@RequestBody FlowInstanceVO instanceVO) {
@@ -123,6 +129,7 @@ public class FlowInstanceController {
      * @param query 查询参数
      * @return 审批人列表
      */
+    @RequiresPermi("flow:instance:detail")
     @GetMapping("assigneeList")
     public ResultData<List<FlowInstanceAssigneeResult>> queryInstanceAssigneeList(FlowInstanceAssigneeQuery query) {
         return instanceService.queryInstanceAssigneeList(query);
@@ -133,6 +140,7 @@ public class FlowInstanceController {
      * @param instanceVO 替换参数
      * @return 响应
      */
+    @RequiresPermi("flow:instance:replaceAssignee")
     @Debounce
     @PostMapping("replaceAssignee")
     public ResultData<Void> replaceInstanceAssignee(@RequestBody FlowInstanceVO instanceVO) {
@@ -144,6 +152,7 @@ public class FlowInstanceController {
      * @param instanceVO 催办参数
      * @return 响应
      */
+    @RequiresPermi("flow:instance:urge")
     @Debounce
     @PostMapping("urge")
     public ResultData<Void> urgeInstance(FlowInstanceVO instanceVO) {
@@ -155,6 +164,7 @@ public class FlowInstanceController {
      * @param instanceVO 转办参数
      * @return 响应
      */
+    @RequiresPermi("flow:instance:transfer")
     @Debounce
     @PostMapping("transfer")
     public ResultData<Void> transferInstance(FlowInstanceVO instanceVO) {
@@ -166,6 +176,7 @@ public class FlowInstanceController {
      * @param instanceVO 加签参数
      * @return 响应
      */
+    @RequiresPermi("flow:instance:addSign")
     @Debounce
     @PostMapping("addSign")
     public ResultData<Void> addSignInstance(FlowInstanceVO instanceVO) {
@@ -177,6 +188,7 @@ public class FlowInstanceController {
      * @param instanceVO 撤回参数
      * @return 响应
      */
+    @RequiresPermi("flow:instance:recall")
     @Debounce
     @PostMapping("recall")
     public ResultData<Void> recallInstance(@RequestBody FlowInstanceVO instanceVO) {
@@ -188,6 +200,7 @@ public class FlowInstanceController {
      * @param copyVO 抄送参数
      * @return 响应
      */
+    @RequiresPermi("flow:instance:copy")
     @Debounce
     @PostMapping("copy")
     public ResultData<Void> copyInstance(@RequestBody FlowInstanceCopyVO copyVO) {

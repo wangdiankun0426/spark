@@ -13,7 +13,7 @@ src/
 ├── components/             # 通用组件（显式 import，不走 easycom）
 │   ├── AppTabbar/          # 底部导航（自绘，替代 up-tabbar）
 │   ├── PageHeader/         # 二级页统一头部（返回+居中标题+extra 插槽，below/tip props）
-│   ├── SectionTitle/       # 分组小标题（14px/700 渐变竖条唯一定版，danger prop）
+│   ├── SectionTitle/       # 分组小标题（14px/700 渐变竖条唯一规格，danger prop）
 │   ├── EmptyState/         # 列表空状态（icon/title/desc/btnText/btnIcon，按钮可选）
 │   ├── ThemeGlyph/         # 亮/暗主题图标（纯 CSS 画月亮/太阳）
 │   ├── UserAvatar/ UserPicker/ AiSessionPicker/ TenantSwitch/ FormFieldValue/
@@ -116,22 +116,22 @@ function submitForm() {
 
 所有页面 `navigationStyle: custom`，顶部适配统一走 `@/utils/navBarUtil.js`，由 `App.vue` 在 `onLaunch` 调 `initNavBarInfo()` 初始化（状态栏高度 + 胶囊按钮布局），**禁止写死顶部间距**：
 
-- **二级页头部一律用 `@/components/PageHeader` 组件**，禁止再拷贝三段式头部或私建 chat-header/message-header 类名：`<PageHeader title="标题" @back="goBack"/>`；右侧操作走 `#extra` 插槽（无插槽时组件自渲染等宽空槽保证标题居中）；右侧按钮与微信胶囊挤位时传 `below`（内部切 `navHeaderBelowStyle()`），间距可用 `below-gap` 收紧（默认 8px，聊天页 4px）；无选中对象的兜底文案传 `tip`；导航适配、返回图标色（`getHeaderIconColor`）已在组件内收口，页面不再写 backIconColor computed 与 navBarUtil import。tab 主页的 24px 大标题头部不在此列，维持各页 `navHeaderStyle()` 自绘。
+- **二级页头部一律用 `@/components/PageHeader` 组件**，禁止再拷贝三段式头部或私建 chat-header/message-header 类名：`<PageHeader title="标题" @back="goBack"/>`；右侧操作走 `#extra` 插槽（无插槽时组件自渲染等宽空槽保证标题居中）；右侧按钮与微信胶囊挤位时传 `below`（内部切 `navHeaderBelowStyle()`），间距可用 `below-gap` 收紧（默认 8px，聊天页 4px）；无选中对象的兜底文案传 `tip`；导航适配、返回图标色（`getHeaderIconColor`）已在组件内收口，页面不写 backIconColor computed 与 navBarUtil import。tab 主页的 24px 大标题头部不在此列，维持各页 `navHeaderStyle()` 自绘。
 
 - 普通头部页：头部节点绑定 `:style="navHeaderStyle()"`（小程序 `paddingTop = 状态栏高度 + 16px`，内容行与微信胶囊同高；H5 返回空对象样式不变）。头部右侧自带操作按钮时分两种处理：二级页（先例：聊天页 ... 更多）同一行会与胶囊挤位，改用 `:style="navHeaderBelowStyle()"` 让整个内容行下移到胶囊底边下方（paddingTop = menuBottom + 8px），右侧按钮保持正常贴右、不加 margin 避让；tab 主页（24px 大标题行）必须保持 `navHeaderStyle()` 与其他 tab 主页标题齐平、不得整行下移；头部带副标题时（先例：pages/flow/index.vue），右侧操作按钮放进副标题 flex 行末尾、`margin-left:auto` 贴右并与副标题文字垂直居中——副标题行本就落在胶囊下方，无需任何胶囊避让；无副标题、按钮只能放标题行的场景才用 navBarInfo 水平避让。
-- **两级头部**（2026-11 UI 升级定版，取代旧的单一 `header-bg` + italic 品牌色标题）：
+- **两级头部**（分 tab 主页与二级页两套规格）：
   - **tab 主页**（工作台/流程/AI应用/消息，底部挂 `AppTabbar` 的页面）：头部底色 `background-color: $app-header-bg;`（亮 #ffffff、暗 #131d2e），**不加下分隔线**；标题左对齐、`24px/700/letter-spacing:.5px/color:$app-text-primary`，非斜体。
   - **二级页**（`navigateTo` 进入、带返回箭头的页面，含聊天窗口 `views/chat/index`、聊天设置 `chatDetail`、聊天记录 `chatMsgRecord`）：头部高 `48px`、`padding:0 14px`、`background-color: $app-bg-card`（亮 #ffffff、暗 #1a2537）、底部 `1px solid $app-border-light`，节点绑 `navHeaderStyle()`；左右各留 `30px` 等宽槽位放返回与操作图标，标题 `flex:1` 居中、`18px/700/letter-spacing:.4px/$app-text-primary`，非斜体。
-  - 两级标题都**已废弃**旧的 italic + `letter-spacing:1px` + 品牌色 `$app-brand` + H5 渐变文字 `--app-title-gradient` + `text-shadow` 辉光方案，不得再抄旧代码里的 `.section-title` 渐变文字写法。
+  - 两级标题一律非斜体、深色文字，禁止 italic + `letter-spacing:1px` + 品牌色 `$app-brand` + H5 渐变文字 `--app-title-gradient` + `text-shadow` 辉光写法。
   - 头部返回/操作图标统一 19~20px，颜色走 `@/utils/themeUtil` 的 `getHeaderIconColor(isDark)`（亮 #2f7bff、暗 #8fb6ff 提亮一档），**不要写死 #2f7bff，也不要每页重写一份 `backIconColor` computed**；右侧自带操作按钮（如聊天页「...」更多）与微信胶囊挤位时整行改用 `navHeaderBelowStyle()`，按钮贴右不加 margin 避让。
-  - 蓝色纯色导航底历次被否（#0052cc 压抑、低饱和渐变发灰、高明度渐变发白、#5b94f5 也被否），导航栏禁止蓝底；蓝色只用在欢迎卡渐变与品牌元素，禁止写死 `#fff` 头部。聊天气泡、状态点等非头部元素不受头部规格约束。
-- **欢迎卡**（工作台 `.welcome-card` / 我的 `.my-header`）：整卡品牌蓝渐变，`background-image: $app-gradient-welcome|$app-gradient-profile`（亮色 172deg 蓝渐变收尾 #8fb8ff，暗色另为 radial 蓝光叠加深色渐变），并必须同规则写 `background-color: $app-bg-mid` 兜底；底部圆角 `20px`，高度由 padding 撑开、**不写死 height/calc**；工作台容器用 flex 列布局（welcome-card `flex-shrink:0`、滚动区 `flex:1;min-height:0`）。**卡上所有文字/图标一律 `$app-fill-tx`**（亮 #ffffff、暗 #e9f1ff），靠 `opacity` 分级而非写 rgba 白：主标题 21px/700 不透明、副文案约 12.5px/opacity:.82、辅助文字 11.5px/opacity:.72~.92；渐变填充按钮内的图标/文字用 `getOnFillColor(isDark)`。禁止写死 `#fff` 或 `rgba(255,255,255,*)` 作文字色；纯装饰性圆环、光斑的 rgba 白可保留。旧的「140px 内收尾 #eaf2ff + 深色加粗文字」方案已随整卡蓝渐变废弃。
-- 状态栏图标色由主题运行时统一设置，不再逐页配置：`utils/themeUtil.js#applyStatusBarTheme()` 调 `uni.setNavigationBarColor`（亮色黑图标、暗色白图标）并按皮肤切 `uni.setBackgroundColor` 改窗口与下拉区底色；切皮肤时由 store 触发，每页 `useTheme()` 初始化时再校正一次。`pages.json` 的 `navigationBarTextStyle: "black"` 只作首屏兜底，新增页面不必单独覆盖。
-- 底部 tabbar：导航项统一在 `utils/menuUtil.js#visibleTabs()` 配置（按菜单权限过滤），图标用 uview-plus 实心（`-fill`）图标，当前五项 home-fill / file-text-fill / **star-fill（中间「AI应用」，带 `center:true` 凸起圆钮）** / chat-fill / account-fill；AI 是平台主入口，圆钮是底栏唯一视觉重心。渲染走自绘 `@/components/AppTabbar`（显式 `import`，`<AppTabbar :value="active" @change="..."/>`，自定义组件不走 easycom）：组件高 `54px` + 安全区内边距自兜，底色与上描边走 `$app-bg-tabbar` / `$app-border-light`；普通项选中/未选中色由组件内 computed 按皮肤给出（亮 #004fc5 / #909399，暗 #4d8dff / #8b9cb5），选中项顶部有 36rpx 品牌渐变指示条；中间凸起圆钮常态 46px（`$app-bg-sub` 底 + `$app-border-light` 描边 + 上浮 -24px），选中放大到 48px、底切 `$app-gradient-fill`、阴影整条用 `$app-shadow-center`（亮蓝辉光/暗黑影，两套取值，**禁止再写 `.theme-dark .xxx` 外部类覆盖阴影**——组件样式隔离小程序不生效）、钮上图标用 `getOnFillColor(isDark)`；未读红点用 `$app-error-solid`。页面不传 `activeColor`、不留 padding-bottom、**不写 `:deep(.u-tabbar){flex:none}` 补丁**、不用 `:placeholder="false"` 绕路；`App.vue` 已对宿主节点写 `app-tabbar{display:block;flex:none}`。
-- 列表卡片图标统一蓝白素色、柔色底无描边（2026-11 升级定版），禁止青/紫/绿/橙/粉多色渐变底色池（用户评「花里胡哨」）：容器 `background-color: $app-primary-soft`、不加 border；图标用品牌色实色（`up-icon :color` 走 isDark computed 或 `getHeaderIconColor`）。两种现行尺寸：工作台 `pages/home/index.vue` 的 `.item-icon` 为 38px 容器 + 11px 圆角 + 18px 图标；AI 应用 `pages/llm/index.vue` 的 `.card-icon` 为 42px 容器 + 12px 圆角 + 34px 图标；卡片圆角 14、不再固定 72px 高。旧的「46px 容器 + 12px 圆角 + rgba(.1) 底 + rgba(.18) 描边」规格已废弃。**此条只管列表卡片**，「我的」页基础功能/热门功能是功能宫格，按功能用不同色（蓝/青/绿/橙/紫）区分是用户确认保留的既定设计，不算违规。
-- 页签统一用自绘分段控件 `.seg-tab`（2026-11 升级定版，先例 `pages/flow/index.vue`、`pages/llm/index.vue`），不再新增 `up-tabs`：高 30px、圆角 9px；均分版各段 `flex:1`（flow，gap 4），胶囊版各段 `flex:none` + 页面左右 padding 14px（llm，gap 6）；选中段底切 `$app-gradient-fill`、辉光 `box-shadow: $app-shadow-brand`、文字 `$app-fill-tx` + 700，未选段文字 `$app-text-secondary`（13~13.5px）；选中切换用自绘滑块/类名，无组件隔离问题。旧页面已有的 `up-tabs` 可保留，其旧配置（`lineColor="#2f7bff"`、`:activeStyle="{color:'#2f7bff',fontWeight:700}"`、下划线六成宽、`scrollable=false` 时 `:lineWidth` 公式）不再用于新页。
+  - 导航栏禁止蓝底（纯色压抑、低饱和渐变发灰、高明度渐变发白）；蓝色只用在欢迎卡渐变与品牌元素，禁止写死 `#fff` 头部。聊天气泡、状态点等非头部元素不受头部规格约束。
+- **欢迎卡**（工作台 `.welcome-card` / 我的 `.my-header`）：整卡品牌蓝渐变，`background-image: $app-gradient-welcome|$app-gradient-profile`（亮色 172deg 蓝渐变收尾 #8fb8ff，暗色另为 radial 蓝光叠加深色渐变），并必须同规则写 `background-color: $app-bg-mid` 兜底；底部圆角 `20px`，高度由 padding 撑开、**不写死 height/calc**；工作台容器用 flex 列布局（welcome-card `flex-shrink:0`、滚动区 `flex:1;min-height:0`）。**卡上所有文字/图标一律 `$app-fill-tx`**（亮 #ffffff、暗 #e9f1ff），靠 `opacity` 分级而非写 rgba 白：主标题 21px/700 不透明、副文案约 12.5px/opacity:.82、辅助文字 11.5px/opacity:.72~.92；渐变填充按钮内的图标/文字用 `getOnFillColor(isDark)`。禁止写死 `#fff` 或 `rgba(255,255,255,*)` 作文字色；纯装饰性圆环、光斑的 rgba 白可保留。
+- 状态栏图标色由主题运行时统一设置，不逐页配置：`utils/themeUtil.js#applyStatusBarTheme()` 调 `uni.setNavigationBarColor`（亮色黑图标、暗色白图标）并按皮肤切 `uni.setBackgroundColor` 改窗口与下拉区底色；切皮肤时由 store 触发，每页 `useTheme()` 初始化时再校正一次。`pages.json` 的 `navigationBarTextStyle: "black"` 只作首屏兜底，新增页面不必单独覆盖。
+- 底部 tabbar：导航项统一在 `utils/menuUtil.js#visibleTabs()` 配置，图标用 uview-plus 实心（`-fill`）图标，当前五项 home-fill / file-text-fill / **star-fill（中间「AI应用」，带 `center:true` 凸起圆钮）** / chat-fill / account-fill；AI 是平台主入口，圆钮是底栏唯一视觉重心。渲染走自绘 `@/components/AppTabbar`（显式 `import`，`<AppTabbar :value="active" @change="..."/>`，自定义组件不走 easycom）：组件高 `54px` + 安全区内边距自兜，底色与上描边走 `$app-bg-tabbar` / `$app-border-light`；普通项选中/未选中色由组件内 computed 按皮肤给出（亮 #004fc5 / #909399，暗 #4d8dff / #8b9cb5），选中项顶部有 36rpx 品牌渐变指示条；中间凸起圆钮常态 46px（`$app-bg-sub` 底 + `$app-border-light` 描边 + 上浮 -24px），选中放大到 48px、底切 `$app-gradient-fill`、阴影整条用 `$app-shadow-center`（亮蓝辉光/暗黑影，两套取值，**禁止再写 `.theme-dark .xxx` 外部类覆盖阴影**——组件样式隔离小程序不生效）、钮上图标用 `getOnFillColor(isDark)`；未读红点用 `$app-error-solid`。页面不传 `activeColor`、不留 padding-bottom、**不写 `:deep(.u-tabbar){flex:none}` 补丁**、不用 `:placeholder="false"` 绕路；`App.vue` 已对宿主节点写 `app-tabbar{display:block;flex:none}`。
+- 列表卡片图标统一蓝白素色、柔色底无描边，禁止青/紫/绿/橙/粉多色渐变底色池（用户评「花里胡哨」）：容器 `background-color: $app-primary-soft`、不加 border；图标用品牌色实色（`up-icon :color` 走 isDark computed 或 `getHeaderIconColor`）。两种现行尺寸：工作台 `pages/home/index.vue` 的 `.item-icon` 为 38px 容器 + 11px 圆角 + 18px 图标；AI 应用 `pages/llm/index.vue` 的 `.card-icon` 为 42px 容器 + 12px 圆角 + 34px 图标；卡片圆角 14、不固定 72px 高。**此条只管列表卡片**，「我的」页基础功能/热门功能是功能宫格，按功能用不同色（蓝/青/绿/橙/紫）区分是用户确认保留的既定设计，不算违规。
+- 页签统一用自绘分段控件 `.seg-tab`（先例 `pages/flow/index.vue`、`pages/llm/index.vue`），不新增 `up-tabs`：高 30px、圆角 9px；均分版各段 `flex:1`（flow，gap 4），胶囊版各段 `flex:none` + 页面左右 padding 14px（llm，gap 6）；选中段底切 `$app-gradient-fill`、辉光 `box-shadow: $app-shadow-brand`、文字 `$app-fill-tx` + 700，未选段文字 `$app-text-secondary`（13~13.5px）；选中切换用自绘滑块/类名，无组件隔离问题。存量 `up-tabs` 可保留，新页不沿用其旧配置。
 - 渐变/全屏头部页（参考 `pages/home/index.vue`、`pages/my/index.vue`）：头部自身绑动态 `paddingTop`；需要落到胶囊下方的定位元素用 `navBarInfo.menuBottom` 计算，平台差异用 `// #ifdef MP-WEIXIN` / `// #ifdef H5` 条件编译分别返回。
-- **分组小标题一律用 `@/components/SectionTitle`**：`<SectionTitle>标题</SectionTitle>`，错误语义传 `danger`（文字与竖条切错误色）。14px/700 + 品牌渐变竖条是全站唯一定版规格，禁止再写 13.5px/600 独立竖条、15px 下划线等历史变体；组件只管标题本体，外层 `.section-head`  flex 容器与间距、右侧计数/操作留在页面。
+- **分组小标题一律用 `@/components/SectionTitle`**：`<SectionTitle>标题</SectionTitle>`，错误语义传 `danger`（文字与竖条切错误色）。14px/700 + 品牌渐变竖条是全站唯一规格，禁止 13.5px/600 独立竖条、15px 下划线等变体；组件只管标题本体，外层 `.section-head`  flex 容器与间距、右侧计数/操作留在页面。
 - **列表空状态一律用 `@/components/EmptyState`**：`<EmptyState icon="star-fill" title="标题" desc="副文案" btn-text="刷新看看" @btn-click="onRefresh"/>`，`desc`/`btnText`/`btnIcon` 均可选（无按钮场景不传 btnText）；图标色组件内按皮肤收口，禁止再拷贝 empty-card/big-empty 样式。
 
 ### 3.2 主题（亮色 / 暗色）
@@ -144,7 +144,7 @@ function submitForm() {
 - 新增主题 token 流程：① `theme.scss` 亮/暗两套同名加 `--app-*` → ② `uni.scss` 加同名 `$app-*` 映射（右值为 `var(--app-*)`）→ ③ 需要以实色传 uview 组件 prop 时在 `utils/themeUtil.js` 的 `themeTokens` 加同名 key（小程序无 DOM，这份实色表是刚需，与 theme.scss 双源对账、改色两处同改）→ ④ 消费处写 `$app-*` → ⑤ 提交前跑 `npm run lint:style`。
 - stylelint 三红线（`.stylelintrc.cjs`，与 PC 端 spark-ui 同规则集）：`function-disallowed-list` 禁 `var()`、`color-no-hex` 禁 hex、`declaration-property-value-disallowed-list` 拦截自定义属性右值裸 `$`（给 `--xxx` 赋 SCSS 变量必须 `#{$x}` 插值）。永久豁免：`src/styles/**` 定义层（hex+var 放行、插值红线保留）、`uni.scss`（映射右值）、`views/chat/index.vue`（hljs 色板）、`components/UserAvatar/index.vue`（头像分类渐变）；模板 prop 与 JS computed 里的实色不在 stylelint 管辖范围，走 themeUtil 双源契约。
 - 样式里只准写 `uni.scss` 的 `$app-*` 同名变量，禁止裸写 `var(--app-*)`（定义层 theme.scss、映射右值与 JS 通道除外）。变量语义清单（定义名，消费时换 `$` 前缀）：文字 `--app-text-primary|regular|secondary|tertiary|placeholder|muted`，底色 `--app-bg-page|card|sub|overlay|hover`、`--app-page-base`、`--app-header-bg`、`--app-bg-tabbar`，描边 `--app-border|border-light|divide`，另有 `--app-primary*`、`--app-brand*`、`--app-brand-border`、`--app-error-border`、`--app-error-solid`（未读徽标实心红）、`--app-shadow-card`、`--app-shadow-brand`（品牌蓝辉光）、`--app-shadow-center`（凸起圆钮选中态整段阴影）、状态色 `--app-bg-info|success|warning|error|purple` 与其 `--app-text-*`、我的页宫格分类色板 `--app-tile-cyan|green|orange|blue|purple|theme` 及各自 `-bg`；品牌渐变填充面相关 `--app-gradient-fill` + 其上文字 `--app-fill-tx`（亮 #fff/暗 #e9f1ff）、hero 卡片 `--app-gradient-hero`/`--app-hero-border`、页面纹理 `--app-bg-texture`、头像底 `--app-avatar-bg`。
-- **渐变必须整段收进一个变量**（`$app-gradient-login|brand|fill|card|welcome|profile|hero`），页面只写 `background-image: $app-gradient-xxx`；禁止 `linear-gradient(...)` 里嵌变量的写法，部分小程序渲染层解析不了。`--app-title-gradient` 与旧 italic 标题已随 2026-11 升级废弃，新页不要用。
+- **渐变必须整段收进一个变量**（`$app-gradient-login|brand|fill|card|welcome|profile|hero`），页面只写 `background-image: $app-gradient-xxx`；禁止 `linear-gradient(...)` 里嵌变量的写法，部分小程序渲染层解析不了。`--app-title-gradient` 与 italic 标题禁用，新页不要用。
 - 需要具体色值传 prop 的地方（uview 的 `color` / `activeColor` / `placeholderStyle`、`up-parse` 的 `tag-style`、`up-input/up-textarea` 的 `customStyle` 底色）用 computed 按 `isDark` 给实色，**不传内联 `var()`**（小程序原生输入组件存疑）；同一色值跨文件重复时收进 `utils/themeUtil.js`，现成函数：`getSearchBgColor`（搜索/选人弹层底）、`getHeaderIconColor`（头部返回/操作图标，亮 #2f7bff/暗 #8fb6ff）、`getOnFillColor`（品牌渐变填充面上的文字/图标，亮 #fff/暗 #e9f1ff）；单文件内的一次性色值就地写在 computed 里即可。
 - 切换入口固定两处，都是纯图标、不带文字：登录页右上角圆角方块按钮（`login-theme-btn` + `ThemeGlyph`，64rpx 方块、`border-radius:20rpx`，小程序用 `navBarInfo.menuBottom + 10` 避开胶囊），「我的」页基础功能第 4 个图标格（排在「修改头像」右侧，`ThemeGlyph` 走 `item.glyph` 分支）。文案统一「深色模式 / 浅色模式」（与 PC 端一致），不写「暗色 / 亮色」；内部主题值与类名仍用 `light` / `dark`。
 - 图标语义统一为「**点一下会变成什么**」：浅色时画月亮（点了变深色）、深色时画太阳。`ThemeGlyph` 组件的 `dark` prop 就是这个语义，PC 端登录页与顶栏同规则，两端不要各写一套。
@@ -226,11 +226,21 @@ const encrypted = des(password) // DES 加密，ECB 模式 + Pkcs7 填充
 - 密码、手机号等敏感字段提交前用 `des()` 加密
 - 密钥从 `import.meta.env.VITE_ENCRYPT_PRIVATE_KEY` 读取，禁止硬编码
 
-## 7. Vuex（登录态）
+## 7. Vuex（登录态与鉴权）
 
 - 登录走 `store.dispatch('user/login', { loginForm: data })`，成功后 `uni.reLaunch` 到 `/pages/home/index`
-- token 由 `user` 模块管理，`store.getters['user/getToken']` 供 request.js 取用
+- token 即后端 sessionId，`user/login` 成功 `SET_TOKEN(res.data.sessionId)`；`store.getters['user/getToken']` 供 request.js 注入 `Authorization`，`getUserInfo` 取用户信息；`logout` 清 token 与 userInfo
+- 会话接口 `getSessionAPI` 请求 `/auth/session` 返回 userInfo 等会话数据
+- `code === 601` 由 request.js 自动 `uni.reLaunch` 到 `/pages/login`，业务代码不重复处理
 - 新增模块必须 `namespaced: true` 并在 `store/index.js` 注册
+
+### 7.1 登录平台与类型
+
+- `loginPlatform` 按端取值：H5 = 2，微信小程序 = 6，企微 OAuth 移动端 = 5；普通登录用条件编译 `#ifdef MP-WEIXIN` 给 6、`#ifndef MP-WEIXIN` 给 2
+- `loginType`：1 密码、2 短信、3 邮箱、4 企微 oauth2、5 微信小程序免密
+- 微信小程序免密登录 `wxQuickLogin`：`uni.login` 取 code，提交 `{ loginType: 5, wxCode, loginPlatform: 6 }`；进登录页时 `!store.state.user.wxSkipAutoLogin && agreed` 才自动静默登录，避免同意协议前收集 openid
+- 密码登录先 `getEncryptKeyAPI` 申请一次性密钥，`des(password, key)` 加密并带 `keyId`
+- 移动端不消费 PC 的动态路由与 `v-hasPermi`；底部导航 `menuUtil.js#visibleTabs()` 当前为静态配置
 
 ## 8. uViewPlus 组件
 

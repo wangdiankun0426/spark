@@ -4,6 +4,7 @@ import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.sys.entity.TenantConfig;
 import com.spark.common.bean.sys.query.TenantConfigQuery;
 import com.spark.common.bean.sys.result.PasswordRuleResult;
@@ -53,7 +54,19 @@ public class TenantConfigServiceImpl extends BaseService<TenantConfigQuery, Tena
     @LogOperate(operateType = OperateTypeEnum.TENANT_CONFIG_INSERT)
     public ResultData<Void> createTenantConfig(TenantConfigVO tenantConfigVO) {
         ResultData<Void> result = new ResultData<>();
-        if (tenantConfigVO == null || tenantConfigVO.getTenantId() == null) {
+        if (!SessionHolder.isSysAdmin() && !SessionHolder.isOrgAdmin()) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
+        if (tenantConfigVO == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        // 组织管理员强制归属当前租户
+        if (!SessionHolder.isSysAdmin()) {
+            tenantConfigVO.setTenantId(SessionHolder.getCurrentTenantId());
+        }
+        if (tenantConfigVO.getTenantId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
@@ -94,6 +107,10 @@ public class TenantConfigServiceImpl extends BaseService<TenantConfigQuery, Tena
     @LogOperate(operateType = OperateTypeEnum.TENANT_CONFIG_UPDATE)
     public ResultData<Void> updateTenantConfig(TenantConfigVO tenantConfigVO) {
         ResultData<Void> result = new ResultData<>();
+        if (!SessionHolder.isSysAdmin() && !SessionHolder.isOrgAdmin()) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
         if (tenantConfigVO == null || tenantConfigVO.getId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
@@ -102,8 +119,23 @@ public class TenantConfigServiceImpl extends BaseService<TenantConfigQuery, Tena
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        // 组织管理员仅限当前租户配置
+        if (!SessionHolder.isSysAdmin()) {
+            TenantConfigQuery existQuery = new TenantConfigQuery();
+            existQuery.setId(tenantConfigVO.getId());
+            existQuery.setTenantId(SessionHolder.getCurrentTenantId());
+            TenantConfigResult existConfig = tenantConfigDao.queryTenantConfig(existQuery);
+            if (existConfig == null) {
+                result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+                return result;
+            }
+        }
         TenantConfig tenantConfig = new TenantConfig();
         BeanUtil.copyProperties(tenantConfigVO, tenantConfig);
+        // 组织管理员禁止迁移配置租户
+        if (!SessionHolder.isSysAdmin()) {
+            tenantConfig.setTenantId(SessionHolder.getCurrentTenantId());
+        }
         int count = tenantConfigDao.updateDBById(tenantConfig);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
@@ -123,9 +155,24 @@ public class TenantConfigServiceImpl extends BaseService<TenantConfigQuery, Tena
     @LogOperate(operateType = OperateTypeEnum.TENANT_CONFIG_DELETE)
     public ResultData<Void> deleteTenantConfig(TenantConfigVO tenantConfigVO) {
         ResultData<Void> result = new ResultData<>();
+        if (!SessionHolder.isSysAdmin() && !SessionHolder.isOrgAdmin()) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
         if (tenantConfigVO == null || tenantConfigVO.getId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
+        }
+        // 组织管理员仅限当前租户配置
+        if (!SessionHolder.isSysAdmin()) {
+            TenantConfigQuery existQuery = new TenantConfigQuery();
+            existQuery.setId(tenantConfigVO.getId());
+            existQuery.setTenantId(SessionHolder.getCurrentTenantId());
+            TenantConfigResult existConfig = tenantConfigDao.queryTenantConfig(existQuery);
+            if (existConfig == null) {
+                result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+                return result;
+            }
         }
         TenantConfig tenantConfig = new TenantConfig();
         tenantConfig.setId(tenantConfigVO.getId());
@@ -147,6 +194,10 @@ public class TenantConfigServiceImpl extends BaseService<TenantConfigQuery, Tena
     @Override
     public ResultData<PageResult<TenantConfigResult>> pageTenantConfigList(TenantConfigQuery query) {
         ResultData<PageResult<TenantConfigResult>> result = new ResultData<>();
+        if (!SessionHolder.isSysAdmin() && !SessionHolder.isOrgAdmin()) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
         if (query == null) {
             query = new TenantConfigQuery();
         }

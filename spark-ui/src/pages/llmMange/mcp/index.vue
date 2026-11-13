@@ -16,7 +16,7 @@
             :prefix-icon="Search"
             style="width: 300px"
         />
-        <el-button type="primary" @click="handleOpenCreate">
+        <el-button v-hasPermi="['llm:mcp:create']" type="primary" @click="handleOpenCreate">
           <el-icon><Plus /></el-icon>新增MCP服务
         </el-button>
       </div>
@@ -339,6 +339,7 @@ function cardActions(item) {
       label: '工具',
       icon: 'Menu',
       loading: !!toolsLoadingMap[item.id],
+      perms: ['llm:mcp:listTools'],
       onClick: () => handleViewTools(item)
     },
     {
@@ -346,10 +347,11 @@ function cardActions(item) {
       label: '测试',
       icon: 'Tools',
       loading: !!testingMap[item.id],
+      perms: ['llm:mcp:test'],
       onClick: () => handleTest(item)
     },
-    { key: 'edit', label: '修改', icon: 'Edit',onClick: () => handleOpenUpdate(item) },
-    { key: 'delete', label: '删除',icon: 'Delete', onClick: () => handleDelete(item) }
+    { key: 'edit', label: '修改', icon: 'Edit', perms: ['llm:mcp:update'], onClick: () => handleOpenUpdate(item) },
+    { key: 'delete', label: '删除', icon: 'Delete', perms: ['llm:mcp:delete'], onClick: () => handleDelete(item) }
   ]
 }
 

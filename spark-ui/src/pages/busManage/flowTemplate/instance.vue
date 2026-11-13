@@ -80,6 +80,7 @@
             </span>
           </el-button>
           <el-button
+              v-hasPermi="['flow:instance:adminApproval']"
               type="success"
               text
               v-if="isAdmin && row.status === 2"
@@ -91,6 +92,7 @@
             </span>
           </el-button>
           <el-button
+              v-hasPermi="['flow:instance:adminApproval']"
               type="danger"
               text
               v-if="isAdmin && row.status === 2"
@@ -102,6 +104,7 @@
             </span>
           </el-button>
           <el-button
+              v-hasPermi="['flow:instance:replaceAssignee']"
               type="primary"
               text
               v-if="isAdmin && row.status === 2"

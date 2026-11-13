@@ -2,6 +2,7 @@ package com.spark.kb.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.kb.entity.Knowledge;
 import com.spark.common.bean.kb.query.KnowledgeQuery;
 import com.spark.common.bean.kb.result.KnowledgeResult;
@@ -68,6 +69,10 @@ public class KbServiceImpl extends BaseService<KnowledgeQuery, KnowledgeResult> 
         }
         Knowledge knowledge = new Knowledge();
         BeanUtil.copyProperties(knowledgeVO, knowledge);
+        // 非站点管理员强制归属当前租户
+        if (!SessionHolder.isSysAdmin()) {
+            knowledge.setTenantId(SessionHolder.getCurrentTenantId());
+        }
         if (knowledge.getVectorModelId() == null || knowledge.getRerankModelId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
@@ -126,6 +131,7 @@ public class KbServiceImpl extends BaseService<KnowledgeQuery, KnowledgeResult> 
         }
         KnowledgeQuery knowledgeQuery = new KnowledgeQuery();
         knowledgeQuery.setId(knowledgeVO.getId());
+        super.scopeTenant(knowledgeQuery);
         KnowledgeResult knowledgeResult = knowledgeDao.queryKnowledge(knowledgeQuery);
         if (knowledgeResult == null) {
             result.setErrorCode(ErrorCodeEnum.KNOWLEDGE_NOT_EXIST);
@@ -162,6 +168,7 @@ public class KbServiceImpl extends BaseService<KnowledgeQuery, KnowledgeResult> 
         }
         KnowledgeQuery knowledgeQuery = new KnowledgeQuery();
         knowledgeQuery.setId(knowledgeVO.getId());
+        super.scopeTenant(knowledgeQuery);
         KnowledgeResult knowledgeResult = knowledgeDao.queryKnowledge(knowledgeQuery);
         if (knowledgeResult == null) {
             result.setCode(ResultData.OK);
@@ -210,6 +217,7 @@ public class KbServiceImpl extends BaseService<KnowledgeQuery, KnowledgeResult> 
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        super.scopeTenant(query);
         KnowledgeResult knowledgeResult = knowledgeDao.queryKnowledge(query);
         if (knowledgeResult == null) {
             result.setErrorCode(ErrorCodeEnum.KNOWLEDGE_NOT_EXIST);

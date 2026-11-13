@@ -2,6 +2,7 @@ package com.spark.llm.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.llm.entity.Provider;
 import com.spark.common.bean.llm.query.ProviderQuery;
 import com.spark.common.bean.llm.result.ProviderResult;
@@ -55,6 +56,10 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
         }
         Provider provider = new Provider();
         BeanUtil.copyProperties(providerVO, provider);
+        // 非站点管理员强制归属当前租户
+        if (!SessionHolder.isSysAdmin()) {
+            provider.setTenantId(SessionHolder.getCurrentTenantId());
+        }
         int count = providerDao.insertDB(provider);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
@@ -80,6 +85,7 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
         }
         ProviderQuery providerQuery = new ProviderQuery();
         providerQuery.setId(providerVO.getId());
+        super.scopeTenant(providerQuery);
         ProviderResult providerResult = providerDao.queryProvider(providerQuery);
         if (providerResult == null) {
             result.setErrorCode(ErrorCodeEnum.PROVIDER_NOT_EXIST);
@@ -114,6 +120,7 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
         }
         ProviderQuery providerQuery = new ProviderQuery();
         providerQuery.setId(providerVO.getId());
+        super.scopeTenant(providerQuery);
         ProviderResult providerResult = providerDao.queryProvider(providerQuery);
         if (providerResult == null) {
             result.setCode(ResultData.OK);
@@ -164,6 +171,7 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        super.scopeTenant(query);
         ProviderResult providerResult = providerDao.queryProvider(query);
         if (providerResult == null) {
             result.setErrorCode(ErrorCodeEnum.PROVIDER_NOT_EXIST);

@@ -94,6 +94,11 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        // 校验引用的模板版本与表单版本归属当前租户
+        if (!this.checkVersionTenant(instanceVO.getTemplateRevId(), instanceVO.getFormRevId())) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
         // 校验流程模板是否已部署到flowable
         ResultData<Void> deployedData = flowableService.checkProcessDeployed(instanceVO.getProcessId());
         if (deployedData.getCode() != ResultData.OK) {
@@ -147,9 +152,15 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        super.scopeTenant(query);
         FlowInstanceResult instanceResult = instanceDao.queryInstance(query);
         if (instanceResult == null) {
             result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_EXIST);
+            return result;
+        }
+        // 校验引用的模板版本与表单版本归属当前租户
+        if (!this.checkVersionTenant(instanceResult.getTemplateRevId(), instanceResult.getFormRevId())) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
         this.supplyCreatedByName(instanceResult);
@@ -337,6 +348,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
         instanceQuery.setId(instanceVO.getId());
         instanceQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        super.scopeTenant(instanceQuery);
         FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
         if (instanceResult == null) {
             result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
@@ -447,6 +459,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
         instanceQuery.setId(instanceVO.getId());
         instanceQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        super.scopeTenant(instanceQuery);
         FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
         if (instanceResult == null) {
             result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
@@ -504,6 +517,15 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        // 校验流程实例归属当前租户
+        FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
+        instanceQuery.setId(query.getInstanceId());
+        super.scopeTenant(instanceQuery);
+        FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
+        if (instanceResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_EXIST);
+            return result;
+        }
         FlowInstanceNodeResult instanceNodeResult = this.queryProcessingNode(query.getInstanceId());
         if (instanceNodeResult == null) {
             result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
@@ -553,6 +575,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
         instanceQuery.setId(instanceVO.getId());
         instanceQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        super.scopeTenant(instanceQuery);
         FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
         if (instanceResult == null) {
             result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
@@ -659,6 +682,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
         instanceQuery.setId(instanceVO.getId());
         instanceQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        super.scopeTenant(instanceQuery);
         FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
         if (instanceResult == null) {
             result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
@@ -826,6 +850,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
         instanceQuery.setId(instanceVO.getId());
         instanceQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        super.scopeTenant(instanceQuery);
         FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
         if (instanceResult == null) {
             result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
@@ -987,6 +1012,7 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
         instanceQuery.setId(instanceVO.getId());
         instanceQuery.setStatus(FlowInstanceStatusEnum.PROCESSING.getValue());
+        super.scopeTenant(instanceQuery);
         FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
         if (instanceResult == null) {
             result.setErrorCode(ErrorCodeEnum.FLOW_INSTANCE_NOT_ALLOW);
@@ -1039,6 +1065,25 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         return FlowInstanceStatusEnum.COMPLETED.getValue().equals(status)
                 || FlowInstanceStatusEnum.REJECTED.getValue().equals(status)
                 || FlowInstanceStatusEnum.AUTO_PASS.getValue().equals(status);
+    }
+
+    /**
+     * 校验实例引用的模板版本与表单版本归属当前租户
+     * @param templateRevId 模板版本id
+     * @param formRevId 表单版本id
+     * @return true 归属合法，false 非法
+     */
+    private boolean checkVersionTenant(Long templateRevId, Long formRevId) {
+        if (SessionHolder.isSysAdmin()) {
+            return true;
+        }
+        Long currentTenantId = SessionHolder.getCurrentTenantId();
+        Long templateTenantId = templateVersionDao.queryTemplateVersionTenantId(templateRevId);
+        if (!Objects.equals(templateTenantId, currentTenantId)) {
+            return false;
+        }
+        Long formTenantId = formVersionDao.queryFormVersionTenantId(formRevId);
+        return Objects.equals(formTenantId, currentTenantId);
     }
 
     /**

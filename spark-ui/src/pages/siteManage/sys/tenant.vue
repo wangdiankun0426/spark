@@ -111,30 +111,41 @@
         <el-table-column prop="userName" label="用户名称" min-width="80" align="center"/>
         <el-table-column prop="loginName" label="登录名" min-width="100" align="center"/>
         <el-table-column prop="roleTypeName" label="用户角色" min-width="96" align="center"/>
-        <el-table-column fixed="right" label="操作" width="190" align="center">
+        <el-table-column fixed="right" label="操作" width="300" align="center">
           <template #default="scope">
             <el-button
                 v-if="!isOrgAdminRole(scope.row.roleType)"
                 type="success"
                 text
-                @click="setTenantUserAdmin(scope.row)"
+                @click="openOrgMenuForm(scope.row)"
             >
               <el-icon><TurnOff /></el-icon>
               <span style="font-size: 14px; font-weight: 500">
                 设为管理员
               </span>
             </el-button>
-            <el-button
-                v-else
-                type="danger"
-                text
-                @click="cancelTenantUserAdmin(scope.row)"
-            >
-              <el-icon><TurnOff /></el-icon>
-              <span style="font-size: 14px; font-weight: 500">
-                取消管理员
-              </span>
-            </el-button>
+            <template v-else>
+              <el-button
+                  type="primary"
+                  text
+                  @click="openOrgMenuConfig(scope.row)"
+              >
+                <el-icon><SetUp /></el-icon>
+                <span style="font-size: 14px; font-weight: 500">
+                  菜单配置
+                </span>
+              </el-button>
+              <el-button
+                  type="danger"
+                  text
+                  @click="cancelTenantUserAdmin(scope.row)"
+              >
+                <el-icon><TurnOff /></el-icon>
+                <span style="font-size: 14px; font-weight: 500">
+                  取消管理员
+                </span>
+              </el-button>
+            </template>
             <el-button
                 type="warning"
                 text
@@ -247,12 +258,46 @@
         <el-button @click="closeUserForm">取消</el-button>
       </template>
     </el-drawer>
+
+    <!-- 组织菜单配置抽屉 -->
+    <el-drawer
+        v-model="orgMenuFormVisible"
+        :title="orgMenuFormTitle"
+        direction="ltr"
+        size="40%"
+        :close-on-click-modal="false"
+    >
+      <div class="org-menu-box">
+        <div class="org-menu-toolbar">
+          <el-button link type="primary" size="small" @click="checkAllOrgMenu(true)">全部勾选</el-button>
+          <el-button link type="info" size="small" @click="checkAllOrgMenu(false)">全部清空</el-button>
+        </div>
+        <div class="org-menu-tree">
+          <el-tree
+              ref="orgMenuTreeRef"
+              :data="orgMenuTree"
+              node-key="id"
+              :props="orgMenuTreeProps"
+              show-checkbox
+              :check-strictly="false"
+              :indent="16"
+              default-expand-all
+              :expand-on-click-node="false"
+          />
+        </div>
+      </div>
+      <template #footer>
+        <el-button type="primary" @click="submitOrgMenuForm">保存</el-button>
+        <el-button @click="closeOrgMenuForm">取消</el-button>
+      </template>
+    </el-drawer>
   </div>
 </template>
 
 <script setup>
 import {pageTenantListAPI, createTenantAPI, updateTenantAPI, deleteTenantAPI} from '@/api/manage/sys/tenant.js';
-import {addTenantUserAPI, pageTenantUserListAPI, removeTenantUserAPI, updateTenantUserAPI} from '@/api/manage/sys/tenantUser.js';
+import {addTenantUserAPI, pageTenantUserListAPI, removeTenantUserAPI, updateTenantUserAPI, queryOrgMenusAPI} from '@/api/manage/sys/tenantUser.js';
+import {orgMenuTreeAPI} from '@/api/manage/sys/menu.js';
 import {createUserAPI} from '@/api/manage/sys/user.js';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import SelectUser from '@/components/SelectUser/index.vue';
@@ -301,8 +346,19 @@ const userFormRules = {
   name: [{ required: true, trigger: 'blur', message: '请输入用户名' }],
   loginName: [{ required: true, trigger: 'blur', message: '请输入登录名' }],
 };
+// 组织菜单配置
+const orgMenuFormVisible = ref(false);
+const orgMenuFormTitle = ref('');
+const orgMenuForm = ref({ userId: undefined, userName: '' });
+const orgMenuTree = ref([]);
+const orgMenuTreeRef = ref();
+// 组织菜单树全部节点 id 与叶子节点 id，用于全选与联动加载
+const orgMenuAllIds = ref([]);
+const orgMenuLeafIds = ref([]);
+const orgMenuTreeProps = {label: 'name', children: 'children'};
 
 getTenantList();
+getOrgMenuTree();
 
 /**
  * 分页查询租户列表
@@ -420,35 +476,14 @@ function removeUser(id) {
 }
 
 /**
- * 设置租户用户为组织管理员
- * @param row 租户用户行数据
- */
-function setTenantUserAdmin(row) {
-  changeTenantUserRole(row, 2, '设为组织管理员');
-}
-
-/**
  * 取消租户用户组织管理员角色
  * @param row 租户用户行数据
  */
 function cancelTenantUserAdmin(row) {
-  changeTenantUserRole(row, 1, '取消组织管理员');
-}
-
-/**
- * 修改租户用户角色类型
- * @param row 租户用户行数据
- * @param roleType 目标角色类型
- * @param actionName 操作名称
- */
-function changeTenantUserRole(row, roleType, actionName) {
   if (currentTenantId.value == null || !row || row.userId == null) {
     return;
   }
-  const msg = roleType === 2
-      ? '是否确定将用户【' + row.userName + '】设为组织管理员?'
-      : '是否确定取消用户【' + row.userName + '】的组织管理员角色?';
-  ElMessageBox.confirm(msg, '提示', {
+  ElMessageBox.confirm('是否确定取消用户【' + row.userName + '】的组织管理员角色?', '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning',
@@ -456,16 +491,163 @@ function changeTenantUserRole(row, roleType, actionName) {
     const data = {
       tenantId: currentTenantId.value,
       userId: row.userId,
-      roleType: roleType,
+      roleType: 1,
     };
     updateTenantUserAPI(data).then(res => {
       if (res.code !== 200) {
         return;
       }
-      ElMessage.success(actionName + '成功');
+      ElMessage.success('取消组织管理员成功');
       getTenantUserList();
     })
   }).catch(() => {
+  })
+}
+
+/**
+ * 查询组织菜单授权树
+ */
+function getOrgMenuTree() {
+  orgMenuTreeAPI().then(res => {
+    orgMenuTree.value = res.data || [];
+    const ids = collectOrgMenuIds(orgMenuTree.value);
+    orgMenuAllIds.value = ids.allIds;
+    orgMenuLeafIds.value = ids.leafIds;
+  })
+}
+
+/**
+ * 收集组织菜单树全部节点 id 与叶子节点 id
+ * @param nodes 组织菜单树
+ * @returns {{allIds: Array, leafIds: Array}}
+ */
+function collectOrgMenuIds(nodes) {
+  const allIds = [];
+  const leafIds = [];
+  const walk = (items) => items.forEach(item => {
+    allIds.push(item.id);
+    if (item.children && item.children.length) {
+      walk(item.children);
+    } else {
+      leafIds.push(item.id);
+    }
+  });
+  walk(nodes || []);
+  return { allIds, leafIds };
+}
+
+/**
+ * 全部勾选或全部清空组织菜单
+ * @param checked 是否勾选
+ */
+function checkAllOrgMenu(checked) {
+  if (!orgMenuTreeRef.value) {
+    return;
+  }
+  if (!checked) {
+    orgMenuTreeRef.value.setCheckedKeys([]);
+    return;
+  }
+  // 联动模式只设叶子节点，父节点由 el-tree 自动推导，避免半选父被全选
+  orgMenuTreeRef.value.setCheckedKeys(orgMenuLeafIds.value);
+}
+
+/**
+ * 按用户已授权组织菜单 id 回填勾选
+ * @param menuIds 菜单 id 列表
+ */
+function applyOrgMenuChecked(menuIds) {
+  if (!orgMenuTreeRef.value) {
+    return;
+  }
+  // 联动模式只回填叶子节点，父节点由 el-tree 自动推导
+  const leafIdSet = new Set(orgMenuLeafIds.value);
+  const leafChecked = menuIds.filter(id => leafIdSet.has(id));
+  orgMenuTreeRef.value.setCheckedKeys(leafChecked);
+}
+
+/**
+ * 读取当前勾选的组织菜单 id，含半选父节点
+ * @returns {Array}
+ */
+function collectCheckedOrgMenuIds() {
+  if (!orgMenuTreeRef.value) {
+    return [];
+  }
+  const checkedKeys = orgMenuTreeRef.value.getCheckedKeys();
+  const halfCheckedKeys = orgMenuTreeRef.value.getHalfCheckedKeys();
+  return [...checkedKeys, ...halfCheckedKeys];
+}
+
+/**
+ * 打开设为管理员抽屉
+ * @param row 租户用户行数据
+ */
+function openOrgMenuForm(row) {
+  if (currentTenantId.value == null || !row || row.userId == null) {
+    return;
+  }
+  orgMenuForm.value = { userId: row.userId, userName: row.userName };
+  orgMenuFormTitle.value = '设为管理员 - ' + row.userName;
+  orgMenuFormVisible.value = true;
+  nextTick(() => {
+    if (orgMenuTreeRef.value) {
+      orgMenuTreeRef.value.setCheckedKeys([]);
+    }
+  });
+}
+
+/**
+ * 打开组织菜单配置抽屉并回填已授权菜单
+ * @param row 租户用户行数据
+ */
+function openOrgMenuConfig(row) {
+  if (currentTenantId.value == null || !row || row.userId == null) {
+    return;
+  }
+  queryOrgMenusAPI({ tenantId: currentTenantId.value, userId: row.userId }).then(res => {
+    if (res.code !== 200) {
+      return;
+    }
+    orgMenuForm.value = { userId: row.userId, userName: row.userName };
+    orgMenuFormTitle.value = '菜单配置 - ' + row.userName;
+    orgMenuFormVisible.value = true;
+    const menuIds = res.data || [];
+    nextTick(() => {
+      applyOrgMenuChecked(menuIds);
+    });
+  })
+}
+
+/**
+ * 关闭组织菜单配置抽屉
+ */
+function closeOrgMenuForm() {
+  if (orgMenuTreeRef.value) {
+    orgMenuTreeRef.value.setCheckedKeys([]);
+  }
+  orgMenuFormVisible.value = false;
+}
+
+/**
+ * 提交组织菜单授权并设为组织管理员
+ */
+function submitOrgMenuForm() {
+  const menuIds = collectCheckedOrgMenuIds();
+  // 菜单 id 以逗号串传递，后端绑定为 List<Long>
+  const data = {
+    tenantId: currentTenantId.value,
+    userId: orgMenuForm.value.userId,
+    roleType: 2,
+    orgMenuIds: menuIds.join(','),
+  };
+  updateTenantUserAPI(data).then(res => {
+    if (res.code !== 200) {
+      return;
+    }
+    ElMessage.success('组织菜单保存成功');
+    closeOrgMenuForm();
+    getTenantUserList();
   })
 }
 
@@ -665,6 +847,19 @@ function openConfig(row) {
   .user-select {
     flex: 1;
     min-width: 0;
+  }
+}
+.org-menu-box {
+  width: 100%;
+  .org-menu-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: $spacing-xs;
+  }
+  .org-menu-tree {
+    max-height: calc(100vh - 180px);
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 }
 </style>

@@ -113,7 +113,7 @@ public class RoleUserServiceImpl extends BaseService<RoleUserQuery, RoleUserResu
         }
         int count = roleUserDao.deleteRoleUser(SessionHolder.getCurrentTenantId(),
                 List.of(roleUserVO.getRoleId()), roleUserVO.getUserId(), SessionHolder.getCurrentUserId());
-        if (count < 0) {
+        if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }

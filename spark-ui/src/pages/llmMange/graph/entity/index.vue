@@ -19,7 +19,7 @@
         <el-button type="info" @click="handleGetEntityList">
           <el-icon><Search /></el-icon>查询
         </el-button>
-        <el-button type="primary" @click="handleOpenCreateForm">
+        <el-button v-hasPermi="['kg:entity:create']" type="primary" @click="handleOpenCreateForm">
           <el-icon><Plus /></el-icon>新建实体
         </el-button>
       </div>
@@ -125,6 +125,7 @@
         <el-table-column fixed="right" label="操作" width="150" align="center">
           <template #default="scope">
             <el-button
+                v-hasPermi="['kg:entity:update']"
                 type="success"
                 text
                 @click="handleOpenUpdateForm(scope.row)"
@@ -133,6 +134,7 @@
               <span style="font-size: 12px; font-weight: 400">修改</span>
             </el-button>
             <el-button
+                v-hasPermi="['kg:entity:delete']"
                 type="danger"
                 text
                 @click="handleDelete(scope.row.id)"

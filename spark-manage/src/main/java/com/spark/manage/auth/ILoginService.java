@@ -1,6 +1,7 @@
 package com.spark.manage.auth;
 
 import com.spark.common.bean.sys.entity.Session;
+import com.spark.common.bean.sys.result.UserResult;
 import com.spark.common.bean.sys.vo.LoginVO;
 import com.spark.common.bean.base.ResultData;
 
@@ -34,4 +35,10 @@ public interface ILoginService {
      * @return 退出结果
      */
     ResultData<Void> forceLogout(LoginVO loginVO);
+
+    /**
+     * 查询当前登录会话信息，含权限串集合与动态路由
+     * @return 用户会话信息
+     */
+    ResultData<UserResult> queryLoginSession();
 }

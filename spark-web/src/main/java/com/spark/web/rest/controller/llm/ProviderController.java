@@ -6,6 +6,7 @@ import com.spark.common.bean.llm.vo.ProviderVO;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.llm.service.IProviderService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,6 +34,7 @@ public class ProviderController {
      * @param providerVO  创建模型厂商参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:provider:create")
     @PostMapping("create")
     public ResultData<Void> createProvider(ProviderVO providerVO) {
         return providerService.createProvider(providerVO);
@@ -43,6 +45,7 @@ public class ProviderController {
      * @param providerVO 修改模型厂商参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:provider:update")
     @PostMapping("update")
     public ResultData<Void> updateProvider(ProviderVO providerVO) {
         return providerService.updateProvider(providerVO);
@@ -53,6 +56,7 @@ public class ProviderController {
      * @param providerVO 删除模型厂商参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:provider:delete")
     @PostMapping("delete")
     public ResultData<Void> deleteProvider(ProviderVO providerVO) {
         return providerService.deleteProvider(providerVO);
@@ -63,6 +67,7 @@ public class ProviderController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:provider:query")
     @GetMapping("pageList")
     public ResultData<PageResult<ProviderResult>> pageProviderList(ProviderQuery query) {
         return providerService.pageProviderList(query);
@@ -73,6 +78,7 @@ public class ProviderController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:provider:detail")
     @GetMapping("detail")
     public ResultData<ProviderResult> queryProviderDetail(ProviderQuery query) {
         return providerService.queryProviderDetail(query);

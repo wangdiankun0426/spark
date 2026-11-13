@@ -22,7 +22,7 @@ description: Spark 项目前端 Web（spark-ui，Vue3 PC 端）编码规范。�
 - **响应约定**：后端返回 `{ code, message, data }`；`code===200` 成功，`code===601` 跳转 `/login`。
 - **运行时变量**：后端基址 `process.env.BASE_HTTP_API`（由 Vite 注入 `.env` 的 `VITE_HTTP_BASE_API`）；加密密钥 `import.meta.env.VITE_ENCRYPT_PRIVATE_KEY`。
 - env 文件只在 Vite 启动时读取一次，改动后必须重启 dev 服务；`vite.config.js` 的 `envBannerPlugin` 会在启动横幅打印实际 mode、接口基址与监听端口，dev 模式基址指向远程时输出黄色警告，排查接口环境问题先看该横幅。
-- **管理员判定**：`utils/utils.js#isAdmin()` 检查 `userInfo.id === 101`，仅前端体验校验。
+- **身份与权限判定**：`utils/permissionUtil.js` 的 `isSysAdmin()`（accountType===2）/ `isOrgAdmin()`（roleType&2）/ `checkPermi(perm)`，仅前端体验校验、后端强制；禁止用 `id === 101` 硬编码判定管理员。动态路由与按钮权限详则见 `references/permission.md`。
 
 ## 3. 目录与文件约定
 
@@ -49,7 +49,7 @@ description: Spark 项目前端 Web（spark-ui，Vue3 PC 端）编码规范。�
 3. 在 `.vue` 中写非 `scoped` 的 `<style>`（`src/styles/*.scss` 全局文件除外）
 4. 业务样式中硬编码颜色/字号/间距，或直接写 `var(--xxx)` 消费 CSS 变量 —— 三层架构：主题色只在 `theme.scss` / `element.scss` 的 `:root` 定义，`variables.scss` 做同名 `$` 映射，`.vue` / `.scss` 消费层一律引用 `variables.scss` 的 `$` 变量（如 `$app-text-secondary`、`$ds-brand`、`$shell-nav-text`），禁止直接写 `var(--app-text-secondary)`；不随主题变化的字面值也禁止写死 `#fff`，用 `$color-text-white` 等 token。豁免：组件私有动态 CSS 变量（如 `:style` 绑定的 `--z`，非主题色）、JS/echarts 画布场景（SCSS 不可达，用模块内色板常量）
     - **自定义属性右值必须插值**：给 CSS 自定义属性（`--xxx`）赋 SCSS 变量时写 `--el-tag-bg-color: #{$ds-info-bg};`，禁止裸写 `--el-tag-bg-color: $ds-info-bg;`——SCSS 对自定义属性右值按原样字符串处理、不求值，裸写会把 `$ds-info-bg` 字面输出到 CSS 导致失效。普通声明直接写 `color: $ds-brand;` 即可，仅自定义属性右值与 `calc()` 内需要 `#{}`
-    - **stylelint 强制**：以上三条红线由 `spark-ui/.stylelintrc.cjs` 静态拦截，提交前跑 `npm run lint:style`，退出码非 0 必须修复。存量 hex 豁免台账已于 2026-11-05 清零，消费层违规一律走 token 化治理，不得新增文件级豁免；`src/styles/**` 定义层与 `src/assets/icons/**` SVG 资源为永久豁免。组件私有动态 CSS 变量（如 `--z`）用 `// stylelint-disable-next-line function-disallowed-list` 行级豁免并注明原因；mask 遮罩的不透明色用 `$mask-opaque` 而非行级豁免
+    - **stylelint 强制**：以上三条红线由 `spark-ui/.stylelintrc.cjs` 静态拦截，提交前跑 `npm run lint:style`，退出码非 0 必须修复。消费层违规一律走 token 化治理，不得新增文件级豁免；`src/styles/**` 定义层与 `src/assets/icons/**` SVG 资源为永久豁免。组件私有动态 CSS 变量（如 `--z`）用 `// stylelint-disable-next-line function-disallowed-list` 行级豁免并注明原因；mask 遮罩的不透明色用 `$mask-opaque` 而非行级豁免
 5. 直接调用 `axios` —— 必须从 `@/api/request` 引入
 6. 硬编码 localStorage key 字符串 —— 用 `utils/keyUtils.js#localStorageKey`
 7. 修改 `VITE_ENCRYPT_PRIVATE_KEY`，或将密钥写入源码/日志
@@ -74,7 +74,7 @@ description: Spark 项目前端 Web（spark-ui，Vue3 PC 端）编码规范。�
 3. 组件结构 `<template>` → `<script setup>` → `<style scoped lang="scss">`
 4. API 命名 `功能+API`，从 `@/api/request` 引入
 5. GET/POST 都用 `params`（大文本保存等明确 body 场景除外，见禁止项 9）
-6. 新增模块路由后在 `router/index.js` 注入 `layoutRoutes[0].children`；页面路由设 `meta.title`
+6. 业务页面路由由后端菜单种子驱动（`component` 串与 permission store 的 componentMap 键一致），不手工注入 `layoutRoutes`；静态 common/layout 路由保留，页面路由设 `meta.title`
 7. 新增 Vuex 模块必须 `namespaced: true` 并在 `store/index.js` 注册
 8. 内容页面顶层容器 `class="app-container"`
 9. 敏感字段加密用 `utils/encryptUtil.js#des()`
@@ -109,7 +109,8 @@ description: Spark 项目前端 Web（spark-ui，Vue3 PC 端）编码规范。�
 | 日期格式化 | `@/utils/dateUtil.js` | `getCurrentDate`、`formatDate` |
 | 存储 key | `@/utils/keyUtils.js#localStorageKey` | `SPARK_USER_TOKEN`、`SPARK_USER_INFO` |
 | 文档类型 | `@/utils/documentUtil.js` | `getDocumentCategory`、文件后缀映射 |
-| 管理员判断 | `@/utils/utils.js#isAdmin()` | `userInfo.id === 101` |
+| 身份与权限判定 | `@/utils/permissionUtil.js` | `isSysAdmin()`/`isOrgAdmin()`/`checkPermi(perm)`，仅体验校验 |
+| 操作权限指令 | `@/directive/hasPermi.js` | `v-hasPermi` 无权限移除元素，权限串与后端按钮种子一致 |
 | 设计 token | `@/styles/variables.scss` | SCSS 侧唯一变量入口：编译期参数（颜色字面值、圆角、阴影、间距、过渡、侧栏宽度）+ 全部运行时主题变量的同名 `$` 映射（`$app-*` / `$ds-*` / `$shell-*` / `$dsk-*` / `$el-*`），消费层只准引用本文件 |
 | 主题变量 | `@/styles/theme.scss` | `--app-*` / `--shell-*` / `--nav-*` / `--sidebar-*` 的唯一定义处，亮/暗两套与公共主题底座（`html.dark` / `html.theme-light`）；客户端外壳令牌 `--dsk-*` 定义在 `html.desktop-shell` 下，值映射自 Web 主题变量；只放定义不放消费 |
 | 退出登录 | `@/utils/useLogout.js#useLogout()` | Web 导航栏与客户端顶栏、账号卡共用的登出确认流程 |
@@ -130,7 +131,7 @@ description: Spark 项目前端 Web（spark-ui，Vue3 PC 端）编码规范。�
 - 加密密钥来自 `import.meta.env.VITE_ENCRYPT_PRIVATE_KEY`，禁止硬编码到源码
 - token 由 `request.js` 自动注入 `Authorization`，禁止手工拼接
 - 用户输入在表单校验层处理；尽量避免 `v-html` 渲染用户内容
-- 后台管理路由必须挂 `/manage` 下，由前置守卫统一校验 `isAdmin()`
+- 路由由后端菜单树动态生成（permission store + `router/index.js` 守卫），落地页 `defaultPath` 菜单驱动；按钮权限挂 `v-hasPermi`，仅 platform0 三模块（AI/业务/组织管理）限制，公共与站点模块不限制；详则见 `references/permission.md`
 
 ## 8. 视觉风格基调
 
@@ -154,5 +155,6 @@ description: Spark 项目前端 Web（spark-ui，Vue3 PC 端）编码规范。�
 | 新增页面/组件/API/路由/Vuex 模块（即几乎一切前端编码任务） | `references/templates.md` |
 | 涉及页面样式、布局、卡片、配色、留白、亮/暗主题 | `references/visual-style.md` |
 | 交付前自查视觉质量 | `references/visual-style.md`（交付前自查清单） |
+| 涉及身份判定、动态路由、按钮权限、登录态 | `references/permission.md` |
 
 判断依据：拿不准是否命中时，一律按命中处理——先 Read 再写。

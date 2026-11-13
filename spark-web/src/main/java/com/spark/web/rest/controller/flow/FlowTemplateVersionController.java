@@ -5,6 +5,7 @@ import com.spark.common.bean.flow.result.FlowTemplateVersionResult;
 import com.spark.common.bean.flow.vo.FlowTemplateVersionVO;
 import com.spark.common.bean.base.ResultData;
 import com.spark.flow.service.IFlowTemplateVersionService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +30,7 @@ public class FlowTemplateVersionController {
      * @param templateVersionVO 模板版本信息
      * @return 创建结果
      */
+    @RequiresPermi("flow:templateVersion:create")
     @PostMapping("create")
     public ResultData<Void> createTemplateVersion(@RequestBody FlowTemplateVersionVO templateVersionVO) {
         return templateVersionService.createTemplateVersion(templateVersionVO);
@@ -39,6 +41,7 @@ public class FlowTemplateVersionController {
      * @param query 查询参数
      * @return 查询结果
      */
+    @RequiresPermi("flow:templateVersion:detail")
     @GetMapping("detail")
     public ResultData<FlowTemplateVersionResult> queryTemplateVersionDetail(FlowTemplateVersionQuery query) {
         return templateVersionService.queryTemplateVersionDetail(query);

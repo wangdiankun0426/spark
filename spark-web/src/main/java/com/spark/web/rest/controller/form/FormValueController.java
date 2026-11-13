@@ -5,6 +5,7 @@ import com.spark.common.bean.form.query.FormObjQuery;
 import com.spark.common.bean.form.result.FormObjResult;
 import com.spark.common.bean.form.vo.FormObjValueVO;
 import com.spark.form.service.IFormObjValueService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,8 +29,9 @@ public class FormValueController {
      * @param valueVO 表单数据
      * @return 创建结果
      */
+    @RequiresPermi("form:value:save")
     @PostMapping("save")
-    private ResultData<Void> saveFormObjValues(@RequestBody FormObjValueVO valueVO) {
+    public ResultData<Void> saveFormObjValues(@RequestBody FormObjValueVO valueVO) {
         return formObjValueService.saveFormObjValues(valueVO);
     }
 
@@ -38,6 +40,7 @@ public class FormValueController {
      * @param query 查询参数
      * @return 表单数据详情
      */
+    @RequiresPermi("form:value:detail")
     @GetMapping("detail")
     public ResultData<FormObjResult> queryFormObjDetail(FormObjQuery query) {
         return formObjValueService.queryFormObjDetail(query);

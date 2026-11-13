@@ -87,6 +87,7 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
         }
         FlowTemplateQuery templateQuery = new FlowTemplateQuery();
         templateQuery.setId(templateVersionVO.getTemplateId());
+        super.scopeTenant(templateQuery);
         FlowTemplateResult templateResult = templateDao.queryTemplate(templateQuery);
         if (templateResult == null) {
             result.setErrorCode(ErrorCodeEnum.FLOW_TEMPLATE_NOT_EXIST);
@@ -268,6 +269,7 @@ public class TemplateVersionServiceImpl extends BaseService<FlowTemplateVersionQ
         }
         FlowTemplateQuery templateQuery = new FlowTemplateQuery();
         templateQuery.setId(templateVersionResult.getTemplateId());
+        super.scopeTenant(templateQuery);
         FlowTemplateResult templateResult = templateDao.queryTemplate(templateQuery);
         if (templateResult == null) {
             result.setErrorCode(ErrorCodeEnum.FLOW_TEMPLATE_NOT_EXIST);

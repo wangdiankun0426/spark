@@ -87,6 +87,10 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         }
         Form form = new Form();
         BeanUtil.copyProperties(formVO, form);
+        // 非站点管理员强制归属当前租户
+        if (!SessionHolder.isSysAdmin()) {
+            form.setTenantId(SessionHolder.getCurrentTenantId());
+        }
         form.setId(formId);
         form.setRevId(formVersion.getId());
         form.setRevNum(formVersion.getRevNum());
@@ -121,6 +125,14 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        FormQuery formQuery = new FormQuery();
+        formQuery.setId(formVO.getId());
+        super.scopeTenant(formQuery);
+        FormResult formResult = formDao.queryForm(formQuery);
+        if (formResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FORM_NOT_EXIST);
+            return result;
+        }
         Form form = new Form();
         BeanUtil.copyProperties(formVO, form);
         int count = formDao.updateDBById(form);
@@ -144,6 +156,14 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         ResultData<Void> result = new ResultData<>();
         if (formVO == null || formVO.getId() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        FormQuery formQuery = new FormQuery();
+        formQuery.setId(formVO.getId());
+        super.scopeTenant(formQuery);
+        FormResult formResult = formDao.queryForm(formQuery);
+        if (formResult == null) {
+            result.setCode(ResultData.OK);
             return result;
         }
         Form form = new Form();
@@ -188,6 +208,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        super.scopeTenant(query);
         FormResult formResult = formDao.queryForm(query);
         if (formResult == null) {
             result.setErrorCode(ErrorCodeEnum.FORM_NOT_EXIST);
@@ -211,17 +232,19 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        super.scopeTenant(query);
+        FormResult formResult = formDao.queryForm(query);
+        if (formResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FORM_NOT_EXIST);
+            return result;
+        }
         Long revId = query.getRevId();
         if (revId == null) {
-            FormResult formResult = formDao.queryForm(query);
-            if (formResult == null) {
-                result.setErrorCode(ErrorCodeEnum.FORM_NOT_EXIST);
-                return result;
-            }
             revId = formResult.getRevId();
         }
         FormVersionQuery versionQuery = new FormVersionQuery();
         versionQuery.setId(revId);
+        versionQuery.setFormId(formResult.getId());
         FormVersionResult formVersionResult = formVersionDao.queryFormVersion(versionQuery);
         if (formVersionResult == null) {
             result.setErrorCode(ErrorCodeEnum.FORM_VERSION_NOT_EXIST);
@@ -257,6 +280,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         Long formId = formVO.getId();
         FormQuery formQuery = new FormQuery();
         formQuery.setId(formId);
+        super.scopeTenant(formQuery);
         FormResult formResult = formDao.queryForm(formQuery);
         if (formResult == null) {
             result.setErrorCode(ErrorCodeEnum.FORM_NOT_EXIST);
@@ -317,7 +341,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
             query = new FormQuery();
         }
         query.setPage(false);
-        query.setTenantId(SessionHolder.getCurrentTenantId());
+        super.scopeTenant(query);
         List<FormResult> formList = formDao.queryFormList(query);
         this.supplyList(formList);
         result.setData(formList);

@@ -5,6 +5,7 @@ import com.spark.common.bean.dms.query.DocumentEventQuery;
 import com.spark.common.bean.dms.result.DocumentEventResult;
 import com.spark.common.bean.dms.vo.DocumentEventVO;
 import com.spark.dms.service.IDocumentEventService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,6 +32,7 @@ public class DocumentEventController {
      * @param query 查询参数
      * @return 文档事件详情
      */
+    @RequiresPermi("dms:event:detail")
     @GetMapping("detail")
     public ResultData<DocumentEventResult> queryDocumentEventDetail(DocumentEventQuery query) {
         return documentEventService.queryDocumentEventDetail(query);
@@ -41,6 +43,7 @@ public class DocumentEventController {
      * @param documentEventVO 文档事件参数
      * @return 修改结果
      */
+    @RequiresPermi("dms:event:update")
     @PostMapping("update")
     public ResultData<Void> updateDocumentEvent(DocumentEventVO documentEventVO) {
         return documentEventService.updateDocumentEvent(documentEventVO);

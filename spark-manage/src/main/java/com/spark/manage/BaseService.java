@@ -9,6 +9,7 @@ import com.spark.common.bean.llm.result.AgentResult;
 import com.spark.common.bean.sys.result.DepartmentResult;
 import com.spark.common.bean.sys.result.RoleResult;
 import com.spark.common.bean.sys.result.UserResult;
+import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.base.BaseQuery;
 import com.spark.common.bean.base.BaseResult;
 import com.spark.common.bean.base.PageResult;
@@ -19,6 +20,7 @@ import com.spark.dao.llm.AgentDao;
 import com.spark.dao.llm.ModelDao;
 import com.spark.dao.sys.*;
 import com.spark.common.bean.sys.query.UserQuery;
+import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.ObjectTypeEnum;
 import com.spark.common.enums.VariableTypeEnum;
 import com.spark.common.utils.CollectionUtil;
@@ -30,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -71,6 +74,35 @@ public abstract class BaseService<Q extends BaseQuery, R extends BaseResult> {
         pageResult.setRows(list);
         pageResult.setTotal(count);
         return pageResult;
+    }
+
+    /**
+     * 非分页查询租户收口，非系统管理员强制按当前会话租户过滤
+     * @param query 查询参数
+     */
+    protected void scopeTenant(BaseQuery query) {
+        if (query == null) {
+            return;
+        }
+        if (SessionHolder.isSysAdmin()) {
+            return;
+        }
+        Long tenantId = SessionHolder.getCurrentTenantId();
+        query.setTenantId(tenantId);
+    }
+
+    /**
+     * 单对象租户断言，系统管理员豁免，跨租户抛无操作权限
+     * @param tenantId 对象租户id
+     */
+    protected void assertTenant(Long tenantId) {
+        if (SessionHolder.isSysAdmin()) {
+            return;
+        }
+        Long currentTenantId = SessionHolder.getCurrentTenantId();
+        if (!Objects.equals(tenantId, currentTenantId)) {
+            throw new BaseException(ErrorCodeEnum.NO_PERMISSION);
+        }
     }
 
     /**

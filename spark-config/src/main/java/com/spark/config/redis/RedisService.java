@@ -213,6 +213,61 @@ public class RedisService {
     }
 
     /**
+     * 删除指定租户的全部登录会话，租户停用或删除后强制成员重新登录
+     * @param tenantId 租户id
+     */
+    public void deleteLoginSessionByTenantId(Long tenantId) {
+        if (tenantId == null) {
+            return;
+        }
+        try {
+            Set<Object> sessionKeys = redisTemplate.keys(ObjectCacheKey.LOGIN_SESSION + "*");
+            if (sessionKeys == null || sessionKeys.isEmpty()) {
+                return;
+            }
+            for (Object key : sessionKeys) {
+                Object value = redisTemplate.opsForValue().get(key);
+                if (value == null) {
+                    continue;
+                }
+                Session session = JsonUtil.toObject(value.toString(), Session.class);
+                if (session != null && tenantId.equals(session.getTenantId())) {
+                    redisTemplate.delete(key);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 删除全部登录会话并排除指定会话，菜单目录变更后权限需重登物化
+     * @param excludeSessionId 保留的会话id，通常为操作者自身会话
+     */
+    public void deleteAllLoginSession(String excludeSessionId) {
+        try {
+            Set<Object> sessionKeys = redisTemplate.keys(ObjectCacheKey.LOGIN_SESSION + "*");
+            if (sessionKeys == null || sessionKeys.isEmpty()) {
+                return;
+            }
+            for (Object key : sessionKeys) {
+                Object value = redisTemplate.opsForValue().get(key);
+                if (value == null) {
+                    continue;
+                }
+                Session session = JsonUtil.toObject(value.toString(), Session.class);
+                if (session != null && StringUtil.isNotBlank(excludeSessionId)
+                        && excludeSessionId.equals(session.getSessionId())) {
+                    continue;
+                }
+                redisTemplate.delete(key);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * 指定缓存失效时间
      * @param key 键
      * @param time 时间(秒)

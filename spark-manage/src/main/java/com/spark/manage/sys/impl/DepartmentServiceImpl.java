@@ -73,6 +73,10 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
         if (result.getCode() != ResultData.OK) {
             return result;
         }
+        if (!SessionHolder.isOrgAdmin()) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
         Department department = new Department();
         long deptId = super.genObjectId(ObjectTypeEnum.DEPARTMENT);
         department.setId(deptId);
@@ -144,8 +148,13 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
         if (result.getCode() != ResultData.OK) {
             return result;
         }
+        Long deptId = departmentVO.getId();
+        if (!this.validateDeptManage(deptId)) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
         Department department = new Department();
-        department.setId(departmentVO.getId());
+        department.setId(deptId);
         department.setName(departmentVO.getName());
         department.setPrtId(departmentVO.getPrtId());
         department.setHeaderId(departmentVO.getHeaderId());
@@ -185,8 +194,13 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        Long deptId = departmentVO.getId();
+        if (!this.validateDeptManage(deptId)) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
         DepartmentQuery departmentQuery = new DepartmentQuery();
-        departmentQuery.setId(departmentVO.getId());
+        departmentQuery.setId(deptId);
         DepartmentResult departmentResult = departmentDao.queryDepartment(departmentQuery);
         if (departmentResult == null) {
             result.setErrorCode(ErrorCodeEnum.DEPT_NOT_EXIST);
@@ -393,6 +407,23 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
         }
         result.setCode(ResultData.OK);
         return result;
+    }
+
+    /**
+     * 校验部门管理权限与部门归属，仅能操作本租户的部门
+     * @param deptId 部门id
+     * @return true 有权限，false 无权限或部门不存在
+     */
+    private boolean validateDeptManage(Long deptId) {
+        if (!SessionHolder.isOrgAdmin()) {
+            return false;
+        }
+        Long tenantId = SessionHolder.getCurrentTenantId();
+        DepartmentQuery departmentQuery = new DepartmentQuery();
+        departmentQuery.setId(deptId);
+        departmentQuery.setTenantId(tenantId);
+        DepartmentResult departmentResult = departmentDao.queryDepartment(departmentQuery);
+        return departmentResult != null;
     }
 
     /**

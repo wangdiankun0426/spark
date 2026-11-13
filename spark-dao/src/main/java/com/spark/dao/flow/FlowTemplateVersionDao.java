@@ -4,6 +4,7 @@ import com.spark.common.bean.flow.entity.FlowTemplateVersion;
 import com.spark.common.bean.flow.query.FlowTemplateVersionQuery;
 import com.spark.common.bean.flow.result.FlowTemplateVersionResult;
 import com.spark.dao.BaseDao;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -70,4 +71,12 @@ public interface FlowTemplateVersionDao extends BaseDao<FlowTemplateVersion> {
      */
     @Select("select max(rev_code) from flow_template_version where template_id = #{value}")
     int queryMaxRevCode(Long templateId);
+
+    /**
+     * 查询流程模板版本归属租户id，经父模板关联
+     * @param id 版本id
+     * @return 租户id
+     */
+    @Select("select t.tenant_id from flow_template_version v join flow_template t on t.id = v.template_id and t.delete_flag = 1 where v.id = #{id} and v.delete_flag = 1")
+    Long queryTemplateVersionTenantId(@Param("id") Long id);
 }

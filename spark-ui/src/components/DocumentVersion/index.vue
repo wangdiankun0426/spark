@@ -31,10 +31,10 @@
       <el-table-column prop="createdDt" label="时间" width="160" align="center" />
       <el-table-column fixed="right" label="操作" width="170" align="center">
         <template #default="scope">
-          <el-button type="primary" text @click="handleDownload(scope.row)">下载</el-button>
+          <el-button v-hasPermi="['dms:version:download', 'dms:document:download']" type="primary" text @click="handleDownload(scope.row)">下载</el-button>
           <template v-if="!scope.row.currentFlag">
-            <el-button type="warning" text @click="handleRollback(scope.row)">回滚</el-button>
-            <el-button type="danger" text @click="handleDelete(scope.row)">删除</el-button>
+            <el-button v-hasPermi="['dms:version:rollback']" type="warning" text @click="handleRollback(scope.row)">回滚</el-button>
+            <el-button v-hasPermi="['dms:version:delete']" type="danger" text @click="handleDelete(scope.row)">删除</el-button>
           </template>
         </template>
       </el-table-column>

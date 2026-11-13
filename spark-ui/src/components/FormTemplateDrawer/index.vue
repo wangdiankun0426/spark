@@ -12,7 +12,7 @@
     <el-form :model="formQuery" label-width="auto">
       <el-row :gutter="24">
         <el-col :span="6">
-          <el-button type="primary" @click="handleOpenCreateFormForm">
+          <el-button v-hasPermi="['form:form:create']" type="primary" @click="handleOpenCreateFormForm">
             <el-icon><Plus /></el-icon>新建表单模板
           </el-button>
           <el-button type="warning" @click="handleResetFormQuery">
@@ -85,6 +85,7 @@
             <span style="font-size: 12px; font-weight: 500">设计</span>
           </el-button>
           <el-button
+              v-hasPermi="['form:form:update']"
               type="success"
               text
               @click="handleOpenUpdateFormForm(scope.row)"
@@ -93,6 +94,7 @@
             <span style="font-size: 12px; font-weight: 500">修改</span>
           </el-button>
           <el-button
+              v-hasPermi="['form:form:delete']"
               type="danger"
               text
               @click="handleDeleteForm(scope.row.id)"

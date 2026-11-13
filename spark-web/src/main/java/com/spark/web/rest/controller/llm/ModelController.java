@@ -6,6 +6,7 @@ import com.spark.common.bean.llm.vo.ModelVO;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.llm.service.IModelService;
+import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,6 +34,7 @@ public class ModelController {
      * @param modelVO  创建模型参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:model:create")
     @PostMapping("create")
     public ResultData<Void> createModel(ModelVO modelVO) {
         return modelService.createModel(modelVO);
@@ -43,6 +45,7 @@ public class ModelController {
      * @param modelVO 修改模型参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:model:update")
     @PostMapping("update")
     public ResultData<Void> updateModel(ModelVO modelVO) {
         return modelService.updateModel(modelVO);
@@ -53,6 +56,7 @@ public class ModelController {
      * @param modelVO 删除模型参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:model:delete")
     @PostMapping("delete")
     public ResultData<Void> deleteModel(ModelVO modelVO) {
         return modelService.deleteModel(modelVO);
@@ -63,6 +67,7 @@ public class ModelController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:model:query")
     @GetMapping("pageList")
     public ResultData<PageResult<ModelResult>> pageModelList(ModelQuery query) {
         return modelService.pageModelList(query);
@@ -73,6 +78,7 @@ public class ModelController {
      * @param query 查询参数
      * @return 响应结果
      */
+    @RequiresPermi("llm:model:detail")
     @GetMapping("detail")
     public ResultData<ModelResult> queryModelDetail(ModelQuery query) {
         return modelService.queryModelDetail(query);

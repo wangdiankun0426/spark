@@ -79,6 +79,10 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
         }
         Skill skill = new Skill();
         BeanUtil.copyProperties(skillVO, skill);
+        // 非站点管理员强制归属当前租户
+        if (!SessionHolder.isSysAdmin()) {
+            skill.setTenantId(SessionHolder.getCurrentTenantId());
+        }
         if (skill.getStatus() == null) {
             skill.setStatus(StatusEnum.NORMAL.getValue());
         }
@@ -108,6 +112,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
         }
         SkillQuery query = new SkillQuery();
         query.setId(skillVO.getId());
+        super.scopeTenant(query);
         SkillResult existResult = skillDao.querySkill(query);
         if (existResult == null) {
             result.setErrorCode(ErrorCodeEnum.SKILL_NOT_EXIST);
@@ -157,6 +162,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
         }
         SkillQuery query = new SkillQuery();
         query.setId(skillVO.getId());
+        super.scopeTenant(query);
         SkillResult existResult = skillDao.querySkill(query);
         if (existResult == null) {
             result.setCode(ResultData.OK);
@@ -209,6 +215,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        super.scopeTenant(query);
         SkillResult skillResult = skillDao.querySkill(query);
         if (skillResult == null) {
             result.setErrorCode(ErrorCodeEnum.SKILL_NOT_EXIST);

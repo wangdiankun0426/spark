@@ -119,6 +119,22 @@ CREATE TABLE `sys_tenant_user` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='租户用户表';
 
+DROP TABLE IF EXISTS `sys_tenant_user_menu`;
+CREATE TABLE `sys_tenant_user_menu` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `tenant_id` bigint(12) NOT NULL DEFAULT 0 COMMENT '租户id',
+    `tenant_user_id` bigint(12) NOT NULL COMMENT '租户用户id',
+    `menu_id` bigint(12) NOT NULL COMMENT '菜单id',
+
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_tenant_user_menu` (`tenant_user_id`, `menu_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='租户用户组织菜单关联';
+
 DROP TABLE IF EXISTS `sys_role`;
 CREATE TABLE `sys_role` (
     `id` bigint(12) NOT NULL COMMENT '主键,后两位固定04',
@@ -126,7 +142,8 @@ CREATE TABLE `sys_role` (
     `name` varchar(128) NOT NULL COMMENT '名称',
     `data_scope` int(4) NOT NULL DEFAULT 1 COMMENT '数据权限',
     `status` int(1) NOT NULL DEFAULT 1 COMMENT '状态',
-    `menu_codes` varchar(2048) NULL COMMENT '菜单标识码列表，逗号分隔',
+    `menu_codes` varchar(2048) NULL COMMENT '菜单标识码列表，已废弃由sys_role_menu取代，保留作回滚',
+    `menu_check_strictly` tinyint(3) NOT NULL DEFAULT 1 COMMENT '菜单父子联动',
 
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
     `created_by` bigint(12) NOT NULL COMMENT '创建人id',
@@ -151,20 +168,61 @@ CREATE TABLE `sys_role_user` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='用户角色关联表';
 
-DROP TABLE IF EXISTS `sys_menu`;
-CREATE TABLE `sys_menu` (
+DROP TABLE IF EXISTS `sys_role_menu`;
+CREATE TABLE `sys_role_menu` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
-    `name` varchar(128) NOT NULL COMMENT '菜单名称',
-    `parent_code` varchar(64) NOT NULL DEFAULT '' COMMENT '上级菜单标识码',
-    `code` varchar(64) NOT NULL COMMENT '标识码',
-    `type` int(1) NOT NULL DEFAULT 1 COMMENT '类型',
+    `tenant_id` bigint(12) NOT NULL DEFAULT 0 COMMENT '租户id',
+    `role_id` bigint(12) NOT NULL COMMENT '角色id',
+    `menu_id` bigint(12) NOT NULL COMMENT '菜单id',
 
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
     `created_by` bigint(12) NOT NULL COMMENT '创建人id',
     `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
     `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_role_menu` (`role_id`, `menu_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='角色菜单关联';
+
+DROP TABLE IF EXISTS `sys_role_dept`;
+CREATE TABLE `sys_role_dept` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `tenant_id` bigint(12) NOT NULL DEFAULT 0 COMMENT '租户id',
+    `role_id` bigint(12) NOT NULL COMMENT '角色id',
+    `dept_id` bigint(12) NOT NULL COMMENT '部门id',
+
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_role_dept` (`role_id`, `dept_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='角色部门关联';
+
+DROP TABLE IF EXISTS `sys_menu`;
+CREATE TABLE `sys_menu` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `name` varchar(128) NOT NULL COMMENT '菜单名称',
+    `parent_code` varchar(64) NOT NULL DEFAULT '' COMMENT '上级菜单标识码',
+    `code` varchar(64) NOT NULL COMMENT '标识码',
+    `type` int(1) NOT NULL DEFAULT 1 COMMENT '类型 1模块2分组3菜单4按钮',
+    `perms` varchar(100) NULL COMMENT '权限串 模块:功能:操作',
+    `path` varchar(200) NULL COMMENT '路由地址',
+    `component` varchar(255) NULL COMMENT '组件路径 相对src无后缀',
+    `icon` varchar(100) NULL COMMENT '图标名',
+    `order_num` int(11) NOT NULL DEFAULT 99 COMMENT '排序号',
+    `visible` tinyint(3) NOT NULL DEFAULT 1 COMMENT '显示状态 1显示0隐藏',
+    `status` tinyint(3) NOT NULL DEFAULT 1 COMMENT '菜单状态 1正常0停用',
+    `platform` tinyint(3) NOT NULL DEFAULT 0 COMMENT '平台归属 0租户菜单1站点菜单2公共菜单3组织菜单',
+
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_code` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='菜单表';
 
 DROP TABLE IF EXISTS `sys_message`;
@@ -432,6 +490,7 @@ CREATE TABLE `chat_space` (
 DROP TABLE IF EXISTS `chat_msg`;
 CREATE TABLE `chat_msg` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `tenant_id` bigint(12) NOT NULL DEFAULT 0 COMMENT '租户id',
     `space_id` bigint(12) NOT NULL COMMENT '空间主键，后两位固定05',
     `sender_id` bigint(12) NOT NULL COMMENT '发送人id',
     `receiver_id` bigint(12) NOT NULL COMMENT '接收人id',
@@ -444,7 +503,8 @@ CREATE TABLE `chat_msg` (
     `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
     `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    INDEX `idx_tenant_space` (`tenant_id`, `space_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='聊天消息记录表';
 
 DROP TABLE IF EXISTS `chat_msg_att`;
@@ -772,6 +832,7 @@ CREATE TABLE `form_field` (
 DROP TABLE IF EXISTS `form_obj`;
 CREATE TABLE `form_obj` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `tenant_id` bigint(12) NOT NULL DEFAULT 0 COMMENT '租户id',
     `obj_id` bigint(12) NOT NULL COMMENT '对象id',
     `form_id` bigint(12) NOT NULL COMMENT '表单id',
 
@@ -780,7 +841,8 @@ CREATE TABLE `form_obj` (
     `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
     `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    INDEX `idx_tenant_obj` (`tenant_id`, `obj_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='表单关联对象表';
 
 DROP TABLE IF EXISTS `form_obj_value`;
