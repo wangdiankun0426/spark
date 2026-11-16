@@ -1,6 +1,7 @@
 package com.spark.manage.sys.impl;
 
 import com.spark.common.bean.base.BaseAssert;
+import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.sys.query.DepartmentQuery;
 import com.spark.common.bean.sys.query.RoleUserQuery;
 import com.spark.common.bean.sys.query.TenantQuery;
@@ -43,6 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -101,8 +103,10 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
      * @param userVO 用户参数
      * @return 创建结果
      */
+    // 用户主表与扩展信息同事务写入，加入租户或分配角色失败整体回滚
     @Override
     @LogOperate(operateType = OperateTypeEnum.USER_INSERT)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Long> createUser(UserVO userVO) {
         ResultData<Long> result = this.validateCreateUserParam(userVO);
         BaseAssert.assertTrue(result);
@@ -143,8 +147,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         }
         int count = userDao.insertDB(user);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         // 插入扩展信息
         UserProfile userProfile = new UserProfile();
@@ -154,8 +157,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         userProfile.setWxUnionId(userVO.getWxUnionId());
         count = userProfileDao.insertDB(userProfile);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         // 加入租户
         TenantUserVO tenantUserVO = new TenantUserVO();

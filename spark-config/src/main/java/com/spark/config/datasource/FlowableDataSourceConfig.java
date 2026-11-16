@@ -1,6 +1,7 @@
 package com.spark.config.datasource;
 
 import com.alibaba.druid.spring.boot.autoconfigure.DruidDataSourceBuilder;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,7 +32,7 @@ public class FlowableDataSourceConfig {
 
     @Bean(name = "flowableTransactionManager")
     public PlatformTransactionManager flowableTransactionManager(
-            DataSource flowableDataSource) {
+            @Qualifier("flowableDataSource") DataSource flowableDataSource) {
         return new DataSourceTransactionManager(flowableDataSource);
     }
 }

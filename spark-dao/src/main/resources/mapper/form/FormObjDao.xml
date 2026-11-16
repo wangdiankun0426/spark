@@ -70,6 +70,11 @@
         where id = #{id}
     </update>
 
+    <update id="deleteByObjId">
+        update form_obj set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = now()
+        where obj_id = #{objId} and delete_flag = 1
+    </update>
+
     <select id="queryFormObjCount" resultType="java.lang.Integer">
         select count(1)
         from form_obj

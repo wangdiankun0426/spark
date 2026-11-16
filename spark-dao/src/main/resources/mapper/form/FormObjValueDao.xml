@@ -45,6 +45,11 @@
         </foreach>
     </insert>
 
+    <update id="deleteByObjId">
+        update form_obj_value set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = now()
+        where obj_id = #{objId} and delete_flag = 1
+    </update>
+
     <select id="queryFormObjValueList" resultType="com.spark.common.bean.form.result.FormObjValueResult">
         select <include refid="allColumnList"/>
         from form_obj_value

@@ -1,5 +1,6 @@
 package com.spark.chat.service.impl;
 
+import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
@@ -30,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -66,7 +68,9 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
      * @param chatSpaceVO 聊天空间信息
      * @return 创建结果
      */
+    // 镜像双行同事务写入，第二行失败回滚第一行避免单边会话
     @Override
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<ChatSpace> createChatSpace(ChatSpaceVO chatSpaceVO) {
         ResultData<ChatSpace> result = new ResultData<>();
         if (chatSpaceVO == null || chatSpaceVO.getReceiverId() == null) {
@@ -106,15 +110,13 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
         chatSpace.setSpaceType(ChatSpaceTypeEnum.USER.getValue());
         int count = chatSpaceDao.insertDB(chatSpace);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         chatSpace.setSenderId(receiverId);
         chatSpace.setReceiverId(senderId);
         count = chatSpaceDao.insertDB(chatSpace);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         result.setData(chatSpace);
         result.setCode(ResultData.OK);

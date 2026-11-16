@@ -5,6 +5,8 @@ import com.spark.common.constant.ObjectCacheKey;
 import com.spark.common.utils.JsonUtil;
 import com.spark.common.utils.StringUtil;
 import jakarta.annotation.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +28,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Service
 public class RedisService {
+    private final static Logger logger = LoggerFactory.getLogger(RedisService.class);
     @Resource(name = "redisTemplate")
     private RedisTemplate<Object, Object> redisTemplate;
 
@@ -126,6 +129,27 @@ public class RedisService {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    /**
+     * 原子写入并设置时间，键已存在则不覆盖
+     * @param key 键
+     * @param value 值
+     * @param time 时间
+     * @param timeUnit 时间单位
+     * @return true写入成功或Redis异常放行 false键已存在
+     */
+    public boolean setIfAbsent(String key, String value, long time, TimeUnit timeUnit) {
+        if (StringUtil.isBlank(key)) {
+            return false;
+        }
+        try {
+            Boolean success = redisTemplate.opsForValue().setIfAbsent(key, value, time, timeUnit);
+            return Boolean.TRUE.equals(success);
+        } catch (Exception e) {
+            logger.warn("setIfAbsent error, key={}", key, e);
+            return true;
         }
     }
 

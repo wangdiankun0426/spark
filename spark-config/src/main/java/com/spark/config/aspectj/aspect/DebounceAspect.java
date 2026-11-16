@@ -57,16 +57,14 @@ public class DebounceAspect {
         String className = joinPoint.getTarget().getClass().getSimpleName();
         String methodName = method.getName();
         String redisKey = ObjectCacheKey.DEBOUNCE_KEY + userId + "_" + className + "." + methodName;
-        // 检查是否存在防抖标记
-        boolean exists = redisService.hasKey(redisKey);
-        if (exists) {
+        // 原子写入防抖标记，未获取到说明窗口内已有提交，消除并发双穿
+        boolean acquired = redisService.setIfAbsent(redisKey, "1", annotation.value(), annotation.timeUnit());
+        if (!acquired) {
             logger.warn("debounce hit, key={}", redisKey);
             ResultData<Object> result = new ResultData<>();
             result.setErrorCode(ErrorCodeEnum.OPERATE_TOO_FREQUENT);
             return result;
         }
-        // 设置防抖标记
-        redisService.setStr(redisKey, "1", annotation.value(), annotation.timeUnit());
         return joinPoint.proceed();
     }
 }

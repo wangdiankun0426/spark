@@ -22,6 +22,7 @@ import com.spark.common.enums.*;
 import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.dao.flow.*;
+import com.spark.dao.form.FormObjDao;
 import com.spark.dao.form.FormObjValueDao;
 import com.spark.dao.form.FormVersionDao;
 import com.spark.flow.service.FlowMessageService;
@@ -68,6 +69,8 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
     private FormVersionDao formVersionDao;
     @Autowired
     private FormObjValueDao formObjValueDao;
+    @Autowired
+    private FormObjDao formObjDao;
     @Autowired
     private FlowInstanceDiscussDao instanceDiscussDao;
     @Autowired
@@ -130,10 +133,29 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
                 return result;
             }
         }
-        ResultData<String> createInstanceData = flowableService.createInstance(instanceVO.getProcessId(), variables);
+        ResultData<String> createInstanceData;
+        try {
+            createInstanceData = flowableService.createInstance(instanceVO.getProcessId(), variables);
+        } catch (Exception e) {
+            logger.error("createInstance engine error, instanceId={}", instanceId, e);
+            this.compensateCreateInstance(instanceId);
+            result.setErrorCode(ErrorCodeEnum.SYSTEM_ERROR);
+            return result;
+        }
         if (createInstanceData.getCode() != ResultData.OK) {
+            this.compensateCreateInstance(instanceId);
             result.setCode(createInstanceData.getCode());
             result.setMessage(createInstanceData.getMessage());
+            return result;
+        }
+        // 引擎成功后校验业务实例已落库，监听器插入失败被吞时走补偿
+        FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
+        instanceQuery.setId(instanceId);
+        FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
+        if (instanceResult == null) {
+            logger.error("createInstance instance missing after engine start, instanceId={}", instanceId);
+            this.compensateCreateInstance(instanceId);
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         result.setCode(ResultData.OK);
@@ -1361,6 +1383,44 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         }
         flowMessageService.sendFlowNotice(flowableInstanceId, MessageTypeEnum.FLOW_TODO.getType());
         return true;
+    }
+
+    /**
+     * 流程提交中途失败补偿，尽力而为清理业务实例与表单数据
+     * @param instanceId 流程实例id
+     */
+    private void compensateCreateInstance(Long instanceId) {
+        FlowInstanceQuery instanceQuery = new FlowInstanceQuery();
+        instanceQuery.setId(instanceId);
+        FlowInstanceResult instanceResult = instanceDao.queryInstance(instanceQuery);
+        // 先逻辑删业务实例，使引擎删除触发的取消事件查不到存活实例而跳过通知
+        if (instanceResult != null) {
+            try {
+                FlowInstance instance = new FlowInstance();
+                instance.setId(instanceId);
+                instanceDao.deleteDBById(instance);
+            } catch (Exception e) {
+                logger.error("compensateCreateInstance delete instance fail, instanceId={}", instanceId, e);
+            }
+            String flowableInstanceId = instanceResult.getFlowableInstanceId();
+            if (StringUtil.isNotBlank(flowableInstanceId)) {
+                try {
+                    flowableService.deleteInstance(flowableInstanceId);
+                } catch (Exception e) {
+                    logger.error("compensateCreateInstance delete engine instance fail, instanceId={}, flowableInstanceId={}", instanceId, flowableInstanceId, e);
+                }
+            }
+        }
+        try {
+            formObjDao.deleteDBByObjId(instanceId);
+        } catch (Exception e) {
+            logger.error("compensateCreateInstance delete formObj fail, instanceId={}", instanceId, e);
+        }
+        try {
+            formObjValueDao.deleteDBByObjId(instanceId);
+        } catch (Exception e) {
+            logger.error("compensateCreateInstance delete formObjValue fail, instanceId={}", instanceId, e);
+        }
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.spark.form.service.impl;
 
+import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.form.entity.FormObj;
@@ -24,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +56,9 @@ public class FormObjValueServiceImpl extends BaseService<FormObjQuery, FormObjRe
      * @param valueVO 表单对象值
      * @return 创建结果
      */
+    // 独立事务在流程引擎启动前提交，表单值写入失败整体回滚避免孤儿 form_obj，同时保住引擎写即可见
     @Override
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> saveFormObjValues(FormObjValueVO valueVO) {
         ResultData<Void> result = new ResultData<>();
         Long userId = SessionHolder.getCurrentUserId();
@@ -84,8 +88,7 @@ public class FormObjValueServiceImpl extends BaseService<FormObjQuery, FormObjRe
         int count = formObjDao.insertDB(formObj);
         if (count < 1) {
             logger.error("insert data error");
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         List<FormObjValue> list = new ArrayList<>();
         for (FormObjValue value : valueVO.getValues()) {
@@ -104,8 +107,7 @@ public class FormObjValueServiceImpl extends BaseService<FormObjQuery, FormObjRe
         }
         count = formObjValueDao.batchInsert(list);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         result.setCode(ResultData.OK);
         return result;

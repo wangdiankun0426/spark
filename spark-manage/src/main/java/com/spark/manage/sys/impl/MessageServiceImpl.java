@@ -1,5 +1,6 @@
 package com.spark.manage.sys.impl;
 
+import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import com.spark.common.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -55,6 +57,7 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
      * @return 创建结果
      */
     @Override
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> createMessage(MessageVO messageVO) {
         ResultData<Void> result = new ResultData<>();
         if (messageVO == null || messageVO.getType() == null || StringUtil.isBlank(messageVO.getTitle())
@@ -70,8 +73,7 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
         BeanUtil.copyProperties(messageVO, message);
         int count = messageDao.insertDB(message);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         if (CollectionUtil.isEmpty(messageVO.getUserIds())) {
             result.setCode(ResultData.OK);
@@ -79,8 +81,7 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
         }
         count = messageUserDao.batchInsert(message.getId(), messageVO.getUserIds(), SessionHolder.getCurrentUserId());
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         result.setCode(ResultData.OK);
         return result;
@@ -232,8 +233,10 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
      * @param messageVO 删除参数
      * @return 删除结果
      */
+    // 消息与关联用户同事务删除，关联删除失败回滚避免消息丢失
     @Override
     @LogOperate(operateType = OperateTypeEnum.MESSAGE_DELETE)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> deleteMessage(MessageVO messageVO) {
         ResultData<Void> result = new ResultData<>();
         Long userId = SessionHolder.getCurrentUserId();
@@ -256,13 +259,11 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
         message.setId(messageVO.getId());
         int count = messageDao.deleteDBById(message);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.DELETE_DATA_FAIL);
         }
         count = messageUserDao.deleteByMsgId(messageVO.getId(), userId, new Date());
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.DEPT_NOT_EXIST);
-            return result;
+            throw new BaseException(ErrorCodeEnum.DELETE_DATA_FAIL);
         }
         result.setObjId(messageVO.getId());
         result.setCode(ResultData.OK);
