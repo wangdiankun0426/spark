@@ -65,16 +65,6 @@ public class TenantUserController {
     }
 
     /**
-     * 查询租户用户已勾选的组织菜单id集合
-     * @param query 查询参数
-     * @return 菜单id集合
-     */
-    @GetMapping("orgMenus")
-    public ResultData<List<Long>> queryOrgMenuIds(TenantUserQuery query) {
-        return tenantUserService.queryOrgMenuIds(query);
-    }
-
-    /**
      * 分页查询租户用户列表
      * @param query 查询参数
      * @return 分页结果

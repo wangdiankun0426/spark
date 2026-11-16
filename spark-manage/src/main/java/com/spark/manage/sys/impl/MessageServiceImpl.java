@@ -196,6 +196,7 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.MESSAGE_INSERT)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> sendMessage(MessageVO messageVO) {
         ResultData<Void> result = new ResultData<>();
         Long userId = SessionHolder.getCurrentUserId();
@@ -214,14 +215,12 @@ public class MessageServiceImpl extends BaseService<MessageQuery, MessageResult>
         message.setRefId(userId);
         int count = messageDao.insertDB(message);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         List<Long> userIds = messageVO.getUserIds().stream().distinct().collect(Collectors.toList());
         count = messageUserDao.batchInsert(message.getId(), userIds, userId);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         result.setObjId(message.getId());
         result.setCode(ResultData.OK);

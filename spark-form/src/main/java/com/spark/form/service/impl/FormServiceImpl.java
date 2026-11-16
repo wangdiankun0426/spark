@@ -1,5 +1,6 @@
 package com.spark.form.service.impl;
 
+import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
@@ -33,6 +34,7 @@ import com.spark.common.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,6 +70,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.FORM_INSERT)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Form> createForm(FormVO formVO) {
         ResultData<Form> result = new ResultData<>();
         if (formVO == null) {
@@ -82,8 +85,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         int count = formVersionDao.insertDB(formVersion);
         if (count < 1) {
             logger.error("createForm error, insert form version db fail");
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         Form form = new Form();
         BeanUtil.copyProperties(formVO, form);
@@ -103,8 +105,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         count = formDao.insertDB(form);
         if (count < 1) {
             logger.error("createForm error, insert form db fail");
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         result.setData(form);
         result.setObjId(formId);

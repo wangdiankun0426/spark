@@ -6,14 +6,13 @@ import com.spark.common.bean.sys.entity.Role;
 import com.spark.common.bean.sys.query.RoleQuery;
 import com.spark.common.bean.sys.result.RoleResult;
 import com.spark.common.bean.sys.vo.RoleVO;
+import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.dao.sys.RoleDao;
 import com.spark.dao.sys.RoleDeptDao;
 import com.spark.dao.sys.RoleMenuDao;
-import com.spark.dao.sys.RoleUserDao;
-import com.spark.config.redis.RedisService;
 import com.spark.common.enums.DataScopeEnum;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.ErrorCodeEnum;
@@ -24,6 +23,7 @@ import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -45,10 +45,6 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
     private RoleMenuDao roleMenuDao;
     @Autowired
     private RoleDeptDao roleDeptDao;
-    @Autowired
-    private RoleUserDao roleUserDao;
-    @Autowired
-    private RedisService redisService;
 
     /**
      * 创建角色
@@ -57,6 +53,7 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.ROLE_INSERT)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> createRole(RoleVO roleVO) {
         ResultData<Void> result = new ResultData<>();
         if (roleVO == null || StringUtil.isBlank(roleVO.getName())) {
@@ -83,8 +80,7 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
         role.setId(roleId);
         int count = roleDao.insertDB(role);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         this.saveRoleRelations(roleId, tenantId, roleVO);
         result.setObjId(roleId);
@@ -149,6 +145,7 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.ROLE_UPDATE)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> updateRole(RoleVO roleVO) {
         ResultData<Void> result = new ResultData<>();
         if (roleVO == null || roleVO.getId() == null || StringUtil.isBlank(roleVO.getName())) {
@@ -175,11 +172,9 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
         role.setMenuCheckStrictly(menuCheckStrictly);
         int count = roleDao.updateDBById(role);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.UPDATE_DATA_FAIL);
         }
         this.saveRoleRelations(roleId, tenantId, roleVO);
-        this.invalidateRoleUserSession(roleId);
         result.setObjId(roleId);
         result.setCode(ResultData.OK);
         return result;
@@ -192,6 +187,7 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.ROLE_DELETE)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> deleteRole(RoleVO roleVO) {
         ResultData<Void> result = new ResultData<>();
         if (roleVO == null || roleVO.getId() == null) {
@@ -207,12 +203,10 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
         role.setId(roleId);
         int count = roleDao.deleteDBById(role);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.DELETE_DATA_FAIL);
         }
         roleMenuDao.deleteByRoleId(roleId);
         roleDeptDao.deleteByRoleId(roleId);
-        this.invalidateRoleUserSession(roleId);
         result.setObjId(roleId);
         result.setCode(ResultData.OK);
         return result;
@@ -274,14 +268,20 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
         roleMenuDao.deleteByRoleId(roleId);
         List<Long> menuIds = roleVO.getMenuIds();
         if (CollectionUtil.isNotEmpty(menuIds)) {
-            roleMenuDao.batchInsertByRoleId(tenantId, roleId, menuIds, createdBy);
+            int count = roleMenuDao.batchInsertByRoleId(tenantId, roleId, menuIds, createdBy);
+            if (count < 1) {
+                throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
+            }
         }
         roleDeptDao.deleteByRoleId(roleId);
         // 自定义数据范围才保存部门关联
         if (DataScopeEnum.CUSTOM.getValue().equals(roleVO.getDataScope())) {
             List<Long> deptIds = roleVO.getDeptIds();
             if (CollectionUtil.isNotEmpty(deptIds)) {
-                roleDeptDao.batchInsertByRoleId(tenantId, roleId, deptIds, createdBy);
+                int count = roleDeptDao.batchInsertByRoleId(tenantId, roleId, deptIds, createdBy);
+                if (count < 1) {
+                    throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
+                }
             }
         }
     }
@@ -301,22 +301,5 @@ public class RoleServiceImpl extends BaseService<RoleQuery, RoleResult> implemen
         roleQuery.setTenantId(tenantId);
         RoleResult roleResult = roleDao.queryRole(roleQuery);
         return roleResult != null;
-    }
-
-    /**
-     * 角色变更后定向失效关联用户的登录会话
-     * @param roleId 角色id
-     */
-    private void invalidateRoleUserSession(Long roleId) {
-        if (roleId == null) {
-            return;
-        }
-        List<Long> userIds = roleUserDao.queryUserIdsByRoleId(roleId);
-        if (CollectionUtil.isEmpty(userIds)) {
-            return;
-        }
-        for (Long userId : userIds) {
-            redisService.deleteLoginSessionByUserId(userId);
-        }
     }
 }

@@ -327,12 +327,11 @@ VALUES
 -- 工作台按钮，全员公共
 ('工作台概览', 'menu.home.dashboard', 'menu.home.dashboard.f.dashboard.query', 4, 'home:dashboard:query', NULL, NULL, NULL, 1, 1, 1, 2, 1, 101, now());
 
--- 组织管理员全量授组织菜单，站点管理员后续逐人裁剪
-INSERT INTO sys_tenant_user_menu (tenant_id, tenant_user_id, menu_id, delete_flag, created_by, created_dt)
-SELECT tu.tenant_id, tu.id, m.id, 1, 101, now()
-FROM sys_tenant_user tu
-JOIN sys_menu m ON m.platform = 3 AND m.delete_flag = 1 AND m.status = 1
-WHERE tu.delete_flag = 1 AND (tu.role_type & 2) = 2;
+-- 演示租户全量授租户/组织菜单开箱可用，站点管理员后续按需收窄
+INSERT INTO sys_tenant_menu (tenant_id, menu_id, delete_flag, created_by, created_dt)
+SELECT 103, m.id, 1, 101, now()
+FROM sys_menu m
+WHERE m.platform IN (0, 3) AND m.delete_flag = 1 AND m.status = 1;
 
 INSERT INTO `llm_skill` (`id`, `tenant_id`, `name`, `description`, `content`, `status`, `dept_id`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (1, 103, 'sql编写规范', '在写sql时候必须使用此规范', '---\nname: sql-writing-guide\ndescription: 当用户要求编写、优化或审查 MySQL 8 查询语句时命中。强制统一的命名规范、分页写法、JOIN 与索引要求，输出可直接执行的 SQL 并附设计说明。\n---\n\n## 执行流程\n\n1. 明确用户的查询目标：涉及的表、过滤条件、返回字段、是否需要分页或排序。\n2. 信息不足时先向用户确认（表结构、数据量级、是否允许全表扫描），不要凭空假设表名与字段名。\n3. 按以下规则编写 SQL，具体细则按需读取对应子文件：\n   - 表名、字段名、别名、索引名的命名要求 → 读取 `references/naming-convention.md`\n   - 分页、JOIN、子查询、函数使用等编写规则与禁止项 → 读取 `references/query-rules.md`\n   - 常见场景（分页列表、树形查询、批量操作等）的可复用模板 → 读取 `scripts/query-templates.sql`\n   - 评估 SQL 是否走索引或给出加索引建议时 → 读取 `references/index-guide.md`\n4. 输出 SQL 后必须附「设计说明」，包含：\n   - 关键写法的选择理由（如为什么用该 JOIN 方式）\n   - 预计命中的索引；如无法命中索引，必须显式提示全表扫描风险\n5. 审查用户提供的既有 SQL 时，按上述 references 逐条核对，输出「违规项清单 + 修正后的 SQL」。\n\n## 硬性要求\n\n- 所有 SQL 以 MySQL 8.0 语法为准，禁止使用 MySQL 8 已移除的特性。\n- 禁止 `SELECT *`，必须列出明确字段。\n- 分页必须包含 `ORDER BY`，且排序字段需有索引或说明无法走索引的原因。\n- 涉及多表时必须为每张表指定别名，别名规则见 `references/naming-convention.md`。\n- 不杜撰表名与字段名；用户未提供表结构时，先要求提供或用注释占位并明确标注。\n\n## 输出格式\n\n1. SQL 代码块（带必要的中文注释）\n2. 设计说明（要点列表）\n3. 如有风险或待确认项，单独列出「注意事项」\n', 1, 102, 1, 101, '2026-09-05 18:38:42', 201, '2026-10-15 11:07:14');
 INSERT INTO `llm_skill_file` (`id`, `tenant_id`, `skill_id`, `file_path`, `description`, `content`, `sort`, `dept_id`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`) VALUES (1, 103, 1, 'references/index-guide.md', '索引设计与命中判断', '# 索引设计与命中判断\n\n## 判断方法\n\n- 用 `EXPLAIN` 思路评估：type 至少达到 `range`，`ALL`（全表扫描）必须显式提示。\n- 联合索引遵循最左前缀：索引 `(a, b, c)` 可命中 `a`、`a,b`、`a,b,c` 前缀条件。\n- `ORDER BY` 字段与 `WHERE` 条件共用联合索引时可避免 filesort，例如 `WHERE a = ? ORDER BY b` 适用索引 `(a, b)`。\n\n## 建索引建议的输出格式\n\n给出加索引建议时，直接输出可执行的 DDL：\n\n```sql\nALTER TABLE order_info ADD INDEX idx_user_id_created_dt (user_id, created_dt);\n```\n\n并说明：该索引服务哪些查询、是否会造成已有查询的索引选择变化、写入开销提示。\n\n## 常见失效场景\n\n- 字段上套函数或做隐式类型转换（字符串字段传数字）。\n- `LIKE` 前缀通配、`OR` 两侧有一侧无索引、联合索引跳过最左列。\n- 数据区分度过低的字段（如 status 仅 2~3 个值）单独建索引意义不大，应做联合索引首列需高区分度。\n', 1, 902, 1, 201, '2026-10-15 11:07:14', 201, '2026-10-15 11:07:14');

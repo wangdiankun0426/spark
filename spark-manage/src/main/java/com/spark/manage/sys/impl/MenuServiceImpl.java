@@ -14,18 +14,19 @@ import com.spark.common.utils.BeanUtil;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.StringUtil;
 import com.spark.config.aspectj.annotation.LogPrint;
-import com.spark.config.redis.RedisService;
 import com.spark.dao.sys.MenuDao;
 import com.spark.dao.sys.RoleMenuDao;
-import com.spark.dao.sys.TenantUserMenuDao;
+import com.spark.dao.sys.TenantMenuDao;
 import com.spark.manage.sys.IMenuService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * +++/\_/\
@@ -59,9 +60,7 @@ public class MenuServiceImpl implements IMenuService {
     @Autowired
     private RoleMenuDao roleMenuDao;
     @Autowired
-    private TenantUserMenuDao tenantUserMenuDao;
-    @Autowired
-    private RedisService redisService;
+    private TenantMenuDao tenantMenuDao;
 
     /**
      * 查询菜单列表
@@ -148,8 +147,6 @@ public class MenuServiceImpl implements IMenuService {
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
-        String sessionId = SessionHolder.getCurrentSessionId();
-        redisService.deleteAllLoginSession(sessionId);
         result.setCode(ResultData.OK);
         return result;
     }
@@ -182,8 +179,6 @@ public class MenuServiceImpl implements IMenuService {
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
-        String sessionId = SessionHolder.getCurrentSessionId();
-        redisService.deleteAllLoginSession(sessionId);
         result.setCode(ResultData.OK);
         return result;
     }
@@ -222,9 +217,9 @@ public class MenuServiceImpl implements IMenuService {
             result.setErrorCode(ErrorCodeEnum.MENU_ROLE_ASSIGNED);
             return result;
         }
-        int orgGrantCount = tenantUserMenuDao.countByMenuId(menuId);
-        if (orgGrantCount > 0) {
-            result.setErrorCode(ErrorCodeEnum.MENU_ORG_ASSIGNED);
+        int tenantGrantCount = tenantMenuDao.countByMenuId(menuId);
+        if (tenantGrantCount > 0) {
+            result.setErrorCode(ErrorCodeEnum.MENU_TENANT_ASSIGNED);
             return result;
         }
         int count = menuDao.deleteMenuById(menuId);
@@ -232,14 +227,12 @@ public class MenuServiceImpl implements IMenuService {
             result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
-        String sessionId = SessionHolder.getCurrentSessionId();
-        redisService.deleteAllLoginSession(sessionId);
         result.setCode(ResultData.OK);
         return result;
     }
 
     /**
-     * 查询角色授权菜单树，仅租户菜单平台菜单
+     * 查询角色授权菜单树，仅租户菜单平台菜单，非站点管理员限当前租户已授权菜单
      * @return 菜单树
      */
     @Override
@@ -251,6 +244,12 @@ public class MenuServiceImpl implements IMenuService {
         }
         List<Integer> platformList = List.of(PLATFORM_TENANT);
         List<Menu> menuList = menuDao.queryMenuListByPlatform(platformList);
+        if (!SessionHolder.isSysAdmin()) {
+            Long tenantId = SessionHolder.getCurrentTenantId();
+            List<Long> tenantMenuIds = tenantMenuDao.queryMenuIdsByTenantId(tenantId);
+            Set<Long> tenantMenuIdSet = new HashSet<>(tenantMenuIds);
+            menuList.removeIf(menu -> !tenantMenuIdSet.contains(menu.getId()));
+        }
         List<MenuTree> treeList = this.buildMenuTree(menuList);
         result.setData(treeList);
         result.setCode(ResultData.OK);
@@ -258,17 +257,17 @@ public class MenuServiceImpl implements IMenuService {
     }
 
     /**
-     * 查询组织菜单授权树，仅组织平台菜单含按钮，仅站点管理员
+     * 查询租户菜单授权树，含租户与组织平台菜单与按钮，仅站点管理员
      * @return 菜单树
      */
     @Override
-    public ResultData<List<MenuTree>> queryOrgMenuTreeList() {
+    public ResultData<List<MenuTree>> queryTenantMenuTreeList() {
         ResultData<List<MenuTree>> result = new ResultData<>();
         if (!SessionHolder.isSysAdmin()) {
             result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
-        List<Integer> platformList = List.of(PLATFORM_ORG);
+        List<Integer> platformList = List.of(PLATFORM_TENANT, PLATFORM_ORG);
         List<Menu> menuList = menuDao.queryMenuListByPlatform(platformList);
         List<MenuTree> treeList = this.buildMenuTree(menuList);
         result.setData(treeList);

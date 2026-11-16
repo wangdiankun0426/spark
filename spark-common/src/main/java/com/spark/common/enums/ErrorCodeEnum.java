@@ -58,7 +58,7 @@ public enum ErrorCodeEnum {
     MENU_CODE_EXIST(1003, "相同标识码的菜单已存在"),
     MENU_CHILD_EXIST(1004, "存在子菜单，不允许删除"),
     MENU_ROLE_ASSIGNED(1005, "菜单已分配角色，不允许删除"),
-    MENU_ORG_ASSIGNED(1006, "菜单已分配组织管理员，不允许删除"),
+    MENU_TENANT_ASSIGNED(1006, "菜单已授权租户，不允许删除"),
     // 租户相关状态码
     TENANT_SAME_NAME_EXIST(1101,"相同名称的租户已存在"),
     TENANT_UNAVAILABLE(1102,"租户不可用或未加入"),

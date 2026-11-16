@@ -119,11 +119,10 @@ CREATE TABLE `sys_tenant_user` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='租户用户表';
 
-DROP TABLE IF EXISTS `sys_tenant_user_menu`;
-CREATE TABLE `sys_tenant_user_menu` (
+DROP TABLE IF EXISTS `sys_tenant_menu`;
+CREATE TABLE `sys_tenant_menu` (
     `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
     `tenant_id` bigint(12) NOT NULL DEFAULT 0 COMMENT '租户id',
-    `tenant_user_id` bigint(12) NOT NULL COMMENT '租户用户id',
     `menu_id` bigint(12) NOT NULL COMMENT '菜单id',
 
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
@@ -132,8 +131,8 @@ CREATE TABLE `sys_tenant_user_menu` (
     `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
     `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_tenant_user_menu` (`tenant_user_id`, `menu_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='租户用户组织菜单关联';
+    UNIQUE KEY `uk_tenant_menu` (`tenant_id`, `menu_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='租户菜单关联';
 
 DROP TABLE IF EXISTS `sys_role`;
 CREATE TABLE `sys_role` (

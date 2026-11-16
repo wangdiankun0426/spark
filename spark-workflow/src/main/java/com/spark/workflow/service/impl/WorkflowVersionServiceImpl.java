@@ -1,5 +1,6 @@
 package com.spark.workflow.service.impl;
 
+import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.workflow.entity.WfTemplate;
 import com.spark.common.bean.workflow.entity.WfTemplateVersion;
@@ -21,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -50,6 +52,7 @@ public class WorkflowVersionServiceImpl extends BaseService<WfTemplateVersionQue
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.WORKFLOW_VERSION_SAVE)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> saveVersion(WfTemplateVersionVO versionVO) {
         ResultData<Void> result = new ResultData<>();
         if (versionVO == null || versionVO.getTemplateId() == null) {
@@ -76,8 +79,7 @@ public class WorkflowVersionServiceImpl extends BaseService<WfTemplateVersionQue
         int count = templateVersionDao.insertDB(version);
         if (count < 1) {
             logger.error("saveVersion error, insert version db fail");
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         WfTemplate template = new WfTemplate();
         template.setId(versionVO.getTemplateId());
@@ -86,9 +88,10 @@ public class WorkflowVersionServiceImpl extends BaseService<WfTemplateVersionQue
         template.setFormId(templateResult.getFormId());
         count = templateDao.updateDBById(template);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.UPDATE_DATA_FAIL);
         }
+        Long versionId = version.getId();
+        result.setObjId(versionId);
         result.setCode(ResultData.OK);
         return result;
     }

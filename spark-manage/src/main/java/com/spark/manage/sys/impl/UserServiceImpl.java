@@ -23,7 +23,6 @@ import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.LogIgnore;
 import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.LogOperate;
-import com.spark.config.redis.RedisService;
 import com.spark.common.bean.sys.entity.User;
 import com.spark.common.bean.sys.entity.UserProfile;
 import com.spark.common.bean.sys.vo.UserVO;
@@ -93,8 +92,6 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
     private ITenantConfigService tenantConfigService;
     @Autowired
     private IEncryptKeyService encryptKeyService;
-    @Autowired
-    private RedisService redisService;
     @Value("${user.avatar.path}")
     private String userAvatarPath;
 
@@ -200,6 +197,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.USER_UPDATE)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> updateUser(UserVO userVO) {
         ResultData<Void> result = this.validateUpdateUserParam(userVO);
         BaseAssert.assertTrue(result);
@@ -219,8 +217,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         user.setStatus(userVO.getStatus());
         int count = userDao.updateDBById(user);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.UPDATE_DATA_FAIL);
         }
         // 更新扩展表数据
         UserProfile userProfile = new UserProfile();
@@ -228,8 +225,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         userProfile.setWecomId(userVO.getWecomId());
         count = userProfileDao.updateDBById(userProfile);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.UPDATE_DATA_FAIL);
         }
         // 加入租户
         TenantUserVO tenantUserVO = new TenantUserVO();
@@ -253,6 +249,7 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.USER_DELETE)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> deleteUser(UserVO userVO) {
         ResultData<Void> result = new ResultData<>();
         if (userVO == null || userVO.getId() == null) {
@@ -268,12 +265,10 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
         user.setId(userId);
         int count = userDao.deleteDBById(user);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.DELETE_DATA_FAIL);
         }
         // 删除用户所属租户信息
         tenantUserDao.deleteTenantUserV2(userVO.getId(), SessionHolder.getCurrentUserId());
-        redisService.deleteLoginSessionByUserId(userId);
         result.setObjId(userVO.getId());
         result.setCode(ResultData.OK);
         return result;
@@ -378,7 +373,6 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
-        redisService.deleteLoginSessionByUserId(userId);
         result.setObjId(userId);
         result.setCode(ResultData.OK);
         return result;

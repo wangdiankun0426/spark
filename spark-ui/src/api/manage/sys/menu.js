@@ -60,10 +60,10 @@ export function roleMenuTreeAPI() {
     })
 }
 
-// 查询组织菜单授权树
-export function orgMenuTreeAPI() {
+// 查询租户菜单授权树
+export function tenantMenuTreeAPI() {
     return request({
-        url: '/sys/menu/orgTree',
+        url: '/sys/menu/tenantTree',
         method: 'get'
     })
 }

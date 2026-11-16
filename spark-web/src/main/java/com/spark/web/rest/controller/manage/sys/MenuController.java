@@ -99,11 +99,11 @@ public class MenuController {
     }
 
     /**
-     * 查询组织菜单授权树
+     * 查询租户菜单授权树
      * @return 菜单树
      */
-    @GetMapping("orgTree")
-    public ResultData<List<MenuTree>> queryOrgMenuTreeList() {
-        return menuService.queryOrgMenuTreeList();
+    @GetMapping("tenantTree")
+    public ResultData<List<MenuTree>> queryTenantMenuTreeList() {
+        return menuService.queryTenantMenuTreeList();
     }
 }

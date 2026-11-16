@@ -241,6 +241,7 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
      * @return 删除结果
      */
     @Override
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> deleteChatSpace(ChatSpaceVO chatSpaceVO) {
         ResultData<Void> result = new ResultData<>();
         if (chatSpaceVO == null || chatSpaceVO.getSpaceId() == null) {
@@ -267,8 +268,7 @@ public class ChatSpaceServiceImpl extends BaseService<ChatSpaceQuery, ChatSpaceR
         chatSpace.setId(chatSpaceResult.getId());
         int count = chatSpaceDao.deleteDBById(chatSpace);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.DELETE_DATA_FAIL);
         }
         chatMsgDao.deleteBySpaceId(chatSpaceVO.getSpaceId(), userId);
         result.setCode(ResultData.OK);

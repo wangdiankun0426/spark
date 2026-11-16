@@ -1,5 +1,6 @@
 package com.spark.task.service.impl;
 
+import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
@@ -23,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.spark.common.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -50,6 +52,7 @@ public class TaskTemplateServiceImpl extends BaseService<TaskTemplateQuery, Task
      * @return 创建结果
      */
     @Override
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> createTaskTemplate(TaskTemplateVO taskTemplateVO) {
         ResultData<Void> result = new ResultData<>();
         if (taskTemplateVO == null || StringUtil.isBlank(taskTemplateVO.getName()) || taskTemplateVO.getTaskType() == null) {
@@ -72,8 +75,7 @@ public class TaskTemplateServiceImpl extends BaseService<TaskTemplateQuery, Task
         }
         int count = taskTemplateDao.insertDB(taskTemplate);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         TaskTemplateParamQuery templateParamQuery = new TaskTemplateParamQuery();
         templateParamQuery.setTemplateId(taskTemplateResult.getId());
@@ -83,7 +85,10 @@ public class TaskTemplateServiceImpl extends BaseService<TaskTemplateQuery, Task
                 TaskTemplateParam taskTemplateParam = new TaskTemplateParam();
                 BeanUtil.copyProperties(taskTemplateParamResult, taskTemplateParam);
                 taskTemplateParam.setTemplateId(taskTemplate.getId());
-                taskTemplateParamDao.insertDB(taskTemplateParam);
+                int paramInsertCount = taskTemplateParamDao.insertDB(taskTemplateParam);
+                if (paramInsertCount < 1) {
+                    throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
+                }
             }
         }
         result.setObjId(taskTemplate.getId());
@@ -129,6 +134,7 @@ public class TaskTemplateServiceImpl extends BaseService<TaskTemplateQuery, Task
      * @return 删除结果
      */
     @Override
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> deleteTaskTemplate(TaskTemplateVO taskTemplateVO) {
         ResultData<Void> result = new ResultData<>();
         if (taskTemplateVO == null || taskTemplateVO.getId() == null) {
@@ -148,14 +154,13 @@ public class TaskTemplateServiceImpl extends BaseService<TaskTemplateQuery, Task
         taskTemplate.setId(taskTemplateVO.getId());
         int count = taskTemplateDao.deleteDBById(taskTemplate);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.DELETE_DATA_FAIL);
         }
         // 级联删除该模板下的参数
         int paramCount = taskTemplateParamDao.deleteByTemplateId(taskTemplate.getId(), userId);
         if (paramCount < 0) {
             logger.error("deleteTaskTemplate error, delete param db fail");
-            return result;
+            throw new BaseException(ErrorCodeEnum.DELETE_DATA_FAIL);
         }
         result.setObjId(taskTemplate.getId());
         result.setCode(ResultData.OK);

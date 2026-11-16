@@ -18,7 +18,6 @@ import com.spark.dao.sys.UserDao;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.StatusEnum;
-import com.spark.config.redis.RedisService;
 import com.spark.manage.sys.IRoleUserService;
 import com.spark.manage.BaseService;
 import com.spark.common.utils.CollectionUtil;
@@ -47,8 +46,6 @@ public class RoleUserServiceImpl extends BaseService<RoleUserQuery, RoleUserResu
     private RoleDao roleDao;
     @Autowired
     private UserDao userDao;
-    @Autowired
-    private RedisService redisService;
 
     /**
      * 添加用户
@@ -86,9 +83,9 @@ public class RoleUserServiceImpl extends BaseService<RoleUserQuery, RoleUserResu
         Long tenantId = SessionHolder.getCurrentTenantId();
         int count = roleUserDao.batchInsertByRoleId(tenantId, roleId, userIds, createdBy);
         if (count < 1) {
+            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
-        userIds.forEach(redisService::deleteLoginSessionByUserId);
         result.setObjId(roleId);
         result.setCode(ResultData.OK);
         return result;
@@ -117,7 +114,6 @@ public class RoleUserServiceImpl extends BaseService<RoleUserQuery, RoleUserResu
             result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
         }
-        redisService.deleteLoginSessionByUserId(roleUserVO.getUserId());
         result.setObjId(roleUserVO.getRoleId());
         result.setCode(ResultData.OK);
         return result;

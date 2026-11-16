@@ -39,7 +39,7 @@ import java.util.Set;
  * @author wangdiankun
  * @since 2026-11-13 15:00:00
  * 权限加载服务实现
- * 站点管理员授通配权限，组织管理员物化已勾选组织菜单、角色授权与公共菜单并集，普通用户取角色授权与公共菜单并集
+ * 站点管理员授通配权限，组织管理员物化租户授权组织菜单、角色授权与公共菜单并集，普通用户取公共菜单与租户授权范围内角色授权菜单并集
  */
 @Service
 public class PermissionServiceImpl implements IPermissionService {
@@ -80,7 +80,7 @@ public class PermissionServiceImpl implements IPermissionService {
         if (orgAdmin) {
             Long orgTenantId = session.getTenantId();
             Long orgUserId = session.getUserId();
-            List<Menu> orgMenuList = menuDao.queryOrgAdminMenuList(orgTenantId, orgUserId);
+            List<Menu> orgMenuList = menuDao.queryTenantOrgMenuList(orgTenantId);
             List<Menu> userMenuList = menuDao.queryUserMenuList(orgTenantId, orgUserId);
             List<Menu> menuList = new ArrayList<>(orgMenuList);
             menuList.addAll(userMenuList);
@@ -131,7 +131,7 @@ public class PermissionServiceImpl implements IPermissionService {
         if (SessionHolder.isOrgAdmin()) {
             Long tenantId = SessionHolder.getCurrentTenantId();
             Long userId = SessionHolder.getCurrentUserId();
-            List<Menu> orgMenuList = menuDao.queryOrgAdminMenuList(tenantId, userId);
+            List<Menu> orgMenuList = menuDao.queryTenantOrgMenuList(tenantId);
             List<Menu> userMenuList = menuDao.queryUserMenuList(tenantId, userId);
             List<Menu> menuList = new ArrayList<>(orgMenuList);
             menuList.addAll(userMenuList);

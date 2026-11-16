@@ -83,14 +83,6 @@ public interface TenantDao extends BaseDao<Tenant> {
     Long queryTenantMaxId();
 
     /**
-     * 查询待关闭的超期租户id集合
-     * 状态为启用且截止时间已过的有效租户
-     * @return 租户id集合
-     */
-    @Select("select id from sys_tenant where delete_flag = 1 and status = 1 and deadline is not null and deadline <= now()")
-    List<Long> queryExpiredTenantIds();
-
-    /**
      * 批量关闭超期租户
      * 状态为启用且截止时间已过的有效租户置为停用
      * @return 影响行数

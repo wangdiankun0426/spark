@@ -2,6 +2,7 @@ package com.spark.manage.sys.impl;
 
 import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.LogOperate;
+import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
@@ -23,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -213,6 +215,7 @@ public class TenantConfigServiceImpl extends BaseService<TenantConfigQuery, Tena
      * @return 创建结果
      */
     @Override
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Integer> createDefaultConfig(Long tenantId) {
         ResultData<Integer> result = new ResultData<>();
         if (tenantId == null) {
@@ -226,7 +229,11 @@ public class TenantConfigServiceImpl extends BaseService<TenantConfigQuery, Tena
             tenantConfig.setName(tenantConfigEnum.getName());
             tenantConfig.setKey(tenantConfigEnum.getKey());
             tenantConfig.setValue(tenantConfigEnum.getValue());
-            count += tenantConfigDao.insertDB(tenantConfig);
+            int insertCount = tenantConfigDao.insertDB(tenantConfig);
+            if (insertCount < 1) {
+                throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
+            }
+            count += insertCount;
         }
         result.setData(count);
         result.setCode(ResultData.OK);

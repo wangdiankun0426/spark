@@ -2,6 +2,8 @@ package com.spark.manage.sys.impl;
 
 import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.LogOperate;
+import com.spark.common.bean.base.BaseAssert;
+import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
@@ -16,7 +18,6 @@ import com.spark.common.enums.RoleTypeEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.StringUtil;
-import com.spark.config.redis.RedisService;
 import com.spark.dao.sys.*;
 import com.spark.manage.BaseService;
 import com.spark.manage.sys.ITenantConfigService;
@@ -25,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 /**
@@ -44,9 +46,9 @@ public class TenantServiceImpl extends BaseService<TenantQuery, TenantResult> im
     @Autowired
     private TenantDao tenantDao;
     @Autowired
-    private ITenantConfigService tenantConfigService;
+    private TenantMenuDao tenantMenuDao;
     @Autowired
-    private RedisService redisService;
+    private ITenantConfigService tenantConfigService;
 
     /**
      * 创建租户
@@ -55,6 +57,7 @@ public class TenantServiceImpl extends BaseService<TenantQuery, TenantResult> im
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.TENANT_INSERT)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> createTenant(TenantVO tenantVO) {
         ResultData<Void> result = new ResultData<>();
         if (tenantVO == null || StringUtil.isBlank(tenantVO.getName())) {
@@ -87,16 +90,14 @@ public class TenantServiceImpl extends BaseService<TenantQuery, TenantResult> im
         tenant.setDeadline(tenantVO.getDeadline());
         int count = tenantDao.insertDB(tenant);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         // 初始化租户默认配置
         ResultData<Integer> configResult = tenantConfigService.createDefaultConfig(tenantId);
         if (configResult.getCode() != ResultData.OK) {
             logger.error("create tenant default config fail, tenantId={}", tenantId);
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
         }
+        BaseAssert.assertTrue(configResult);
         result.setObjId(tenant.getId());
         result.setCode(ResultData.OK);
         return result;
@@ -157,11 +158,6 @@ public class TenantServiceImpl extends BaseService<TenantQuery, TenantResult> im
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
-        // 租户停用后强制成员重新登录
-        Integer status = tenantVO.getStatus();
-        if (status != null && !StatusEnum.NORMAL.getValue().equals(status)) {
-            redisService.deleteLoginSessionByTenantId(tenantVO.getId());
-        }
         result.setObjId(tenantVO.getId());
         result.setCode(ResultData.OK);
         return result;
@@ -174,6 +170,7 @@ public class TenantServiceImpl extends BaseService<TenantQuery, TenantResult> im
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.TENANT_DELETE)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> deleteTenant(TenantVO tenantVO) {
         ResultData<Void> result = new ResultData<>();
         if (tenantVO == null || tenantVO.getId() == null) {
@@ -188,11 +185,77 @@ public class TenantServiceImpl extends BaseService<TenantQuery, TenantResult> im
         tenant.setId(tenantVO.getId());
         int count = tenantDao.deleteDBById(tenant);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
+            throw new BaseException(ErrorCodeEnum.DELETE_DATA_FAIL);
+        }
+        tenantMenuDao.deleteByTenantId(tenantVO.getId());
+        result.setObjId(tenantVO.getId());
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 查询租户已授权的菜单id集合
+     * @param tenantVO 租户参数
+     * @return 菜单id集合
+     */
+    @Override
+    public ResultData<List<Long>> queryTenantMenuIds(TenantVO tenantVO) {
+        ResultData<List<Long>> result = new ResultData<>();
+        if (tenantVO == null || tenantVO.getId() == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        redisService.deleteLoginSessionByTenantId(tenantVO.getId());
-        result.setObjId(tenantVO.getId());
+        if (!SessionHolder.isSysAdmin()) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
+        TenantQuery tenantQuery = new TenantQuery();
+        tenantQuery.setTenantId(tenantVO.getId());
+        TenantResult tenantResult = tenantDao.queryTenant(tenantQuery);
+        if (tenantResult == null) {
+            result.setErrorCode(ErrorCodeEnum.TENANT_NOT_EXIST);
+            return result;
+        }
+        List<Long> menuIds = tenantMenuDao.queryMenuIdsByTenantId(tenantVO.getId());
+        result.setData(menuIds);
+        result.setCode(ResultData.OK);
+        return result;
+    }
+
+    /**
+     * 保存租户菜单授权，物理删除后批量插入，空集合即清空授权
+     * @param tenantVO 租户参数
+     * @return 保存结果
+     */
+    @Override
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
+    public ResultData<Void> saveTenantMenus(TenantVO tenantVO) {
+        ResultData<Void> result = new ResultData<>();
+        if (tenantVO == null || tenantVO.getId() == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (!SessionHolder.isSysAdmin()) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
+        }
+        Long tenantId = tenantVO.getId();
+        TenantQuery tenantQuery = new TenantQuery();
+        tenantQuery.setTenantId(tenantId);
+        TenantResult tenantResult = tenantDao.queryTenant(tenantQuery);
+        if (tenantResult == null) {
+            result.setErrorCode(ErrorCodeEnum.TENANT_NOT_EXIST);
+            return result;
+        }
+        tenantMenuDao.deleteByTenantId(tenantId);
+        List<Long> menuIds = tenantVO.getMenuIds();
+        if (CollectionUtil.isNotEmpty(menuIds)) {
+            Long createdBy = SessionHolder.getCurrentUserId();
+            int count = tenantMenuDao.batchInsertByTenantId(tenantId, menuIds, createdBy);
+            if (count < 1) {
+                throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
+            }
+        }
         result.setCode(ResultData.OK);
         return result;
     }
@@ -205,14 +268,7 @@ public class TenantServiceImpl extends BaseService<TenantQuery, TenantResult> im
     @Override
     public ResultData<Integer> closeExpiredTenant() {
         ResultData<Integer> result = new ResultData<>();
-        List<Long> expiredTenantIds = tenantDao.queryExpiredTenantIds();
         int count = tenantDao.closeExpiredTenant();
-        // 超期租户停用后强制成员重新登录
-        if (CollectionUtil.isNotEmpty(expiredTenantIds)) {
-            for (Long tenantId : expiredTenantIds) {
-                redisService.deleteLoginSessionByTenantId(tenantId);
-            }
-        }
         result.setData(count);
         result.setCode(ResultData.OK);
         return result;

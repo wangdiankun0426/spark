@@ -34,6 +34,12 @@
             or (
               platform = 0
               and id in (
+                  select tm.menu_id
+                  from sys_tenant_menu tm
+                  where tm.delete_flag = 1
+                    and tm.tenant_id = #{tenantId}
+              )
+              and id in (
                   select rm.menu_id
                   from sys_role_menu rm
                   join sys_role r on r.id = rm.role_id and r.delete_flag = 1 and r.status = 1
@@ -56,19 +62,17 @@
         order by order_num asc, id asc
     </select>
 
-    <select id="queryOrgAdminMenuList" resultType="com.spark.common.bean.sys.entity.Menu">
+    <select id="queryTenantOrgMenuList" resultType="com.spark.common.bean.sys.entity.Menu">
         select <include refid="Base_Column_List"/>
         from sys_menu
         where delete_flag = 1
           and status = 1
           and platform = 3
           and id in (
-              select tum.menu_id
-              from sys_tenant_user_menu tum
-              join sys_tenant_user tu on tu.id = tum.tenant_user_id and tu.delete_flag = 1
-              where tum.delete_flag = 1
-                and tu.tenant_id = #{tenantId}
-                and tu.user_id = #{userId}
+              select tm.menu_id
+              from sys_tenant_menu tm
+              where tm.delete_flag = 1
+                and tm.tenant_id = #{tenantId}
           )
         order by order_num asc, id asc
     </select>

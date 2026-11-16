@@ -51,3 +51,29 @@ export function deleteTenantAPI(data) {
         params: data
     })
 }
+
+/**
+ * 查询租户已授权的菜单id集合
+ * @param query 查询参数
+ * @returns {Promise<AxiosResponse<any>>}
+ */
+export function queryTenantMenuIdsAPI(query) {
+    return request({
+        url: '/sys/tenant/menuIds',
+        method: 'get',
+        params: query
+    })
+}
+
+/**
+ * 保存租户菜单授权
+ * @param data 授权参数
+ * @returns {Promise<AxiosResponse<any>>}
+ */
+export function saveTenantMenusAPI(data) {
+    return request({
+        url: '/sys/tenant/saveMenu',
+        method: 'post',
+        params: data
+    })
+}

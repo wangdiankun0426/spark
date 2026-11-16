@@ -60,14 +60,14 @@ public interface IMenuService {
     ResultData<Void> deleteMenu(MenuVO menuVO);
 
     /**
-     * 查询角色授权菜单树，仅租户业务平台且排除公共菜单
+     * 查询角色授权菜单树，仅租户业务平台菜单，非站点管理员限当前租户已授权菜单
      * @return 菜单树
      */
     ResultData<List<MenuTree>> queryRoleMenuTreeList();
 
     /**
-     * 查询组织菜单授权树，仅组织平台菜单含按钮，供站点管理员逐人勾选
+     * 查询租户菜单授权树，含租户与组织平台菜单与按钮，供站点管理员按租户勾选
      * @return 菜单树
      */
-    ResultData<List<MenuTree>> queryOrgMenuTreeList();
+    ResultData<List<MenuTree>> queryTenantMenuTreeList();
 }

@@ -1,6 +1,7 @@
 package com.spark.manage.sys.impl;
 
 import com.spark.common.bean.base.BaseAssert;
+import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.sys.entity.Session;
 import com.spark.common.bean.sys.entity.TenantUser;
 import com.spark.common.bean.sys.entity.User;
@@ -26,7 +27,6 @@ import com.spark.common.bean.sys.result.TenantUserResult;
 import com.spark.common.bean.sys.vo.TenantUserVO;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.OperateTypeEnum;
-import com.spark.common.enums.RoleTypeEnum;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.config.redis.RedisService;
 import com.spark.dao.sys.*;
@@ -68,8 +68,6 @@ public class TenantUserServiceImpl extends BaseService<TenantUserQuery, TenantUs
     private DepartmentDao departmentDao;
     @Autowired
     private IPermissionService permissionService;
-    @Autowired
-    private TenantUserMenuDao tenantUserMenuDao;
 
     /**
      * 添加用户到租户
@@ -168,12 +166,8 @@ public class TenantUserServiceImpl extends BaseService<TenantUserQuery, TenantUs
         tenantUser.setId(tenantUserResult.getId());
         int count = tenantUserDao.deleteDBById(tenantUser);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.DELETE_DATA_FAIL);
         }
-        Long tenantUserId = tenantUserResult.getId();
-        tenantUserMenuDao.deleteByTenantUserId(tenantUserId);
-        redisService.deleteLoginSessionByUserId(tenantUserVO.getUserId());
         result.setObjId(tenantUserVO.getTenantId());
         result.setCode(ResultData.OK);
         return result;
@@ -219,47 +213,9 @@ public class TenantUserServiceImpl extends BaseService<TenantUserQuery, TenantUs
         }
         int count = tenantUserDao.updateDBById(tenantUser);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.UPDATE_DATA_FAIL);
         }
-        // 身份明确变更时重授组织菜单，部门调整不动授权
-        if (sysAdmin && roleType != null) {
-            List<Long> orgMenuIds = tenantUserVO.getOrgMenuIds();
-            this.saveOrgMenuRelations(tenantUserResult, roleType, orgMenuIds);
-        }
-        redisService.deleteLoginSessionByUserId(tenantUserVO.getUserId());
         result.setObjId(tenantUserVO.getTenantId());
-        result.setCode(ResultData.OK);
-        return result;
-    }
-
-    /**
-     * 查询租户用户已勾选的组织菜单id集合，仅站点管理员
-     * @param query 查询参数
-     * @return 菜单id集合
-     */
-    @Override
-    public ResultData<List<Long>> queryOrgMenuIds(TenantUserQuery query) {
-        ResultData<List<Long>> result = new ResultData<>();
-        if (query == null || query.getUserId() == null || query.getTenantId() == null) {
-            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
-            return result;
-        }
-        if (!SessionHolder.isSysAdmin()) {
-            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
-            return result;
-        }
-        TenantUserQuery tenantUserQuery = new TenantUserQuery();
-        tenantUserQuery.setTenantId(query.getTenantId());
-        tenantUserQuery.setUserId(query.getUserId());
-        TenantUserResult tenantUserResult = tenantUserDao.queryTenantUser(tenantUserQuery);
-        if (tenantUserResult == null) {
-            result.setErrorCode(ErrorCodeEnum.TENANT_USER_NOT_EXIST);
-            return result;
-        }
-        Long tenantUserId = tenantUserResult.getId();
-        List<Long> menuIds = tenantUserMenuDao.queryMenuIdsByTenantUserId(tenantUserId);
-        result.setData(menuIds);
         result.setCode(ResultData.OK);
         return result;
     }
@@ -481,23 +437,5 @@ public class TenantUserServiceImpl extends BaseService<TenantUserQuery, TenantUs
         departmentQuery.setTenantId(tenantId);
         DepartmentResult departmentResult = departmentDao.queryDepartment(departmentQuery);
         return departmentResult != null;
-    }
-
-    /**
-     * 重授组织管理员菜单关联，物理删除后批量插入，取消管理员仅清空
-     * @param tenantUserResult 租户用户
-     * @param roleType 角色类型
-     * @param orgMenuIds 组织菜单id集合
-     */
-    private void saveOrgMenuRelations(TenantUserResult tenantUserResult, Integer roleType, List<Long> orgMenuIds) {
-        Long tenantUserId = tenantUserResult.getId();
-        tenantUserMenuDao.deleteByTenantUserId(tenantUserId);
-        boolean orgAdmin = RoleTypeEnum.hasRole(roleType, RoleTypeEnum.ORG_ADMIN);
-        if (!orgAdmin || CollectionUtil.isEmpty(orgMenuIds)) {
-            return;
-        }
-        Long tenantId = tenantUserResult.getTenantId();
-        Long createdBy = SessionHolder.getCurrentUserId();
-        tenantUserMenuDao.batchInsertByTenantUserId(tenantId, tenantUserId, orgMenuIds, createdBy);
     }
 }

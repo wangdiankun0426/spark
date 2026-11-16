@@ -1,5 +1,6 @@
 package com.spark.workflow.service.impl;
 
+import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
@@ -35,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -69,6 +71,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.WORKFLOW_INSERT)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> createWorkflow(WfTemplateVO templateVO) {
         ResultData<Void> result = new ResultData<>();
         if (templateVO == null || StringUtil.isBlank(templateVO.getName())) {
@@ -88,8 +91,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
         int count = templateVersionDao.insertDB(version);
         if (count < 1) {
             logger.error("createWorkflow error, insert version db fail");
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         WfTemplate template = new WfTemplate();
         BeanUtil.copyProperties(templateVO, template);
@@ -104,8 +106,7 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
         count = templateDao.insertDB(template);
         if (count < 1) {
             logger.error("createWorkflow error, insert template db fail");
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         result.setObjId(templateId);
         result.setCode(ResultData.OK);

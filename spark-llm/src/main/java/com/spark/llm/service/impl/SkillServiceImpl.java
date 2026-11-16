@@ -1,5 +1,6 @@
 package com.spark.llm.service.impl;
 
+import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
@@ -27,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -61,6 +63,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.SKILL_INSERT)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> createSkill(SkillVO skillVO) {
         ResultData<Void> result = new ResultData<>();
         if (skillVO == null || StringUtil.isBlank(skillVO.getName())
@@ -88,8 +91,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
         }
         int count = skillDao.insertDB(skill);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         // 保存技能文件
         this.saveSkillFiles(skill.getId(), fileList);
@@ -104,6 +106,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.SKILL_UPDATE)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> updateSkill(SkillVO skillVO) {
         ResultData<Void> result = new ResultData<>();
         if (skillVO == null || skillVO.getId() == null) {
@@ -134,8 +137,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
         BeanUtil.copyProperties(skillVO, skill);
         int count = skillDao.updateDBById(skill);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.UPDATE_DATA_FAIL);
         }
         // 全量替换技能文件
         Long currentUserId = SessionHolder.getCurrentUserId();
@@ -154,6 +156,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.SKILL_DELETE)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> deleteSkill(SkillVO skillVO) {
         ResultData<Void> result = new ResultData<>();
         if (skillVO == null || skillVO.getId() == null) {
@@ -172,8 +175,7 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
         skill.setId(skillVO.getId());
         int count = skillDao.deleteDBById(skill);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.DELETE_DATA_FAIL);
         }
         // 级联删除技能文件
         Long currentUserId = SessionHolder.getCurrentUserId();
@@ -307,7 +309,10 @@ public class SkillServiceImpl extends BaseService<SkillQuery, SkillResult> imple
         }
         for (SkillFile file : fileList) {
             file.setSkillId(skillId);
-            skillFileDao.insertDB(file);
+            int count = skillFileDao.insertDB(file);
+            if (count < 1) {
+                throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
+            }
         }
     }
 

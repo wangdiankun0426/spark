@@ -7,11 +7,14 @@
 | 身份 | 判定依据 | 判定方法 | 权限特征 |
 |------|----------|----------|----------|
 | 系统管理员 sysAdmin | `sys_user.account_type == 2`，userId=101 | `SessionHolder.isSysAdmin()` | 通配 `*:*:*`，绕过操作权限、数据权限、租户断言一切校验 |
-| 组织管理员 orgAdmin | `sys_tenant_user.role_type` 位掩码 `(roleType & 2) == 2` | `SessionHolder.isOrgAdmin()` | 数据权限豁免但限本租户；菜单=勾选组织菜单∪角色授权菜单∪首页 |
-| 普通用户 | 非以上两者 | — | 菜单=角色授权菜单∪首页；数据范围=角色档位并集，空兜底仅本人 |
+| 组织管理员 orgAdmin | `sys_tenant_user.role_type` 位掩码 `(roleType & 2) == 2` | `SessionHolder.isOrgAdmin()` | 数据权限豁免但限本租户；菜单=租户组织菜单∪角色授权菜单∪公共菜单 |
+| 普通用户 | 非以上两者 | — | 菜单=公共菜单∪角色授权菜单（租户菜单限租户已授权范围）；数据范围=角色档位并集，空兜底仅本人 |
 
 - orgAdmin 是 `sys_tenant_user.role_type` 位标志，**不是 `sys_role` 角色**；`RoleTypeEnum.hasRole(roleType, ORG_ADMIN)` 按位与判定。
-- orgAdmin 菜单来源：逐人勾选的组织菜单（platform3，`sys_tenant_user_menu`）∪ 角色授权租户菜单（platform0）∪ 公共首页（platform2）；数据范围 `applyAllAccess` 即 `[ALL_ACCESS]`。
+- orgAdmin 菜单来源：租户授权组织菜单（platform3）∪ 角色授权租户菜单（platform0）∪ 公共菜单（platform2 全员固定）；数据范围 `applyAllAccess` 即 `[ALL_ACCESS]`。
+- **租户级菜单授权**：`sys_tenant_menu`（tenant_id + menu_id）由站点管理员在租户管理页逐租户配置，仅覆盖 platform 0/3，公共菜单（2）全员固定不纳入租户授权，站点菜单（1）仅 sysAdmin；存量与运行时新建租户默认空授权，未配置则该租户用户登录仅公共菜单；`queryUserMenuList` 租户菜单分支与 `queryTenantOrgMenuList` 叠加租户授权交集，公共菜单不受限，sysAdmin 不受影响。
+- 角色授权树＝platform0 ∩ 当前租户已授权菜单（`queryRoleMenuTreeList` 非 sysAdmin 用 `tenantMenuDao.queryMenuIdsByTenantId` 过滤，sysAdmin 豁免看全量）。
+- 租户菜单树 `queryTenantMenuTreeList`（`GET /sys/menu/tenantTree`）与租户授权读写 `queryTenantMenuIds` / `saveTenantMenus`（`/sys/tenant/menuIds`、`/sys/tenant/saveMenu`）均站点域 sysAdmin 服务守卫；保存物理删＋批量插，授权变更不主动失效现有会话，用户重新登录后生效。
 - 身份判定一律走 `SessionHolder.isSysAdmin()` / `isOrgAdmin()`，**禁止手写 `accountType == 2`、`roleType & 2` 等魔数判定**。
 
 ### 枚举精确名值
@@ -38,7 +41,7 @@
 `PermissionServiceImpl.loadPermission` 按身份分支物化权限串与数据范围：
 
 - sysAdmin：permissions = `*:*:*`，`applyAllAccess`。
-- orgAdmin：`queryOrgAdminMenuList` ∪ `queryUserMenuList` → `extractPermissions` → `applyAllAccess`。
+- orgAdmin：`queryTenantOrgMenuList` ∪ `queryUserMenuList` → `extractPermissions` → `applyAllAccess`。
 - 普通用户：`queryUserMenuList` 取菜单与权限串，`queryUserDataScopeList` 取数据档位（空兜底 `[ONLY_ONESELF]`），`queryUserCustomDeptIds` 取自定义部门。
 
 ## 3. 操作权限 @RequiresPermi
@@ -159,11 +162,13 @@ if (templateResult == null) {
 | WECOM_MOBILE | 5 企微移动端 |
 | WECHAT_MINIAPP | 6 微信小程序端 |
 
-## 7. 会话失效触发点
+## 7. 会话保留与权限生效
 
-- `RedisService.deleteLoginSessionByUserId` / `deleteLoginSessionByTenantId` / `deleteAllLoginSession(excludeSessionId)`，遍历 `l_s_*` 解析 Session 比对删除。
-- 触发清单：删用户、改密、租户成员移除、租户用户更新、角色用户移除、租户停用/删除/到期、角色变更、菜单 CRUD、组织菜单变更。
-- 上线运维：`SESSION_VERSION` 值未变时存量旧会话不会自动失效，权限模型上线必须清 Redis `LOGIN_SESSION*` 键。
+- 后台业务管理操作和定时任务均**不主动删除已登录会话**，包括角色及角色成员变更、菜单 CRUD、租户菜单授权、部门或管理员身份调整、租户成员移除、普通用户资料编辑。
+- 账号停用/删除、修改密码、租户停用/删除/到期同样保留现有会话，不再设置自动踢出例外。
+- 用户退出并重新登录后重新物化身份、菜单、操作权限与数据权限；权限模型或菜单上线不强制清 Redis `LOGIN_SESSION*` 键。
+- 用户主动退出登录与管理员手动踢出是独立操作，不属于后台状态变更的自动会话失效。
+- `SESSION_VERSION` 仅用于显式要求全量重新登录的破坏性升级，不由业务操作自动修改。
 
 ## 8. 编码规则与禁止项
 

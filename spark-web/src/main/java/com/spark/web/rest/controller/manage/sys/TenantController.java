@@ -70,4 +70,24 @@ public class TenantController {
         return tenantService.deleteTenant(tenantVO);
     }
 
+    /**
+     * 查询租户已授权的菜单id集合
+     * @param tenantVO 租户参数
+     * @return 菜单id集合
+     */
+    @GetMapping("menuIds")
+    public ResultData<List<Long>> queryTenantMenuIds(TenantVO tenantVO) {
+        return tenantService.queryTenantMenuIds(tenantVO);
+    }
+
+    /**
+     * 保存租户菜单授权
+     * @param tenantVO 租户参数
+     * @return 保存结果
+     */
+    @PostMapping("saveMenu")
+    public ResultData<Void> saveTenantMenus(TenantVO tenantVO) {
+        return tenantService.saveTenantMenus(tenantVO);
+    }
+
 }

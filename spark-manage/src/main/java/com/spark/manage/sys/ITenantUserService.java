@@ -44,13 +44,6 @@ public interface ITenantUserService {
     ResultData<Void> updateTenantUser(TenantUserVO tenantUserVO);
 
     /**
-     * 查询租户用户已勾选的组织菜单id集合，仅站点管理员
-     * @param query 查询参数
-     * @return 菜单id集合
-     */
-    ResultData<List<Long>> queryOrgMenuIds(TenantUserQuery query);
-
-    /**
      * 分页查询租户用户列表
      * @param query 查询参数
      * @return 分页结果

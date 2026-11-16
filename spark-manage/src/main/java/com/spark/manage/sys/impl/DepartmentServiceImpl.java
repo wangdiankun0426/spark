@@ -11,6 +11,7 @@ import com.spark.common.bean.sys.query.DepartmentQuery;
 import com.spark.common.bean.sys.query.UserQuery;
 import com.spark.common.bean.sys.result.DepartmentResult;
 import com.spark.common.bean.sys.tree.DepartmentTree;
+import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.dao.sys.DepartmentDao;
@@ -32,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import com.spark.common.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,6 +70,7 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.DEPT_INSERT)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> createDepartment(DepartmentVO departmentVO) {
         ResultData<Void> result = this.validateCreateDepartmentParam(departmentVO);
         if (result.getCode() != ResultData.OK) {
@@ -92,16 +95,14 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
         }
         int count = departmentDao.insertDB(department);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         DepartmentProfile departmentProfile = new DepartmentProfile();
         departmentProfile.setId(deptId);
         departmentProfile.setWecomId(departmentVO.getWecomId());
         count = departmentProfileDao.insertDB(departmentProfile);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         result.setObjId(deptId);
         result.setCode(ResultData.OK);
@@ -143,6 +144,7 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.DEPT_UPDATE)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> updateDepartment(DepartmentVO departmentVO) {
         ResultData<Void> result = this.validateUpdateDepartmentParam(departmentVO);
         if (result.getCode() != ResultData.OK) {
@@ -172,8 +174,7 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
         }
         int count = departmentDao.updateDBById(department);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.UPDATE_DATA_FAIL);
         }
         this.upsertDepartmentProfile(departmentVO.getId(), departmentVO.getWecomId());
         result.setObjId(departmentVO.getId());
@@ -188,6 +189,7 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.DEPT_DELETE)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> deleteDepartment(DepartmentVO departmentVO) {
         ResultData<Void> result = new ResultData<>();
         if (departmentVO == null || departmentVO.getId() == null) {
@@ -207,19 +209,16 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
             return result;
         }
         int count = departmentDao.deleteSubDepartment(departmentResult.getCode(), SessionHolder.getCurrentUserId());
-        if (count < 0) {
-            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
-            return result;
+        if (count < 1) {
+            throw new BaseException(ErrorCodeEnum.DELETE_DATA_FAIL);
         }
         count = departmentProfileDao.deleteByDeptCode(departmentResult.getCode(), SessionHolder.getCurrentUserId());
         if (count < 0) {
-            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.DELETE_DATA_FAIL);
         }
         count = userDao.resetUserDeptByDeptId(departmentVO.getId());
         if (count < 0) {
-            result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.DELETE_DATA_FAIL);
         }
         result.setObjId(departmentVO.getId());
         result.setCode(ResultData.OK);
@@ -441,7 +440,10 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
             DepartmentProfile departmentProfile = new DepartmentProfile();
             departmentProfile.setId(deptId);
             departmentProfile.setWecomId(wecomId);
-            departmentProfileDao.insertDB(departmentProfile);
+            int count = departmentProfileDao.insertDB(departmentProfile);
+            if (count < 1) {
+                throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
+            }
             return;
         }
         if (wecomId == null) {
@@ -450,7 +452,10 @@ public class DepartmentServiceImpl extends BaseService<DepartmentQuery, Departme
         DepartmentProfile departmentProfile = new DepartmentProfile();
         departmentProfile.setId(deptId);
         departmentProfile.setWecomId(wecomId);
-        departmentProfileDao.updateDBById(departmentProfile);
+        int count = departmentProfileDao.updateDBById(departmentProfile);
+        if (count < 1) {
+            throw new BaseException(ErrorCodeEnum.UPDATE_DATA_FAIL);
+        }
     }
 
     /**

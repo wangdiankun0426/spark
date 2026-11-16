@@ -1,5 +1,6 @@
 package com.spark.dms.service.impl;
 
+import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
@@ -38,6 +39,7 @@ import com.spark.common.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.util.*;
@@ -81,6 +83,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.DOCUMENT_INSERT)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Long> fileDocument(Long attId, Long prtId) {
         ResultData<Long> result = new ResultData<>();
         if (attId == null) {
@@ -137,6 +140,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.DOCUMENT_INSERT)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Long> createDocument(String name, String ext, Long size, String path, Long prtId) {
         ResultData<Long> result = new ResultData<>();
         if (StringUtil.isBlank(name) || StringUtil.isBlank(ext) || size == null || StringUtil.isBlank(path) || prtId == null) {
@@ -173,8 +177,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         document.setTenantId(tenantId);
         int count = documentDao.insertDB(document);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         ObjectTypeEnum objEnum = super.getObjEnum(document.getPrtId());
         DocumentEvent event = new DocumentEvent();
@@ -194,8 +197,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         event.setUpdatedBy(userId);
         count = documentEventDao.insertDB(event);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         // 构造默认1版本
         DocumentVersion documentVersion = new DocumentVersion();
@@ -209,8 +211,7 @@ public class DocumentServiceImpl extends BaseService<DocumentQuery, DocumentResu
         documentVersion.setUpdatedBy(userId);
         count = documentVersionDao.insertDB(documentVersion);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         result.setData(docId);
         result.setObjId(docId);

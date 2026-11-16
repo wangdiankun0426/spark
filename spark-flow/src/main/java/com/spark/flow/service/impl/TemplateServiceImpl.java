@@ -1,6 +1,7 @@
 package com.spark.flow.service.impl;
 
 import com.spark.config.aspectj.annotation.DataScope;
+import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import com.spark.common.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -63,6 +65,7 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
      * @return 创建结果
      */
     @Override
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> createTemplate(FlowTemplateVO templateVO) {
         ResultData<Void> result = new ResultData<>();
         if (templateVO == null || StringUtil.isBlank(templateVO.getName()) || templateVO.getFormId() == null) {
@@ -78,8 +81,7 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
         templateVersion.setProcessId(processId);
         int count = templateVersionDao.insertDB(templateVersion);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         FlowTemplate template = new FlowTemplate();
         BeanUtil.copyProperties(templateVO, template);
@@ -95,8 +97,7 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
         template.setId(templateId);
         count = templateDao.insertDB(template);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         result.setCode(ResultData.OK);
         return result;

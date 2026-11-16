@@ -32,7 +32,7 @@ public interface MenuDao extends BaseDao<Menu> {
     List<Menu> queryMenuListByPlatform(@Param("platformList") List<Integer> platformList);
 
     /**
-     * 查询用户可见菜单列表，角色授权与公共菜单并集，限租户业务平台
+     * 查询用户可见菜单列表，公共菜单与角色授权租户菜单并集，租户菜单限租户已授权范围
      * @param tenantId 租户id
      * @param userId 用户id
      * @return 菜单列表
@@ -46,12 +46,11 @@ public interface MenuDao extends BaseDao<Menu> {
     List<Menu> querySysAdminMenuList();
 
     /**
-     * 查询组织管理员已勾选的组织菜单列表，仅组织平台启用菜单，经租户用户定位关联
+     * 查询租户已授权的组织菜单列表，仅组织平台启用菜单
      * @param tenantId 租户id
-     * @param userId 用户id
      * @return 菜单列表
      */
-    List<Menu> queryOrgAdminMenuList(@Param("tenantId") Long tenantId, @Param("userId") Long userId);
+    List<Menu> queryTenantOrgMenuList(@Param("tenantId") Long tenantId);
 
     /**
      * 查询单个菜单

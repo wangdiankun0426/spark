@@ -1,5 +1,6 @@
 package com.spark.dms.service.impl;
 
+import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.dms.entity.Document;
@@ -30,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.util.List;
@@ -70,6 +72,7 @@ public class DocumentVersionServiceImpl extends BaseService<DocumentVersionQuery
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.DOCUMENT_VERSION_INSERT)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> uploadVersion(Long docId, String name, String ext, Long size, String path) {
         ResultData<Void> result = new ResultData<>();
         if (docId == null || StringUtil.isBlank(name) || StringUtil.isBlank(ext) || size == null || StringUtil.isBlank(path)) {
@@ -97,17 +100,21 @@ public class DocumentVersionServiceImpl extends BaseService<DocumentVersionQuery
         document.setVersionNo(versionNo);
         int count = documentDao.updateDBById(document);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.UPDATE_DATA_FAIL);
         }
         // 新版本记录入库
         count = this.insertVersion(docId, versionNo, name, size, path, ext);
         if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
         // 重置文档事件触发重新处理
-        this.resetEvent(documentResult);
+        Integer resetCount = this.resetEvent(documentResult);
+        if (resetCount == null) {
+            throw new BaseException(ErrorCodeEnum.DOCUMENT_EVENT_NOT_EXIST);
+        }
+        if (resetCount < 1) {
+            throw new BaseException(ErrorCodeEnum.UPDATE_DATA_FAIL);
+        }
         result.setObjId(docId);
         result.setCode(ResultData.OK);
         return result;
@@ -371,14 +378,15 @@ public class DocumentVersionServiceImpl extends BaseService<DocumentVersionQuery
     /**
      * 重置文档事件触发重新处理
      * @param documentResult 文档
+     * @return 影响行数，事件不存在返回null
      */
-    private void resetEvent(DocumentResult documentResult) {
+    private Integer resetEvent(DocumentResult documentResult) {
         DocumentEventQuery eventQuery = new DocumentEventQuery();
         eventQuery.setDocId(documentResult.getId());
         DocumentEventResult eventResult = documentEventDao.queryDocumentEvent(eventQuery);
         if (eventResult == null) {
             logger.warn("resetEvent skip, document event not exist, docId={}", documentResult.getId());
-            return;
+            return null;
         }
         DocumentEvent documentEvent = new DocumentEvent();
         documentEvent.setId(eventResult.getId());
@@ -396,6 +404,6 @@ public class DocumentVersionServiceImpl extends BaseService<DocumentVersionQuery
         } else {
             documentEvent.setGraphStatus(DocumentEventStatusEnum.NO_EXECUTE.getValue());
         }
-        documentEventDao.updateDBById(documentEvent);
+        return documentEventDao.updateDBById(documentEvent);
     }
 }

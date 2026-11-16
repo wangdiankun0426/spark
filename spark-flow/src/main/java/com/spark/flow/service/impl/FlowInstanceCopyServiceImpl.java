@@ -1,5 +1,6 @@
 package com.spark.flow.service.impl;
 
+import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
@@ -18,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -54,6 +56,7 @@ public class FlowInstanceCopyServiceImpl extends BaseService<FlowInstanceCopyQue
      * @return 抄送结果
      */
     @Override
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> copyInstance(FlowInstanceCopyVO copyVO) {
         ResultData<Void> result = new ResultData<>();
         if (copyVO == null || copyVO.getInstanceId() == null || CollectionUtil.isEmpty(copyVO.getUserIds())) {
@@ -97,22 +100,19 @@ public class FlowInstanceCopyServiceImpl extends BaseService<FlowInstanceCopyQue
         }
         // 批量插入抄送记录
         List<Long> userIds = copyVO.getUserIds().stream().distinct().toList();
-        int insertCount = 0;
         for (Long userId : userIds) {
             FlowInstanceCopy instanceCopy = new FlowInstanceCopy();
             instanceCopy.setInstanceId(copyVO.getInstanceId());
             instanceCopy.setUserId(userId);
             instanceCopy.setNodeId(copyVO.getNodeId() == null ? null : copyVO.getNodeId().toString());
             int count = instanceCopyDao.insertDB(instanceCopy);
-            if (count > 0) {
-                insertCount++;
+            if (count < 1) {
+                throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
             }
         }
-        if (insertCount > 0) {
-            // 记录审批讨论
-            String userNames = StringUtil.join(super.getObjNames(userIds), ",");
-            this.saveFlowDiscuss(instanceResult.getId(), copyVO.getNodeId(), FlowInstanceStatusEnum.PROCESSING.getValue(), "抄送给：" + userNames);
-        }
+        // 记录审批讨论
+        String userNames = StringUtil.join(super.getObjNames(userIds), ",");
+        this.saveFlowDiscuss(instanceResult.getId(), copyVO.getNodeId(), FlowInstanceStatusEnum.PROCESSING.getValue(), "抄送给：" + userNames);
         result.setCode(ResultData.OK);
         return result;
     }
@@ -152,6 +152,7 @@ public class FlowInstanceCopyServiceImpl extends BaseService<FlowInstanceCopyQue
         int count = instanceDiscussDao.insertDB(instanceDiscuss);
         if (count < 1) {
             logger.error("saveFlowDiscuss error, insert db fail");
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
         }
     }
 

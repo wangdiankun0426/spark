@@ -51,16 +51,3 @@ export function updateTenantUserAPI(data) {
         params: data
     })
 }
-
-/**
- * 查询租户用户已勾选的组织菜单id集合
- * @param query 查询参数
- * @returns {Promise<AxiosResponse<any>>}
- */
-export function queryOrgMenusAPI(query) {
-    return request({
-        url: '/sys/tenant/user/orgMenus',
-        method: 'get',
-        params: query
-    })
-}

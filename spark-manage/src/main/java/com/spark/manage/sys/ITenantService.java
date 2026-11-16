@@ -49,6 +49,20 @@ public interface ITenantService {
     ResultData<Void> deleteTenant(TenantVO tenantVO);
 
     /**
+     * 查询租户已授权的菜单id集合
+     * @param tenantVO 租户参数
+     * @return 菜单id集合
+     */
+    ResultData<List<Long>> queryTenantMenuIds(TenantVO tenantVO);
+
+    /**
+     * 保存租户菜单授权
+     * @param tenantVO 租户参数
+     * @return 保存结果
+     */
+    ResultData<Void> saveTenantMenus(TenantVO tenantVO);
+
+    /**
      * 批量关闭超期租户
      * @return 关闭结果
      */
