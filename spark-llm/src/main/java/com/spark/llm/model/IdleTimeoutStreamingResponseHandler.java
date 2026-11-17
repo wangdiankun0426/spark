@@ -105,7 +105,8 @@ public class IdleTimeoutStreamingResponseHandler implements StreamingChatRespons
         }
         terminated = true;
         this.cancelTimeout();
-        delegate.onError(error);
+        ModelInvocationException exception = ModelErrorClassifier.wrap(error);
+        delegate.onError(exception);
     }
 
     /**

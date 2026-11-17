@@ -1,10 +1,13 @@
 package com.spark.test.llm;
 
+import com.spark.common.enums.ModelErrorTypeEnum;
 import com.spark.llm.model.IdleTimeoutStreamingResponseHandler;
+import com.spark.llm.model.ModelInvocationException;
 import com.spark.llm.model.ModelInvoker;
 import com.spark.llm.model.ModelTimeoutException;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.exception.HttpException;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
@@ -24,8 +27,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -70,7 +75,9 @@ public class ModelInvokerTest {
         model.doChat(request, handler);
         ArgumentCaptor<Throwable> errorCaptor = ArgumentCaptor.forClass(Throwable.class);
         verify(handler, timeout(2000)).onError(errorCaptor.capture());
-        assertInstanceOf(ModelTimeoutException.class, errorCaptor.getValue());
+        ModelTimeoutException timeoutException = assertInstanceOf(ModelTimeoutException.class, errorCaptor.getValue());
+        assertEquals(ModelErrorTypeEnum.TIMEOUT, timeoutException.getErrorType());
+        assertTrue(timeoutException.getUserMessage().contains("1 秒"));
         verify(handler, never()).onCompleteResponse(any());
     }
 
@@ -174,6 +181,40 @@ public class ModelInvokerTest {
         Runnable currentTask = tasks.get(1);
         currentTask.run();
         verify(handler, times(1)).onError(any(ModelTimeoutException.class));
+    }
+
+    @Test
+    void shouldClassifySyncInvocationError() {
+        ChatModel chatDelegate = mock(ChatModel.class);
+        ChatRequest request = mock(ChatRequest.class);
+        HttpException error = new HttpException(503, "unavailable");
+        when(chatDelegate.doChat(request)).thenThrow(error);
+        ChatModel chatModel = modelInvoker.wrap(chatDelegate);
+        ModelInvocationException exception = assertThrows(ModelInvocationException.class,
+                () -> chatModel.doChat(request));
+        assertEquals(ModelErrorTypeEnum.SERVER, exception.getErrorType());
+        assertEquals(503, exception.getHttpStatus());
+        assertSame(error, exception.getCause());
+    }
+
+    @Test
+    void shouldClassifyStreamingError() {
+        StreamingChatModel delegate = mock(StreamingChatModel.class);
+        StreamingChatModel model = modelInvoker.wrap(delegate, 1L, 60000L);
+        StreamingChatResponseHandler handler = mock(StreamingChatResponseHandler.class);
+        ChatRequest request = mock(ChatRequest.class);
+        model.doChat(request, handler);
+        ArgumentCaptor<StreamingChatResponseHandler> handlerCaptor = ArgumentCaptor.forClass(StreamingChatResponseHandler.class);
+        verify(delegate).doChat(eq(request), handlerCaptor.capture());
+        StreamingChatResponseHandler timeoutHandler = handlerCaptor.getValue();
+        HttpException error = new HttpException(429, "limited");
+        timeoutHandler.onError(error);
+        ArgumentCaptor<Throwable> errorCaptor = ArgumentCaptor.forClass(Throwable.class);
+        verify(handler, times(1)).onError(errorCaptor.capture());
+        ModelInvocationException exception = assertInstanceOf(ModelInvocationException.class, errorCaptor.getValue());
+        assertEquals(ModelErrorTypeEnum.RATE_LIMIT, exception.getErrorType());
+        assertEquals(429, exception.getHttpStatus());
+        assertSame(error, exception.getCause());
     }
 
     @Test

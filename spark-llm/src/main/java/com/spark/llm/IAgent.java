@@ -5,11 +5,15 @@ import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.UserMessage;
 
 /**
- * Agent接口定义
- * 支持同步对话和流式对话（含工具调用过程通知）
+ * +++/\_/\
+ * + ( °w° )=
+ * +++)   (  //
+ * + (__ __)//
  *
  * @author wangdiankun
  * @since 2025/10/19 19:23
+ * Agent接口定义
+ * 支持同步对话和流式对话（含工具调用过程通知）
  */
 public interface IAgent {
 

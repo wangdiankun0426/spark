@@ -37,10 +37,14 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 模型工厂类 - 根据数据库中的模型配置动态创建 LangChain4j 模型实例
- * 
+ * +++/\_/\
+ * + ( °w° )=
+ * +++)   (  //
+ * + (__ __)//
+ *
  * @author wangdiankun
  * @since 2026/5/14
+ * 模型工厂类 - 根据数据库中的模型配置动态创建 LangChain4j 模型实例
  */
 @Component
 public class ModelFactory {

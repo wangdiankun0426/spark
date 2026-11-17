@@ -43,9 +43,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * + ( °w° )=
  * +++)   (  //
  * + (__ __)//
- * 基于Agent ID构建和缓存Agent实例
+ *
  * @author wangdiankun
  * @since 2026/05/14
+ * 基于Agent ID构建和缓存Agent实例
  */
 @Component
 public class AgentFactory {

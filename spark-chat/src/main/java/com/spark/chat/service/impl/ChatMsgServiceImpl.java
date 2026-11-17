@@ -29,8 +29,8 @@ import com.spark.dao.chat.ChatMsgDao;
 import com.spark.dao.chat.ChatSpaceDao;
 import com.spark.dao.llm.AgentDao;
 import com.spark.llm.model.ContextStreamingChatModel;
+import com.spark.llm.model.ModelErrorClassifier;
 import com.spark.llm.model.ModelFactory;
-import com.spark.llm.model.ModelTimeoutException;
 import com.spark.manage.BaseService;
 import com.spark.chat.service.IChatMsgService;
 import com.spark.chat.service.IChatSpaceService;
@@ -707,17 +707,6 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
      * @return 用户提示
      */
     private String buildChatErrorMessage(Throwable throwable, String defaultMessage) {
-        if (throwable == null) {
-            return defaultMessage;
-        }
-        Throwable cause = throwable;
-        while (cause != null) {
-            if (cause instanceof ModelTimeoutException timeoutException) {
-                long timeoutSeconds = timeoutException.getTimeoutMs() / 1000;
-                return "模型响应超过 " + timeoutSeconds + " 秒无输出，本次对话已结束，请重试";
-            }
-            cause = cause.getCause();
-        }
-        return defaultMessage;
+        return ModelErrorClassifier.resolveUserMessage(throwable, defaultMessage);
     }
 }

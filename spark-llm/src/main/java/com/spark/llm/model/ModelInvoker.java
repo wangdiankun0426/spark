@@ -112,7 +112,11 @@ public class ModelInvoker {
         if (invocation == null) {
             throw new IllegalArgumentException("invocation must not be null");
         }
-        return invocation.get();
+        try {
+            return invocation.get();
+        } catch (RuntimeException e) {
+            throw ModelErrorClassifier.wrap(e);
+        }
     }
 
     /**

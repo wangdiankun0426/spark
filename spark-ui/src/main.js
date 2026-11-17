@@ -19,7 +19,7 @@ import locale from 'element-plus/es/locale/lang/zh-cn';
 import { installDebounceDirectives } from '@/directive/debounce.js';
 import { installPermissionDirectives } from '@/directive/hasPermi.js';
 // 表单设计器组件
-import { installFormDesignerComponents } from '@/views/formDesigner/installFormDesignerComponents.js';
+import { installCustomFormComponents } from '@/views/formDesigner/installCustomFormComponents.js';
 // 引用v-md-editor
 import VMdEditor from '@kangc/v-md-editor';
 import VMdPreview from '@kangc/v-md-editor/lib/preview.js';
@@ -47,7 +47,7 @@ Object.keys(ElIcon).forEach((key) => {
   app.component(key, ElIcon[key])
 })
 // 注册表单设计器组件
-installFormDesignerComponents(app);
+installCustomFormComponents(app);
 // 注册防抖指令
 installDebounceDirectives(app);
 // 注册权限指令

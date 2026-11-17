@@ -4,6 +4,7 @@ import com.spark.common.bean.llm.dto.ModelInfo;
 import com.spark.common.utils.JsonUtil;
 import com.spark.common.utils.MapUtil;
 import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.exception.HttpException;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.model.scoring.ScoringModel;
@@ -80,8 +81,10 @@ public class RerankModel implements ScoringModel {
                     .build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             if (response.statusCode() != 200) {
-                logger.error("rerank http fail, status={}, body={}", response.statusCode(), response.body());
-                throw new RuntimeException("rerank http fail, status=" + response.statusCode());
+                int statusCode = response.statusCode();
+                String responseBody = response.body();
+                logger.error("rerank http fail, status={}, body={}", statusCode, responseBody);
+                throw new HttpException(statusCode, responseBody);
             }
             Map<String, Object> resp = JsonUtil.toMap(response.body());
             List<Map<String, Object>> results = JsonUtil.getMapList(resp, "results");
@@ -105,6 +108,10 @@ public class RerankModel implements ScoringModel {
                 return new Response<>(scores);
             }
             return new Response<>(scores, tokenUsage, null);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.error("rerank interrupted, query={}, docsSize={}", query, segments.size(), e);
+            throw new RuntimeException("rerank interrupted", e);
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {

@@ -17,11 +17,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * + ( °w° )=
  * +++)   (  //
  * + (__ __)//
- * 在线用户和session的关系，同一账号可能多终端登录，因此一个用户对应多个session
+ *
  * @author wangdiankun
  * @since 2024/4/14 21:03
+ * 在线用户和session的关系，同一账号可能多终端登录，因此一个用户对应多个session
  */
-
 public class UserChannelRel {
     private final static Logger logger = LoggerFactory.getLogger(UserChannelRel.class);
 
