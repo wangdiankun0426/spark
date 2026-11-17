@@ -3,12 +3,13 @@
       class="form-inline"
       :label-position="props.form.formConfig.position"
       :size="props.form.formConfig.size"
+      :style="{ width: props.form.formConfig.width + 'px' }"
       :disabled="disabled"
   >
     <el-row :gutter="24">
       <el-col :span="widget.config.width"
-              v-for="(widget, index) in props.form.widgetList"
-              :key="index">
+              v-for="widget in props.form.widgetList"
+              :key="widget.config.code">
         <component
             :is="getFieldName(widget)"
             :widget="widget"
@@ -66,5 +67,7 @@ onBeforeUnmount(() => {
 </script>
 <style scoped lang="scss">
 .form-inline {
+  max-width: 100%;
+  margin: 0 auto;
 }
 </style>

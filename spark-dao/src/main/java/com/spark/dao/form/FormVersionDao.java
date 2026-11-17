@@ -58,10 +58,10 @@ public interface FormVersionDao extends BaseDao<FormVersion> {
     List<FormVersionResult> queryFormVersionList(FormVersionQuery query);
 
     /**
-     * 查询表单版本归属租户id，经父表单关联
+     * 查询表单版本归属租户id，历史快照不依赖父表单存活状态
      * @param id 版本id
      * @return 租户id
      */
-    @Select("select f.tenant_id from form_version v join form f on f.id = v.form_id and f.delete_flag = 1 where v.id = #{id} and v.delete_flag = 1")
+    @Select("select f.tenant_id from form_version v join form f on f.id = v.form_id where v.id = #{id} and v.delete_flag = 1")
     Long queryFormVersionTenantId(@Param("id") Long id);
 }

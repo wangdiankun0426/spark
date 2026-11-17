@@ -808,7 +808,8 @@ CREATE TABLE `form_version` (
     `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
     `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    INDEX `idx_form_version_form_rev` (`form_id`, `delete_flag`, `rev_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='表单版本表';
 
 DROP TABLE IF EXISTS `form_field`;
@@ -834,6 +835,7 @@ CREATE TABLE `form_obj` (
     `tenant_id` bigint(12) NOT NULL DEFAULT 0 COMMENT '租户id',
     `obj_id` bigint(12) NOT NULL COMMENT '对象id',
     `form_id` bigint(12) NOT NULL COMMENT '表单id',
+    `form_rev_id` bigint(12) DEFAULT NULL COMMENT '表单版本id',
 
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
     `created_by` bigint(12) NOT NULL COMMENT '创建人id',
@@ -841,7 +843,8 @@ CREATE TABLE `form_obj` (
     `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
     `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
     PRIMARY KEY (`id`),
-    INDEX `idx_tenant_obj` (`tenant_id`, `obj_id`)
+    INDEX `idx_tenant_obj` (`tenant_id`, `obj_id`),
+    INDEX `idx_form_obj_obj_delete` (`obj_id`, `delete_flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='表单关联对象表';
 
 DROP TABLE IF EXISTS `form_obj_value`;
@@ -851,15 +854,16 @@ CREATE TABLE `form_obj_value` (
       `form_id` bigint(12) NOT NULL COMMENT '表单id',
       `code` varchar(36) NOT NULL COMMENT '字段名',
       `type` varchar(20) NOT NULL COMMENT '字段类型',
-      `value` varchar(64) NULL COMMENT '字段值',
-      `show_value` varchar(512) NULL COMMENT '字段值',
+      `value` longtext NULL COMMENT '字段值',
+      `show_value` longtext NULL COMMENT '字段显示值',
 
       `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
       `created_by` bigint(12) NOT NULL COMMENT '创建人id',
       `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
       `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
       `updated_dt` timestamp NULL DEFAULT NULL COMMENT '修改时间',
-      PRIMARY KEY (`id`)
+      PRIMARY KEY (`id`),
+      INDEX `idx_form_obj_value_obj_delete` (`obj_id`, `delete_flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='表单对象字段值表';
 
 DROP TABLE IF EXISTS `kg_graph`;

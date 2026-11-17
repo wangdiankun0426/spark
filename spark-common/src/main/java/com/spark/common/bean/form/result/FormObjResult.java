@@ -24,6 +24,10 @@ public class FormObjResult extends BaseResult {
      * 表单id
      */
     private Long formId;
+    /**
+     * 表单版本id
+     */
+    private Long formRevId;
 
     /**
      * 表单值

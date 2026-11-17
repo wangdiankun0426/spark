@@ -55,6 +55,11 @@ function getTypeLabelByKey(value) {
  */
 function handleChangeShowValue() {
   const value = props.widget.config.value;
+  if (value === null || value === undefined || value === '') {
+    props.widget.config.showValue = null;
+    emitChange();
+    return;
+  }
   props.widget.config.showValue = getTypeLabelByKey(value);
   emitChange();
 }

@@ -22,4 +22,8 @@ public class FormObj extends BaseEntity {
      * 表单id
      */
     private Long formId;
+    /**
+     * 表单版本id
+     */
+    private Long formRevId;
 }

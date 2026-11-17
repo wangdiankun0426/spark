@@ -45,6 +45,11 @@
          </foreach>
     </insert>
 
+    <update id="deleteByRevId">
+        update form_field set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = now()
+        where rev_id = #{revId} and delete_flag = 1
+    </update>
+
     <select id="queryFormFieldList" resultType="com.spark.common.bean.form.result.FormFieldResult">
         select <include refid="allColumnList"/>
         from form_field

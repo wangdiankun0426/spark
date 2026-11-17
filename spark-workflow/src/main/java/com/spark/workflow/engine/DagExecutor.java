@@ -34,7 +34,16 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -77,6 +86,7 @@ public class DagExecutor {
             execute(context, dagJson);
         } catch (Exception e) {
             logger.error("executeAsync error", e);
+            this.markAsyncFailed(context, "工作流异步执行失败");
         }
     }
 
@@ -90,6 +100,53 @@ public class DagExecutor {
     public void execute(BaseContext context, String dagJson) {
         Map<String, WfInstanceNodeResult> replayRows = new HashMap<>();
         this.runDag(context, dagJson, replayRows);
+    }
+
+    /**
+     * 求值一条出边上的 el 表达式是否满足，缺少字段类型时按字符串处理
+     * @param expression el 表达式
+     * @param input 当前节点输入
+     * @param valueMap 表单值
+     * @param showValueMap 表单显示值
+     * @return 表达式求值为 true 时返回 true；表达式为空或求值异常时返回 false
+     */
+    public boolean matchExpression(String expression, Map<String, String> input, Map<String, String> valueMap, Map<String, String> showValueMap) {
+        if (StringUtil.isBlank(expression)) {
+            return false;
+        }
+        return this.matchExpression(expression, input, valueMap, showValueMap, null);
+    }
+
+    /**
+     * 求值一条出边上的 el 表达式是否满足，仅数值字段参与数值比较
+     * @param expression el 表达式
+     * @param input 当前节点输入
+     * @param valueMap 表单值
+     * @param showValueMap 表单显示值
+     * @param valueTypeMap 表单字段类型
+     * @return 表达式求值为 true 时返回 true；表达式为空或求值异常时返回 false
+     */
+    public boolean matchExpression(String expression, Map<String, String> input, Map<String, String> valueMap, Map<String, String> showValueMap,
+                                   Map<String, String> valueTypeMap) {
+        if (StringUtil.isBlank(expression)) {
+            return false;
+        }
+        String expr = expression.trim();
+        if (expr.startsWith("${") && expr.endsWith("}")) {
+            expr = expr.substring(2, expr.length() - 1);
+        }
+        try {
+            StandardEvaluationContext context = new StandardEvaluationContext();
+            context.addPropertyAccessor(new MapPropertyAccessor());
+            Map<String, Object> objectMap = this.buildVariableMap(input, valueMap, showValueMap, valueTypeMap);
+            context.setRootObject(objectMap);
+            Expression parsed = parser.parseExpression(expr);
+            Boolean value = parsed.getValue(context, Boolean.class);
+            return Boolean.TRUE.equals(value);
+        } catch (Exception e) {
+            logger.warn("exclusive gateway condition evaluate failed, expression={}, errMsg={}", expression, e.getMessage());
+            return false;
+        }
     }
 
     /**
@@ -110,6 +167,7 @@ public class DagExecutor {
             this.runDag(context, dagJson, replayRows);
         } catch (Exception e) {
             logger.error("resumeAsync error, errMsg={}", e.getMessage(), e);
+            this.markAsyncFailed(context, "工作流异步恢复失败");
         }
     }
 
@@ -123,6 +181,7 @@ public class DagExecutor {
     private void runDag(BaseContext context, String dagJson, Map<String, WfInstanceNodeResult> replayRows) {
         if (StringUtil.isBlank(dagJson)) {
             logger.error("dagJson is null");
+            this.markAsyncFailed(context, "工作流DAG定义为空");
             return;
         }
         WfInstance wfInstance = context.getVal(WfInstance.class);
@@ -132,10 +191,11 @@ public class DagExecutor {
         }
         Map<String, String> valueMap = (Map<String, String>) context.getOrDefault("valueMap", new HashMap<>());
         Map<String, String> showValueMap = (Map<String, String>) context.getOrDefault("showValueMap", new HashMap<>());
+        Map<String, String> valueTypeMap = (Map<String, String>) context.getOrDefault("valueTypeMap", new HashMap<>());
         Long instanceId = wfInstance.getId();
         long startTime = System.currentTimeMillis();
         // 创建变量空间
-        WorkflowVariableSpace variableSpace = new WorkflowVariableSpace(null, valueMap, showValueMap);
+        WorkflowVariableSpace variableSpace = new WorkflowVariableSpace(null, valueMap, showValueMap, valueTypeMap);
         Map<String, Object> dag = JsonUtil.toMap(dagJson);
         List<Map<String, Object>> nodes = JsonUtil.getMapList(dag, "nodes");
         List<Map<String, Object>> sequences = JsonUtil.getMapList(dag, "sequences");
@@ -266,7 +326,7 @@ public class DagExecutor {
                     this.updateInstanceNode(runNodeId, WorkflowNodeStatusEnum.SUCCESS.getValue(), JsonUtil.toString(nodeOutput), null, nodeDuration);
                     // 排他网关：按出边配置的走向条件求值，确定生效分支放行，无命中抛异常
                     if (WorkflowTemplateTypeEnum.EXCLUSIVE_GATEWAY.getValue().equals(nodeType)) {
-                        this.routeExclusiveGateway(nodeId, sequences, nodeInput, valueMap, showValueMap, instanceId, nodeMap, remainingInDegree, executed, skipped, liveMarked, queue, replayRows);
+                        this.routeExclusiveGateway(nodeId, sequences, nodeInput, valueMap, showValueMap, valueTypeMap, instanceId, nodeMap, remainingInDegree, executed, skipped, liveMarked, queue, replayRows);
                         executed.add(nodeId);
                         continue;
                     }
@@ -314,6 +374,7 @@ public class DagExecutor {
      * @param nodeInput 当前节点输入
      * @param valueMap 表单值
      * @param showValueMap 表单显示值
+     * @param valueTypeMap 表单字段类型
      * @param instanceId 实例ID
      * @param nodeMap 节点索引
      * @param remainingInDegree 剩余入度
@@ -324,8 +385,8 @@ public class DagExecutor {
      * @param replayRows 各节点最新一条运行记录
      */
     private void routeExclusiveGateway(String nodeId, List<Map<String, Object>> sequences, Map<String, String> nodeInput,
-                                       Map<String, String> valueMap, Map<String, String> showValueMap, Long instanceId,
-                                       Map<String, Map<String, Object>> nodeMap, Map<String, Integer> remainingInDegree,
+                                       Map<String, String> valueMap, Map<String, String> showValueMap, Map<String, String> valueTypeMap,
+                                       Long instanceId, Map<String, Map<String, Object>> nodeMap, Map<String, Integer> remainingInDegree,
                                        Set<String> executed, Set<String> skipped, Set<String> liveMarked, Queue<String> queue,
                                        Map<String, WfInstanceNodeResult> replayRows) {
         List<Map<String, Object>> outgoing = new ArrayList<>();
@@ -338,7 +399,7 @@ public class DagExecutor {
         String activeTarget = null;
         for (Map<String, Object> sequence : outgoing) {
             String conditionExpression = MapUtil.getStringVal(sequence, "conditionExpression");
-            if (StringUtil.isNotBlank(conditionExpression) && this.matchExpression(conditionExpression, nodeInput, valueMap, showValueMap)) {
+            if (StringUtil.isNotBlank(conditionExpression) && this.matchExpression(conditionExpression, nodeInput, valueMap, showValueMap, valueTypeMap)) {
                 activeTarget = MapUtil.getStringVal(sequence, "target");
                 break;
             }
@@ -569,6 +630,40 @@ public class DagExecutor {
     }
 
     /**
+     * 异步入口异常时收口实例状态
+     * @param context 执行上下文
+     * @param errorMsg 失败原因
+     */
+    private void markAsyncFailed(BaseContext context, String errorMsg) {
+        if (context == null || StringUtil.isBlank(errorMsg)) {
+            logger.warn("markAsyncFailed skip, invalid param");
+            return;
+        }
+        WfInstance instance = context.getVal(WfInstance.class);
+        if (instance == null || instance.getId() == null) {
+            logger.error("markAsyncFailed skip, instanceId is null");
+            return;
+        }
+        Long instanceId = instance.getId();
+        int failedStatus = WorkflowInstanceStatusEnum.FAILED.getValue();
+        try {
+            WfInstance failed = new WfInstance();
+            failed.setId(instanceId);
+            failed.setStatus(failedStatus);
+            failed.setErrorMsg(errorMsg);
+            long currentTime = System.currentTimeMillis();
+            Timestamp finishedDt = new Timestamp(currentTime);
+            failed.setFinishedDt(finishedDt);
+            int count = instanceDao.updateDBById(failed);
+            if (count < 1) {
+                logger.error("markAsyncFailed update fail, instanceId={}", instanceId);
+            }
+        } catch (RuntimeException e) {
+            logger.error("markAsyncFailed update error, instanceId={}", instanceId, e);
+        }
+    }
+
+    /**
      * 加载实例各节点最新一条运行记录，用于审核挂起后的重放恢复，同节点多行取id最大者以容忍崩溃残留行
      * @param instanceId 实例ID
      * @return 节点ID到运行记录的映射
@@ -626,79 +721,43 @@ public class DagExecutor {
     }
 
     /**
-     * 求值一条出边上的 el 表达式（SpEL）是否满足，如 ${amount > 80 && status == '1'}
-     * @param expression el 表达式
-     * @param input 当前节点输入
-     * @param valueMap 表单值
-     * @param showValueMap 表单显示值
-     * @return 表达式求值为 true 时返回 true；表达式为空或求值异常时返回 false
-     */
-    public boolean matchExpression(String expression, Map<String, String> input, Map<String, String> valueMap, Map<String, String> showValueMap) {
-        if (StringUtil.isBlank(expression)) {
-            return false;
-        }
-        String expr = expression.trim();
-        if (expr.startsWith("${") && expr.endsWith("}")) {
-            expr = expr.substring(2, expr.length() - 1);
-        }
-        try {
-            StandardEvaluationContext context = new StandardEvaluationContext();
-            context.addPropertyAccessor(new MapPropertyAccessor());
-            Map<String, Object> objectMap = this.buildVariableMap(input, valueMap, showValueMap);
-            context.setRootObject(objectMap);
-            Expression parsed = parser.parseExpression(expr);
-            return Boolean.TRUE.equals(parsed.getValue(context, Boolean.class));
-        } catch (Exception e) {
-            logger.warn("exclusive gateway condition evaluate failed, expression={}, errMsg={}", expression, e.getMessage());
-            return false;
-        }
-    }
-
-    /**
      * 合并求值变量
      * @param input 当前节点输入
      * @param valueMap 表单值
      * @param showValueMap 表单显示值
+     * @param valueTypeMap 表单字段类型
      * @return 变量集合
      */
-    private Map<String, Object> buildVariableMap(Map<String, String> input, Map<String, String> valueMap, Map<String, String> showValueMap) {
+    private Map<String, Object> buildVariableMap(Map<String, String> input, Map<String, String> valueMap, Map<String, String> showValueMap,
+                                                 Map<String, String> valueTypeMap) {
         Map<String, Object> vars = new HashMap<>();
-        vars.putAll(this.convertValueMap(input));
-        vars.putAll(this.convertValueMap(showValueMap));
-        vars.putAll(this.convertValueMap(valueMap));
+        Map<String, Object> inputValues = this.convertValueMap(input, valueTypeMap);
+        Map<String, Object> displayValues = this.convertValueMap(showValueMap, null);
+        Map<String, Object> formValues = this.convertValueMap(valueMap, valueTypeMap);
+        vars.putAll(inputValues);
+        vars.putAll(displayValues);
+        vars.putAll(formValues);
         return vars;
     }
 
     /**
-     * 变量值转数值类型用于数值比较；非纯数字字符串保持原样（字符串比较）
+     * 数值字段转高精度数值，其他变量保持字符串
      * @param src 原始变量集合
+     * @param valueTypeMap 表单字段类型
      * @return 转换后的变量集合
      */
-    private Map<String, Object> convertValueMap(Map<String, String> src) {
+    private Map<String, Object> convertValueMap(Map<String, String> src, Map<String, String> valueTypeMap) {
         Map<String, Object> out = new HashMap<>();
         if (src == null) {
             return out;
         }
         for (Map.Entry<String, String> entry : src.entrySet()) {
-            out.put(entry.getKey(), this.parseNumberValue(entry.getValue()));
+            String code = entry.getKey();
+            String rawValue = entry.getValue();
+            Object value = WorkflowVariableSpace.parseNumberValue(code, rawValue, valueTypeMap);
+            out.put(code, value);
         }
         return out;
-    }
-
-    /**
-     * 将字符串解析为数值类型，解析失败返回原字符串
-     * @param value 变量值
-     * @return 数值或原字符串
-     */
-    private Object parseNumberValue(String value) {
-        if (StringUtil.isBlank(value)) {
-            return value;
-        }
-        try {
-            return Double.parseDouble(value.trim());
-        } catch (NumberFormatException e) {
-            return value;
-        }
     }
 
     /**

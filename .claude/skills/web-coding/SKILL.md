@@ -83,6 +83,7 @@ description: Spark 项目前端 Web（spark-ui，Vue3 PC 端）编码规范。�
 12. Element Plus 图标模板中直接用 `<el-icon><IconName /></el-icon>`；自定义图标组件从 `assets/icons/` 导入
 13. 生成的 Vue/HTML 模板标签必须完整闭合（开始/结束一一对应，自闭合用 `/>`），避免漏 `>`、`</xxx>` 或嵌套错误
 14. 代码标识符统一首字母小写驼峰（lowerCamelCase）：变量、函数、props、emits、事件处理函数、请求参数名等；组件名用 PascalCase；禁止 `snake_case`。日志/报错消息首词同样用驼峰，如 `console.log('receiverChange error', e)`
+15. 表单动态规则边界：`set-hidden/set-required` 的最终运行时状态由前端事件解释器计算并校验，静态规则由服务端校验。当前协议不记录事件轨迹，不得把客户端最终动态状态包装成服务端可信事实，也不得在未改协议的情况下宣称动态规则服务端闭环
 
 ### 5.1 注释规范
 

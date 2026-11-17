@@ -2,8 +2,12 @@ package com.spark.form.service.impl;
 
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
+import com.spark.common.bean.form.query.FormQuery;
 import com.spark.common.bean.form.query.FormVersionQuery;
+import com.spark.common.bean.form.result.FormResult;
 import com.spark.common.bean.form.result.FormVersionResult;
+import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.dao.form.FormDao;
 import com.spark.dao.form.FormVersionDao;
 import com.spark.form.service.IFormVersionService;
 import com.spark.manage.BaseService;
@@ -29,6 +33,8 @@ public class FormVersionServiceImpl extends BaseService<FormVersionQuery, FormVe
     private final static Logger logger = LoggerFactory.getLogger(FormVersionServiceImpl.class);
     @Autowired
     private FormVersionDao formVersionDao;
+    @Autowired
+    private FormDao formDao;
 
     /**
      * 分页查询
@@ -38,8 +44,18 @@ public class FormVersionServiceImpl extends BaseService<FormVersionQuery, FormVe
     @Override
     public ResultData<PageResult<FormVersionResult>> pageFormVersionList(FormVersionQuery query) {
         ResultData<PageResult<FormVersionResult>> result = new ResultData<>();
-        if (query == null) {
-            query = new FormVersionQuery();
+        if (query == null || query.getFormId() == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        FormQuery formQuery = new FormQuery();
+        Long formId = query.getFormId();
+        formQuery.setId(formId);
+        super.scopeTenant(formQuery);
+        FormResult formResult = formDao.queryForm(formQuery);
+        if (formResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FORM_NOT_EXIST);
+            return result;
         }
         PageResult<FormVersionResult> list = super.pageList(query);
         result.setData(list);

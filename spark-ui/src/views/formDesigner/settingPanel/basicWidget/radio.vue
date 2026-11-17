@@ -18,9 +18,6 @@
           :max="24"
       />
     </el-form-item>
-    <el-form-item label="占位内容">
-      <el-input v-model="props.config.placeholder" />
-    </el-form-item>
     <el-form-item label="是否必填">
       <el-switch v-model="props.config.required" />
     </el-form-item>

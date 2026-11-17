@@ -76,10 +76,12 @@ import widgetPanel from './widgetPanel/index.vue';
 import formWidget from './formWidget/index.vue';
 import settingPanel from './settingPanel/index.vue';
 import FormView from '../../components/FormView/index.vue';
+import { buildFormTemplate, validateFormSchema } from '@/views/formDesigner/formSchema.js';
 import {queryFormJsonAPI, saveFormJsonAPI} from '@/api/form/form.js';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import {ElMessage} from "element-plus";
 const route = useRoute();
+const router = useRouter();
 const id = route.params.id;
 // 路由带版本号时编辑指定版本，不带版本号时编辑当前最新版本
 const revId = route.params.revId;
@@ -117,7 +119,19 @@ function handleGetFormJson() {
   }
   queryFormJsonAPI(query).then(res => {
     if(res.data) {
-      designer.value = JSON.parse(res.data);
+      let form;
+      try {
+        form = JSON.parse(res.data);
+      } catch (e) {
+        ElMessage.warning("表单JSON格式有误，请检查后重试");
+        return;
+      }
+      const validation = validateFormSchema(form);
+      if (!validation.valid) {
+        ElMessage.warning(validation.message);
+        return;
+      }
+      designer.value = buildFormTemplate(form);
       // 打开设计器默认选中第一个组件，右侧设置面板可直接编辑；无组件时不选
       designer.value.selectedId = designer.value.widgetList.length > 0 ? 0 : null;
     }
@@ -146,15 +160,23 @@ function handleSaveForm() {
   if (!id) {
     return
   }
+  const validation = validateFormSchema(designer.value);
+  if (!validation.valid) {
+    ElMessage.warning(validation.message);
+    return;
+  }
   const form = {
     id: id,
-    formJson: JSON.stringify(designer.value),
+    formJson: JSON.stringify(buildFormTemplate(designer.value)),
   }
   saveFormJsonAPI(form).then(res => {
     if (res.code !== 200) {
       return;
     }
     ElMessage.success("保存成功");
+    if (route.params.revId) {
+      router.replace(`/form/designer/${id}`);
+    }
   });
 }
 
@@ -162,8 +184,13 @@ function handleSaveForm() {
  * 预览表单
  */
 function handleViewForm() {
-  // 深拷贝一份给预览用，避免预览时的事件动作污染画布数据后被保存落库
-  previewForm.value = JSON.parse(JSON.stringify(designer.value));
+  const validation = validateFormSchema(designer.value);
+  if (!validation.valid) {
+    ElMessage.warning(validation.message);
+    return;
+  }
+  // 预览使用独立模板，避免事件动作污染画布数据后被保存落库
+  previewForm.value = buildFormTemplate(designer.value);
   formKey.value++;
   viewFormVisible.value = true;
 }
@@ -172,10 +199,7 @@ function handleViewForm() {
  * 当前表单可移植的JSON：组件列表与表单配置，不含选中态
  */
 function buildFormJson() {
-  return {
-    widgetList: designer.value.widgetList,
-    formConfig: designer.value.formConfig,
-  }
+  return buildFormTemplate(designer.value);
 }
 
 function handleOpenJson() {
@@ -220,20 +244,26 @@ function handleApplyJson() {
     return;
   }
   // 兼容只粘贴组件数组的情况
-  const sourceList = Array.isArray(json.widgetList) ? json.widgetList : (Array.isArray(json) ? json : []);
-  if (sourceList.length === 0) {
+  const source = Array.isArray(json) ? { widgetList: json } : json;
+  if (!source || !Array.isArray(source.widgetList) || source.widgetList.length === 0) {
     ElMessage.warning("JSON中没有可应用的组件");
     return;
   }
-  // 深拷贝后再挂到 designer，避免持有外部引用
-  const widgets = sourceList.map(widget => JSON.parse(JSON.stringify(widget)));
-  designer.value.widgetList = widgets;
-  if (json.formConfig) {
-    designer.value.formConfig = { ...json.formConfig };
+  const candidate = {
+    widgetList: source.widgetList,
+    formConfig: source.formConfig === undefined ? designer.value.formConfig : source.formConfig,
+  };
+  const validation = validateFormSchema(candidate);
+  if (!validation.valid) {
+    ElMessage.warning(validation.message);
+    return;
   }
+  const template = buildFormTemplate(candidate);
+  designer.value.widgetList = template.widgetList;
+  designer.value.formConfig = template.formConfig;
   designer.value.selectedId = null;
   jsonText.value = JSON.stringify(buildFormJson(), null, 2);
-  ElMessage.success("已应用" + widgets.length + "个组件");
+  ElMessage.success("已应用" + template.widgetList.length + "个组件");
 }
 </script>
 <style lang="scss" scoped>

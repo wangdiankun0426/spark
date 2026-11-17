@@ -1,10 +1,13 @@
 package com.spark.workflow.engine;
 
+import com.spark.common.enums.FormFieldTypeEnum;
 import com.spark.common.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,6 +55,11 @@ public class WorkflowVariableSpace {
     private final Map<String, String> formDisplayValues = new HashMap<>();
 
     /**
+     * 表单字段类型
+     */
+    private final Map<String, String> valueTypeMap = new HashMap<>();
+
+    /**
      * 构造函数
      */
     public WorkflowVariableSpace() {
@@ -64,6 +72,18 @@ public class WorkflowVariableSpace {
      * @param formDisplayValues 表单显示值
      */
     public WorkflowVariableSpace(Map<String, String> globalVars, Map<String, String> formValues, Map<String, String> formDisplayValues) {
+        this(globalVars, formValues, formDisplayValues, null);
+    }
+
+    /**
+     * 构造函数
+     * @param globalVars 全局变量
+     * @param formValues 表单值
+     * @param formDisplayValues 表单显示值
+     * @param valueTypeMap 表单字段类型
+     */
+    public WorkflowVariableSpace(Map<String, String> globalVars, Map<String, String> formValues, Map<String, String> formDisplayValues,
+                                 Map<String, String> valueTypeMap) {
         if (globalVars != null) {
             this.globalVars.putAll(globalVars);
         }
@@ -72,6 +92,9 @@ public class WorkflowVariableSpace {
         }
         if (formDisplayValues != null) {
             this.formDisplayValues.putAll(formDisplayValues);
+        }
+        if (valueTypeMap != null) {
+            this.valueTypeMap.putAll(valueTypeMap);
         }
     }
 
@@ -256,24 +279,35 @@ public class WorkflowVariableSpace {
 
         // 添加全局变量
         for (Map.Entry<String, String> entry : globalVars.entrySet()) {
-            merged.put(entry.getKey(), parseNumberValue(entry.getValue()));
+            String code = entry.getKey();
+            String rawValue = entry.getValue();
+            Object value = parseNumberValue(code, rawValue, valueTypeMap);
+            merged.put(code, value);
         }
 
         // 添加表单值
         for (Map.Entry<String, String> entry : formValues.entrySet()) {
-            merged.put(entry.getKey(), parseNumberValue(entry.getValue()));
+            String code = entry.getKey();
+            String rawValue = entry.getValue();
+            Object value = parseNumberValue(code, rawValue, valueTypeMap);
+            merged.put(code, value);
         }
 
         // 添加表单显示值
         for (Map.Entry<String, String> entry : formDisplayValues.entrySet()) {
-            merged.put("show_" + entry.getKey(), parseNumberValue(entry.getValue()));
+            String code = entry.getKey();
+            String showCode = "show_" + code;
+            String showValue = entry.getValue();
+            merged.put(showCode, showValue);
         }
 
         // 添加节点输出（扁平化）
         for (Map.Entry<String, Map<String, String>> entry : nodeOutputs.entrySet()) {
             String nodeId = entry.getKey();
             for (Map.Entry<String, String> outputEntry : entry.getValue().entrySet()) {
-                merged.put(nodeId + "." + outputEntry.getKey(), parseNumberValue(outputEntry.getValue()));
+                String outputCode = nodeId + "." + outputEntry.getKey();
+                String outputValue = outputEntry.getValue();
+                merged.put(outputCode, outputValue);
             }
         }
 
@@ -313,16 +347,27 @@ public class WorkflowVariableSpace {
     }
 
     /**
-     * 将字符串解析为数值类型，解析失败返回原字符串
+     * 将数值字段解析为高精度数值，其他字段保持字符串
+     * @param code 字段编码
      * @param value 变量值
+     * @param valueTypeMap 表单字段类型
      * @return 数值或原字符串
      */
-    private Object parseNumberValue(String value) {
+    static Object parseNumberValue(String code, String value, Map<String, String> valueTypeMap) {
         if (StringUtil.isBlank(value)) {
             return value;
         }
+        if (valueTypeMap == null) {
+            return value;
+        }
+        String valueType = valueTypeMap.get(code);
+        String numberType = FormFieldTypeEnum.NUMBER.getValue();
+        if (!numberType.equals(valueType)) {
+            return value;
+        }
+        String numberValue = value.trim();
         try {
-            return Double.parseDouble(value.trim());
+            return new BigDecimal(numberValue);
         } catch (NumberFormatException e) {
             return value;
         }

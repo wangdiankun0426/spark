@@ -62,6 +62,13 @@
         update wf_instance
         set status = #{toStatus} , updated_by = #{updatedBy} , updated_dt = now()
         where id = #{id} and status = #{fromStatus} and delete_flag = 1
+          and exists (
+              select 1 from wf_instance_node rin
+              where rin.id = #{nodeRunId}
+                and rin.instance_id = #{id}
+                and rin.status = #{waitingStatus}
+                and rin.delete_flag = 1
+          )
     </update>
 
     <select id="queryInstanceCount" resultType="java.lang.Integer">

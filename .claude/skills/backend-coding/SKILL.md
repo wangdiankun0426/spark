@@ -49,6 +49,7 @@ logger.info("readSkill name={}, skillIds={}", name, skillIds);
 11. **JSON 统一走 JsonUtil（强制）**：JSON 解析/序列化一律用 `spark-common` 的 `JsonUtil`（`toObject/toList/toMap/toMapList/toArray/toString/isValidJson/parseMap/parseList/getMap/getMapList/getArray`），业务代码只持有 `Map<String, Object>` / `List` 等 JDK 类型；Map 的类型化取值用 `MapUtil`（`getStringVal/getIntegerVal/getLongVal/getBooleanVal/getDoubleVal`）。**业务类禁止 import 或调用第三方 JSON 库（`com.alibaba.fastjson2` / `com.fasterxml.jackson` / `cn.hutool.json`）；`JsonUtil` 不具备所需能力时，必须先在 `JsonUtil` 中补充封装方法再在业务代码中调用，禁止以"缺方法/不方便"为由直接调用第三方库。** 唯一例外：纯数据 Bean 上的 Jackson 声明式注解（`@JsonFormat`/`@JsonInclude`/`@JsonProperty`，仅作字段元数据，不得用于手动解析或序列化）。收口目的是便于后续维护与 jar 升级；`JsonUtil` 与 `MapUtil` 是唯一允许触达 JSON 库的封装点。
 12. **纯数据类用 Lombok，禁止手写样板（强制）**：一切纯数据持有类（含 entity/vo/query/result/dto，以及内部值对象、元数据持有类、快照类等）一律 Lombok 注解：可变对象 `@Data`；构造即不可变的用 `@Data` + `final` 字段（`@Data` 已含 `@RequiredArgsConstructor`，全字段 final 时即全参构造，**禁止再叠加 `@AllArgsConstructor`**）；final 与非 final 字段混存且确实需要全参构造时才允许 `@AllArgsConstructor`；需要无参构造再加 `@NoArgsConstructor`。**禁止手写 getter/setter、toString、equals/hashCode、全参构造**。注意：Spring 组件/含业务逻辑的类不在此列，其手工构造里允许有初始化逻辑。
 13. **禁止创建类中类（强制）**：新增代码一律不允许写内部类/嵌套类/静态内部类（含值对象、快照、DTO、枚举以外的一切数据结构）；需要的数据类型必须建独立顶层类文件。跨模块复用的数据对象放 `spark-common` 的 `bean/{module}/dto/` 包；仅单模块内部使用的放该模块对应业务包。本条约束新增代码，不溯及存量内部类（如 `RerankModel.RerankResult`），修改存量类时不做顺带搬迁。
+14. **表单动态规则边界**：静态 `hidden/required` 由服务端按表单版本 Schema 强制校验；`set-hidden/set-required` 的最终运行时状态由前端事件解释器计算。当前协议不记录事件轨迹，服务端不得把客户端提交的最终动态状态直接当作校验事实，也不得宣称已完成动态规则服务端闭环；如需改变该边界必须先单独设计可验证协议。
 
 ## 4. 基类字段（继承体系）
 
@@ -153,6 +154,8 @@ taskInstanceResult.setDataList(dataList);
 - 新增字段/表/索引：写入 `sql/alert.sql`（顺时间序，最新在底部）
 - 表结构变更：同步更新 `sql/table.sql` 对应 CREATE TABLE 定义
 - 所有字段/表必须有 COMMENT
+- COMMENT 只写字段或表的核心业务含义，禁止追加历史兼容、迁移策略、实现细节、使用说明等扩展描述；必要说明写在迁移脚本注释或 DAO 接口 Javadoc
+- 正确：`COMMENT '表单版本id'`；禁止：`COMMENT '表单版本id，历史空数据按当前版本兼容读取'`
 - 示例：加列时 `ALTER TABLE xxx ADD COLUMN ...` 追加到 alert.sql 底部，并在 table.sql 同步列定义
 
 ## 10. 红线（违反必须返工）

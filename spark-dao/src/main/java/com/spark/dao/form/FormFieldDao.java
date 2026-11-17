@@ -2,6 +2,7 @@ package com.spark.dao.form;
 
 import com.spark.common.bean.form.entity.FormField;
 import com.spark.common.bean.form.query.FormFieldQuery;
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.form.result.FormFieldResult;
 import com.spark.common.bean.form.vo.FormFieldVO;
 import com.spark.dao.BaseDao;
@@ -43,4 +44,25 @@ public interface FormFieldDao extends BaseDao<FormField> {
      * @return
      */
     FormFieldResult queryFormField(FormFieldQuery query);
+
+    /**
+     * 按版本id逻辑删除字段，自动填充修改人审计字段
+     * @param revId 版本id
+     * @return 删除条数
+     */
+    default int deleteDBByRevId(Long revId) {
+        if (revId == null) {
+            return -1;
+        }
+        Long updatedBy = SessionHolder.getCurrentUserId();
+        return deleteByRevId(revId, updatedBy);
+    }
+
+    /**
+     * 按版本id逻辑删除字段
+     * @param revId 版本id
+     * @param updatedBy 修改人id
+     * @return 删除条数
+     */
+    int deleteByRevId(@Param("revId") Long revId, @Param("updatedBy") Long updatedBy);
 }

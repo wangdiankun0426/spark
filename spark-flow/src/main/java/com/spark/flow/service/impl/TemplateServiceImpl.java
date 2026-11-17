@@ -20,6 +20,7 @@ import com.spark.dao.flow.FlowTemplateDao;
 import com.spark.dao.flow.FlowTemplateVersionDao;
 import com.spark.dao.form.FormDao;
 import com.spark.dao.form.FormVersionDao;
+import com.spark.common.enums.DeleteFlagEnum;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.FlowTypeEnum;
 import com.spark.common.enums.ObjectTypeEnum;
@@ -72,6 +73,15 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        FormQuery formQuery = new FormQuery();
+        Long formId = templateVO.getFormId();
+        formQuery.setId(formId);
+        super.scopeTenant(formQuery);
+        FormResult formResult = formDao.queryForm(formQuery);
+        if (formResult == null || !this.isActiveForm(formResult)) {
+            result.setErrorCode(ErrorCodeEnum.FORM_NOT_EXIST);
+            return result;
+        }
         Long templateId = super.genObjectId(ObjectTypeEnum.FLOW_TEMPLATE);
         String processId = "process_"+ System.currentTimeMillis();
         FlowTemplateVersion templateVersion = new FlowTemplateVersion();
@@ -119,8 +129,17 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
         templateQuery.setId(templateVO.getId());
         super.scopeTenant(templateQuery);
         FlowTemplateResult templateResult = templateDao.queryTemplate(templateQuery);
-        if (templateResult == null) {
+        if (templateResult == null || !this.isActiveTemplate(templateResult)) {
             result.setErrorCode(ErrorCodeEnum.FLOW_TEMPLATE_NOT_EXIST);
+            return result;
+        }
+        FormQuery formQuery = new FormQuery();
+        Long formId = templateVO.getFormId();
+        formQuery.setId(formId);
+        super.scopeTenant(formQuery);
+        FormResult formResult = formDao.queryForm(formQuery);
+        if (formResult == null || !this.isActiveForm(formResult)) {
+            result.setErrorCode(ErrorCodeEnum.FORM_NOT_EXIST);
             return result;
         }
         FlowTemplate template = new FlowTemplate();
@@ -197,7 +216,7 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
         }
         super.scopeTenant(query);
         FlowTemplateResult templateResult = templateDao.queryTemplate(query);
-        if (templateResult == null) {
+        if (templateResult == null || !this.isActiveTemplate(templateResult)) {
             result.setErrorCode(ErrorCodeEnum.FLOW_TEMPLATE_NOT_EXIST);
             return result;
         }
@@ -220,20 +239,23 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
         }
         super.scopeTenant(query);
         FlowTemplateResult templateResult = templateDao.queryTemplate(query);
-        if (templateResult == null) {
+        if (templateResult == null || !this.isActiveTemplate(templateResult)) {
             result.setErrorCode(ErrorCodeEnum.FLOW_TEMPLATE_NOT_EXIST);
             return result;
         }
         Long formId = templateResult.getFormId();
         FormQuery formQuery = new FormQuery();
         formQuery.setId(formId);
+        super.scopeTenant(formQuery);
         FormResult formResult = formDao.queryForm(formQuery);
-        if (formResult == null) {
+        if (formResult == null || !this.isActiveForm(formResult)) {
             result.setErrorCode(ErrorCodeEnum.FORM_NOT_EXIST);
             return result;
         }
         FormVersionQuery formVersionQuery = new FormVersionQuery();
-        formVersionQuery.setId(formResult.getRevId());
+        Long formRevId = formResult.getRevId();
+        formVersionQuery.setId(formRevId);
+        formVersionQuery.setFormId(formId);
         FormVersionResult formVersionResult = formVersionDao.queryFormVersion(formVersionQuery);
         if (formVersionResult == null) {
             result.setErrorCode(ErrorCodeEnum.FORM_VERSION_NOT_EXIST);
@@ -243,7 +265,15 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
         String formPath = formVersionResult.getFilePath();
         if (StringUtil.isNotBlank(formPath)) {
             ResultData<String> fromText = TextUtil.getFromText(formPath, false);
-            templateResult.setFormJson(fromText.getData());
+            int fromTextCode = fromText.getCode();
+            if (fromTextCode != ResultData.OK) {
+                result.setCode(fromTextCode);
+                String fromTextMessage = fromText.getMessage();
+                result.setMessage(fromTextMessage);
+                return result;
+            }
+            String formJson = fromText.getData();
+            templateResult.setFormJson(formJson);
         }
         FlowTemplateVersionQuery templateVersionQuery = new FlowTemplateVersionQuery();
         templateVersionQuery.setId(templateResult.getRevId());
@@ -255,7 +285,15 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
         String bpmPath = templateVersionResult.getBpmPath();
         if (StringUtil.isNotBlank(bpmPath)) {
             ResultData<String> fromText = TextUtil.getFromText(bpmPath, false);
-            templateResult.setBpmJson(fromText.getData());
+            int fromTextCode = fromText.getCode();
+            if (fromTextCode != ResultData.OK) {
+                result.setCode(fromTextCode);
+                String fromTextMessage = fromText.getMessage();
+                result.setMessage(fromTextMessage);
+                return result;
+            }
+            String bpmJson = fromText.getData();
+            templateResult.setBpmJson(bpmJson);
         }
         result.setData(templateResult);
         result.setCode(ResultData.OK);
@@ -306,5 +344,27 @@ public class TemplateServiceImpl extends BaseService<FlowTemplateQuery, FlowTemp
     @Override
     protected Long queryMaxId() {
         return templateDao.queryTemplateMaxId();
+    }
+
+    /**
+     * 判断流程模板是否允许当前使用
+     * @param templateResult 模板详情
+     * @return true模板存活
+     */
+    private boolean isActiveTemplate(FlowTemplateResult templateResult) {
+        Integer deleteFlag = templateResult.getDeleteFlag();
+        Integer normalFlag = DeleteFlagEnum.NORMAL.getValue();
+        return normalFlag.equals(deleteFlag);
+    }
+
+    /**
+     * 判断绑定表单是否允许当前使用
+     * @param formResult 表单详情
+     * @return true表单存活
+     */
+    private boolean isActiveForm(FormResult formResult) {
+        Integer deleteFlag = formResult.getDeleteFlag();
+        Integer normalFlag = DeleteFlagEnum.NORMAL.getValue();
+        return normalFlag.equals(deleteFlag);
     }
 }

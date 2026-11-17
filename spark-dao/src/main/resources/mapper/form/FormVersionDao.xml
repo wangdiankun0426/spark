@@ -29,6 +29,11 @@
         values (#{formId} , #{revCode} , #{revNum}  , #{filePath} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
+    <update id="deleteById">
+        update form_version set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id} and delete_flag = 1
+    </update>
+
     <select id="queryFormVersion" resultType="com.spark.common.bean.form.result.FormVersionResult">
         select <include refid="allColumnList"/>
         from form_version

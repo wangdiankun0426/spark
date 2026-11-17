@@ -85,7 +85,9 @@ export function useWidgetEventBridge(widget, emit) {
             oldValue: eventName === 'change' ? lastValue : undefined,
             config: widget.config,
         }
-        lastValue = widget.config.value
+        if (eventName === 'change') {
+            lastValue = widget.config.value
+        }
         emit('widget-event', payload)
         return payload
     }

@@ -1,82 +1,65 @@
 <template>
   <el-tabs v-model="activeName">
-      <el-tab-pane name="componentSetting">
-        <template #label>
-          <span>组件设置</span>
-        </template>
-        <component
-            v-if="selectedId !== null"
-            :is="getFieldSettingName(widget)"
-            :key="widget.config.code"
-            :config="widget.config"
-        />
-        <!--事件配置对所有组件类型同构，统一挂在选择的具体设置组件之后；key 加前缀避免与上面的组件同 key-->
-        <widget-event-panel
-            v-if="selectedId !== null"
-            :key="'event-' + widget.config.code"
-            :widget="widget"
-            :widget-list="props.designer.widgetList"
-        />
-      </el-tab-pane>
-      <el-tab-pane name="formSetting">
-        <template #label>
-          <span>表单设置</span>
-        </template>
-        <el-form label-width="auto">
-          <el-form-item label="宽度" label-position="right">
-            <el-input-number
-                v-model="formConfig.width"
-                :min="800"
-                :max="1600"
-                controls-position="right"
-            />
-          </el-form-item>
-          <el-form-item label="对齐方式" label-position="right">
-            <el-radio-group v-model="formConfig.position">
-              <el-radio-button value="left" label="left">靠左</el-radio-button>
-              <el-radio-button value="right" label="right">靠右</el-radio-button>
-              <el-radio-button value="top" label="top">靠上</el-radio-button>
-            </el-radio-group>
-          </el-form-item>
-          <el-form-item label="组件大小" label-position="right">
-            <el-radio-group v-model="formConfig.size">
-              <el-radio-button value="large" label="large">较大</el-radio-button>
-              <el-radio-button value="default" label="default">默认</el-radio-button>
-              <el-radio-button value="small" label="small">较小</el-radio-button>
-            </el-radio-group>
-          </el-form-item>
-        </el-form>
-      </el-tab-pane>
-    </el-tabs>
+    <el-tab-pane name="componentSetting">
+      <template #label>
+        <span>组件设置</span>
+      </template>
+      <component
+          v-if="widget"
+          :is="getFieldSettingName(widget)"
+          :key="widget.config.code"
+          :config="widget.config"
+      />
+      <!--事件配置对所有组件类型同构，统一挂在选择的具体设置组件之后；key 加前缀避免与上面的组件同 key-->
+      <widget-event-panel
+          v-if="widget"
+          :key="'event-' + widget.config.code"
+          :widget="widget"
+          :widget-list="props.designer.widgetList"
+      />
+    </el-tab-pane>
+    <el-tab-pane name="formSetting">
+      <template #label>
+        <span>表单设置</span>
+      </template>
+      <el-form v-if="formConfig" label-width="auto">
+        <el-form-item label="宽度" label-position="right">
+          <el-input-number
+              v-model="formConfig.width"
+              :min="600"
+              :max="1600"
+              controls-position="right"
+          />
+        </el-form-item>
+        <el-form-item label="对齐方式" label-position="right">
+          <el-radio-group v-model="formConfig.position">
+            <el-radio-button value="left" label="left">靠左</el-radio-button>
+            <el-radio-button value="right" label="right">靠右</el-radio-button>
+            <el-radio-button value="top" label="top">靠上</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="组件大小" label-position="right">
+          <el-radio-group v-model="formConfig.size">
+            <el-radio-button value="large" label="large">较大</el-radio-button>
+            <el-radio-button value="default" label="default">默认</el-radio-button>
+            <el-radio-button value="small" label="small">较小</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+    </el-tab-pane>
+  </el-tabs>
 </template>
 <script setup>
-import {ref, watch} from 'vue';
+import {computed, ref} from 'vue';
 import WidgetEventPanel from './widgetEventPanel.vue';
+
 const props = defineProps({
   designer: Object,
 })
 const activeName = ref('componentSetting');
-const widget = ref({});
-const formConfig = ref({});
-const selectedId = ref(null);
-
-getSelectedWidget();
-
-/**
- * 获取当前被选中的组件配置
- * */
-function getSelectedWidget() {
-  selectedId.value = props.designer.selectedId;
-  formConfig.value = props.designer.formConfig;
-  if (selectedId.value !== null) {
-    widget.value = props.designer.widgetList[props.designer.selectedId];
-  }
-}
-
-// 监听 designer 的变化
-watch(props.designer, (newValue, oldValue) => {
-  getSelectedWidget();
-});
+const selectedId = computed(() => props.designer.selectedId);
+const widget = computed(() => selectedId.value === null ? null : props.designer.widgetList[selectedId.value] || null);
+const formConfig = computed(() => props.designer.formConfig);
 
 /**
  * 获取自定义组件配置组件名称

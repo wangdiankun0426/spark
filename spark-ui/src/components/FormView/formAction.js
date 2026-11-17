@@ -19,25 +19,42 @@ export function runWidgetActions(widget, eventName, widgetList, disabled) {
     if (!rules || !Array.isArray(rules)) {
         return
     }
+    const widgetMap = buildWidgetMap(widgetList)
     for (const rule of rules) {
         if (!rule || !rule.target) {
             continue
         }
-        if (!matchCondition(rule.when, widgetList)) {
+        if (!matchCondition(rule.when, widgetMap)) {
             continue
         }
-        applyAction(rule, widgetList, disabled)
+        applyAction(rule, widgetMap, disabled)
     }
 }
 
 /**
- * 判断条件是否满足。无条件（when 为空）视为满足。
- * 字段不存在时取值为 undefined，按"为空"语义参与比较。
- * @param when 条件对象 { field, op, value }
+ * 建立单次事件执行共用的字段索引，重复编码沿用首个组件
  * @param widgetList 组件列表
+ * @returns {Map} 字段索引
+ */
+function buildWidgetMap(widgetList) {
+    const widgetMap = new Map()
+    for (const widget of widgetList) {
+        const code = widget.config.code
+        if (!widgetMap.has(code)) {
+            widgetMap.set(code, widget)
+        }
+    }
+    return widgetMap
+}
+
+/**
+ * 判断条件是否满足。无条件（when 为空）视为满足。
+ * 条件字段不存在时整条规则不执行，避免把缺失引用误当空值。
+ * @param when 条件对象 { field, op, value }
+ * @param widgetMap 字段索引
  * @returns {boolean}
  */
-function matchCondition(when, widgetList) {
+function matchCondition(when, widgetMap) {
     // 无条件（when 为空）视为满足；条件已开启但字段或运算符未配齐时跳过该条规则，避免误当无条件执行
     if (!when) {
         return true
@@ -45,7 +62,10 @@ function matchCondition(when, widgetList) {
     if (!when.field || !when.op) {
         return false
     }
-    const actual = resolveFieldValue(widgetList, when.field)
+    if (!widgetMap.has(when.field)) {
+        return false
+    }
+    const actual = resolveMapFieldValue(widgetMap, when.field)
     const expected = when.value
     switch (when.op) {
         case 'eq':
@@ -83,7 +103,17 @@ function matchCondition(when, widgetList) {
  * @returns {*}
  */
 export function resolveFieldValue(widgetList, code) {
-    const target = widgetList.find(widget => widget.config.code === code)
+    return resolveMapFieldValue(buildWidgetMap(widgetList), code)
+}
+
+/**
+ * 从已建立的字段索引读取业务值
+ * @param widgetMap 字段索引
+ * @param code 字段编码
+ * @returns {*}
+ */
+function resolveMapFieldValue(widgetMap, code) {
+    const target = widgetMap.get(code)
     return target ? target.config.value : undefined
 }
 
@@ -98,8 +128,18 @@ export function resolvePlaceholders(value, widgetList) {
     if (value == null) {
         return null
     }
+    return resolveMapPlaceholders(value, buildWidgetMap(widgetList))
+}
+
+/**
+ * 使用单次事件共用的字段索引解析占位符
+ * @param value 原始动作值
+ * @param widgetMap 字段索引
+ * @returns {string}
+ */
+function resolveMapPlaceholders(value, widgetMap) {
     return String(value).replace(/#\{([^}]+)\}/g, (match, code) => {
-        const fieldValue = resolveFieldValue(widgetList, String(code).trim())
+        const fieldValue = resolveMapFieldValue(widgetMap, String(code).trim())
         return fieldValue == null ? '' : String(fieldValue)
     })
 }
@@ -107,11 +147,11 @@ export function resolvePlaceholders(value, widgetList) {
 /**
  * 执行单条动作
  * @param rule 动作规则 { action, target, value }
- * @param widgetList 组件列表
+ * @param widgetMap 字段索引
  * @param disabled 表单级只读态
  */
-function applyAction(rule, widgetList, disabled) {
-    const target = widgetList.find(widget => widget.config.code === rule.target)
+function applyAction(rule, widgetMap, disabled) {
+    const target = widgetMap.get(rule.target)
     if (!target) {
         return
     }
@@ -121,7 +161,7 @@ function applyAction(rule, widgetList, disabled) {
             if (disabled || LOCAL_VALUE_TYPES.indexOf(target.type) === -1) {
                 return
             }
-            const raw = resolvePlaceholders(rule.value, widgetList)
+            const raw = resolveMapPlaceholders(rule.value, widgetMap)
             target.config.value = normalizeValue(target, raw)
             target.config.showValue = resolveShowValue(target, target.config.value)
             break
@@ -162,6 +202,10 @@ function normalizeValue(widget, raw) {
         const num = Number(raw)
         return Number.isNaN(num) ? null : num
     }
+    if (widget.type === 'radio' || widget.type === 'select') {
+        const option = (widget.config.options || []).find(item => String(item.value) === String(raw))
+        return option ? option.value : raw
+    }
     return raw
 }
 
@@ -176,7 +220,7 @@ function resolveShowValue(widget, value) {
         return null
     }
     if (widget.type === 'radio' || widget.type === 'select') {
-        const option = (widget.config.options || []).find(item => item.value === value)
+        const option = (widget.config.options || []).find(item => String(item.value) === String(value))
         return option ? option.label : String(value)
     }
     return value

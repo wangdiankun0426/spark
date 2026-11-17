@@ -73,10 +73,10 @@ public interface FlowTemplateVersionDao extends BaseDao<FlowTemplateVersion> {
     int queryMaxRevCode(Long templateId);
 
     /**
-     * 查询流程模板版本归属租户id，经父模板关联
+     * 查询流程模板版本归属租户id，历史快照不依赖父模板存活状态
      * @param id 版本id
      * @return 租户id
      */
-    @Select("select t.tenant_id from flow_template_version v join flow_template t on t.id = v.template_id and t.delete_flag = 1 where v.id = #{id} and v.delete_flag = 1")
+    @Select("select t.tenant_id from flow_template_version v join flow_template t on t.id = v.template_id where v.id = #{id} and v.delete_flag = 1")
     Long queryTemplateVersionTenantId(@Param("id") Long id);
 }

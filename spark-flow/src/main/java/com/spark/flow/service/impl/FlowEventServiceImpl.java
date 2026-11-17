@@ -421,6 +421,7 @@ public class FlowEventServiceImpl extends BaseFlowService implements FlowEventSe
             return null;
         }
         List<Long> assigneeIds = new ArrayList<>();
+        Long tenantId = flowInstanceResult.getTenantId();
         for (FormObjValueResult valueResult : valueList) {
             String fieldType = valueResult.getType();
             String value = valueResult.getValue();
@@ -429,20 +430,26 @@ public class FlowEventServiceImpl extends BaseFlowService implements FlowEventSe
                 continue;
             }
             if (FormFieldTypeEnum.SELECT_USER.getValue().equals(fieldType)) {
-                List<Long> userIds = Arrays.stream(value.split(","))
-                        .filter(StringUtil::isNotBlank)
-                        .map(Long::parseLong)
-                        .toList();
+                List<Long> userIds = this.parseIdList(value);
                 if (CollectionUtil.isNotEmpty(userIds)) {
-                    assigneeIds.addAll(userIds);
+                    UserQuery userQuery = new UserQuery();
+                    userQuery.setPage(false);
+                    userQuery.setTenantId(tenantId);
+                    userQuery.setIds(userIds);
+                    List<UserResult> userList = userDao.queryUserList(userQuery);
+                    for (UserResult userResult : userList) {
+                        Long userId = userResult.getId();
+                        assigneeIds.add(userId);
+                    }
                 }
             } else if (FormFieldTypeEnum.SELECT_DEPT.getValue().equals(fieldType)) {
-                List<Long> deptIds = Arrays.stream(value.split(","))
-                        .filter(StringUtil::isNotBlank)
-                        .map(Long::parseLong)
-                        .collect(Collectors.toList());
+                List<Long> deptIds = this.parseIdList(value);
+                if (CollectionUtil.isEmpty(deptIds)) {
+                    continue;
+                }
                 UserQuery userQuery = new UserQuery();
                 userQuery.setPage(false);
+                userQuery.setTenantId(tenantId);
                 userQuery.setDeptIds(deptIds);
                 List<UserResult> userList = userDao.queryUserList(userQuery);
                 if (CollectionUtil.isNotEmpty(userList)) {
@@ -453,11 +460,12 @@ public class FlowEventServiceImpl extends BaseFlowService implements FlowEventSe
                     assigneeIds.addAll(userIds);
                 }
             } else if (FormFieldTypeEnum.SELECT_ROLE.getValue().equals(fieldType)) {
-                List<Long> roleIds = Arrays.stream(value.split(","))
-                        .filter(StringUtil::isNotBlank)
-                        .map(Long::parseLong)
-                        .toList();
+                List<Long> roleIds = this.parseIdList(value);
+                if (CollectionUtil.isEmpty(roleIds)) {
+                    continue;
+                }
                 RoleUserQuery roleUserQuery = new RoleUserQuery();
+                roleUserQuery.setTenantId(tenantId);
                 roleUserQuery.setRoleIds(roleIds);
                 roleUserQuery.setPage(false);
                 List<RoleUserResult> roleUserList = roleUserDao.queryRoleUserList(roleUserQuery);
@@ -471,7 +479,7 @@ public class FlowEventServiceImpl extends BaseFlowService implements FlowEventSe
                 logger.warn("queryAssigneeByFormData, fieldType={}", fieldType);
             }
         }
-        return assigneeIds;
+        return assigneeIds.stream().distinct().toList();
     }
 
     /**
@@ -542,6 +550,33 @@ public class FlowEventServiceImpl extends BaseFlowService implements FlowEventSe
         if (count < 1) {
             logger.error("insert task instance fail");
         }
+    }
+
+    /**
+     * 解析表单中的ID串
+     * @param value 原始ID串
+     * @return ID列表
+     */
+    private List<Long> parseIdList(String value) {
+        List<Long> ids = new ArrayList<>();
+        if (StringUtil.isBlank(value)) {
+            return ids;
+        }
+        String[] parts = value.split(",");
+        for (String part : parts) {
+            String idText = part.trim();
+            if (StringUtil.isBlank(idText)) {
+                continue;
+            }
+            try {
+                Long id = Long.parseLong(idText);
+                ids.add(id);
+            } catch (NumberFormatException e) {
+                logger.warn("queryAssigneeByFormData invalid id, value={}", value);
+                return new ArrayList<>();
+            }
+        }
+        return ids;
     }
 
 }

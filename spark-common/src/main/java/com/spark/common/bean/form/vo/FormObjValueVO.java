@@ -26,6 +26,10 @@ public class FormObjValueVO extends BaseVO {
      */
     private Long formId;
     /**
+     * 表单版本id
+     */
+    private Long formRevId;
+    /**
      * 表单值
      */
     private List<FormObjValue> values;

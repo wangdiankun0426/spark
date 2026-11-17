@@ -22,6 +22,11 @@ public class WfReviewVO extends BaseVO {
     private Long instanceId;
 
     /**
+     * 待审核节点运行记录ID
+     */
+    private Long nodeRunId;
+
+    /**
      * 审核结果：true通过/false驳回
      */
     private Boolean approved;

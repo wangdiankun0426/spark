@@ -14,6 +14,7 @@ import com.spark.common.bean.form.query.FormQuery;
 import com.spark.common.bean.form.query.FormVersionQuery;
 import com.spark.common.bean.form.result.FormResult;
 import com.spark.common.bean.form.result.FormVersionResult;
+import com.spark.common.enums.DeleteFlagEnum;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.ObjectTypeEnum;
 import com.spark.common.enums.OperateTypeEnum;
@@ -227,7 +228,14 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
             result.setErrorCode(ErrorCodeEnum.WORKFLOW_NOT_FOUND);
             return result;
         }
-        fillFormJson(templateResult);
+        ResultData<Void> fillResult = this.fillFormJson(templateResult);
+        if (fillResult.getCode() != ResultData.OK) {
+            int errorCode = fillResult.getCode();
+            String errorMessage = fillResult.getMessage();
+            result.setCode(errorCode);
+            result.setMessage(errorMessage);
+            return result;
+        }
         result.setData(templateResult);
         result.setObjId(templateResult.getId());
         result.setCode(ResultData.OK);
@@ -253,48 +261,6 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
         result.setData(count);
         result.setCode(ResultData.OK);
         return result;
-    }
-
-    /**
-     * 校验表单是否存在
-     *
-     * @param formId 表单ID
-     * @return 是否存在
-     */
-    private boolean checkFormExist(Long formId) {
-        FormQuery formQuery = new FormQuery();
-        formQuery.setId(formId);
-        super.scopeTenant(formQuery);
-        return formDao.queryForm(formQuery) != null;
-    }
-
-    /**
-     * 填充绑定表单JSON定义
-     *
-     * @param templateResult 模板结果
-     */
-    private void fillFormJson(WfTemplateResult templateResult) {
-        if (templateResult.getFormId() == null) {
-            return;
-        }
-        FormQuery formQuery = new FormQuery();
-        formQuery.setId(templateResult.getFormId());
-        FormResult formResult = formDao.queryForm(formQuery);
-        if (formResult == null) {
-            return;
-        }
-        templateResult.setFormRevId(formResult.getRevId());
-        if (formResult.getRevId() == null) {
-            return;
-        }
-        FormVersionQuery formVersionQuery = new FormVersionQuery();
-        formVersionQuery.setId(formResult.getRevId());
-        FormVersionResult formVersionResult = formVersionDao.queryFormVersion(formVersionQuery);
-        if (formVersionResult == null || StringUtil.isBlank(formVersionResult.getFilePath())) {
-            return;
-        }
-        ResultData<String> fromText = TextUtil.getFromText(formVersionResult.getFilePath(), false);
-        templateResult.setFormJson(fromText.getData());
     }
 
     /**
@@ -333,4 +299,89 @@ public class WorkflowServiceImpl extends BaseService<WfTemplateQuery, WfTemplate
      */
     @Override
     protected Long queryMaxId() { return templateDao.queryTemplateMaxId(); }
+
+    /**
+     * 校验表单是否存在
+     * @param formId 表单id
+     * @return true表单存在且存活
+     */
+    private boolean checkFormExist(Long formId) {
+        if (formId == null) {
+            return false;
+        }
+        FormQuery formQuery = new FormQuery();
+        formQuery.setId(formId);
+        super.scopeTenant(formQuery);
+        FormResult formResult = formDao.queryForm(formQuery);
+        if (formResult == null) {
+            return false;
+        }
+        Integer deleteFlag = formResult.getDeleteFlag();
+        Integer normalFlag = DeleteFlagEnum.NORMAL.getValue();
+        return normalFlag.equals(deleteFlag);
+    }
+
+    /**
+     * 填充绑定表单JSON定义
+     * @param templateResult 模板结果
+     * @return 填充结果
+     */
+    private ResultData<Void> fillFormJson(WfTemplateResult templateResult) {
+        ResultData<Void> result = new ResultData<>();
+        if (templateResult == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        Long formId = templateResult.getFormId();
+        if (formId == null) {
+            result.setCode(ResultData.OK);
+            return result;
+        }
+        FormQuery formQuery = new FormQuery();
+        formQuery.setId(formId);
+        super.scopeTenant(formQuery);
+        FormResult formResult = formDao.queryForm(formQuery);
+        if (formResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FORM_NOT_EXIST);
+            return result;
+        }
+        Integer deleteFlag = formResult.getDeleteFlag();
+        Integer normalFlag = DeleteFlagEnum.NORMAL.getValue();
+        if (!normalFlag.equals(deleteFlag)) {
+            result.setErrorCode(ErrorCodeEnum.FORM_NOT_EXIST);
+            return result;
+        }
+        Long formRevId = formResult.getRevId();
+        templateResult.setFormRevId(formRevId);
+        if (formRevId == null) {
+            result.setErrorCode(ErrorCodeEnum.FORM_VERSION_NOT_EXIST);
+            return result;
+        }
+        FormVersionQuery formVersionQuery = new FormVersionQuery();
+        formVersionQuery.setId(formRevId);
+        formVersionQuery.setFormId(formId);
+        FormVersionResult formVersionResult = formVersionDao.queryFormVersion(formVersionQuery);
+        if (formVersionResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FORM_VERSION_NOT_EXIST);
+            return result;
+        }
+        String filePath = formVersionResult.getFilePath();
+        if (StringUtil.isBlank(filePath)) {
+            result.setErrorCode(ErrorCodeEnum.FORM_VERSION_NOT_EXIST);
+            result.setMessage("表单版本内容不存在");
+            return result;
+        }
+        ResultData<String> textResult = TextUtil.getFromText(filePath, false);
+        if (textResult.getCode() != ResultData.OK) {
+            int errorCode = textResult.getCode();
+            String errorMessage = textResult.getMessage();
+            result.setCode(errorCode);
+            result.setMessage(errorMessage);
+            return result;
+        }
+        String formJson = textResult.getData();
+        templateResult.setFormJson(formJson);
+        result.setCode(ResultData.OK);
+        return result;
+    }
 }

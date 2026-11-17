@@ -116,6 +116,7 @@ import { runWorkflowAPI, queryInstanceDetailAPI } from '@/api/workflow/instance.
 import FormView from '@/components/FormView'
 import WorkflowPreview from '@/components/WorkflowPreview/index.vue'
 import WfInstanceDetailDialog from '@/components/WfInstanceDetailDialog/index.vue'
+import { collectFormValues, validateFormValues } from '@/views/formDesigner/formSchema.js'
 
 // 运行结果轮询次数，每次间隔 1 秒
 const RUN_POLL_RETRIES = 30
@@ -127,6 +128,7 @@ const workflowList = ref([])
 const currentWorkflow = ref({})
 const formJson = ref(null)
 const formId = ref(null)
+const formRevId = ref(null)
 const running = ref(false)
 const resultVisible = ref(false)
 const resultInstanceId = ref(null)
@@ -180,6 +182,7 @@ function handleSelect(item) {
   currentWorkflow.value = item
   formJson.value = null
   formId.value = null
+  formRevId.value = null
   currentRevId.value = null
   dagNodes.value = []
   dagSequences.value = []
@@ -200,6 +203,7 @@ function loadFormJson(id) {
       return
     }
     formId.value = res.data.formId
+    formRevId.value = res.data.formRevId || null
     try {
       formJson.value = JSON.parse(res.data.formJson)
     } catch (e) {
@@ -263,34 +267,18 @@ async function handleRun() {
   if (!currentWorkflow.value.id) {
     return
   }
-  const widgetList = (formJson.value && formJson.value.widgetList) || []
-  const missingWidget = widgetList.find(widget => {
-    if (!widget.config || !widget.config.required) {
-      return false
-    }
-    const value = widget.config.value
-    return value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)
-  })
-  if (missingWidget) {
-    ElMessage.warning(`【${missingWidget.config.label}】为必填项，请填写后再运行`)
+  const validation = validateFormValues(formJson.value, '运行')
+  if (!validation.valid) {
+    ElMessage.warning(validation.message)
     return
   }
-  const values = []
-  widgetList.forEach(widget => {
-    if (widget.config && widget.config.code) {
-      values.push({
-        code: widget.config.code,
-        type: widget.type,
-        value: widget.config.value,
-        showValue: widget.config.showValue != null ? widget.config.showValue : widget.config.value
-      })
-    }
-  })
+  const values = collectFormValues(formJson.value)
   running.value = true
   try {
     const res = await runWorkflowAPI({
       templateId: currentWorkflow.value.id,
       formId: formId.value,
+      formRevId: formRevId.value,
       values
     })
     if (res.code !== 200 || !res.data || !res.data.id) {

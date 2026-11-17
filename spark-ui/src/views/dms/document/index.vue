@@ -201,7 +201,7 @@
             v-for="item in metadataList"
             :key="item.id"
             class="metadata-item"
-            @click="handleOpenMetadataForm(item.id)"
+            @click="handleOpenMetadataForm(item)"
         >
           <el-icon class="metadata-item-icon"><Tickets /></el-icon>
           <span class="metadata-item-name">{{ item.name }}</span>
@@ -229,6 +229,7 @@
         direction="ltr"
         size="40%"
         :close-on-click-modal="false"
+        @close="handleCloseMetadataForm"
     >
       <form-view
           :form="formJson"
@@ -237,7 +238,7 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button type="primary" @click="handleSubmitMetadataForm">保存</el-button>
-          <el-button @click="metadataFormVisible = false">取消</el-button>
+          <el-button @click="handleCloseMetadataForm">取消</el-button>
         </div>
       </template>
     </el-drawer>
@@ -255,6 +256,7 @@ import {
 import { queryKnowledgeDetailAPI } from '@/api/kb/knowledge.js'
 import { queryGraphDetailAPI } from '@/api/kg/graph.js'
 import FormView from '@/components/FormView/index.vue'
+import { collectFormValues, validateFormValues } from '@/views/formDesigner/formSchema.js'
 import DocumentIcon from '@/components/DocumentIcon/index.vue'
 import DocumentEvent from '@/components/DocumentEvent/index.vue'
 import DocumentUpload from '@/components/DocumentUpload/index.vue'
@@ -333,6 +335,7 @@ const metadataVisible = ref(false)
 const metadataFormVisible = ref(false)
 const currentDocId = ref(undefined)
 const currentFormId = ref(undefined)
+const currentFormRevId = ref(undefined)
 const formJson = ref(undefined)
 
 // 批量操作相关
@@ -529,6 +532,7 @@ function handleDocumentVersion(docId) {
  * 展示文档元数据列表
  */
 function handleDocumentMetadata(docId) {
+  handleCloseMetadataForm()
   detailFormValueAPI({ objId: docId }).then(res => {
     if (res.code !== 200) return
     currentDocId.value = docId
@@ -547,6 +551,7 @@ function handleDocumentMetadata(docId) {
       })
       formJson.value = formJsonResult
       currentFormId.value = res.data.formId
+      currentFormRevId.value = res.data.formRevId
       metadataFormVisible.value = true
     }
   })
@@ -566,11 +571,12 @@ function handleGetMetadataList() {
 /**
  * 打开元数据表单
  */
-function handleOpenMetadataForm(formId) {
-  queryFormJsonAPI({ id: formId }).then(res => {
+function handleOpenMetadataForm(item) {
+  queryFormJsonAPI({ id: item.id, revId: item.revId }).then(res => {
     if (!res.data) return
     formJson.value = JSON.parse(res.data)
-    currentFormId.value = formId
+    currentFormId.value = item.id
+    currentFormRevId.value = item.revId
     metadataFormVisible.value = true
   })
 }
@@ -579,29 +585,32 @@ function handleOpenMetadataForm(formId) {
  * 提交元数据表单
  */
 function handleSubmitMetadataForm() {
-  const list = JSON.parse(JSON.stringify(formJson.value)).widgetList
-  const values = []
-  list.forEach(widget => {
-    const config = widget.config
-    values.push({
-      code: config.code,
-      type: widget.type,
-      value: config.value,
-      showValue: config.showValue
-    })
-  })
+  const validation = validateFormValues(formJson.value, '保存')
+  if (!validation.valid) {
+    ElMessage.warning(validation.message)
+    return
+  }
   saveFormValueAPI({
     objId: currentDocId.value,
     formId: currentFormId.value,
-    values
+    formRevId: currentFormRevId.value,
+    values: collectFormValues(formJson.value)
   }).then(res => {
     if (res.code !== 200) return
     ElMessage.success('元数据提交成功')
-    formJson.value = undefined
-    currentFormId.value = undefined
-    metadataFormVisible.value = false
+    handleCloseMetadataForm()
     metadataVisible.value = false
   })
+}
+
+/**
+ * 关闭元数据表单，避免版本上下文带入下一份文档
+ */
+function handleCloseMetadataForm() {
+  formJson.value = undefined
+  currentFormId.value = undefined
+  currentFormRevId.value = undefined
+  metadataFormVisible.value = false
 }
 
 /**
@@ -609,10 +618,13 @@ function handleSubmitMetadataForm() {
  */
 function handleMetadataPageChangeSize(pageSize) {
   metadataQuery.value.pageSize = pageSize
+  metadataQuery.value.pageNo = 1
+  handleGetMetadataList()
 }
 
 function handleMetadataPageChangeNo(pageNo) {
   metadataQuery.value.pageNo = pageNo
+  handleGetMetadataList()
 }
 
 /**

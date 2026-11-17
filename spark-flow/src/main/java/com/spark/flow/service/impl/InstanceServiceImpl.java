@@ -97,13 +97,61 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        Long templateId = instanceVO.getTemplateId();
+        Long templateRevId = instanceVO.getTemplateRevId();
+        Long formId = instanceVO.getFormId();
+        Long formRevId = instanceVO.getFormRevId();
+        String requestProcessId = instanceVO.getProcessId();
+        FlowTemplateQuery templateQuery = new FlowTemplateQuery();
+        templateQuery.setId(templateId);
+        super.scopeTenant(templateQuery);
+        FlowTemplateResult templateResult = templateDao.queryTemplate(templateQuery);
+        if (templateResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_TEMPLATE_NOT_EXIST);
+            return result;
+        }
+        Integer templateDeleteFlag = templateResult.getDeleteFlag();
+        Integer normalDeleteFlag = DeleteFlagEnum.NORMAL.getValue();
+        if (!normalDeleteFlag.equals(templateDeleteFlag)) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_TEMPLATE_NOT_EXIST);
+            return result;
+        }
+        FlowTemplateVersionQuery versionQuery = new FlowTemplateVersionQuery();
+        versionQuery.setId(templateRevId);
+        versionQuery.setTemplateId(templateId);
+        FlowTemplateVersionResult versionResult = templateVersionDao.queryTemplateVersion(versionQuery);
+        if (versionResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FLOW_TEMPLATE_VERSION_NOT_EXIST);
+            return result;
+        }
+        Long templateFormId = templateResult.getFormId();
+        if (!Objects.equals(templateFormId, formId)) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            result.setMessage("流程模板与表单绑定关系不一致");
+            return result;
+        }
+        FormVersionQuery formVersionQuery = new FormVersionQuery();
+        formVersionQuery.setId(formRevId);
+        formVersionQuery.setFormId(formId);
+        FormVersionResult formVersionResult = formVersionDao.queryFormVersion(formVersionQuery);
+        if (formVersionResult == null) {
+            result.setErrorCode(ErrorCodeEnum.FORM_VERSION_NOT_EXIST);
+            return result;
+        }
+        String processId = versionResult.getProcessId();
+        String templateProcessId = templateResult.getProcessId();
+        if (!Objects.equals(processId, requestProcessId) || !Objects.equals(templateProcessId, processId)) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            result.setMessage("流程模板版本与流程定义不一致");
+            return result;
+        }
         // 校验引用的模板版本与表单版本归属当前租户
-        if (!this.checkVersionTenant(instanceVO.getTemplateRevId(), instanceVO.getFormRevId())) {
+        if (!this.checkVersionTenant(templateRevId, formRevId)) {
             result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
         // 校验流程模板是否已部署到flowable
-        ResultData<Void> deployedData = flowableService.checkProcessDeployed(instanceVO.getProcessId());
+        ResultData<Void> deployedData = flowableService.checkProcessDeployed(processId);
         if (deployedData.getCode() != ResultData.OK) {
             result.setCode(deployedData.getCode());
             result.setMessage(deployedData.getMessage());
@@ -118,24 +166,28 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         BaseContext baseContext = new BaseContext();
         baseContext.putVal(FlowInstance.class, instance);
         SessionHolder.setContext(baseContext);
-        List<FormObjValue> values = instanceVO.getValues();
+        FormObjValueVO formObjValueVO = new FormObjValueVO();
+        List<FormObjValue> originalValues = instanceVO.getValues();
+        formObjValueVO.setValues(originalValues);
+        formObjValueVO.setFormId(formId);
+        formObjValueVO.setFormRevId(formRevId);
+        formObjValueVO.setObjId(instanceId);
+        ResultData<Void> saveFormData = formObjValueService.saveFormObjValues(formObjValueVO);
+        if (saveFormData.getCode() != ResultData.OK) {
+            result.setCode(saveFormData.getCode());
+            result.setMessage(saveFormData.getMessage());
+            return result;
+        }
+        List<FormObjValue> values = formObjValueVO.getValues();
         Map<String, Object> variables = new HashMap<>();
-        if (CollectionUtil.isNotEmpty(values)) {
-            variables = values.stream().filter(v -> StringUtil.isNotBlank(v.getValue())).collect(Collectors.toMap(FormObjValue::getCode, FormObjValue::getValue, (v1, v2) -> v1));
-            FormObjValueVO formObjValueVO = new FormObjValueVO();
-            formObjValueVO.setValues(values);
-            formObjValueVO.setFormId(instanceVO.getFormId());
-            formObjValueVO.setObjId(instanceId);
-            ResultData<Void> saveFormData = formObjValueService.saveFormObjValues(formObjValueVO);
-            if (saveFormData.getCode() != ResultData.OK) {
-                result.setCode(saveFormData.getCode());
-                result.setMessage(saveFormData.getMessage());
-                return result;
-            }
+        for (FormObjValue value : values) {
+            String code = value.getCode();
+            String fieldValue = value.getValue();
+            variables.put(code, fieldValue);
         }
         ResultData<String> createInstanceData;
         try {
-            createInstanceData = flowableService.createInstance(instanceVO.getProcessId(), variables);
+            createInstanceData = flowableService.createInstance(processId, variables);
         } catch (Exception e) {
             logger.error("createInstance engine error, instanceId={}", instanceId, e);
             this.compensateCreateInstance(instanceId);
@@ -190,8 +242,13 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         if (instanceResult.getDeptId() != null) {
             instanceResult.setDeptName(this.getObjName(instanceResult.getDeptId()));
         }
+        Long templateRevId = instanceResult.getTemplateRevId();
+        Long templateId = instanceResult.getTemplateId();
+        Long formRevId = instanceResult.getFormRevId();
+        Long formId = instanceResult.getFormId();
         FlowTemplateVersionQuery templateVersionQuery = new FlowTemplateVersionQuery();
-        templateVersionQuery.setId(instanceResult.getTemplateRevId());
+        templateVersionQuery.setId(templateRevId);
+        templateVersionQuery.setTemplateId(templateId);
         FlowTemplateVersionResult templateVersionResult = templateVersionDao.queryTemplateVersion(templateVersionQuery);
         if (templateVersionResult == null) {
             result.setErrorCode(ErrorCodeEnum.FLOW_TEMPLATE_VERSION_NOT_EXIST);
@@ -201,10 +258,19 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         String bpmPath = templateVersionResult.getBpmPath();
         if (StringUtil.isNotBlank(bpmPath)) {
             ResultData<String> fromText = TextUtil.getFromText(bpmPath, false);
-            instanceResult.setBpmJson(fromText.getData());
+            if (fromText.getCode() != ResultData.OK) {
+                int errorCode = fromText.getCode();
+                String errorMessage = fromText.getMessage();
+                result.setCode(errorCode);
+                result.setMessage(errorMessage);
+                return result;
+            }
+            String bpmJson = fromText.getData();
+            instanceResult.setBpmJson(bpmJson);
         }
         FormVersionQuery formVersionQuery = new FormVersionQuery();
-        formVersionQuery.setId(instanceResult.getFormRevId());
+        formVersionQuery.setId(formRevId);
+        formVersionQuery.setFormId(formId);
         FormVersionResult formVersionResult = formVersionDao.queryFormVersion(formVersionQuery);
         if (formVersionResult == null) {
             result.setErrorCode(ErrorCodeEnum.FORM_VERSION_NOT_EXIST);
@@ -213,7 +279,15 @@ public class InstanceServiceImpl extends BaseService<FlowInstanceQuery, FlowInst
         String formPath = formVersionResult.getFilePath();
         if (StringUtil.isNotBlank(formPath)) {
             ResultData<String> fromText = TextUtil.getFromText(formPath, false);
-            instanceResult.setFormJson(fromText.getData());
+            if (fromText.getCode() != ResultData.OK) {
+                int errorCode = fromText.getCode();
+                String errorMessage = fromText.getMessage();
+                result.setCode(errorCode);
+                result.setMessage(errorMessage);
+                return result;
+            }
+            String formJson = fromText.getData();
+            instanceResult.setFormJson(formJson);
         }
         FormObjValueQuery formObjValueQuery = new FormObjValueQuery();
         formObjValueQuery.setObjId(instanceResult.getId());

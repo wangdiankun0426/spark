@@ -15,6 +15,8 @@ public enum FormFieldTypeEnum {
     TEXTAREA("textarea", "多行文本"),
     RADIO("radio", "单选框"),
     SELECT("select", "下拉选择"),
+    NUMBER("number", "计数器"),
+    DATE("date", "日期"),
     SELECT_USER("select-user", "选择用户"),
     SELECT_DEPT("select-dept", "选择部门"),
     SELECT_ROLE("select-role", "选择角色"),

@@ -98,11 +98,26 @@
         </if>
     </select>
 
+    <update id="updateFormRevIdCas">
+        update form
+        set rev_id = #{revId} , rev_num = #{revNum} , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id} and rev_id = #{expectedRevId} and delete_flag = 1
+    </update>
+
     <select id="queryForm" resultType="com.spark.common.bean.form.result.FormResult">
         select <include refid="allColumnList"/>
         from form
         where 1=1
         <include refid="searchCondition"/>
         limit 1
+    </select>
+
+    <select id="queryFormForUpdate" resultType="com.spark.common.bean.form.result.FormResult">
+        select <include refid="allColumnList"/>
+        from form
+        where 1=1
+        <include refid="searchCondition"/>
+        limit 1
+        for update
     </select>
 </mapper>

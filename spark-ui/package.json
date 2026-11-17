@@ -11,6 +11,7 @@
     "dev:win": "tauri dev",
     "pack:win": "node src-tauri/scripts/sync-version.cjs && tauri build && node src-tauri/scripts/rename-installer.cjs",
     "pack:update": "node src-tauri/scripts/pack-hot-update.cjs",
+    "test": "node --test tests/formSchema.test.js tests/formAction.test.js",
     "lint:style": "stylelint \"src/**/*.{vue,scss}\""
   },
   "dependencies": {

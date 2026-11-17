@@ -28,6 +28,13 @@ public interface IFormObjValueService {
     ResultData<Void> saveFormObjValues(FormObjValueVO valueVO);
 
     /**
+     * 创建或更新表单对象值
+     * @param valueVO 表单对象值
+     * @return 保存结果
+     */
+    ResultData<Void> saveOrUpdateFormObjValues(FormObjValueVO valueVO);
+
+    /**
      * 查询对象表单值列表
      * @param query 查询参数
      * @return 表单对象值列表

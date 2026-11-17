@@ -22,6 +22,9 @@
         <if test="formId != null">
             and form_id = #{formId}
         </if>
+        <if test="type != null and type != ''">
+            and type = #{type}
+        </if>
         <if test="code != null">
             and code = #{code}
         </if>

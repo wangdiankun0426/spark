@@ -20,10 +20,14 @@ import com.spark.common.bean.workflow.vo.WfReviewVO;
 import com.spark.common.bean.workflow.vo.WfRunVO;
 import com.spark.common.bean.form.entity.FormObjValue;
 import com.spark.common.bean.form.query.FormObjValueQuery;
+import com.spark.common.bean.form.query.FormQuery;
 import com.spark.common.bean.form.result.FormObjValueResult;
+import com.spark.common.bean.form.result.FormResult;
 import com.spark.common.bean.form.vo.FormObjValueVO;
 import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.LogPrint;
+import com.spark.dao.form.FormObjDao;
+import com.spark.dao.form.FormObjValueDao;
 import com.spark.dao.workflow.WfInstanceDao;
 import com.spark.dao.workflow.WfInstanceNodeDao;
 import com.spark.dao.workflow.WfTemplateDao;
@@ -34,6 +38,7 @@ import com.spark.common.enums.WorkflowInstanceStatusEnum;
 import com.spark.common.enums.WorkflowNodeStatusEnum;
 import com.spark.common.enums.WorkflowTemplateTypeEnum;
 import com.spark.form.service.IFormObjValueService;
+import com.spark.form.service.IFormService;
 import com.spark.manage.BaseService;
 import com.spark.common.utils.BeanUtil;
 import com.spark.common.utils.CollectionUtil;
@@ -53,7 +58,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 /**
  * +++/\_/\
@@ -81,6 +86,12 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
     private DagExecutor dagExecutor;
     @Autowired
     private IFormObjValueService formObjValueService;
+    @Autowired
+    private IFormService formService;
+    @Autowired
+    private FormObjDao formObjDao;
+    @Autowired
+    private FormObjValueDao formObjValueDao;
 
     /**
      * 分页查询运行实例
@@ -195,6 +206,7 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
         }
         WfTemplateVersionQuery versionQuery = new WfTemplateVersionQuery();
         versionQuery.setId(template.getRevId());
+        versionQuery.setTemplateId(templateId);
         WfTemplateVersionResult versionResult = templateVersionDao.queryVersion(versionQuery);
         if (versionResult == null) {
             result.setErrorCode(ErrorCodeEnum.WORKFLOW_VERSION_NOT_FOUND);
@@ -204,23 +216,60 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
             result.setErrorCode(ErrorCodeEnum.WORKFLOW_DAG_INVALID);
             return result;
         }
+        Long formId = template.getFormId();
+        Long requestFormId = runVO.getFormId();
+        if (!Objects.equals(formId, requestFormId)) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            result.setMessage("工作流与输入表单绑定关系不一致");
+            return result;
+        }
+        FormQuery formQuery = new FormQuery();
+        formQuery.setId(formId);
+        ResultData<FormResult> formDetailResult = formService.queryFormDetail(formQuery);
+        if (formDetailResult.getCode() != ResultData.OK) {
+            int errorCode = formDetailResult.getCode();
+            String errorMessage = formDetailResult.getMessage();
+            result.setCode(errorCode);
+            result.setMessage(errorMessage);
+            return result;
+        }
+        FormResult formResult = formDetailResult.getData();
+        Long formRevId = formResult.getRevId();
+        if (formRevId == null) {
+            result.setErrorCode(ErrorCodeEnum.FORM_VERSION_NOT_EXIST);
+            return result;
+        }
+        Long requestFormRevId = runVO.getFormRevId();
+        if (requestFormRevId != null && !Objects.equals(requestFormRevId, formRevId)) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            result.setMessage("输入表单版本已更新，请刷新后重试");
+            return result;
+        }
         Long instanceId = super.genObjectId(ObjectTypeEnum.WORKFLOW_INSTANCE);
-        List<FormObjValue> values = runVO.getValues();
-        Map<String, String> vlaueMap = new HashMap<>();
-        Map<String, String> showVlaueMap = new HashMap<>();
-        if (CollectionUtil.isNotEmpty(values)) {
-            FormObjValueVO formObjValueVO = new FormObjValueVO();
-            formObjValueVO.setObjId(instanceId);
-            formObjValueVO.setFormId(runVO.getFormId());
-            formObjValueVO.setValues(values);
-            ResultData<Void> saveFormData = formObjValueService.saveFormObjValues(formObjValueVO);
-            if (saveFormData.getCode() != ResultData.OK) {
-                result.setCode(saveFormData.getCode());
-                result.setMessage(saveFormData.getMessage());
-                return result;
-            }
-            vlaueMap = values.stream().filter(v -> StringUtil.isNotBlank(v.getValue())).collect(Collectors.toMap(FormObjValue::getCode, FormObjValue::getValue, (v1, v2) -> v2));
-            showVlaueMap = values.stream().filter(v -> StringUtil.isNotBlank(v.getShowValue())).collect(Collectors.toMap(FormObjValue::getCode, FormObjValue::getShowValue, (v1, v2) -> v2));
+        FormObjValueVO formObjValueVO = new FormObjValueVO();
+        formObjValueVO.setObjId(instanceId);
+        formObjValueVO.setFormId(formId);
+        formObjValueVO.setFormRevId(formRevId);
+        List<FormObjValue> originalValues = runVO.getValues();
+        formObjValueVO.setValues(originalValues);
+        ResultData<Void> saveFormData = formObjValueService.saveFormObjValues(formObjValueVO);
+        if (saveFormData.getCode() != ResultData.OK) {
+            result.setCode(saveFormData.getCode());
+            result.setMessage(saveFormData.getMessage());
+            return result;
+        }
+        List<FormObjValue> values = formObjValueVO.getValues();
+        Map<String, String> valueMap = new HashMap<>();
+        Map<String, String> showValueMap = new HashMap<>();
+        Map<String, String> valueTypeMap = new HashMap<>();
+        for (FormObjValue value : values) {
+            String code = value.getCode();
+            String fieldValue = value.getValue();
+            String showValue = value.getShowValue();
+            String fieldType = value.getType();
+            valueMap.put(code, fieldValue);
+            showValueMap.put(code, showValue);
+            valueTypeMap.put(code, fieldType);
         }
         WfInstance instance = new WfInstance();
         instance.setId(instanceId);
@@ -228,18 +277,35 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
         instance.setRevId(template.getRevId());
         instance.setRevNum(template.getRevNum());
         instance.setStatus(WorkflowInstanceStatusEnum.RUNNING.getValue());
-        int count = instanceDao.insertDB(instance);
+        int count;
+        try {
+            count = instanceDao.insertDB(instance);
+        } catch (RuntimeException e) {
+            this.compensateRunWorkflowForm(instanceId);
+            throw e;
+        }
         if (count < 1) {
-            logger.error("runWorkflow error, insert instance fail");
+            this.compensateRunWorkflowForm(instanceId);
+            logger.error("runWorkflow error, insert instance fail, instanceId={}", instanceId);
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
         BaseContext context = new BaseContext();
         context.putVal(WfInstance.class, instance);
-        context.put("valueMap", vlaueMap);
-        context.put("showValueMap", showVlaueMap);
-        context.put("templateName", template.getName());
-        dagExecutor.executeAsync(context, versionResult.getDagJson());
+        context.put("valueMap", valueMap);
+        context.put("showValueMap", showValueMap);
+        context.put("valueTypeMap", valueTypeMap);
+        String templateName = template.getName();
+        context.put("templateName", templateName);
+        String dagJson = versionResult.getDagJson();
+        try {
+            dagExecutor.executeAsync(context, dagJson);
+        } catch (RuntimeException e) {
+            this.markWorkflowFailed(instanceId, "工作流提交执行失败");
+            logger.error("runWorkflow submit error, instanceId={}", instanceId, e);
+            result.setErrorCode(ErrorCodeEnum.SYSTEM_ERROR);
+            return result;
+        }
         result.setData(instance);
         result.setCode(ResultData.OK);
         return result;
@@ -270,7 +336,7 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
     @Override
     public ResultData<Void> reviewInstance(WfReviewVO reviewVO) {
         ResultData<Void> result = new ResultData<>();
-        if (reviewVO == null || reviewVO.getInstanceId() == null || reviewVO.getApproved() == null) {
+        if (reviewVO == null || reviewVO.getInstanceId() == null || reviewVO.getNodeRunId() == null || reviewVO.getApproved() == null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
@@ -306,6 +372,12 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
             result.setErrorCode(ErrorCodeEnum.WORKFLOW_REVIEW_INVALID);
             return result;
         }
+        Long nodeRunId = reviewVO.getNodeRunId();
+        Long currentNodeRunId = reviewRow.getId();
+        if (!Objects.equals(nodeRunId, currentNodeRunId)) {
+            result.setErrorCode(ErrorCodeEnum.WORKFLOW_REVIEW_INVALID);
+            return result;
+        }
         Map<String, String> reviewInfo = JsonUtil.parseMap(reviewRow.getOutputJson());
         if (reviewInfo == null) {
             reviewInfo = new HashMap<>();
@@ -317,12 +389,26 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
             result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
             return result;
         }
+        BaseContext resumeContext = null;
+        if (reviewVO.getApproved()) {
+            ResultData<BaseContext> prepareResult = this.prepareResumeDag(instance);
+            if (prepareResult.getCode() != ResultData.OK) {
+                int errorCode = prepareResult.getCode();
+                String errorMessage = prepareResult.getMessage();
+                result.setCode(errorCode);
+                result.setMessage(errorMessage);
+                return result;
+            }
+            resumeContext = prepareResult.getData();
+        }
         Integer toStatus = WorkflowInstanceStatusEnum.RUNNING.getValue();
         if (!reviewVO.getApproved()) {
             toStatus = WorkflowInstanceStatusEnum.REJECTED.getValue();
         }
-        // 条件更新抢锁，仅当前仍为已暂停才生效，防止并发重复审核
-        int locked = instanceDao.updateInstanceStatusCas(instanceId, WorkflowInstanceStatusEnum.PAUSED.getValue(), toStatus, currentUserId);
+        // 实例状态与指定待审行必须在同一原子条件中有效，防止并发及跨节点重复审核
+        Integer pausedStatus = WorkflowInstanceStatusEnum.PAUSED.getValue();
+        Integer waitingStatus = WorkflowNodeStatusEnum.WAITING.getValue();
+        int locked = instanceDao.updateInstanceStatusCas(instanceId, nodeRunId, pausedStatus, toStatus, waitingStatus, currentUserId);
         if (locked < 1) {
             result.setErrorCode(ErrorCodeEnum.WORKFLOW_REVIEW_INVALID);
             return result;
@@ -338,22 +424,57 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
         finalOutput.put("comment", commentText);
         String finalJson = JsonUtil.toString(finalOutput);
         WfInstanceNode nodeUpdate = new WfInstanceNode();
-        nodeUpdate.setId(reviewRow.getId());
+        nodeUpdate.setId(currentNodeRunId);
         nodeUpdate.setStatus(WorkflowNodeStatusEnum.SUCCESS.getValue());
         nodeUpdate.setOutputJson(finalJson);
-        instanceNodeDao.updateDBById(nodeUpdate);
+        int nodeCount;
+        try {
+            nodeCount = instanceNodeDao.updateDBById(nodeUpdate);
+        } catch (RuntimeException e) {
+            this.markWorkflowFailed(instanceId, "人工审核记录更新异常");
+            throw e;
+        }
+        if (nodeCount < 1) {
+            this.markWorkflowFailed(instanceId, "人工审核记录更新失败");
+            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
+            return result;
+        }
         if (!reviewVO.getApproved()) {
             WfInstance meta = new WfInstance();
             meta.setId(instanceId);
             meta.setErrorMsg("人工审核驳回");
-            meta.setFinishedDt(new Timestamp(System.currentTimeMillis()));
-            instanceDao.updateDBById(meta);
+            long currentTime = System.currentTimeMillis();
+            Timestamp finishedDt = new Timestamp(currentTime);
+            meta.setFinishedDt(finishedDt);
+            int metaCount;
+            try {
+                metaCount = instanceDao.updateDBById(meta);
+            } catch (RuntimeException e) {
+                this.markWorkflowFailed(instanceId, "人工审核驳回状态更新异常");
+                throw e;
+            }
+            if (metaCount < 1) {
+                this.markWorkflowFailed(instanceId, "人工审核驳回状态更新失败");
+                result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
+                return result;
+            }
             result.setCode(ResultData.OK);
             return result;
         }
-        ResultData<Void> resumeResult = this.resumeDag(instance);
-        if (resumeResult.getCode() != ResultData.OK) {
-            return resumeResult;
+        if (resumeContext == null) {
+            this.markWorkflowFailed(instanceId, "工作流恢复上下文缺失");
+            result.setErrorCode(ErrorCodeEnum.SYSTEM_ERROR);
+            return result;
+        }
+        Object dagObject = resumeContext.get("dagJson");
+        String dagJson = String.valueOf(dagObject);
+        try {
+            dagExecutor.resumeAsync(resumeContext, dagJson);
+        } catch (RuntimeException e) {
+            this.markWorkflowFailed(instanceId, "工作流恢复提交失败");
+            logger.error("reviewInstance resume submit error, instanceId={}", instanceId, e);
+            result.setErrorCode(ErrorCodeEnum.SYSTEM_ERROR);
+            return result;
         }
         result.setCode(ResultData.OK);
         return result;
@@ -471,42 +592,85 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
     protected Long queryMaxId() { return instanceDao.queryInstanceMaxId(); }
 
     /**
-     * 审核通过后重建执行上下文并异步恢复DAG
+     * 审核前准备恢复执行上下文
      * @param instance 实例查询结果
-     * @return 恢复提交结果
+     * @return 恢复执行上下文
      */
-    private ResultData<Void> resumeDag(WfInstanceResult instance) {
-        ResultData<Void> result = new ResultData<>();
+    private ResultData<BaseContext> prepareResumeDag(WfInstanceResult instance) {
+        ResultData<BaseContext> result = new ResultData<>();
+        if (instance == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        Long instanceId = instance.getId();
+        Long templateId = instance.getTemplateId();
+        Long revId = instance.getRevId();
+        if (instanceId == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (templateId == null || revId == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
         WfTemplateVersionQuery versionQuery = new WfTemplateVersionQuery();
-        versionQuery.setId(instance.getRevId());
+        versionQuery.setId(revId);
+        versionQuery.setTemplateId(templateId);
         WfTemplateVersionResult versionResult = templateVersionDao.queryVersion(versionQuery);
         if (versionResult == null || StringUtil.isBlank(versionResult.getDagJson())) {
-            logger.error("resume dag failed, dag json missing, instanceId={}", instance.getId());
+            logger.error("prepareResumeDag dag missing, instanceId={}", instanceId);
             result.setErrorCode(ErrorCodeEnum.WORKFLOW_DAG_INVALID);
             return result;
         }
         FormObjValueQuery valueQuery = new FormObjValueQuery();
-        valueQuery.setObjId(instance.getId());
+        valueQuery.setObjId(instanceId);
         valueQuery.setPage(false);
         ResultData<List<FormObjValueResult>> valueResult = formObjValueService.queryFormObjValueList(valueQuery);
+        if (valueResult.getCode() != ResultData.OK) {
+            int errorCode = valueResult.getCode();
+            String errorMessage = valueResult.getMessage();
+            result.setCode(errorCode);
+            result.setMessage(errorMessage);
+            return result;
+        }
         Map<String, String> valueMap = new HashMap<>();
         Map<String, String> showValueMap = new HashMap<>();
+        Map<String, String> valueTypeMap = new HashMap<>();
         List<FormObjValueResult> formValues = valueResult.getData();
-        if (valueResult.getCode() == ResultData.OK && CollectionUtil.isNotEmpty(formValues)) {
-            valueMap = formValues.stream().filter(v -> StringUtil.isNotBlank(v.getValue())).collect(Collectors.toMap(FormObjValueResult::getCode, FormObjValueResult::getValue, (v1, v2) -> v2));
-            showValueMap = formValues.stream().filter(v -> StringUtil.isNotBlank(v.getShowValue())).collect(Collectors.toMap(FormObjValueResult::getCode, FormObjValueResult::getShowValue, (v1, v2) -> v2));
+        if (formValues != null) {
+            for (FormObjValueResult formValue : formValues) {
+                String code = formValue.getCode();
+                if (StringUtil.isBlank(code)) {
+                    continue;
+                }
+                String fieldValue = formValue.getValue();
+                String showValue = formValue.getShowValue();
+                String fieldType = formValue.getType();
+                if (StringUtil.isNotBlank(fieldValue)) {
+                    valueMap.put(code, fieldValue);
+                }
+                if (StringUtil.isNotBlank(showValue)) {
+                    showValueMap.put(code, showValue);
+                }
+                if (StringUtil.isNotBlank(fieldType)) {
+                    valueTypeMap.put(code, fieldType);
+                }
+            }
         }
         WfInstance instanceEntity = new WfInstance();
-        instanceEntity.setId(instance.getId());
-        instanceEntity.setTemplateId(instance.getTemplateId());
-        instanceEntity.setRevId(instance.getRevId());
+        instanceEntity.setId(instanceId);
+        instanceEntity.setTemplateId(templateId);
+        instanceEntity.setRevId(revId);
         BaseContext context = new BaseContext();
         context.putVal(WfInstance.class, instanceEntity);
         context.put("valueMap", valueMap);
         context.put("showValueMap", showValueMap);
-        context.put("templateName", instance.getTemplateName());
+        context.put("valueTypeMap", valueTypeMap);
+        String templateName = instance.getTemplateName();
+        context.put("templateName", templateName);
         String dagJson = versionResult.getDagJson();
-        dagExecutor.resumeAsync(context, dagJson);
+        context.put("dagJson", dagJson);
+        result.setData(context);
         result.setCode(ResultData.OK);
         return result;
     }
@@ -547,5 +711,52 @@ public class WorkflowInstanceServiceImpl extends BaseService<WfInstanceQuery, Wf
         List<String> ids = Arrays.asList(reviewerIds.split(","));
         String userIdText = String.valueOf(currentUserId);
         return ids.contains(userIdText);
+    }
+
+    /**
+     * 清理实例创建失败前保存的表单对象
+     * @param instanceId 实例id
+     */
+    private void compensateRunWorkflowForm(Long instanceId) {
+        if (instanceId == null) {
+            return;
+        }
+        try {
+            formObjValueDao.deleteDBByObjId(instanceId);
+        } catch (RuntimeException e) {
+            logger.error("runWorkflow value compensation error, instanceId={}", instanceId, e);
+        }
+        try {
+            formObjDao.deleteDBByObjId(instanceId);
+        } catch (RuntimeException e) {
+            logger.error("runWorkflow form compensation error, instanceId={}", instanceId, e);
+        }
+    }
+
+    /**
+     * 标记工作流实例失败
+     * @param instanceId 实例id
+     * @param errorMsg 失败原因
+     */
+    private void markWorkflowFailed(Long instanceId, String errorMsg) {
+        if (instanceId == null) {
+            return;
+        }
+        try {
+            WfInstance failed = new WfInstance();
+            failed.setId(instanceId);
+            Integer failedStatus = WorkflowInstanceStatusEnum.FAILED.getValue();
+            failed.setStatus(failedStatus);
+            failed.setErrorMsg(errorMsg);
+            long currentTime = System.currentTimeMillis();
+            Timestamp finishedDt = new Timestamp(currentTime);
+            failed.setFinishedDt(finishedDt);
+            int count = instanceDao.updateDBById(failed);
+            if (count < 1) {
+                logger.error("markWorkflowFailed update fail, instanceId={}", instanceId);
+            }
+        } catch (RuntimeException e) {
+            logger.error("markWorkflowFailed error, instanceId={}", instanceId, e);
+        }
     }
 }

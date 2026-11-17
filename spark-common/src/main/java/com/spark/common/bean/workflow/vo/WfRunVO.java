@@ -30,6 +30,11 @@ public class WfRunVO extends BaseVO {
     private Long formId;
 
     /**
+     * 绑定输入表单版本ID
+     */
+    private Long formRevId;
+
+    /**
      * 表单值
      */
     private List<FormObjValue> values;

@@ -27,12 +27,12 @@ public class FormValueController {
     /**
      * 保存表单数据
      * @param valueVO 表单数据
-     * @return 创建结果
+     * @return 保存结果
      */
     @RequiresPermi("form:value:save")
     @PostMapping("save")
     public ResultData<Void> saveFormObjValues(@RequestBody FormObjValueVO valueVO) {
-        return formObjValueService.saveFormObjValues(valueVO);
+        return formObjValueService.saveOrUpdateFormObjValues(valueVO);
     }
 
     /**

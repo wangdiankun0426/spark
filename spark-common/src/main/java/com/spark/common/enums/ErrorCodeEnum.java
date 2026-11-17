@@ -75,7 +75,7 @@ public enum ErrorCodeEnum {
     // 表单相关状态码
     FORM_NOT_EXIST(1401, "表单不存在"),
     FORM_VERSION_NOT_EXIST(1402, "表单版本不存在"),
-    FORM_OBJ_EXIST(1403, "表单关联对象不存在"),
+    FORM_OBJ_EXIST(1403, "表单关联对象已存在"),
     // 附件相关状态码
     ATTACHMENT_NOT_EXIST(1501, "附件数据不存在"),
     UPLOAD_SESSION_NOT_EXIST(1502, "上传会话不存在或已过期"),

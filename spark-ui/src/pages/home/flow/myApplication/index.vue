@@ -161,10 +161,6 @@ function handleCloseFlowDetail() {
   instanceLevel.value = 1;
   instanceRevNum.value = '';
   instanceTemplateId.value = undefined;
-  instanceTemplateRevId.value = undefined;
-  instanceFormId.value = undefined;
-  instanceFormRevId.value = undefined;
-  instanceValues.value = [];
 }
 
 /**
@@ -245,16 +241,13 @@ function handleRecall() {
 }
 
 /**
- * 重新发起流程（基于原模板和表单数据创建新实例）
+ * 重新发起流程，使用最新模板创建空白申请
  */
 function handleReInitiate() {
-  const query = {
-    templateId: instanceTemplateId.value,
-    templateRevId: instanceTemplateRevId.value,
-    formId: instanceFormId.value,
-    formRevId: instanceFormRevId.value,
-  };
-  router.push({ path: '/home/flow/application', query });
+  router.push({
+    path: '/home/flow/application',
+    query: { templateId: instanceTemplateId.value },
+  });
 }
 
 const formJson = ref({});
@@ -274,10 +267,6 @@ const instanceDeptName = ref('');
 const instanceLevel = ref(1);
 const instanceRevNum = ref('');
 const instanceTemplateId = ref(undefined);
-const instanceTemplateRevId = ref(undefined);
-const instanceFormId = ref(undefined);
-const instanceFormRevId = ref(undefined);
-const instanceValues = ref([]);
 
 /**
  * 打开流程模板
@@ -304,10 +293,6 @@ function handleOpenInstance(id) {
       instanceLevel.value = res.data.level;
       instanceRevNum.value = res.data.revNum || '';
       instanceTemplateId.value = res.data.templateId;
-      instanceTemplateRevId.value = res.data.templateRevId;
-      instanceFormId.value = res.data.formId;
-      instanceFormRevId.value = res.data.formRevId;
-      instanceValues.value = res.data.values || [];
       const values = res.data.values;
       if (values.length === 0) {
         flowDetailVisible.value = true;

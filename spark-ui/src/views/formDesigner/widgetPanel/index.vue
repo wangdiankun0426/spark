@@ -51,6 +51,7 @@
 import { ref, computed } from 'vue';
 import { Search } from '@element-plus/icons-vue';
 import {basicWidgetList, sysWidgetList} from "./widgetList.js"
+import { generateFieldCode } from '@/views/formDesigner/formSchema.js'
 
 const props = defineProps({
   designer: Object,
@@ -104,7 +105,7 @@ const widgetIconMap = {
 function addWidget(widget) {
   // 这里对widget进行深拷贝，不然会出现推入新对象时却发现数组中新增的对象变成了之前修改过的对象的样子
   const widget_ = JSON.parse(JSON.stringify(widget));
-  widget_.config.code = "field"+Date.now();
+  widget_.config.code = generateFieldCode(props.designer.widgetList);
   props.designer.widgetList.push(widget_);
   props.designer.selectedId = props.designer.widgetList.length-1;
 }

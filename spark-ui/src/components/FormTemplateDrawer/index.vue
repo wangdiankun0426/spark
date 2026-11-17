@@ -303,7 +303,10 @@ handleGetFormList();
  * 查询表单版本列表
  */
 function handleGetFormVersionList(formId) {
-  formVersionQuery.value.formId = formId;
+  if (formId !== undefined) {
+    formVersionQuery.value.formId = formId;
+    formVersionQuery.value.pageNo = 1;
+  }
   pageFormVersionListAPI(formVersionQuery.value).then(res => {
     formVersionList.value = res.data.rows;
     versionTotal.value = res.data.total;
@@ -486,6 +489,7 @@ function handlePageChangeNo(pageNo) {
  */
 function handleVersionPageChangeSize(pageSize) {
   formVersionQuery.value.pageSize = pageSize;
+  formVersionQuery.value.pageNo = 1;
   handleGetFormVersionList();
 }
 

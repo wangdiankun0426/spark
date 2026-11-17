@@ -5,7 +5,11 @@ import com.spark.common.enums.ErrorCodeEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 
 /**
  * +++/\_/\
@@ -37,36 +41,35 @@ public class TextUtil {
             result.setErrorCode(ErrorCodeEnum.FILE_NOT_EXIST);
             return result;
         }
-        FileReader fr;
-        BufferedReader br;
-        String text;
-        try {
-            fr = new FileReader(filePath);
-            br = new BufferedReader(fr);
+        StringBuilder textContent = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String tempContent;
-            StringBuilder textContent = new StringBuilder();
-            while ((tempContent = br.readLine()) != null) {
+            while ((tempContent = reader.readLine()) != null) {
                 textContent.append(tempContent);
                 if (withFormat) {
                     textContent.append("\n");
                 }
             }
-            text = textContent.toString();
-            result.setCode(ResultData.OK);
-            result.setData(text);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            logger.error("getFromText error, filePath={}", filePath, e);
+            result.setErrorCode(ErrorCodeEnum.SYSTEM_ERROR);
+            return result;
         }
+        String text = textContent.toString();
+        result.setData(text);
+        result.setCode(ResultData.OK);
         return result;
     }
 
     /**
      * 将字符串写入text中
+     * @param filePath 文本文件路径
      * @param content 要写入的文本
+     * @return 写入结果
      */
     public static ResultData<Void> writeToText(String filePath, String content) {
         ResultData<Void> result = new ResultData<>();
-        if ( StringUtil.isBlank(filePath) ||  StringUtil.isBlank(content)) {
+        if (StringUtil.isBlank(filePath) || StringUtil.isBlank(content)) {
             logger.error("writeToText error, params not complete");
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
@@ -76,24 +79,26 @@ public class TextUtil {
             result.setErrorCode(ErrorCodeEnum.FILE_EXIST);
             return result;
         }
-        FileWriter writer = null;
+        boolean created = false;
         try {
-            boolean bo = file.createNewFile();
-            if (!bo) {
+            created = file.createNewFile();
+            if (!created) {
+                result.setErrorCode(ErrorCodeEnum.FILE_CREATE_FAIL);
                 return result;
             }
-            writer = new FileWriter(file);
-            writer.write(content);
-        } catch (IOException e) {
-            logger.error("writeToText error, create new file fail, filePath={}", filePath, e);
-        } finally {
-            try {
-                if (writer != null) {
-                    writer.close();
-                }
-            } catch (IOException e) {
-                logger.error("writeToText error, close writer fail", e);
+            try (FileWriter writer = new FileWriter(file)) {
+                writer.write(content);
             }
+        } catch (IOException e) {
+            logger.error("writeToText error, filePath={}", filePath, e);
+            if (created) {
+                boolean deleted = file.delete();
+                if (!deleted) {
+                    logger.warn("writeToText cleanup incomplete, filePath={}", filePath);
+                }
+            }
+            result.setErrorCode(ErrorCodeEnum.FILE_CREATE_FAIL);
+            return result;
         }
         result.setCode(ResultData.OK);
         return result;

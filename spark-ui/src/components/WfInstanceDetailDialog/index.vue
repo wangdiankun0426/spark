@@ -278,6 +278,7 @@ function validateComment(value) {
 async function submitReview(approved, comment) {
   const data = {
     instanceId: props.instanceId,
+    nodeRunId: waitingReviewNode.value?.id,
     approved: approved,
     comment: comment
   }

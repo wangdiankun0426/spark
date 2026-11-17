@@ -18,14 +18,14 @@ import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.form.FormDao;
 import com.spark.dao.form.FormFieldDao;
 import com.spark.dao.form.FormVersionDao;
+import com.spark.common.enums.DeleteFlagEnum;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.FormTypeEnum;
 import com.spark.common.enums.ObjectTypeEnum;
 import com.spark.form.service.IFormService;
+import com.spark.form.util.FormSchemaUtil;
 import com.spark.manage.BaseService;
 import com.spark.common.utils.CollectionUtil;
-import com.spark.common.utils.JsonUtil;
-import com.spark.common.utils.MapUtil;
 import com.spark.common.utils.StringUtil;
 import com.spark.common.utils.TextUtil;
 import org.slf4j.Logger;
@@ -36,9 +36,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import java.io.File;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -130,7 +129,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         formQuery.setId(formVO.getId());
         super.scopeTenant(formQuery);
         FormResult formResult = formDao.queryForm(formQuery);
-        if (formResult == null) {
+        if (formResult == null || !this.isActiveForm(formResult)) {
             result.setErrorCode(ErrorCodeEnum.FORM_NOT_EXIST);
             return result;
         }
@@ -211,7 +210,7 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         }
         super.scopeTenant(query);
         FormResult formResult = formDao.queryForm(query);
-        if (formResult == null) {
+        if (formResult == null || !this.isActiveForm(formResult)) {
             result.setErrorCode(ErrorCodeEnum.FORM_NOT_EXIST);
             return result;
         }
@@ -283,10 +282,20 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         formQuery.setId(formId);
         super.scopeTenant(formQuery);
         FormResult formResult = formDao.queryForm(formQuery);
-        if (formResult == null) {
+        if (formResult == null || !this.isActiveForm(formResult)) {
             result.setErrorCode(ErrorCodeEnum.FORM_NOT_EXIST);
             return result;
         }
+        Long expectedRevId = formResult.getRevId();
+        ResultData<List<FormFieldVO>> schemaResult = FormSchemaUtil.analyzeFormFields(formVO.getFormJson());
+        if (schemaResult.getCode() != ResultData.OK) {
+            int errorCode = schemaResult.getCode();
+            String errorMessage = schemaResult.getMessage();
+            result.setCode(errorCode);
+            result.setMessage(errorMessage);
+            return result;
+        }
+        List<FormFieldVO> fieldList = schemaResult.getData();
         UUID uuid = UUID.randomUUID();
         String filePath = formFilePath + uuid;
         ResultData<Void> writeTextResult = TextUtil.writeToText(filePath, formVO.getFormJson());
@@ -297,33 +306,37 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         formVersion.setFormId(formId);
         formVersion.setFilePath(filePath);
         int maxCode = formVersionDao.queryMaxFormVersionCode(formId);
-        int revCode = maxCode+1;
+        int revCode = maxCode + 1;
         String revNum = this.convertRevNum(revCode);
         formVersion.setRevCode(revCode);
         formVersion.setRevNum(revNum);
-        int count = formVersionDao.insertDB(formVersion);
-        if (count < 1) {
-            logger.error("saveFormJson error, insert form version db fail");
-            result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
-            return result;
-        }
-        Long revId = formVersion.getId();
-        List<FormFieldVO> fieldList = this.analyzeFormField(formVO.getFormJson());
-        if (CollectionUtil.isNotEmpty(fieldList)) {
-            count = formFieldDao.batchInsert(formId, revId, userId, fieldList);
+        Long revId = null;
+        try {
+            int count = formVersionDao.insertDB(formVersion);
             if (count < 1) {
-                logger.error("saveFormJson error, insert form field db fail");
+                this.compensateSaveFormJson(formVersion, revId, filePath);
+                result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
                 return result;
             }
-        }
-        Form form = new Form();
-        form.setId(formVO.getId());
-        form.setRevId(revId);
-        form.setRevNum(revNum);
-        count = formDao.updateDBById(form);
-        if (count < 1) {
-            result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
-            return result;
+            revId = formVersion.getId();
+            if (CollectionUtil.isNotEmpty(fieldList)) {
+                count = formFieldDao.batchInsert(formId, revId, userId, fieldList);
+                if (count < 1) {
+                    this.compensateSaveFormJson(formVersion, revId, filePath);
+                    result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
+                    return result;
+                }
+            }
+            count = formDao.updateFormRevIdCasDB(formId, expectedRevId, revId, revNum);
+            if (count < 1) {
+                this.compensateSaveFormJson(formVersion, revId, filePath);
+                result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
+                result.setMessage("表单版本已更新，请刷新后重试");
+                return result;
+            }
+        } catch (RuntimeException e) {
+            this.compensateSaveFormJson(formVersion, revId, filePath);
+            throw e;
         }
         result.setObjId(formId);
         result.setCode(ResultData.OK);
@@ -348,41 +361,6 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
         result.setData(formList);
         result.setCode(ResultData.OK);
         return result;
-    }
-
-    /**
-     * 解析formField
-     * @param formJson 表单json
-     * @return 表单字段列表
-     */
-    private List<FormFieldVO> analyzeFormField(String formJson) {
-        List<FormFieldVO> list = new ArrayList<>();
-        if (StringUtil.isBlank(formJson)) {
-            return list;
-        }
-        Map<String, Object> jsonObject = JsonUtil.toMap(formJson);
-        List<Map<String, Object>> widgetList = JsonUtil.getMapList(jsonObject, "widgetList");
-        for (Map<String, Object> widgetJson : widgetList) {
-            String type = MapUtil.getStringVal(widgetJson, "type");
-            Map<String, Object> config = JsonUtil.getMap(widgetJson, "config");
-            String code = MapUtil.getStringVal(config, "code");
-            String label = MapUtil.getStringVal(config, "label");
-            FormFieldVO formFieldVO = new FormFieldVO();
-            formFieldVO.setCode(code);
-            formFieldVO.setLabel(label);
-            formFieldVO.setType(type);
-            list.add(formFieldVO);
-        }
-        return list;
-    }
-
-    /**
-     * 将revCode转成revNum
-     * @param revCode 表单版本号
-     * @return revNum
-     */
-    private String convertRevNum(int revCode) {
-        return String.format("%.1f", revCode/10.0);
     }
 
     /**
@@ -428,5 +406,64 @@ public class FormServiceImpl extends BaseService<FormQuery, FormResult> implemen
     @Override
     protected Long queryMaxId() {
         return formDao.queryFormMaxId();
+    }
+
+    /**
+     * 判断表单是否允许当前读写
+     * @param formResult 表单详情
+     * @return true表单存活
+     */
+    private boolean isActiveForm(FormResult formResult) {
+        Integer deleteFlag = formResult.getDeleteFlag();
+        Integer normalFlag = DeleteFlagEnum.NORMAL.getValue();
+        return normalFlag.equals(deleteFlag);
+    }
+
+    /**
+     * 将revCode转成revNum
+     * @param revCode 表单版本号
+     * @return revNum
+     */
+    private String convertRevNum(int revCode) {
+        return String.format("%.1f", revCode / 10.0);
+    }
+
+    /**
+     * 补偿未生效的表单版本和新文件
+     * @param formVersion 新表单版本
+     * @param revId 新版本id
+     * @param filePath 新文件路径
+     */
+    private void compensateSaveFormJson(FormVersion formVersion, Long revId, String filePath) {
+        if (revId != null) {
+            try {
+                formFieldDao.deleteDBByRevId(revId);
+            } catch (RuntimeException e) {
+                logger.error("saveFormJson field compensation error, revId={}", revId, e);
+            }
+        }
+        Long versionId = formVersion.getId();
+        if (versionId != null) {
+            try {
+                FormVersion deleteVersion = new FormVersion();
+                deleteVersion.setId(versionId);
+                int count = formVersionDao.deleteDBById(deleteVersion);
+                if (count < 1) {
+                    logger.warn("saveFormJson version compensation missing, revId={}", versionId);
+                }
+            } catch (RuntimeException e) {
+                logger.error("saveFormJson version compensation error, revId={}", versionId, e);
+            }
+        }
+        if (StringUtil.isBlank(filePath)) {
+            return;
+        }
+        File file = new File(filePath);
+        if (file.exists()) {
+            boolean deleted = file.delete();
+            if (!deleted) {
+                logger.error("saveFormJson file compensation error, filePath={}", filePath);
+            }
+        }
     }
 }

@@ -16,7 +16,7 @@
       <el-row :gutter="24">
         <el-col :span="widget.config.width"
               v-for="(widget, index) in props.designer.widgetList"
-              :key="index"
+              :key="widget.config.code"
               :class="[handleSelectedStyle(index), { 'widget-dragging': dragIndex === index, 'widget-drag-over': dragOverIndex === index && dragIndex !== null && dragIndex !== index }]"
               draggable="true"
               @click="handleSelectWidget(index)"
@@ -53,6 +53,7 @@
 <script setup>
 import { ref } from 'vue';
 import { basicWidgetList, sysWidgetList } from '../widgetPanel/widgetList.js';
+import { generateFieldCode } from '@/views/formDesigner/formSchema.js';
 
 const props = defineProps({
   designer: Object
@@ -106,7 +107,7 @@ function handleDropWidget(event) {
     return;
   }
   const widget = JSON.parse(JSON.stringify(template));
-  widget.config.code = "field" + Date.now();
+  widget.config.code = generateFieldCode(props.designer.widgetList);
   props.designer.widgetList.push(widget);
   props.designer.selectedId = props.designer.widgetList.length - 1;
 }
@@ -148,7 +149,7 @@ function handleCopyWidget(index) {
   const widget = props.designer.widgetList[index];
   // 这里对widget进行深拷贝，不然会出现推入新对象时却发现数组中新增的对象变成了之前修改过的对象的样子
   const widget_ = JSON.parse(JSON.stringify(widget));
-  widget_.config.code = "field"+Date.now();
+  widget_.config.code = generateFieldCode(props.designer.widgetList);
   props.designer.widgetList.push(widget_);
   // 复制后仍保持选中原组件，不跳到末尾的副本上；push 追加到末尾，原组件下标不变
   props.designer.selectedId = index;
