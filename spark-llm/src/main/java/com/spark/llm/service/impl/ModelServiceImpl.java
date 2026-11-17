@@ -18,7 +18,9 @@ import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.ModelTypeEnum;
 import com.spark.common.enums.ObjectTypeEnum;
 import com.spark.common.enums.StatusEnum;
+import com.spark.llm.agent.AgentFactory;
 import com.spark.llm.model.ModelFactory;
+import com.spark.llm.model.ModelInvoker;
 import com.spark.llm.service.IModelService;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.manage.BaseService;
@@ -50,6 +52,8 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
     private ModelFactory modelFactory;
     @Autowired
     private ProviderDao providerDao;
+    @Autowired
+    private AgentFactory agentFactory;
 
     /**
      * 创建模型
@@ -61,6 +65,11 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
     public ResultData<Void> createModel(ModelVO modelVO) {
         ResultData<Void> result = new ResultData<>();
         if (modelVO == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        Integer timeoutMs = modelVO.getTimeoutMs();
+        if (!this.isTimeoutValid(timeoutMs)) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
@@ -96,6 +105,11 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        Integer timeoutMs = modelVO.getTimeoutMs();
+        if (!this.isTimeoutValid(timeoutMs)) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
         ModelQuery modelQuery = new ModelQuery();
         modelQuery.setId(modelVO.getId());
         super.scopeTenant(modelQuery);
@@ -113,6 +127,7 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
         }
         // 清除模型缓存，确保下次获取时使用最新配置
         modelFactory.clearModelCache(modelVO.getId());
+        agentFactory.clearAllAgentCache();
         logger.info("model updated with id={}, cache cleared", modelVO.getId());
         result.setObjId(modelVO.getId());
         result.setCode(ResultData.OK);
@@ -149,6 +164,7 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
         }
         // 清除模型缓存
         modelFactory.clearModelCache(modelVO.getId());
+        agentFactory.clearAllAgentCache();
         logger.info("model deleted with id={}, cache cleared", modelVO.getId());
         result.setObjId(modelVO.getId());
         result.setCode(ResultData.OK);
@@ -271,5 +287,17 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
     @Override
     protected Long queryMaxId() {
         return modelDao.queryModelMaxId();
+    }
+
+    /**
+     * 校验模型调用超时范围
+     * @param timeoutMs 超时毫秒
+     * @return 是否有效
+     */
+    private boolean isTimeoutValid(Integer timeoutMs) {
+        if (timeoutMs == null) {
+            return true;
+        }
+        return timeoutMs >= ModelInvoker.MIN_TIMEOUT_MS && timeoutMs <= ModelInvoker.MAX_TIMEOUT_MS;
     }
 }

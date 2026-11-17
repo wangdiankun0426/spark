@@ -341,6 +341,15 @@
               style="width: 100%"
           />
         </el-form-item>
+        <el-form-item label="调用超时（毫秒）" prop="timeoutMs">
+          <el-input-number
+              v-model="modelForm.timeoutMs"
+              :min="1000"
+              :max="600000"
+              :step="1000"
+              style="width: 100%"
+          />
+        </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-switch
               v-model="modelForm.status"
@@ -700,6 +709,10 @@ const modelFormRules = {
     { required: true, message: '请输入温度参数', trigger: 'blur' },
     { type: 'number', min: 0, max: 2, message: '温度参数范围为 0.0-2.0', trigger: 'blur' }
   ],
+  timeoutMs: [
+    { required: true, message: '请输入调用超时', trigger: 'blur' },
+    { type: 'number', min: 1000, max: 600000, message: '调用超时范围为 1000-600000 毫秒', trigger: 'blur' }
+  ],
 }
 
 /**
@@ -713,6 +726,7 @@ function createEmptyModelForm() {
     name: undefined,
     enableThinking: -1,
     temperature: 0.10,
+    timeoutMs: 60000,
     status: 1,
     description: undefined,
     remark: undefined,
@@ -743,6 +757,7 @@ function handleOpenUpdateModel(model) {
       name: d.name,
       enableThinking: d.enableThinking,
       temperature: d.temperature,
+      timeoutMs: d.timeoutMs ?? 60000,
       status: d.status,
       description: d.description,
       remark: d.remark,
@@ -777,6 +792,7 @@ function handleSubmitModelForm() {
       name: modelForm.value.name,
       enableThinking: modelForm.value.type === 1 ? modelForm.value.enableThinking : -1,
       temperature: modelForm.value.temperature,
+      timeoutMs: modelForm.value.timeoutMs,
       status: modelForm.value.status,
       description: modelForm.value.description,
       remark: modelForm.value.remark,

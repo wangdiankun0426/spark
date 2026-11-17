@@ -37,12 +37,17 @@ public class RerankModel implements ScoringModel {
     private final String secretKey;
     private final ModelInfo modelInfo;
     private final HttpClient httpClient;
+    private final Duration timeout;
 
-    public RerankModel(String apiUrl, String secretKey, ModelInfo modelInfo) {
+    public RerankModel(String apiUrl, String secretKey, ModelInfo modelInfo, Duration timeout) {
+        if (timeout == null || timeout.isZero() || timeout.isNegative()) {
+            throw new IllegalArgumentException("timeout must be positive");
+        }
         this.apiUrl = apiUrl;
         this.secretKey = secretKey;
         this.modelInfo = modelInfo;
-        this.httpClient = HttpClient.newBuilder().build();
+        this.timeout = timeout;
+        this.httpClient = HttpClient.newBuilder().connectTimeout(timeout).build();
     }
 
     /**
@@ -71,7 +76,7 @@ public class RerankModel implements ScoringModel {
                     .header("Content-Type", "application/json")
                     .header("Authorization", "Bearer " + secretKey)
                     .POST(HttpRequest.BodyPublishers.ofString(JsonUtil.toString(body), StandardCharsets.UTF_8))
-                    .timeout(Duration.ofSeconds(60))
+                    .timeout(timeout)
                     .build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             if (response.statusCode() != 200) {

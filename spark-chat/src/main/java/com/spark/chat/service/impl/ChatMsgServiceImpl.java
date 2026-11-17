@@ -30,6 +30,7 @@ import com.spark.dao.chat.ChatSpaceDao;
 import com.spark.dao.llm.AgentDao;
 import com.spark.llm.model.ContextStreamingChatModel;
 import com.spark.llm.model.ModelFactory;
+import com.spark.llm.model.ModelTimeoutException;
 import com.spark.manage.BaseService;
 import com.spark.chat.service.IChatMsgService;
 import com.spark.chat.service.IChatSpaceService;
@@ -58,6 +59,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
@@ -173,6 +175,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         chatMsg.setCreatedDt(new Timestamp(System.currentTimeMillis()));
         chatMsg.setUpdatedDt(new Timestamp(System.currentTimeMillis()));
         StringBuilder fullAnswer = new StringBuilder();
+        AtomicBoolean terminated = new AtomicBoolean(false);
         SessionSnapshot snapshot = SessionContextUtil.capture(ModelUsageSceneEnum.AGENT_CHAT);
         IAgent agent = agentFactory.buildForRequest(chatMsgVO.getReceiverId(), snapshot);
         String question = chatMsgVO.getMessage();
@@ -182,6 +185,9 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         try {
             agent.streamChat(chatMsgVO.getSpaceId(), question)
                 .beforeToolExecution(beforeTool -> {
+                    if (terminated.get()) {
+                        return;
+                    }
                     // 工具调用前：通知前端正在调用哪个工具
                     String toolName = beforeTool.request().name();
                     String response = "正在调用 " + AgentToolEnum.descOf(toolName) + " 工具...\n";
@@ -192,6 +198,9 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
                     UserChannelRel.sendMessage(sessions, dataContent, null);
                 })
                 .onToolExecuted(toolExecution -> {
+                    if (terminated.get()) {
+                        return;
+                    }
                     // 工具调用完成：通知前端工具返回结果
                     String toolName = toolExecution.request().name();
                     String toolResult = toolExecution.result();
@@ -204,6 +213,9 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
                     UserChannelRel.sendMessage(sessions, dataContent, null);
                 })
                 .onPartialResponse(response -> {
+                    if (terminated.get()) {
+                        return;
+                    }
                     // 响应中 - 逐块发送并累积
                     fullAnswer.append(response);
                     chatMsg.setMessage(response);
@@ -212,6 +224,9 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
                     UserChannelRel.sendMessage(sessions, dataContent, null);
                 })
                 .onCompleteResponse(completeResponse -> {
+                    if (!terminated.compareAndSet(false, true)) {
+                        return;
+                    }
                     // 响应完成 - 保存完整消息到数据库
                     String answer = fullAnswer.toString();
                     chatMsg.setMessage(answer);
@@ -234,8 +249,11 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
                     logger.info("llm chat completed, spaceId={}", chatMsgVO.getSpaceId());
                 })
                 .onError(throwable -> {
+                    if (!terminated.compareAndSet(false, true)) {
+                        return;
+                    }
                     // 异常处理
-                    String answer = "抱歉，当前Agent对话异常！";
+                    String answer = this.buildChatErrorMessage(throwable, "抱歉，当前Agent对话异常！");
                     chatMsg.setMessage(answer);
                     int count = chatMsgDao.insertDB(chatMsg);
                     if (count > 0) {
@@ -287,6 +305,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         String question = chatMsgVO.getMessage();
         chatSpaceService.fillTitleIfBlank(chatMsgVO.getSpaceId(), question, chatMsgVO.getSenderId());
         StringBuilder fullAnswer = new StringBuilder();
+        AtomicBoolean terminated = new AtomicBoolean(false);
         // 会话快照随流式回调传播，禁止在此链路添加publishOn/subscribeOn，否则回调线程丢失登录身份
         SessionSnapshot snapshot = SessionContextUtil.capture(ModelUsageSceneEnum.CHAT);
         StreamingChatModel streamingChatModel = new ContextStreamingChatModel(
@@ -316,6 +335,9 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
                 ModelUsageSceneHolder.pop();
             }
         }).doOnNext(response -> {
+            if (terminated.get()) {
+                return;
+            }
             // 响应中 - 逐块发送并累积
             fullAnswer.append(response);
             chatMsg.setMessage(response);
@@ -323,6 +345,9 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
             dataContent.setChatMsg(chatMsg);
             UserChannelRel.sendMessage(sessions, dataContent, null);
         }).doOnComplete(() -> {
+            if (!terminated.compareAndSet(false, true)) {
+                return;
+            }
             // 响应完成 - 保存完整消息到数据库
             String answer = fullAnswer.toString();
             chatMsg.setMessage(answer);
@@ -336,8 +361,11 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
             }
             logger.info("model chat completed, spaceId={}", chatMsgVO.getSpaceId());
         }).doOnError(throwable -> {
+            if (!terminated.compareAndSet(false, true)) {
+                return;
+            }
             // 异常处理
-            String answer = "抱歉，当前模型对话异常！";
+            String answer = this.buildChatErrorMessage(throwable, "抱歉，当前模型对话异常！");
             chatMsg.setMessage(answer);
             int count = chatMsgDao.insertDB(chatMsg);
             if (count > 0) {
@@ -670,5 +698,26 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         existQuery.setId(chatMsgVO.getId());
         ChatMsgResult existMsg = chatMsgDao.queryChatMsg(existQuery);
         return existMsg != null && chatMsgVO.getReceiverId().equals(existMsg.getReceiverId());
+    }
+
+    /**
+     * 构造聊天异常提示
+     * @param throwable 异常
+     * @param defaultMessage 默认提示
+     * @return 用户提示
+     */
+    private String buildChatErrorMessage(Throwable throwable, String defaultMessage) {
+        if (throwable == null) {
+            return defaultMessage;
+        }
+        Throwable cause = throwable;
+        while (cause != null) {
+            if (cause instanceof ModelTimeoutException timeoutException) {
+                long timeoutSeconds = timeoutException.getTimeoutMs() / 1000;
+                return "模型响应超过 " + timeoutSeconds + " 秒无输出，本次对话已结束，请重试";
+            }
+            cause = cause.getCause();
+        }
+        return defaultMessage;
     }
 }

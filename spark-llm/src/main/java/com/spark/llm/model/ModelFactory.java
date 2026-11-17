@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -50,6 +51,8 @@ public class ModelFactory {
     private ProviderDao providerDao;
     @Autowired
     private ModelUsageRecorder modelUsageRecorder;
+    @Autowired
+    private ModelInvoker modelInvoker;
     /**
      * 模型实例缓存，避免重复创建
      */
@@ -251,6 +254,7 @@ public class ModelFactory {
         model.setRemark(modelResult.getRemark());
         model.setEnableThinking(modelResult.getEnableThinking());
         model.setTemperature(modelResult.getTemperature());
+        model.setTimeoutMs(modelResult.getTimeoutMs());
         return model;
     }
     
@@ -294,10 +298,14 @@ public class ModelFactory {
         ModelTypeEnum typeEnum = ModelTypeEnum.indexOf(model.getType());
         if (Objects.requireNonNull(typeEnum) == ModelTypeEnum.RERANK) {
             Provider provider = loadProvider(model.getProviderId());
-            logger.info("create rerankModel, model={}, provider={}", model.getName(), provider.getName());
+            long timeoutMs = modelInvoker.resolveTimeout(model.getTimeoutMs());
+            Duration timeout = Duration.ofMillis(timeoutMs);
+            logger.info("create rerankModel, modelId={}, model={}, provider={}, timeoutMs={}",
+                    model.getId(), model.getName(), provider.getName(), timeoutMs);
             ModelInfo modelInfo = this.buildModelInfo(model);
-            RerankModel rerankModel = new RerankModel(provider.getApiUrl(), provider.getSecretKey(), modelInfo);
-            return new ScoringUsageWrapper(rerankModel, modelUsageRecorder, modelInfo);
+            RerankModel rerankModel = new RerankModel(provider.getApiUrl(), provider.getSecretKey(), modelInfo, timeout);
+            ScoringModel scoringModel = new ScoringUsageWrapper(rerankModel, modelUsageRecorder, modelInfo);
+            return modelInvoker.wrap(scoringModel);
         }
         throw new UnsupportedOperationException("Unsupported model type: " + typeEnum.getDesc());
     }
@@ -307,22 +315,28 @@ public class ModelFactory {
      */
     private ChatModel createOpenAiChatModel(Model model) {
         Provider provider = loadProvider(model.getProviderId());
-        logger.info("create chatModel, model={}, provider={}, enableThinking={}, temperature={}", model.getName(), provider.getName(), model.getEnableThinking(), model.getTemperature());
+        long timeoutMs = modelInvoker.resolveTimeout(model.getTimeoutMs());
+        Duration timeout = Duration.ofMillis(timeoutMs);
+        logger.info("create chatModel, modelId={}, model={}, provider={}, enableThinking={}, temperature={}, timeoutMs={}",
+                model.getId(), model.getName(), provider.getName(), model.getEnableThinking(), model.getTemperature(), timeoutMs);
         OpenAiChatModel.OpenAiChatModelBuilder builder = OpenAiChatModel.builder()
                 .baseUrl(provider.getApiUrl())
                 .apiKey(provider.getSecretKey())
                 .modelName(model.getName())
-                .temperature(model.getTemperature() != null ? model.getTemperature() : 0.1);
+                .temperature(model.getTemperature() != null ? model.getTemperature() : 0.1)
+                .timeout(timeout);
         if (StatusEnum.NORMAL.getValue().equals(model.getEnableThinking())) {
             builder.returnThinking(true);
             builder.defaultRequestParameters(OpenAiChatRequestParameters.builder()
                     .customParameters(Map.of("enable_thinking", true))
                     .build());
         }
-        ChatModelListener usageListener = new ModelUsageChatListener(modelUsageRecorder, this.buildModelInfo(model));
+        ModelInfo modelInfo = this.buildModelInfo(model);
+        ChatModelListener usageListener = new ModelUsageChatListener(modelUsageRecorder, modelInfo);
         List<ChatModelListener> listeners = List.of(usageListener);
         builder.listeners(listeners);
-        return builder.build();
+        ChatModel chatModel = builder.build();
+        return modelInvoker.wrap(chatModel);
     }
 
     /**
@@ -330,22 +344,28 @@ public class ModelFactory {
      */
     private StreamingChatModel createOpenAiStreamingChatModel(Model model) {
         Provider provider = loadProvider(model.getProviderId());
-        logger.info("create streamingChatModel, model={}, provider={}, enableThinking={}, temperature={}", model.getName(), provider.getName(), model.getEnableThinking(), model.getTemperature());
+        long timeoutMs = modelInvoker.resolveTimeout(model.getTimeoutMs());
+        Duration timeout = Duration.ofMillis(timeoutMs);
+        logger.info("create streamingChatModel, modelId={}, model={}, provider={}, enableThinking={}, temperature={}, timeoutMs={}",
+                model.getId(), model.getName(), provider.getName(), model.getEnableThinking(), model.getTemperature(), timeoutMs);
         OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder builder = OpenAiStreamingChatModel.builder()
                 .baseUrl(provider.getApiUrl())
                 .apiKey(provider.getSecretKey())
                 .modelName(model.getName())
-                .temperature(model.getTemperature() != null ? model.getTemperature() : 0.1);
+                .temperature(model.getTemperature() != null ? model.getTemperature() : 0.1)
+                .timeout(timeout);
         if (StatusEnum.NORMAL.getValue().equals(model.getEnableThinking())) {
             builder.returnThinking(true);
             builder.defaultRequestParameters(OpenAiChatRequestParameters.builder()
                     .customParameters(Map.of("enable_thinking", true))
                     .build());
         }
-        ChatModelListener usageListener = new ModelUsageChatListener(modelUsageRecorder, this.buildModelInfo(model));
+        ModelInfo modelInfo = this.buildModelInfo(model);
+        ChatModelListener usageListener = new ModelUsageChatListener(modelUsageRecorder, modelInfo);
         List<ChatModelListener> listeners = List.of(usageListener);
         builder.listeners(listeners);
-        return builder.build();
+        StreamingChatModel streamingChatModel = builder.build();
+        return modelInvoker.wrap(streamingChatModel, model.getId(), timeoutMs);
     }
 
     /**
@@ -353,15 +373,21 @@ public class ModelFactory {
      */
     private EmbeddingModel createOpenAiEmbeddingModel(Model model) {
         Provider provider = loadProvider(model.getProviderId());
-        logger.info("create embeddingModel, model={}, provider={}", model.getName(), provider.getName());
+        long timeoutMs = modelInvoker.resolveTimeout(model.getTimeoutMs());
+        Duration timeout = Duration.ofMillis(timeoutMs);
+        logger.info("create embeddingModel, modelId={}, model={}, provider={}, timeoutMs={}",
+                model.getId(), model.getName(), provider.getName(), timeoutMs);
         EmbeddingModel embeddingModel = OpenAiEmbeddingModel.builder()
                 .baseUrl(provider.getApiUrl())
                 .apiKey(provider.getSecretKey())
                 .modelName(model.getName())
                 .dimensions(1024)
                 .encodingFormat("float")
+                .timeout(timeout)
                 .build();
-        return new EmbeddingUsageWrapper(embeddingModel, modelUsageRecorder, this.buildModelInfo(model));
+        ModelInfo modelInfo = this.buildModelInfo(model);
+        EmbeddingModel usageModel = new EmbeddingUsageWrapper(embeddingModel, modelUsageRecorder, modelInfo);
+        return modelInvoker.wrap(usageModel);
     }
 
     /**

@@ -174,6 +174,14 @@ public class AgentFactory {
     }
 
     /**
+     * 模型配置变更后清除全部Agent缓存
+     */
+    public void clearAllAgentCache() {
+        agentCache.clear();
+        logger.info("all agent caches cleared");
+    }
+
+    /**
      * 技能变更后清除绑定该技能的Agent缓存
      * 技能装配目录是构建期快照，技能名称/描述/停用或删除后需重建绑定Agent
      *

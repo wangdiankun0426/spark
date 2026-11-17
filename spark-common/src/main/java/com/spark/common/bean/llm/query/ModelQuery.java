@@ -51,6 +51,11 @@ public class ModelQuery extends BaseQuery {
     private Double temperature;
 
     /**
+     * 模型调用超时毫秒
+     */
+    private Integer timeoutMs;
+
+    /**
      * 状态：1:已开启，-1:已关闭
      */
     private Integer status;

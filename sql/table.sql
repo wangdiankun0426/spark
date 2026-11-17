@@ -321,6 +321,8 @@ CREATE TABLE `llm_model` (
     `name` varchar(50) NOT NULL COMMENT '模型名称',
     `enable_thinking` tinyint(3) NULL COMMENT '是否开启思考模式：1:开启，-1:不开启',
     `temperature` decimal(3,2) NULL COMMENT '温度参数：控制生成内容的随机性，范围 0.0-2.0',
+    `timeout_ms` int NULL DEFAULT 60000 COMMENT '模型调用超时毫秒',
+    `context_length` int NULL COMMENT '模型上下文窗口token数',
     `status` tinyint(3) NOT NULL DEFAULT 1 COMMENT '状态：1:已开启，-1:已关闭',
     `description` varchar(256)  NULL COMMENT '描述',
     `remark` varchar(256)  NULL COMMENT '备注',
