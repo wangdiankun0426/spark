@@ -229,7 +229,8 @@ public class RetryingStreamingInvocation {
             activeAttempt = nextAttempt;
             state = WAITING_RETRY;
             int nextRetryCount = retryCount + 1;
-            long delayMs = retryPolicy.nextDelayMs(nextRetryCount);
+            Long retryAfterMs = exception.getRetryAfterMs();
+            long delayMs = retryPolicy.nextDelayMs(nextRetryCount, retryAfterMs);
             logger.info("model streaming retry scheduled, modelId={}, retryCount={}, delayMs={}, errorType={}",
                     modelId, nextRetryCount, delayMs, exception.getErrorType());
             retryFuture = scheduler.schedule(() -> serialExecutor.execute(() -> this.startAttempt(nextAttempt)),

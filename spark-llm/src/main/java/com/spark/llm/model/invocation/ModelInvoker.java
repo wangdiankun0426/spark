@@ -305,7 +305,8 @@ public class ModelInvoker {
                         throw exception;
                     }
                     int nextRetryCount = retryCount + 1;
-                    long delayMs = retryPolicy.nextDelayMs(nextRetryCount);
+                    Long retryAfterMs = exception.getRetryAfterMs();
+                    long delayMs = retryPolicy.nextDelayMs(nextRetryCount, retryAfterMs);
                     logger.info("model invocation retry scheduled, retryCount={}, delayMs={}, errorType={}",
                             nextRetryCount, delayMs, exception.getErrorType());
                     this.waitBeforeRetry(delayMs, exception);

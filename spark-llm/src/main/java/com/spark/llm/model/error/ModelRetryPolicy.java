@@ -53,8 +53,25 @@ public class ModelRetryPolicy {
      * @return 等待毫秒
      */
     public long nextDelayMs(int retryNumber) {
+        return this.nextDelayMs(retryNumber, null);
+    }
+
+    /**
+     * 计算本次重试的实际等待时间
+     * @param retryNumber 重试序号
+     * @param retryAfterMs 供应商要求的最短等待毫秒
+     * @return 等待毫秒
+     */
+    public long nextDelayMs(int retryNumber, Long retryAfterMs) {
+        if (retryAfterMs != null && retryAfterMs < 0) {
+            throw new IllegalArgumentException("retryAfterMs must not be negative");
+        }
         double jitter = jitterSupplier.getAsDouble();
-        return calculateDelayMs(retryNumber, jitter);
+        long localDelayMs = calculateDelayMs(retryNumber, jitter);
+        if (retryAfterMs == null) {
+            return localDelayMs;
+        }
+        return Math.max(localDelayMs, retryAfterMs);
     }
 
     /**

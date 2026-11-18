@@ -17,6 +17,8 @@ import java.net.http.HttpTimeoutException;
 import java.nio.channels.UnresolvedAddressException;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -27,9 +29,12 @@ import java.util.Set;
  *
  * @author wangdiankun
  * @since 2026-11-17 11:00:00
- * 模型错误分类器，仅依据异常类型和HTTP状态归一化错误
+ * 模型错误分类器，依据异常类型、HTTP状态和明确限流文案归一化错误
  */
 public final class ModelErrorClassifier {
+    private static final List<String> RATE_LIMIT_PHRASES = List.of(
+            "too many requests", "rate limit exceeded", "rate limit reached", "rate_limit_exceeded",
+            "request limit exceeded", "请求过于频繁", "请求频率超限", "请求次数超限");
 
     private ModelErrorClassifier() {
     }
@@ -64,8 +69,18 @@ public final class ModelErrorClassifier {
         if (errorType == ModelErrorTypeEnum.UNKNOWN) {
             errorType = classifyByType(error);
         }
-        String message = error != null ? error.getMessage() : null;
-        return new ModelInvocationException(errorType, httpStatus, message, error, errorType.getUserMessage());
+        if (errorType == ModelErrorTypeEnum.UNKNOWN) {
+            errorType = classifyByMessage(error);
+        }
+        Long retryAfterMs = null;
+        if (httpException instanceof RetryAfterHttpException retryAfterException) {
+            retryAfterMs = retryAfterException.getRetryAfterMs();
+        }
+        String message = httpException != null ? httpException.getMessage() : null;
+        if (message == null && error != null) {
+            message = error.getMessage();
+        }
+        return new ModelInvocationException(errorType, httpStatus, message, error, errorType.getUserMessage(), retryAfterMs);
     }
 
     /**
@@ -174,6 +189,29 @@ public final class ModelErrorClassifier {
             }
             if (current instanceof IOException) {
                 return ModelErrorTypeEnum.NETWORK;
+            }
+            current = current.getCause();
+        }
+        return ModelErrorTypeEnum.UNKNOWN;
+    }
+
+    /**
+     * 按明确的供应商限流文案分类
+     * @param error 原始异常
+     * @return 标准错误分类
+     */
+    private static ModelErrorTypeEnum classifyByMessage(Throwable error) {
+        Set<Throwable> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+        Throwable current = error;
+        while (current != null && visited.add(current)) {
+            String message = current.getMessage();
+            if (message != null) {
+                String normalizedMessage = message.toLowerCase(Locale.ROOT);
+                for (String phrase : RATE_LIMIT_PHRASES) {
+                    if (normalizedMessage.contains(phrase)) {
+                        return ModelErrorTypeEnum.RATE_LIMIT;
+                    }
+                }
             }
             current = current.getCause();
         }

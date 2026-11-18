@@ -5,6 +5,7 @@ import com.spark.common.enums.ModelErrorTypeEnum;
 import com.spark.llm.model.error.ModelErrorClassifier;
 import com.spark.llm.model.error.ModelInvocationException;
 import com.spark.llm.model.error.ModelTimeoutException;
+import com.spark.llm.model.error.RetryAfterHttpException;
 import dev.langchain4j.exception.HttpException;
 import dev.langchain4j.exception.ModelNotFoundException;
 import dev.langchain4j.exception.RateLimitException;
@@ -98,12 +99,50 @@ public class ModelErrorClassifierTest {
     }
 
     /**
-     * 验证异常文案含429或普通参数异常时不会按字符串误分类，统一落入UNKNOWN且不重试
+     * 验证多层异常中的完整限流短语按大小写不敏感识别为RATE_LIMIT，并允许应用层重试
      */
     @Test
-    void shouldFallbackUnknownWithoutMessageMatching() {
-        RuntimeException error = new RuntimeException("429 too many requests");
+    void shouldClassifyExplicitRateLimitMessage() {
+        IllegalStateException cause = new IllegalStateException("Rate_Limit_Exceeded");
+        RuntimeException error = new RuntimeException(cause);
+        this.assertError(error, ModelErrorTypeEnum.RATE_LIMIT, null, true);
+        RuntimeException httpStyleError = new RuntimeException("429 Too Many Requests");
+        this.assertError(httpStyleError, ModelErrorTypeEnum.RATE_LIMIT, null, true);
+        RuntimeException chineseError = new RuntimeException("当前请求过于频繁，请控制调用速度");
+        this.assertError(chineseError, ModelErrorTypeEnum.RATE_LIMIT, null, true);
+    }
+
+    /**
+     * 验证明确HTTP状态优先于限流文案，400、403和503不会被错误改判为限流
+     */
+    @Test
+    void shouldKeepHttpStatusBeforeRateLimitMessage() {
+        this.assertError(new HttpException(400, "too many requests"), ModelErrorTypeEnum.INVALID, 400, false);
+        this.assertError(new HttpException(403, "rate limit exceeded"), ModelErrorTypeEnum.AUTH, 403, false);
+        this.assertError(new HttpException(503, "too many requests"), ModelErrorTypeEnum.SERVER, 503, true);
+    }
+
+    /**
+     * 验证嵌套429异常携带Retry-After时保留毫秒值和RATE_LIMIT分类
+     */
+    @Test
+    void shouldPreserveRetryAfterFromNestedHttpError() {
+        RetryAfterHttpException httpException = new RetryAfterHttpException(429, "limited", 2000L);
+        RateLimitException rateLimitException = new RateLimitException(httpException);
+        RuntimeException error = new RuntimeException(rateLimitException);
+        ModelInvocationException exception = this.assertError(error, ModelErrorTypeEnum.RATE_LIMIT, 429, true);
+        assertEquals(2000L, exception.getRetryAfterMs());
+    }
+
+    /**
+     * 验证孤立状态数字、泛化额度或普通参数异常不按字符串误分类，统一落入UNKNOWN且不重试
+     */
+    @Test
+    void shouldFallbackUnknownWithoutExplicitRateLimitMessage() {
+        RuntimeException error = new RuntimeException("upstream returned 429");
         this.assertError(error, ModelErrorTypeEnum.UNKNOWN, null, false);
+        RuntimeException quotaError = new RuntimeException("quota configuration");
+        this.assertError(quotaError, ModelErrorTypeEnum.UNKNOWN, null, false);
         IllegalArgumentException argumentException = new IllegalArgumentException("local argument");
         this.assertError(argumentException, ModelErrorTypeEnum.UNKNOWN, null, false);
     }

@@ -79,6 +79,11 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        Integer contextLength = modelVO.getContextLength();
+        if (!this.isContextLengthValid(contextLength)) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
         Model model = new Model();
         BeanUtil.copyProperties(modelVO, model);
         // 非站点管理员强制归属当前租户
@@ -118,6 +123,11 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
         }
         Integer maxRetries = modelVO.getMaxRetries();
         if (!this.isMaxRetriesValid(maxRetries)) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        Integer contextLength = modelVO.getContextLength();
+        if (!this.isContextLengthValid(contextLength)) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
@@ -322,5 +332,17 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
             return true;
         }
         return maxRetries >= ModelRetryPolicy.MIN_MAX_RETRIES && maxRetries <= ModelRetryPolicy.MAX_MAX_RETRIES;
+    }
+
+    /**
+     * 校验模型上下文窗口
+     * @param contextLength 上下文窗口token数
+     * @return 是否有效
+     */
+    private boolean isContextLengthValid(Integer contextLength) {
+        if (contextLength == null) {
+            return true;
+        }
+        return contextLength >= 1;
     }
 }

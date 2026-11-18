@@ -43,7 +43,11 @@ logger.info("agent built and cached, agentid={}", agentId);
 logger.info("agent built and cached, agentId={}, name={}", agentId, name);
 logger.info("readSkill name={}, skillIds={}", name, skillIds);
 ```
-8. **不自动编译**：生成/修改代码后不执行 `mvn compile/install/package` 等构建验证。
+8. **后端验证与服务限制（强制）**：
+   - 不单独执行 `mvn compile/install/package` 等构建命令，不启动或重启应用服务。
+   - 后端功能或业务逻辑新增、修改时，必须同步编写或更新单元测试，并实际执行相关测试直至全部通过。测试命令所需的主代码与测试代码编译属于单测执行过程，不受前一项限制。
+   - 测试失败必须修复代码或测试后重新执行，禁止只写测试不运行、未通过就交付，或通过删除测试、跳过测试、弱化断言来制造通过结果。
+   - 因环境或依赖问题无法执行时，必须如实报告未验证原因和实际输出，不得声称测试通过。
 9. **`@LogOperate` 与手动 ID 生成需用户确认（强制询问）**：为写方法生成 `@LogOperate(operateType = OperateTypeEnum.XXX_*)`，或为业务对象手动生成 ID（`genObjectId` + 新增 `ObjectTypeEnum` 枚举 + `queryMaxId`）之前，**必须先询问用户是否需要**；得到用户肯定回答后再生成，**默认不生成**。用户确认不需要时：省略 `@LogOperate` 及对应的 `result.setObjId(...)`；省略 `genObjectId`/`queryMaxId` 与 `ObjectTypeEnum` 枚举，改用数据库自增（`useGeneratedKeys`）。
 10. **守护式编程（强制，所有方法必须遵守）**：每个方法入口对入参做防御性校验，非法参数快速失败（guard clause 提前 return），禁止依赖 try-catch 兜底业务异常。详则见 `references/guard-clauses.md`。
 11. **JSON 统一走 JsonUtil（强制）**：JSON 解析/序列化一律用 `spark-common` 的 `JsonUtil`（`toObject/toList/toMap/toMapList/toArray/toString/isValidJson/parseMap/parseList/getMap/getMapList/getArray`），业务代码只持有 `Map<String, Object>` / `List` 等 JDK 类型；Map 的类型化取值用 `MapUtil`（`getStringVal/getIntegerVal/getLongVal/getBooleanVal/getDoubleVal`）。**业务类禁止 import 或调用第三方 JSON 库（`com.alibaba.fastjson2` / `com.fasterxml.jackson` / `cn.hutool.json`）；`JsonUtil` 不具备所需能力时，必须先在 `JsonUtil` 中补充封装方法再在业务代码中调用，禁止以"缺方法/不方便"为由直接调用第三方库。** 唯一例外：纯数据 Bean 上的 Jackson 声明式注解（`@JsonFormat`/`@JsonInclude`/`@JsonProperty`，仅作字段元数据，不得用于手动解析或序列化）。收口目的是便于后续维护与 jar 升级；`JsonUtil` 与 `MapUtil` 是唯一允许触达 JSON 库的封装点。
@@ -165,7 +169,8 @@ taskInstanceResult.setDataList(dataList);
 - 直接调用 `insert` / `updateById` / `deleteById`（绕过 BaseDao 审计填充）
 - 手写 ID、手工赋值审计字段（created_by/updated_by/timestamp/dept_id）
 - 注释或用户消息用英文、logger 消息用中文/非首字母小写驼峰/未用 `key={}` 占位
-- 测试方法缺少说明测试场景与预期结果的中文块注释
+- 测试方法缺少说明测试场景与预期结果的中文块注释，或测试代码违反正常后端编码规范
+- 后端业务逻辑变更只写单测不执行、相关测试未全部通过就交付，或通过删除、跳过、弱化断言制造通过结果
 - Mapper XML 中写 `<!-- -->` 注释，注释必须归位 DAO 接口 Javadoc
 - 修改无关代码、引入无关依赖、通配符导入
 - private 方法插在 public 方法之间（private 必须集中在类尾部，全部 public 方法之后）

@@ -11,6 +11,7 @@ import com.spark.llm.model.credential.ProviderKeyRouter;
 import com.spark.llm.model.credential.ProviderKeyScoringModel;
 import com.spark.llm.model.credential.ProviderKeyStreamingChatModel;
 import com.spark.llm.model.custom.RerankModel;
+import com.spark.llm.model.http.RetryAfterHttpClientBuilder;
 import com.spark.common.bean.llm.entity.Model;
 import com.spark.common.bean.llm.entity.Provider;
 import com.spark.common.bean.llm.query.ProviderQuery;
@@ -27,6 +28,7 @@ import com.spark.llm.usage.EmbeddingUsageWrapper;
 import com.spark.llm.usage.ModelUsageChatListener;
 import com.spark.llm.usage.ModelUsageRecorder;
 import com.spark.llm.usage.ScoringUsageWrapper;
+import dev.langchain4j.http.client.HttpClientBuilder;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
@@ -285,6 +287,7 @@ public class ModelFactory {
         model.setTemperature(modelResult.getTemperature());
         model.setTimeoutMs(modelResult.getTimeoutMs());
         model.setMaxRetries(modelResult.getMaxRetries());
+        model.setContextLength(modelResult.getContextLength());
         return model;
     }
     
@@ -496,7 +499,9 @@ public class ModelFactory {
      * 创建不带监听器的原始同步聊天客户端
      */
     private ChatModel createRawOpenAiChatModel(Model model, Provider provider, String secretKey, Duration timeout) {
+        HttpClientBuilder httpClientBuilder = RetryAfterHttpClientBuilder.createHttpClientBuilder();
         OpenAiChatModel.OpenAiChatModelBuilder builder = OpenAiChatModel.builder()
+                .httpClientBuilder(httpClientBuilder)
                 .baseUrl(provider.getApiUrl())
                 .apiKey(secretKey)
                 .modelName(model.getName())
@@ -517,7 +522,9 @@ public class ModelFactory {
      */
     private StreamingChatModel createRawOpenAiStreamingChatModel(Model model, Provider provider,
                                                                  String secretKey, Duration timeout) {
+        HttpClientBuilder httpClientBuilder = RetryAfterHttpClientBuilder.createHttpClientBuilder();
         OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder builder = OpenAiStreamingChatModel.builder()
+                .httpClientBuilder(httpClientBuilder)
                 .baseUrl(provider.getApiUrl())
                 .apiKey(secretKey)
                 .modelName(model.getName())
@@ -537,7 +544,9 @@ public class ModelFactory {
      */
     private EmbeddingModel createRawOpenAiEmbeddingModel(Model model, Provider provider,
                                                          String secretKey, Duration timeout) {
+        HttpClientBuilder httpClientBuilder = RetryAfterHttpClientBuilder.createHttpClientBuilder();
         return OpenAiEmbeddingModel.builder()
+                .httpClientBuilder(httpClientBuilder)
                 .baseUrl(provider.getApiUrl())
                 .apiKey(secretKey)
                 .modelName(model.getName())

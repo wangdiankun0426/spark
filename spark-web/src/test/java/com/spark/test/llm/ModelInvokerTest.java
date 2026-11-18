@@ -7,6 +7,7 @@ import com.spark.llm.model.error.ModelInvocationException;
 import com.spark.llm.model.invocation.ModelInvoker;
 import com.spark.llm.model.error.ModelRetryPolicy;
 import com.spark.llm.model.error.ModelTimeoutException;
+import com.spark.llm.model.error.RetryAfterHttpException;
 import com.spark.llm.usage.EmbeddingUsageWrapper;
 import com.spark.llm.usage.ModelRetryContext;
 import com.spark.llm.usage.ModelUsageRecorder;
@@ -274,6 +275,27 @@ public class ModelInvokerTest {
     }
 
     /**
+     * 验证同步429携带Retry-After时统一调用层将等待毫秒传给重试策略，第二次调用成功且不真实等待
+     */
+    @Test
+    void shouldPassRetryAfterToSyncRetryPolicy() {
+        ScheduledThreadPoolExecutor scheduler = mock(ScheduledThreadPoolExecutor.class);
+        ExecutorService callbackExecutor = mock(ExecutorService.class);
+        ModelRetryPolicy retryPolicy = mock(ModelRetryPolicy.class);
+        when(retryPolicy.nextDelayMs(1, 2000L)).thenReturn(0L);
+        ModelInvoker retryInvoker = new ModelInvoker(scheduler, callbackExecutor, retryPolicy);
+        ChatModel delegate = mock(ChatModel.class);
+        ChatRequest request = mock(ChatRequest.class);
+        ChatResponse response = mock(ChatResponse.class);
+        RetryAfterHttpException error = new RetryAfterHttpException(429, "limited", 2000L);
+        when(delegate.doChat(request)).thenThrow(error).thenReturn(response);
+        ChatModel model = retryInvoker.wrap(delegate, 1);
+        assertSame(response, model.doChat(request));
+        verify(delegate, times(2)).doChat(request);
+        verify(retryPolicy).nextDelayMs(1, 2000L);
+    }
+
+    /**
      * 验证同步400属于不可重试错误，仅调用一次并抛出统一异常
      */
     @Test
@@ -327,7 +349,7 @@ public class ModelInvokerTest {
     }
 
     /**
-     * 验证流式首输出前429可重试，第二次输出和完成仅下发一次且旧分片被隔离
+     * 验证流式首输出前429携带Retry-After时按供应商等待时间调度，第二次输出和完成仅下发一次且旧分片被隔离
      */
     @Test
     void shouldRetryStreamingErrorBeforeFirstOutput() {
@@ -341,10 +363,10 @@ public class ModelInvokerTest {
         ArgumentCaptor<StreamingChatResponseHandler> firstAttemptCaptor = ArgumentCaptor.forClass(StreamingChatResponseHandler.class);
         verify(delegate).doChat(eq(request), firstAttemptCaptor.capture());
         StreamingChatResponseHandler firstAttempt = firstAttemptCaptor.getValue();
-        firstAttempt.onError(new HttpException(429, "limited"));
+        firstAttempt.onError(new RetryAfterHttpException(429, "limited", 2000L));
         verify(handler, never()).onError(any());
         ArgumentCaptor<Runnable> retryTaskCaptor = ArgumentCaptor.forClass(Runnable.class);
-        verify(scheduler).schedule(retryTaskCaptor.capture(), eq(0L), eq(TimeUnit.MILLISECONDS));
+        verify(scheduler).schedule(retryTaskCaptor.capture(), eq(2000L), eq(TimeUnit.MILLISECONDS));
         Runnable retryTask = retryTaskCaptor.getValue();
         retryTask.run();
         ArgumentCaptor<StreamingChatResponseHandler> attemptsCaptor = ArgumentCaptor.forClass(StreamingChatResponseHandler.class);
@@ -360,7 +382,7 @@ public class ModelInvokerTest {
     }
 
     /**
-     * 验证流式已输出分片后发生空闲超时不再重试，业务依次收到分片和最终错误
+     * 验证流式已输出分片后429即使携带较长Retry-After也不再重试，业务依次收到分片和最终错误
      */
     @Test
     void shouldNotRetryStreamingErrorAfterFirstOutput() {
@@ -374,9 +396,9 @@ public class ModelInvokerTest {
         verify(delegate).doChat(eq(request), attemptCaptor.capture());
         StreamingChatResponseHandler attempt = attemptCaptor.getValue();
         attempt.onPartialResponse("first");
-        attempt.onError(new ModelTimeoutException(1L, 60000L));
+        attempt.onError(new RetryAfterHttpException(429, "limited", 120000L));
         verify(handler).onPartialResponse("first");
-        verify(handler).onError(any(ModelTimeoutException.class));
+        verify(handler).onError(any(ModelInvocationException.class));
         verify(delegate, times(1)).doChat(eq(request), any());
     }
 

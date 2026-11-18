@@ -368,6 +368,15 @@
           />
           <el-text size="small" type="info">0 表示关闭；流式首输出后不再重试</el-text>
         </el-form-item>
+        <el-form-item label="上下文窗口（Token）" prop="contextLength">
+          <el-input-number
+              v-model="modelForm.contextLength"
+              :min="1"
+              :step="1"
+              :precision="0"
+              style="width: 100%"
+          />
+        </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-switch
               v-model="modelForm.status"
@@ -762,6 +771,9 @@ const modelFormRules = {
     { required: true, message: '请输入额外重试次数', trigger: 'blur' },
     { type: 'number', min: 0, max: 5, message: '额外重试次数范围为 0-5', trigger: 'blur' }
   ],
+  contextLength: [
+    { type: 'number', min: 1, message: '上下文窗口必须为正整数', trigger: 'blur' }
+  ],
 }
 
 /**
@@ -777,6 +789,7 @@ function createEmptyModelForm() {
     temperature: 0.10,
     timeoutMs: 60000,
     maxRetries: 3,
+    contextLength: undefined,
     status: 1,
     description: undefined,
     remark: undefined,
@@ -809,6 +822,7 @@ function handleOpenUpdateModel(model) {
       temperature: d.temperature,
       timeoutMs: d.timeoutMs ?? 60000,
       maxRetries: d.maxRetries ?? 3,
+      contextLength: d.contextLength,
       status: d.status,
       description: d.description,
       remark: d.remark,
@@ -845,6 +859,7 @@ function handleSubmitModelForm() {
       temperature: modelForm.value.temperature,
       timeoutMs: modelForm.value.timeoutMs,
       maxRetries: modelForm.value.maxRetries,
+      contextLength: modelForm.value.contextLength,
       status: modelForm.value.status,
       description: modelForm.value.description,
       remark: modelForm.value.remark,

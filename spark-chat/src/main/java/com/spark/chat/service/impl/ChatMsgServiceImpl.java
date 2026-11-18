@@ -30,6 +30,7 @@ import com.spark.dao.chat.ChatSpaceDao;
 import com.spark.dao.llm.AgentDao;
 import com.spark.llm.model.streaming.ContextStreamingChatModel;
 import com.spark.llm.model.error.ModelErrorClassifier;
+import com.spark.llm.model.error.ModelInvocationException;
 import com.spark.llm.model.factory.ModelFactory;
 import com.spark.manage.BaseService;
 import com.spark.chat.service.IChatMsgService;
@@ -177,7 +178,13 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         StringBuilder fullAnswer = new StringBuilder();
         AtomicBoolean terminated = new AtomicBoolean(false);
         SessionSnapshot snapshot = SessionContextUtil.capture(ModelUsageSceneEnum.AGENT_CHAT);
-        IAgent agent = agentFactory.buildForRequest(chatMsgVO.getReceiverId(), snapshot);
+        IAgent agent;
+        try {
+            agent = agentFactory.buildForRequest(chatMsgVO.getReceiverId(), snapshot);
+        } catch (RuntimeException e) {
+            this.handleAgentChatError(e, chatMsg, sessions, terminated);
+            return;
+        }
         String question = chatMsgVO.getMessage();
         chatSpaceService.fillTitleIfBlank(chatMsgVO.getSpaceId(), question, chatMsgVO.getSenderId());
         // 第一轮onRequest在当前WS线程同步触发，场景须在此入栈；回调线程的第二轮与工具调用由快照承载
@@ -248,22 +255,7 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
                     searchKnowledge.clearReferences(chatMsgVO.getSpaceId());
                     logger.info("llm chat completed, spaceId={}", chatMsgVO.getSpaceId());
                 })
-                .onError(throwable -> {
-                    if (!terminated.compareAndSet(false, true)) {
-                        return;
-                    }
-                    // 异常处理
-                    String answer = this.buildChatErrorMessage(throwable, "抱歉，当前Agent对话异常！");
-                    chatMsg.setMessage(answer);
-                    int count = chatMsgDao.insertDB(chatMsg);
-                    if (count > 0) {
-                        DataContentVO dataContent = new DataContentVO();
-                        dataContent.setChatMsg(chatMsg);
-                        UserChannelRel.sendMessage(sessions, dataContent, null);
-                    }
-                    searchKnowledge.clearReferences(chatMsgVO.getSpaceId());
-                    logger.error("llm chat error", throwable);
-                })
+                .onError(throwable -> this.handleAgentChatError(throwable, chatMsg, sessions, terminated))
                 .start();
         } finally {
             ModelUsageSceneHolder.pop();
@@ -308,8 +300,14 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
         AtomicBoolean terminated = new AtomicBoolean(false);
         // 会话快照随流式回调传播，禁止在此链路添加publishOn/subscribeOn，否则回调线程丢失登录身份
         SessionSnapshot snapshot = SessionContextUtil.capture(ModelUsageSceneEnum.CHAT);
-        StreamingChatModel streamingChatModel = new ContextStreamingChatModel(
-                modelFactory.getStreamingChatModel(modelResult.getId()), snapshot);
+        StreamingChatModel streamingChatModel;
+        try {
+            StreamingChatModel delegate = modelFactory.getStreamingChatModel(modelResult.getId());
+            streamingChatModel = new ContextStreamingChatModel(delegate, snapshot);
+        } catch (RuntimeException e) {
+            this.handleChatError(e, "抱歉，当前模型对话异常！", chatMsg, sessions, terminated);
+            return;
+        }
         List<ChatMessage> messages = this.buildModelContextMessages(chatMsgVO);
         Flux.<String> create(sink -> {
             // subscribe在当前WS线程同步执行，第一轮onRequest在此触发，场景须就地入栈并在发起后出栈
@@ -360,21 +358,8 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
                 UserChannelRel.sendMessage(sessions, dataContent, null);
             }
             logger.info("model chat completed, spaceId={}", chatMsgVO.getSpaceId());
-        }).doOnError(throwable -> {
-            if (!terminated.compareAndSet(false, true)) {
-                return;
-            }
-            // 异常处理
-            String answer = this.buildChatErrorMessage(throwable, "抱歉，当前模型对话异常！");
-            chatMsg.setMessage(answer);
-            int count = chatMsgDao.insertDB(chatMsg);
-            if (count > 0) {
-                DataContentVO dataContent = new DataContentVO();
-                dataContent.setChatMsg(chatMsg);
-                UserChannelRel.sendMessage(sessions, dataContent, null);
-            }
-            logger.error("llm chat error", throwable);
-        }).subscribe();
+        }).doOnError(throwable -> this.handleChatError(
+                throwable, "抱歉，当前模型对话异常！", chatMsg, sessions, terminated)).subscribe();
     }
 
     /**
@@ -701,12 +686,54 @@ public class ChatMsgServiceImpl extends BaseService<ChatMsgQuery, ChatMsgResult>
     }
 
     /**
+     * 处理Agent对话错误终态
+     * @param throwable 异常
+     * @param chatMsg 聊天消息
+     * @param sessions 在线连接
+     * @param terminated 终态标记
+     */
+    private void handleAgentChatError(Throwable throwable, ChatMsg chatMsg,
+                                      List<Session> sessions, AtomicBoolean terminated) {
+        boolean handled = this.handleChatError(throwable, "抱歉，当前Agent对话异常！", chatMsg, sessions, terminated);
+        if (handled) {
+            searchKnowledge.clearReferences(chatMsg.getSpaceId());
+        }
+    }
+
+    /**
+     * 处理对话错误终态
+     * @param throwable 异常
+     * @param defaultMessage 默认提示
+     * @param chatMsg 聊天消息
+     * @param sessions 在线连接
+     * @param terminated 终态标记
+     * @return 是否完成本次错误处理
+     */
+    private boolean handleChatError(Throwable throwable, String defaultMessage, ChatMsg chatMsg,
+                                    List<Session> sessions, AtomicBoolean terminated) {
+        if (!terminated.compareAndSet(false, true)) {
+            return false;
+        }
+        String answer = this.buildChatErrorMessage(throwable, defaultMessage);
+        chatMsg.setMessage(answer);
+        int count = chatMsgDao.insertDB(chatMsg);
+        if (count > 0) {
+            DataContentVO dataContent = new DataContentVO();
+            dataContent.setChatMsg(chatMsg);
+            UserChannelRel.sendMessage(sessions, dataContent, null);
+        }
+        logger.error("llm chat error", throwable);
+        return true;
+    }
+
+    /**
      * 构造聊天异常提示
      * @param throwable 异常
      * @param defaultMessage 默认提示
      * @return 用户提示
      */
     private String buildChatErrorMessage(Throwable throwable, String defaultMessage) {
-        return ModelErrorClassifier.resolveUserMessage(throwable, defaultMessage);
+        ModelInvocationException exception = ModelErrorClassifier.wrap(throwable);
+        return ModelErrorClassifier.resolveUserMessage(exception, defaultMessage);
     }
 }

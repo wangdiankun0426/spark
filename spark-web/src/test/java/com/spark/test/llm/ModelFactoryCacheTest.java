@@ -2,6 +2,8 @@ package com.spark.test.llm;
 
 import com.spark.common.bean.llm.entity.Model;
 import com.spark.common.bean.llm.entity.Provider;
+import com.spark.common.bean.llm.result.ModelResult;
+import com.spark.dao.llm.ModelDao;
 import com.spark.llm.model.credential.ProviderKeyModel;
 import com.spark.llm.model.credential.ProviderKeyRoute;
 import com.spark.llm.model.credential.ProviderKeyRouter;
@@ -13,8 +15,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Duration;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -29,6 +33,22 @@ import static org.mockito.Mockito.when;
  * 模型凭据客户端缓存测试
  */
 public class ModelFactoryCacheTest {
+
+    /**
+     * 验证数据库模型包含上下文窗口时加载到运行时元数据，避免手工映射丢失该配置
+     */
+    @Test
+    void shouldLoadContextLengthIntoRuntimeModel() {
+        ModelFactory modelFactory = new ModelFactory();
+        ModelDao modelDao = mock(ModelDao.class);
+        ReflectionTestUtils.setField(modelFactory, "modelDao", modelDao);
+        ModelResult modelResult = new ModelResult();
+        modelResult.setId(1L);
+        modelResult.setContextLength(128000);
+        when(modelDao.queryModel(any())).thenReturn(modelResult);
+        Model model = ReflectionTestUtils.invokeMethod(modelFactory, "loadModel", 1L);
+        assertEquals(128000, model.getContextLength());
+    }
 
     /**
      * 验证同步Chat同模型同Key密文不变时复用客户端，密文变化后立即创建新客户端

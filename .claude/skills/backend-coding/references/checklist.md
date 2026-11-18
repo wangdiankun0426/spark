@@ -13,4 +13,4 @@
 7. [ ] 鉴权与租户隔离（详则见 `permission.md`）：Controller public 方法按需标 `@RequiresPermi`，权限串与 `sys_menu` 按钮种子逐字一致；非分页查询/详情/写操作前置 `scopeTenant` 或 `assertTenant`，create 非 sysAdmin 强制归属当前租户；无 tenant_id/dept_id 子表经父对象收口
 8. [ ] 每个方法入口守护式参数校验（返回 `ResultData` 校验失败置 `ErrorCodeEnum` 后 return；void 方法记 warn 后 return；详则见 `guard-clauses.md`）
 9. [ ] SQL 变更写入 `sql/alert.sql`（最新在底部）并同步 `sql/table.sql`
-10. [ ] 生成完成后不做编译验证
+10. [ ] 测试代码遵守正常后端编码与中文注释规范，相关单元测试已实际执行并全部通过；不单独执行 compile/install/package，不启动或重启服务

@@ -42,4 +42,16 @@ public class ModelRetryPolicyTest {
         assertEquals(2500L, ModelRetryPolicy.calculateDelayMs(5, 0.5));
         assertEquals(0L, ModelRetryPolicy.calculateDelayMs(1, 0));
     }
+
+    /**
+     * 验证供应商等待时间大于本地退避时采用供应商值，较小时保留本地退避且不截断较长等待
+     */
+    @Test
+    void shouldRespectRetryAfterWithoutWeakeningBackoff() {
+        ModelRetryPolicy retryPolicy = new ModelRetryPolicy(() -> 0.5);
+        assertEquals(2000L, retryPolicy.nextDelayMs(1, 2000L));
+        assertEquals(250L, retryPolicy.nextDelayMs(1, 100L));
+        assertEquals(250L, retryPolicy.nextDelayMs(1, null));
+        assertEquals(10000L, retryPolicy.nextDelayMs(5, 10000L));
+    }
 }

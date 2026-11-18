@@ -10,10 +10,11 @@
 - **Comments & messages**: All comments and user-facing messages must be in Chinese; `logger.info/warn/error/debug` messages must be in English.
 - **详细编码规范见 skills**：`.claude/skills/` 下的 `backend-coding`（Java/MyBatis）、`web-coding`（spark-ui）、`mobile-coding`（spark-app）在生成/修改对应代码时自动加载，含完整模板、禁止项与红线，以其为唯一事实来源。
 
-## No Auto-Compile After Code Generation
-- 生成/修改代码后 **不要自动执行编译或构建验证**（如 `mvn compile` / `mvn install` / `mvn package` 等）。
-- 代码写完后直接交付，由用户或 CI 统一编译验证，除非用户明确要求编译检查。
-- 同理，不要自动执行前端构建（`npm run build` 等）或启动服务。
+## Backend Verification and Service Restrictions
+- 后端功能或业务逻辑新增、修改后，必须同步编写或更新单元测试，并实际执行相关测试直至全部通过；不得只写测试不运行，不得在测试失败时交付为已完成。
+- 测试代码同样遵守 `backend-coding` 的正常后端编码与中文注释规范，包括类头、命名、方法顺序、禁内部类、禁嵌套调用和测试场景注释。
+- 不单独执行 `mvn compile` / `mvn install` / `mvn package` 等构建命令；单元测试所需的编译随测试命令执行。
+- 不启动或重启应用服务，不自动执行前端构建（`npm run build` 等）。测试未执行、失败或环境受阻时必须如实报告，不得声称验证通过。
 
 ## Tech Stack
 - JDK 21 / SpringBoot 3.4.0 / Maven 3.9.9

@@ -61,6 +61,11 @@ public class ModelVO extends BaseVO {
     private Integer maxRetries;
 
     /**
+     * 模型上下文窗口token数
+     **/
+    private Integer contextLength;
+
+    /**
      * 状态：1:已开启，-1:已关闭
      **/
     private Integer status;

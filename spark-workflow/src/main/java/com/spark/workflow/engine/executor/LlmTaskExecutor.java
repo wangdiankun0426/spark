@@ -7,6 +7,7 @@ import com.spark.common.llm.ModelUsageSceneHolder;
 import com.spark.common.utils.JsonUtil;
 import com.spark.common.utils.MapUtil;
 import com.spark.common.utils.StringUtil;
+import com.spark.llm.model.error.ModelErrorClassifier;
 import com.spark.llm.model.factory.ModelFactory;
 import com.spark.manage.BaseService;
 import dev.langchain4j.model.chat.ChatModel;
@@ -84,7 +85,7 @@ public class LlmTaskExecutor extends BaseService implements IWfNodeExecutor {
             logger.info("llm node executed");
         } catch (Exception e) {
             logger.error("llm execution failed", e);
-            output.put(nodeId+"text", "");
+            throw ModelErrorClassifier.wrap(e);
         } finally {
             ModelUsageSceneHolder.pop();
         }

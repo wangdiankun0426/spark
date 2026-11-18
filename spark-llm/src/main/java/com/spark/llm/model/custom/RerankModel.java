@@ -3,6 +3,8 @@ package com.spark.llm.model.custom;
 import com.spark.common.bean.llm.dto.ModelInfo;
 import com.spark.common.utils.JsonUtil;
 import com.spark.common.utils.MapUtil;
+import com.spark.llm.model.error.RetryAfterHttpException;
+import com.spark.llm.model.http.RetryAfterHttpClient;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.exception.HttpException;
 import dev.langchain4j.model.output.Response;
@@ -17,6 +19,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -84,6 +87,11 @@ public class RerankModel implements ScoringModel {
                 int statusCode = response.statusCode();
                 String responseBody = response.body();
                 logger.error("rerank http fail, status={}, body={}", statusCode, responseBody);
+                String retryAfter = response.headers().firstValue("Retry-After").orElse(null);
+                Long retryAfterMs = RetryAfterHttpClient.parseRetryAfterMs(retryAfter, Instant.now());
+                if (retryAfterMs != null) {
+                    throw new RetryAfterHttpException(statusCode, responseBody, retryAfterMs);
+                }
                 throw new HttpException(statusCode, responseBody);
             }
             Map<String, Object> resp = JsonUtil.toMap(response.body());
