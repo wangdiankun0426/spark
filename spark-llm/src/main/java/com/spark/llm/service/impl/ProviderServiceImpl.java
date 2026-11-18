@@ -1,9 +1,11 @@
 package com.spark.llm.service.impl;
 
+import com.spark.common.bean.base.BaseException;
 import com.spark.common.bean.base.PageResult;
 import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.llm.entity.Provider;
+import com.spark.common.bean.llm.entity.ProviderKey;
 import com.spark.common.bean.llm.query.ProviderQuery;
 import com.spark.common.bean.llm.result.ProviderResult;
 import com.spark.common.bean.llm.vo.ProviderVO;
@@ -12,15 +14,21 @@ import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.llm.ProviderDao;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.OperateTypeEnum;
-import com.spark.llm.model.ModelFactory;
+import com.spark.common.enums.StatusEnum;
+import com.spark.dao.llm.ProviderKeyDao;
+import com.spark.llm.agent.AgentFactory;
+import com.spark.llm.model.factory.ModelFactory;
+import com.spark.llm.security.LlmApiKeyCipher;
 import com.spark.llm.service.IProviderService;
 import com.spark.common.utils.CollectionUtil;
+import com.spark.common.utils.StringUtil;
 import com.spark.manage.BaseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.spark.common.utils.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -39,7 +47,13 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
     @Autowired
     private ProviderDao providerDao;
     @Autowired
+    private ProviderKeyDao providerKeyDao;
+    @Autowired
     private ModelFactory modelFactory;
+    @Autowired
+    private AgentFactory agentFactory;
+    @Autowired
+    private LlmApiKeyCipher llmApiKeyCipher;
 
     /**
      * 创建模型厂商
@@ -48,9 +62,24 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
      */
     @Override
     @LogOperate(operateType = OperateTypeEnum.PROVIDER_INSERT)
+    @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)
     public ResultData<Void> createProvider(ProviderVO providerVO) {
         ResultData<Void> result = new ResultData<>();
         if (providerVO == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (StringUtil.isBlank(providerVO.getSecretKey())) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (providerVO.getSecretKey().length() > 256) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        String plainKey = providerVO.getSecretKey();
+        String encryptedKey = llmApiKeyCipher.encrypt(plainKey);
+        if (encryptedKey.length() > 512) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
@@ -65,7 +94,18 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
-        result.setObjId(provider.getId());
+        ProviderKey providerKey = new ProviderKey();
+        Long providerId = provider.getId();
+        providerKey.setProviderId(providerId);
+        providerKey.setSecretKey(encryptedKey);
+        String keyLast4 = llmApiKeyCipher.last4(plainKey);
+        providerKey.setKeyLast4(keyLast4);
+        providerKey.setStatus(StatusEnum.NORMAL.getValue());
+        int keyCount = providerKeyDao.insertDB(providerKey);
+        if (keyCount < 1) {
+            throw new BaseException(ErrorCodeEnum.INSERT_DATA_FAIL);
+        }
+        result.setObjId(providerId);
         result.setCode(ResultData.OK);
         return result;
     }
@@ -80,6 +120,10 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
     public ResultData<Void> updateProvider(ProviderVO providerVO) {
         ResultData<Void> result = new ResultData<>();
         if (providerVO == null || providerVO.getId() == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (providerVO.getSecretKey() != null) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
@@ -98,8 +142,9 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
-        // 厂商密钥变更后清空该厂商下所有模型缓存，确保下次使用时使用最新密钥
+        // 厂商配置变更后清空关联缓存
         modelFactory.clearModelCacheByProvider(providerVO.getId());
+        agentFactory.clearAllAgentCache();
         result.setObjId(providerVO.getId());
         result.setCode(ResultData.OK);
         return result;
@@ -135,6 +180,7 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
         }
         // 厂商删除后清空该厂商下所有模型缓存
         modelFactory.clearModelCacheByProvider(providerVO.getId());
+        agentFactory.clearAllAgentCache();
         result.setObjId(providerVO.getId());
         result.setCode(ResultData.OK);
         return result;

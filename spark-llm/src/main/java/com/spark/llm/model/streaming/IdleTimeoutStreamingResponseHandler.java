@@ -1,4 +1,8 @@
-package com.spark.llm.model;
+package com.spark.llm.model.streaming;
+
+import com.spark.llm.model.error.ModelErrorClassifier;
+import com.spark.llm.model.error.ModelInvocationException;
+import com.spark.llm.model.error.ModelTimeoutException;
 
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.CompleteToolCall;

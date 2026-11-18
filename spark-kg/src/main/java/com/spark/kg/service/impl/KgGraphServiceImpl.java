@@ -25,7 +25,7 @@ import com.spark.common.enums.ObjectTypeEnum;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.kg.service.IKgGraphService;
-import com.spark.llm.model.ModelFactory;
+import com.spark.llm.model.factory.ModelFactory;
 import com.spark.kg.retrieve.KgRetrieve;
 import com.spark.kg.store.KgVectorStore;
 import com.spark.kg.store.KgGraphStore;

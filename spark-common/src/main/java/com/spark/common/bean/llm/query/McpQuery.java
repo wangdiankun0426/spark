@@ -26,11 +26,6 @@ public class McpQuery extends BaseQuery {
     private Integer transport;
 
     /**
-     * 厂商id
-     */
-    private Long providerId;
-
-    /**
      * 状态
      */
     private Integer status;

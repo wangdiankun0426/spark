@@ -102,6 +102,8 @@ flow:
   bpmn:
     path: /opt/spark/docs/bpmn/
 spark:
+  llm:
+    api-key-encrypt-key: l/H+p+xEN6eSKwbVSr6sFQ4gVcaWDQ7kQLDq+2aSBSc=
   email:
     host: smtp.163.com
     enable-auth: true

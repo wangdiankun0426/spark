@@ -298,7 +298,6 @@ CREATE TABLE `llm_provider` (
     `name` varchar(50) NOT NULL COMMENT '厂商名称',
     `icon` varchar(128) NOT NULL COMMENT '厂商图标',
     `api_url` varchar(128) NOT NULL COMMENT 'API地址',
-    `secret_key` varchar(128) NOT NULL COMMENT '厂商密钥',
     `order_num` int(3) NOT NULL COMMENT '排序',
     `description` varchar(256)  NULL COMMENT '描述',
     `remark` varchar(256)  NULL COMMENT '备注',
@@ -311,6 +310,24 @@ CREATE TABLE `llm_provider` (
     `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='模型厂商表';
+
+DROP TABLE IF EXISTS `llm_provider_key`;
+CREATE TABLE `llm_provider_key` (
+    `id` bigint(12) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `provider_id` bigint(12) NOT NULL COMMENT '厂商id',
+    `secret_key` varchar(512) NOT NULL COMMENT '加密后的厂商密钥',
+    `key_last4` varchar(4) NOT NULL COMMENT '密钥末四位',
+    `status` tinyint(3) NOT NULL DEFAULT 1 COMMENT '状态：1:启用，-1:禁用',
+    `cooldown_until` timestamp(3) NULL DEFAULT NULL COMMENT '冷却截止时间',
+
+    `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
+    `created_by` bigint(12) NOT NULL COMMENT '创建人id',
+    `created_dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_by` bigint(12) DEFAULT NULL COMMENT '修改人id',
+    `updated_dt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_provider_status_delete_cooldown` (`provider_id`, `status`, `delete_flag`, `cooldown_until`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='模型厂商密钥表';
 
 DROP TABLE IF EXISTS `llm_model`;
 CREATE TABLE `llm_model` (
@@ -370,7 +387,7 @@ CREATE TABLE `llm_mcp` (
       `tenant_id` bigint(12) NOT NULL COMMENT '租户id',
       `name` varchar(64) NOT NULL COMMENT '服务器名称',
       `transport` tinyint(3) NOT NULL COMMENT '传输类型',
-      `provider_id` bigint(12) NULL COMMENT '厂商id',
+      `secret_key` varchar(512) NULL COMMENT '加密后的MCP服务密钥',
       `url` varchar(255) NULL COMMENT '服务URL',
       `timeout` bigint(12) NULL COMMENT '连接超时秒',
       `status` int(1) NOT NULL DEFAULT 1 COMMENT '状态',

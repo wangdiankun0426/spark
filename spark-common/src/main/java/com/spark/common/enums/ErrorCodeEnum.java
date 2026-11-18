@@ -111,6 +111,7 @@ public enum ErrorCodeEnum {
     PROVIDER_NOT_EXIST(2001, "模型厂商不存在"),
     MODEL_NOT_EXIST(2002, "模型不存在"),
     AGENT_NOT_EXIST(2003, "智能体不存在"),
+    PROVIDER_KEY_NOT_EXIST(2005, "模型厂商密钥不存在"),
     // 知识库相关状态码
     KNOWLEDGE_NOT_EXIST(2101, "知识库不存在"),
     KNOWLEDGE_DOCUMENT_NOT_EXIST(2102, "知识库文档不存在"),

@@ -1,4 +1,4 @@
-package com.spark.llm.model;
+package com.spark.llm.model.invocation;
 
 import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.Capability;

@@ -2,9 +2,9 @@ package com.spark.test.llm;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.spark.common.enums.ModelErrorTypeEnum;
-import com.spark.llm.model.ModelErrorClassifier;
-import com.spark.llm.model.ModelInvocationException;
-import com.spark.llm.model.ModelTimeoutException;
+import com.spark.llm.model.error.ModelErrorClassifier;
+import com.spark.llm.model.error.ModelInvocationException;
+import com.spark.llm.model.error.ModelTimeoutException;
 import dev.langchain4j.exception.HttpException;
 import dev.langchain4j.exception.ModelNotFoundException;
 import dev.langchain4j.exception.RateLimitException;

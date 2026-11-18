@@ -1,5 +1,16 @@
-package com.spark.llm.model;
+package com.spark.llm.model.factory;
 
+import com.spark.llm.model.invocation.ModelInvoker;
+import com.spark.llm.model.credential.ProviderKeyChatModel;
+import com.spark.llm.model.credential.ProviderKeyEmbeddingModel;
+import com.spark.llm.model.credential.ProviderKeyModel;
+import com.spark.llm.model.credential.ProviderKeyModelCacheEntry;
+import com.spark.llm.model.credential.ProviderKeyModelCacheKey;
+import com.spark.llm.model.credential.ProviderKeyRoute;
+import com.spark.llm.model.credential.ProviderKeyRouter;
+import com.spark.llm.model.credential.ProviderKeyScoringModel;
+import com.spark.llm.model.credential.ProviderKeyStreamingChatModel;
+import com.spark.llm.model.custom.RerankModel;
 import com.spark.common.bean.llm.entity.Model;
 import com.spark.common.bean.llm.entity.Provider;
 import com.spark.common.bean.llm.query.ProviderQuery;
@@ -57,6 +68,8 @@ public class ModelFactory {
     private ModelUsageRecorder modelUsageRecorder;
     @Autowired
     private ModelInvoker modelInvoker;
+    @Autowired
+    private ProviderKeyRouter providerKeyRouter;
     /**
      * 模型实例缓存，避免重复创建
      */
@@ -64,6 +77,10 @@ public class ModelFactory {
     private final Map<Long, StreamingChatModel> streamingChatModelCache = new ConcurrentHashMap<>();
     private final Map<Long, EmbeddingModel> embeddingModelCache = new ConcurrentHashMap<>();
     private final Map<Long, ScoringModel> rerankModelCache = new ConcurrentHashMap<>();
+    private final Map<ProviderKeyModelCacheKey, ProviderKeyModelCacheEntry<ChatModel>> chatKeyModelCache = new ConcurrentHashMap<>();
+    private final Map<ProviderKeyModelCacheKey, ProviderKeyModelCacheEntry<StreamingChatModel>> streamingKeyModelCache = new ConcurrentHashMap<>();
+    private final Map<ProviderKeyModelCacheKey, ProviderKeyModelCacheEntry<EmbeddingModel>> embeddingKeyModelCache = new ConcurrentHashMap<>();
+    private final Map<ProviderKeyModelCacheKey, ProviderKeyModelCacheEntry<ScoringModel>> rerankKeyModelCache = new ConcurrentHashMap<>();
     
     /**
      * 获取默认的聊天模型
@@ -213,10 +230,17 @@ public class ModelFactory {
      * @param modelId 模型ID
      */
     public void clearModelCache(Long modelId) {
+        if (modelId == null) {
+            return;
+        }
         chatModelCache.remove(modelId);
         streamingChatModelCache.remove(modelId);
         embeddingModelCache.remove(modelId);
         rerankModelCache.remove(modelId);
+        chatKeyModelCache.keySet().removeIf(key -> modelId.equals(key.getModelId()));
+        streamingKeyModelCache.keySet().removeIf(key -> modelId.equals(key.getModelId()));
+        embeddingKeyModelCache.keySet().removeIf(key -> modelId.equals(key.getModelId()));
+        rerankKeyModelCache.keySet().removeIf(key -> modelId.equals(key.getModelId()));
     }
 
     /**
@@ -227,6 +251,7 @@ public class ModelFactory {
         if (providerId == null) {
             return;
         }
+        providerKeyRouter.clearProvider(providerId);
         ModelQuery query = new ModelQuery();
         query.setProviderId(providerId);
         query.setPage(false);
@@ -309,8 +334,9 @@ public class ModelFactory {
             logger.info("create rerankModel, modelId={}, model={}, provider={}, timeoutMs={}, maxRetries={}",
                     model.getId(), model.getName(), provider.getName(), timeoutMs, maxRetries);
             ModelInfo modelInfo = this.buildModelInfo(model);
-            RerankModel rerankModel = new RerankModel(provider.getApiUrl(), provider.getSecretKey(), modelInfo, timeout);
-            ScoringModel scoringModel = new ScoringUsageWrapper(rerankModel, modelUsageRecorder, modelInfo);
+            ScoringModel providerKeyModel = new ProviderKeyScoringModel(
+                    () -> this.selectRerankModel(model, provider, modelInfo, timeout), providerKeyRouter);
+            ScoringModel scoringModel = new ScoringUsageWrapper(providerKeyModel, modelUsageRecorder, modelInfo);
             return modelInvoker.wrap(scoringModel, maxRetries);
         }
         throw new UnsupportedOperationException("Unsupported model type: " + typeEnum.getDesc());
@@ -326,25 +352,14 @@ public class ModelFactory {
         Duration timeout = Duration.ofMillis(timeoutMs);
         logger.info("create chatModel, modelId={}, model={}, provider={}, enableThinking={}, temperature={}, timeoutMs={}, maxRetries={}",
                 model.getId(), model.getName(), provider.getName(), model.getEnableThinking(), model.getTemperature(), timeoutMs, maxRetries);
-        OpenAiChatModel.OpenAiChatModelBuilder builder = OpenAiChatModel.builder()
-                .baseUrl(provider.getApiUrl())
-                .apiKey(provider.getSecretKey())
-                .modelName(model.getName())
-                .temperature(model.getTemperature() != null ? model.getTemperature() : 0.1)
-                .timeout(timeout)
-                .maxRetries(0);
-        if (StatusEnum.NORMAL.getValue().equals(model.getEnableThinking())) {
-            builder.returnThinking(true);
-            builder.defaultRequestParameters(OpenAiChatRequestParameters.builder()
-                    .customParameters(Map.of("enable_thinking", true))
-                    .build());
-        }
         ModelInfo modelInfo = this.buildModelInfo(model);
         ChatModelListener usageListener = new ModelUsageChatListener(modelUsageRecorder, modelInfo);
         List<ChatModelListener> listeners = List.of(usageListener);
-        builder.listeners(listeners);
-        ChatModel chatModel = builder.build();
-        return modelInvoker.wrap(chatModel, maxRetries);
+        ProviderKeyModel<ChatModel> metadataModel = this.selectChatModel(model, provider, timeout);
+        ChatModel metadataDelegate = metadataModel.getDelegate();
+        ChatModel providerKeyModel = new ProviderKeyChatModel(
+                () -> this.selectChatModel(model, provider, timeout), providerKeyRouter, metadataDelegate, listeners);
+        return modelInvoker.wrap(providerKeyModel, maxRetries);
     }
 
     /**
@@ -357,24 +372,15 @@ public class ModelFactory {
         Duration timeout = Duration.ofMillis(timeoutMs);
         logger.info("create streamingChatModel, modelId={}, model={}, provider={}, enableThinking={}, temperature={}, timeoutMs={}, maxRetries={}",
                 model.getId(), model.getName(), provider.getName(), model.getEnableThinking(), model.getTemperature(), timeoutMs, maxRetries);
-        OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder builder = OpenAiStreamingChatModel.builder()
-                .baseUrl(provider.getApiUrl())
-                .apiKey(provider.getSecretKey())
-                .modelName(model.getName())
-                .temperature(model.getTemperature() != null ? model.getTemperature() : 0.1)
-                .timeout(timeout);
-        if (StatusEnum.NORMAL.getValue().equals(model.getEnableThinking())) {
-            builder.returnThinking(true);
-            builder.defaultRequestParameters(OpenAiChatRequestParameters.builder()
-                    .customParameters(Map.of("enable_thinking", true))
-                    .build());
-        }
         ModelInfo modelInfo = this.buildModelInfo(model);
         ChatModelListener usageListener = new ModelUsageChatListener(modelUsageRecorder, modelInfo);
         List<ChatModelListener> listeners = List.of(usageListener);
-        builder.listeners(listeners);
-        StreamingChatModel streamingChatModel = builder.build();
-        return modelInvoker.wrap(streamingChatModel, model.getId(), timeoutMs, maxRetries);
+        ProviderKeyModel<StreamingChatModel> metadataModel = this.selectStreamingChatModel(model, provider, timeout);
+        StreamingChatModel metadataDelegate = metadataModel.getDelegate();
+        StreamingChatModel providerKeyModel = new ProviderKeyStreamingChatModel(
+                () -> this.selectStreamingChatModel(model, provider, timeout), providerKeyRouter, metadataDelegate, listeners);
+        Long modelId = model.getId();
+        return modelInvoker.wrap(providerKeyModel, modelId, timeoutMs, maxRetries);
     }
 
     /**
@@ -387,18 +393,159 @@ public class ModelFactory {
         Duration timeout = Duration.ofMillis(timeoutMs);
         logger.info("create embeddingModel, modelId={}, model={}, provider={}, timeoutMs={}, maxRetries={}",
                 model.getId(), model.getName(), provider.getName(), timeoutMs, maxRetries);
-        EmbeddingModel embeddingModel = OpenAiEmbeddingModel.builder()
+        ModelInfo modelInfo = this.buildModelInfo(model);
+        ProviderKeyModel<EmbeddingModel> metadataModel = this.selectEmbeddingModel(model, provider, timeout);
+        EmbeddingModel metadataDelegate = metadataModel.getDelegate();
+        EmbeddingModel providerKeyModel = new ProviderKeyEmbeddingModel(
+                () -> this.selectEmbeddingModel(model, provider, timeout), providerKeyRouter, metadataDelegate);
+        EmbeddingModel usageModel = new EmbeddingUsageWrapper(providerKeyModel, modelUsageRecorder, modelInfo);
+        return modelInvoker.wrap(usageModel, maxRetries);
+    }
+
+    /**
+     * 选择同步聊天客户端
+     */
+    private ProviderKeyModel<ChatModel> selectChatModel(Model model, Provider provider, Duration timeout) {
+        Long providerId = provider.getId();
+        ProviderKeyRoute route = providerKeyRouter.select(providerId);
+        Long modelId = model.getId();
+        Long providerKeyId = route.getProviderKeyId();
+        ProviderKeyModelCacheKey cacheKey = new ProviderKeyModelCacheKey(modelId, providerKeyId);
+        String encryptedKey = route.getEncryptedKey();
+        String secretKey = route.getSecretKey();
+        ProviderKeyModelCacheEntry<ChatModel> entry = chatKeyModelCache.compute(cacheKey, (key, current) -> {
+            if (current != null && Objects.equals(current.getEncryptedKey(), encryptedKey)) {
+                return current;
+            }
+            ChatModel rawModel = this.createRawOpenAiChatModel(model, provider, secretKey, timeout);
+            return new ProviderKeyModelCacheEntry<>(encryptedKey, rawModel);
+        });
+        ChatModel delegate = entry.getDelegate();
+        return new ProviderKeyModel<>(providerId, providerKeyId, delegate);
+    }
+
+    /**
+     * 选择流式聊天客户端
+     */
+    private ProviderKeyModel<StreamingChatModel> selectStreamingChatModel(Model model, Provider provider, Duration timeout) {
+        Long providerId = provider.getId();
+        ProviderKeyRoute route = providerKeyRouter.select(providerId);
+        Long modelId = model.getId();
+        Long providerKeyId = route.getProviderKeyId();
+        ProviderKeyModelCacheKey cacheKey = new ProviderKeyModelCacheKey(modelId, providerKeyId);
+        String encryptedKey = route.getEncryptedKey();
+        String secretKey = route.getSecretKey();
+        ProviderKeyModelCacheEntry<StreamingChatModel> entry = streamingKeyModelCache.compute(cacheKey, (key, current) -> {
+            if (current != null && Objects.equals(current.getEncryptedKey(), encryptedKey)) {
+                return current;
+            }
+            StreamingChatModel rawModel = this.createRawOpenAiStreamingChatModel(model, provider, secretKey, timeout);
+            return new ProviderKeyModelCacheEntry<>(encryptedKey, rawModel);
+        });
+        StreamingChatModel delegate = entry.getDelegate();
+        return new ProviderKeyModel<>(providerId, providerKeyId, delegate);
+    }
+
+    /**
+     * 选择向量客户端
+     */
+    private ProviderKeyModel<EmbeddingModel> selectEmbeddingModel(Model model, Provider provider, Duration timeout) {
+        Long providerId = provider.getId();
+        ProviderKeyRoute route = providerKeyRouter.select(providerId);
+        Long modelId = model.getId();
+        Long providerKeyId = route.getProviderKeyId();
+        ProviderKeyModelCacheKey cacheKey = new ProviderKeyModelCacheKey(modelId, providerKeyId);
+        String encryptedKey = route.getEncryptedKey();
+        String secretKey = route.getSecretKey();
+        ProviderKeyModelCacheEntry<EmbeddingModel> entry = embeddingKeyModelCache.compute(cacheKey, (key, current) -> {
+            if (current != null && Objects.equals(current.getEncryptedKey(), encryptedKey)) {
+                return current;
+            }
+            EmbeddingModel rawModel = this.createRawOpenAiEmbeddingModel(model, provider, secretKey, timeout);
+            return new ProviderKeyModelCacheEntry<>(encryptedKey, rawModel);
+        });
+        EmbeddingModel delegate = entry.getDelegate();
+        return new ProviderKeyModel<>(providerId, providerKeyId, delegate);
+    }
+
+    /**
+     * 选择排序客户端
+     */
+    private ProviderKeyModel<ScoringModel> selectRerankModel(Model model, Provider provider,
+                                                             ModelInfo modelInfo, Duration timeout) {
+        Long providerId = provider.getId();
+        ProviderKeyRoute route = providerKeyRouter.select(providerId);
+        Long modelId = model.getId();
+        Long providerKeyId = route.getProviderKeyId();
+        ProviderKeyModelCacheKey cacheKey = new ProviderKeyModelCacheKey(modelId, providerKeyId);
+        String encryptedKey = route.getEncryptedKey();
+        String secretKey = route.getSecretKey();
+        ProviderKeyModelCacheEntry<ScoringModel> entry = rerankKeyModelCache.compute(cacheKey, (key, current) -> {
+            if (current != null && Objects.equals(current.getEncryptedKey(), encryptedKey)) {
+                return current;
+            }
+            String apiUrl = provider.getApiUrl();
+            ScoringModel rawModel = new RerankModel(apiUrl, secretKey, modelInfo, timeout);
+            return new ProviderKeyModelCacheEntry<>(encryptedKey, rawModel);
+        });
+        ScoringModel delegate = entry.getDelegate();
+        return new ProviderKeyModel<>(providerId, providerKeyId, delegate);
+    }
+
+    /**
+     * 创建不带监听器的原始同步聊天客户端
+     */
+    private ChatModel createRawOpenAiChatModel(Model model, Provider provider, String secretKey, Duration timeout) {
+        OpenAiChatModel.OpenAiChatModelBuilder builder = OpenAiChatModel.builder()
                 .baseUrl(provider.getApiUrl())
-                .apiKey(provider.getSecretKey())
+                .apiKey(secretKey)
+                .modelName(model.getName())
+                .temperature(model.getTemperature() != null ? model.getTemperature() : 0.1)
+                .timeout(timeout)
+                .maxRetries(0);
+        if (StatusEnum.NORMAL.getValue().equals(model.getEnableThinking())) {
+            builder.returnThinking(true);
+            builder.defaultRequestParameters(OpenAiChatRequestParameters.builder()
+                    .customParameters(Map.of("enable_thinking", true))
+                    .build());
+        }
+        return builder.build();
+    }
+
+    /**
+     * 创建不带监听器的原始流式聊天客户端
+     */
+    private StreamingChatModel createRawOpenAiStreamingChatModel(Model model, Provider provider,
+                                                                 String secretKey, Duration timeout) {
+        OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder builder = OpenAiStreamingChatModel.builder()
+                .baseUrl(provider.getApiUrl())
+                .apiKey(secretKey)
+                .modelName(model.getName())
+                .temperature(model.getTemperature() != null ? model.getTemperature() : 0.1)
+                .timeout(timeout);
+        if (StatusEnum.NORMAL.getValue().equals(model.getEnableThinking())) {
+            builder.returnThinking(true);
+            builder.defaultRequestParameters(OpenAiChatRequestParameters.builder()
+                    .customParameters(Map.of("enable_thinking", true))
+                    .build());
+        }
+        return builder.build();
+    }
+
+    /**
+     * 创建原始向量客户端
+     */
+    private EmbeddingModel createRawOpenAiEmbeddingModel(Model model, Provider provider,
+                                                         String secretKey, Duration timeout) {
+        return OpenAiEmbeddingModel.builder()
+                .baseUrl(provider.getApiUrl())
+                .apiKey(secretKey)
                 .modelName(model.getName())
                 .dimensions(1024)
                 .encodingFormat("float")
                 .timeout(timeout)
                 .maxRetries(0)
                 .build();
-        ModelInfo modelInfo = this.buildModelInfo(model);
-        EmbeddingModel usageModel = new EmbeddingUsageWrapper(embeddingModel, modelUsageRecorder, modelInfo);
-        return modelInvoker.wrap(usageModel, maxRetries);
     }
 
     /**
@@ -427,7 +574,6 @@ public class ModelFactory {
         provider.setId(providerResult.getId());
         provider.setName(providerResult.getName());
         provider.setApiUrl(providerResult.getApiUrl());
-        provider.setSecretKey(providerResult.getSecretKey());
         provider.setIcon(providerResult.getIcon());
         provider.setDescription(providerResult.getDescription());
         provider.setRemark(providerResult.getRemark());

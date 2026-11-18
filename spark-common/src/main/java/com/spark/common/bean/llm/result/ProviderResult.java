@@ -31,11 +31,6 @@ public class ProviderResult extends BaseResult {
     private String apiUrl;
 
     /**
-     * 厂商密钥
-     **/
-    private String secretKey;
-
-    /**
      * 厂商描述
      **/
     private String description;

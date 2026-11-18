@@ -1,4 +1,4 @@
-package com.spark.llm.model;
+package com.spark.llm.model.error;
 
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.DoubleSupplier;

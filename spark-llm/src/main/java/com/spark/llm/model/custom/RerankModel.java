@@ -1,4 +1,4 @@
-package com.spark.llm.model;
+package com.spark.llm.model.custom;
 
 import com.spark.common.bean.llm.dto.ModelInfo;
 import com.spark.common.utils.JsonUtil;

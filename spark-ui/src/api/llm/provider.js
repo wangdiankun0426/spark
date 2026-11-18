@@ -5,7 +5,7 @@ export function createProviderAPI(data) {
     return request({
         url: '/llm/provider/create',
         method: 'post',
-        params: data
+        data
     })
 }
 
@@ -23,7 +23,7 @@ export function updateProviderAPI(data) {
     return request({
         url: '/llm/provider/update',
         method: 'post',
-        params: data
+        data
     })
 }
 

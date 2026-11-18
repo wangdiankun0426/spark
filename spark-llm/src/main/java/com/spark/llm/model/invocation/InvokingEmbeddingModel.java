@@ -1,4 +1,4 @@
-package com.spark.llm.model;
+package com.spark.llm.model.invocation;
 
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;

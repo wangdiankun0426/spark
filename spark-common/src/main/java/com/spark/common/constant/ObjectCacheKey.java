@@ -58,7 +58,7 @@ public class ObjectCacheKey {
     /**
      * 知识图谱检索缓存key前缀
      */
-    public final static String KG_RETRIEVE_CACHE = "k_g_r";
+    public final static String KG_RETRIEVE_CACHE = "k_g_r_";
 
     /**
      * OnlyOffice下载凭证缓存key前缀

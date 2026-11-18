@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.spark.dao.llm.ProviderKeyDao" >
+    <sql id="allColumnList" >
+        id , provider_id , key_last4 , concat('****', key_last4) as key_mask , status , cooldown_until , delete_flag , created_by , created_dt , updated_by , updated_dt
+    </sql>
+
+    <sql id="searchCondition">
+        <if test="id != null">
+            and id = #{id}
+        </if>
+        <if test="ids != null and ids.size() > 0">
+            and id in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="providerId != null">
+            and provider_id = #{providerId}
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
+        <if test="deleteFlag != null and id == null and ids == null">
+            and delete_flag = #{deleteFlag}
+        </if>
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into llm_provider_key (provider_id , secret_key , key_last4 , status , cooldown_until , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{providerId} , #{secretKey} , #{keyLast4} , #{status} , #{cooldownUntil} , 1 , #{createdBy} , #{createdDt} , #{updatedBy} , #{updatedDt})
+    </insert>
+
+    <update id="updateById">
+        update llm_provider_key set updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        <if test="secretKey != null and secretKey != ''">
+            , secret_key = #{secretKey}
+            , key_last4 = #{keyLast4}
+            , cooldown_until = null
+        </if>
+        <if test="status != null">
+            , status = #{status}
+        </if>
+        <if test="cooldownUntil != null">
+            , cooldown_until = #{cooldownUntil}
+        </if>
+        where id = #{id}
+    </update>
+
+    <update id="deleteById">
+        update llm_provider_key set delete_flag = -1 , updated_by = #{updatedBy} , updated_dt = #{updatedDt}
+        where id = #{id}
+    </update>
+
+    <select id="queryProviderKeyCount" resultType="java.lang.Integer">
+        select count(1)
+        from llm_provider_key
+        where 1 = 1
+        <include refid="searchCondition"/>
+    </select>
+
+    <select id="queryProviderKeyList" resultType="com.spark.common.bean.llm.result.ProviderKeyResult">
+        select <include refid="allColumnList"/>
+        from llm_provider_key
+        where 1 = 1
+        <include refid="searchCondition"/>
+        order by id desc
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="queryProviderKey" resultType="com.spark.common.bean.llm.result.ProviderKeyResult">
+        select <include refid="allColumnList"/>
+        from llm_provider_key
+        where 1 = 1
+        <include refid="searchCondition"/>
+        limit 1
+    </select>
+
+    <select id="queryAvailableProviderKeyList" resultType="com.spark.common.bean.llm.dto.ProviderKeyCredential">
+        select id , provider_id , secret_key
+        from llm_provider_key
+        where provider_id = #{providerId}
+          and status = 1
+          and delete_flag = 1
+          and (cooldown_until is null or cooldown_until &lt;= now(3))
+        order by id
+    </select>
+
+    <select id="queryCurrentTime" resultType="java.sql.Timestamp">
+        select now(3)
+    </select>
+</mapper>

@@ -3,7 +3,7 @@ package com.spark.test.llm;
 import cn.hutool.http.HttpRequest;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
-import com.spark.llm.model.ModelFactory;
+import com.spark.llm.model.factory.ModelFactory;
 import com.spark.kb.store.KbVectorStore;
 import com.spark.common.utils.TextChunkUtil;
 import com.spark.prompt.PromptTemplateLoader;

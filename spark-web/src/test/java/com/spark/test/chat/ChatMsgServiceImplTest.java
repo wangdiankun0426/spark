@@ -2,8 +2,8 @@ package com.spark.test.chat;
 
 import com.spark.chat.service.impl.ChatMsgServiceImpl;
 import com.spark.common.enums.ModelErrorTypeEnum;
-import com.spark.llm.model.ModelInvocationException;
-import com.spark.llm.model.ModelTimeoutException;
+import com.spark.llm.model.error.ModelInvocationException;
+import com.spark.llm.model.error.ModelTimeoutException;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 

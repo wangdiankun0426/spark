@@ -1,4 +1,4 @@
-package com.spark.llm.model;
+package com.spark.llm.model.error;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.spark.common.enums.ModelErrorTypeEnum;

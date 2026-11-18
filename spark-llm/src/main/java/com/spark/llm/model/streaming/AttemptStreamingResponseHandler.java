@@ -1,4 +1,4 @@
-package com.spark.llm.model;
+package com.spark.llm.model.streaming;
 
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.CompleteToolCall;

@@ -5,21 +5,21 @@ import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.llm.entity.Mcp;
 import com.spark.common.bean.llm.query.McpQuery;
-import com.spark.common.bean.llm.query.ProviderQuery;
 import com.spark.common.bean.llm.result.McpResult;
 import com.spark.common.bean.llm.result.McpToolResult;
-import com.spark.common.bean.llm.result.ProviderResult;
 import com.spark.common.bean.llm.vo.McpVO;
 import com.spark.config.aspectj.annotation.DataScope;
+import com.spark.config.aspectj.annotation.LogIgnore;
 import com.spark.config.aspectj.annotation.LogPrint;
 import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.llm.McpDao;
-import com.spark.dao.llm.ProviderDao;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.McpTransportTypeEnum;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.StatusEnum;
+import com.spark.llm.agent.AgentFactory;
 import com.spark.llm.mcp.McpClientManager;
+import com.spark.llm.security.LlmApiKeyCipher;
 import com.spark.llm.service.IMcpService;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.StringUtil;
@@ -33,8 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -55,7 +53,9 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
     @Autowired
     private McpClientManager mcpClientManager;
     @Autowired
-    private ProviderDao providerDao;
+    private AgentFactory agentFactory;
+    @Autowired
+    private LlmApiKeyCipher llmApiKeyCipher;
 
     /**
      * 创建MCP服务器
@@ -63,6 +63,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
      * @return 创建结果
      */
     @Override
+    @LogIgnore
     @LogOperate(operateType = OperateTypeEnum.MCP_INSERT)
     public ResultData<Void> createMcp(McpVO mcpVO) {
         ResultData<Void> result = new ResultData<>();
@@ -70,12 +71,27 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        if (!this.validateTransport(mcpVO.getTransport(), mcpVO.getUrl(), mcpVO.getProviderId())) {
+        if (!this.validateTransport(mcpVO.getTransport(), mcpVO.getUrl())) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        String plainKey = mcpVO.getSecretKey();
+        if (StringUtil.isBlank(plainKey)) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (plainKey.length() > 256) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
         Mcp mcp = new Mcp();
         BeanUtil.copyProperties(mcpVO, mcp);
+        String encryptedKey = llmApiKeyCipher.encrypt(plainKey);
+        if (encryptedKey.length() > 512) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        mcp.setSecretKey(encryptedKey);
         // 非站点管理员强制归属当前租户
         if (!SessionHolder.isSysAdmin()) {
             mcp.setTenantId(SessionHolder.getCurrentTenantId());
@@ -99,6 +115,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
      * @return 修改结果
      */
     @Override
+    @LogIgnore
     @LogOperate(operateType = OperateTypeEnum.MCP_UPDATE)
     public ResultData<Void> updateMcp(McpVO mcpVO) {
         ResultData<Void> result = new ResultData<>();
@@ -109,17 +126,36 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
         McpQuery query = new McpQuery();
         query.setId(mcpVO.getId());
         super.scopeTenant(query);
-        McpResult existResult = mcpDao.queryMcp(query);
-        if (existResult == null) {
+        Mcp existMcp = mcpDao.queryMcpConfig(query);
+        if (existMcp == null) {
             result.setErrorCode(ErrorCodeEnum.MCP_NOT_EXIST);
             return result;
         }
-        if (mcpVO.getTransport() != null && !this.validateTransport(mcpVO.getTransport(), mcpVO.getUrl(), mcpVO.getProviderId())) {
+        if (mcpVO.getTransport() != null && !this.validateTransport(mcpVO.getTransport(), mcpVO.getUrl())) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        String plainKey = mcpVO.getSecretKey();
+        if (StringUtil.isBlank(existMcp.getSecretKey()) && StringUtil.isBlank(plainKey)) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        if (StringUtil.isNotBlank(plainKey) && plainKey.length() > 256) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
         Mcp mcp = new Mcp();
         BeanUtil.copyProperties(mcpVO, mcp);
+        if (StringUtil.isNotBlank(plainKey)) {
+            String encryptedKey = llmApiKeyCipher.encrypt(plainKey);
+            if (encryptedKey.length() > 512) {
+                result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+                return result;
+            }
+            mcp.setSecretKey(encryptedKey);
+        } else {
+            mcp.setSecretKey(null);
+        }
         int count = mcpDao.updateDBById(mcp);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
@@ -127,6 +163,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
         }
         // 配置变更后断开旧连接，下次使用时会按新配置重连
         mcpClientManager.disconnect(mcpVO.getId());
+        agentFactory.clearAllAgentCache();
         result.setObjId(mcp.getId());
         result.setCode(ResultData.OK);
         return result;
@@ -162,6 +199,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
         }
         // 同步断开MCP客户端连接
         mcpClientManager.disconnect(mcpVO.getId());
+        agentFactory.clearAllAgentCache();
         result.setObjId(mcpVO.getId());
         result.setCode(ResultData.OK);
         return result;
@@ -227,30 +265,29 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
         McpQuery mcpQuery = new McpQuery();
         mcpQuery.setId(mcpVO.getId());
         super.scopeTenant(mcpQuery);
-        McpResult mcpResult = mcpDao.queryMcp(mcpQuery);
-        if (mcpResult == null) {
+        Mcp mcp = mcpDao.queryMcpConfig(mcpQuery);
+        if (mcp == null) {
             result.setErrorCode(ErrorCodeEnum.MCP_NOT_EXIST);
             return result;
         }
-        Mcp Mcp = new Mcp();
-        BeanUtil.copyProperties(mcpResult, Mcp);
-        Mcp.setStatus(StatusEnum.NORMAL.getValue());
+        mcp.setStatus(StatusEnum.NORMAL.getValue());
+        String mcpName = mcp.getName();
         try {
-            McpClient client = mcpClientManager.connectToServer(Mcp);
+            McpClient client = mcpClientManager.connectToServer(mcp);
             if (client == null) {
                 result.setErrorCode(ErrorCodeEnum.MCP_CONNECT_FAIL);
                 return result;
             }
             // 触发listTools验证连通性
             int toolCount = client.listTools().size();
-            logger.info("mcp connect success, name={}, tools={}", mcpVO.getName(), toolCount);
+            logger.info("mcp connect success, name={}, tools={}", mcpName, toolCount);
             // 测试完毕断开（避免占用资源，正式使用时按需重连）
             mcpClientManager.disconnect(mcpVO.getId());
             result.setObjId(mcpVO.getId());
             result.setCode(ResultData.OK);
             return result;
         } catch (Exception e) {
-            logger.error("mcp connect fail, name={}", mcpVO.getName(), e);
+            logger.error("mcp connect fail, name={}", mcpName, e);
             result.setErrorCode(ErrorCodeEnum.MCP_CONNECT_FAIL);
             return result;
         }
@@ -269,15 +306,14 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
             return result;
         }
         super.scopeTenant(query);
-        McpResult mcpResult = mcpDao.queryMcp(query);
-        if (mcpResult == null) {
+        Mcp mcp = mcpDao.queryMcpConfig(query);
+        if (mcp == null) {
             result.setErrorCode(ErrorCodeEnum.MCP_NOT_EXIST);
             return result;
         }
-        Mcp mcp = new Mcp();
-        BeanUtil.copyProperties(mcpResult, mcp);
         // 停用状态也允许查看工具，与测试连通逻辑一致
         mcp.setStatus(StatusEnum.NORMAL.getValue());
+        String mcpName = mcp.getName();
         try {
             McpClient client = mcpClientManager.connectToServer(mcp);
             if (client == null) {
@@ -296,7 +332,7 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
             result.setCode(ResultData.OK);
             return result;
         } catch (Exception e) {
-            logger.error("queryMcpToolList fail, name={}", mcpResult.getName(), e);
+            logger.error("queryMcpToolList fail, name={}", mcpName, e);
             result.setErrorCode(ErrorCodeEnum.MCP_CONNECT_FAIL);
             return result;
         }
@@ -306,12 +342,11 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
      * 校验传输类型与配套参数
      * @param transport 传输类型
      * @param url HTTP地址
-     * @param providerId 厂商id
      * @return 校验结果
      */
-    private boolean validateTransport(Integer transport, String url, Long providerId) {
+    private boolean validateTransport(Integer transport, String url) {
         if (McpTransportTypeEnum.HTTP.getValue().equals(transport)) {
-            return StringUtil.isNotBlank(url) && providerId != null;
+            return StringUtil.isNotBlank(url);
         }
         return false;
     }
@@ -323,14 +358,6 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
     private void supplySingle(McpResult mcpResult) {
         mcpResult.setTransportName(McpTransportTypeEnum.indexOf(mcpResult.getTransport()).getDesc());
         mcpResult.setStatusName(StatusEnum.indexOf(mcpResult.getStatus()).getDesc());
-        if (mcpResult.getProviderId() != null) {
-            ProviderQuery providerQuery = new ProviderQuery();
-            providerQuery.setId(mcpResult.getProviderId());
-            ProviderResult provider = providerDao.queryProvider(providerQuery);
-            if (provider != null) {
-                mcpResult.setProviderName(provider.getName());
-            }
-        }
     }
 
     /**
@@ -344,26 +371,9 @@ public class McpServiceImpl extends BaseService<McpQuery, McpResult> implements 
         }
         super.supplyCreatedByName(list);
         super.supplyUpdatedByName(list);
-        List<Long> providerIds = list.stream()
-                .map(McpResult::getProviderId)
-                .filter(Objects::nonNull)
-                .distinct()
-                .toList();
-        Map<Long, String> providerNameMap = Map.of();
-        if (!providerIds.isEmpty()) {
-            ProviderQuery providerQuery = new ProviderQuery();
-            providerQuery.setIds(providerIds);
-            providerQuery.setPage(false);
-            List<ProviderResult> providerList = providerDao.queryProviderList(providerQuery);
-            providerNameMap = providerList.stream()
-                    .collect(Collectors.toMap(ProviderResult::getId, ProviderResult::getName));
-        }
         for (McpResult mcpResult : list) {
             mcpResult.setTransportName(McpTransportTypeEnum.indexOf(mcpResult.getTransport()).getDesc());
             mcpResult.setStatusName(StatusEnum.indexOf(mcpResult.getStatus()).getDesc());
-            if (mcpResult.getProviderId() != null) {
-                mcpResult.setProviderName(providerNameMap.get(mcpResult.getProviderId()));
-            }
         }
     }
 

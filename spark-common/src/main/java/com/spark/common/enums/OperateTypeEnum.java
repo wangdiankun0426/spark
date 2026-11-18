@@ -106,6 +106,10 @@ public enum OperateTypeEnum {
     AGENT_UPDATE(171, "修改智能体"),
     AGENT_DELETE(172, "删除智能体"),
     AGENT_DETAIL(173, "查询智能体详情"),
+    // 模型厂商密钥相关操作
+    PROVIDER_KEY_INSERT(174, "新增模型厂商密钥"),
+    PROVIDER_KEY_UPDATE(175, "修改模型厂商密钥"),
+    PROVIDER_KEY_DELETE(176, "删除模型厂商密钥"),
     // skill相关操作
     SKILL_INSERT(180, "新增技能"),
     SKILL_UPDATE(181, "修改技能"),

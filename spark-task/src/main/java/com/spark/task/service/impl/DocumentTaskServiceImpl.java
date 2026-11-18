@@ -24,7 +24,7 @@ import com.spark.common.enums.DocumentEventStatusEnum;
 import com.spark.common.enums.KgSourceTypeEnum;
 import com.spark.common.enums.ModelUsageSceneEnum;
 import com.spark.common.enums.StatusEnum;
-import com.spark.llm.model.ModelFactory;
+import com.spark.llm.model.factory.ModelFactory;
 import com.spark.kb.store.KbVectorStore;
 import com.spark.kg.store.KgVectorStore;
 import com.spark.kg.store.KgGraphStore;

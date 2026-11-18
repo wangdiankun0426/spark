@@ -1,4 +1,4 @@
-package com.spark.llm.model;
+package com.spark.llm.model.error;
 
 import com.spark.common.enums.ModelErrorTypeEnum;
 import lombok.Getter;

@@ -62,4 +62,18 @@ public interface McpDao extends BaseDao<Mcp> {
      * @return 单条数据
      */
     McpResult queryMcp(McpQuery query);
+
+    /**
+     * 查询单条运行时配置，包含独立密钥密文
+     * @param query 查询条件
+     * @return MCP配置
+     */
+    Mcp queryMcpConfig(McpQuery query);
+
+    /**
+     * 查询运行时配置列表，包含独立密钥密文
+     * @param query 查询条件
+     * @return MCP配置列表
+     */
+    List<Mcp> queryMcpConfigList(McpQuery query);
 }

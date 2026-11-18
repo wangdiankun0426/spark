@@ -11,6 +11,7 @@ import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,7 +40,7 @@ public class McpController {
      */
     @RequiresPermi("llm:mcp:create")
     @PostMapping("create")
-    public ResultData<Void> createMcp(McpVO mcpVO) {
+    public ResultData<Void> createMcp(@RequestBody McpVO mcpVO) {
         return mcpService.createMcp(mcpVO);
     }
 
@@ -50,7 +51,7 @@ public class McpController {
      */
     @RequiresPermi("llm:mcp:update")
     @PostMapping("update")
-    public ResultData<Void> updateMcp(McpVO mcpVO) {
+    public ResultData<Void> updateMcp(@RequestBody McpVO mcpVO) {
         return mcpService.updateMcp(mcpVO);
     }
 

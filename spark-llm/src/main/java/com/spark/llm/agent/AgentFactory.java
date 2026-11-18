@@ -3,7 +3,6 @@ package com.spark.llm.agent;
 import com.spark.common.bean.base.SessionSnapshot;
 import com.spark.common.bean.llm.query.AgentQuery;
 import com.spark.common.bean.llm.result.AgentResult;
-import com.spark.common.bean.llm.result.McpResult;
 import com.spark.common.bean.llm.result.SkillResult;
 import com.spark.common.bean.llm.entity.Agent;
 import com.spark.common.bean.llm.entity.Mcp;
@@ -15,8 +14,8 @@ import com.spark.dao.llm.McpDao;
 import com.spark.dao.llm.SkillDao;
 import com.spark.llm.mcp.McpClientManager;
 import com.spark.llm.memory.RedisChatMemory;
-import com.spark.llm.model.ContextStreamingChatModel;
-import com.spark.llm.model.ModelFactory;
+import com.spark.llm.model.streaming.ContextStreamingChatModel;
+import com.spark.llm.model.factory.ModelFactory;
 import com.spark.llm.tools.SearchKnowledge;
 import com.spark.llm.tools.SearchKnowledgeGraph;
 import com.spark.llm.tools.SkillTool;
@@ -413,21 +412,9 @@ public class AgentFactory {
         McpQuery query = new McpQuery();
         query.setIds(McpIds);
         query.setPage(false);
-        List<McpResult> mcpResults = mcpDao.queryMcpList(query);
-        if (CollectionUtil.isEmpty(mcpResults)) {
+        List<Mcp> mcpList = mcpDao.queryMcpConfigList(query);
+        if (CollectionUtil.isEmpty(mcpList)) {
             return new ArrayList<>();
-        }
-        List<Mcp> mcpList = new ArrayList<>();
-        for (McpResult mcpResult : mcpResults) {
-            Mcp mcp = new Mcp();
-            mcp.setId(mcpResult.getId());
-            mcp.setName(mcpResult.getName());
-            mcp.setTransport(mcpResult.getTransport());
-            mcp.setProviderId(mcpResult.getProviderId());
-            mcp.setUrl(mcpResult.getUrl());
-            mcp.setTimeout(mcpResult.getTimeout());
-            mcp.setStatus(mcpResult.getStatus());
-            mcpList.add(mcp);
         }
         return mcpClientManager.connectToServers(mcpList);
     }

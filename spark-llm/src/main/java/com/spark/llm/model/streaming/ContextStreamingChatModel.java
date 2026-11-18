@@ -1,4 +1,4 @@
-package com.spark.llm.model;
+package com.spark.llm.model.streaming;
 
 import com.spark.common.bean.base.SessionSnapshot;
 import dev.langchain4j.model.ModelProvider;

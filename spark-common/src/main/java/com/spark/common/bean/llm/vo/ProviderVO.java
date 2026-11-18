@@ -1,7 +1,9 @@
 package com.spark.common.bean.llm.vo;
 
 import com.spark.common.bean.base.BaseVO;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lombok.ToString;
 
 /**
  * +++/\_/\
@@ -33,6 +35,8 @@ public class ProviderVO extends BaseVO {
     /**
      * 厂商密钥
      **/
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @ToString.Exclude
     private String secretKey;
 
     /**

@@ -100,7 +100,6 @@ public class UserServiceImpl extends BaseService<UserQuery, UserResult> implemen
      * @param userVO 用户参数
      * @return 创建结果
      */
-    // 用户主表与扩展信息同事务写入，加入租户或分配角色失败整体回滚
     @Override
     @LogOperate(operateType = OperateTypeEnum.USER_INSERT)
     @Transactional(transactionManager = "primaryTransactionManager", rollbackFor = Exception.class)

@@ -15,7 +15,7 @@ import com.spark.dao.kg.KgGraphDao;
 import com.spark.common.enums.ModelUsageSceneEnum;
 import com.spark.common.enums.ObjectTypeEnum;
 import com.spark.common.enums.StatusEnum;
-import com.spark.llm.model.ModelFactory;
+import com.spark.llm.model.factory.ModelFactory;
 import com.spark.common.llm.ModelUsageSceneHolder;
 import com.spark.common.utils.TextChunkUtil;
 import com.spark.prompt.PromptTemplateLoader;

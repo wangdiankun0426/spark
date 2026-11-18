@@ -2,6 +2,7 @@ package com.spark.common.bean.llm.entity;
 
 import com.spark.common.bean.base.BaseEntity;
 import lombok.Data;
+import lombok.ToString;
 
 /**
  * +++/\_/\
@@ -26,9 +27,10 @@ public class Mcp extends BaseEntity {
     private Integer transport;
 
     /**
-     * 厂商id
+     * 加密后的MCP服务密钥
      **/
-    private Long providerId;
+    @ToString.Exclude
+    private String secretKey;
 
     /**
      * 服务URL

@@ -89,10 +89,17 @@
                 </span>
                 <template #dropdown>
                   <el-dropdown-menu>
+                    <el-dropdown-item v-if="checkPermi('llm:providerKey:query')" command="key">
+                      <el-icon><Key /></el-icon>密钥
+                    </el-dropdown-item>
                     <el-dropdown-item v-if="checkPermi('llm:provider:update')" command="edit">
                       <el-icon><Edit /></el-icon>修改
                     </el-dropdown-item>
-                    <el-dropdown-item v-if="checkPermi('llm:provider:delete')" command="delete" :divided="checkPermi('llm:provider:update')">
+                    <el-dropdown-item
+                        v-if="checkPermi('llm:provider:delete')"
+                        command="delete"
+                        :divided="checkPermi('llm:providerKey:query') || checkPermi('llm:provider:update')"
+                    >
                       <el-icon><Delete /></el-icon>删除
                     </el-dropdown-item>
                   </el-dropdown-menu>
@@ -210,13 +217,13 @@
               show-word-limit
           />
         </el-form-item>
-        <el-form-item label="密钥" prop="secretKey">
+        <el-form-item v-if="!providerForm.id" label="密钥" prop="secretKey">
           <el-input
               v-model="providerForm.secretKey"
               placeholder="请输入厂商密钥（API Key），如：sk-xxxxxxxx"
               type="password"
               show-password
-              maxlength="128"
+              maxlength="256"
           />
         </el-form-item>
         <el-form-item label="厂商描述" prop="description">
@@ -257,7 +264,7 @@
             <div>厂商名称建议与官方名称保持一致，会展示在模型选择列表中；</div>
             <div>厂商图标填图标 URL 或图标标识，用于列表中的品牌展示；</div>
             <div>API 地址为该厂商的接口基址，需带协议头，如 https://api.openai.com；</div>
-            <div>密钥为调用该厂商模型所用的 API Key，请确保其具备模型调用权限，保存后以密文回显；</div>
+            <div>{{ providerForm.id ? '厂商密钥请在密钥管理中维护，仅显示尾 4 位，完整密钥不会回显；' : '新建厂商需填写初始密钥，保存后仅显示尾 4 位，完整密钥不会回显；' }}</div>
             <div>排序用于控制厂商在列表中的展示顺序。</div>
           </div>
         </template>
@@ -414,6 +421,13 @@
         </div>
       </template>
     </el-drawer>
+
+    <!-- 厂商密钥管理抽屉 -->
+    <provider-key-drawer
+        v-model="providerKeyDrawerVisible"
+        :provider-id="providerKeyProviderId"
+        :provider-name="providerKeyProviderName"
+    />
   </div>
 </template>
 
@@ -435,6 +449,7 @@ import {
   queryProviderDetailAPI
 } from '@/api/llm/provider.js'
 import InfoCard from '@/components/InfoCard/index.vue'
+import ProviderKeyDrawer from '@/pages/llmMange/modelMarket/components/ProviderKeyDrawer.vue'
 import { checkPermi } from '@/utils/permissionUtil'
 import {Search, Grid, Collection, Plus, MoreFilled, Delete} from '@element-plus/icons-vue'
 import ModelLanguage from "@/assets/icons/modelLanguage.vue";
@@ -501,9 +516,11 @@ const currentProviderName = computed(() => {
 })
 
 /**
- * 厂商操作入口开关，无修改与删除权限时隐藏更多气泡
+ * 厂商操作入口开关，无密钥、修改与删除权限时隐藏更多气泡
  */
-const hasProviderOps = computed(() => checkPermi('llm:provider:update') || checkPermi('llm:provider:delete'))
+const hasProviderOps = computed(() => checkPermi('llm:providerKey:query')
+    || checkPermi('llm:provider:update')
+    || checkPermi('llm:provider:delete'))
 
 /**
  * 空状态文案
@@ -588,6 +605,11 @@ function handleSelectProvider(providerId) {
   loadModels()
 }
 
+// 厂商密钥管理
+const providerKeyDrawerVisible = ref(false)
+const providerKeyProviderId = ref(undefined)
+const providerKeyProviderName = ref('')
+
 // 新增 / 修改 厂商表单
 const providerFormVisible = ref(false)
 const providerFormTitle = ref('')
@@ -640,7 +662,6 @@ function handleOpenUpdateProvider(provider) {
       name: d.name,
       icon: d.icon,
       apiUrl: d.apiUrl,
-      secretKey: d.secretKey,
       description: d.description,
       remark: d.remark,
       orderNum: d.orderNum,
@@ -669,6 +690,9 @@ function handleSubmitProviderForm() {
   providerFormRef.value.validate(valid => {
     if (!valid) return
     const data = { ...providerForm.value }
+    if (data.id) {
+      delete data.secretKey
+    }
     const api = data.id ? updateProviderAPI : createProviderAPI
     api(data).then(res => {
       if (res.code !== 200) return
@@ -677,6 +701,16 @@ function handleSubmitProviderForm() {
       loadProviders()
     })
   })
+}
+
+/**
+ * 打开厂商密钥管理
+ * @param provider 厂商行数据
+ */
+function handleOpenProviderKey(provider) {
+  providerKeyProviderId.value = provider.id
+  providerKeyProviderName.value = provider.name
+  providerKeyDrawerVisible.value = true
 }
 
 /**
@@ -869,15 +903,21 @@ function getIcon(model) {
 
 /**
  * 厂商「···」菜单命令
- * @param command 命令标识（edit/delete）
+ * @param command 命令标识
  * @param provider 厂商行数据
  */
 function handleProviderCommand(command, provider) {
+  if (command === 'key') {
+    handleOpenProviderKey(provider)
+    return
+  }
   if (command === 'edit') {
     handleOpenUpdateProvider(provider)
     return
   }
-  handleDeleteProvider(provider)
+  if (command === 'delete') {
+    handleDeleteProvider(provider)
+  }
 }
 </script>
 

@@ -1,4 +1,4 @@
-package com.spark.llm.model;
+package com.spark.llm.model.streaming;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

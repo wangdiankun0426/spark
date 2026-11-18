@@ -7,7 +7,7 @@ import com.spark.common.llm.ModelUsageSceneHolder;
 import com.spark.common.utils.JsonUtil;
 import com.spark.common.utils.MapUtil;
 import com.spark.common.utils.StringUtil;
-import com.spark.llm.model.ModelFactory;
+import com.spark.llm.model.factory.ModelFactory;
 import com.spark.manage.BaseService;
 import dev.langchain4j.model.chat.ChatModel;
 import org.slf4j.Logger;

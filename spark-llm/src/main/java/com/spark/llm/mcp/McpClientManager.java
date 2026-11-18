@@ -1,13 +1,10 @@
 package com.spark.llm.mcp;
 
 import com.spark.common.bean.llm.entity.Mcp;
-import com.spark.common.bean.llm.entity.Provider;
-import com.spark.common.bean.llm.query.ProviderQuery;
-import com.spark.common.bean.llm.result.ProviderResult;
-import com.spark.dao.llm.ProviderDao;
 import com.spark.common.enums.McpTransportTypeEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.common.utils.StringUtil;
+import com.spark.llm.security.LlmApiKeyCipher;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.transport.McpTransport;
@@ -39,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class McpClientManager {
     private final static Logger logger = LoggerFactory.getLogger(McpClientManager.class);
     @Autowired
-    private ProviderDao providerDao;
+    private LlmApiKeyCipher llmApiKeyCipher;
     /**
      * MCP客户端缓存：key=服务器ID, value=MCP客户端
      */
@@ -67,16 +64,12 @@ public class McpClientManager {
             logger.info("connectToServer serverId={}", serverId);
             McpClient client;
             if (McpTransportTypeEnum.HTTP.getValue().equals(mcp.getTransport())) {
-                if (mcp.getProviderId() == null) {
-                    logger.error("connectToServer mcp provider id is null");
+                if (StringUtil.isBlank(mcp.getSecretKey())) {
+                    logger.error("connectToServer mcp secret key is null");
                     return null;
                 }
-                Provider provider = loadProvider(mcp.getProviderId());
-                if (provider == null || StringUtil.isBlank(provider.getSecretKey())) {
-                    logger.error("connectToServer provider secret key is null");
-                    return null;
-                }
-                client = createHttpClient(mcp, provider);
+                String secretKey = llmApiKeyCipher.decrypt(mcp.getSecretKey());
+                client = createHttpClient(mcp, secretKey);
             } else {
                 logger.error("connectToServer mcp transport type unsupported, transport={}", mcp.getTransport());
                 return null;
@@ -152,14 +145,14 @@ public class McpClientManager {
     /**
      * 创建HTTP传输的MCP客户端
      * @param mcp MCP服务器配置
-     * @param provider 厂商信息（提供密钥用于鉴权）
+     * @param secretKey 解密后的独立密钥
      * @return MCP客户端
      */
-    private McpClient createHttpClient(Mcp mcp, Provider provider) {
+    private McpClient createHttpClient(Mcp mcp, String secretKey) {
         StreamableHttpMcpTransport transport = new StreamableHttpMcpTransport.Builder()
                 .url(mcp.getUrl())
-                .customHeaders(Map.of("Authorization", "Bearer " + provider.getSecretKey()))
-                .logRequests(true)
+                .customHeaders(Map.of("Authorization", "Bearer " + secretKey))
+                .logRequests(false)
                 .logResponses(true)
                 .build();
         return clientBuilder(mcp, transport).build();
@@ -177,32 +170,5 @@ public class McpClientManager {
                 .transport(transport)
                 .initializationTimeout(Duration.ofSeconds(timeoutSeconds))
                 .toolExecutionTimeout(Duration.ofSeconds(timeoutSeconds));
-    }
-
-    /**
-     * 从数据库加载厂商信息
-     * @param providerId 厂商ID
-     * @return 厂商信息，不存在返回null
-     */
-    private Provider loadProvider(Long providerId) {
-        if (providerId == null) {
-            return null;
-        }
-        ProviderQuery query = new ProviderQuery();
-        query.setId(providerId);
-        ProviderResult providerResult = providerDao.queryProvider(query);
-        if (providerResult == null) {
-            return null;
-        }
-        Provider provider = new Provider();
-        provider.setId(providerResult.getId());
-        provider.setName(providerResult.getName());
-        provider.setApiUrl(providerResult.getApiUrl());
-        provider.setSecretKey(providerResult.getSecretKey());
-        provider.setIcon(providerResult.getIcon());
-        provider.setDescription(providerResult.getDescription());
-        provider.setRemark(providerResult.getRemark());
-        provider.setOrderNum(providerResult.getOrderNum());
-        return provider;
     }
 }

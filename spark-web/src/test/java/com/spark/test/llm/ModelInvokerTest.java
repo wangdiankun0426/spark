@@ -2,11 +2,11 @@ package com.spark.test.llm;
 
 import com.spark.common.bean.llm.dto.ModelInfo;
 import com.spark.common.enums.ModelErrorTypeEnum;
-import com.spark.llm.model.IdleTimeoutStreamingResponseHandler;
-import com.spark.llm.model.ModelInvocationException;
-import com.spark.llm.model.ModelInvoker;
-import com.spark.llm.model.ModelRetryPolicy;
-import com.spark.llm.model.ModelTimeoutException;
+import com.spark.llm.model.streaming.IdleTimeoutStreamingResponseHandler;
+import com.spark.llm.model.error.ModelInvocationException;
+import com.spark.llm.model.invocation.ModelInvoker;
+import com.spark.llm.model.error.ModelRetryPolicy;
+import com.spark.llm.model.error.ModelTimeoutException;
 import com.spark.llm.usage.EmbeddingUsageWrapper;
 import com.spark.llm.usage.ModelRetryContext;
 import com.spark.llm.usage.ModelUsageRecorder;

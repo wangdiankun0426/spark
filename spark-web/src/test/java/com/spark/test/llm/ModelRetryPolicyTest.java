@@ -1,6 +1,6 @@
 package com.spark.test.llm;
 
-import com.spark.llm.model.ModelRetryPolicy;
+import com.spark.llm.model.error.ModelRetryPolicy;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

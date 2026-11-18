@@ -79,20 +79,15 @@
               show-word-limit
           />
         </el-form-item>
-        <el-form-item label="厂商" prop="providerId">
-          <el-select
-              v-model="mcpForm.providerId"
-              placeholder="请选择厂商"
-              style="width: 100%"
-              filterable
-          >
-            <el-option
-                v-for="item in providerOptions"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id"
-            />
-          </el-select>
+        <el-form-item label="独立密钥" prop="secretKey" :required="!mcpForm.id">
+          <el-input
+              v-model="mcpForm.secretKey"
+              type="password"
+              :placeholder="mcpForm.id ? '留空表示不更换独立密钥' : '请输入独立密钥'"
+              maxlength="256"
+              autocomplete="new-password"
+              show-password
+          />
         </el-form-item>
         <el-form-item label="URL" prop="url">
           <el-input
@@ -134,7 +129,7 @@
         <template #title>
           <div class="form-tip">
             <div>名称为必填项，建议使用能体现服务用途的标识，便于后续识别；</div>
-            <div>需选择所属厂商并填写服务 URL，厂商请先在厂商管理中维护；</div>
+            <div>新增需填写独立密钥，编辑留空表示不更换，独立密钥不会回显；</div>
             <div>超时时间取值范围 1-600 秒，建议根据目标服务响应速度合理设置；</div>
             <div>状态默认启用，禁用后该 MCP 服务器不会被业务调用。</div>
           </div>
@@ -196,7 +191,6 @@ import {
   testMcpAPI,
   listMcpToolsAPI
 } from '@/api/llm/mcp.js'
-import { pageProviderListAPI } from '@/api/llm/provider.js'
 import { Search, Plus } from '@element-plus/icons-vue'
 import InfoCard from '@/components/InfoCard/index.vue'
 import Mcp from "@/assets/icons/mcp.vue";
@@ -218,13 +212,10 @@ const formRef = ref(null)
 const mcpForm = ref(createEmptyForm())
 const formRules = {
   name: [{ required: true, message: '请输入名称', trigger: 'blur' }],
-  providerId: [{ required: true, message: '请选择厂商', trigger: 'change' }],
+  secretKey: [{ validator: validateSecretKey, trigger: 'blur' }],
   url: [{ required: true, message: '请输入 URL', trigger: 'blur' }],
   timeout: [{ required: true, message: '请输入超时时间', trigger: 'blur' }]
 }
-
-// 厂商选项
-const providerOptions = ref([])
 
 // 测试中状态映射，按 id 维度控制 loading
 const testingMap = reactive({})
@@ -241,7 +232,6 @@ let searchTimer = null
 
 onMounted(() => {
   handleGetList()
-  loadProviderOptions()
 })
 
 onBeforeUnmount(() => {
@@ -270,7 +260,7 @@ function createEmptyForm() {
   return {
     id: undefined,
     name: '',
-    providerId: undefined,
+    secretKey: '',
     transport: 2,
     url: '',
     timeout: 30,
@@ -280,14 +270,14 @@ function createEmptyForm() {
 }
 
 /**
- * 加载厂商选项列表
+ * 校验独立密钥，新增必填，编辑允许留空
  */
-function loadProviderOptions() {
-  pageProviderListAPI({ page: false }).then(res => {
-    if (res.code === 200 && res.data) {
-      providerOptions.value = res.data.rows || []
-    }
-  })
+function validateSecretKey(rule, value, callback) {
+  if (!mcpForm.value.id && (!value || !value.trim())) {
+    callback(new Error('请输入独立密钥'))
+    return
+  }
+  callback()
 }
 
 /**
@@ -375,7 +365,7 @@ function handleOpenUpdate(item) {
     mcpForm.value = {
       id: data.id,
       name: data.name,
-      providerId: data.providerId,
+      secretKey: '',
       transport: data.transport,
       url: data.url || '',
       timeout: data.timeout,
@@ -490,7 +480,7 @@ function buildSubmitData() {
   const data = {
     name: form.name,
     transport: form.transport,
-    providerId: form.providerId,
+    secretKey: form.secretKey,
     url: form.url,
     timeout: form.timeout,
     description: form.description,
@@ -498,6 +488,9 @@ function buildSubmitData() {
   }
   if (form.id) {
     data.id = form.id
+    if (!form.secretKey || !form.secretKey.trim()) {
+      data.secretKey = undefined
+    }
   }
   return data
 }

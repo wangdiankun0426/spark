@@ -1,7 +1,9 @@
 package com.spark.common.bean.llm.vo;
 
 import com.spark.common.bean.base.BaseVO;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lombok.ToString;
 
 /**
  * +++/\_/\
@@ -26,9 +28,11 @@ public class McpVO extends BaseVO {
     private Integer transport;
 
     /**
-     * 厂商id
+     * MCP服务密钥
      **/
-    private Long providerId;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @ToString.Exclude
+    private String secretKey;
 
     /**
      * 服务URL

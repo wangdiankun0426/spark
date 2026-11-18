@@ -10,7 +10,7 @@ import com.spark.common.enums.ModelUsageSceneEnum;
 import com.spark.config.es.ESDataScope;
 import com.spark.dao.kg.KgEntityDao;
 import com.spark.dao.kg.KgGraphDao;
-import com.spark.llm.model.ModelFactory;
+import com.spark.llm.model.factory.ModelFactory;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.common.utils.JsonUtil;
 import com.spark.common.llm.ModelUsageSceneHolder;

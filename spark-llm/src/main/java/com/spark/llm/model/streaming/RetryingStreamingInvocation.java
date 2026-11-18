@@ -1,4 +1,8 @@
-package com.spark.llm.model;
+package com.spark.llm.model.streaming;
+
+import com.spark.llm.model.error.ModelErrorClassifier;
+import com.spark.llm.model.error.ModelInvocationException;
+import com.spark.llm.model.error.ModelRetryPolicy;
 
 import com.spark.llm.usage.ModelRetryContext;
 import dev.langchain4j.model.chat.StreamingChatModel;

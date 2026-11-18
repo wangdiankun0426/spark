@@ -31,16 +31,6 @@ public class McpResult extends BaseResult {
     private String transportName;
 
     /**
-     * 厂商id
-     **/
-    private Long providerId;
-
-    /**
-     * 厂商名称
-     **/
-    private String providerName;
-
-    /**
      * 服务URL
      **/
     private String url;

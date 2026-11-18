@@ -8,7 +8,7 @@ import com.spark.config.redis.RedisService;
 import com.spark.common.constant.ObjectCacheKey;
 import com.spark.kg.store.KgVectorStore;
 import com.spark.kg.store.KgGraphStore;
-import com.spark.llm.model.ModelFactory;
+import com.spark.llm.model.factory.ModelFactory;
 import com.spark.prompt.PromptTemplateLoader;
 import com.spark.common.enums.ModelUsageSceneEnum;
 import com.spark.common.utils.CollectionUtil;

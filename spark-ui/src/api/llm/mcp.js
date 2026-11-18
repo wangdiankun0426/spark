@@ -5,7 +5,7 @@ export function createMcpAPI(data) {
     return request({
         url: '/llm/mcp/create',
         method: 'post',
-        params: data
+        data
     })
 }
 
@@ -14,7 +14,7 @@ export function updateMcpAPI(data) {
     return request({
         url: '/llm/mcp/update',
         method: 'post',
-        params: data
+        data
     })
 }
 

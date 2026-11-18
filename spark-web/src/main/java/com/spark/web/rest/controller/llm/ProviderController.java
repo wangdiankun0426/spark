@@ -10,6 +10,7 @@ import com.spark.config.aspectj.annotation.RequiresPermi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -36,7 +37,7 @@ public class ProviderController {
      */
     @RequiresPermi("llm:provider:create")
     @PostMapping("create")
-    public ResultData<Void> createProvider(ProviderVO providerVO) {
+    public ResultData<Void> createProvider(@RequestBody ProviderVO providerVO) {
         return providerService.createProvider(providerVO);
     }
 
@@ -47,7 +48,7 @@ public class ProviderController {
      */
     @RequiresPermi("llm:provider:update")
     @PostMapping("update")
-    public ResultData<Void> updateProvider(ProviderVO providerVO) {
+    public ResultData<Void> updateProvider(@RequestBody ProviderVO providerVO) {
         return providerService.updateProvider(providerVO);
     }
 

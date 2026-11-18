@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.llm.McpDao" >
     <sql id="allColumnList" >
-        id , tenant_id, name , transport , provider_id , url , timeout , description , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , tenant_id, name , transport , url , timeout , description , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="searchCondition">
@@ -24,9 +24,6 @@
         </if>
         <if test="transport != null">
             and transport = #{transport}
-        </if>
-        <if test="providerId != null">
-            and provider_id = #{providerId}
         </if>
         <if test="name != null">
             and name like concat('%', #{name}, '%')
@@ -50,8 +47,8 @@
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into llm_mcp (tenant_id, name , transport , provider_id , url , timeout , description , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values (#{tenantId}, #{name} , #{transport} , #{providerId} , #{url} , #{timeout} , #{description} , #{status} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into llm_mcp (tenant_id, name , transport , secret_key , url , timeout , description , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{tenantId}, #{name} , #{transport} , #{secretKey} , #{url} , #{timeout} , #{description} , #{status} , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">
@@ -67,8 +64,8 @@
         <if test="transport != null">
             , transport = #{transport}
         </if>
-        <if test="providerId != null">
-            , provider_id = #{providerId}
+        <if test="secretKey != null and secretKey != ''">
+            , secret_key = #{secretKey}
         </if>
         <if test="url != null">
             , url = #{url}
@@ -112,5 +109,26 @@
         where 1=1
         <include refid="searchCondition"/>
         limit 1
+    </select>
+
+    <select id="queryMcpConfig" resultType="com.spark.common.bean.llm.entity.Mcp">
+        select <include refid="allColumnList"/>, secret_key
+        from llm_mcp
+        where 1=1
+        <include refid="searchCondition"/>
+        limit 1
+    </select>
+
+    <select id="queryMcpConfigList" resultType="com.spark.common.bean.llm.entity.Mcp">
+        select <include refid="allColumnList"/>, secret_key
+        from llm_mcp
+        where 1 = 1
+        <include refid="searchCondition"/>
+        ${dataScopeSQL}
+        order by
+        <include refid="sortCondition"/>
+        <if test="page == true">
+            limit #{startRow}, #{pageSize}
+        </if>
     </select>
 </mapper>

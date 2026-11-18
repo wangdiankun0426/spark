@@ -27,7 +27,7 @@ service.interceptors.request.use(
     },
     error => {
         // 请求错误处理
-        console.log('request error:', error)
+        console.log('request error', error?.response?.status || error?.code || 'unknown')
         return Promise.reject(error)
     }
 )
@@ -52,8 +52,8 @@ service.interceptors.response.use(
         }
     },
     error => {
-        console.log('response error:', error)
-        ElMessage.warning(error)
+        console.log('response error', error?.response?.status || error?.code || 'unknown')
+        ElMessage.warning('请求失败，请稍后重试')
         return Promise.reject(error)
     }
 )
