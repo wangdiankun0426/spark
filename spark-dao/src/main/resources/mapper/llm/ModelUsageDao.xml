@@ -4,7 +4,7 @@
 
     <sql id="allColumnList">
         id , tenant_id , user_id , model_id , model_name , provider_id , type , scene ,
-        input_tokens , output_tokens , total_tokens ,
+        input_tokens , output_tokens , total_tokens , retry_count ,
         dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
@@ -51,12 +51,12 @@
     <insert id="insertBatch">
         insert into llm_model_usage
         (tenant_id , user_id , model_id , model_name , provider_id , type , scene ,
-         input_tokens , output_tokens , total_tokens ,
+         input_tokens , output_tokens , total_tokens , retry_count ,
          dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
         values
         <foreach collection="list" item="item" separator=",">
             (#{item.tenantId} , #{item.userId} , #{item.modelId} , #{item.modelName} , #{item.providerId} ,
-             #{item.type} , #{item.scene} , #{item.inputTokens} , #{item.outputTokens} , #{item.totalTokens} ,
+             #{item.type} , #{item.scene} , #{item.inputTokens} , #{item.outputTokens} , #{item.totalTokens} , #{item.retryCount} ,
              #{item.deptId} , 1 , #{item.createdBy} , now() , #{item.updatedBy} , now())
         </foreach>
     </insert>

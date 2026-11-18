@@ -65,7 +65,9 @@ public class EmbeddingUsageWrapper implements EmbeddingModel {
                     SessionHolder.getCurrentUserId(),
                     SessionHolder.getCurrentDeptId(),
                     ModelUsageSceneHolder.current().getValue());
-            recorder.record(modelInfo, snapshot, inputTokens, outputTokens, totalTokens);
+            ModelRetryContext retryContext = ModelRetryContext.current();
+            int retryCount = retryContext == null ? 0 : retryContext.getRetryCount();
+            recorder.record(modelInfo, snapshot, inputTokens, outputTokens, totalTokens, retryCount);
         } catch (Exception e) {
             logger.warn("embedding usage report error, modelId={}", modelInfo.getModelId(), e);
         }

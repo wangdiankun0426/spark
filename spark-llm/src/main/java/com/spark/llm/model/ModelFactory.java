@@ -259,6 +259,7 @@ public class ModelFactory {
         model.setEnableThinking(modelResult.getEnableThinking());
         model.setTemperature(modelResult.getTemperature());
         model.setTimeoutMs(modelResult.getTimeoutMs());
+        model.setMaxRetries(modelResult.getMaxRetries());
         return model;
     }
     
@@ -303,13 +304,14 @@ public class ModelFactory {
         if (Objects.requireNonNull(typeEnum) == ModelTypeEnum.RERANK) {
             Provider provider = loadProvider(model.getProviderId());
             long timeoutMs = modelInvoker.resolveTimeout(model.getTimeoutMs());
+            int maxRetries = modelInvoker.resolveMaxRetries(model.getMaxRetries());
             Duration timeout = Duration.ofMillis(timeoutMs);
-            logger.info("create rerankModel, modelId={}, model={}, provider={}, timeoutMs={}",
-                    model.getId(), model.getName(), provider.getName(), timeoutMs);
+            logger.info("create rerankModel, modelId={}, model={}, provider={}, timeoutMs={}, maxRetries={}",
+                    model.getId(), model.getName(), provider.getName(), timeoutMs, maxRetries);
             ModelInfo modelInfo = this.buildModelInfo(model);
             RerankModel rerankModel = new RerankModel(provider.getApiUrl(), provider.getSecretKey(), modelInfo, timeout);
             ScoringModel scoringModel = new ScoringUsageWrapper(rerankModel, modelUsageRecorder, modelInfo);
-            return modelInvoker.wrap(scoringModel);
+            return modelInvoker.wrap(scoringModel, maxRetries);
         }
         throw new UnsupportedOperationException("Unsupported model type: " + typeEnum.getDesc());
     }
@@ -320,15 +322,17 @@ public class ModelFactory {
     private ChatModel createOpenAiChatModel(Model model) {
         Provider provider = loadProvider(model.getProviderId());
         long timeoutMs = modelInvoker.resolveTimeout(model.getTimeoutMs());
+        int maxRetries = modelInvoker.resolveMaxRetries(model.getMaxRetries());
         Duration timeout = Duration.ofMillis(timeoutMs);
-        logger.info("create chatModel, modelId={}, model={}, provider={}, enableThinking={}, temperature={}, timeoutMs={}",
-                model.getId(), model.getName(), provider.getName(), model.getEnableThinking(), model.getTemperature(), timeoutMs);
+        logger.info("create chatModel, modelId={}, model={}, provider={}, enableThinking={}, temperature={}, timeoutMs={}, maxRetries={}",
+                model.getId(), model.getName(), provider.getName(), model.getEnableThinking(), model.getTemperature(), timeoutMs, maxRetries);
         OpenAiChatModel.OpenAiChatModelBuilder builder = OpenAiChatModel.builder()
                 .baseUrl(provider.getApiUrl())
                 .apiKey(provider.getSecretKey())
                 .modelName(model.getName())
                 .temperature(model.getTemperature() != null ? model.getTemperature() : 0.1)
-                .timeout(timeout);
+                .timeout(timeout)
+                .maxRetries(0);
         if (StatusEnum.NORMAL.getValue().equals(model.getEnableThinking())) {
             builder.returnThinking(true);
             builder.defaultRequestParameters(OpenAiChatRequestParameters.builder()
@@ -340,7 +344,7 @@ public class ModelFactory {
         List<ChatModelListener> listeners = List.of(usageListener);
         builder.listeners(listeners);
         ChatModel chatModel = builder.build();
-        return modelInvoker.wrap(chatModel);
+        return modelInvoker.wrap(chatModel, maxRetries);
     }
 
     /**
@@ -349,9 +353,10 @@ public class ModelFactory {
     private StreamingChatModel createOpenAiStreamingChatModel(Model model) {
         Provider provider = loadProvider(model.getProviderId());
         long timeoutMs = modelInvoker.resolveTimeout(model.getTimeoutMs());
+        int maxRetries = modelInvoker.resolveMaxRetries(model.getMaxRetries());
         Duration timeout = Duration.ofMillis(timeoutMs);
-        logger.info("create streamingChatModel, modelId={}, model={}, provider={}, enableThinking={}, temperature={}, timeoutMs={}",
-                model.getId(), model.getName(), provider.getName(), model.getEnableThinking(), model.getTemperature(), timeoutMs);
+        logger.info("create streamingChatModel, modelId={}, model={}, provider={}, enableThinking={}, temperature={}, timeoutMs={}, maxRetries={}",
+                model.getId(), model.getName(), provider.getName(), model.getEnableThinking(), model.getTemperature(), timeoutMs, maxRetries);
         OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder builder = OpenAiStreamingChatModel.builder()
                 .baseUrl(provider.getApiUrl())
                 .apiKey(provider.getSecretKey())
@@ -369,7 +374,7 @@ public class ModelFactory {
         List<ChatModelListener> listeners = List.of(usageListener);
         builder.listeners(listeners);
         StreamingChatModel streamingChatModel = builder.build();
-        return modelInvoker.wrap(streamingChatModel, model.getId(), timeoutMs);
+        return modelInvoker.wrap(streamingChatModel, model.getId(), timeoutMs, maxRetries);
     }
 
     /**
@@ -378,9 +383,10 @@ public class ModelFactory {
     private EmbeddingModel createOpenAiEmbeddingModel(Model model) {
         Provider provider = loadProvider(model.getProviderId());
         long timeoutMs = modelInvoker.resolveTimeout(model.getTimeoutMs());
+        int maxRetries = modelInvoker.resolveMaxRetries(model.getMaxRetries());
         Duration timeout = Duration.ofMillis(timeoutMs);
-        logger.info("create embeddingModel, modelId={}, model={}, provider={}, timeoutMs={}",
-                model.getId(), model.getName(), provider.getName(), timeoutMs);
+        logger.info("create embeddingModel, modelId={}, model={}, provider={}, timeoutMs={}, maxRetries={}",
+                model.getId(), model.getName(), provider.getName(), timeoutMs, maxRetries);
         EmbeddingModel embeddingModel = OpenAiEmbeddingModel.builder()
                 .baseUrl(provider.getApiUrl())
                 .apiKey(provider.getSecretKey())
@@ -388,10 +394,11 @@ public class ModelFactory {
                 .dimensions(1024)
                 .encodingFormat("float")
                 .timeout(timeout)
+                .maxRetries(0)
                 .build();
         ModelInfo modelInfo = this.buildModelInfo(model);
         EmbeddingModel usageModel = new EmbeddingUsageWrapper(embeddingModel, modelUsageRecorder, modelInfo);
-        return modelInvoker.wrap(usageModel);
+        return modelInvoker.wrap(usageModel, maxRetries);
     }
 
     /**

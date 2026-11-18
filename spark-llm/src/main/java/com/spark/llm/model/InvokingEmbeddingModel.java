@@ -20,10 +20,12 @@ import java.util.List;
 public class InvokingEmbeddingModel implements EmbeddingModel {
     private final EmbeddingModel delegate;
     private final ModelInvoker modelInvoker;
+    private final int maxRetries;
 
-    public InvokingEmbeddingModel(EmbeddingModel delegate, ModelInvoker modelInvoker) {
+    public InvokingEmbeddingModel(EmbeddingModel delegate, ModelInvoker modelInvoker, int maxRetries) {
         this.delegate = delegate;
         this.modelInvoker = modelInvoker;
+        this.maxRetries = maxRetries;
     }
 
     @Override
@@ -31,7 +33,7 @@ public class InvokingEmbeddingModel implements EmbeddingModel {
         if (segments == null) {
             throw new IllegalArgumentException("segments must not be null");
         }
-        return modelInvoker.invoke(() -> delegate.embedAll(segments));
+        return modelInvoker.invoke(() -> delegate.embedAll(segments), maxRetries);
     }
 
     @Override

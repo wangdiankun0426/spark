@@ -81,4 +81,9 @@ public class ModelUsageResult extends BaseResult {
      **/
     private Integer totalTokens;
 
+    /**
+     * 重试次数
+     **/
+    private Integer retryCount;
+
 }

@@ -21,6 +21,7 @@ import com.spark.common.enums.StatusEnum;
 import com.spark.llm.agent.AgentFactory;
 import com.spark.llm.model.ModelFactory;
 import com.spark.llm.model.ModelInvoker;
+import com.spark.llm.model.ModelRetryPolicy;
 import com.spark.llm.service.IModelService;
 import com.spark.common.utils.CollectionUtil;
 import com.spark.manage.BaseService;
@@ -73,6 +74,11 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        Integer maxRetries = modelVO.getMaxRetries();
+        if (!this.isMaxRetriesValid(maxRetries)) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
         Model model = new Model();
         BeanUtil.copyProperties(modelVO, model);
         // 非站点管理员强制归属当前租户
@@ -107,6 +113,11 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
         }
         Integer timeoutMs = modelVO.getTimeoutMs();
         if (!this.isTimeoutValid(timeoutMs)) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        Integer maxRetries = modelVO.getMaxRetries();
+        if (!this.isMaxRetriesValid(maxRetries)) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
@@ -299,5 +310,17 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
             return true;
         }
         return timeoutMs >= ModelInvoker.MIN_TIMEOUT_MS && timeoutMs <= ModelInvoker.MAX_TIMEOUT_MS;
+    }
+
+    /**
+     * 校验额外重试次数
+     * @param maxRetries 重试次数
+     * @return 是否有效
+     */
+    private boolean isMaxRetriesValid(Integer maxRetries) {
+        if (maxRetries == null) {
+            return true;
+        }
+        return maxRetries >= ModelRetryPolicy.MIN_MAX_RETRIES && maxRetries <= ModelRetryPolicy.MAX_MAX_RETRIES;
     }
 }

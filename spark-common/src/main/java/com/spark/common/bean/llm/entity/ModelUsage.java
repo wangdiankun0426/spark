@@ -61,4 +61,9 @@ public class ModelUsage extends BaseEntity {
      **/
     private Integer totalTokens;
 
+    /**
+     * 重试次数
+     **/
+    private Integer retryCount;
+
 }

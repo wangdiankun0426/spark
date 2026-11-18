@@ -56,6 +56,11 @@ public class ModelVO extends BaseVO {
     private Integer timeoutMs;
 
     /**
+     * 额外重试次数
+     **/
+    private Integer maxRetries;
+
+    /**
      * 状态：1:已开启，-1:已关闭
      **/
     private Integer status;

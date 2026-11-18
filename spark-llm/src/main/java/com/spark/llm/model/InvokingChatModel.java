@@ -24,10 +24,12 @@ import java.util.Set;
 public class InvokingChatModel implements ChatModel {
     private final ChatModel delegate;
     private final ModelInvoker modelInvoker;
+    private final int maxRetries;
 
-    public InvokingChatModel(ChatModel delegate, ModelInvoker modelInvoker) {
+    public InvokingChatModel(ChatModel delegate, ModelInvoker modelInvoker, int maxRetries) {
         this.delegate = delegate;
         this.modelInvoker = modelInvoker;
+        this.maxRetries = maxRetries;
     }
 
     @Override
@@ -35,7 +37,7 @@ public class InvokingChatModel implements ChatModel {
         if (request == null) {
             throw new IllegalArgumentException("request must not be null");
         }
-        return modelInvoker.invoke(() -> delegate.doChat(request));
+        return modelInvoker.invokeChat(() -> delegate.doChat(request), maxRetries);
     }
 
     @Override

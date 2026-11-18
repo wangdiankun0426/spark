@@ -109,6 +109,7 @@
             <el-table-column prop="inputTokens" label="输入Token" min-width="100" align="center"/>
             <el-table-column prop="outputTokens" label="输出Token" min-width="100" align="center"/>
             <el-table-column prop="totalTokens" label="总Token" min-width="100" align="center"/>
+            <el-table-column prop="retryCount" label="重试次数" min-width="90" align="center"/>
           </el-table>
         </div>
         <el-pagination

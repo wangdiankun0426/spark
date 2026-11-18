@@ -33,6 +33,11 @@ public class ModelUsageChatListener implements ChatModelListener {
      */
     private static final Object SNAPSHOT_KEY = new Object();
 
+    /**
+     * attributes中逻辑调用重试上下文的key
+     */
+    private static final Object RETRY_CONTEXT_KEY = new Object();
+
     private final ModelUsageRecorder recorder;
     private final ModelInfo modelInfo;
 
@@ -50,6 +55,9 @@ public class ModelUsageChatListener implements ChatModelListener {
             String scene = ModelUsageSceneHolder.current().getValue();
             UsageSnapshot snapshot = new UsageSnapshot(tenantId, userId, deptId, scene);
             context.attributes().put(SNAPSHOT_KEY, snapshot);
+            ModelRetryContext retryContext = new ModelRetryContext();
+            context.attributes().put(RETRY_CONTEXT_KEY, retryContext);
+            ModelRetryContext.bind(retryContext);
         } catch (Exception e) {
             logger.warn("model usage onRequest error, modelId={}", modelInfo.getModelId(), e);
         }
@@ -63,7 +71,9 @@ public class ModelUsageChatListener implements ChatModelListener {
             Integer inputTokens = tokenUsage == null ? null : tokenUsage.inputTokenCount();
             Integer outputTokens = tokenUsage == null ? null : tokenUsage.outputTokenCount();
             Integer totalTokens = tokenUsage == null ? null : tokenUsage.totalTokenCount();
-            recorder.record(modelInfo, snapshot, inputTokens, outputTokens, totalTokens);
+            ModelRetryContext retryContext = this.resolveRetryContext(context.attributes().get(RETRY_CONTEXT_KEY));
+            int retryCount = retryContext.getRetryCount();
+            recorder.record(modelInfo, snapshot, inputTokens, outputTokens, totalTokens, retryCount);
         } catch (Exception e) {
             logger.warn("model usage onResponse error, modelId={}", modelInfo.getModelId(), e);
         }
@@ -84,5 +94,17 @@ public class ModelUsageChatListener implements ChatModelListener {
             return (UsageSnapshot) value;
         }
         return new UsageSnapshot(null, null, null, ModelUsageSceneEnum.OTHER.getValue());
+    }
+
+    /**
+     * 解析逻辑调用重试上下文
+     * @param value attributes中的上下文
+     * @return 重试上下文
+     */
+    private ModelRetryContext resolveRetryContext(Object value) {
+        if (value instanceof ModelRetryContext retryContext) {
+            return retryContext;
+        }
+        return new ModelRetryContext();
     }
 }

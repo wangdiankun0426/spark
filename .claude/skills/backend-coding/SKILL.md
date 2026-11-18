@@ -119,6 +119,7 @@ logger.info("readSkill name={}, skillIds={}", name, skillIds);
 - 最多一个连续空行
 - 禁止 emoji
 - 禁止无关注释/英文注释/英文响应消息（专有名词除外）
+- **测试用例注释（强制）**：新增或修改测试方法时，必须在 `@Test` 上方写中文块注释，说明构造的测试场景和预期结果；故障注入、并发顺序、边界条件等关键背景必须写清楚，禁止只复述方法名或只写“测试xxx”，模板见 `references/templates.md` 第 8 节
 - **禁止方法调用嵌套传参**：方法调用的返回值禁止直接作为另一个方法调用的实参（含 setter），必须先赋值给局部变量再使用；仅 Controller 单层委托 `return xxxService.xxx(vo);` 例外
 
 ```java
@@ -164,6 +165,7 @@ taskInstanceResult.setDataList(dataList);
 - 直接调用 `insert` / `updateById` / `deleteById`（绕过 BaseDao 审计填充）
 - 手写 ID、手工赋值审计字段（created_by/updated_by/timestamp/dept_id）
 - 注释或用户消息用英文、logger 消息用中文/非首字母小写驼峰/未用 `key={}` 占位
+- 测试方法缺少说明测试场景与预期结果的中文块注释
 - Mapper XML 中写 `<!-- -->` 注释，注释必须归位 DAO 接口 Javadoc
 - 修改无关代码、引入无关依赖、通配符导入
 - private 方法插在 public 方法之间（private 必须集中在类尾部，全部 public 方法之后）

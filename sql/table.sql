@@ -322,6 +322,7 @@ CREATE TABLE `llm_model` (
     `enable_thinking` tinyint(3) NULL COMMENT '是否开启思考模式：1:开启，-1:不开启',
     `temperature` decimal(3,2) NULL COMMENT '温度参数：控制生成内容的随机性，范围 0.0-2.0',
     `timeout_ms` int NULL DEFAULT 60000 COMMENT '模型调用超时毫秒',
+    `max_retries` int NULL DEFAULT 3 COMMENT '额外重试次数',
     `context_length` int NULL COMMENT '模型上下文窗口token数',
     `status` tinyint(3) NOT NULL DEFAULT 1 COMMENT '状态：1:已开启，-1:已关闭',
     `description` varchar(256)  NULL COMMENT '描述',
@@ -349,6 +350,7 @@ CREATE TABLE `llm_model_usage` (
     `input_tokens` int(11) DEFAULT NULL COMMENT '输入token数',
     `output_tokens` int(11) DEFAULT NULL COMMENT '输出token数',
     `total_tokens` int(11) DEFAULT NULL COMMENT '总token数',
+    `retry_count` int NOT NULL DEFAULT 0 COMMENT '重试次数',
 
     `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',

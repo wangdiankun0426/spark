@@ -274,3 +274,30 @@ int deleteByXxxId(@Param("xxxId") Long xxxId, @Param("updatedBy") Long userId);
 - **日志**：SLF4J，消息必须纯英文、首字母小写驼峰（标识符/方法名/key 保持 camelCase，单词缩写全小写）、输出值用 `key={}` 占位；`logger.error("create agent error, agentId={}, errMsg={}", agentId, e.getMessage(), e)`
 - **Redis**：`RedisService`（`incr/setObj` 等），如部门编码生成
 - **当前用户**：`SessionHolder.getCurrentUserId()`
+
+## 8. 测试用例模板
+
+新增或修改测试方法时，必须在 `@Test` 上方写中文块注释。注释至少包含测试场景和预期结果，让读者不读方法体也能理解测试目的。
+
+```java
+/**
+ * 验证首次请求返回429后执行一次重试，第二次成功时只返回最终结果且retryCount为1
+ */
+@Test
+void shouldRetryRateLimitAndSucceed() {
+    // 测试代码
+}
+
+/**
+ * 验证流式已经输出首个分片后发生500错误，不再发起重试并只推送一次最终错误
+ */
+@Test
+void shouldNotRetryAfterFirstOutput() {
+    // 测试代码
+}
+```
+
+- 故障注入写清状态码、异常类型或慢响应条件
+- 并发与流式测试写清事件顺序和终态要求
+- 边界测试写清边界值及允许或拒绝的预期
+- 禁止只复述方法名、只写“测试重试”或不写注释

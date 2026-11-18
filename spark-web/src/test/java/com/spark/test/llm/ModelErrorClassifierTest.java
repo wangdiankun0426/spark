@@ -32,6 +32,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class ModelErrorClassifierTest {
 
+    /**
+     * 验证429及其LangChain4j包装异常归类为RATE_LIMIT，保留状态并允许重试且提示繁忙
+     */
     @Test
     void shouldClassifyRateLimit() {
         HttpException httpException = new HttpException(429, "limited");
@@ -41,12 +44,18 @@ public class ModelErrorClassifierTest {
         assertTrue(exception.getUserMessage().contains("繁忙"));
     }
 
+    /**
+     * 验证403认证失败归类为AUTH，保留HTTP状态且不允许重试
+     */
     @Test
     void shouldClassifyAuthentication() {
         HttpException error = new HttpException(403, "forbidden");
         this.assertError(error, ModelErrorTypeEnum.AUTH, 403, false);
     }
 
+    /**
+     * 验证HTTP和Socket超时优先于普通网络IO归类为TIMEOUT，避免误判为NETWORK
+     */
     @Test
     void shouldClassifyTimeoutBeforeNetwork() {
         HttpTimeoutException timeoutException = new HttpTimeoutException("timeout");
@@ -57,12 +66,18 @@ public class ModelErrorClassifierTest {
         this.assertError(socketError, ModelErrorTypeEnum.TIMEOUT, null, true);
     }
 
+    /**
+     * 验证503供应商服务异常归类为SERVER，保留HTTP状态并允许重试
+     */
     @Test
     void shouldClassifyServerError() {
         HttpException error = new HttpException(503, "unavailable");
         this.assertError(error, ModelErrorTypeEnum.SERVER, 503, true);
     }
 
+    /**
+     * 验证多层RuntimeException中的连接拒绝异常仍能穿透归类为NETWORK并允许重试
+     */
     @Test
     void shouldClassifyNestedNetworkError() {
         ConnectException connectException = new ConnectException("connection refused");
@@ -71,6 +86,9 @@ public class ModelErrorClassifierTest {
         this.assertError(error, ModelErrorTypeEnum.NETWORK, null, true);
     }
 
+    /**
+     * 验证400和模型不存在等明确请求错误归类为INVALID且不允许重试
+     */
     @Test
     void shouldClassifyInvalidRequest() {
         HttpException error = new HttpException(400, "bad request");
@@ -79,6 +97,9 @@ public class ModelErrorClassifierTest {
         this.assertError(modelNotFoundException, ModelErrorTypeEnum.INVALID, null, false);
     }
 
+    /**
+     * 验证异常文案含429或普通参数异常时不会按字符串误分类，统一落入UNKNOWN且不重试
+     */
     @Test
     void shouldFallbackUnknownWithoutMessageMatching() {
         RuntimeException error = new RuntimeException("429 too many requests");
@@ -87,6 +108,9 @@ public class ModelErrorClassifierTest {
         this.assertError(argumentException, ModelErrorTypeEnum.UNKNOWN, null, false);
     }
 
+    /**
+     * 验证JSON解析异常虽属于IO体系仍归类为UNKNOWN，避免误报网络故障并触发重试
+     */
     @Test
     void shouldNotClassifyJsonErrorAsNetwork() {
         JsonParseException parseException = new JsonParseException("bad json");
@@ -94,6 +118,9 @@ public class ModelErrorClassifierTest {
         this.assertError(error, ModelErrorTypeEnum.UNKNOWN, null, false);
     }
 
+    /**
+     * 验证已统一的流式超时异常不会被重复包装，仍保留TIMEOUT分类和动态秒数提示
+     */
     @Test
     void shouldPreserveStandardTimeoutException() {
         ModelTimeoutException timeoutException = new ModelTimeoutException(1L, 60000L);

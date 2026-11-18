@@ -23,6 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ChatMsgServiceImplTest {
     private static final String DEFAULT_MESSAGE = "抱歉，当前Agent对话异常！";
 
+    /**
+     * 验证六类已知模型错误即使被外层异常包装也返回各自差异化中文提示
+     */
     @Test
     void shouldResolveKnownErrorMessages() {
         ChatMsgServiceImpl service = new ChatMsgServiceImpl();
@@ -39,6 +42,9 @@ public class ChatMsgServiceImplTest {
         }
     }
 
+    /**
+     * 验证UNKNOWN、普通本地异常和空异常仍保留原Agent默认提示，不误报为供应商错误
+     */
     @Test
     void shouldKeepDefaultMessageForUnknownError() {
         ChatMsgServiceImpl service = new ChatMsgServiceImpl();
@@ -56,6 +62,9 @@ public class ChatMsgServiceImplTest {
         assertEquals(DEFAULT_MESSAGE, nullMessage);
     }
 
+    /**
+     * 验证流式空闲超时继续使用带实际秒数的动态提示，不被通用超时文案覆盖
+     */
     @Test
     void shouldKeepDynamicTimeoutMessage() {
         ChatMsgServiceImpl service = new ChatMsgServiceImpl();

@@ -350,6 +350,17 @@
               style="width: 100%"
           />
         </el-form-item>
+        <el-form-item label="额外重试次数" prop="maxRetries">
+          <el-input-number
+              v-model="modelForm.maxRetries"
+              :min="0"
+              :max="5"
+              :step="1"
+              :precision="0"
+              style="width: 100%"
+          />
+          <el-text size="small" type="info">0 表示关闭；流式首输出后不再重试</el-text>
+        </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-switch
               v-model="modelForm.status"
@@ -713,6 +724,10 @@ const modelFormRules = {
     { required: true, message: '请输入调用超时', trigger: 'blur' },
     { type: 'number', min: 1000, max: 600000, message: '调用超时范围为 1000-600000 毫秒', trigger: 'blur' }
   ],
+  maxRetries: [
+    { required: true, message: '请输入额外重试次数', trigger: 'blur' },
+    { type: 'number', min: 0, max: 5, message: '额外重试次数范围为 0-5', trigger: 'blur' }
+  ],
 }
 
 /**
@@ -727,6 +742,7 @@ function createEmptyModelForm() {
     enableThinking: -1,
     temperature: 0.10,
     timeoutMs: 60000,
+    maxRetries: 3,
     status: 1,
     description: undefined,
     remark: undefined,
@@ -758,6 +774,7 @@ function handleOpenUpdateModel(model) {
       enableThinking: d.enableThinking,
       temperature: d.temperature,
       timeoutMs: d.timeoutMs ?? 60000,
+      maxRetries: d.maxRetries ?? 3,
       status: d.status,
       description: d.description,
       remark: d.remark,
@@ -793,6 +810,7 @@ function handleSubmitModelForm() {
       enableThinking: modelForm.value.type === 1 ? modelForm.value.enableThinking : -1,
       temperature: modelForm.value.temperature,
       timeoutMs: modelForm.value.timeoutMs,
+      maxRetries: modelForm.value.maxRetries,
       status: modelForm.value.status,
       description: modelForm.value.description,
       remark: modelForm.value.remark,

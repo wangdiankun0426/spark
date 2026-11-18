@@ -19,10 +19,12 @@ import java.util.List;
 public class InvokingScoringModel implements ScoringModel {
     private final ScoringModel delegate;
     private final ModelInvoker modelInvoker;
+    private final int maxRetries;
 
-    public InvokingScoringModel(ScoringModel delegate, ModelInvoker modelInvoker) {
+    public InvokingScoringModel(ScoringModel delegate, ModelInvoker modelInvoker, int maxRetries) {
         this.delegate = delegate;
         this.modelInvoker = modelInvoker;
+        this.maxRetries = maxRetries;
     }
 
     @Override
@@ -30,6 +32,6 @@ public class InvokingScoringModel implements ScoringModel {
         if (segments == null || query == null) {
             throw new IllegalArgumentException("segments and query must not be null");
         }
-        return modelInvoker.invoke(() -> delegate.scoreAll(segments, query));
+        return modelInvoker.invoke(() -> delegate.scoreAll(segments, query), maxRetries);
     }
 }

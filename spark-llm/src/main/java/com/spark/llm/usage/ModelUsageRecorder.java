@@ -67,8 +67,10 @@ public class ModelUsageRecorder {
      * @param inputTokens 输入token
      * @param outputTokens 输出token
      * @param totalTokens 总token
+     * @param retryCount 重试次数
      */
-    public void record(ModelInfo modelInfo, UsageSnapshot snapshot, Integer inputTokens, Integer outputTokens, Integer totalTokens) {
+    public void record(ModelInfo modelInfo, UsageSnapshot snapshot, Integer inputTokens,
+                       Integer outputTokens, Integer totalTokens, int retryCount) {
         if (modelInfo == null || modelInfo.getModelId() == null) {
             return;
         }
@@ -92,6 +94,7 @@ public class ModelUsageRecorder {
             usage.setInputTokens(inputTokens);
             usage.setOutputTokens(outputTokens);
             usage.setTotalTokens(this.normalizeTotal(inputTokens, outputTokens, totalTokens));
+            usage.setRetryCount(retryCount);
             usage.setDeptId(deptId);
             usage.setCreatedBy(userId);
             usage.setUpdatedBy(userId);

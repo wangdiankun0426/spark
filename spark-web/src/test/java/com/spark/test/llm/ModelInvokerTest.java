@@ -1,10 +1,15 @@
 package com.spark.test.llm;
 
+import com.spark.common.bean.llm.dto.ModelInfo;
 import com.spark.common.enums.ModelErrorTypeEnum;
 import com.spark.llm.model.IdleTimeoutStreamingResponseHandler;
 import com.spark.llm.model.ModelInvocationException;
 import com.spark.llm.model.ModelInvoker;
+import com.spark.llm.model.ModelRetryPolicy;
 import com.spark.llm.model.ModelTimeoutException;
+import com.spark.llm.usage.EmbeddingUsageWrapper;
+import com.spark.llm.usage.ModelRetryContext;
+import com.spark.llm.usage.ModelUsageRecorder;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.exception.HttpException;
@@ -24,17 +29,21 @@ import org.mockito.ArgumentCaptor;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -66,6 +75,9 @@ public class ModelInvokerTest {
         modelInvoker.destroy();
     }
 
+    /**
+     * 验证流式持续无输出达到空闲时限后只推送一次超时异常且不触发完成回调
+     */
     @Test
     void shouldTimeoutWhenStreamIdle() {
         StreamingChatModel delegate = mock(StreamingChatModel.class);
@@ -81,6 +93,9 @@ public class ModelInvokerTest {
         verify(handler, never()).onCompleteResponse(any());
     }
 
+    /**
+     * 验证流式正常完成后空闲任务被取消，等待超过时限也不再推送异常
+     */
     @Test
     void shouldCancelTimeoutAfterComplete() throws InterruptedException {
         StreamingChatModel delegate = mock(StreamingChatModel.class);
@@ -89,15 +104,18 @@ public class ModelInvokerTest {
         ChatRequest request = mock(ChatRequest.class);
         model.doChat(request, handler);
         ArgumentCaptor<StreamingChatResponseHandler> handlerCaptor = ArgumentCaptor.forClass(StreamingChatResponseHandler.class);
-        verify(delegate).doChat(eq(request), handlerCaptor.capture());
+        verify(delegate, timeout(1000)).doChat(eq(request), handlerCaptor.capture());
         StreamingChatResponseHandler timeoutHandler = handlerCaptor.getValue();
         ChatResponse response = mock(ChatResponse.class);
         timeoutHandler.onCompleteResponse(response);
-        verify(handler).onCompleteResponse(response);
+        verify(handler, timeout(1000)).onCompleteResponse(response);
         Thread.sleep(1200);
         verify(handler, never()).onError(any());
     }
 
+    /**
+     * 验证空闲超时后迟到的分片、完成和异常全部被忽略，业务终态不重复
+     */
     @Test
     void shouldIgnoreLateEventsAfterTimeout() {
         StreamingChatModel delegate = mock(StreamingChatModel.class);
@@ -106,7 +124,7 @@ public class ModelInvokerTest {
         ChatRequest request = mock(ChatRequest.class);
         model.doChat(request, handler);
         ArgumentCaptor<StreamingChatResponseHandler> handlerCaptor = ArgumentCaptor.forClass(StreamingChatResponseHandler.class);
-        verify(delegate).doChat(eq(request), handlerCaptor.capture());
+        verify(delegate, timeout(1000)).doChat(eq(request), handlerCaptor.capture());
         StreamingChatResponseHandler timeoutHandler = handlerCaptor.getValue();
         verify(handler, timeout(2000)).onError(any(ModelTimeoutException.class));
         timeoutHandler.onPartialResponse("late");
@@ -119,6 +137,9 @@ public class ModelInvokerTest {
         verify(handler, times(1)).onError(any());
     }
 
+    /**
+     * 验证两个并发流共享模型时状态隔离，快速流正常完成而慢速流独立超时
+     */
     @Test
     void shouldIsolateConcurrentStreamState() {
         StreamingChatModel delegate = mock(StreamingChatModel.class);
@@ -130,15 +151,18 @@ public class ModelInvokerTest {
         model.doChat(slowRequest, slowHandler);
         model.doChat(fastRequest, fastHandler);
         ArgumentCaptor<StreamingChatResponseHandler> fastHandlerCaptor = ArgumentCaptor.forClass(StreamingChatResponseHandler.class);
-        verify(delegate).doChat(eq(fastRequest), fastHandlerCaptor.capture());
+        verify(delegate, timeout(1000)).doChat(eq(fastRequest), fastHandlerCaptor.capture());
         StreamingChatResponseHandler fastTimeoutHandler = fastHandlerCaptor.getValue();
         ChatResponse response = mock(ChatResponse.class);
         fastTimeoutHandler.onCompleteResponse(response);
-        verify(fastHandler).onCompleteResponse(response);
+        verify(fastHandler, timeout(1000)).onCompleteResponse(response);
         verify(slowHandler, timeout(2000)).onError(any(ModelTimeoutException.class));
         verify(fastHandler, never()).onError(any());
     }
 
+    /**
+     * 验证一个流的错误回调阻塞时不影响另一个流按时收到超时错误
+     */
     @Test
     void shouldNotBlockOtherTimeoutsByCallback() throws InterruptedException {
         StreamingChatModel delegate = mock(StreamingChatModel.class);
@@ -164,6 +188,9 @@ public class ModelInvokerTest {
         }
     }
 
+    /**
+     * 验证分片刷新计时后旧定时任务即使执行也不会误触发超时，仅当前任务有效
+     */
     @Test
     void shouldIgnoreStaleTimeoutTask() {
         StreamingChatResponseHandler handler = mock(StreamingChatResponseHandler.class);
@@ -183,6 +210,9 @@ public class ModelInvokerTest {
         verify(handler, times(1)).onError(any(ModelTimeoutException.class));
     }
 
+    /**
+     * 验证同步调用收到503时统一转换为SERVER模型异常并保留状态和原始异常
+     */
     @Test
     void shouldClassifySyncInvocationError() {
         ChatModel chatDelegate = mock(ChatModel.class);
@@ -197,6 +227,9 @@ public class ModelInvokerTest {
         assertSame(error, exception.getCause());
     }
 
+    /**
+     * 验证流式429经错误回调统一转换为RATE_LIMIT且只通知一次业务终态
+     */
     @Test
     void shouldClassifyStreamingError() {
         StreamingChatModel delegate = mock(StreamingChatModel.class);
@@ -205,18 +238,151 @@ public class ModelInvokerTest {
         ChatRequest request = mock(ChatRequest.class);
         model.doChat(request, handler);
         ArgumentCaptor<StreamingChatResponseHandler> handlerCaptor = ArgumentCaptor.forClass(StreamingChatResponseHandler.class);
-        verify(delegate).doChat(eq(request), handlerCaptor.capture());
+        verify(delegate, timeout(1000)).doChat(eq(request), handlerCaptor.capture());
         StreamingChatResponseHandler timeoutHandler = handlerCaptor.getValue();
         HttpException error = new HttpException(429, "limited");
         timeoutHandler.onError(error);
         ArgumentCaptor<Throwable> errorCaptor = ArgumentCaptor.forClass(Throwable.class);
-        verify(handler, times(1)).onError(errorCaptor.capture());
+        verify(handler, timeout(1000).times(1)).onError(errorCaptor.capture());
         ModelInvocationException exception = assertInstanceOf(ModelInvocationException.class, errorCaptor.getValue());
         assertEquals(ModelErrorTypeEnum.RATE_LIMIT, exception.getErrorType());
         assertEquals(429, exception.getHttpStatus());
         assertSame(error, exception.getCause());
     }
 
+    /**
+     * 验证同步503后实际重试一次并成功，第二次调用读取到retryCount为1且上下文已清理
+     */
+    @Test
+    void shouldRetrySyncErrorAndSucceed() {
+        ModelInvoker retryInvoker = this.createDirectInvoker();
+        ChatModel delegate = mock(ChatModel.class);
+        ChatRequest request = mock(ChatRequest.class);
+        ChatResponse response = mock(ChatResponse.class);
+        HttpException error = new HttpException(503, "unavailable");
+        AtomicInteger successRetryCount = new AtomicInteger();
+        when(delegate.doChat(request)).thenThrow(error).thenAnswer(invocation -> {
+            ModelRetryContext context = ModelRetryContext.current();
+            successRetryCount.set(context.getRetryCount());
+            return response;
+        });
+        ChatModel model = retryInvoker.wrap(delegate, 2);
+        assertSame(response, model.doChat(request));
+        verify(delegate, times(2)).doChat(request);
+        assertEquals(1, successRetryCount.get());
+        assertNull(ModelRetryContext.current());
+    }
+
+    /**
+     * 验证同步400属于不可重试错误，仅调用一次并抛出统一异常
+     */
+    @Test
+    void shouldNotRetryInvalidSyncError() {
+        ModelInvoker retryInvoker = this.createDirectInvoker();
+        ChatModel delegate = mock(ChatModel.class);
+        ChatRequest request = mock(ChatRequest.class);
+        HttpException error = new HttpException(400, "bad request");
+        when(delegate.doChat(request)).thenThrow(error);
+        ChatModel model = retryInvoker.wrap(delegate, 3);
+        assertThrows(ModelInvocationException.class, () -> model.doChat(request));
+        verify(delegate, times(1)).doChat(request);
+    }
+
+    /**
+     * 验证连续500达到重试上限后停止，总调用次数为配置值加一并保留SERVER分类
+     */
+    @Test
+    void shouldStopAfterRetryExhaustion() {
+        ModelInvoker retryInvoker = this.createDirectInvoker();
+        ChatModel delegate = mock(ChatModel.class);
+        ChatRequest request = mock(ChatRequest.class);
+        HttpException error = new HttpException(500, "server error");
+        when(delegate.doChat(request)).thenThrow(error);
+        ChatModel model = retryInvoker.wrap(delegate, 2);
+        ModelInvocationException exception = assertThrows(ModelInvocationException.class,
+                () -> model.doChat(request));
+        assertEquals(ModelErrorTypeEnum.SERVER, exception.getErrorType());
+        verify(delegate, times(3)).doChat(request);
+    }
+
+    /**
+     * 验证Embedding首次429后重试成功只记录一条用量且retryCount为1
+     */
+    @Test
+    void shouldRecordEmbeddingRetryCountOnce() {
+        ModelInvoker retryInvoker = this.createDirectInvoker();
+        EmbeddingModel delegate = mock(EmbeddingModel.class);
+        ModelUsageRecorder recorder = mock(ModelUsageRecorder.class);
+        ModelInfo modelInfo = new ModelInfo(1L, "embedding", 2L, 2);
+        EmbeddingUsageWrapper usageWrapper = new EmbeddingUsageWrapper(delegate, recorder, modelInfo);
+        List<TextSegment> segments = List.of();
+        Response<List<Embedding>> response = mock(Response.class);
+        when(response.tokenUsage()).thenReturn(null);
+        HttpException error = new HttpException(429, "limited");
+        when(delegate.embedAll(segments)).thenThrow(error).thenReturn(response);
+        EmbeddingModel model = retryInvoker.wrap(usageWrapper, 2);
+        assertSame(response, model.embedAll(segments));
+        verify(delegate, times(2)).embedAll(segments);
+        verify(recorder, times(1)).record(eq(modelInfo), any(), isNull(), isNull(), isNull(), eq(1));
+    }
+
+    /**
+     * 验证流式首输出前429可重试，第二次输出和完成仅下发一次且旧分片被隔离
+     */
+    @Test
+    void shouldRetryStreamingErrorBeforeFirstOutput() {
+        ScheduledThreadPoolExecutor scheduler = mock(ScheduledThreadPoolExecutor.class);
+        ModelInvoker retryInvoker = this.createDirectInvoker(scheduler);
+        StreamingChatModel delegate = mock(StreamingChatModel.class);
+        StreamingChatModel model = retryInvoker.wrap(delegate, 1L, 60000L, 1);
+        StreamingChatResponseHandler handler = mock(StreamingChatResponseHandler.class);
+        ChatRequest request = mock(ChatRequest.class);
+        model.doChat(request, handler);
+        ArgumentCaptor<StreamingChatResponseHandler> firstAttemptCaptor = ArgumentCaptor.forClass(StreamingChatResponseHandler.class);
+        verify(delegate).doChat(eq(request), firstAttemptCaptor.capture());
+        StreamingChatResponseHandler firstAttempt = firstAttemptCaptor.getValue();
+        firstAttempt.onError(new HttpException(429, "limited"));
+        verify(handler, never()).onError(any());
+        ArgumentCaptor<Runnable> retryTaskCaptor = ArgumentCaptor.forClass(Runnable.class);
+        verify(scheduler).schedule(retryTaskCaptor.capture(), eq(0L), eq(TimeUnit.MILLISECONDS));
+        Runnable retryTask = retryTaskCaptor.getValue();
+        retryTask.run();
+        ArgumentCaptor<StreamingChatResponseHandler> attemptsCaptor = ArgumentCaptor.forClass(StreamingChatResponseHandler.class);
+        verify(delegate, times(2)).doChat(eq(request), attemptsCaptor.capture());
+        StreamingChatResponseHandler secondAttempt = attemptsCaptor.getAllValues().get(1);
+        secondAttempt.onPartialResponse("ok");
+        verify(handler).onPartialResponse("ok");
+        ChatResponse response = mock(ChatResponse.class);
+        secondAttempt.onCompleteResponse(response);
+        verify(handler).onCompleteResponse(response);
+        firstAttempt.onPartialResponse("old");
+        verify(handler, never()).onPartialResponse("old");
+    }
+
+    /**
+     * 验证流式已输出分片后发生空闲超时不再重试，业务依次收到分片和最终错误
+     */
+    @Test
+    void shouldNotRetryStreamingErrorAfterFirstOutput() {
+        ModelInvoker retryInvoker = this.createDirectInvoker();
+        StreamingChatModel delegate = mock(StreamingChatModel.class);
+        StreamingChatModel model = retryInvoker.wrap(delegate, 1L, 60000L, 3);
+        StreamingChatResponseHandler handler = mock(StreamingChatResponseHandler.class);
+        ChatRequest request = mock(ChatRequest.class);
+        model.doChat(request, handler);
+        ArgumentCaptor<StreamingChatResponseHandler> attemptCaptor = ArgumentCaptor.forClass(StreamingChatResponseHandler.class);
+        verify(delegate).doChat(eq(request), attemptCaptor.capture());
+        StreamingChatResponseHandler attempt = attemptCaptor.getValue();
+        attempt.onPartialResponse("first");
+        attempt.onError(new ModelTimeoutException(1L, 60000L));
+        verify(handler).onPartialResponse("first");
+        verify(handler).onError(any(ModelTimeoutException.class));
+        verify(delegate, times(1)).doChat(eq(request), any());
+    }
+
+    /**
+     * 验证Chat、Embedding、Scoring同步包装只委托一次并保留响应和模型元数据
+     */
     @Test
     void shouldDelegateSyncModelsOnce() {
         ChatModel chatDelegate = mock(ChatModel.class);
@@ -244,5 +410,30 @@ public class ModelInvokerTest {
         ScoringModel scoringModel = modelInvoker.wrap(scoringDelegate);
         assertSame(scoringResponse, scoringModel.scoreAll(segments, "query"));
         verify(scoringDelegate, times(1)).scoreAll(segments, "query");
+    }
+
+    /**
+     * 创建零等待且直接执行回调的调用器
+     * @return 调用器
+     */
+    private ModelInvoker createDirectInvoker() {
+        ScheduledThreadPoolExecutor scheduler = mock(ScheduledThreadPoolExecutor.class);
+        return this.createDirectInvoker(scheduler);
+    }
+
+    /**
+     * 创建指定调度器的直接回调调用器
+     * @param scheduler 调度器
+     * @return 调用器
+     */
+    private ModelInvoker createDirectInvoker(ScheduledThreadPoolExecutor scheduler) {
+        ExecutorService callbackExecutor = mock(ExecutorService.class);
+        doAnswer(invocation -> {
+            Runnable task = invocation.getArgument(0);
+            task.run();
+            return null;
+        }).when(callbackExecutor).execute(any(Runnable.class));
+        ModelRetryPolicy retryPolicy = new ModelRetryPolicy(() -> 0);
+        return new ModelInvoker(scheduler, callbackExecutor, retryPolicy);
     }
 }

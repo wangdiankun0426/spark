@@ -26,13 +26,15 @@ public class InvokingStreamingChatModel implements StreamingChatModel {
     private final ModelInvoker modelInvoker;
     private final Long modelId;
     private final long idleTimeoutMs;
+    private final int maxRetries;
 
     public InvokingStreamingChatModel(StreamingChatModel delegate, ModelInvoker modelInvoker,
-                                      Long modelId, long idleTimeoutMs) {
+                                      Long modelId, long idleTimeoutMs, int maxRetries) {
         this.delegate = delegate;
         this.modelInvoker = modelInvoker;
         this.modelId = modelId;
         this.idleTimeoutMs = idleTimeoutMs;
+        this.maxRetries = maxRetries;
     }
 
     @Override
@@ -40,7 +42,7 @@ public class InvokingStreamingChatModel implements StreamingChatModel {
         if (request == null || handler == null) {
             throw new IllegalArgumentException("request and handler must not be null");
         }
-        modelInvoker.invoke(delegate, request, handler, modelId, idleTimeoutMs);
+        modelInvoker.invoke(delegate, request, handler, modelId, idleTimeoutMs, maxRetries);
     }
 
     @Override
