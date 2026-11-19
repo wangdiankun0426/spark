@@ -1,6 +1,10 @@
 package com.spark.test.llm;
 
 import com.spark.common.bean.llm.dto.ModelInfo;
+import com.spark.common.enums.CircuitStateEnum;
+import com.spark.common.enums.ModelErrorTypeEnum;
+import com.spark.llm.model.circuit.ProviderCircuitBreaker;
+import com.spark.llm.model.error.ModelInvocationException;
 import com.spark.llm.model.error.ModelRetryPolicy;
 import com.spark.llm.model.fallback.FallbackModelTarget;
 import com.spark.llm.model.fallback.FallbackStreamingChatModel;
@@ -27,6 +31,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -35,6 +40,7 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -51,6 +57,7 @@ import static org.mockito.Mockito.when;
 public class FallbackStreamingChatModelTest {
     private ModelInvoker modelInvoker;
     private ModelUsageRecorder recorder;
+    private ProviderCircuitBreaker circuitBreaker;
 
     @BeforeEach
     void setUp() {
@@ -64,6 +71,7 @@ public class FallbackStreamingChatModelTest {
         ModelRetryPolicy retryPolicy = new ModelRetryPolicy(() -> 0);
         modelInvoker = new ModelInvoker(scheduler, callbackExecutor, retryPolicy);
         recorder = mock(ModelUsageRecorder.class);
+        circuitBreaker = new ProviderCircuitBreaker();
     }
 
     @AfterEach
@@ -96,7 +104,7 @@ public class FallbackStreamingChatModelTest {
         FallbackModelTarget<StreamingChatModel> fallbackTarget = this.createStreamingTarget(fallbackInfo, fallback);
         ChatModelListener listener = new ModelUsageChatListener(recorder, primaryInfo);
         FallbackStreamingChatModel model = new FallbackStreamingChatModel(
-                List.of(primaryTarget, fallbackTarget), List.of(listener));
+                List.of(primaryTarget, fallbackTarget), List.of(listener), circuitBreaker);
         StreamingChatResponseHandler handler = mock(StreamingChatResponseHandler.class);
         ChatRequest request = this.createRequest();
         model.chat(request, handler);
@@ -137,7 +145,7 @@ public class FallbackStreamingChatModelTest {
         FallbackModelTarget<StreamingChatModel> fallbackTarget = this.createStreamingTarget(fallbackInfo, fallback);
         FallbackModelTarget<StreamingChatModel> thirdTarget = this.createStreamingTarget(thirdInfo, third);
         FallbackStreamingChatModel model = new FallbackStreamingChatModel(
-                List.of(primaryTarget, fallbackTarget, thirdTarget), List.of());
+                List.of(primaryTarget, fallbackTarget, thirdTarget), List.of(), circuitBreaker);
         StreamingChatResponseHandler handler = mock(StreamingChatResponseHandler.class);
         ChatRequest request = this.createRequest();
         model.chat(request, handler);
@@ -145,6 +153,108 @@ public class FallbackStreamingChatModelTest {
         verify(handler).onError(any());
         verify(handler, never()).onCompleteResponse(any());
         verify(third, never()).doChat(any(ChatRequest.class), any(StreamingChatResponseHandler.class));
+    }
+
+    /**
+     * 验证主供应商熔断打开后流式请求零等待跳过主模型直接由备用模型完成输出，主模型不发生任何调用
+     */
+    @Test
+    void shouldSkipCircuitOpenPrimaryAndStreamFallback() {
+        ModelInfo primaryInfo = new ModelInfo(1L, "primary", 11L, 1);
+        ModelInfo fallbackInfo = new ModelInfo(2L, "fallback", 22L, 1);
+        StreamingChatModel primary = this.prepareStreamingModel(mock(StreamingChatModel.class));
+        StreamingChatModel fallback = this.prepareStreamingModel(mock(StreamingChatModel.class));
+        ChatResponse fallbackResponse = mock(ChatResponse.class);
+        doAnswer(invocation -> {
+            StreamingChatResponseHandler handler = invocation.getArgument(1);
+            handler.onPartialResponse("ok");
+            handler.onCompleteResponse(fallbackResponse);
+            return null;
+        }).when(fallback).doChat(any(ChatRequest.class), any(StreamingChatResponseHandler.class));
+        for (int i = 0; i < 5; i++) {
+            circuitBreaker.recordFailure(11L);
+        }
+        FallbackModelTarget<StreamingChatModel> primaryTarget = this.createStreamingTarget(primaryInfo, primary);
+        FallbackModelTarget<StreamingChatModel> fallbackTarget = this.createStreamingTarget(fallbackInfo, fallback);
+        FallbackStreamingChatModel model = new FallbackStreamingChatModel(
+                List.of(primaryTarget, fallbackTarget), List.of(), circuitBreaker);
+        StreamingChatResponseHandler handler = mock(StreamingChatResponseHandler.class);
+        ChatRequest request = this.createRequest();
+        model.chat(request, handler);
+        verify(handler).onPartialResponse("ok");
+        verify(handler).onCompleteResponse(fallbackResponse);
+        verify(primary, never()).doChat(any(ChatRequest.class), any(StreamingChatResponseHandler.class));
+        assertEquals(CircuitStateEnum.OPEN, circuitBreaker.getState(11L));
+        assertEquals(CircuitStateEnum.CLOSED, circuitBreaker.getState(22L));
+    }
+
+    /**
+     * 验证单目标流式连续5次可重试终态错误后熔断打开，第6次请求零等待收到503熔断异常且底层模型只被调用5次
+     */
+    @Test
+    void shouldOpenCircuitAfterFiveStreamingFailures() {
+        ModelInfo primaryInfo = new ModelInfo(1L, "primary", 11L, 1);
+        StreamingChatModel primary = this.prepareStreamingModel(mock(StreamingChatModel.class));
+        doAnswer(invocation -> {
+            StreamingChatResponseHandler handler = invocation.getArgument(1);
+            handler.onError(new HttpException(500, "primary error"));
+            return null;
+        }).when(primary).doChat(any(ChatRequest.class), any(StreamingChatResponseHandler.class));
+        FallbackModelTarget<StreamingChatModel> primaryTarget = this.createStreamingTarget(primaryInfo, primary);
+        FallbackStreamingChatModel model = new FallbackStreamingChatModel(List.of(primaryTarget), List.of(), circuitBreaker);
+        StreamingChatResponseHandler handler = mock(StreamingChatResponseHandler.class);
+        ChatRequest request = this.createRequest();
+        for (int i = 0; i < 6; i++) {
+            model.chat(request, handler);
+        }
+        assertEquals(CircuitStateEnum.OPEN, circuitBreaker.getState(11L));
+        verify(primary, times(5)).doChat(any(ChatRequest.class), any(StreamingChatResponseHandler.class));
+        ArgumentCaptor<Throwable> errorCaptor = ArgumentCaptor.forClass(Throwable.class);
+        verify(handler, times(6)).onError(errorCaptor.capture());
+        List<Throwable> errors = errorCaptor.getAllValues();
+        Throwable lastError = errors.get(5);
+        ModelInvocationException circuitException = (ModelInvocationException) lastError;
+        assertEquals(ModelErrorTypeEnum.SERVER, circuitException.getErrorType());
+        assertEquals(503, circuitException.getHttpStatus());
+    }
+
+    /**
+     * 验证流式完成回调清零连续失败计数，4次失败后一次成功再连续4次失败仍不触发熔断
+     */
+    @Test
+    void shouldResetFailureCountOnStreamingSuccess() {
+        ModelInfo primaryInfo = new ModelInfo(1L, "primary", 11L, 1);
+        StreamingChatModel primary = this.prepareStreamingModel(mock(StreamingChatModel.class));
+        doAnswer(invocation -> {
+            StreamingChatResponseHandler handler = invocation.getArgument(1);
+            handler.onError(new HttpException(500, "primary error"));
+            return null;
+        }).when(primary).doChat(any(ChatRequest.class), any(StreamingChatResponseHandler.class));
+        FallbackModelTarget<StreamingChatModel> primaryTarget = this.createStreamingTarget(primaryInfo, primary);
+        FallbackStreamingChatModel model = new FallbackStreamingChatModel(List.of(primaryTarget), List.of(), circuitBreaker);
+        StreamingChatResponseHandler handler = mock(StreamingChatResponseHandler.class);
+        ChatRequest request = this.createRequest();
+        for (int i = 0; i < 4; i++) {
+            model.chat(request, handler);
+        }
+        assertEquals(CircuitStateEnum.CLOSED, circuitBreaker.getState(11L));
+        ChatResponse successResponse = mock(ChatResponse.class);
+        doAnswer(invocation -> {
+            StreamingChatResponseHandler responseHandler = invocation.getArgument(1);
+            responseHandler.onCompleteResponse(successResponse);
+            return null;
+        }).when(primary).doChat(any(ChatRequest.class), any(StreamingChatResponseHandler.class));
+        model.chat(request, handler);
+        doAnswer(invocation -> {
+            StreamingChatResponseHandler responseHandler = invocation.getArgument(1);
+            responseHandler.onError(new HttpException(500, "primary error"));
+            return null;
+        }).when(primary).doChat(any(ChatRequest.class), any(StreamingChatResponseHandler.class));
+        for (int i = 0; i < 4; i++) {
+            model.chat(request, handler);
+        }
+        assertEquals(CircuitStateEnum.CLOSED, circuitBreaker.getState(11L));
+        verify(handler).onCompleteResponse(successResponse);
     }
 
     /**

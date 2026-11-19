@@ -75,7 +75,14 @@
               {{ provider.name?.charAt(0) }}
             </div>
             <div class="provider-item-info">
-              <div class="provider-item-name">{{ provider.name }}</div>
+              <div class="provider-item-name">
+                <span class="provider-item-name-text">{{ provider.name }}</span>
+                <el-tag
+                    v-if="provider.circuitState && provider.circuitState !== 1"
+                    :type="provider.circuitState === 2 ? 'danger' : 'warning'"
+                    size="small"
+                >{{ provider.circuitStateName }}</el-tag>
+              </div>
               <div class="provider-item-count" v-if="provider.description">{{ provider.description }}</div>
             </div>
             <div class="provider-item-actions">
@@ -500,15 +507,21 @@ const query = ref({
 const activeProviderId = ref(null)
 
 let searchTimer = null
+let providerRefreshTimer = null
 
 onMounted(() => {
   loadProviders()
   loadModels()
+  // 熔断状态运行时变化，定时静默刷新厂商列表保持展示近实时
+  providerRefreshTimer = setInterval(loadProviders, 30000)
 })
 
 onBeforeUnmount(() => {
   if (searchTimer) {
     clearTimeout(searchTimer)
+  }
+  if (providerRefreshTimer) {
+    clearInterval(providerRefreshTimer)
   }
 })
 
@@ -1168,9 +1181,21 @@ function handleProviderCommand(command, provider) {
 }
 
 .provider-item-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 13px;
   font-weight: 600;
   color: $color-text-primary;
+
+  .el-tag {
+    flex: none;
+  }
+}
+
+.provider-item-name-text {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

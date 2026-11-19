@@ -7,6 +7,7 @@ import com.spark.common.bean.llm.result.ModelResult;
 import com.spark.common.bean.llm.result.ProviderResult;
 import com.spark.dao.llm.ModelDao;
 import com.spark.dao.llm.ProviderDao;
+import com.spark.llm.model.circuit.ProviderCircuitBreaker;
 import com.spark.llm.model.credential.ProviderKeyRouter;
 import com.spark.llm.model.factory.ModelFactory;
 import com.spark.llm.model.fallback.FallbackModelTarget;
@@ -52,11 +53,13 @@ public class ModelFactoryFallbackTest {
         ProviderKeyRouter providerKeyRouter = mock(ProviderKeyRouter.class);
         ModelInvoker modelInvoker = mock(ModelInvoker.class);
         ModelUsageRecorder modelUsageRecorder = mock(ModelUsageRecorder.class);
+        ProviderCircuitBreaker providerCircuitBreaker = new ProviderCircuitBreaker();
         ReflectionTestUtils.setField(modelFactory, "modelDao", modelDao);
         ReflectionTestUtils.setField(modelFactory, "providerDao", providerDao);
         ReflectionTestUtils.setField(modelFactory, "providerKeyRouter", providerKeyRouter);
         ReflectionTestUtils.setField(modelFactory, "modelInvoker", modelInvoker);
         ReflectionTestUtils.setField(modelFactory, "modelUsageRecorder", modelUsageRecorder);
+        ReflectionTestUtils.setField(modelFactory, "providerCircuitBreaker", providerCircuitBreaker);
         ModelResult root = this.createModel(1L, 0L, 10L, 1, "2,2,1,3");
         ModelResult fallback = this.createModel(2L, 0L, 20L, 1, "3");
         ModelResult invalidCandidate = this.createModel(3L, 1L, 30L, 1, null);
@@ -96,15 +99,17 @@ public class ModelFactoryFallbackTest {
     }
 
     /**
-     * 验证厂商下已没有有效模型时仍清空聊天外观缓存，避免已删除厂商的备用模型继续被旧降级链引用
+     * 验证厂商下已没有有效模型时仍清空聊天外观缓存并重置该厂商熔断状态，避免已删除厂商的备用模型继续被旧降级链引用
      */
     @Test
     void shouldClearFacadeWhenProviderHasNoModels() {
         ModelFactory modelFactory = new ModelFactory();
         ModelDao modelDao = mock(ModelDao.class);
         ProviderKeyRouter providerKeyRouter = mock(ProviderKeyRouter.class);
+        ProviderCircuitBreaker providerCircuitBreaker = mock(ProviderCircuitBreaker.class);
         ReflectionTestUtils.setField(modelFactory, "modelDao", modelDao);
         ReflectionTestUtils.setField(modelFactory, "providerKeyRouter", providerKeyRouter);
+        ReflectionTestUtils.setField(modelFactory, "providerCircuitBreaker", providerCircuitBreaker);
         ChatModel cachedModel = mock(ChatModel.class);
         Map<Long, ChatModel> chatModelCache = new ConcurrentHashMap<>();
         chatModelCache.put(1L, cachedModel);
@@ -113,6 +118,7 @@ public class ModelFactoryFallbackTest {
         modelFactory.clearModelCacheByProvider(10L);
         assertEquals(0, chatModelCache.size());
         verify(providerKeyRouter).clearProvider(10L);
+        verify(providerCircuitBreaker).reset(10L);
     }
 
     /**

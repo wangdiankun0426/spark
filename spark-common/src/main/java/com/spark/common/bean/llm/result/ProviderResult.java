@@ -45,4 +45,14 @@ public class ProviderResult extends BaseResult {
      **/
     private Integer orderNum;
 
+    /**
+     * 熔断状态值
+     **/
+    private Integer circuitState;
+
+    /**
+     * 熔断状态名称
+     **/
+    private String circuitStateName;
+
 }

@@ -2,6 +2,7 @@ package com.spark.llm.model.fallback;
 
 import com.spark.common.bean.llm.dto.ModelInfo;
 import com.spark.common.enums.ModelErrorTypeEnum;
+import com.spark.llm.model.circuit.ProviderCircuitBreaker;
 import com.spark.llm.model.error.ModelErrorClassifier;
 import com.spark.llm.model.error.ModelInvocationException;
 import com.spark.llm.usage.ModelRetryContext;
@@ -33,20 +34,24 @@ public class FallbackStreamingInvocation {
     private final ChatRequest request;
     private final StreamingChatResponseHandler handler;
     private final ModelRetryContext context;
+    private final ProviderCircuitBreaker circuitBreaker;
     private int currentTargetIndex;
     private long activeAttempt;
     private boolean outputStarted;
     private boolean terminal;
 
     public FallbackStreamingInvocation(List<FallbackModelTarget<StreamingChatModel>> targets, ChatRequest request,
-                                       StreamingChatResponseHandler handler, ModelRetryContext context) {
-        if (targets == null || targets.isEmpty() || request == null || handler == null || context == null) {
+                                       StreamingChatResponseHandler handler, ModelRetryContext context,
+                                       ProviderCircuitBreaker circuitBreaker) {
+        if (targets == null || targets.isEmpty() || request == null || handler == null || context == null
+                || circuitBreaker == null) {
             throw new IllegalArgumentException("fallback streaming invocation params must not be null");
         }
         this.targets = List.copyOf(targets);
         this.request = request;
         this.handler = handler;
         this.context = context;
+        this.circuitBreaker = circuitBreaker;
     }
 
     /**
@@ -118,6 +123,10 @@ public class FallbackStreamingInvocation {
             return;
         }
         terminal = true;
+        FallbackModelTarget<StreamingChatModel> currentTarget = targets.get(currentTargetIndex);
+        ModelInfo currentModelInfo = currentTarget.getModelInfo();
+        Long providerId = currentModelInfo.getProviderId();
+        circuitBreaker.recordSuccess(providerId);
         handler.onCompleteResponse(completeResponse);
     }
 
@@ -131,15 +140,19 @@ public class FallbackStreamingInvocation {
             return;
         }
         ModelInvocationException exception = ModelErrorClassifier.wrap(error);
+        FallbackModelTarget<StreamingChatModel> currentTarget = targets.get(currentTargetIndex);
+        ModelInfo currentModelInfo = currentTarget.getModelInfo();
+        Long currentModelId = currentModelInfo.getModelId();
+        Long currentProviderId = currentModelInfo.getProviderId();
+        if (exception.isRetryable()) {
+            circuitBreaker.recordFailure(currentProviderId);
+        }
         if (outputStarted || currentTargetIndex >= targets.size() - 1
                 || !ModelFallbackPolicy.shouldFallback(exception)) {
             terminal = true;
             handler.onError(exception);
             return;
         }
-        FallbackModelTarget<StreamingChatModel> currentTarget = targets.get(currentTargetIndex);
-        ModelInfo currentModelInfo = currentTarget.getModelInfo();
-        Long currentModelId = currentModelInfo.getModelId();
         FallbackModelTarget<StreamingChatModel> nextTarget = targets.get(currentTargetIndex + 1);
         ModelInfo nextModelInfo = nextTarget.getModelInfo();
         Long nextModelId = nextModelInfo.getModelId();
@@ -157,12 +170,31 @@ public class FallbackStreamingInvocation {
         if (terminal) {
             return;
         }
-        currentTargetIndex = targetIndex;
+        int acquiredIndex = targetIndex;
+        while (acquiredIndex < targets.size()) {
+            FallbackModelTarget<StreamingChatModel> candidate = targets.get(acquiredIndex);
+            ModelInfo candidateInfo = candidate.getModelInfo();
+            Long candidateProviderId = candidateInfo.getProviderId();
+            if (circuitBreaker.tryAcquire(candidateProviderId)) {
+                break;
+            }
+            Long candidateModelId = candidateInfo.getModelId();
+            logger.warn("model streaming fallback target circuit rejected, modelId={}, providerId={}",
+                    candidateModelId, candidateProviderId);
+            acquiredIndex++;
+        }
+        if (acquiredIndex >= targets.size()) {
+            terminal = true;
+            ModelInvocationException exception = ModelFallbackPolicy.circuitOpenException();
+            handler.onError(exception);
+            return;
+        }
+        currentTargetIndex = acquiredIndex;
         activeAttempt++;
         long attemptId = activeAttempt;
-        FallbackModelTarget<StreamingChatModel> target = targets.get(targetIndex);
+        FallbackModelTarget<StreamingChatModel> target = targets.get(acquiredIndex);
         ModelInfo modelInfo = target.getModelInfo();
-        context.selectTarget(modelInfo, targetIndex > 0);
+        context.selectTarget(modelInfo, acquiredIndex > 0);
         FallbackStreamingResponseHandler targetHandler = new FallbackStreamingResponseHandler(this, attemptId);
         if (ModelRetryContext.current() != context) {
             ModelRetryContext.bind(context);

@@ -4,13 +4,17 @@ import com.spark.common.bean.base.ResultData;
 import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.llm.entity.Provider;
 import com.spark.common.bean.llm.entity.ProviderKey;
+import com.spark.common.bean.llm.result.ProviderResult;
 import com.spark.common.bean.llm.vo.ProviderVO;
 import com.spark.common.bean.sys.entity.Session;
 import com.spark.common.enums.AccountTypeEnum;
+import com.spark.common.enums.CircuitStateEnum;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.dao.llm.ProviderDao;
 import com.spark.dao.llm.ProviderKeyDao;
+import com.spark.dao.sys.UserDao;
 import com.spark.llm.agent.AgentFactory;
+import com.spark.llm.model.circuit.ProviderCircuitBreaker;
 import com.spark.llm.model.factory.ModelFactory;
 import com.spark.llm.security.LlmApiKeyCipher;
 import com.spark.llm.service.impl.ProviderServiceImpl;
@@ -19,6 +23,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -35,7 +41,7 @@ import static org.mockito.Mockito.when;
  *
  * @author wangdiankun
  * @since 2026-11-18 10:40:00
- * 模型厂商凭据创建与更新测试
+ * 模型厂商凭据与列表熔断状态测试
  */
 public class ProviderServiceImplTest {
     private ProviderServiceImpl providerService;
@@ -44,6 +50,7 @@ public class ProviderServiceImplTest {
     private ModelFactory modelFactory;
     private AgentFactory agentFactory;
     private LlmApiKeyCipher llmApiKeyCipher;
+    private ProviderCircuitBreaker providerCircuitBreaker;
 
     @BeforeEach
     void setUp() {
@@ -53,11 +60,15 @@ public class ProviderServiceImplTest {
         modelFactory = mock(ModelFactory.class);
         agentFactory = mock(AgentFactory.class);
         llmApiKeyCipher = mock(LlmApiKeyCipher.class);
+        providerCircuitBreaker = new ProviderCircuitBreaker();
+        UserDao userDao = mock(UserDao.class);
         ReflectionTestUtils.setField(providerService, "providerDao", providerDao);
         ReflectionTestUtils.setField(providerService, "providerKeyDao", providerKeyDao);
         ReflectionTestUtils.setField(providerService, "modelFactory", modelFactory);
         ReflectionTestUtils.setField(providerService, "agentFactory", agentFactory);
         ReflectionTestUtils.setField(providerService, "llmApiKeyCipher", llmApiKeyCipher);
+        ReflectionTestUtils.setField(providerService, "providerCircuitBreaker", providerCircuitBreaker);
+        ReflectionTestUtils.setField(providerService, "userDao", userDao);
         Session session = new Session();
         session.setUserId(101L);
         session.setAccountType(AccountTypeEnum.SITE_ADMIN.getValue());
@@ -108,6 +119,26 @@ public class ProviderServiceImplTest {
         assertEquals(ErrorCodeEnum.INVALID_PARAM.getValue(), result.getCode());
         verify(providerDao, never()).insertDB(any());
         verify(providerKeyDao, never()).insertDB(any());
+    }
+
+    /**
+     * 验证厂商列表补充时回填实时熔断状态，熔断打开的厂商展示熔断中，无失败记录的厂商展示正常
+     */
+    @Test
+    void shouldSupplyCircuitStateInProviderList() {
+        for (int i = 0; i < 5; i++) {
+            providerCircuitBreaker.recordFailure(11L);
+        }
+        ProviderResult openProvider = new ProviderResult();
+        openProvider.setId(11L);
+        ProviderResult closedProvider = new ProviderResult();
+        closedProvider.setId(22L);
+        List<ProviderResult> list = List.of(openProvider, closedProvider);
+        ReflectionTestUtils.invokeMethod(providerService, "supplyList", list);
+        assertEquals(CircuitStateEnum.OPEN.getValue(), openProvider.getCircuitState());
+        assertEquals(CircuitStateEnum.OPEN.getDesc(), openProvider.getCircuitStateName());
+        assertEquals(CircuitStateEnum.CLOSED.getValue(), closedProvider.getCircuitState());
+        assertEquals(CircuitStateEnum.CLOSED.getDesc(), closedProvider.getCircuitStateName());
     }
 
     /**

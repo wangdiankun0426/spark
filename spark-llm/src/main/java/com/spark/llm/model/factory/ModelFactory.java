@@ -1,6 +1,7 @@
 package com.spark.llm.model.factory;
 
 import com.spark.llm.model.invocation.ModelInvoker;
+import com.spark.llm.model.circuit.ProviderCircuitBreaker;
 import com.spark.llm.model.credential.ProviderKeyChatModel;
 import com.spark.llm.model.credential.ProviderKeyEmbeddingModel;
 import com.spark.llm.model.credential.ProviderKeyModel;
@@ -82,6 +83,8 @@ public class ModelFactory {
     private ModelInvoker modelInvoker;
     @Autowired
     private ProviderKeyRouter providerKeyRouter;
+    @Autowired
+    private ProviderCircuitBreaker providerCircuitBreaker;
     /**
      * 模型实例缓存，避免重复创建
      */
@@ -264,6 +267,7 @@ public class ModelFactory {
             return;
         }
         providerKeyRouter.clearProvider(providerId);
+        providerCircuitBreaker.reset(providerId);
         chatModelCache.clear();
         streamingChatModelCache.clear();
         embeddingModelCache.clear();
@@ -318,7 +322,7 @@ public class ModelFactory {
             ModelInfo modelInfo = this.buildModelInfo(model);
             ChatModelListener usageListener = new ModelUsageChatListener(modelUsageRecorder, modelInfo);
             List<ChatModelListener> listeners = List.of(usageListener);
-            return new FallbackChatModel(targets, listeners);
+            return new FallbackChatModel(targets, listeners, providerCircuitBreaker);
         }
         throw new UnsupportedOperationException("Unsupported model type: " + typeEnum.getDesc());
     }
@@ -334,7 +338,7 @@ public class ModelFactory {
             ModelInfo modelInfo = this.buildModelInfo(model);
             ChatModelListener usageListener = new ModelUsageChatListener(modelUsageRecorder, modelInfo);
             List<ChatModelListener> listeners = List.of(usageListener);
-            return new FallbackStreamingChatModel(targets, listeners);
+            return new FallbackStreamingChatModel(targets, listeners, providerCircuitBreaker);
         }
         throw new UnsupportedOperationException("Unsupported model type: " + typeEnum.getDesc());
     }
@@ -347,7 +351,7 @@ public class ModelFactory {
         if (Objects.requireNonNull(typeEnum) == ModelTypeEnum.VECTOR) {
             List<FallbackModelTarget<EmbeddingModel>> targets = this.createFallbackTargets(
                     model, this::createEmbeddingTarget);
-            FallbackEmbeddingModel fallbackModel = new FallbackEmbeddingModel(targets);
+            FallbackEmbeddingModel fallbackModel = new FallbackEmbeddingModel(targets, providerCircuitBreaker);
             ModelInfo modelInfo = this.buildModelInfo(model);
             return new EmbeddingUsageWrapper(fallbackModel, modelUsageRecorder, modelInfo);
         }
@@ -361,7 +365,7 @@ public class ModelFactory {
         ModelTypeEnum typeEnum = ModelTypeEnum.indexOf(model.getType());
         if (Objects.requireNonNull(typeEnum) == ModelTypeEnum.RERANK) {
             List<FallbackModelTarget<ScoringModel>> targets = this.createFallbackTargets(model, this::createRerankTarget);
-            FallbackScoringModel fallbackModel = new FallbackScoringModel(targets);
+            FallbackScoringModel fallbackModel = new FallbackScoringModel(targets, providerCircuitBreaker);
             ModelInfo modelInfo = this.buildModelInfo(model);
             return new ScoringUsageWrapper(fallbackModel, modelUsageRecorder, modelInfo);
         }

@@ -1,6 +1,7 @@
 package com.spark.llm.model.fallback;
 
 import com.spark.common.bean.llm.dto.ModelInfo;
+import com.spark.llm.model.circuit.ProviderCircuitBreaker;
 import com.spark.llm.model.error.ModelErrorClassifier;
 import com.spark.llm.model.error.ModelInvocationException;
 import com.spark.llm.usage.ModelRetryContext;
@@ -32,13 +33,16 @@ public class FallbackChatModel implements ChatModel {
     private static final Logger logger = LoggerFactory.getLogger(FallbackChatModel.class);
     private final List<FallbackModelTarget<ChatModel>> targets;
     private final List<ChatModelListener> listeners;
+    private final ProviderCircuitBreaker circuitBreaker;
 
-    public FallbackChatModel(List<FallbackModelTarget<ChatModel>> targets, List<ChatModelListener> listeners) {
-        if (targets == null || targets.isEmpty() || listeners == null) {
-            throw new IllegalArgumentException("fallback chatModel targets and listeners must not be empty");
+    public FallbackChatModel(List<FallbackModelTarget<ChatModel>> targets, List<ChatModelListener> listeners,
+                             ProviderCircuitBreaker circuitBreaker) {
+        if (targets == null || targets.isEmpty() || listeners == null || circuitBreaker == null) {
+            throw new IllegalArgumentException("fallback chatModel targets, listeners and circuitBreaker must not be empty");
         }
         this.targets = List.copyOf(targets);
         this.listeners = List.copyOf(listeners);
+        this.circuitBreaker = circuitBreaker;
     }
 
     @Override
@@ -55,15 +59,25 @@ public class FallbackChatModel implements ChatModel {
                 FallbackModelTarget<ChatModel> target = targets.get(index);
                 ModelInfo modelInfo = target.getModelInfo();
                 Long modelId = modelInfo.getModelId();
+                Long providerId = modelInfo.getProviderId();
+                if (!circuitBreaker.tryAcquire(providerId)) {
+                    logger.warn("model fallback target circuit rejected, modelId={}, providerId={}", modelId, providerId);
+                    continue;
+                }
                 context.selectTarget(modelInfo, index > 0);
                 if (ModelRetryContext.current() != context) {
                     ModelRetryContext.bind(context);
                 }
                 try {
                     ChatModel delegate = target.getDelegate();
-                    return delegate.chat(request);
+                    ChatResponse response = delegate.chat(request);
+                    circuitBreaker.recordSuccess(providerId);
+                    return response;
                 } catch (RuntimeException e) {
                     ModelInvocationException exception = ModelErrorClassifier.wrap(e);
+                    if (exception.isRetryable()) {
+                        circuitBreaker.recordFailure(providerId);
+                    }
                     if (index >= targets.size() - 1 || !ModelFallbackPolicy.shouldFallback(exception)) {
                         throw exception;
                     }
@@ -79,7 +93,7 @@ public class FallbackChatModel implements ChatModel {
         } finally {
             ModelRetryContext.unbind(context);
         }
-        throw new IllegalStateException("fallback chatModel target list is empty");
+        throw ModelFallbackPolicy.circuitOpenException();
     }
 
     @Override

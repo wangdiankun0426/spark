@@ -12,11 +12,13 @@ import com.spark.common.bean.llm.vo.ProviderVO;
 import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.llm.ProviderDao;
+import com.spark.common.enums.CircuitStateEnum;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.dao.llm.ProviderKeyDao;
 import com.spark.llm.agent.AgentFactory;
+import com.spark.llm.model.circuit.ProviderCircuitBreaker;
 import com.spark.llm.model.factory.ModelFactory;
 import com.spark.llm.security.LlmApiKeyCipher;
 import com.spark.llm.service.IProviderService;
@@ -54,6 +56,8 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
     private AgentFactory agentFactory;
     @Autowired
     private LlmApiKeyCipher llmApiKeyCipher;
+    @Autowired
+    private ProviderCircuitBreaker providerCircuitBreaker;
 
     /**
      * 创建模型厂商
@@ -240,6 +244,11 @@ public class ProviderServiceImpl extends BaseService<ProviderQuery, ProviderResu
         }
         super.supplyCreatedByName(list);
         super.supplyUpdatedByName(list);
+        for (ProviderResult providerResult : list) {
+            CircuitStateEnum circuitState = providerCircuitBreaker.getState(providerResult.getId());
+            providerResult.setCircuitState(circuitState.getValue());
+            providerResult.setCircuitStateName(circuitState.getDesc());
+        }
     }
 
     /**

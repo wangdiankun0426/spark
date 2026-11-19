@@ -30,4 +30,13 @@ public final class ModelFallbackPolicy {
         ModelErrorTypeEnum errorType = exception.getErrorType();
         return errorType == ModelErrorTypeEnum.AUTH || errorType.isRetryable();
     }
+
+    /**
+     * 构造降级链全部目标被熔断拒绝时的快速失败异常
+     * @return 统一模型调用异常
+     */
+    public static ModelInvocationException circuitOpenException() {
+        String userMessage = ModelErrorTypeEnum.SERVER.getUserMessage();
+        return new ModelInvocationException(ModelErrorTypeEnum.SERVER, 503, "provider circuit open", null, userMessage);
+    }
 }

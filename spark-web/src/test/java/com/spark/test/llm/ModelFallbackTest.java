@@ -2,6 +2,7 @@ package com.spark.test.llm;
 
 import com.spark.common.bean.llm.dto.ModelInfo;
 import com.spark.common.enums.ModelErrorTypeEnum;
+import com.spark.llm.model.circuit.ProviderCircuitBreaker;
 import com.spark.llm.model.error.ModelInvocationException;
 import com.spark.llm.model.fallback.FallbackChatModel;
 import com.spark.llm.model.fallback.FallbackEmbeddingModel;
@@ -68,6 +69,7 @@ import static org.mockito.Mockito.when;
 public class ModelFallbackTest {
     private ModelInvoker modelInvoker;
     private ModelUsageRecorder recorder;
+    private ProviderCircuitBreaker circuitBreaker;
 
     @BeforeEach
     void setUp() {
@@ -81,6 +83,7 @@ public class ModelFallbackTest {
         ModelRetryPolicy retryPolicy = new ModelRetryPolicy(() -> 0);
         modelInvoker = new ModelInvoker(scheduler, callbackExecutor, retryPolicy);
         recorder = mock(ModelUsageRecorder.class);
+        circuitBreaker = new ProviderCircuitBreaker();
     }
 
     @AfterEach
@@ -103,7 +106,7 @@ public class ModelFallbackTest {
         FallbackModelTarget<ChatModel> primaryTarget = this.createChatTarget(primaryInfo, primary, 1);
         FallbackModelTarget<ChatModel> fallbackTarget = this.createChatTarget(fallbackInfo, fallback, 0);
         ChatModelListener listener = new ModelUsageChatListener(recorder, primaryInfo);
-        FallbackChatModel model = new FallbackChatModel(List.of(primaryTarget, fallbackTarget), List.of(listener));
+        FallbackChatModel model = new FallbackChatModel(List.of(primaryTarget, fallbackTarget), List.of(listener), circuitBreaker);
         ChatRequest request = this.createRequest();
         ChatResponse response = model.chat(request);
         assertSame(fallbackResponse, response);
@@ -127,7 +130,7 @@ public class ModelFallbackTest {
         FallbackModelTarget<ChatModel> primaryTarget = this.createChatTarget(primaryInfo, primary, 0);
         FallbackModelTarget<ChatModel> fallbackTarget = this.createChatTarget(fallbackInfo, fallback, 0);
         ChatModelListener listener = new ModelUsageChatListener(recorder, primaryInfo);
-        FallbackChatModel model = new FallbackChatModel(List.of(primaryTarget, fallbackTarget), List.of(listener));
+        FallbackChatModel model = new FallbackChatModel(List.of(primaryTarget, fallbackTarget), List.of(listener), circuitBreaker);
         ChatRequest request = this.createRequest();
         ChatResponse response = model.chat(request);
         assertSame(primaryResponse, response);
@@ -149,7 +152,7 @@ public class ModelFallbackTest {
         when(fallback.doChat(any(ChatRequest.class))).thenReturn(fallbackResponse);
         FallbackModelTarget<ChatModel> primaryTarget = this.createChatTarget(primaryInfo, primary, 3);
         FallbackModelTarget<ChatModel> fallbackTarget = this.createChatTarget(fallbackInfo, fallback, 0);
-        FallbackChatModel model = new FallbackChatModel(List.of(primaryTarget, fallbackTarget), List.of());
+        FallbackChatModel model = new FallbackChatModel(List.of(primaryTarget, fallbackTarget), List.of(), circuitBreaker);
         ChatRequest request = this.createRequest();
         ChatResponse response = model.chat(request);
         assertSame(fallbackResponse, response);
@@ -169,7 +172,7 @@ public class ModelFallbackTest {
         when(primary.doChat(any(ChatRequest.class))).thenThrow(new HttpException(400, "bad request"));
         FallbackModelTarget<ChatModel> primaryTarget = this.createChatTarget(primaryInfo, primary, 3);
         FallbackModelTarget<ChatModel> fallbackTarget = this.createChatTarget(fallbackInfo, fallback, 0);
-        FallbackChatModel model = new FallbackChatModel(List.of(primaryTarget, fallbackTarget), List.of());
+        FallbackChatModel model = new FallbackChatModel(List.of(primaryTarget, fallbackTarget), List.of(), circuitBreaker);
         ChatRequest request = this.createRequest();
         ModelInvocationException exception = assertThrows(ModelInvocationException.class, () -> model.chat(request));
         assertEquals(ModelErrorTypeEnum.INVALID, exception.getErrorType());
@@ -205,7 +208,7 @@ public class ModelFallbackTest {
         when(fallback.doChat(any(ChatRequest.class))).thenReturn(fallbackResponse);
         FallbackModelTarget<ChatModel> primaryTarget = this.createChatTarget(primaryInfo, primary, 0);
         FallbackModelTarget<ChatModel> fallbackTarget = this.createChatTarget(fallbackInfo, fallback, 0);
-        FallbackChatModel model = new FallbackChatModel(List.of(primaryTarget, fallbackTarget), List.of());
+        FallbackChatModel model = new FallbackChatModel(List.of(primaryTarget, fallbackTarget), List.of(), circuitBreaker);
         ChatRequest request = this.createRequest();
         ChatResponse response = model.chat(request);
         assertSame(fallbackResponse, response);
@@ -232,7 +235,7 @@ public class ModelFallbackTest {
         when(fallback.doChat(any(ChatRequest.class))).thenThrow(new HttpException(503, "fallback error"));
         FallbackModelTarget<ChatModel> primaryTarget = this.createChatTarget(primaryInfo, primary, 0);
         FallbackModelTarget<ChatModel> fallbackTarget = this.createChatTarget(fallbackInfo, fallback, 0);
-        FallbackChatModel model = new FallbackChatModel(List.of(primaryTarget, fallbackTarget), List.of());
+        FallbackChatModel model = new FallbackChatModel(List.of(primaryTarget, fallbackTarget), List.of(), circuitBreaker);
         ChatRequest request = this.createRequest();
         ModelInvocationException exception = assertThrows(ModelInvocationException.class, () -> model.chat(request));
         assertEquals(503, exception.getHttpStatus());
@@ -254,7 +257,7 @@ public class ModelFallbackTest {
         when(fallback.embedAll(segments)).thenReturn(fallbackResponse);
         FallbackModelTarget<EmbeddingModel> primaryTarget = this.createEmbeddingTarget(primaryInfo, primary, 1);
         FallbackModelTarget<EmbeddingModel> fallbackTarget = this.createEmbeddingTarget(fallbackInfo, fallback, 0);
-        FallbackEmbeddingModel fallbackModel = new FallbackEmbeddingModel(List.of(primaryTarget, fallbackTarget));
+        FallbackEmbeddingModel fallbackModel = new FallbackEmbeddingModel(List.of(primaryTarget, fallbackTarget), circuitBreaker);
         EmbeddingUsageWrapper model = new EmbeddingUsageWrapper(fallbackModel, recorder, primaryInfo);
         Response<List<Embedding>> response = model.embedAll(segments);
         assertSame(fallbackResponse, response);
@@ -277,7 +280,7 @@ public class ModelFallbackTest {
         when(fallback.scoreAll(segments, "query")).thenReturn(fallbackResponse);
         FallbackModelTarget<ScoringModel> primaryTarget = this.createScoringTarget(primaryInfo, primary, 3);
         FallbackModelTarget<ScoringModel> fallbackTarget = this.createScoringTarget(fallbackInfo, fallback, 0);
-        FallbackScoringModel fallbackModel = new FallbackScoringModel(List.of(primaryTarget, fallbackTarget));
+        FallbackScoringModel fallbackModel = new FallbackScoringModel(List.of(primaryTarget, fallbackTarget), circuitBreaker);
         ScoringUsageWrapper model = new ScoringUsageWrapper(fallbackModel, recorder, primaryInfo);
         Response<List<Double>> response = model.scoreAll(segments, "query");
         assertSame(fallbackResponse, response);

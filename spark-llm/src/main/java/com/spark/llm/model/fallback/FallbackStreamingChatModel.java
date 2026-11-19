@@ -1,5 +1,6 @@
 package com.spark.llm.model.fallback;
 
+import com.spark.llm.model.circuit.ProviderCircuitBreaker;
 import com.spark.llm.usage.ModelRetryContext;
 import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.Capability;
@@ -26,14 +27,16 @@ import java.util.Set;
 public class FallbackStreamingChatModel implements StreamingChatModel {
     private final List<FallbackModelTarget<StreamingChatModel>> targets;
     private final List<ChatModelListener> listeners;
+    private final ProviderCircuitBreaker circuitBreaker;
 
     public FallbackStreamingChatModel(List<FallbackModelTarget<StreamingChatModel>> targets,
-                                      List<ChatModelListener> listeners) {
-        if (targets == null || targets.isEmpty() || listeners == null) {
-            throw new IllegalArgumentException("fallback streaming targets and listeners must not be null");
+                                      List<ChatModelListener> listeners, ProviderCircuitBreaker circuitBreaker) {
+        if (targets == null || targets.isEmpty() || listeners == null || circuitBreaker == null) {
+            throw new IllegalArgumentException("fallback streaming targets, listeners and circuitBreaker must not be null");
         }
         this.targets = List.copyOf(targets);
         this.listeners = List.copyOf(listeners);
+        this.circuitBreaker = circuitBreaker;
     }
 
     @Override
@@ -47,7 +50,7 @@ public class FallbackStreamingChatModel implements StreamingChatModel {
         }
         try {
             FallbackStreamingInvocation invocation = new FallbackStreamingInvocation(
-                    targets, request, handler, context);
+                    targets, request, handler, context, circuitBreaker);
             invocation.start();
         } finally {
             ModelRetryContext.unbind(context);
