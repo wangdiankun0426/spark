@@ -1,7 +1,14 @@
 package com.spark.llm.model.fallback;
 
+import com.spark.common.bean.base.SessionHolder;
+import com.spark.common.bean.llm.dto.ModelInfo;
+import com.spark.common.bean.llm.dto.UsageSnapshot;
+import com.spark.common.llm.ModelUsageSceneHolder;
 import com.spark.llm.model.circuit.ProviderCircuitBreaker;
+import com.spark.llm.model.error.ModelInvocationException;
+import com.spark.llm.model.ratelimit.TenantRateLimiter;
 import com.spark.llm.usage.ModelRetryContext;
+import com.spark.llm.usage.ModelUsageRecorder;
 import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.StreamingChatModel;
@@ -28,15 +35,21 @@ public class FallbackStreamingChatModel implements StreamingChatModel {
     private final List<FallbackModelTarget<StreamingChatModel>> targets;
     private final List<ChatModelListener> listeners;
     private final ProviderCircuitBreaker circuitBreaker;
+    private final TenantRateLimiter rateLimiter;
+    private final ModelUsageRecorder usageRecorder;
 
     public FallbackStreamingChatModel(List<FallbackModelTarget<StreamingChatModel>> targets,
-                                      List<ChatModelListener> listeners, ProviderCircuitBreaker circuitBreaker) {
-        if (targets == null || targets.isEmpty() || listeners == null || circuitBreaker == null) {
-            throw new IllegalArgumentException("fallback streaming targets, listeners and circuitBreaker must not be null");
+                                      List<ChatModelListener> listeners, ProviderCircuitBreaker circuitBreaker,
+                                      TenantRateLimiter rateLimiter, ModelUsageRecorder usageRecorder) {
+        if (targets == null || targets.isEmpty() || listeners == null || circuitBreaker == null
+                || rateLimiter == null || usageRecorder == null) {
+            throw new IllegalArgumentException("fallback streaming targets, listeners, circuitBreaker, rateLimiter and usageRecorder must not be null");
         }
         this.targets = List.copyOf(targets);
         this.listeners = List.copyOf(listeners);
         this.circuitBreaker = circuitBreaker;
+        this.rateLimiter = rateLimiter;
+        this.usageRecorder = usageRecorder;
     }
 
     @Override
@@ -44,13 +57,20 @@ public class FallbackStreamingChatModel implements StreamingChatModel {
         if (request == null || handler == null) {
             throw new IllegalArgumentException("request and handler must not be null");
         }
+        Long tenantId = SessionHolder.getCurrentTenantId();
+        if (!rateLimiter.tryAcquire(tenantId)) {
+            this.recordRateLimited();
+            ModelInvocationException exception = TenantRateLimiter.rateLimitException();
+            handler.onError(exception);
+            return;
+        }
         ModelRetryContext context = ModelRetryContext.current();
         if (context == null) {
             context = new ModelRetryContext();
         }
         try {
             FallbackStreamingInvocation invocation = new FallbackStreamingInvocation(
-                    targets, request, handler, context, circuitBreaker);
+                    targets, request, handler, context, circuitBreaker, rateLimiter, tenantId);
             invocation.start();
         } finally {
             ModelRetryContext.unbind(context);
@@ -79,5 +99,16 @@ public class FallbackStreamingChatModel implements StreamingChatModel {
         FallbackModelTarget<StreamingChatModel> target = targets.get(0);
         StreamingChatModel delegate = target.getDelegate();
         return delegate.supportedCapabilities();
+    }
+
+    /**
+     * 采集一条被租户限流拒绝的用量
+     */
+    private void recordRateLimited() {
+        FallbackModelTarget<StreamingChatModel> rootTarget = targets.get(0);
+        ModelInfo rootModelInfo = rootTarget.getModelInfo();
+        UsageSnapshot snapshot = new UsageSnapshot(SessionHolder.getCurrentTenantId(), SessionHolder.getCurrentUserId(),
+                SessionHolder.getCurrentDeptId(), ModelUsageSceneHolder.current().getValue());
+        usageRecorder.recordRateLimited(rootModelInfo, snapshot);
     }
 }

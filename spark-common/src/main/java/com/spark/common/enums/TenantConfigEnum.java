@@ -27,6 +27,12 @@ public enum TenantConfigEnum {
     PWD_MIN_LENGTH("pwd.min.length", "密码最小长度", "6"),
     // 密码最大长度
     PWD_MAX_LENGTH("pwd.max.length", "密码最大长度", "14"),
+    // 模型最大并发
+    LLM_MAX_CONCURRENT("llm.max.concurrent", "模型最大并发", "0"),
+    // 模型每分钟请求数
+    LLM_RPM("llm.rpm", "模型每分钟请求数", "0"),
+    // 模型每分钟token数
+    LLM_TPM("llm.tpm", "模型每分钟token数", "0"),
 
     ;
 

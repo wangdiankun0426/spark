@@ -23,6 +23,12 @@ INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_fl
 VALUES (103, '密码最小长度', 'pwd.min.length', '6', 1, 101, now(), 101, now());
 INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`)
 VALUES (103, '密码最大长度', 'pwd.max.length', '14', 1, 101, now(), 101, now());
+INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`)
+VALUES (103, '模型最大并发', 'llm.max.concurrent', '0', 1, 101, now(), 101, now());
+INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`)
+VALUES (103, '模型每分钟请求数', 'llm.rpm', '0', 1, 101, now(), 101, now());
+INSERT INTO `sys_tenant_config` (`tenant_id`, `name`, `key`, `value`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`)
+VALUES (103, '模型每分钟token数', 'llm.tpm', '0', 1, 101, now(), 101, now());
 
 INSERT INTO `sys_user` (`id`, `login_name`, `password`, `name`, `status`, `account_type`, `current_tenant_id`, `delete_flag`, `created_by`, `created_dt`, `updated_by`, `updated_dt`)
 VALUES (201, 'orgadmin', 'e10adc3949ba59abbe56e057f20f883e', '组织管理员', 1, 1, 103, 1, 101, now(), 101, now());

@@ -9,8 +9,10 @@ import com.spark.llm.model.error.ModelRetryPolicy;
 import com.spark.llm.model.fallback.FallbackModelTarget;
 import com.spark.llm.model.fallback.FallbackStreamingChatModel;
 import com.spark.llm.model.invocation.ModelInvoker;
+import com.spark.llm.model.ratelimit.TenantRateLimiter;
 import com.spark.llm.usage.ModelUsageChatListener;
 import com.spark.llm.usage.ModelUsageRecorder;
+import com.spark.manage.sys.ITenantConfigService;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.exception.HttpException;
 import dev.langchain4j.model.ModelProvider;
@@ -25,6 +27,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Set;
@@ -58,6 +61,7 @@ public class FallbackStreamingChatModelTest {
     private ModelInvoker modelInvoker;
     private ModelUsageRecorder recorder;
     private ProviderCircuitBreaker circuitBreaker;
+    private TenantRateLimiter rateLimiter;
 
     @BeforeEach
     void setUp() {
@@ -72,6 +76,9 @@ public class FallbackStreamingChatModelTest {
         modelInvoker = new ModelInvoker(scheduler, callbackExecutor, retryPolicy);
         recorder = mock(ModelUsageRecorder.class);
         circuitBreaker = new ProviderCircuitBreaker();
+        rateLimiter = new TenantRateLimiter();
+        ITenantConfigService tenantConfigService = mock(ITenantConfigService.class);
+        ReflectionTestUtils.setField(rateLimiter, "tenantConfigService", tenantConfigService);
     }
 
     @AfterEach
@@ -104,7 +111,7 @@ public class FallbackStreamingChatModelTest {
         FallbackModelTarget<StreamingChatModel> fallbackTarget = this.createStreamingTarget(fallbackInfo, fallback);
         ChatModelListener listener = new ModelUsageChatListener(recorder, primaryInfo);
         FallbackStreamingChatModel model = new FallbackStreamingChatModel(
-                List.of(primaryTarget, fallbackTarget), List.of(listener), circuitBreaker);
+                List.of(primaryTarget, fallbackTarget), List.of(listener), circuitBreaker, rateLimiter, recorder);
         StreamingChatResponseHandler handler = mock(StreamingChatResponseHandler.class);
         ChatRequest request = this.createRequest();
         model.chat(request, handler);
@@ -145,7 +152,7 @@ public class FallbackStreamingChatModelTest {
         FallbackModelTarget<StreamingChatModel> fallbackTarget = this.createStreamingTarget(fallbackInfo, fallback);
         FallbackModelTarget<StreamingChatModel> thirdTarget = this.createStreamingTarget(thirdInfo, third);
         FallbackStreamingChatModel model = new FallbackStreamingChatModel(
-                List.of(primaryTarget, fallbackTarget, thirdTarget), List.of(), circuitBreaker);
+                List.of(primaryTarget, fallbackTarget, thirdTarget), List.of(), circuitBreaker, rateLimiter, recorder);
         StreamingChatResponseHandler handler = mock(StreamingChatResponseHandler.class);
         ChatRequest request = this.createRequest();
         model.chat(request, handler);
@@ -177,7 +184,7 @@ public class FallbackStreamingChatModelTest {
         FallbackModelTarget<StreamingChatModel> primaryTarget = this.createStreamingTarget(primaryInfo, primary);
         FallbackModelTarget<StreamingChatModel> fallbackTarget = this.createStreamingTarget(fallbackInfo, fallback);
         FallbackStreamingChatModel model = new FallbackStreamingChatModel(
-                List.of(primaryTarget, fallbackTarget), List.of(), circuitBreaker);
+                List.of(primaryTarget, fallbackTarget), List.of(), circuitBreaker, rateLimiter, recorder);
         StreamingChatResponseHandler handler = mock(StreamingChatResponseHandler.class);
         ChatRequest request = this.createRequest();
         model.chat(request, handler);
@@ -201,7 +208,7 @@ public class FallbackStreamingChatModelTest {
             return null;
         }).when(primary).doChat(any(ChatRequest.class), any(StreamingChatResponseHandler.class));
         FallbackModelTarget<StreamingChatModel> primaryTarget = this.createStreamingTarget(primaryInfo, primary);
-        FallbackStreamingChatModel model = new FallbackStreamingChatModel(List.of(primaryTarget), List.of(), circuitBreaker);
+        FallbackStreamingChatModel model = new FallbackStreamingChatModel(List.of(primaryTarget), List.of(), circuitBreaker, rateLimiter, recorder);
         StreamingChatResponseHandler handler = mock(StreamingChatResponseHandler.class);
         ChatRequest request = this.createRequest();
         for (int i = 0; i < 6; i++) {
@@ -231,7 +238,7 @@ public class FallbackStreamingChatModelTest {
             return null;
         }).when(primary).doChat(any(ChatRequest.class), any(StreamingChatResponseHandler.class));
         FallbackModelTarget<StreamingChatModel> primaryTarget = this.createStreamingTarget(primaryInfo, primary);
-        FallbackStreamingChatModel model = new FallbackStreamingChatModel(List.of(primaryTarget), List.of(), circuitBreaker);
+        FallbackStreamingChatModel model = new FallbackStreamingChatModel(List.of(primaryTarget), List.of(), circuitBreaker, rateLimiter, recorder);
         StreamingChatResponseHandler handler = mock(StreamingChatResponseHandler.class);
         ChatRequest request = this.createRequest();
         for (int i = 0; i < 4; i++) {

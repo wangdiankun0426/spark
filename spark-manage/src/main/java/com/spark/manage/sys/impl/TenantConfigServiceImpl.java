@@ -26,8 +26,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +48,10 @@ public class TenantConfigServiceImpl extends BaseService<TenantConfigQuery, Tena
     private final static Logger logger = LoggerFactory.getLogger(TenantConfigServiceImpl.class);
     @Autowired
     private TenantConfigDao tenantConfigDao;
+    /**
+     * 租户配置map缓存，配置写入时立即失效对应租户
+     */
+    private final Map<Long, Map<String, String>> configCache = new ConcurrentHashMap<>();
 
     /**
      * 创建租户配置
@@ -95,6 +101,7 @@ public class TenantConfigServiceImpl extends BaseService<TenantConfigQuery, Tena
             result.setErrorCode(ErrorCodeEnum.INSERT_DATA_FAIL);
             return result;
         }
+        this.invalidateConfigCache(tenantConfig.getTenantId());
         result.setObjId(tenantConfig.getId());
         result.setCode(ResultData.OK);
         return result;
@@ -122,15 +129,15 @@ public class TenantConfigServiceImpl extends BaseService<TenantConfigQuery, Tena
             return result;
         }
         // 组织管理员仅限当前租户配置
+        TenantConfigQuery existQuery = new TenantConfigQuery();
+        existQuery.setId(tenantConfigVO.getId());
         if (!SessionHolder.isSysAdmin()) {
-            TenantConfigQuery existQuery = new TenantConfigQuery();
-            existQuery.setId(tenantConfigVO.getId());
             existQuery.setTenantId(SessionHolder.getCurrentTenantId());
-            TenantConfigResult existConfig = tenantConfigDao.queryTenantConfig(existQuery);
-            if (existConfig == null) {
-                result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
-                return result;
-            }
+        }
+        TenantConfigResult existConfig = tenantConfigDao.queryTenantConfig(existQuery);
+        if (existConfig == null && !SessionHolder.isSysAdmin()) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
         }
         TenantConfig tenantConfig = new TenantConfig();
         BeanUtil.copyProperties(tenantConfigVO, tenantConfig);
@@ -143,6 +150,10 @@ public class TenantConfigServiceImpl extends BaseService<TenantConfigQuery, Tena
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
             return result;
         }
+        if (existConfig != null) {
+            this.invalidateConfigCache(existConfig.getTenantId());
+        }
+        this.invalidateConfigCache(tenantConfig.getTenantId());
         result.setObjId(tenantConfigVO.getId());
         result.setCode(ResultData.OK);
         return result;
@@ -166,15 +177,15 @@ public class TenantConfigServiceImpl extends BaseService<TenantConfigQuery, Tena
             return result;
         }
         // 组织管理员仅限当前租户配置
+        TenantConfigQuery existQuery = new TenantConfigQuery();
+        existQuery.setId(tenantConfigVO.getId());
         if (!SessionHolder.isSysAdmin()) {
-            TenantConfigQuery existQuery = new TenantConfigQuery();
-            existQuery.setId(tenantConfigVO.getId());
             existQuery.setTenantId(SessionHolder.getCurrentTenantId());
-            TenantConfigResult existConfig = tenantConfigDao.queryTenantConfig(existQuery);
-            if (existConfig == null) {
-                result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
-                return result;
-            }
+        }
+        TenantConfigResult existConfig = tenantConfigDao.queryTenantConfig(existQuery);
+        if (existConfig == null && !SessionHolder.isSysAdmin()) {
+            result.setErrorCode(ErrorCodeEnum.NO_PERMISSION);
+            return result;
         }
         TenantConfig tenantConfig = new TenantConfig();
         tenantConfig.setId(tenantConfigVO.getId());
@@ -182,6 +193,9 @@ public class TenantConfigServiceImpl extends BaseService<TenantConfigQuery, Tena
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.DELETE_DATA_FAIL);
             return result;
+        }
+        if (existConfig != null) {
+            this.invalidateConfigCache(existConfig.getTenantId());
         }
         result.setObjId(tenantConfigVO.getId());
         result.setCode(ResultData.OK);
@@ -235,6 +249,7 @@ public class TenantConfigServiceImpl extends BaseService<TenantConfigQuery, Tena
             }
             count += insertCount;
         }
+        this.invalidateConfigCache(tenantId);
         result.setData(count);
         result.setCode(ResultData.OK);
         return result;
@@ -267,7 +282,7 @@ public class TenantConfigServiceImpl extends BaseService<TenantConfigQuery, Tena
     }
 
     /**
-     * 查询租户全部配置
+     * 查询租户全部配置，带内存缓存，配置写入时立即失效
      * @param tenantId 租户id
      * @return 配置key-value
      */
@@ -278,18 +293,17 @@ public class TenantConfigServiceImpl extends BaseService<TenantConfigQuery, Tena
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
-        TenantConfigQuery tenantConfigQuery = new TenantConfigQuery();
-        tenantConfigQuery.setTenantId(tenantId);
-        tenantConfigQuery.setPage(false);
-        List<TenantConfigResult> tenantConfigList = tenantConfigDao.queryTenantConfigList(tenantConfigQuery);
-        if (CollectionUtil.isEmpty(tenantConfigList)) {
+        Map<String, String> configMap = configCache.get(tenantId);
+        if (configMap == null) {
+            configMap = this.loadConfigMap(tenantId);
+            configCache.put(tenantId, configMap);
+        }
+        if (configMap.isEmpty()) {
             result.setErrorCode(ErrorCodeEnum.TENANT_CONFIG_NOT_EXIST);
             return result;
         }
-        Map<String, String> configMap = tenantConfigList.stream()
-                .filter(v -> StringUtil.isNotBlank(v.getKey()) && StringUtil.isNotBlank(v.getValue()))
-                .collect(Collectors.toMap(TenantConfigResult::getKey, TenantConfigResult::getValue, (v1, v2) -> v2));
-        result.setData(configMap);
+        Map<String, String> copyMap = new HashMap<>(configMap);
+        result.setData(copyMap);
         result.setCode(ResultData.OK);
         return result;
     }
@@ -370,5 +384,34 @@ public class TenantConfigServiceImpl extends BaseService<TenantConfigQuery, Tena
     @Override
     protected List<TenantConfigResult> queryList(TenantConfigQuery query) {
         return tenantConfigDao.queryTenantConfigList(query);
+    }
+
+    /**
+     * 从数据库加载租户配置map
+     * @param tenantId 租户id
+     * @return 配置key-value，无配置返回空map
+     */
+    private Map<String, String> loadConfigMap(Long tenantId) {
+        TenantConfigQuery tenantConfigQuery = new TenantConfigQuery();
+        tenantConfigQuery.setTenantId(tenantId);
+        tenantConfigQuery.setPage(false);
+        List<TenantConfigResult> tenantConfigList = tenantConfigDao.queryTenantConfigList(tenantConfigQuery);
+        if (CollectionUtil.isEmpty(tenantConfigList)) {
+            return Map.of();
+        }
+        return tenantConfigList.stream()
+                .filter(v -> StringUtil.isNotBlank(v.getKey()) && StringUtil.isNotBlank(v.getValue()))
+                .collect(Collectors.toMap(TenantConfigResult::getKey, TenantConfigResult::getValue, (v1, v2) -> v2));
+    }
+
+    /**
+     * 失效租户配置缓存
+     * @param tenantId 租户id
+     */
+    private void invalidateConfigCache(Long tenantId) {
+        if (tenantId == null) {
+            return;
+        }
+        configCache.remove(tenantId);
     }
 }

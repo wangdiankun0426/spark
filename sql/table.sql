@@ -370,6 +370,7 @@ CREATE TABLE `llm_model_usage` (
     `total_tokens` int(11) DEFAULT NULL COMMENT '总token数',
     `retry_count` int NOT NULL DEFAULT 0 COMMENT '重试次数',
     `fallback_flag` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否经降级',
+    `rate_limit_flag` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否被限流',
 
     `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',

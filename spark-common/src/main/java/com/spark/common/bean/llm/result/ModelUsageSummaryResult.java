@@ -45,4 +45,9 @@ public class ModelUsageSummaryResult {
      **/
     private Long fallbackCount;
 
+    /**
+     * 限流次数
+     **/
+    private Long rateLimitCount;
+
 }

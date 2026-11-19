@@ -1,14 +1,20 @@
 package com.spark.llm.model.fallback;
 
+import com.spark.common.bean.base.SessionHolder;
 import com.spark.common.bean.llm.dto.ModelInfo;
+import com.spark.common.bean.llm.dto.UsageSnapshot;
+import com.spark.common.llm.ModelUsageSceneHolder;
 import com.spark.llm.model.circuit.ProviderCircuitBreaker;
 import com.spark.llm.model.error.ModelErrorClassifier;
 import com.spark.llm.model.error.ModelInvocationException;
+import com.spark.llm.model.ratelimit.TenantRateLimiter;
 import com.spark.llm.usage.ModelRetryContext;
+import com.spark.llm.usage.ModelUsageRecorder;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.output.TokenUsage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,19 +34,29 @@ public class FallbackEmbeddingModel implements EmbeddingModel {
     private static final Logger logger = LoggerFactory.getLogger(FallbackEmbeddingModel.class);
     private final List<FallbackModelTarget<EmbeddingModel>> targets;
     private final ProviderCircuitBreaker circuitBreaker;
+    private final TenantRateLimiter rateLimiter;
+    private final ModelUsageRecorder usageRecorder;
 
-    public FallbackEmbeddingModel(List<FallbackModelTarget<EmbeddingModel>> targets, ProviderCircuitBreaker circuitBreaker) {
-        if (targets == null || targets.isEmpty() || circuitBreaker == null) {
-            throw new IllegalArgumentException("fallback embeddingModel targets and circuitBreaker must not be empty");
+    public FallbackEmbeddingModel(List<FallbackModelTarget<EmbeddingModel>> targets, ProviderCircuitBreaker circuitBreaker,
+                                  TenantRateLimiter rateLimiter, ModelUsageRecorder usageRecorder) {
+        if (targets == null || targets.isEmpty() || circuitBreaker == null || rateLimiter == null || usageRecorder == null) {
+            throw new IllegalArgumentException("fallback embeddingModel targets, circuitBreaker, rateLimiter and usageRecorder must not be empty");
         }
         this.targets = List.copyOf(targets);
         this.circuitBreaker = circuitBreaker;
+        this.rateLimiter = rateLimiter;
+        this.usageRecorder = usageRecorder;
     }
 
     @Override
     public Response<List<Embedding>> embedAll(List<TextSegment> segments) {
         if (segments == null) {
             throw new IllegalArgumentException("segments must not be null");
+        }
+        Long tenantId = SessionHolder.getCurrentTenantId();
+        if (!rateLimiter.tryAcquire(tenantId)) {
+            this.recordRateLimited();
+            throw TenantRateLimiter.rateLimitException();
         }
         ModelRetryContext context = ModelRetryContext.current();
         if (context == null) {
@@ -64,6 +80,7 @@ public class FallbackEmbeddingModel implements EmbeddingModel {
                     EmbeddingModel delegate = target.getDelegate();
                     Response<List<Embedding>> response = delegate.embedAll(segments);
                     circuitBreaker.recordSuccess(providerId);
+                    this.recordTokens(tenantId, response);
                     return response;
                 } catch (RuntimeException e) {
                     ModelInvocationException exception = ModelErrorClassifier.wrap(e);
@@ -84,6 +101,7 @@ public class FallbackEmbeddingModel implements EmbeddingModel {
             }
         } finally {
             ModelRetryContext.unbind(context);
+            rateLimiter.release(tenantId);
         }
         throw ModelFallbackPolicy.circuitOpenException();
     }
@@ -93,5 +111,33 @@ public class FallbackEmbeddingModel implements EmbeddingModel {
         FallbackModelTarget<EmbeddingModel> target = targets.get(0);
         EmbeddingModel delegate = target.getDelegate();
         return delegate.dimension();
+    }
+
+    /**
+     * 采集一条被租户限流拒绝的用量
+     */
+    private void recordRateLimited() {
+        FallbackModelTarget<EmbeddingModel> rootTarget = targets.get(0);
+        ModelInfo rootModelInfo = rootTarget.getModelInfo();
+        UsageSnapshot snapshot = new UsageSnapshot(SessionHolder.getCurrentTenantId(), SessionHolder.getCurrentUserId(),
+                SessionHolder.getCurrentDeptId(), ModelUsageSceneHolder.current().getValue());
+        usageRecorder.recordRateLimited(rootModelInfo, snapshot);
+    }
+
+    /**
+     * 成功调用后回填租户token计数
+     * @param tenantId 租户id
+     * @param response 模型响应
+     */
+    private void recordTokens(Long tenantId, Response<List<Embedding>> response) {
+        if (response == null) {
+            return;
+        }
+        TokenUsage tokenUsage = response.tokenUsage();
+        if (tokenUsage == null) {
+            return;
+        }
+        Integer totalTokens = tokenUsage.totalTokenCount();
+        rateLimiter.recordTokens(tenantId, totalTokens);
     }
 }

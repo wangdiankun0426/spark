@@ -51,6 +51,19 @@
               :value="item.value"
           />
         </el-select>
+        <el-select
+            v-model="rateLimitFilter"
+            placeholder="是否限流"
+            clearable
+            style="width: 180px"
+        >
+          <el-option
+              v-for="item in rateLimitOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+          />
+        </el-select>
       </div>
 
       <div class="usage-overview">
@@ -114,6 +127,15 @@
           >
             <template #icon><el-icon><DataAnalysis/></el-icon></template>
           </stat-card>
+          <stat-card
+              class="usage-stat-item"
+              label="限流次数"
+              :value="formatNumber(stat.rateLimitCount)"
+              unit="次"
+              type="danger"
+          >
+            <template #icon><el-icon><CircleClose/></el-icon></template>
+          </stat-card>
         </div>
       </div>
 
@@ -148,6 +170,13 @@
                 </el-tag>
               </template>
             </el-table-column>
+            <el-table-column label="是否限流" min-width="100" align="center">
+              <template #default="scope">
+                <el-tag :type="scope.row.rateLimitFlag === 1 ? 'danger' : 'info'" size="small">
+                  {{ scope.row.rateLimitFlag === 1 ? '已限流' : '未限流' }}
+                </el-tag>
+              </template>
+            </el-table-column>
           </el-table>
         </div>
         <el-pagination
@@ -176,7 +205,7 @@ import {
 import StatCard from '@/components/Dashboard/StatCard.vue'
 import { useChart } from '@/utils/useChart'
 import { chartTokens } from '@/utils/chartTheme'
-import { TrendCharts, Coin, Download, Upload, Histogram, Document, Warning, DataAnalysis } from '@element-plus/icons-vue'
+import { TrendCharts, Coin, Download, Upload, Histogram, Document, Warning, DataAnalysis, CircleClose } from '@element-plus/icons-vue'
 
 const TYPE_LANGUAGE = 1
 const TYPE_VECTOR = 2
@@ -191,6 +220,11 @@ const typeOptions = [
 const fallbackOptions = [
   { value: 1, label: '已降级' },
   { value: 0, label: '未降级' }
+]
+
+const rateLimitOptions = [
+  { value: 1, label: '已限流' },
+  { value: 0, label: '未限流' }
 ]
 
 const sceneOptions = [
@@ -219,6 +253,7 @@ const dateRange = ref(rangeByDays(6))
 const typeFilter = ref(null)
 const sceneFilter = ref(null)
 const fallbackFilter = ref(null)
+const rateLimitFilter = ref(null)
 
 const tableLoading = ref(false)
 const tableList = ref([])
@@ -231,7 +266,8 @@ const stat = reactive({
   outputTokens: 0,
   totalTokens: 0,
   fallbackCount: 0,
-  fallbackRate: 0
+  fallbackRate: 0,
+  rateLimitCount: 0
 })
 
 const { elRef: chartRef, setOption } = useChart()
@@ -254,7 +290,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('app-theme-change', handleThemeChange)
 })
 
-watch([dateRange, typeFilter, sceneFilter, fallbackFilter], () => {
+watch([dateRange, typeFilter, sceneFilter, fallbackFilter, rateLimitFilter], () => {
   if (reloadTimer) clearTimeout(reloadTimer)
   reloadTimer = setTimeout(() => {
     query.pageNo = 1
@@ -297,7 +333,8 @@ function buildParams() {
     endTime: dateRange.value ? dateRange.value[1] : undefined,
     type: typeFilter.value || undefined,
     scene: sceneFilter.value || undefined,
-    fallbackFlag: fallbackFilter.value ?? undefined
+    fallbackFlag: fallbackFilter.value ?? undefined,
+    rateLimitFlag: rateLimitFilter.value ?? undefined
   }
 }
 
@@ -314,6 +351,7 @@ function loadSummary() {
     stat.totalTokens = list.reduce((sum, item) => sum + (item.totalTokens || 0), 0)
     stat.fallbackCount = list.reduce((sum, item) => sum + (item.fallbackCount || 0), 0)
     stat.fallbackRate = stat.callCount > 0 ? stat.fallbackCount * 100 / stat.callCount : 0
+    stat.rateLimitCount = list.reduce((sum, item) => sum + (item.rateLimitCount || 0), 0)
   })
 }
 

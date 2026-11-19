@@ -91,4 +91,9 @@ public class ModelUsageResult extends BaseResult {
      **/
     private Integer fallbackFlag;
 
+    /**
+     * 是否被限流：0否，1是
+     **/
+    private Integer rateLimitFlag;
+
 }

@@ -75,36 +75,37 @@ public class ModelUsageRecorder {
         if (modelInfo == null || modelInfo.getModelId() == null) {
             return;
         }
-        if (snapshot == null) {
-            snapshot = new UsageSnapshot(DefaultBaseParam.SYSTEM_TENANT_ID, DefaultBaseParam.SYSTEM_USER_ID,
-                    DefaultBaseParam.SYSTEM_DEPT_ID, ModelUsageSceneEnum.OTHER.getValue());
-        }
         try {
-            Long tenantId = snapshot.getTenantId() == null ? DefaultBaseParam.SYSTEM_TENANT_ID : snapshot.getTenantId();
-            Long userId = snapshot.getUserId() == null ? DefaultBaseParam.SYSTEM_USER_ID : snapshot.getUserId();
-            Long deptId = snapshot.getDeptId() == null ? DefaultBaseParam.SYSTEM_DEPT_ID : snapshot.getDeptId();
-            String scene = snapshot.getScene() == null ? ModelUsageSceneEnum.OTHER.getValue() : snapshot.getScene();
-            ModelUsage usage = new ModelUsage();
-            usage.setTenantId(tenantId);
-            usage.setUserId(userId);
-            usage.setModelId(modelInfo.getModelId());
-            usage.setModelName(modelInfo.getModelName());
-            usage.setProviderId(modelInfo.getProviderId());
-            usage.setType(modelInfo.getType());
-            usage.setScene(scene);
+            ModelUsage usage = this.createBaseUsage(modelInfo, snapshot);
             usage.setInputTokens(inputTokens);
             usage.setOutputTokens(outputTokens);
             usage.setTotalTokens(this.normalizeTotal(inputTokens, outputTokens, totalTokens));
             usage.setRetryCount(retryCount);
             usage.setFallbackFlag(fallbackFlag ? 1 : 0);
-            usage.setDeptId(deptId);
-            usage.setCreatedBy(userId);
-            usage.setUpdatedBy(userId);
-            if (!queue.offer(usage)) {
-                this.warnDrop();
-            }
+            usage.setRateLimitFlag(0);
+            this.offerUsage(usage);
         } catch (Exception e) {
             logger.warn("record model usage error, modelId={}", modelInfo.getModelId(), e);
+        }
+    }
+
+    /**
+     * 采集一条被租户限流拒绝的调用，不产生token消耗
+     * @param modelInfo 模型元数据
+     * @param snapshot 调用瞬间的会话与场景快照
+     */
+    public void recordRateLimited(ModelInfo modelInfo, UsageSnapshot snapshot) {
+        if (modelInfo == null || modelInfo.getModelId() == null) {
+            return;
+        }
+        try {
+            ModelUsage usage = this.createBaseUsage(modelInfo, snapshot);
+            usage.setRetryCount(0);
+            usage.setFallbackFlag(0);
+            usage.setRateLimitFlag(1);
+            this.offerUsage(usage);
+        } catch (Exception e) {
+            logger.warn("record rate limited usage error, modelId={}", modelInfo.getModelId(), e);
         }
     }
 
@@ -174,6 +175,45 @@ public class ModelUsageRecorder {
         long last = lastDropWarnTime.get();
         if (now - last > DROP_WARN_INTERVAL_MS && lastDropWarnTime.compareAndSet(last, now)) {
             logger.warn("model usage queue is full, drop record, queueSize={}", QUEUE_CAPACITY);
+        }
+    }
+
+    /**
+     * 构建用量基础字段，会话缺失按系统调用兜底
+     * @param modelInfo 模型元数据
+     * @param snapshot 调用瞬间的会话与场景快照
+     * @return 用量明细
+     */
+    private ModelUsage createBaseUsage(ModelInfo modelInfo, UsageSnapshot snapshot) {
+        if (snapshot == null) {
+            snapshot = new UsageSnapshot(DefaultBaseParam.SYSTEM_TENANT_ID, DefaultBaseParam.SYSTEM_USER_ID,
+                    DefaultBaseParam.SYSTEM_DEPT_ID, ModelUsageSceneEnum.OTHER.getValue());
+        }
+        Long tenantId = snapshot.getTenantId() == null ? DefaultBaseParam.SYSTEM_TENANT_ID : snapshot.getTenantId();
+        Long userId = snapshot.getUserId() == null ? DefaultBaseParam.SYSTEM_USER_ID : snapshot.getUserId();
+        Long deptId = snapshot.getDeptId() == null ? DefaultBaseParam.SYSTEM_DEPT_ID : snapshot.getDeptId();
+        String scene = snapshot.getScene() == null ? ModelUsageSceneEnum.OTHER.getValue() : snapshot.getScene();
+        ModelUsage usage = new ModelUsage();
+        usage.setTenantId(tenantId);
+        usage.setUserId(userId);
+        usage.setModelId(modelInfo.getModelId());
+        usage.setModelName(modelInfo.getModelName());
+        usage.setProviderId(modelInfo.getProviderId());
+        usage.setType(modelInfo.getType());
+        usage.setScene(scene);
+        usage.setDeptId(deptId);
+        usage.setCreatedBy(userId);
+        usage.setUpdatedBy(userId);
+        return usage;
+    }
+
+    /**
+     * 用量入队，队列满时告警丢弃
+     * @param usage 用量明细
+     */
+    private void offerUsage(ModelUsage usage) {
+        if (!queue.offer(usage)) {
+            this.warnDrop();
         }
     }
 }

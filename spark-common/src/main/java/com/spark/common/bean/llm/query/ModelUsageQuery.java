@@ -47,6 +47,11 @@ public class ModelUsageQuery extends BaseQuery {
     private Integer fallbackFlag;
 
     /**
+     * 是否被限流：0否，1是
+     **/
+    private Integer rateLimitFlag;
+
+    /**
      * 起始时间（yyyy-MM-dd HH:mm:ss）
      **/
     private String startTime;

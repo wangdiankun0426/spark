@@ -71,4 +71,9 @@ public class ModelUsage extends BaseEntity {
      **/
     private Integer fallbackFlag;
 
+    /**
+     * 是否被限流：0否，1是
+     **/
+    private Integer rateLimitFlag;
+
 }

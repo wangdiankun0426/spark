@@ -5,6 +5,7 @@ import com.spark.common.enums.ModelErrorTypeEnum;
 import com.spark.llm.model.circuit.ProviderCircuitBreaker;
 import com.spark.llm.model.error.ModelErrorClassifier;
 import com.spark.llm.model.error.ModelInvocationException;
+import com.spark.llm.model.ratelimit.TenantRateLimiter;
 import com.spark.llm.usage.ModelRetryContext;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
@@ -13,6 +14,7 @@ import dev.langchain4j.model.chat.response.CompleteToolCall;
 import dev.langchain4j.model.chat.response.PartialThinking;
 import dev.langchain4j.model.chat.response.PartialToolCall;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
+import dev.langchain4j.model.output.TokenUsage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +37,8 @@ public class FallbackStreamingInvocation {
     private final StreamingChatResponseHandler handler;
     private final ModelRetryContext context;
     private final ProviderCircuitBreaker circuitBreaker;
+    private final TenantRateLimiter rateLimiter;
+    private final Long tenantId;
     private int currentTargetIndex;
     private long activeAttempt;
     private boolean outputStarted;
@@ -42,9 +46,9 @@ public class FallbackStreamingInvocation {
 
     public FallbackStreamingInvocation(List<FallbackModelTarget<StreamingChatModel>> targets, ChatRequest request,
                                        StreamingChatResponseHandler handler, ModelRetryContext context,
-                                       ProviderCircuitBreaker circuitBreaker) {
+                                       ProviderCircuitBreaker circuitBreaker, TenantRateLimiter rateLimiter, Long tenantId) {
         if (targets == null || targets.isEmpty() || request == null || handler == null || context == null
-                || circuitBreaker == null) {
+                || circuitBreaker == null || rateLimiter == null) {
             throw new IllegalArgumentException("fallback streaming invocation params must not be null");
         }
         this.targets = List.copyOf(targets);
@@ -52,6 +56,8 @@ public class FallbackStreamingInvocation {
         this.handler = handler;
         this.context = context;
         this.circuitBreaker = circuitBreaker;
+        this.rateLimiter = rateLimiter;
+        this.tenantId = tenantId;
     }
 
     /**
@@ -127,6 +133,8 @@ public class FallbackStreamingInvocation {
         ModelInfo currentModelInfo = currentTarget.getModelInfo();
         Long providerId = currentModelInfo.getProviderId();
         circuitBreaker.recordSuccess(providerId);
+        this.recordTokens(completeResponse);
+        rateLimiter.release(tenantId);
         handler.onCompleteResponse(completeResponse);
     }
 
@@ -150,6 +158,7 @@ public class FallbackStreamingInvocation {
         if (outputStarted || currentTargetIndex >= targets.size() - 1
                 || !ModelFallbackPolicy.shouldFallback(exception)) {
             terminal = true;
+            rateLimiter.release(tenantId);
             handler.onError(exception);
             return;
         }
@@ -185,6 +194,7 @@ public class FallbackStreamingInvocation {
         }
         if (acquiredIndex >= targets.size()) {
             terminal = true;
+            rateLimiter.release(tenantId);
             ModelInvocationException exception = ModelFallbackPolicy.circuitOpenException();
             handler.onError(exception);
             return;
@@ -216,5 +226,21 @@ public class FallbackStreamingInvocation {
      */
     private boolean isCurrentAttempt(long attemptId) {
         return !terminal && attemptId == activeAttempt;
+    }
+
+    /**
+     * 成功完成后回填租户token计数
+     * @param completeResponse 完成响应
+     */
+    private void recordTokens(ChatResponse completeResponse) {
+        if (completeResponse == null) {
+            return;
+        }
+        TokenUsage tokenUsage = completeResponse.tokenUsage();
+        if (tokenUsage == null) {
+            return;
+        }
+        Integer totalTokens = tokenUsage.totalTokenCount();
+        rateLimiter.recordTokens(tenantId, totalTokens);
     }
 }
