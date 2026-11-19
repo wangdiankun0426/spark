@@ -161,6 +161,7 @@
               :icon="getIcon(model)"
               :title="model.name"
               :description="model.description || '暂无描述'"
+              :tag="modelHealthTag(model)"
               :actions="cardActions(model)"
           />
         </div>
@@ -414,6 +415,17 @@
               inline-prompt
           />
         </el-form-item>
+        <el-form-item label="默认权重" prop="weight">
+          <el-input-number
+              v-model="modelForm.weight"
+              :min="0"
+              :max="9999"
+              :step="1"
+              :precision="0"
+              style="width: 100%"
+          />
+          <el-text size="small" type="info">同类型默认模型优先选取健康且权重最高者</el-text>
+        </el-form-item>
         <el-form-item label="模型描述" prop="description">
           <el-input
               v-model="modelForm.description"
@@ -446,6 +458,7 @@
             <div>模型名称必须与厂商接口中的模型标识完全一致（如 gpt-4、deepseek-chat），否则调用会失败；</div>
             <div>模型类型决定用途：语言模型用于对话与信息抽取，向量模型用于知识库向量化，排序模型用于召回结果重排；</div>
             <div>思考模式与温度参数仅对语言模型生效，温度值越大回答越发散、越小越稳定；</div>
+            <div>默认权重用于同类型默认模型的选取，健康模型中权重最高者优先；</div>
             <div>停用的模型不会出现在知识库、智能体等功能的模型可选列表中。</div>
           </div>
         </template>
@@ -512,8 +525,11 @@ let providerRefreshTimer = null
 onMounted(() => {
   loadProviders()
   loadModels()
-  // 熔断状态运行时变化，定时静默刷新厂商列表保持展示近实时
-  providerRefreshTimer = setInterval(loadProviders, 30000)
+  // 熔断与健康状态运行时变化，定时静默刷新保持展示近实时
+  providerRefreshTimer = setInterval(() => {
+    loadProviders()
+    loadModels(true)
+  }, 30000)
 })
 
 onBeforeUnmount(() => {
@@ -587,10 +603,13 @@ function loadProviders() {
 }
 
 /**
- * 分页加载模型列表
+ * 分页加载模型列表，静默模式不触发 loading 避免网格闪烁
+ * @param silent 是否静默刷新
  */
-function loadModels() {
-  loading.value = true
+function loadModels(silent = false) {
+  if (!silent) {
+    loading.value = true
+  }
   const params = {
     pageNo: query.value.pageNo,
     pageSize: query.value.pageSize,
@@ -602,7 +621,9 @@ function loadModels() {
     modelList.value = res.data.rows || []
     total.value = res.data.total || 0
   }).finally(() => {
-    loading.value = false
+    if (!silent) {
+      loading.value = false
+    }
   })
 }
 
@@ -809,6 +830,10 @@ const modelFormRules = {
   contextLength: [
     { type: 'number', min: 1, message: '上下文窗口必须为正整数', trigger: 'blur' }
   ],
+  weight: [
+    { required: true, message: '请输入默认权重', trigger: 'blur' },
+    { type: 'number', min: 0, max: 9999, message: '默认权重范围为 0-9999', trigger: 'blur' }
+  ],
 }
 
 /**
@@ -827,6 +852,7 @@ function createEmptyModelForm() {
     contextLength: undefined,
     fallbackModelIds: [],
     status: 1,
+    weight: 100,
     description: undefined,
     remark: undefined,
   }
@@ -893,6 +919,7 @@ function handleOpenUpdateModel(model) {
       contextLength: d.contextLength,
       fallbackModelIds: d.fallbackModelIds ? d.fallbackModelIds.split(',').map(Number) : [],
       status: d.status,
+      weight: d.weight ?? 100,
       description: d.description,
       remark: d.remark,
     }
@@ -934,6 +961,7 @@ function handleSubmitModelForm() {
       contextLength: modelForm.value.contextLength,
       fallbackModelIds: modelForm.value.fallbackModelIds.join(','),
       status: modelForm.value.status,
+      weight: modelForm.value.weight,
       description: modelForm.value.description,
       remark: modelForm.value.remark,
     }
@@ -977,6 +1005,16 @@ function cardActions(model) {
     { key: 'edit', label: '修改', icon: 'Edit', perms: ['llm:model:update'], onClick: () => handleOpenUpdateModel(model) },
     { key: 'delete', label: '删除', icon: 'Delete', perms: ['llm:model:delete'], onClick: () => handleDeleteModel(model) }
   ]
+}
+
+/**
+ * 模型健康标签，仅探活异常时展示，悬停提示最近失败时间
+ * @param model
+ */
+function modelHealthTag(model) {
+  if (model.healthStatus !== 2) return null
+  const title = model.lastFailDt ? `最近探活失败：${model.lastFailDt}` : '最近探活失败'
+  return { text: '异常', type: 'danger', title }
 }
 
 /**

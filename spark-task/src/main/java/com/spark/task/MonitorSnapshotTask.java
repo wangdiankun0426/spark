@@ -1,4 +1,4 @@
-package com.spark.monitor.task;
+package com.spark.task;
 
 import com.spark.common.bean.monitor.entity.MonitorApiSnapshot;
 import com.spark.common.bean.monitor.entity.MonitorDruidSnapshot;
@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -39,10 +39,10 @@ import java.util.concurrent.TimeUnit;
  * @since 2026-10-23 10:00:00
  * 监控快照定时采集任务
  */
-@Component
-public class MonitorSnapshotJob {
+@Service
+public class MonitorSnapshotTask {
 
-    private final static Logger logger = LoggerFactory.getLogger(MonitorSnapshotJob.class);
+    private final static Logger logger = LoggerFactory.getLogger(MonitorSnapshotTask.class);
 
     @Autowired
     private NodeHolder nodeHolder;

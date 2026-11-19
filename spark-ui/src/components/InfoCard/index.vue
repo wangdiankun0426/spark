@@ -7,6 +7,13 @@
         </el-icon>
       </span>
       <span class="info-card-title" :title="title">{{ title }}</span>
+      <el-tag
+          v-if="tag"
+          class="info-card-tag"
+          size="small"
+          :type="tag.type"
+          :title="tag.title"
+      >{{ tag.text }}</el-tag>
     </div>
     <div
         class="info-card-desc"
@@ -94,6 +101,11 @@ const props = defineProps({
   description: {
     type: String,
     default: ''
+  },
+  // 状态标签，不传不渲染
+  tag: {
+    type: Object,
+    default: null
   },
   disabled: {
     type: Boolean,
@@ -184,6 +196,10 @@ function handleAction(act) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.info-card-tag {
+  flex-shrink: 0;
 }
 
 .info-card-desc {

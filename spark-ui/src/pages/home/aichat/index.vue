@@ -104,7 +104,7 @@ onBeforeUnmount(() => {
 })
 
 /**
- * 加载可用语言模型，默认选中第一个
+ * 加载可用语言模型，按健康与权重排序后默认选中第一个
  */
 function loadModels() {
   const query = { type: 1, status: 1, page: false }
@@ -112,7 +112,9 @@ function loadModels() {
     if (res.code !== 200) {
       return
     }
-    modelList.value = res.data.rows || []
+    const rows = res.data.rows || []
+    rows.sort(compareModelPriority)
+    modelList.value = rows
     if (modelList.value.length) {
       selectedModelId.value = modelList.value[0].id
     } else {
@@ -120,6 +122,25 @@ function loadModels() {
     }
     sessionPaneRef.value.loadFirst()
   })
+}
+
+/**
+ * 默认模型优先级与后端 ModelFactory 选取规则保持一致：健康优先、权重降序、id降序
+ * @param left 左模型
+ * @param right 右模型
+ */
+function compareModelPriority(left, right) {
+  const leftHealthy = left.healthStatus !== 2
+  const rightHealthy = right.healthStatus !== 2
+  if (leftHealthy !== rightHealthy) {
+    return leftHealthy ? -1 : 1
+  }
+  const leftWeight = left.weight ?? 100
+  const rightWeight = right.weight ?? 100
+  if (leftWeight !== rightWeight) {
+    return rightWeight - leftWeight
+  }
+  return right.id - left.id
 }
 
 /**

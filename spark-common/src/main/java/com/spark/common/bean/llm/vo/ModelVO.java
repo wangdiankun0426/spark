@@ -75,4 +75,9 @@ public class ModelVO extends BaseVO {
      **/
     private Integer status;
 
+    /**
+     * 默认模型选取权重
+     **/
+    private Integer weight;
+
 }

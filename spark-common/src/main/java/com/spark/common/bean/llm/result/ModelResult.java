@@ -1,7 +1,10 @@
 package com.spark.common.bean.llm.result;
 
 import com.spark.common.bean.base.BaseResult;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+
+import java.sql.Timestamp;
 
 /**
  * +++/\_/\
@@ -74,6 +77,27 @@ public class ModelResult extends BaseResult {
      * 状态：1:已开启，-1:已关闭
      **/
     private Integer status;
+
+    /**
+     * 默认模型选取权重
+     **/
+    private Integer weight;
+
+    /**
+     * 健康状态：1正常 2异常
+     **/
+    private Integer healthStatus;
+
+    /**
+     * 最近探活失败时间
+     **/
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
+    private Timestamp lastFailDt;
+
+    /**
+     * 健康状态名称
+     **/
+    private String healthStatusName;
 
     /**
      * 状态名称

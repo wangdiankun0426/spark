@@ -343,6 +343,9 @@ CREATE TABLE `llm_model` (
     `context_length` int NULL COMMENT '模型上下文窗口token数',
     `fallback_model_ids` varchar(256) NULL COMMENT '降级模型id列表，逗号分隔，按序尝试',
     `status` tinyint(3) NOT NULL DEFAULT 1 COMMENT '状态：1:已开启，-1:已关闭',
+    `weight` int NOT NULL DEFAULT 100 COMMENT '默认模型选取权重',
+    `health_status` tinyint NOT NULL DEFAULT 1 COMMENT '健康状态：1正常 2异常',
+    `last_fail_dt` timestamp NULL DEFAULT NULL COMMENT '最近探活失败时间',
     `description` varchar(256)  NULL COMMENT '描述',
     `remark` varchar(256)  NULL COMMENT '备注',
 

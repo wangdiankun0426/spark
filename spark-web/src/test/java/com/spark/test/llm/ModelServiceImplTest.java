@@ -31,6 +31,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -347,6 +348,64 @@ public class ModelServiceImplTest {
         int resultCode = result.getCode();
         assertEquals(ResultData.OK, resultCode);
         verify(modelDao, never()).queryModelList(any());
+    }
+
+    /**
+     * 验证创建权重-1与修改权重10000均返回无效参数，不写数据库也不清理缓存
+     */
+    @Test
+    void shouldRejectOutOfRangeWeight() {
+        ModelVO createVO = new ModelVO();
+        createVO.setWeight(-1);
+        ResultData<Void> createResult = modelService.createModel(createVO);
+        assertEquals(ErrorCodeEnum.INVALID_PARAM.getValue(), createResult.getCode());
+        ModelVO updateVO = new ModelVO();
+        updateVO.setId(1L);
+        updateVO.setWeight(10000);
+        ResultData<Void> updateResult = modelService.updateModel(updateVO);
+        assertEquals(ErrorCodeEnum.INVALID_PARAM.getValue(), updateResult.getCode());
+        verify(modelDao, never()).insertDB(any());
+        verify(modelDao, never()).updateDBById(any());
+    }
+
+    /**
+     * 验证创建边界权重0与9999均保存成功，DAO收到原始权重值
+     */
+    @Test
+    void shouldSaveBoundaryWeightOnCreate() {
+        when(modelDao.insertDB(any(Model.class))).thenReturn(1);
+        ModelVO zeroVO = new ModelVO();
+        zeroVO.setWeight(0);
+        ResultData<Void> zeroResult = modelService.createModel(zeroVO);
+        assertEquals(ResultData.OK, zeroResult.getCode());
+        ModelVO maxVO = new ModelVO();
+        maxVO.setWeight(9999);
+        ResultData<Void> maxResult = modelService.createModel(maxVO);
+        assertEquals(ResultData.OK, maxResult.getCode());
+        ArgumentCaptor<Model> modelCaptor = ArgumentCaptor.forClass(Model.class);
+        verify(modelDao, times(2)).insertDB(modelCaptor.capture());
+        List<Model> savedModels = modelCaptor.getAllValues();
+        assertEquals(0, savedModels.get(0).getWeight());
+        assertEquals(9999, savedModels.get(1).getWeight());
+    }
+
+    /**
+     * 验证修改未传权重时放行且DAO收到空值，健康列不被管理端编辑触碰
+     */
+    @Test
+    void shouldAllowNullWeightOnUpdate() {
+        when(modelDao.queryModel(any())).thenReturn(new ModelResult());
+        when(modelDao.updateDBById(any(Model.class))).thenReturn(1);
+        ModelVO modelVO = new ModelVO();
+        modelVO.setId(1L);
+        ResultData<Void> result = modelService.updateModel(modelVO);
+        assertEquals(ResultData.OK, result.getCode());
+        ArgumentCaptor<Model> modelCaptor = ArgumentCaptor.forClass(Model.class);
+        verify(modelDao).updateDBById(modelCaptor.capture());
+        Model savedModel = modelCaptor.getValue();
+        assertNull(savedModel.getWeight());
+        assertNull(savedModel.getHealthStatus());
+        assertNull(savedModel.getLastFailDt());
     }
 
     /**

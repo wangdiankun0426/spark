@@ -1,4 +1,4 @@
-package com.spark.monitor.task;
+package com.spark.task;
 
 import com.spark.dao.monitor.MonitorApiSnapshotDao;
 import com.spark.dao.monitor.MonitorDruidSnapshotDao;
@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -25,10 +25,10 @@ import java.time.LocalDateTime;
  * @since 2026-10-23 10:00:00
  * 监控快照过期清理任务
  */
-@Component
-public class MonitorCleanJob {
+@Service
+public class MonitorCleanTask {
 
-    private final static Logger logger = LoggerFactory.getLogger(MonitorCleanJob.class);
+    private final static Logger logger = LoggerFactory.getLogger(MonitorCleanTask.class);
 
     @Autowired
     private MonitorHostSnapshotDao hostSnapshotDao;

@@ -29,7 +29,7 @@
         <el-table-column prop="statusName" label="状态" width="120" align="center"/>
         <el-table-column prop="accountCount" label="账号数量" width="90" align="center"/>
         <el-table-column prop="deadline" label="截止时间" width="170" align="center"/>
-        <el-table-column fixed="right" label="操作" width="320" align="center">
+        <el-table-column fixed="right" label="操作" width="360" align="center">
           <template #default="scope">
             <el-button
                 type="primary"
@@ -38,7 +38,7 @@
             >
               <el-icon><SetUp /></el-icon>
               <span style="font-size: 14px; font-weight: 500">
-                配置
+                租户配置
               </span>
             </el-button>
             <el-button

@@ -15,6 +15,7 @@ import com.spark.dao.llm.ModelDao;
 import com.spark.dao.llm.ProviderDao;
 import com.spark.common.enums.DeleteFlagEnum;
 import com.spark.common.enums.ErrorCodeEnum;
+import com.spark.common.enums.ModelHealthStatusEnum;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.ModelTypeEnum;
 import com.spark.common.enums.ObjectTypeEnum;
@@ -50,6 +51,8 @@ import java.util.stream.Collectors;
 @Service
 public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> implements IModelService {
     private final static Logger logger = LoggerFactory.getLogger(ModelServiceImpl.class);
+    private static final int MIN_WEIGHT = 0;
+    private static final int MAX_WEIGHT = 9999;
     @Autowired
     private ModelDao modelDao;
     @Autowired
@@ -84,6 +87,11 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
         }
         Integer contextLength = modelVO.getContextLength();
         if (!this.isContextLengthValid(contextLength)) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        Integer weight = modelVO.getWeight();
+        if (!this.isWeightValid(weight)) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
@@ -144,6 +152,11 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
         }
         Integer contextLength = modelVO.getContextLength();
         if (!this.isContextLengthValid(contextLength)) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        Integer weight = modelVO.getWeight();
+        if (!this.isWeightValid(weight)) {
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
@@ -307,6 +320,7 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
             modelResult.setProviderName(providerNameMap.get(modelResult.getProviderId()));
             modelResult.setTypeName(ModelTypeEnum.indexOf(modelResult.getType()).getDesc());
             modelResult.setStatusName(StatusEnum.indexOf(modelResult.getStatus()).getDesc());
+            modelResult.setHealthStatusName(ModelHealthStatusEnum.indexOf(modelResult.getHealthStatus()).getDesc());
         }
 
     }
@@ -374,6 +388,18 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
             return true;
         }
         return contextLength >= 1;
+    }
+
+    /**
+     * 校验默认模型选取权重范围
+     * @param weight 权重
+     * @return 是否有效
+     */
+    private boolean isWeightValid(Integer weight) {
+        if (weight == null) {
+            return true;
+        }
+        return weight >= MIN_WEIGHT && weight <= MAX_WEIGHT;
     }
 
     /**

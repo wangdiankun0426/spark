@@ -10,7 +10,6 @@ import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -110,10 +109,8 @@ public class ModelUsageRecorder {
     }
 
     /**
-     * 定时将队列用量批量落库
-     * 10秒一次
+     * 将队列用量批量落库
      */
-    @Scheduled(fixedDelay = 10000)
     public void flush() {
         if (queue.isEmpty()) {
             return;

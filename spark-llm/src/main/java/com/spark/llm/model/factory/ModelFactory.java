@@ -29,6 +29,7 @@ import com.spark.common.bean.llm.result.ModelResult;
 import com.spark.dao.llm.ModelDao;
 import com.spark.dao.llm.ProviderDao;
 import com.spark.common.enums.DeleteFlagEnum;
+import com.spark.common.enums.ModelHealthStatusEnum;
 import com.spark.common.enums.ModelTypeEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.common.bean.llm.dto.ModelInfo;
@@ -74,6 +75,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ModelFactory {
     private static final Logger logger = LoggerFactory.getLogger(ModelFactory.class);
     private static final int OPENAI_EMBEDDING_DIMENSION = 1024;
+    private static final int DEFAULT_MODEL_WEIGHT = 100;
     @Autowired
     private ModelDao modelDao;
     @Autowired
@@ -107,11 +109,14 @@ public class ModelFactory {
     public ChatModel getDefaultChatModel() {
         ModelQuery query = new ModelQuery();
         query.setType(ModelTypeEnum.LANGUAGE.getType());
+        query.setStatus(StatusEnum.NORMAL.getValue());
+        query.setPage(false);
         List<ModelResult> modelList = modelDao.queryModelList(query);
         if (CollectionUtil.isEmpty(modelList)) {
             throw new IllegalStateException("No language model found in database");
         }
-        Long modelId = modelList.get(0).getId();
+        ModelResult defaultModel = this.selectDefaultModel(modelList);
+        Long modelId = defaultModel.getId();
         return getChatModel(modelId);
     }
 
@@ -122,12 +127,14 @@ public class ModelFactory {
     public StreamingChatModel getDefaultStreamingChatModel() {
         ModelQuery query = new ModelQuery();
         query.setType(ModelTypeEnum.LANGUAGE.getType());
+        query.setStatus(StatusEnum.NORMAL.getValue());
+        query.setPage(false);
         List<ModelResult> modelList = modelDao.queryModelList(query);
         if (CollectionUtil.isEmpty(modelList)) {
             throw new IllegalStateException("No language model found in database");
         }
-        // 取第一个有效的模型
-        Long modelId = modelList.get(0).getId();
+        ModelResult defaultModel = this.selectDefaultModel(modelList);
+        Long modelId = defaultModel.getId();
         return getStreamingChatModel(modelId);
     }
 
@@ -140,12 +147,15 @@ public class ModelFactory {
         ModelQuery query = new ModelQuery();
         query.setType(ModelTypeEnum.LANGUAGE.getType());
         query.setEnableThinking(StatusEnum.ABNORMAL.getValue());
+        query.setStatus(StatusEnum.NORMAL.getValue());
+        query.setPage(false);
         List<ModelResult> modelList = modelDao.queryModelList(query);
         if (CollectionUtil.isEmpty(modelList)) {
             logger.warn("no thinking-enabled language model found, fallback to default chat model");
             return getDefaultChatModel();
         }
-        Long modelId = modelList.get(0).getId();
+        ModelResult defaultModel = this.selectDefaultModel(modelList);
+        Long modelId = defaultModel.getId();
         return getChatModel(modelId);
     }
 
@@ -158,12 +168,15 @@ public class ModelFactory {
         ModelQuery query = new ModelQuery();
         query.setType(ModelTypeEnum.LANGUAGE.getType());
         query.setEnableThinking(StatusEnum.NORMAL.getValue());
+        query.setStatus(StatusEnum.NORMAL.getValue());
+        query.setPage(false);
         List<ModelResult> modelList = modelDao.queryModelList(query);
         if (CollectionUtil.isEmpty(modelList)) {
             logger.warn("no thinking-enabled language model found, fallback to default streaming chat model");
             return getDefaultStreamingChatModel();
         }
-        Long modelId = modelList.get(0).getId();
+        ModelResult defaultModel = this.selectDefaultModel(modelList);
+        Long modelId = defaultModel.getId();
         return getStreamingChatModel(modelId);
     }
     
@@ -174,12 +187,14 @@ public class ModelFactory {
     public EmbeddingModel getDefaultEmbeddingModel() {
         ModelQuery query = new ModelQuery();
         query.setType(ModelTypeEnum.VECTOR.getType());
+        query.setStatus(StatusEnum.NORMAL.getValue());
+        query.setPage(false);
         List<ModelResult> modelList = modelDao.queryModelList(query);
         if (CollectionUtil.isEmpty(modelList)) {
             throw new IllegalStateException("No embedding model found in database");
         }
-        // 取第一个有效的模型
-        Long modelId = modelList.get(0).getId();
+        ModelResult defaultModel = this.selectDefaultModel(modelList);
+        Long modelId = defaultModel.getId();
         return getEmbeddingModel(modelId);
     }
     
@@ -677,5 +692,59 @@ public class ModelFactory {
         provider.setRemark(providerResult.getRemark());
         provider.setOrderNum(providerResult.getOrderNum());
         return provider;
+    }
+
+    /**
+     * 按健康优先、权重降序、id降序选取默认模型，全部异常时仍返回最优
+     * @param modelList 候选模型列表
+     * @return 默认模型
+     */
+    private ModelResult selectDefaultModel(List<ModelResult> modelList) {
+        ModelResult best = null;
+        for (ModelResult candidate : modelList) {
+            if (best == null) {
+                best = candidate;
+                continue;
+            }
+            int priority = this.compareDefaultPriority(candidate, best);
+            if (priority > 0) {
+                best = candidate;
+            }
+        }
+        return best;
+    }
+
+    /**
+     * 比较两个模型的默认选取优先级
+     * @param left 左模型
+     * @param right 右模型
+     * @return 左模型优先级更高时返回正数
+     */
+    private int compareDefaultPriority(ModelResult left, ModelResult right) {
+        boolean leftHealthy = this.isModelHealthy(left);
+        boolean rightHealthy = this.isModelHealthy(right);
+        if (leftHealthy != rightHealthy) {
+            return leftHealthy ? 1 : -1;
+        }
+        Integer leftWeightValue = left.getWeight();
+        Integer rightWeightValue = right.getWeight();
+        int leftWeight = leftWeightValue != null ? leftWeightValue : DEFAULT_MODEL_WEIGHT;
+        int rightWeight = rightWeightValue != null ? rightWeightValue : DEFAULT_MODEL_WEIGHT;
+        if (leftWeight != rightWeight) {
+            return Integer.compare(leftWeight, rightWeight);
+        }
+        Long leftId = left.getId();
+        Long rightId = right.getId();
+        return Long.compare(leftId, rightId);
+    }
+
+    /**
+     * 判断模型健康状态，未探活过的视同正常
+     * @param model 模型数据
+     * @return 是否健康
+     */
+    private boolean isModelHealthy(ModelResult model) {
+        Integer healthStatus = model.getHealthStatus();
+        return healthStatus == null || ModelHealthStatusEnum.NORMAL.getValue().equals(healthStatus);
     }
 }

@@ -3,6 +3,8 @@ package com.spark.common.bean.llm.entity;
 import com.spark.common.bean.base.BaseEntity;
 import lombok.Data;
 
+import java.sql.Timestamp;
+
 /**
  * +++/\_/\
  * + ( °w° )=
@@ -75,5 +77,21 @@ public class Model extends BaseEntity {
      * 状态：1:已开启，-1:已关闭
      **/
     private Integer status;
+
+    /**
+     * 默认模型选取权重
+     **/
+    private Integer weight;
+
+    /**
+     * 健康状态：1正常 2异常
+     * ModelHealthStatusEnum
+     **/
+    private Integer healthStatus;
+
+    /**
+     * 最近探活失败时间
+     **/
+    private Timestamp lastFailDt;
 
 }

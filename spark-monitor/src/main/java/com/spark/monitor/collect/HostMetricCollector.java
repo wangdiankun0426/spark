@@ -14,7 +14,6 @@ import oshi.software.os.OSFileStore;
 import oshi.software.os.OperatingSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.lang.management.ClassLoadingMXBean;
@@ -101,9 +100,8 @@ public class HostMetricCollector {
     }
 
     /**
-     * 5秒差值采样CPU使用率与网卡速率
+     * 差值采样CPU使用率与网卡速率
      */
-    @Scheduled(fixedDelay = 5000L, initialDelay = 5000L)
     public void sampleDeltaMetrics() {
         long now = System.currentTimeMillis();
         long[] ticks = processor.getSystemCpuLoadTicks();
