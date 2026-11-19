@@ -41,9 +41,18 @@ public class EmbeddingUsageWrapper implements EmbeddingModel {
 
     @Override
     public Response<List<Embedding>> embedAll(List<TextSegment> segments) {
-        Response<List<Embedding>> response = delegate.embedAll(segments);
-        this.reportUsage(response.tokenUsage());
-        return response;
+        ModelRetryContext retryContext = ModelRetryContext.current();
+        if (retryContext == null) {
+            retryContext = new ModelRetryContext();
+        }
+        ModelRetryContext.bind(retryContext);
+        try {
+            Response<List<Embedding>> response = delegate.embedAll(segments);
+            this.reportUsage(response.tokenUsage(), retryContext);
+            return response;
+        } finally {
+            ModelRetryContext.unbind(retryContext);
+        }
     }
 
     @Override
@@ -54,8 +63,9 @@ public class EmbeddingUsageWrapper implements EmbeddingModel {
     /**
      * 上报向量调用用量
      * @param tokenUsage 第三方返回的token用量
+     * @param retryContext 重试上下文
      */
-    private void reportUsage(TokenUsage tokenUsage) {
+    private void reportUsage(TokenUsage tokenUsage, ModelRetryContext retryContext) {
         try {
             Integer inputTokens = tokenUsage == null ? null : tokenUsage.inputTokenCount();
             Integer outputTokens = tokenUsage == null ? null : tokenUsage.outputTokenCount();
@@ -65,9 +75,11 @@ public class EmbeddingUsageWrapper implements EmbeddingModel {
                     SessionHolder.getCurrentUserId(),
                     SessionHolder.getCurrentDeptId(),
                     ModelUsageSceneHolder.current().getValue());
-            ModelRetryContext retryContext = ModelRetryContext.current();
-            int retryCount = retryContext == null ? 0 : retryContext.getRetryCount();
-            recorder.record(modelInfo, snapshot, inputTokens, outputTokens, totalTokens, retryCount);
+            ModelInfo actualModelInfo = retryContext.getActualModelInfo();
+            ModelInfo usageModelInfo = actualModelInfo == null ? modelInfo : actualModelInfo;
+            int retryCount = retryContext.getRetryCount();
+            boolean fallbackFlag = retryContext.isFallback();
+            recorder.record(usageModelInfo, snapshot, inputTokens, outputTokens, totalTokens, retryCount, fallbackFlag);
         } catch (Exception e) {
             logger.warn("embedding usage report error, modelId={}", modelInfo.getModelId(), e);
         }

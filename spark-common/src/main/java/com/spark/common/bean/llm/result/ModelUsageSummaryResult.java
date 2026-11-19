@@ -40,4 +40,9 @@ public class ModelUsageSummaryResult {
      **/
     private Long callCount;
 
+    /**
+     * 降级调用次数
+     **/
+    private Long fallbackCount;
+
 }

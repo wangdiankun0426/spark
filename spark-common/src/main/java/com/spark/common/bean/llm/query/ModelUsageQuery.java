@@ -42,6 +42,11 @@ public class ModelUsageQuery extends BaseQuery {
     private Long userId;
 
     /**
+     * 是否经降级：0否，1是
+     **/
+    private Integer fallbackFlag;
+
+    /**
      * 起始时间（yyyy-MM-dd HH:mm:ss）
      **/
     private String startTime;

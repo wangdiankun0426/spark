@@ -67,6 +67,11 @@ public class Model extends BaseEntity {
     private Integer contextLength;
 
     /**
+     * 降级模型id列表，逗号分隔，按序尝试
+     **/
+    private String fallbackModelIds;
+
+    /**
      * 状态：1:已开启，-1:已关闭
      **/
     private Integer status;

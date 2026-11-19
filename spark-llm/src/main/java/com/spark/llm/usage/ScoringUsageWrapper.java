@@ -39,16 +39,26 @@ public class ScoringUsageWrapper implements ScoringModel {
 
     @Override
     public Response<List<Double>> scoreAll(List<TextSegment> segments, String query) {
-        Response<List<Double>> response = delegate.scoreAll(segments, query);
-        this.reportUsage(response.tokenUsage());
-        return response;
+        ModelRetryContext retryContext = ModelRetryContext.current();
+        if (retryContext == null) {
+            retryContext = new ModelRetryContext();
+        }
+        ModelRetryContext.bind(retryContext);
+        try {
+            Response<List<Double>> response = delegate.scoreAll(segments, query);
+            this.reportUsage(response.tokenUsage(), retryContext);
+            return response;
+        } finally {
+            ModelRetryContext.unbind(retryContext);
+        }
     }
 
     /**
      * 上报排序调用用量，排序模型仅产生输入token
      * @param tokenUsage 第三方返回的token用量
+     * @param retryContext 重试上下文
      */
-    private void reportUsage(TokenUsage tokenUsage) {
+    private void reportUsage(TokenUsage tokenUsage, ModelRetryContext retryContext) {
         try {
             Integer inputTokens = tokenUsage == null ? null : tokenUsage.inputTokenCount();
             Integer outputTokens = tokenUsage == null ? null : tokenUsage.outputTokenCount();
@@ -58,9 +68,11 @@ public class ScoringUsageWrapper implements ScoringModel {
                     SessionHolder.getCurrentUserId(),
                     SessionHolder.getCurrentDeptId(),
                     ModelUsageSceneHolder.current().getValue());
-            ModelRetryContext retryContext = ModelRetryContext.current();
-            int retryCount = retryContext == null ? 0 : retryContext.getRetryCount();
-            recorder.record(modelInfo, snapshot, inputTokens, outputTokens, totalTokens, retryCount);
+            ModelInfo actualModelInfo = retryContext.getActualModelInfo();
+            ModelInfo usageModelInfo = actualModelInfo == null ? modelInfo : actualModelInfo;
+            int retryCount = retryContext.getRetryCount();
+            boolean fallbackFlag = retryContext.isFallback();
+            recorder.record(usageModelInfo, snapshot, inputTokens, outputTokens, totalTokens, retryCount, fallbackFlag);
         } catch (Exception e) {
             logger.warn("scoring usage report error, modelId={}", modelInfo.getModelId(), e);
         }

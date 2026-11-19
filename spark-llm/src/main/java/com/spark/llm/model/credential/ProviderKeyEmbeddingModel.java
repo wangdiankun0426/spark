@@ -28,18 +28,18 @@ public class ProviderKeyEmbeddingModel implements EmbeddingModel {
      */
     private final ProviderKeyRouter providerKeyRouter;
     /**
-     * 提供向量维度等固定元数据的客户端，不参与实际调用
+     * 当前向量模型的固定维度
      */
-    private final EmbeddingModel metadataDelegate;
+    private final int dimension;
 
     public ProviderKeyEmbeddingModel(Supplier<ProviderKeyModel<EmbeddingModel>> modelSelector,
-                                     ProviderKeyRouter providerKeyRouter, EmbeddingModel metadataDelegate) {
-        if (modelSelector == null || providerKeyRouter == null || metadataDelegate == null) {
-            throw new IllegalArgumentException("providerKey embeddingModel params must not be null");
+                                     ProviderKeyRouter providerKeyRouter, int dimension) {
+        if (modelSelector == null || providerKeyRouter == null || dimension < 1) {
+            throw new IllegalArgumentException("providerKey embeddingModel params must be valid");
         }
         this.modelSelector = modelSelector;
         this.providerKeyRouter = providerKeyRouter;
-        this.metadataDelegate = metadataDelegate;
+        this.dimension = dimension;
     }
 
     @Override
@@ -61,6 +61,6 @@ public class ProviderKeyEmbeddingModel implements EmbeddingModel {
 
     @Override
     public int dimension() {
-        return metadataDelegate.dimension();
+        return dimension;
     }
 }

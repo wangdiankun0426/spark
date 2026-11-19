@@ -13,6 +13,7 @@ import com.spark.config.aspectj.annotation.DataScope;
 import com.spark.config.aspectj.annotation.LogOperate;
 import com.spark.dao.llm.ModelDao;
 import com.spark.dao.llm.ProviderDao;
+import com.spark.common.enums.DeleteFlagEnum;
 import com.spark.common.enums.ErrorCodeEnum;
 import com.spark.common.enums.OperateTypeEnum;
 import com.spark.common.enums.ModelTypeEnum;
@@ -20,6 +21,7 @@ import com.spark.common.enums.ObjectTypeEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.llm.agent.AgentFactory;
 import com.spark.llm.model.factory.ModelFactory;
+import com.spark.llm.model.fallback.ModelFallbackChainParser;
 import com.spark.llm.model.invocation.ModelInvoker;
 import com.spark.llm.model.error.ModelRetryPolicy;
 import com.spark.llm.service.IModelService;
@@ -33,6 +35,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -84,8 +87,21 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
             result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
             return result;
         }
+        String fallbackChain = modelVO.getFallbackModelIds();
+        Long tenantId = modelVO.getTenantId();
+        if (!SessionHolder.isSysAdmin() || tenantId == null) {
+            tenantId = SessionHolder.getCurrentTenantId();
+        }
+        Integer modelType = modelVO.getType();
+        List<Long> fallbackModelIds = this.resolveFallbackModelIds(fallbackChain, null, tenantId, modelType);
+        if (fallbackModelIds == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        String normalizedFallbackModelIds = ModelFallbackChainParser.normalize(fallbackModelIds);
         Model model = new Model();
         BeanUtil.copyProperties(modelVO, model);
+        model.setFallbackModelIds(normalizedFallbackModelIds);
         // 非站点管理员强制归属当前租户
         if (!SessionHolder.isSysAdmin()) {
             model.setTenantId(SessionHolder.getCurrentTenantId());
@@ -139,8 +155,22 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
             result.setErrorCode(ErrorCodeEnum.MODEL_NOT_EXIST);
             return result;
         }
+        Integer effectiveType = modelVO.getType();
+        if (effectiveType == null) {
+            effectiveType = modelResult.getType();
+        }
+        String fallbackChain = modelVO.getFallbackModelIds();
+        Long rootId = modelVO.getId();
+        Long tenantId = modelResult.getTenantId();
+        List<Long> fallbackModelIds = this.resolveFallbackModelIds(fallbackChain, rootId, tenantId, effectiveType);
+        if (fallbackModelIds == null) {
+            result.setErrorCode(ErrorCodeEnum.INVALID_PARAM);
+            return result;
+        }
+        String normalizedFallbackModelIds = ModelFallbackChainParser.normalize(fallbackModelIds);
         Model model = new Model();
         BeanUtil.copyProperties(modelVO, model);
+        model.setFallbackModelIds(normalizedFallbackModelIds);
         int count = modelDao.updateDBById(model);
         if (count < 1) {
             result.setErrorCode(ErrorCodeEnum.UPDATE_DATA_FAIL);
@@ -344,5 +374,47 @@ public class ModelServiceImpl extends BaseService<ModelQuery, ModelResult> imple
             return true;
         }
         return contextLength >= 1;
+    }
+
+    /**
+     * 解析降级链并校验候选模型
+     * @param fallbackChain 降级模型id列表
+     * @param rootId 主模型id
+     * @param tenantId 原模型租户id
+     * @param type 有效模型类型
+     * @return 有序模型id列表
+     */
+    private List<Long> resolveFallbackModelIds(String fallbackChain, Long rootId, Long tenantId, Integer type) {
+        if (!ModelFallbackChainParser.isValidStrict(fallbackChain, rootId)) {
+            return null;
+        }
+        List<Long> fallbackModelIds = ModelFallbackChainParser.parseStrict(fallbackChain, rootId);
+        if (fallbackModelIds.isEmpty()) {
+            return fallbackModelIds;
+        }
+        if (tenantId == null || ModelTypeEnum.indexOf(type) == ModelTypeEnum.UNKNOWN) {
+            return null;
+        }
+        ModelQuery candidateQuery = new ModelQuery();
+        candidateQuery.setIds(fallbackModelIds);
+        candidateQuery.setTenantId(tenantId);
+        candidateQuery.setType(type);
+        candidateQuery.setStatus(StatusEnum.NORMAL.getValue());
+        candidateQuery.setDeleteFlag(1);
+        candidateQuery.setPage(false);
+        List<ModelResult> candidateList = modelDao.queryModelList(candidateQuery);
+        if (CollectionUtil.isEmpty(candidateList) || candidateList.size() != fallbackModelIds.size()) {
+            return null;
+        }
+        Set<Long> candidateIds = candidateList.stream().map(ModelResult::getId).collect(Collectors.toSet());
+        if (!candidateIds.containsAll(fallbackModelIds)) {
+            return null;
+        }
+        for (ModelResult candidate : candidateList) {
+            if (!DeleteFlagEnum.NORMAL.getValue().equals(candidate.getDeleteFlag())) {
+                return null;
+            }
+        }
+        return fallbackModelIds;
     }
 }

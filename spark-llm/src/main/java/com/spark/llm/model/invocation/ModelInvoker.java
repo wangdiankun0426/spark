@@ -191,8 +191,7 @@ public class ModelInvoker {
             throw new IllegalArgumentException("invocation must not be null");
         }
         ModelRetryPolicy.resolveMaxRetries(maxRetries);
-        ModelRetryContext retryContext = new ModelRetryContext();
-        ModelRetryContext.bind(retryContext);
+        ModelRetryContext retryContext = this.bindRetryContext();
         return this.invokeWithRetry(invocation, maxRetries, retryContext);
     }
 

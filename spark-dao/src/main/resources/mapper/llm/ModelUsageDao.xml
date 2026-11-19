@@ -4,7 +4,7 @@
 
     <sql id="allColumnList">
         id , tenant_id , user_id , model_id , model_name , provider_id , type , scene ,
-        input_tokens , output_tokens , total_tokens , retry_count ,
+        input_tokens , output_tokens , total_tokens , retry_count , fallback_flag ,
         dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
@@ -30,6 +30,9 @@
         <if test="scene != null and scene != ''">
             and scene = #{scene}
         </if>
+        <if test="fallbackFlag != null">
+            and fallback_flag = #{fallbackFlag}
+        </if>
         <if test="startTime != null and startTime != ''">
             and created_dt &gt;= #{startTime}
         </if>
@@ -51,12 +54,13 @@
     <insert id="insertBatch">
         insert into llm_model_usage
         (tenant_id , user_id , model_id , model_name , provider_id , type , scene ,
-         input_tokens , output_tokens , total_tokens , retry_count ,
+         input_tokens , output_tokens , total_tokens , retry_count , fallback_flag ,
          dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
         values
         <foreach collection="list" item="item" separator=",">
             (#{item.tenantId} , #{item.userId} , #{item.modelId} , #{item.modelName} , #{item.providerId} ,
-             #{item.type} , #{item.scene} , #{item.inputTokens} , #{item.outputTokens} , #{item.totalTokens} , #{item.retryCount} ,
+             #{item.type} , #{item.scene} , #{item.inputTokens} , #{item.outputTokens} , #{item.totalTokens} ,
+             #{item.retryCount} , #{item.fallbackFlag} ,
              #{item.deptId} , 1 , #{item.createdBy} , now() , #{item.updatedBy} , now())
         </foreach>
     </insert>
@@ -84,7 +88,8 @@
                sum(input_tokens) as inputTokens ,
                sum(output_tokens) as outputTokens ,
                sum(total_tokens) as totalTokens ,
-               count(1) as callCount
+               count(1) as callCount ,
+               sum(fallback_flag) as fallbackCount
         from llm_model_usage
         where 1 = 1
         <include refid="searchCondition"/>

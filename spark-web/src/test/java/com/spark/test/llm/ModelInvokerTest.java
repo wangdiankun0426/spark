@@ -345,7 +345,7 @@ public class ModelInvokerTest {
         EmbeddingModel model = retryInvoker.wrap(usageWrapper, 2);
         assertSame(response, model.embedAll(segments));
         verify(delegate, times(2)).embedAll(segments);
-        verify(recorder, times(1)).record(eq(modelInfo), any(), isNull(), isNull(), isNull(), eq(1));
+        verify(recorder, times(1)).record(eq(modelInfo), any(), isNull(), isNull(), isNull(), eq(1), eq(false));
     }
 
     /**

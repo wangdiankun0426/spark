@@ -44,6 +44,7 @@ public class ModelFactoryCacheTest {
         ReflectionTestUtils.setField(modelFactory, "modelDao", modelDao);
         ModelResult modelResult = new ModelResult();
         modelResult.setId(1L);
+        modelResult.setDeleteFlag(1);
         modelResult.setContextLength(128000);
         when(modelDao.queryModel(any())).thenReturn(modelResult);
         Model model = ReflectionTestUtils.invokeMethod(modelFactory, "loadModel", 1L);

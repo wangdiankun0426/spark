@@ -66,4 +66,9 @@ public class ModelUsage extends BaseEntity {
      **/
     private Integer retryCount;
 
+    /**
+     * 是否经降级：0否，1是
+     **/
+    private Integer fallbackFlag;
+
 }

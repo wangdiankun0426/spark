@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.spark.dao.llm.ModelDao" >
     <sql id="allColumnList" >
-        id , tenant_id, provider_id , type , name , description , remark , enable_thinking , temperature , timeout_ms , max_retries , context_length , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
+        id , tenant_id, provider_id , type , name , description , remark , enable_thinking , temperature , timeout_ms , max_retries , context_length , fallback_model_ids , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt
     </sql>
 
     <sql id="searchCondition">
@@ -56,8 +56,8 @@
     </sql>
 
     <insert id="insert">
-        insert into llm_model (id, tenant_id, provider_id , type , name , description , remark , enable_thinking , temperature , timeout_ms , max_retries , context_length , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
-        values (#{id}, #{tenantId}, #{providerId} , #{type} , #{name} , #{description} , #{remark} , IFNULL(#{enableThinking}, -1) , IFNULL(#{temperature}, 0.1) , IFNULL(#{timeoutMs}, 60000) , IFNULL(#{maxRetries}, 3) , #{contextLength} , IFNULL(#{status}, 1) , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
+        insert into llm_model (id, tenant_id, provider_id , type , name , description , remark , enable_thinking , temperature , timeout_ms , max_retries , context_length , fallback_model_ids , status , dept_id , delete_flag , created_by , created_dt , updated_by , updated_dt)
+        values (#{id}, #{tenantId}, #{providerId} , #{type} , #{name} , #{description} , #{remark} , IFNULL(#{enableThinking}, -1) , IFNULL(#{temperature}, 0.1) , IFNULL(#{timeoutMs}, 60000) , IFNULL(#{maxRetries}, 3) , #{contextLength} , #{fallbackModelIds} , IFNULL(#{status}, 1) , #{deptId} , 1, #{createdBy}, #{createdDt}, #{updatedBy}, #{updatedDt})
     </insert>
 
     <update id="deleteById">
@@ -95,6 +95,7 @@
             , max_retries = #{maxRetries}
         </if>
         , context_length = #{contextLength}
+        , fallback_model_ids = #{fallbackModelIds}
         <if test="status != null">
             , status = #{status}
         </if>

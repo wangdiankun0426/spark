@@ -70,7 +70,7 @@ public class ModelRetryContextTest {
         when(responseContext.chatResponse()).thenReturn(chatResponse);
         when(chatResponse.tokenUsage()).thenReturn(null);
         listener.onResponse(responseContext);
-        verify(recorder).record(eq(modelInfo), any(), isNull(), isNull(), isNull(), eq(1));
+        verify(recorder).record(eq(modelInfo), any(), isNull(), isNull(), isNull(), eq(1), eq(false));
         assertNull(ModelRetryContext.current());
     }
 }

@@ -19,6 +19,7 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.request.DefaultChatRequestParameters;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -68,9 +69,7 @@ public class ProviderKeyModelTest {
         ProviderKeyRouter router = mock(ProviderKeyRouter.class);
         ChatModel first = mock(ChatModel.class);
         ChatModel second = mock(ChatModel.class);
-        ChatModel metadata = mock(ChatModel.class);
         OpenAiChatRequestParameters parameters = OpenAiChatRequestParameters.builder().modelName("test-model").build();
-        when(metadata.defaultRequestParameters()).thenReturn(parameters);
         ChatRequest request = ChatRequest.builder().messages(UserMessage.from("hello")).build();
         ChatResponse response = mock(ChatResponse.class);
         HttpException error = new HttpException(429, "limited");
@@ -86,7 +85,7 @@ public class ProviderKeyModelTest {
                 return new ProviderKeyModel<>(10L, 1L, first);
             }
             return new ProviderKeyModel<>(10L, 2L, second);
-        }, router, metadata, listeners);
+        }, router, parameters, listeners);
         ChatModel model = invoker.wrap(providerKeyModel, 1);
         ChatResponse actual = model.chat(request);
         assertSame(response, actual);
@@ -101,7 +100,7 @@ public class ProviderKeyModelTest {
         assertEquals("test-model", secondRequest.parameters().modelName());
         assertEquals(request.messages(), firstRequest.messages());
         assertEquals(request.messages(), secondRequest.messages());
-        verify(recorder).record(eq(modelInfo), any(), isNull(), isNull(), isNull(), eq(1));
+        verify(recorder).record(eq(modelInfo), any(), isNull(), isNull(), isNull(), eq(1), eq(false));
         verifyNoMoreInteractions(recorder);
     }
 
@@ -116,7 +115,6 @@ public class ProviderKeyModelTest {
         List<TextSegment> segments = List.of();
         EmbeddingModel firstEmbedding = mock(EmbeddingModel.class);
         EmbeddingModel secondEmbedding = mock(EmbeddingModel.class);
-        EmbeddingModel embeddingMetadata = mock(EmbeddingModel.class);
         Response<List<Embedding>> embeddingResponse = new Response<>(List.of());
         when(firstEmbedding.embedAll(segments)).thenThrow(error);
         when(secondEmbedding.embedAll(segments)).thenReturn(embeddingResponse);
@@ -126,7 +124,7 @@ public class ProviderKeyModelTest {
                 return new ProviderKeyModel<>(10L, 1L, firstEmbedding);
             }
             return new ProviderKeyModel<>(10L, 2L, secondEmbedding);
-        }, router, embeddingMetadata);
+        }, router, 1024);
         EmbeddingModel embeddingModel = invoker.wrap(providerKeyEmbedding, 1);
         assertSame(embeddingResponse, embeddingModel.embedAll(segments));
 
@@ -158,9 +156,7 @@ public class ProviderKeyModelTest {
         ProviderKeyRouter router = mock(ProviderKeyRouter.class);
         StreamingChatModel first = mock(StreamingChatModel.class);
         StreamingChatModel second = mock(StreamingChatModel.class);
-        StreamingChatModel metadata = mock(StreamingChatModel.class);
         OpenAiChatRequestParameters parameters = OpenAiChatRequestParameters.builder().modelName("test-model").build();
-        when(metadata.defaultRequestParameters()).thenReturn(parameters);
         ModelUsageRecorder recorder = mock(ModelUsageRecorder.class);
         ModelInfo modelInfo = new ModelInfo(1L, "test-model", 10L, 1);
         ChatModelListener usageListener = new ModelUsageChatListener(recorder, modelInfo);
@@ -171,7 +167,7 @@ public class ProviderKeyModelTest {
                 return new ProviderKeyModel<>(10L, 1L, first);
             }
             return new ProviderKeyModel<>(10L, 2L, second);
-        }, router, metadata, listeners);
+        }, router, parameters, listeners);
         StreamingChatModel model = invoker.wrap(providerKeyModel, 1L, 60000L, 1);
         ChatRequest request = ChatRequest.builder().messages(UserMessage.from("hello")).build();
         StreamingChatResponseHandler handler = mock(StreamingChatResponseHandler.class);
@@ -201,7 +197,7 @@ public class ProviderKeyModelTest {
         secondHandler.onCompleteResponse(response);
         verify(handler).onPartialResponse("ok");
         verify(handler).onCompleteResponse(response);
-        verify(recorder).record(eq(modelInfo), any(), isNull(), isNull(), isNull(), eq(1));
+        verify(recorder).record(eq(modelInfo), any(), isNull(), isNull(), isNull(), eq(1), eq(false));
         verifyNoMoreInteractions(recorder);
         firstHandler.onPartialResponse("old");
         verify(handler, never()).onPartialResponse("old");
@@ -216,9 +212,8 @@ public class ProviderKeyModelTest {
         ModelInvoker invoker = this.createDirectInvoker(scheduler);
         ProviderKeyRouter router = mock(ProviderKeyRouter.class);
         StreamingChatModel first = mock(StreamingChatModel.class);
-        StreamingChatModel metadata = mock(StreamingChatModel.class);
         ProviderKeyStreamingChatModel providerKeyModel = new ProviderKeyStreamingChatModel(
-                () -> new ProviderKeyModel<>(10L, 1L, first), router, metadata, List.of());
+                () -> new ProviderKeyModel<>(10L, 1L, first), router, DefaultChatRequestParameters.EMPTY, List.of());
         StreamingChatModel model = invoker.wrap(providerKeyModel, 1L, 60000L, 3);
         ChatRequest request = mock(ChatRequest.class);
         StreamingChatResponseHandler handler = mock(StreamingChatResponseHandler.class);

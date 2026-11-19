@@ -11,6 +11,12 @@ import com.spark.llm.model.credential.ProviderKeyRouter;
 import com.spark.llm.model.credential.ProviderKeyScoringModel;
 import com.spark.llm.model.credential.ProviderKeyStreamingChatModel;
 import com.spark.llm.model.custom.RerankModel;
+import com.spark.llm.model.fallback.FallbackChatModel;
+import com.spark.llm.model.fallback.FallbackEmbeddingModel;
+import com.spark.llm.model.fallback.FallbackModelTarget;
+import com.spark.llm.model.fallback.FallbackScoringModel;
+import com.spark.llm.model.fallback.FallbackStreamingChatModel;
+import com.spark.llm.model.fallback.ModelFallbackChainParser;
 import com.spark.llm.model.http.RetryAfterHttpClientBuilder;
 import com.spark.common.bean.llm.entity.Model;
 import com.spark.common.bean.llm.entity.Provider;
@@ -20,6 +26,7 @@ import com.spark.common.bean.llm.result.ProviderResult;
 import com.spark.common.bean.llm.result.ModelResult;
 import com.spark.dao.llm.ModelDao;
 import com.spark.dao.llm.ProviderDao;
+import com.spark.common.enums.DeleteFlagEnum;
 import com.spark.common.enums.ModelTypeEnum;
 import com.spark.common.enums.StatusEnum;
 import com.spark.common.bean.llm.dto.ModelInfo;
@@ -44,9 +51,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -62,6 +71,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class ModelFactory {
     private static final Logger logger = LoggerFactory.getLogger(ModelFactory.class);
+    private static final int OPENAI_EMBEDDING_DIMENSION = 1024;
     @Autowired
     private ModelDao modelDao;
     @Autowired
@@ -235,10 +245,10 @@ public class ModelFactory {
         if (modelId == null) {
             return;
         }
-        chatModelCache.remove(modelId);
-        streamingChatModelCache.remove(modelId);
-        embeddingModelCache.remove(modelId);
-        rerankModelCache.remove(modelId);
+        chatModelCache.clear();
+        streamingChatModelCache.clear();
+        embeddingModelCache.clear();
+        rerankModelCache.clear();
         chatKeyModelCache.keySet().removeIf(key -> modelId.equals(key.getModelId()));
         streamingKeyModelCache.keySet().removeIf(key -> modelId.equals(key.getModelId()));
         embeddingKeyModelCache.keySet().removeIf(key -> modelId.equals(key.getModelId()));
@@ -254,6 +264,10 @@ public class ModelFactory {
             return;
         }
         providerKeyRouter.clearProvider(providerId);
+        chatModelCache.clear();
+        streamingChatModelCache.clear();
+        embeddingModelCache.clear();
+        rerankModelCache.clear();
         ModelQuery query = new ModelQuery();
         query.setProviderId(providerId);
         query.setPage(false);
@@ -273,11 +287,12 @@ public class ModelFactory {
         ModelQuery query = new ModelQuery();
         query.setId(modelId);
         ModelResult modelResult = modelDao.queryModel(query);
-        if (modelResult == null) {
+        if (modelResult == null || !DeleteFlagEnum.NORMAL.getValue().equals(modelResult.getDeleteFlag())) {
             throw new IllegalArgumentException("Model not found with id: " + modelId);
         }
         Model model = new Model();
         model.setId(modelResult.getId());
+        model.setTenantId(modelResult.getTenantId());
         model.setProviderId(modelResult.getProviderId());
         model.setType(modelResult.getType());
         model.setName(modelResult.getName());
@@ -288,67 +303,75 @@ public class ModelFactory {
         model.setTimeoutMs(modelResult.getTimeoutMs());
         model.setMaxRetries(modelResult.getMaxRetries());
         model.setContextLength(modelResult.getContextLength());
+        model.setFallbackModelIds(modelResult.getFallbackModelIds());
+        model.setStatus(modelResult.getStatus());
         return model;
     }
     
     /**
-     * 创建聊天模型实例
+     * 创建聊天模型降级外观
      */
     private ChatModel createChatModel(Model model) {
         ModelTypeEnum typeEnum = ModelTypeEnum.indexOf(model.getType());
         if (Objects.requireNonNull(typeEnum) == ModelTypeEnum.LANGUAGE) {
-            return createOpenAiChatModel(model);
-        }
-        throw new UnsupportedOperationException("Unsupported model type: " + typeEnum.getDesc());
-    }
-    
-    /**
-     * 创建流式聊天模型实例
-     */
-    private StreamingChatModel createStreamingChatModel(Model model) {
-        ModelTypeEnum typeEnum = ModelTypeEnum.indexOf(model.getType());
-        if (Objects.requireNonNull(typeEnum) == ModelTypeEnum.LANGUAGE) {
-            return createOpenAiStreamingChatModel(model);
-        }
-        throw new UnsupportedOperationException("Unsupported model type: " + typeEnum.getDesc());
-    }
-    
-    /**
-     * 创建向量模型实例
-     */
-    private EmbeddingModel createEmbeddingModel(Model model) {
-        ModelTypeEnum typeEnum = ModelTypeEnum.indexOf(model.getType());
-        if (Objects.requireNonNull(typeEnum) == ModelTypeEnum.VECTOR) {
-            return createOpenAiEmbeddingModel(model);
+            List<FallbackModelTarget<ChatModel>> targets = this.createFallbackTargets(model, this::createChatTarget);
+            ModelInfo modelInfo = this.buildModelInfo(model);
+            ChatModelListener usageListener = new ModelUsageChatListener(modelUsageRecorder, modelInfo);
+            List<ChatModelListener> listeners = List.of(usageListener);
+            return new FallbackChatModel(targets, listeners);
         }
         throw new UnsupportedOperationException("Unsupported model type: " + typeEnum.getDesc());
     }
 
     /**
-     * 创建排序模型实例
+     * 创建流式聊天模型降级外观
+     */
+    private StreamingChatModel createStreamingChatModel(Model model) {
+        ModelTypeEnum typeEnum = ModelTypeEnum.indexOf(model.getType());
+        if (Objects.requireNonNull(typeEnum) == ModelTypeEnum.LANGUAGE) {
+            List<FallbackModelTarget<StreamingChatModel>> targets = this.createFallbackTargets(
+                    model, this::createStreamingTarget);
+            ModelInfo modelInfo = this.buildModelInfo(model);
+            ChatModelListener usageListener = new ModelUsageChatListener(modelUsageRecorder, modelInfo);
+            List<ChatModelListener> listeners = List.of(usageListener);
+            return new FallbackStreamingChatModel(targets, listeners);
+        }
+        throw new UnsupportedOperationException("Unsupported model type: " + typeEnum.getDesc());
+    }
+
+    /**
+     * 创建向量模型降级外观
+     */
+    private EmbeddingModel createEmbeddingModel(Model model) {
+        ModelTypeEnum typeEnum = ModelTypeEnum.indexOf(model.getType());
+        if (Objects.requireNonNull(typeEnum) == ModelTypeEnum.VECTOR) {
+            List<FallbackModelTarget<EmbeddingModel>> targets = this.createFallbackTargets(
+                    model, this::createEmbeddingTarget);
+            FallbackEmbeddingModel fallbackModel = new FallbackEmbeddingModel(targets);
+            ModelInfo modelInfo = this.buildModelInfo(model);
+            return new EmbeddingUsageWrapper(fallbackModel, modelUsageRecorder, modelInfo);
+        }
+        throw new UnsupportedOperationException("Unsupported model type: " + typeEnum.getDesc());
+    }
+
+    /**
+     * 创建排序模型降级外观
      */
     private ScoringModel createRerankModel(Model model) {
         ModelTypeEnum typeEnum = ModelTypeEnum.indexOf(model.getType());
         if (Objects.requireNonNull(typeEnum) == ModelTypeEnum.RERANK) {
-            Provider provider = loadProvider(model.getProviderId());
-            long timeoutMs = modelInvoker.resolveTimeout(model.getTimeoutMs());
-            int maxRetries = modelInvoker.resolveMaxRetries(model.getMaxRetries());
-            Duration timeout = Duration.ofMillis(timeoutMs);
-            logger.info("create rerankModel, modelId={}, model={}, provider={}, timeoutMs={}, maxRetries={}",
-                    model.getId(), model.getName(), provider.getName(), timeoutMs, maxRetries);
+            List<FallbackModelTarget<ScoringModel>> targets = this.createFallbackTargets(model, this::createRerankTarget);
+            FallbackScoringModel fallbackModel = new FallbackScoringModel(targets);
             ModelInfo modelInfo = this.buildModelInfo(model);
-            ScoringModel providerKeyModel = new ProviderKeyScoringModel(
-                    () -> this.selectRerankModel(model, provider, modelInfo, timeout), providerKeyRouter);
-            ScoringModel scoringModel = new ScoringUsageWrapper(providerKeyModel, modelUsageRecorder, modelInfo);
-            return modelInvoker.wrap(scoringModel, maxRetries);
+            return new ScoringUsageWrapper(fallbackModel, modelUsageRecorder, modelInfo);
         }
         throw new UnsupportedOperationException("Unsupported model type: " + typeEnum.getDesc());
     }
-    
+
     /**
-     * 创建 OpenAI 兼容协议的聊天模型
+     * 创建单个同步聊天目标
      */
-    private ChatModel createOpenAiChatModel(Model model) {
+    private FallbackModelTarget<ChatModel> createChatTarget(Model model) {
         Provider provider = loadProvider(model.getProviderId());
         long timeoutMs = modelInvoker.resolveTimeout(model.getTimeoutMs());
         int maxRetries = modelInvoker.resolveMaxRetries(model.getMaxRetries());
@@ -356,19 +379,17 @@ public class ModelFactory {
         logger.info("create chatModel, modelId={}, model={}, provider={}, enableThinking={}, temperature={}, timeoutMs={}, maxRetries={}",
                 model.getId(), model.getName(), provider.getName(), model.getEnableThinking(), model.getTemperature(), timeoutMs, maxRetries);
         ModelInfo modelInfo = this.buildModelInfo(model);
-        ChatModelListener usageListener = new ModelUsageChatListener(modelUsageRecorder, modelInfo);
-        List<ChatModelListener> listeners = List.of(usageListener);
-        ProviderKeyModel<ChatModel> metadataModel = this.selectChatModel(model, provider, timeout);
-        ChatModel metadataDelegate = metadataModel.getDelegate();
+        OpenAiChatRequestParameters defaultParameters = this.buildOpenAiChatRequestParameters(model);
         ChatModel providerKeyModel = new ProviderKeyChatModel(
-                () -> this.selectChatModel(model, provider, timeout), providerKeyRouter, metadataDelegate, listeners);
-        return modelInvoker.wrap(providerKeyModel, maxRetries);
+                () -> this.selectChatModel(model, provider, timeout), providerKeyRouter, defaultParameters, List.of());
+        ChatModel invokingModel = modelInvoker.wrap(providerKeyModel, maxRetries);
+        return new FallbackModelTarget<>(modelInfo, invokingModel);
     }
 
     /**
-     * 创建 OpenAI 兼容协议的流式聊天模型
+     * 创建单个流式聊天目标
      */
-    private StreamingChatModel createOpenAiStreamingChatModel(Model model) {
+    private FallbackModelTarget<StreamingChatModel> createStreamingTarget(Model model) {
         Provider provider = loadProvider(model.getProviderId());
         long timeoutMs = modelInvoker.resolveTimeout(model.getTimeoutMs());
         int maxRetries = modelInvoker.resolveMaxRetries(model.getMaxRetries());
@@ -376,20 +397,18 @@ public class ModelFactory {
         logger.info("create streamingChatModel, modelId={}, model={}, provider={}, enableThinking={}, temperature={}, timeoutMs={}, maxRetries={}",
                 model.getId(), model.getName(), provider.getName(), model.getEnableThinking(), model.getTemperature(), timeoutMs, maxRetries);
         ModelInfo modelInfo = this.buildModelInfo(model);
-        ChatModelListener usageListener = new ModelUsageChatListener(modelUsageRecorder, modelInfo);
-        List<ChatModelListener> listeners = List.of(usageListener);
-        ProviderKeyModel<StreamingChatModel> metadataModel = this.selectStreamingChatModel(model, provider, timeout);
-        StreamingChatModel metadataDelegate = metadataModel.getDelegate();
+        OpenAiChatRequestParameters defaultParameters = this.buildOpenAiChatRequestParameters(model);
         StreamingChatModel providerKeyModel = new ProviderKeyStreamingChatModel(
-                () -> this.selectStreamingChatModel(model, provider, timeout), providerKeyRouter, metadataDelegate, listeners);
+                () -> this.selectStreamingChatModel(model, provider, timeout), providerKeyRouter, defaultParameters, List.of());
         Long modelId = model.getId();
-        return modelInvoker.wrap(providerKeyModel, modelId, timeoutMs, maxRetries);
+        StreamingChatModel invokingModel = modelInvoker.wrap(providerKeyModel, modelId, timeoutMs, maxRetries);
+        return new FallbackModelTarget<>(modelInfo, invokingModel);
     }
 
     /**
-     * 创建 OpenAI 兼容协议的向量模型
+     * 创建单个向量目标
      */
-    private EmbeddingModel createOpenAiEmbeddingModel(Model model) {
+    private FallbackModelTarget<EmbeddingModel> createEmbeddingTarget(Model model) {
         Provider provider = loadProvider(model.getProviderId());
         long timeoutMs = modelInvoker.resolveTimeout(model.getTimeoutMs());
         int maxRetries = modelInvoker.resolveMaxRetries(model.getMaxRetries());
@@ -397,12 +416,81 @@ public class ModelFactory {
         logger.info("create embeddingModel, modelId={}, model={}, provider={}, timeoutMs={}, maxRetries={}",
                 model.getId(), model.getName(), provider.getName(), timeoutMs, maxRetries);
         ModelInfo modelInfo = this.buildModelInfo(model);
-        ProviderKeyModel<EmbeddingModel> metadataModel = this.selectEmbeddingModel(model, provider, timeout);
-        EmbeddingModel metadataDelegate = metadataModel.getDelegate();
         EmbeddingModel providerKeyModel = new ProviderKeyEmbeddingModel(
-                () -> this.selectEmbeddingModel(model, provider, timeout), providerKeyRouter, metadataDelegate);
-        EmbeddingModel usageModel = new EmbeddingUsageWrapper(providerKeyModel, modelUsageRecorder, modelInfo);
-        return modelInvoker.wrap(usageModel, maxRetries);
+                () -> this.selectEmbeddingModel(model, provider, timeout), providerKeyRouter, OPENAI_EMBEDDING_DIMENSION);
+        EmbeddingModel invokingModel = modelInvoker.wrap(providerKeyModel, maxRetries);
+        return new FallbackModelTarget<>(modelInfo, invokingModel);
+    }
+
+    /**
+     * 创建单个排序目标
+     */
+    private FallbackModelTarget<ScoringModel> createRerankTarget(Model model) {
+        Provider provider = loadProvider(model.getProviderId());
+        long timeoutMs = modelInvoker.resolveTimeout(model.getTimeoutMs());
+        int maxRetries = modelInvoker.resolveMaxRetries(model.getMaxRetries());
+        Duration timeout = Duration.ofMillis(timeoutMs);
+        logger.info("create rerankModel, modelId={}, model={}, provider={}, timeoutMs={}, maxRetries={}",
+                model.getId(), model.getName(), provider.getName(), timeoutMs, maxRetries);
+        ModelInfo modelInfo = this.buildModelInfo(model);
+        ScoringModel providerKeyModel = new ProviderKeyScoringModel(
+                () -> this.selectRerankModel(model, provider, modelInfo, timeout), providerKeyRouter);
+        ScoringModel invokingModel = modelInvoker.wrap(providerKeyModel, maxRetries);
+        return new FallbackModelTarget<>(modelInfo, invokingModel);
+    }
+
+    /**
+     * 装配根模型和直接备用模型目标
+     */
+    private <T> List<FallbackModelTarget<T>> createFallbackTargets(
+            Model model, Function<Model, FallbackModelTarget<T>> targetFactory) {
+        List<FallbackModelTarget<T>> targets = new ArrayList<>();
+        FallbackModelTarget<T> rootTarget = targetFactory.apply(model);
+        targets.add(rootTarget);
+        Long rootModelId = model.getId();
+        String fallbackModelIds = model.getFallbackModelIds();
+        List<Long> fallbackIds = ModelFallbackChainParser.parseLenient(fallbackModelIds, rootModelId);
+        Long rootTenantId = model.getTenantId();
+        Integer rootType = model.getType();
+        for (Long fallbackId : fallbackIds) {
+            try {
+                Model fallbackModel = this.loadModel(fallbackId);
+                Long fallbackTenantId = fallbackModel.getTenantId();
+                Integer fallbackType = fallbackModel.getType();
+                Integer fallbackStatus = fallbackModel.getStatus();
+                if (!Objects.equals(rootTenantId, fallbackTenantId) || !Objects.equals(rootType, fallbackType)
+                        || !StatusEnum.NORMAL.getValue().equals(fallbackStatus)) {
+                    logger.warn("model fallback candidate unavailable, modelId={}, fallbackModelId={}", rootModelId, fallbackId);
+                    continue;
+                }
+                FallbackModelTarget<T> fallbackTarget = targetFactory.apply(fallbackModel);
+                targets.add(fallbackTarget);
+            } catch (RuntimeException e) {
+                String errorMessage = e.getMessage();
+                logger.warn("model fallback candidate skipped, modelId={}, fallbackModelId={}, errMsg={}",
+                        rootModelId, fallbackId, errorMessage);
+            }
+        }
+        return targets;
+    }
+
+    /**
+     * 构造OpenAI聊天默认请求参数
+     */
+    private OpenAiChatRequestParameters buildOpenAiChatRequestParameters(Model model) {
+        Double temperature = model.getTemperature() != null ? model.getTemperature() : 0.1;
+        String modelName = model.getName();
+        if (StatusEnum.NORMAL.getValue().equals(model.getEnableThinking())) {
+            return OpenAiChatRequestParameters.builder()
+                    .modelName(modelName)
+                    .temperature(temperature)
+                    .customParameters(Map.of("enable_thinking", true))
+                    .build();
+        }
+        return OpenAiChatRequestParameters.builder()
+                .modelName(modelName)
+                .temperature(temperature)
+                .build();
     }
 
     /**
@@ -499,20 +587,17 @@ public class ModelFactory {
      * 创建不带监听器的原始同步聊天客户端
      */
     private ChatModel createRawOpenAiChatModel(Model model, Provider provider, String secretKey, Duration timeout) {
+        OpenAiChatRequestParameters defaultParameters = this.buildOpenAiChatRequestParameters(model);
         HttpClientBuilder httpClientBuilder = RetryAfterHttpClientBuilder.createHttpClientBuilder();
         OpenAiChatModel.OpenAiChatModelBuilder builder = OpenAiChatModel.builder()
                 .httpClientBuilder(httpClientBuilder)
                 .baseUrl(provider.getApiUrl())
                 .apiKey(secretKey)
-                .modelName(model.getName())
-                .temperature(model.getTemperature() != null ? model.getTemperature() : 0.1)
+                .defaultRequestParameters(defaultParameters)
                 .timeout(timeout)
                 .maxRetries(0);
         if (StatusEnum.NORMAL.getValue().equals(model.getEnableThinking())) {
             builder.returnThinking(true);
-            builder.defaultRequestParameters(OpenAiChatRequestParameters.builder()
-                    .customParameters(Map.of("enable_thinking", true))
-                    .build());
         }
         return builder.build();
     }
@@ -522,19 +607,16 @@ public class ModelFactory {
      */
     private StreamingChatModel createRawOpenAiStreamingChatModel(Model model, Provider provider,
                                                                  String secretKey, Duration timeout) {
+        OpenAiChatRequestParameters defaultParameters = this.buildOpenAiChatRequestParameters(model);
         HttpClientBuilder httpClientBuilder = RetryAfterHttpClientBuilder.createHttpClientBuilder();
         OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder builder = OpenAiStreamingChatModel.builder()
                 .httpClientBuilder(httpClientBuilder)
                 .baseUrl(provider.getApiUrl())
                 .apiKey(secretKey)
-                .modelName(model.getName())
-                .temperature(model.getTemperature() != null ? model.getTemperature() : 0.1)
+                .defaultRequestParameters(defaultParameters)
                 .timeout(timeout);
         if (StatusEnum.NORMAL.getValue().equals(model.getEnableThinking())) {
             builder.returnThinking(true);
-            builder.defaultRequestParameters(OpenAiChatRequestParameters.builder()
-                    .customParameters(Map.of("enable_thinking", true))
-                    .build());
         }
         return builder.build();
     }
@@ -550,7 +632,7 @@ public class ModelFactory {
                 .baseUrl(provider.getApiUrl())
                 .apiKey(secretKey)
                 .modelName(model.getName())
-                .dimensions(1024)
+                .dimensions(OPENAI_EMBEDDING_DIMENSION)
                 .encodingFormat("float")
                 .timeout(timeout)
                 .maxRetries(0)

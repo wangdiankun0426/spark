@@ -1,5 +1,7 @@
 package com.spark.llm.usage;
 
+import com.spark.common.bean.llm.dto.ModelInfo;
+
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -17,6 +19,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ModelRetryContext {
     private static final ThreadLocal<Deque<ModelRetryContext>> CONTEXT_HOLDER = new ThreadLocal<>();
     private final AtomicInteger retryCount = new AtomicInteger();
+    private volatile boolean fallback;
+    private volatile ModelInfo actualModelInfo;
 
     /**
      * 增加一次实际重试
@@ -32,6 +36,37 @@ public class ModelRetryContext {
      */
     public int getRetryCount() {
         return retryCount.get();
+    }
+
+    /**
+     * 记录当前实际调用目标
+     * @param modelInfo 当前目标模型元数据
+     * @param fallback 是否属于备用目标
+     */
+    public void selectTarget(ModelInfo modelInfo, boolean fallback) {
+        if (modelInfo == null) {
+            throw new IllegalArgumentException("modelInfo must not be null");
+        }
+        this.actualModelInfo = modelInfo;
+        if (fallback) {
+            this.fallback = true;
+        }
+    }
+
+    /**
+     * 获取当前实际目标模型元数据
+     * @return 模型元数据
+     */
+    public ModelInfo getActualModelInfo() {
+        return actualModelInfo;
+    }
+
+    /**
+     * 判断是否实际经过备用模型
+     * @return 是否降级
+     */
+    public boolean isFallback() {
+        return fallback;
     }
 
     /**

@@ -72,8 +72,11 @@ public class ModelUsageChatListener implements ChatModelListener {
             Integer outputTokens = tokenUsage == null ? null : tokenUsage.outputTokenCount();
             Integer totalTokens = tokenUsage == null ? null : tokenUsage.totalTokenCount();
             ModelRetryContext retryContext = this.resolveRetryContext(context.attributes().get(RETRY_CONTEXT_KEY));
+            ModelInfo actualModelInfo = retryContext.getActualModelInfo();
+            ModelInfo usageModelInfo = actualModelInfo == null ? modelInfo : actualModelInfo;
             int retryCount = retryContext.getRetryCount();
-            recorder.record(modelInfo, snapshot, inputTokens, outputTokens, totalTokens, retryCount);
+            boolean fallbackFlag = retryContext.isFallback();
+            recorder.record(usageModelInfo, snapshot, inputTokens, outputTokens, totalTokens, retryCount, fallbackFlag);
         } catch (Exception e) {
             logger.warn("model usage onResponse error, modelId={}", modelInfo.getModelId(), e);
         }

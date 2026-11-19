@@ -32,23 +32,23 @@ public class ProviderKeyChatModel implements ChatModel {
      */
     private final ProviderKeyRouter providerKeyRouter;
     /**
-     * 提供模型固定元数据的客户端，不参与实际调用
+     * 当前模型的默认请求参数
      */
-    private final ChatModel metadataDelegate;
+    private final ChatRequestParameters defaultRequestParameters;
     /**
      * 逻辑调用级监听器，整个重试过程共享
      */
     private final List<ChatModelListener> listeners;
 
     public ProviderKeyChatModel(Supplier<ProviderKeyModel<ChatModel>> modelSelector,
-                                ProviderKeyRouter providerKeyRouter, ChatModel metadataDelegate,
+                                ProviderKeyRouter providerKeyRouter, ChatRequestParameters defaultRequestParameters,
                                 List<ChatModelListener> listeners) {
-        if (modelSelector == null || providerKeyRouter == null || metadataDelegate == null || listeners == null) {
+        if (modelSelector == null || providerKeyRouter == null || defaultRequestParameters == null || listeners == null) {
             throw new IllegalArgumentException("providerKey chatModel params must not be null");
         }
         this.modelSelector = modelSelector;
         this.providerKeyRouter = providerKeyRouter;
-        this.metadataDelegate = metadataDelegate;
+        this.defaultRequestParameters = defaultRequestParameters;
         this.listeners = listeners;
     }
 
@@ -71,7 +71,7 @@ public class ProviderKeyChatModel implements ChatModel {
 
     @Override
     public ChatRequestParameters defaultRequestParameters() {
-        return metadataDelegate.defaultRequestParameters();
+        return defaultRequestParameters;
     }
 
     @Override
@@ -81,11 +81,11 @@ public class ProviderKeyChatModel implements ChatModel {
 
     @Override
     public ModelProvider provider() {
-        return metadataDelegate.provider();
+        return ModelProvider.OPEN_AI;
     }
 
     @Override
     public Set<Capability> supportedCapabilities() {
-        return metadataDelegate.supportedCapabilities();
+        return Set.of();
     }
 }

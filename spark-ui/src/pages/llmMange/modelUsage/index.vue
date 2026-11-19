@@ -38,6 +38,19 @@
               :value="item.value"
           />
         </el-select>
+        <el-select
+            v-model="fallbackFilter"
+            placeholder="是否降级"
+            clearable
+            style="width: 180px"
+        >
+          <el-option
+              v-for="item in fallbackOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+          />
+        </el-select>
       </div>
 
       <div class="usage-overview">
@@ -83,6 +96,24 @@
           >
             <template #icon><el-icon><Upload/></el-icon></template>
           </stat-card>
+          <stat-card
+              class="usage-stat-item"
+              label="降级次数"
+              :value="formatNumber(stat.fallbackCount)"
+              unit="次"
+              type="danger"
+          >
+            <template #icon><el-icon><Warning/></el-icon></template>
+          </stat-card>
+          <stat-card
+              class="usage-stat-item"
+              label="降级率"
+              :value="formatPercent(stat.fallbackRate)"
+              unit="%"
+              type="danger"
+          >
+            <template #icon><el-icon><DataAnalysis/></el-icon></template>
+          </stat-card>
         </div>
       </div>
 
@@ -110,6 +141,13 @@
             <el-table-column prop="outputTokens" label="输出Token" min-width="100" align="center"/>
             <el-table-column prop="totalTokens" label="总Token" min-width="100" align="center"/>
             <el-table-column prop="retryCount" label="重试次数" min-width="90" align="center"/>
+            <el-table-column label="是否降级" min-width="100" align="center">
+              <template #default="scope">
+                <el-tag :type="scope.row.fallbackFlag === 1 ? 'danger' : 'info'" size="small">
+                  {{ scope.row.fallbackFlag === 1 ? '已降级' : '未降级' }}
+                </el-tag>
+              </template>
+            </el-table-column>
           </el-table>
         </div>
         <el-pagination
@@ -138,7 +176,7 @@ import {
 import StatCard from '@/components/Dashboard/StatCard.vue'
 import { useChart } from '@/utils/useChart'
 import { chartTokens } from '@/utils/chartTheme'
-import { TrendCharts, Coin, Download, Upload, Histogram, Document } from '@element-plus/icons-vue'
+import { TrendCharts, Coin, Download, Upload, Histogram, Document, Warning, DataAnalysis } from '@element-plus/icons-vue'
 
 const TYPE_LANGUAGE = 1
 const TYPE_VECTOR = 2
@@ -148,6 +186,11 @@ const typeOptions = [
   { value: TYPE_LANGUAGE, label: '语言模型' },
   { value: TYPE_VECTOR, label: '向量模型' },
   { value: TYPE_RERANK, label: '排序模型' }
+]
+
+const fallbackOptions = [
+  { value: 1, label: '已降级' },
+  { value: 0, label: '未降级' }
 ]
 
 const sceneOptions = [
@@ -175,13 +218,21 @@ const dateShortcuts = [
 const dateRange = ref(rangeByDays(6))
 const typeFilter = ref(null)
 const sceneFilter = ref(null)
+const fallbackFilter = ref(null)
 
 const tableLoading = ref(false)
 const tableList = ref([])
 const total = ref(0)
 const query = reactive({ pageNo: 1, pageSize: 15 })
 
-const stat = reactive({ callCount: 0, inputTokens: 0, outputTokens: 0, totalTokens: 0 })
+const stat = reactive({
+  callCount: 0,
+  inputTokens: 0,
+  outputTokens: 0,
+  totalTokens: 0,
+  fallbackCount: 0,
+  fallbackRate: 0
+})
 
 const { elRef: chartRef, setOption } = useChart()
 
@@ -203,7 +254,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('app-theme-change', handleThemeChange)
 })
 
-watch([dateRange, typeFilter, sceneFilter], () => {
+watch([dateRange, typeFilter, sceneFilter, fallbackFilter], () => {
   if (reloadTimer) clearTimeout(reloadTimer)
   reloadTimer = setTimeout(() => {
     query.pageNo = 1
@@ -245,7 +296,8 @@ function buildParams() {
     startTime: dateRange.value ? dateRange.value[0] : undefined,
     endTime: dateRange.value ? dateRange.value[1] : undefined,
     type: typeFilter.value || undefined,
-    scene: sceneFilter.value || undefined
+    scene: sceneFilter.value || undefined,
+    fallbackFlag: fallbackFilter.value ?? undefined
   }
 }
 
@@ -260,6 +312,8 @@ function loadSummary() {
     stat.inputTokens = list.reduce((sum, item) => sum + (item.inputTokens || 0), 0)
     stat.outputTokens = list.reduce((sum, item) => sum + (item.outputTokens || 0), 0)
     stat.totalTokens = list.reduce((sum, item) => sum + (item.totalTokens || 0), 0)
+    stat.fallbackCount = list.reduce((sum, item) => sum + (item.fallbackCount || 0), 0)
+    stat.fallbackRate = stat.callCount > 0 ? stat.fallbackCount * 100 / stat.callCount : 0
   })
 }
 
@@ -355,6 +409,10 @@ function tagType(type) {
 function formatNumber(value) {
   return (value || 0).toLocaleString()
 }
+
+function formatPercent(value) {
+  return Number(value || 0).toFixed(2)
+}
 </script>
 
 <style scoped lang="scss">
@@ -373,6 +431,7 @@ function formatNumber(value) {
 .usage-toolbar {
   flex: none;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: $spacing-md;
   padding: $spacing-md $spacing-lg;
@@ -392,11 +451,11 @@ function formatNumber(value) {
 
 .usage-stat-aside {
   flex: none;
-  width: 18%;
-  min-width: 220px;
-  max-width: 260px;
-  display: flex;
-  flex-direction: column;
+  width: 40%;
+  min-width: 440px;
+  max-width: 540px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: $spacing-sm;
 }
 

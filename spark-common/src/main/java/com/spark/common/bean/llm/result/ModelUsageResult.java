@@ -86,4 +86,9 @@ public class ModelUsageResult extends BaseResult {
      **/
     private Integer retryCount;
 
+    /**
+     * 是否经降级：0否，1是
+     **/
+    private Integer fallbackFlag;
+
 }

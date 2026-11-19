@@ -68,9 +68,10 @@ public class ModelUsageRecorder {
      * @param outputTokens 输出token
      * @param totalTokens 总token
      * @param retryCount 重试次数
+     * @param fallbackFlag 是否经降级
      */
     public void record(ModelInfo modelInfo, UsageSnapshot snapshot, Integer inputTokens,
-                       Integer outputTokens, Integer totalTokens, int retryCount) {
+                       Integer outputTokens, Integer totalTokens, int retryCount, boolean fallbackFlag) {
         if (modelInfo == null || modelInfo.getModelId() == null) {
             return;
         }
@@ -95,6 +96,7 @@ public class ModelUsageRecorder {
             usage.setOutputTokens(outputTokens);
             usage.setTotalTokens(this.normalizeTotal(inputTokens, outputTokens, totalTokens));
             usage.setRetryCount(retryCount);
+            usage.setFallbackFlag(fallbackFlag ? 1 : 0);
             usage.setDeptId(deptId);
             usage.setCreatedBy(userId);
             usage.setUpdatedBy(userId);

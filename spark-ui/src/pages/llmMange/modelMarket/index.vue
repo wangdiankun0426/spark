@@ -311,6 +311,7 @@
               v-model="modelForm.type"
               placeholder="请选择模型类型"
               style="width: 100%"
+              @change="handleModelTypeChange"
           >
             <el-option
                 v-for="item in modelTypeOptions"
@@ -319,6 +320,25 @@
                 :value="item.value"
             />
           </el-select>
+        </el-form-item>
+        <el-form-item label="降级模型" prop="fallbackModelIds">
+          <el-select
+              v-model="modelForm.fallbackModelIds"
+              multiple
+              filterable
+              :loading="fallbackCandidateLoading"
+              :disabled="!modelForm.type"
+              placeholder="请选择调用失败时按序尝试的模型"
+              style="width: 100%"
+          >
+            <el-option
+                v-for="item in fallbackCandidateList"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+            />
+          </el-select>
+          <el-text size="small" type="info">按选择顺序依次尝试，仅显示同类型且已启用的其他模型</el-text>
         </el-form-item>
         <el-form-item label="模型名称" prop="name">
           <el-input
@@ -750,6 +770,8 @@ const modelFormVisible = ref(false)
 const modelFormTitle = ref('')
 const modelFormRef = ref(null)
 const modelForm = ref(createEmptyModelForm())
+const fallbackCandidateList = ref([])
+const fallbackCandidateLoading = ref(false)
 const modelTypeOptions = [
   { label: '语言模型', value: 1 },
   { label: '向量模型', value: 2 },
@@ -790,6 +812,7 @@ function createEmptyModelForm() {
     timeoutMs: 60000,
     maxRetries: 3,
     contextLength: undefined,
+    fallbackModelIds: [],
     status: 1,
     description: undefined,
     remark: undefined,
@@ -801,8 +824,40 @@ function createEmptyModelForm() {
  */
 function handleOpenCreateModel() {
   modelForm.value = createEmptyModelForm()
+  fallbackCandidateList.value = []
   modelFormTitle.value = '新建模型'
   modelFormVisible.value = true
+}
+
+/**
+ * 模型类型变化后清空降级链并加载新类型候选
+ */
+function handleModelTypeChange() {
+  modelForm.value.fallbackModelIds = []
+  loadFallbackCandidates()
+}
+
+/**
+ * 加载当前类型的全部可用降级模型
+ */
+function loadFallbackCandidates() {
+  const type = modelForm.value.type
+  fallbackCandidateList.value = []
+  if (!type) {
+    fallbackCandidateLoading.value = false
+    return
+  }
+  fallbackCandidateLoading.value = true
+  pageModelListAPI({ page: false, type, status: 1 }).then(res => {
+    if (modelForm.value.type !== type) return
+    const rootId = modelForm.value.id
+    const rows = res.data.rows || []
+    fallbackCandidateList.value = rows.filter(item => item.id !== rootId)
+  }).finally(() => {
+    if (modelForm.value.type === type) {
+      fallbackCandidateLoading.value = false
+    }
+  })
 }
 
 /**
@@ -823,12 +878,14 @@ function handleOpenUpdateModel(model) {
       timeoutMs: d.timeoutMs ?? 60000,
       maxRetries: d.maxRetries ?? 3,
       contextLength: d.contextLength,
+      fallbackModelIds: d.fallbackModelIds ? d.fallbackModelIds.split(',').map(Number) : [],
       status: d.status,
       description: d.description,
       remark: d.remark,
     }
     modelFormTitle.value = '修改模型'
     modelFormVisible.value = true
+    loadFallbackCandidates()
   })
 }
 
@@ -837,6 +894,8 @@ function handleOpenUpdateModel(model) {
  */
 function handleCloseModelForm() {
   modelForm.value = createEmptyModelForm()
+  fallbackCandidateList.value = []
+  fallbackCandidateLoading.value = false
   if (modelFormRef.value) {
     modelFormRef.value.clearValidate()
   }
@@ -860,6 +919,7 @@ function handleSubmitModelForm() {
       timeoutMs: modelForm.value.timeoutMs,
       maxRetries: modelForm.value.maxRetries,
       contextLength: modelForm.value.contextLength,
+      fallbackModelIds: modelForm.value.fallbackModelIds.join(','),
       status: modelForm.value.status,
       description: modelForm.value.description,
       remark: modelForm.value.remark,

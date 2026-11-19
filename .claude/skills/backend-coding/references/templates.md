@@ -315,8 +315,8 @@ void shouldNotRetryAfterFirstOutput() {
 ### 8.2 测试执行验收
 
 - 后端功能或业务逻辑变更后，必须执行与变更相关的单元测试并确保全部通过，不能只生成测试代码。
-- 优先执行指定测试类及其关联测试，再按影响范围执行模块测试。例如：
-  `mvn -pl spark-web -am -Dtest=ModelInvokerTest -Dsurefire.failIfNoSpecifiedTests=false test`
+- 优先执行指定测试类及其关联测试，再按影响范围执行模块测试。必须带 `-P local` 激活本地 profile，`log.path`/`log.pattern` 定义在该 profile 中，漏掉会导致 logback 占位符不替换、日志写入字面量 `@log.path@` 目录。例如：
+  `mvn -P local -pl spark-web -am -Dtest=ModelInvokerTest -Dsurefire.failIfNoSpecifiedTests=false test`
 - 测试失败时根据真实输出修复并重跑，不得删除测试、添加跳过注解或降低断言强度来逃避失败。
 - 交付说明必须列出实际执行的测试命令和结果；未执行、执行失败或环境受阻必须明确说明，禁止把静态检查表述为测试通过。
 - 不启动或重启应用服务，不以服务联调代替单元测试。

@@ -32,9 +32,9 @@ public class ProviderKeyStreamingChatModel implements StreamingChatModel {
      */
     private final ProviderKeyRouter providerKeyRouter;
     /**
-     * 提供流式模型固定元数据的客户端，不参与实际调用
+     * 当前流式模型的默认请求参数
      */
-    private final StreamingChatModel metadataDelegate;
+    private final ChatRequestParameters defaultRequestParameters;
     /**
      * 逻辑流式调用级监听器，整个重试过程共享
      */
@@ -42,14 +42,14 @@ public class ProviderKeyStreamingChatModel implements StreamingChatModel {
 
     public ProviderKeyStreamingChatModel(Supplier<ProviderKeyModel<StreamingChatModel>> modelSelector,
                                          ProviderKeyRouter providerKeyRouter,
-                                         StreamingChatModel metadataDelegate,
+                                         ChatRequestParameters defaultRequestParameters,
                                          List<ChatModelListener> listeners) {
-        if (modelSelector == null || providerKeyRouter == null || metadataDelegate == null || listeners == null) {
+        if (modelSelector == null || providerKeyRouter == null || defaultRequestParameters == null || listeners == null) {
             throw new IllegalArgumentException("providerKey streaming chatModel params must not be null");
         }
         this.modelSelector = modelSelector;
         this.providerKeyRouter = providerKeyRouter;
-        this.metadataDelegate = metadataDelegate;
+        this.defaultRequestParameters = defaultRequestParameters;
         this.listeners = listeners;
     }
 
@@ -74,7 +74,7 @@ public class ProviderKeyStreamingChatModel implements StreamingChatModel {
 
     @Override
     public ChatRequestParameters defaultRequestParameters() {
-        return metadataDelegate.defaultRequestParameters();
+        return defaultRequestParameters;
     }
 
     @Override
@@ -84,11 +84,11 @@ public class ProviderKeyStreamingChatModel implements StreamingChatModel {
 
     @Override
     public ModelProvider provider() {
-        return metadataDelegate.provider();
+        return ModelProvider.OPEN_AI;
     }
 
     @Override
     public Set<Capability> supportedCapabilities() {
-        return metadataDelegate.supportedCapabilities();
+        return Set.of();
     }
 }

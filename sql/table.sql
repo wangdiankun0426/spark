@@ -341,6 +341,7 @@ CREATE TABLE `llm_model` (
     `timeout_ms` int NULL DEFAULT 60000 COMMENT '模型调用超时毫秒',
     `max_retries` int NULL DEFAULT 3 COMMENT '额外重试次数',
     `context_length` int NULL COMMENT '模型上下文窗口token数',
+    `fallback_model_ids` varchar(256) NULL COMMENT '降级模型id列表，逗号分隔，按序尝试',
     `status` tinyint(3) NOT NULL DEFAULT 1 COMMENT '状态：1:已开启，-1:已关闭',
     `description` varchar(256)  NULL COMMENT '描述',
     `remark` varchar(256)  NULL COMMENT '备注',
@@ -368,6 +369,7 @@ CREATE TABLE `llm_model_usage` (
     `output_tokens` int(11) DEFAULT NULL COMMENT '输出token数',
     `total_tokens` int(11) DEFAULT NULL COMMENT '总token数',
     `retry_count` int NOT NULL DEFAULT 0 COMMENT '重试次数',
+    `fallback_flag` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否经降级',
 
     `dept_id` bigint(12) NOT NULL COMMENT '所属部门',
     `delete_flag` tinyint(3) NOT NULL DEFAULT '1' COMMENT '删除标识：1:有效，-1：无效',
